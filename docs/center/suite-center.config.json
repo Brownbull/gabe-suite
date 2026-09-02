@@ -133,7 +133,8 @@
       "kind": "meta",
       "order": 12,
       "skills": [
-        "gabe-init"
+        "gabe-init",
+        "gabe-map"
       ]
     }
   ],

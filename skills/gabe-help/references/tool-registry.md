@@ -20,6 +20,7 @@
 | Artifact motion gate | `skills/gabe-artifact/tools/verify-motion.mjs` | proves each animation actually moves (computed-style sampling) + reduced-motion end states |
 | Storybook correspondence | `skills/gabe-mockup/scripts/check-storybook-correspondence.mjs` | story ↔ component traceability check |
 | Size-budget check | `skills/gabe-commit/scripts/size-budget.sh` | >800-first-party-line WARN at commit time |
+| gabe-map MCP server | `skills/gabe-map/scripts/server.py` (installed: `~/.claude/skills/gabe-map/scripts/`) | the codebase map as tools (`mcp__gabe-map__*`); `mapquery.two_arm` is THE two-arm reach core (reach-emit.py uses it) — never re-author a map reader or a callers query |
 | KDBP templates | `templates/` (installed: `~/.claude/templates/gabe/`) | every `.kdbp/` file, tier sections, mockup templates, debt patterns |
 | Scope prompt library | `prompts/` (installed: `~/.claude/prompts/gabe-scope/`) | /gabe-scope reasoning prompts |
 | Scope schemas | `schemas/` (installed: `~/.claude/schemas/gabe-scope/`) | validating scope-session.json / scope-references.yaml |

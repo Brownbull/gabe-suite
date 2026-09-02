@@ -1,6 +1,8 @@
 # gabe-map — the suite's reliability surface (Path C) — design record
 
-> **Status (2026-09-02): DESIGNED + REVIEWED (partial), NOT BUILT.** Successor of
+> **Status (2026-09-02): BUILT — v1 landed** (`skills/gabe-map/`, `tests/gabe-map` 73 asserts · 4-mutant-proven, twin dry-run on a
+> local CLONE of gustify, harness e2e). §3 v2-amendments list below records which §12 findings the code applies. Registration
+> stays ask-first (`./install.sh --register-mcp`). Earlier status: DESIGNED + REVIEWED (partial).** Successor of
 > [map-delta-loop §13](../map-delta-loop/README.md). The operator's tool-surface ANALYSIS is published
 > (artifact "Gabe Suite Tool Surface", source: [tool-surface-analysis.html](tool-surface-analysis.html);
 > scored data: [tool-surface-scoring.json](tool-surface-scoring.json)). The design below (v1) went through
@@ -43,6 +45,21 @@ offered S6 · 0 `Reach:` records in the live PLAN · inflight.json 20 commits be
 | **MCP tool schemas are ALWAYS deferred** (probe 2026-09-02, client 2.1.258): a 7-tool probe server was deferred in a normal gustify session (124 deferred tools · 0 MCP schemas loaded — Gmail 29 · Drive 11 · Calendar 9 · Excalidraw 5 · Mermaid 1 · notebooklm 30 · pixellab 8 · **graft 6 — `graft mcp` is LIVE in gustify**) AND alone under `--strict-mcp-config` (22 deferred · 0 loaded). The `instructions` block was injected in full both times (marker quoted). | two probe runs | deferral is the policy, not a threshold: trimming other servers never makes a tool eager. The discovery surface = tool NAMES + `instructions`; descriptions/schemas load per tool on demand (ToolSearch). → D7 amended below. |
 
 ## 3 · Settled decisions
+
+**v2 amendments applied in the build (from §12, plus the probes):** prose detection via `tokenize` at the SYMBOL's position,
+a file is code if ANY hit is code (12.2/12.3 d6b) · emit gate (a) map claim present, (d) `git check-ignore` on the accumulator,
+(e) root inside the session roots (12.3) · `map-deltas.py append --once` = the writer-side dedupe (12.3) · fd 1 → stderr via
+`dup2`, frames on the saved fd (12.4 fd1) · root := git toplevel; loaders receive the center's project root (12.4/12.2) ·
+freshness base = the last commit touching archmap.json, worktree + untracked aware, `stale` tristate (12.2 d8 ×3) · `touches`
+MODEL branch reads l2 ∪ cross_edges, a DEFINE branch before bare-function (12.2) · `entity_context` brief/full/raw with raw
+byte-parity (12.2/12.3) · ONE text channel (probe) · pre-init unknown method → -32601 with the id echoed; fallback version
+2025-11-25 (probe/12.4) · registration probe reads `~/.claude.json`; `scripts/checkers/mcp-registration.sh` INFO line + battery
+(12.1) · `--register-mcp` arg case, runs last, guarded; uninstall prints the remove line (12.1) · battery read deadlines +
+`timeout 240`; mutants are same-dir copies via `SERVER_OVERRIDE` + `GABE_SKILLS_DIR` (12.1/12.3) · twin dry-run on a local
+CLONE, never the live tree (12.1) · `suite-center.config.json` `suite-maintenance` group (12.1) · gabe-red row bump (12.1) ·
+D15 naming · D7 routing block. Not applied (deferred, named): `map_build_preview`/`map_diff` (wave 2) · symbol-grouped grep ·
+`reach-emit`'s CLI still uses `graft grep` for its live grep arm (its battery pins that JSON shape; the MCP tool uses `git grep`).
+
 
 - **D1 transport/scope:** stdio + `--scope user`. One registration; every project reads its OWN committed map.
 - **D2 zero dependencies:** Python 3 stdlib only. The suite installs by copy to `~/.claude`; a pip/uv dependency
@@ -444,7 +461,7 @@ frame (CONFIRMED). The rest are the build's amendment list, highest severity fir
 - **[low] `fact-table-citations`** (§2 facts table) — Three §2 rows cite 'docs' for claims the current docs do not make, and the wire's 10 MiB per-frame cap is unnamed.
   → fix: Re-cite rows 24/27 as 'probe' or drop 'docs'; state 'cap 25k (bundle-verified; env-vars page stale)'; add a map-spec wire law: one frame ≤ 1 MiB (well under the client's 10 MiB ReadBuffer) enforced by projection, with a battery assert on the largest fixture result.
 
-## 13 · What the next session does (build order, pre-amendment)
+## 13 · Build order — EXECUTED 2026-09-02 (kept as the record of what shipped)
 
 1. Apply §12 amendments to §3–§8 (design v2); run the missing lenses (battery · axis-1 · write-safety) + a skeptic pass.
 2. Build `skills/gabe-map/{SKILL.md, references/map-spec.md, scripts/server.py, scripts/mapquery.py, scripts/tools.py}` +

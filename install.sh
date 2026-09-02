@@ -5,16 +5,19 @@
 #   ./install.sh              # Install skills + templates + docs + prompts + schemas
 #   ./install.sh --dry-run    # Show what would be done
 #   ./install.sh --uninstall  # Remove gabe-* skills, templates, prompts, schemas, and installed docs
+#   ./install.sh --register-mcp  # ...and register the gabe-map MCP server at user scope (ask-first; restart needed)
 
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DRY_RUN=false
+REGISTER_MCP=false
 UNINSTALL=false
 
 for arg in "$@"; do
     case "$arg" in
         --dry-run) DRY_RUN=true ;;
         --uninstall) UNINSTALL=true ;;
+        --register-mcp) REGISTER_MCP=true ;;   # ask-first: registers the gabe-map MCP server at user scope (runs LAST)
     esac
 done
 
@@ -54,6 +57,7 @@ if $UNINSTALL; then
     # Retired surface — clean up any straggler command mirrors from older installs
     run "rm -f ~/.claude/commands/gabe-*.md"
     run "rm -rf ~/.claude/scripts/hooks/kdbp"
+    echo "  NOTE: the gabe-map MCP registration is NOT removed by this script — if registered, run: claude mcp remove -s user gabe-map"
     run "rm -rf ~/.claude/templates/gabe"
     run "rm -rf ~/.claude/prompts/gabe-scope"
     run "rm -rf ~/.claude/schemas/gabe-scope"
@@ -173,3 +177,22 @@ fi
 
 echo ""
 echo "Installed $INSTALLED/${#GABE_SKILLS[@]} skills."
+
+# gabe-map MCP server — registration is ASK-FIRST (never automatic): report the state; register only on --register-mcp.
+if [ "$DRY_RUN" != true ]; then
+    MCP_SERVER="$HOME/.claude/skills/gabe-map/scripts/server.py"
+    echo "  $(bash "$SCRIPT_DIR/scripts/checkers/mcp-registration.sh" --installed "$MCP_SERVER" 2>/dev/null)"
+    if [ "$REGISTER_MCP" = true ]; then
+        if python3 "$SCRIPT_DIR/skills/gabe-map/scripts/mcp-status.py" --installed "$MCP_SERVER" --json 2>/dev/null | grep -q '"registered": true'; then
+            echo "  OK: gabe-map already registered at user scope"
+        elif command -v claude >/dev/null 2>&1; then
+            if claude mcp add -s user gabe-map -- python3 "$MCP_SERVER"; then
+                echo "  OK: gabe-map registered at user scope — RESTART the Claude Code session for the tools to appear"
+            else
+                echo "  WARN: claude mcp add failed (continuing — register by hand: claude mcp add -s user gabe-map -- python3 \"$MCP_SERVER\")"
+            fi
+        else
+            echo "  WARN: claude CLI not found — register by hand: claude mcp add -s user gabe-map -- python3 \"$MCP_SERVER\""
+        fi
+    fi
+fi

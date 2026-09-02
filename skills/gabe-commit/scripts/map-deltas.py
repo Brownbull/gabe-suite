@@ -25,7 +25,7 @@ Schema (one JSON object per line in .kdbp/map-deltas.jsonl):
   gen    the generator arm that would fix it -- _a3_code.access, _a3_graft.calls,
          _a3_web.bridge, _a3_fe, route_census, ... -- the analyze cluster key.
 
-Exit: append  0 = written or silent no-op   · 1 = usage error.
+Exit: append  0 = written or silent no-op (incl. --once skip)   · 1 = usage error.
       analyze 0 = nothing to show (honest-empty) · 2 = digest printed · 1 = env error.
 An exit 2 is a WARN that feeds the gate's triage; it NEVER blocks a commit.
 """
@@ -77,7 +77,16 @@ def append(a):
     rec = {"v": 1, "type": a.type, "subject": a.subject,
            "found": a.found or "", "pointer": a.pointer or "", "gen": a.gen,
            "ctx": {"cmd": a.cmd or "", "entity": a.entity or "", "head": _head(root)}}
-    with open(os.path.join(kd, LIVE), "a") as f:
+    live = os.path.join(kd, LIVE)
+    if getattr(a, "once", False):
+        # --once: skip when an identical un-swept EDGE (gen, subject, file-without-:line) already sits
+        # in live — the writer owns the edge key, so who_calls/reach-emit never inflate the tally
+        # (_read_live never dedupes; N appends → count += N). The sweep is untouched.
+        key = (a.gen, a.subject, _edge_file(a.pointer or ""))
+        for d in _read_live(live)[0]:
+            if (d.get("gen"), d.get("subject"), _edge_file(d.get("pointer") or "")) == key:
+                return 0
+    with open(live, "a") as f:
         f.write(json.dumps(rec, separators=(",", ":")) + "\n")
     return 0
 
@@ -237,6 +246,7 @@ def main():
     ap.add_argument("--gen", default="")
     ap.add_argument("--cmd", default="")
     ap.add_argument("--entity", default="")
+    ap.add_argument("--once", action="store_true", help="skip when an identical un-swept edge already sits in live")
     an = sub.add_parser("analyze", help="cluster + digest + (--sweep) clear")
     an.add_argument("--threshold", type=int, default=3)
     an.add_argument("--sweep", action="store_true")

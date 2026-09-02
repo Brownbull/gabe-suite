@@ -203,6 +203,10 @@ For each task T_i in order:
      naming a reference (mockup/story/spec/legacy screen) is rebuilt TO that reference.
    - **E4 REUSE FIRST.** Search before authoring anything new (globs/greps/stories); re-authoring a
      lookalike of an existing artifact is a DEFECT, not a style choice.
+   - **The map as tools.** When the project has a command center, context A comes from `mcp__gabe-map__touches` /
+     `owner_of` / `entity_context` and the two-arm reach from `mcp__gabe-map__who_calls` (it emits the delta itself,
+     gated) — reached for mid-reasoning, never remembered. The manual append below stays for divergences the tools
+     cannot see.
    - **Map-delta emit (trust-but-verify).** The map is the first-look surface (the entity's
      `access`/callers slice = context A); the confirming grep is context B. When B surfaces a file or
      symbol A did NOT name, append one delta — free feedback for the map generator (non-blocking; only

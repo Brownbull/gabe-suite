@@ -574,6 +574,13 @@
     "href": "commands.html"
    }
   ],
+  "skill:/gabe-map": [
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   }
+  ],
   "skill:/gabe-scope-pivot": [
    {
     "slug": "skill-map",

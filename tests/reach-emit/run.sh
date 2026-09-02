@@ -20,7 +20,8 @@ bad() { fail=$((fail+1)); echo "FAIL: $1"; }
 
 FX="$T/fx"; mkdir -p "$FX"
 mkrepo() { local r="$1"; mkdir -p "$r"; (cd "$r" && git init -q && git config user.email t@t \
-  && git config user.name t && git commit -q --allow-empty -m base && mkdir -p .kdbp); }
+  && git config user.name t && printf '.kdbp/map-deltas.jsonl\n.kdbp/map-deltas-rollup.jsonl\n' > .gitignore \
+  && git add .gitignore && git commit -q -m base && mkdir -p .kdbp); }   # the accumulator MUST be gitignored (emit gate d)
 
 # ── synthetic graft output ─────────────────────────────────────────────────
 # callers: HouseholdThing calls thing() from other.py; def lives in thing.py.
@@ -86,6 +87,29 @@ rc=$(run foo --dir "$NOIDX")
 [ "$rc" = 0 ] && ok || bad "no-index run should exit 0 (got $rc)"
 grep -qx "no index" "$T/out" && ok || bad "no-index must print exactly 'no index': $(cat "$T/out")"
 [ ! -s "$NOIDX/.kdbp/map-deltas.jsonl" ] 2>/dev/null && ok || bad "no-index must not write a delta"
+
+# ── EMPTY ARM: graft resolved nothing → NO map claim → 0 emits (a delta needs a claim to diverge from) ──
+cat > "$FX/empty.callers.json" <<'JSON'
+{"query":"thing","matches":[]}
+JSON
+: > "$LIVE"
+run thing --dir "$R" --callers-json "$FX/empty.callers.json" --grep-json "$FX/fire.grep.json" >/dev/null
+[ "$(wc -l < "$LIVE")" = 0 ] && ok || bad "empty callers arm must emit NOTHING (got $(cat "$LIVE"))"
+grep -q "emit skipped: no map claim" "$T/out" && ok || bad "empty arm must say why it skipped: $(cat "$T/out")"
+grep -q "grep-only@" "$T/out" && ok || bad "Reach line must not claim graft when the arm resolved nothing: $(cat "$T/out")"
+
+# ── NOT GITIGNORED: a repo without the accumulator seed → emit skipped, named ──
+NOIGN="$T/noign"; mkdir -p "$NOIGN"; (cd "$NOIGN" && git init -q && git config user.email t@t && git config user.name t \
+  && git commit -q --allow-empty -m base && mkdir -p .kdbp)
+run thing --dir "$NOIGN" --callers-json "$FX/fire.callers.json" --grep-json "$FX/fire.grep.json" >/dev/null
+[ ! -s "$NOIGN/.kdbp/map-deltas.jsonl" ] && ok || bad "un-ignored accumulator must NOT be written"
+grep -q "not gitignored" "$T/out" && ok || bad "un-ignored accumulator must be named as the reason: $(cat "$T/out")"
+
+# ── ONCE: the same run twice → still exactly 2 lines (the writer's --once dedupe) ──
+: > "$LIVE"
+run thing --dir "$R" --callers-json "$FX/fire.callers.json" --grep-json "$FX/fire.grep.json" >/dev/null
+run thing --dir "$R" --callers-json "$FX/fire.callers.json" --grep-json "$FX/fire.grep.json" >/dev/null
+[ "$(wc -l < "$LIVE")" = 2 ] && ok || bad "repeating the run must not duplicate edges (--once) (got $(wc -l < "$LIVE"))"
 
 # ── USAGE: no symbol → exit 1 ──────────────────────────────────────────────
 rc=$(run --dir "$R"); [ "$rc" = 1 ] && ok || bad "missing symbol should exit 1 (got $rc)"

@@ -239,7 +239,8 @@ into a hook block, never into silence.
   `/gabe-execute`) disagree. Two shapes (report-never-gate, D1): **unreached** a file this diff
   changed that no recorded reach named — either the graph missed an edge or the change grew past
   its cases · **unused reach** a recorded place the diff never touched — the reach was over-broad,
-  or a case is owed there. Compare against the record's `graft@<sha>` stamp: a diff that moved
+  or a case is owed there. `mcp__gabe-map__who_calls` recomputes a reach for any symbol on demand (a `grep-only@` stamp marks a reach taken
+  without an index). Compare against the record's `graft@<sha>` stamp: a diff that moved
   well past that sha explains drift by growth, not by a missing edge, and the finding says which.
   Priced like any finding; the triage outcome is authoritative. **Detection lives HERE for the
   same reason WORKFLOW DRIFT does** — only review sees the diff that caused it. Fix routes to

@@ -156,6 +156,12 @@ caller → one `type:add, gen:_a3_graft.calls` delta, written through the one va
 append is a silent no-op. `--dry-run` previews without writing. The accumulator (`.kdbp/map-deltas.jsonl`)
 is clustered, digested and swept by `/gabe-commit`. Design record: `../../../docs/design/map-delta-loop/README.md`.
 
+**The core is shared with the MCP tool.** `reach-emit.py` runs `gabe-map/scripts/mapquery.two_arm` — the same
+function behind `mcp__gabe-map__who_calls`, so a reach taken mid-reasoning in ANY beat emits the same gated deltas. Grep
+hits are classified code vs prose (Python via `tokenize`; a docstring mention is never a missed caller — gustify's only two
+early deltas were exactly that), the emit needs a MAP CLAIM (an empty graft arm emits nothing), goes through
+`map-deltas.py append --once`, and is skipped when `.kdbp/map-deltas.jsonl` is not gitignored.
+
 `graft@<sha>` stamps the state it described, so review can tell *the graph missed an edge* from
 *the change grew past its cases*. Build first — always, never conditionally: warm rebuild measured
 **1.6–1.8 s** against `graft check`'s 13.3 s, so asking whether the index is stale costs more than

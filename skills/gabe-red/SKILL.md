@@ -3,7 +3,7 @@ name: gabe-red
 description: "TDD's first half as a lifecycle beat — after /gabe-plan, before any source edit: declare case ids (REUSE vs NEW), write failing tests against stubs, prove RED, commit the red checkpoint."
 when_to_use: "The phase is planned and about to be executed. Refactors declare GUARDs instead of a fake red; genuinely un-testable phases self-skip with an enumerated code."
 metadata:
-  version: 1.9.3
+  version: 1.9.4
 ---
 
 # Gabe Red — the failing state, given an address
@@ -27,7 +27,7 @@ Runs after `/gabe-plan` (needs the phase row + its `proof_type`) and **before ex
 ## Procedure (deep spec: `references/red-spec.md` — binding)
 
 1. **Read the phase** — description, tier, `proof_type`. No test-shaped proof possible → the skip/guard decision (spec §Skip codes) — **never a fake red**.
-2. **Scan the corpus** (E4): grep existing C-ids + search tests related to the touched behavior. Print the `Searched:` line — an empty one invalidates the pass. Where the project carries a graft index, run `graft build && rm -f .ignore` (unconditional; ~2 s warm — **the `rm` is mandatory**, the build re-admits graft's own cards to ripgrep and poisons every later grep) and take the cases' **reach** two-arm — `graft callers` + `graft grep`, never `ask`.
+2. **Scan the corpus** (E4): grep existing C-ids + search tests related to the touched behavior. Print the `Searched:` line — an empty one invalidates the pass. Where the project carries a graft index, run `graft build && rm -f .ignore` (unconditional; ~2 s warm — **the `rm` is mandatory**, the build re-admits graft's own cards to ripgrep and poisons every later grep) and take the cases' **reach** two-arm — `graft callers` + `graft grep`, never `ask` — or call `mcp__gabe-map__who_calls`, the same core with the same gated emit; `reach-emit.py` prints the record form.
 3. **Decide per case:** REUSE an existing case (cite `C<N>`; bump to `v<K+1>` ONLY if the claim itself must change — a re-run never bumps) vs NEW (allocate `max(grep C-ids)+1`).
 4. **Write the cases** — id inside the test NAME (`test_..._C147v2` / `it('C147v2 · ...')`). Where the subject doesn't exist yet, add a **returning stub** (returns a wrong-but-typed value; NEVER raises — a raising stub blinds the tautology guard).
 5. **Run them.** Classify each case against FOUR outcomes: **RED** (fails by assertion, caused by the absent behavior — evidence) · **NOT-RED** (import/collection error — non-evidence, fix before proceeding) · **TAUTOLOGY** (passes on unchanged code — halt; the case asserts nothing) · **RED-WRONG-REASON** (fails by assertion but NOT from the declared absence — indistinguishable from RED at the console; prove the cause with the spec's FLIP test). Runtime-evidence cases also obey the async-boundary rules: bounded waits, an explicit sync point before every post-mutation assertion, and assertions against the source of truth rather than a re-derived rendering.
