@@ -1,0 +1,511 @@
+{
+ "generated": "2026-09-02",
+ "status": "4 of 7 lenses completed (conventions \u00b7 honesty \u00b7 emit-reuse \u00b7 protocol); battery \u00b7 axis1 \u00b7 safety lenses and the skeptic pass NOT run (session limit) \u2014 every finding here is UNVERIFIED by a skeptic",
+ "lenses": [
+  {
+   "lens": "conventions",
+   "verdict": "land-with-fixes",
+   "note": "INSTALL / DOCTOR / CONVENTIONS PARITY lens. Verified against install.sh, scripts/suite-doctor.sh, scripts/gen-help-catalog.py, scripts/checkers/docsite-staleness.sh, docs/center/generators/check_suite_center.py + _suite_data.py + _suite_board.py, tests/suite-center/run.sh, and live `claude mcp` CLI probes on 2.1.257.\n\nVERDICT RATIONALE: no finding invalidates the design's shape \u2014 D1/D2/D3 are correct about the install mechanics (install.sh:39-43 auto-discovers `skills/gabe-*/` so no list maintenance; `cp -r` at :77 is already recursive so `scripts/` + `references/` ship; `_suite_data.py:150-15",
+   "findings": [
+    {
+     "id": "mcp-get-health-checks",
+     "severity": "high",
+     "section": "\u00a73 D9 / \u00a72 harness table / \u00a77",
+     "claim": "D9's registration probe `claude mcp get gabe-map` is not a read \u2014 the CLI health-checks approved servers by launching them, so once gabe-map is registered every `./install.sh` (and every doctor run, per \u00a77's INFO line) spawns `python3 ~/.claude/skills/gabe-map/scripts/server.py`, and a broken-but-registered server reports as NOT REGISTERED.",
+     "failure_scenario": "Operator registers gabe-map, later edits server.py and introduces a startup traceback, then runs `./install.sh`. The probe `claude mcp get gabe-map` spawns the server, the handshake fails, the probe exits non-zero, and install prints `NOT registered \u2014 ./install.sh --register-mcp`. The operator re-runs registration; `~/.claude.json` already holds the entry, nothing changes, and the actual defect (a broken server.py) is never named. Second scenario: install.sh runs `set -e` (install.sh:9) and `run(){ eval \"$@\" }` (install.sh:21-27); a bare `run \"claude mcp get gabe-map\"` aborts the whole install",
+     "evidence": "`claude mcp --help` (2.1.257): `get <name>` \u2014 \"approved servers are health-checked\"; `claude mcp list --help` \u2014 \"approved servers are health-checked unless disabled for this project\". Measured: `claude mcp list` took 3.584s connecting to 6 servers. `claude mcp get gabe-map` (absent) \u2192 RC=1 with a plain-text message. install.sh:9 `set -e`; install.sh:21-27 `run(){ eval \"$@\" }`.",
+     "fix": "Drop `claude mcp get` as the probe. Read `~/.claude.json` with python3 stdlib: `mcpServers[\"gabe-map\"]` for presence, `projects[<abs cwd>].disabledMcpServers` for per-project suppression (that key is real and populated \u2014 `/home/khujta/projects/gabe_lens` carries `[\"magic\",\"pencil\"]`). A pure JSON read spawns nothing, cannot false-negative on a broken server, and is the only way to answer the per-project half of the question \u00a72 says `map_status` must answer."
+    },
+    {
+     "id": "doctor-info-line-untestable",
+     "severity": "high",
+     "section": "\u00a73 D9 / \u00a77",
+     "claim": "The registration INFO line is specified as an inline suite-doctor.sh edit, which the repo's own precedent forbids: an inline check can only ever run against this machine, so it can never be proven to FIRE or stay SILENT \u2014 and \u00a77's parity list does not even name scripts/suite-doctor.sh as a file the change touches.",
+     "failure_scenario": "The inline snippet reads the wrong JSON path (e.g. `projects[root].disabledMcpServers` under a trailing-slash key, or `mcpServers` under `projects[\u2026]` instead of top level). It then prints `gabe-map: NOT registered` on every doctor run of a correctly registered machine, or the inverse. suite-doctor exits 0 either way \u2014 the line is INFO \u2014 so nothing detects the inversion, and the operator is trained to ignore the line. No fixture exists that could catch it, because the check keys off the real `$HOME`.",
+     "evidence": "scripts/suite-doctor.sh:185-190 states the extracted-checker precedent verbatim (\"inline here it could only ever run against this repo, and a check that compares against files that no longer exist reports CLEAN forever. See tests/docsite-staleness/\"); scripts/checkers/docsite-staleness.sh takes `[<repo-root>]` for exactly that reason. CLAUDE.md Conventions: \"Every hook/checker ships fixture cases in `tests/` proving it can both FIRE and stay silent\".",
+     "fix": "Extract to `scripts/checkers/mcp-registration.sh [--config <claude.json>] [--project <dir>]` printing one line and exiting 0 always; suite-doctor.sh calls it the way it calls docsite-staleness.sh but routes output to `echo \"  INFO \u2026\"` instead of `report`. Ship `tests/mcp-registration/run.sh` with four fixture claude.json files: registered / absent / registered-but-listed in `projects[<dir>].disabledMcpServers` / malformed JSON. Also decide the `--quiet` behaviour explicitly \u2014 the dispatch-surface INFO is quiet-gated (suite-doctor.sh:132), the battery-skip INFO is not (suite-doctor.sh:110)."
+    },
+    {
+     "id": "installed-vs-running-server",
+     "severity": "high",
+     "section": "\u00a73 D9 / \u00a76 /gabe-map status",
+     "claim": "The doctor's parity model (repo file hash == install file hash) cannot see the one thing that matters for an MCP server: the LIVE process is the copy loaded at session start, so after `./install.sh` overwrites server.py the doctor reports CLEAN while the tool surface in the running session is the previous version. \u00a72 records \"restart required after `claude mcp add`\" but nothing records \"restart required after ./install.sh\".",
+     "failure_scenario": "A session is running with gabe-map registered. The operator fixes D6 gate (b) so prose-only hits stop emitting, runs `./install.sh` (5 s) and `scripts/suite-doctor.sh` \u2192 CLEAN. The same session keeps calling `who_calls`, still on the pre-fix process, still appending docstring-mention deltas to `.kdbp/map-deltas.jsonl` with `\"cmd\":\"mcp\"`. The operator has a green doctor asserting repo\u2194install sync while the live behaviour is the bug they just fixed, and `/gabe-map status`'s \"server path parity\" check (\u00a76) passes because the PATH is right.",
+     "evidence": "scripts/suite-doctor.sh:22-31 `check_pair` compares md5 of repo file vs install file only; install.sh:71-80 copies over the installed dir with no restart notice; \u00a76 specifies `/gabe-map status` checks \"server path parity\", not version/content parity.",
+     "fix": "Put a content identity on the wire: `serverInfo.version` plus a `server_sha` (md5 over server.py+mapquery.py, computed at startup) echoed in every `map_status` result. `/gabe-map status` compares the live tool's reported `server_sha` against the on-disk `~/.claude/skills/gabe-map/scripts/*.py` and says RESTART OWED when they differ. install.sh prints `restart Claude Code (gabe-map server changed)` when the installed hash changed."
+    },
+    {
+     "id": "battery-hang-no-timeout",
+     "severity": "high",
+     "section": "\u00a78",
+     "claim": "tests/gabe-map/run.sh is the first battery to drive a long-lived bidirectional subprocess, and suite-doctor runs every battery with NO timeout \u2014 a blocked client read hangs the doctor forever instead of failing it.",
+     "failure_scenario": "Per \u00a75, `notifications/initialized` makes the server send `{\"id\":\"srv-1\",\"method\":\"roots/list\"}` and (per D4) wait for the reply. A client assert path that exits or takes the wrong branch before answering leaves the server blocked on that response while the client blocks on `readline()` of the server's next line. `bash tests/gabe-map/run.sh` never returns; `scripts/suite-doctor.sh` sits inside `_out=$(bash \"$h\" 2>&1)` indefinitely. The documented 2\u20134 min doctor budget becomes unbounded, with no failing exit code and no partial output (the subshell buffers everything).",
+     "evidence": "scripts/suite-doctor.sh:98-112 \u2014 the loop is `_out=$(bash \"$h\" 2>&1); _rc=$?` with no `timeout` wrapper anywhere in the script; the only opt-out is the by-name `scope-prompt-harness` skip at :103. Every other `tests/*/run.sh` is pure python/bash with no persistent child.",
+     "fix": "In client.py give every read a deadline (non-blocking `select` on the pipe, hard fail after ~5 s per message); in run.sh wrap each client invocation in `timeout 30` and add `trap 'kill $SRV_PID 2>/dev/null' EXIT`. Separately: when `GABE_MAP_E2E` is unset, print a line containing `SKIPPED-COVERAGE` so suite-doctor.sh:107 emits its INFO rather than letting a partial run read as full CLEAN."
+    },
+    {
+     "id": "skill-map-and-count-strings-missed",
+     "severity": "medium",
+     "section": "\u00a77",
+     "claim": "\u00a77 names only `docs/src/skill-map.md count` (singular) and misses three further count/classification edits in that page plus two 28-skill strings in files it never lists \u2014 and it puts gabe-map in the wrong row of the page's taxonomy by omission.",
+     "failure_scenario": "Only the count is fixed. docs/src/skill-map.md then ships: line 21 `| \u270b **Human-only** | disable-model-invocation \u2026 | 3 | /gabe-cc-init /gabe-init /gabe-scope-pivot |` \u2014 gabe-map carries `disable-model-invocation: true` (\u00a76) and belongs in THAT row (count 3\u21924), not the Manual-only row; line 24 still reads \"Fifteen of twenty-eight\"; docs/docsite.config.py:52 still summarises the page as \"All 28 skills \u2026 which fifteen only run when you remember them\"; docs/prisms/hook-chain/prism.json:12 still asserts \"28 skills, 119 classified rules\" as its provenance source. The generated skill-map.html then c",
+     "evidence": "docs/src/skill-map.md:1 (\"28 skills\"), :3 (\"The suite is 28 skills\"), :21 (Human-only row, count 3, three named skills \u2014 verified `grep -rl 'disable-model-invocation: true' skills/gabe-*/SKILL.md` returns exactly those three), :24 (\"Fifteen of twenty-eight\"); docs/docsite.config.py:52; docs/prisms/hook-chain/prism.json:12. Doctor count regex is `grep -oE '\\([0-9]+ skills\\)'` over CLAUDE.md and README.md ONLY (suite-doctor.sh:155-160) \u2014 none of these parenthesised, none of these files.",
+     "fix": "Enumerate all five edits in \u00a77. Then rebuild the docsite in the same commit: touching docs/src/skill-map.md makes it newer than docs/site/center/skill-map.html and `scripts/checkers/docsite-staleness.sh:44` fires \u2192 suite-doctor.sh:188-190 reports DRIFT. Currently clean (`docsite: 14 source(s) checked, every page present and current`), so this WILL turn the doctor red. `python3 skills/gabe-docsite/generator/build_docsite.py --config docs/docsite.config.py --shell docs/center/shell --nav docs/site/center/nav.json --prisms docs/site/center/prism-fragments.json` rebuilds the docs pages alone, avoi"
+    },
+    {
+     "id": "gabe-red-version-parity",
+     "severity": "medium",
+     "section": "\u00a76 / \u00a77",
+     "claim": "\u00a76 bumps gabe-red 1.9.3 \u2192 1.9.4 but \u00a77's parity edit list omits the matching CLAUDE.md row bump \u2014 the doctor's version-parity invariant fails on exactly that pair.",
+     "failure_scenario": "The build lands `skills/gabe-red/SKILL.md` with `  version: 1.9.4` and every \u00a77 edit. `scripts/suite-doctor.sh` prints `DRIFT  invariant  version drift: gabe-red SKILL.md=1.9.4 vs CLAUDE.md=1.9.3` and exits 1 \u2014 a red doctor on a commit whose \u00a77 checklist was followed exactly.",
+     "evidence": "Design \u00a76 line 197 (\"gabe-red 1.9.3 \u2192 1.9.4\"); CLAUDE.md:99 currently `| **gabe-red** | 1.9.3 | \u2026`; suite-doctor.sh:116-125 compares `sed -n 's/^  version: \\([0-9.]*\\)$/\\1/p' SKILL.md` against `sed -n \"s/^| \\*\\*$name\\*\\* | \\([0-9.]*\\) |.*/\\1/p\" CLAUDE.md`.",
+     "fix": "Add `CLAUDE.md:99 gabe-red row 1.9.3 \u2192 1.9.4` to \u00a77's parity list, and state the general rule there: any \u00a76 spec edit that bumps a skill version is a TWO-file edit. Also pin the frontmatter shape the regex demands \u2014 `metadata:` then `  version: 1.0.0` with exactly two leading spaces and nothing after the number; an unparseable stanza is itself reported as DRIFT (suite-doctor.sh:120-122)."
+    },
+    {
+     "id": "register-mcp-flag-and-set-e",
+     "severity": "medium",
+     "section": "\u00a73 D9 / \u00a77",
+     "claim": "`--register-mcp` is currently swallowed silently by install.sh's arg loop (no default case), and the `claude mcp add` idempotency D9 asserts is unverified \u2014 combined with `set -e` and `run(){ eval \"$@\" }` a non-zero add aborts the install mid-way.",
+     "failure_scenario": "Build ships without adding the `--register-mcp)` case: `./install.sh --register-mcp` performs a plain install, prints nothing about registration, exits 0. The operator believes gabe-map is registered; no tool ever appears. Second scenario: the case IS added but placed before the templates block and invoked through `run`; on a machine where gabe-map is already in `~/.claude.json`, `claude mcp add -s user gabe-map \u2026` exits non-zero, `set -e` kills install.sh after the skills copy but before templates/hooks/docs/prompts/schemas \u2014 the next `suite-doctor.sh` reports every template as `missing from ",
+     "evidence": "install.sh:14-19 \u2014 `for arg in \"$@\"; do case \"$arg\" in --dry-run) \u2026;; --uninstall) \u2026;; esac; done`, no `*)` branch; install.sh:9 `set -e`; install.sh:21-27 `run(){ if $DRY_RUN \u2026 else eval \"$@\" fi }`; install.sh:71-80 skills, :83-116 templates, :119-126 hooks, :130-155 docs, :158-163 prompts, :166-172 schemas. `claude mcp add --help` documents no `--force`/upsert flag, so re-adding an existing name is unspecified.",
+     "fix": "Add the case; run the registration as the LAST step of the install, guarded (`if ! <json read says registered>; then claude mcp add \u2026 || echo '  WARN: registration failed (continuing)'; fi`) so it can never truncate the install; make `--register-mcp` respect `--dry-run`. Do not claim idempotence \u2014 probe `~/.claude.json` first and skip the add when the entry exists."
+    },
+    {
+     "id": "twin-dry-run-not-a-copy",
+     "severity": "medium",
+     "section": "\u00a78 / \u00a79",
+     "claim": "The real-twin dry-run runs against the LIVE gustify tree with a single env var as the write guard, contradicting the suite's stated convention that a script touching real project data dry-runs against a COPY.",
+     "failure_scenario": "`GABE_MAP_NO_EMIT` is read after the emit branch, or spelled differently in mapquery vs server, or unset because the battery shells out without inheriting env. `who_calls apply_recipe_filters` then runs D6's emit with `cwd=/home/khujta/projects/apps/gustify`; `map-deltas.py append` finds `.kdbp/` (gustify is a KDBP project) and writes `.kdbp/map-deltas.jsonl`. Per the design's own \u00a79 risk, gustify has no `.gitignore` seed for `.kdbp/map-deltas*.jsonl`, so the file lands untracked inside a tracked `.kdbp/` and is swept into the operator's next `git add .kdbp` \u2014 polluting a live twin's ledger wi",
+     "evidence": "CLAUDE.md Conventions: \"A deterministic script that will run against real project data ships only after a dry-run against a COPY of that data \u2014 record the run's numbers in the commit message (meta-review P1)\". skills/gabe-commit/scripts/map-deltas.py:44-58 \u2014 `append` gates only on `_git_root()` + `.kdbp` existing, then opens the file for append; there is no second guard. Design \u00a79 bullet 5 concedes gustify lacks the seed.",
+     "fix": "Copy the twin's read surface into the scratchpad (`cp -a <gustify>/docs/site/center <scratch>/docs/site/center` plus a throwaway `git init` for the freshness arm, or `git worktree add --detach`) and run the dry-run there \u2014 the existing read-only-twin precedent is `GABE_REPO_ROOT=<twin> GABE_CENTER_OUT=<scratch>`. Keep `GABE_MAP_NO_EMIT=1` as belt-and-braces, not as the guard."
+    },
+    {
+     "id": "emit-root-vs-writer-root",
+     "severity": "medium",
+     "section": "\u00a73 D4 / D6",
+     "claim": "D6's emit gate (\"`.kdbp/` exists under `<root>`\") and the reused writer's own gate (`.kdbp` under `git rev-parse --show-toplevel` of the process cwd) are different root laws; D4 explicitly allows `<root>` to be any directory the operator names.",
+     "failure_scenario": "`who_calls(symbol, root=\"/home/khujta/projects/apps/gustify/web\")` \u2014 a legitimate D4 root, a subdirectory of the repo. D6 finds no `.kdbp/` directly under `<root>` and suppresses the emit, silently losing the delta on the exact frontend subtree the web arm cares about. The mirror case is worse: in a monorepo where a package dir carries its own `.kdbp/`, D6 passes the gate but `map-deltas.py` walks up to the repo toplevel and appends to the TOP-LEVEL `.kdbp/map-deltas.jsonl`, so two projects' tallies merge into one `(gen, subject, file)` ledger and the S14 breadth threshold fires against the wr",
+     "evidence": "skills/gabe-commit/scripts/map-deltas.py:39-46 `_git_root()` shells `git rev-parse --show-toplevel` with no `cwd=` (inherits the caller's cwd); :48-52 `_kdbp(root)` joins `.kdbp` onto THAT toplevel; :64-66 `append` returns 0 silently when absent. Design D6 states the gate as \"ONLY when `.kdbp/` exists\" scoped to `<root>`, and D4 permits \"a `root` outside the roots set \u2026 the operator may point at a twin\".",
+     "fix": "State one root law: the emit root is `git -C <root> rev-parse --show-toplevel`, and D6 gates on `.kdbp/` under THAT path \u2014 identical to what the writer will do. Add a battery case with a fixture root that is a subdirectory of the git repo, asserting the delta lands in the toplevel `.kdbp/` exactly once."
+    },
+    {
+     "id": "suite-center-roster-is-a-gate",
+     "severity": "medium",
+     "section": "\u00a77",
+     "claim": "\u00a77 lists `docs/center/suite-center.config.json skills list` as ordinary parity, but it is a hard doctor gate with a constraint the design never states: gabe-map must appear in EXACTLY ONE `beats[].skills` array, and which one is a real decision because an omission is silently relabelled rather than errored at render time.",
+     "failure_scenario": "Every \u00a77 edit lands except the config. `bash tests/suite-center/run.sh` prints `DRIFT roster: gabe-map is in no beat group \u2014 _suite_data would file it as 'cross-cutting' silently` and exits 1; suite-doctor.sh's battery sweep reports `DRIFT invariant harness FAILING \u2014 run: bash tests/suite-center/run.sh` and exits 1. If instead it is added to two groups (e.g. both `satellites` and `suite-maintenance`, which is tempting since it is both a management command and a lifecycle-adjacent tool), the same battery fails with `declared in 2 groups`.",
+     "evidence": "tests/suite-center/run.sh:80-83 \u2014 `check \"roster: this repo is complete\" \"$(python3 \"$GEN/check_suite_center.py\" --roster-only \u2026; echo $?)\" \"0\"` runs against the REAL repo config; docs/center/generators/check_suite_center.py:54-65 enforces on-disk\u2286declared, declared\u2286on-disk, and exactly-one-group; _suite_data.py:154 `beats.get(d.name, \"cross-cutting\")` is the silent relabel the gate exists to prevent.",
+     "fix": "In \u00a77 mark the config edit as GATED and name the group. `suite-maintenance` (currently `[\"gabe-init\"]`) is the honest home \u2014 gabe-map is machine the suite installs and registers, not a lifecycle beat and not an on-demand analysis satellite. Note that the roster gate runs on this repo through the doctor's `tests/*/run.sh` sweep, so it fails the same run that ships the skill."
+    },
+    {
+     "id": "mapquery-size-unbudgeted",
+     "severity": "low",
+     "section": "\u00a73 D3 / \u00a75",
+     "claim": "The design prices only `server.py ~250 lines` and never prices `mapquery.py`, which must carry seven tool bodies, \u00a74.3's six-way kind detection and c4/archmap join key-space, and D13's seven inverse indexes \u2014 comfortably over the suite's 800-line CODE budget, with no split seam declared.",
+     "failure_scenario": "mapquery.py lands at ~900-1,200 lines. `skills/gabe-commit/scripts/size-budget.sh` WARNs at commit (exit 2) and the commit message carries no numbers, breaching the stated convention; the suite board grows a permanent BUDGET card because `tests/` and `skills/*/scripts/` are not in the budget lens's skip list, and the first person to touch the file has no recorded seam to split along.",
+     "evidence": "CLAUDE.md Conventions: \"Size budget: 800 lines is a CODE budget, report-never-gate \u2014 state the numbers in any commit that grows a file past it\"; docs/center/generators/_suite_board.py:294-297 `_BUDGET_SKIP = (\"/references/\", \"/_archive/\", \"/__pycache__/\", \"/shell/example/\", \"/.ruff_cache/\", \"docs/handoff/\", \"docs/investigations/\", \"docs/site/\")` \u2014 `skills/*/scripts/` and `tests/` are NOT skipped; `_budget(repo, cap=800)` at :316. For scale, the three scripts being reused total 687 lines (entity-context.py 277, reach-emit.py 156, map-deltas.py 254).",
+     "fix": "Declare the split up front in D3: `mapquery.py` = root/center resolution + loaders + D13 indexes + `two_arm`; a sibling `tools.py` = the seven tool bodies. Both still under `scripts/` so the script census sees them (`_suite_data.py:150-151` counts any file whose parent dir is `scripts`/`tools`/`generator`). Record the measured line counts in the landing commit either way."
+    },
+    {
+     "id": "enforcement-ledger-pin",
+     "severity": "low",
+     "section": "\u00a77",
+     "claim": "\u00a77 lists no enforcement-ledger work, yet gabe-map ships several new enforcement claims (the three D6 emit gates, D5 honest-empty text, the report-never-gate INFO) \u2014 and the ledger's row count is hard-pinned by a battery the doctor runs.",
+     "failure_scenario": "Someone adds gabe-map rules to `docs/center/data/enforcement.json` (correctly \u2014 an asserted mechanism with no ledger row is the suite's own BROKEN_CLAIM class), regenerates the center, and `tests/suite-center/run.sh` fails: `R13 FIRE: every rule row is stamped for filtering \u2014 expected [119] got [123]`. The doctor goes DRIFT on a commit that improved the ledger.",
+     "evidence": "docs/center/data/enforcement.json holds exactly 119 rules (`json.load(...)['rules']` \u2192 119); tests/suite-center/run.sh:300 `check \"R13 FIRE:   every rule row is stamped for filtering\" \"$got\" \"119\"` counts `data-row ` occurrences in the BUILT docs/site/center/enforcement.html.",
+     "fix": "Decide explicitly in \u00a77: either (a) no ledger rows for v1 and say so, or (b) add the rows AND bump the tests/suite-center/run.sh:300 pin in the same commit, plus regenerate the center. Note the same commit must rebuild docs/site/center for the pin to match."
+    },
+    {
+     "id": "frozen-exemplar-28-skills",
+     "severity": "low",
+     "section": "\u00a77",
+     "claim": "`templates/center/shell/example/docpage-skill-map.html` is a shipped, installed, doctor-compared exemplar that names all 28 skills and will silently claim 28 forever; \u00a77 does not mention it.",
+     "failure_scenario": "install.sh copies it to `~/.claude/templates/gabe/center/shell/example/`, and `/gabe-cc-init` promotes the shell into a downstream project. A twin's operator opens the exemplar doc page as the reference for \"what a finished doc page looks like\" and reads a skill roster that is one skill short, with no marker saying it is a frozen snapshot.",
+     "evidence": "All 28 skill names appear in templates/center/shell/example/docpage-skill-map.html (measured); install.sh:104-115 copies every templates subdirectory recursively; suite-doctor.sh:76-85 hash-compares every templates file both directions, so the stale content is actively kept in sync rather than allowed to disappear. docs/handoff/2026-07-31-twin-propagation.md:16 describes it as the \"Shell exemplar \u2014 what a finished doc page looks like\".",
+     "fix": "One line in \u00a77: decide and record whether the exemplar is regenerated with the change or annotated in-page as a dated snapshot. The second is cheaper and matches how `example/feature-transaction.html` is already described in templates/center/shell/README.md:17 (\"a SNAPSHOT of the gastify trial's real generated page\")."
+    }
+   ]
+  },
+  {
+   "lens": "honesty",
+   "verdict": "land-with-fixes",
+   "note": "Reviewed against gustify's committed map (archmap.json head d1880cf4, c4-graph.json, 8 entities) plus the reused scripts. The architecture holds (stdlib server, lazy load, honest-empty as an answer, one emitter); what breaks is at the contract edges: the D6(b) code-shape regex admits docstring lines (the design's own dry-run acceptance number is wrong by it), D8 freshness is blind to uncommitted edits and to 76 fe-arm files, the MODEL branch of `touches` reads only intra-entity l2 edges while the endpoint\u2192model kinds that cross entities live in `cross_edges`, and the \u00a78 byte-parity battery con",
+   "findings": [
+    {
+     "id": "d6b-docstring-code-shape",
+     "severity": "high",
+     "section": "D6(b) \u00b7 \u00a78 twin dry-run",
+     "claim": "The code-shaped regex passes docstring lines, so prose still emits deltas and the design's own dry-run expectation (3 callers \u00b7 2 prose-only \u00b7 0 missed) is wrong.",
+     "failure_scenario": "`who_calls apply_recipe_filters` on gustify: graft returns 3 caller fns in 2 files; `git grep -nwI` returns 17 lines. Running the D6(b) shapes over them classifies `apps/api/tests/test_explore_scale.py:128` \u2014 `allergen exclusion applied inside every batch (same apply_recipe_filters).\"\"\"` (a docstring) \u2014 as CODE via `<sym>\\s*[,)\\]]`, and `recipe_availability.py:6` \u2014 `FIRST via apply_recipe_filters (the exact browse builder)` (module docstring) \u2014 as CODE via `<sym>\\s*\\(`. test_explore_scale.py has no other hit \u2192 it becomes `missed_by_map[1]` and ONE false `_a3_graft.calls` delta is appended with",
+     "evidence": "Measured: 17 grep lines classified with the \u00a7D6(b) regex \u2192 2 false CODE (test_explore_scale.py:128, recipe_availability.py:6), 1 true prose in a test file (test_cookability_summary.py:114). graft: /tmp/\u2026/scratchpad/graft_callers.json (1 match, hits in recipe_availability.py + recipes.py \u00d72). Design line 234 expects '2 prose-only \u00b7 0 missed'.",
+     "fix": "Tighten (b) to `<sym>(` with no whitespace + import/from-import/`.sym`/`@sym`/assignment shapes (drop the `\\s*[,)\\]]` and space-tolerant paren shapes), AND classify by docstring state: the server has the file + line, so scan the tracked file once counting unbalanced `\"\"\"`/`'''` up to the hit line and mark inside-block lines `prose`. Add test_explore_scale-shaped fixture (docstring ending in `)\"\"\"`) to the who_calls battery and correct \u00a78's expected numbers to 1 prose-only file \u00b7 0 missed."
+    },
+    {
+     "id": "d8-worktree-blind",
+     "severity": "high",
+     "section": "D8 \u00b7 4.1",
+     "claim": "Freshness compares committed states only (`<head>..HEAD`), so uncommitted edits \u2014 the window in which an agent actually queries the map \u2014 never flip `stale`.",
+     "failure_scenario": "Agent edits apps/api/services/recipes.py (adds a caller, uncommitted), then calls `touches recipes.py` or `who_calls list_recipes`: `git diff --name-only d1880cf4..HEAD` \u2229 mapped = \u2205 on gustify today \u2192 `stale:false`, `mapped_files_changed_since:[]`, while the file on disk differs from what the map indexed. Every result 'stamps freshness' that is wrong for precisely the file being worked on.",
+     "evidence": "Design line 72 specifies `git diff --name-only <head>..HEAD`; gustify working tree clean now (`git status --porcelain` empty) so the committed-only diff and the worktree diff coincide \u2014 the blind spot is structural, not measured-absent.",
+     "fix": "Compute `git diff --name-only <base>` (no `..HEAD`, so index+worktree vs base) \u222a untracked files from `git status --porcelain` filtered to source extensions, \u2229 the mapped set; report `mapped_files_changed_since` split into `committed` and `uncommitted`. Battery: fixture with an uncommitted edit to a mapped file \u2192 `stale:true`."
+    },
+    {
+     "id": "touches-model-misses-cross-edges",
+     "severity": "high",
+     "section": "4.3 MODEL/SCHEMA \u00b7 D13",
+     "claim": "The MODEL branch reads 'endpoints via c4 l2 edges', but endpoint\u2192model edges that cross entities are emitted only into top-level `cross_edges`; intra-slug `l2[slug].edges` miss them.",
+     "failure_scenario": "`touches User` (auth): l2[auth] in-edges = 4 (3 fk, 1 writes_to) while `cross_edges` targeting model:User = 27 (26 fk + `GET /account/export` reads_from). `touches Recipe`: misses `DELETE /me` writes_to Recipe and 3 cooking endpoints reading it. `touches Household`: misses `POST /_e2e/seed` reads+writes. The answer lists 'endpoints reading/writing this model' as complete with the cross-entity writers absent \u2014 the highest-value edges (a delete cascading into another entity's table) are exactly the missing ones.",
+     "evidence": "Measured on gustify c4-graph.json: model:User l2-in 4 vs cross_edges-in 27; model:Recipe l2-in 17 vs cross 7 (auth `DELETE /me` writes_to); model:Household l2-in 4 vs cross 16. Emitter: templates/center/generators/_a3_graph.py:1064-1068, 1085-1089, 1181-1185 append endpoint\u2192model `touches`/`consumes`/access kinds to `cross_edges`; :648-658 keep l2 edges within the slug.",
+     "fix": "Build the D13 `edge target\u2192sources` inverse over l2 edges \u222a cross_edges (`from`/`to`, kind default `fk`, keep `from_slug`), and render cross-entity sources with their slug. Fixture: a model referenced by an endpoint in another entity \u2192 appears in `touches` with `cross:true`."
+    },
+    {
+     "id": "full-parity-vs-caps",
+     "severity": "medium",
+     "section": "4.2 \u00b7 \u00a78 fixture battery",
+     "claim": "\u00a74.2 caps `full` (cols \u226410/model, docs \u2264160, files \u226440/layer) while \u00a78 asserts `full` minus the additions \u2261 `entity-context.py --json` byte-for-byte \u2014 both cannot hold on any real entity.",
+     "failure_scenario": "gustify pantry: PantryItem 15 cols, ShoppingItem 12, AdminReviewQueue 12; web layer 72 files (cooking 53, recipe 77). Capped `full` drops 5 cols and 32 files \u2192 the parity assert fails; uncapped `full` reproduces the 103 KB pack including every endpoint's `touches_x` (5.1 KB on pantry \u2014 the field \u00a74.3 says is NEVER surfaced) and 17 KB of `defines`.",
+     "evidence": "skills/gabe-cc-entity/scripts/entity-context.py:140 (`code` = the whole entity slice incl. touches_x); measured pack sizes pantry 103,305 B \u00b7 recipe 146,014 B \u00b7 cooking 85,538 B; design lines 121-122 vs 220.",
+     "fix": "Split the contract: `detail:\"raw\"` = the uncapped pack (parity-tested, touches_x stripped and named as stripped) for tooling; `detail:\"full\"` = capped projection with `+N more (cap)` per list; `brief` default. Make the byte-parity assert target `raw`."
+    },
+    {
+     "id": "cases-for-file-state-rows",
+     "severity": "medium",
+     "section": "4.7 \u00b7 4.3 ENDPOINT/CASE",
+     "claim": "`test_insight` web/e2e rows carry `state:\"file\"`, `cid:\"\"`, `name:\"6 case(s)\"`, `n:6`; `cases_for` emits them as cases, and the corpus-vs-map lag is larger than the max-cid floor shows.",
+     "failure_scenario": "`cases_for get_active` (cooking) returns a row `{cid:\"\", name:\"6 case(s)\", state:\"file\"}` beside real C-ids \u2014 a COUNT row read as one case, `n` dropped; a red beat deciding REUSE vs NEW C-ids sees 1 'case' where 6 unnamed web cases exist. `cases_for list_recipes` has 82 rows \u2192 cap 40 hides 42 C-ids that are 5 chars each. `touches C8137` (a web C-id) answers 'unknown case' while the corpus has it: 130 corpus C-ids are absent from `case_home`.",
+     "evidence": "Measured: by_endpoint web/e2e `state:file` rows = 17, by_function via_route 17, by_model via_route 32 (e.g. by_endpoint['apps/api/api/cooking.py::get_active'] \u2192 `{\"cid\":\"\",\"n\":6,\"name\":\"6 case(s)\",\"state\":\"file\"}`); by_function biggest = list_recipes 82 rows; `git grep -ohIE` corpus max 8142 = map max, but 130 corpus ids \u2209 case_home.",
+     "fix": "Separate `cases[]` (rows with a cid) from `test_files[{tfile, corpus, n}]` (state=file rows), never cap the cid list (cap names only), label by_* absence as 'no census row (map floor)', and report `corpus_cids_not_in_map` beside `next_cid_floor`."
+    },
+    {
+     "id": "d8-base-is-regen-parent",
+     "severity": "medium",
+     "section": "D8",
+     "claim": "Using `archmap.head` as the diff base flags the regen commit's own bundled source changes as staleness.",
+     "failure_scenario": "Regen commit 9732e57d (head e41ca827) also committed apps/web/src/features/pantry/spikes/repertorio/repertorioModel.ts, a mapped file \u2192 right after that regen `mapped_files_changed_since:[repertorioModel.ts]`, `stale:true` on a fresh map, until the next regen. Any twin whose operator commits feature + regen together sees a permanently-stale map.",
+     "evidence": "Measured over gustify's last 15 archmap-touching commits: 14 have head == parent, 1 (fcc3bb73) has head 2 behind, 1 (9732e57d) bundles a mapped source file. `git log -1 --format=%H -- docs/site/center/archmap.json` resolves the landing commit in 1 call.",
+     "fix": "Base = the last commit touching `<center>/archmap.json` when it descends from `head` (else `head`); if archmap.json is dirty in the worktree, report `freshness:\"uncommitted regen\"`. Add a fixture: regen commit that also edits a mapped file \u2192 `stale:false`."
+    },
+    {
+     "id": "d8-mapped-set-too-narrow",
+     "severity": "medium",
+     "section": "D8 \u00b7 4.1",
+     "claim": "The staleness set is `entities[].files` only, but the c4 `fe` and `web` arms index files outside it.",
+     "failure_scenario": "Edit apps/web/src/app/queryClient.ts or App.tsx (fe pieces, not entity-claimed) \u2192 `stale:false` while `GABE_C4.fe` and the Screens/bridge answers are out of date; `touches <that file>` says 'fe pieces: \u2026' with a fresh stamp.",
+     "evidence": "Measured: fe.pieces spans 350 files, 76 not in any `entities[].files` (App.tsx, CrashFallback.tsx, ErrorBoundary.tsx, queryClient.ts, generatedIconCatalog.ts, \u2026); function_insight files \u2286 entities (0 outside); web stems \u2286 entity stems (0 outside).",
+     "fix": "Mapped set = entities[].files \u222a fe.pieces[].file \u222a file_census scanned files; report which arm each changed file belongs to (`arm:\"fe\"`)."
+    },
+    {
+     "id": "stale-tristate",
+     "severity": "medium",
+     "section": "D8 \u00b7 4.1",
+     "claim": "`stale:bool` cannot express 'head not in history', so an unresolvable head reads as fresh.",
+     "failure_scenario": "A twin whose center was regenerated on a branch later squashed/rebased (gustify's graft-pilot history) or a shallow clone: `git rev-list --count <head>..HEAD` fails \u2192 design says `freshness: unknown` but the typed `stale:bool` defaults to false in `structuredContent` \u2192 the model reads a fresh map.",
+     "evidence": "Design line 71 types `stale:bool`; line 74 introduces a third state in prose only; archmap.head is an 8-char abbreviation (`d1880cf4`) which git can also reject as ambiguous in a larger repo.",
+     "fix": "`stale: true|false|null` with `freshness: \"fresh\"|\"stale\"|\"unknown\"` and `reason`; battery case with a fixture head not in history asserts `stale:null`."
+    },
+    {
+     "id": "touches-no-class-branch",
+     "severity": "medium",
+     "section": "4.3 kind detection \u00b7 D13",
+     "claim": "D13 builds a `class\u2192(slug,kind,file)` index that no `touches` branch consults, so PascalCase non-model classes fall through to bare-FUNCTION and answer empty.",
+     "failure_scenario": "`touches GastifyCatalogPublisher` or `touches FirebaseTokenVerifier`: not in model_insight (180 keys, kinds model/schema only), no function_insight key has that bare name \u2192 `ambiguous[]` empty, 'no matches' \u2014 while `entities.pantry.defines['apps/api/integrations/gastify_exchange.py']` lists the class and function_insight holds its methods (`FirebaseTokenVerifier.verify`). A false honest-empty on the most common brownfield question ('who owns this class').",
+     "evidence": "archmap.entities[*].defines (dict file\u2192[names], e.g. pantry: BoletappReceiptClient, GastifyCatalogPublisher, \u2026); function_insight keys `file::Class.method` (522, all `::`); design line 128-129 chain has no DEFINE step; D13 line 94 lists the index.",
+     "fix": "Insert a DEFINE branch after MODEL: exact match on the class\u2192(slug,kind,file) index \u2192 owner(s), file, methods (function_insight keys with prefix `file::Class.`), tests via by_file.reach; fall to bare-FUNCTION only after."
+    },
+    {
+     "id": "behind-inverse-capped-and-bare",
+     "severity": "medium",
+     "section": "4.3 FUNCTION",
+     "claim": "'Endpoints reaching this function' is an inverse over `behind.names`, which is capped at 12 bare names \u2014 the floor label alone does not quantify what could not be checked, and bare names join ambiguously.",
+     "failure_scenario": "16 of 80 gustify endpoints hit the cap (`POST /setup/complete` fns 29, names 12, names_more 17; `GET /pantry/overview` 30/12/18). `touches load_user_language` lists the endpoints whose visible names include it and omits any of the 16 where it sits in the hidden 17 \u2014 the answer reads complete. `touches verify` attributes every endpoint whose names contain `verify` to all 3 `*.verify` keys (bare-name join), silently.",
+     "evidence": "templates/center/generators/_a3_graft.py:226 `_BEHIND_NAMES_CAP = 12`; :276-280 names = bare `split('#',1)[1]`; measured names-length census: 16 endpoints at 12 with names_more.",
+     "fix": "Return `endpoints_reaching: {found:[\u2026], unverifiable: N endpoints with names_more (list ids), join:\"bare-name\"}`; for ambiguous bare names mark each attributed key `via:\"bare-name (3 candidates)\"`. Consider reading `graft/.graph/wiring.json` when present for an exact inverse (one BFS, noise-filtered like `_behind_context`)."
+    },
+    {
+     "id": "arm-a-noise-unfiltered",
+     "severity": "low",
+     "section": "4.4 \u00b7 D12",
+     "claim": "Only the grep arm is stated as `_noise`-filtered; graft's callers/defs carry build-output nodes too.",
+     "failure_scenario": "`who_calls verify` on gustify: graft returns 5 matches, two of them `docs/site/center/assets/force-graph.min.js#qa.verify` and `templates/center/shell/assets/force-graph.min.js#qa.verify` with hits \u2192 `callers`/`defs` list a minified vendor bundle; `reach_line` pastes it into the red record. reach-emit.py already filters BOTH arms.",
+     "evidence": "Measured `graft callers verify . --json --no-refresh` \u2192 5 matches incl. 2 `.min.js`; skills/gabe-red/scripts/reach-emit.py:92-93 applies `_noise` to the union and the delta.",
+     "fix": "Apply `_noise` to arm A's paths as well (state it in 4.4) and battery it with a fake-graft fixture containing a `.min.js` def."
+    },
+    {
+     "id": "cid-grep-binary-lines",
+     "severity": "low",
+     "section": "4.7",
+     "claim": "`git grep -ohE` without `-I` emits 'Binary file \u2026 matches' lines, which the C-id parser turns into a crash or a bogus max.",
+     "failure_scenario": "On gustify `git grep -ohE '\\bC[0-9]+\\b' -- apps/web/src` yields the token `inary` (from 'Binary file \u2026 matches') \u2192 `int()` ValueError; with a lenient parser a stray large token becomes `next_cid_floor`.",
+     "evidence": "Reproduced this session (ValueError: invalid literal for int() with base 10: 'inary'); the `-I` run gives api max 8142 \u00b7 web 8137 \u00b7 e2e 8138.",
+     "fix": "`git grep -ohIE` scoped to the corpora's test roots from center.config.json (`paths.e2e_spec_glob`, corpus dirs), parse `^C\\d+$` tokens only."
+    },
+    {
+     "id": "loaders-hardcode-root",
+     "severity": "low",
+     "section": "4.5 \u00b7 4.6 \u00b7 D4",
+     "claim": "`entity_shape.load_project(root)` and `fetch_bridge._center(root)` hardcode `root/docs/site/center`; passing D4's raw `root` when the center was found by walking UP yields a false 'no archmap'.",
+     "failure_scenario": "cwd fallback resolves `root` = apps/api (no CLAUDE_PROJECT_DIR, no roots); D4's walk finds the center two levels up; `entity_shape` then raises FileNotFoundError \u2192 honest-empty 'no map' while `map_status` on the same call says present.",
+     "evidence": "skills/gabe-pulse/scripts/entity_shape.py:150-152; skills/gabe-pulse/scripts/fetch_bridge.py:56-57; design D4 line 43.",
+     "fix": "Derive `project_root = center.parent.parent.parent` once in the center loader and pass THAT to every reused loader; assert in the battery with a subdir cwd."
+    },
+    {
+     "id": "fe-homes-join-key",
+     "severity": "low",
+     "section": "4.2",
+     "claim": "The `fe.homes` row for a slug is keyed `fe\u00b7<slug>` (middle dot), not the slug; two entities have no fe home.",
+     "failure_scenario": "`entity_context pantry` looks up homes by `pantry` \u2192 miss \u2192 the FE row silently absent (reads as 'no frontend'); allergen and progression genuinely have none but the answer cannot distinguish 'no key' from 'no home'.",
+     "evidence": "Measured fe.homes ids: app-shell, design-system, fe\u00b7auth, fe\u00b7cooking, fe\u00b7legal-consent, fe\u00b7pantry, fe\u00b7recipe, fe\u00b7settings, me, profile, shopping.",
+     "fix": "Join on `f\"fe\u00b7{slug}\"`, emit `fe_home: null, reason:\"no fe\u00b7<slug> home in GABE_C4.fe\"` when absent."
+    },
+    {
+     "id": "map-status-count-scopes",
+     "severity": "low",
+     "section": "4.1",
+     "claim": "`counts{files, functions}` mixes scopes: `functions` is Python-only and `files` is entity-claimed, neither is 'the codebase'.",
+     "failure_scenario": "gustify `counts.functions: 522` (function_insight is 522 `.py` keys, 0 TS) and `counts.files: 389` (entity files) beside `file_census.claimed: 112` (backend census) \u2014 a reader infers 522 functions total and two incompatible file totals.",
+     "evidence": "Measured: function_insight ext census {py: 522}; entities files 389; file_census.claimed 112 (int, not a list \u2014 so 4.8 owner_of cannot enumerate 'claimed' from it, only `unclaimed[5]`).",
+     "fix": "Name the scopes: `files_mapped`, `backend_files_census{claimed,unclaimed}`, `functions_py`, `fe_pieces`; owner_of derives 'claimed' from entities[].files + config globs, using file_census only for `unclaimed`."
+    },
+    {
+     "id": "honest-empty-suite-repo",
+     "severity": "low",
+     "section": "D5",
+     "claim": "The honest-empty text pushes `/gabe-cc-init` in the suite repo itself, which the R8 ruling forbids.",
+     "failure_scenario": "In gabe_lens, `docs/site/center/` exists (docsite) without center.config.json; the suite center is `docs/center/suite-center.config.json` (a beat spine, no archmap) \u2192 `map_status` prints 'Build one: /gabe-cc-init' to every suite session.",
+     "evidence": "ls gabe_lens/docs/site/center \u2192 no center.config.json/archmap.json; docs/center/suite-center.config.json present; work_scope.load_center_config already probes both layouts (skills/gabe-pulse/scripts/work_scope.py:138-150); CLAUDE.md 'This repo never carries .kdbp' / 'Do not propose dogfooding'.",
+     "fix": "When `docs/center/suite-center.config.json` exists and no codebase map does, answer `present:false, reason:\"suite center (beat spine) \u2014 no codebase map by ruling R8\"` without the cc-init pointer."
+    },
+    {
+     "id": "graft-match-semantics",
+     "severity": "low",
+     "section": "4.1",
+     "claim": "`graft.match` will read false on most days and the design does not say what that means or where the index lives.",
+     "failure_scenario": "gustify today: live `graft/.graph/wiring.json` sha256[:12] = a223d1b63dcd (refreshed 15:58) vs committed `stats.graft.index_hash` 06d22aab7cd3 \u2192 `match:false` though no source changed; a reader conflates it with a stale map. The design says 'hashes wiring.json' without the `.graph/` segment (the only real path).",
+     "evidence": "templates/center/generators/_a3_graft.py:47 `_INDEX_REL = graft/.graph/wiring.json`; c4 `stats.graft.index_hash: 06d22aab7cd3`; measured live hash a223d1b63dcd (25 ms).",
+     "fix": "Name the path, and render `match:false` as `graft_index: \"refreshed since regen (topology may be newer than the map's calls/imports edges \u2014 not source staleness)\"`."
+    }
+   ]
+  },
+  {
+   "lens": "emit-reuse",
+   "verdict": "land-with-fixes",
+   "note": "Lens: REUSE vs DUPLICATION + the emit contract. Verified SOUND (no finding): `git grep -nwI -- <sym> -- '*.py' \u2026` behaves as claimed (first `--` ends options, `<sym>` is the pattern, second `--` starts pathspecs; `-w` treats `_` as a word char so `ASPECT_SOLE` does not match `ASPECT_SOLE_MAX`; bare globs cross directories); `--cmd mcp` is accepted (free-form, stored in `ctx`, dropped by `_bump`, unread by S14); importing hyphenated `entity-context.py` via `spec_from_file_location` and monkeypatching `fail` works (all callers look up the module global at call time; no import-time side effects);",
+   "findings": [
+    {
+     "id": "d6b-shape-regex-wrong-both-ways",
+     "severity": "high",
+     "section": "D6(b) / 4.4 / \u00a78 twin dry-run",
+     "claim": "The code-shape allowlist plus line-start prefix test misclassifies real twin hits in BOTH directions \u2014 it emits docstring mentions it promises to suppress and drops the grep-only test-caller edges the loop exists to catch.",
+     "failure_scenario": "Ran the D6(b) regex literally over `git grep -nwI` hits on gustify. FALSE EMIT: `apps/api/tests/test_explore_scale.py:128` `\u2026(same apply_recipe_filters).\"\"\"` (docstring END line) matches `<sym>\\s*[,)\\]]` \u2192 CODE \u2192 emitted; `apps/api/services/recipe_availability.py:6` (module-docstring continuation `via apply_recipe_filters (the exact\u2026`) \u2192 CODE. The design's own acceptance number `who_calls apply_recipe_filters \u2192 2 prose-only \u00b7 0 missed` comes out 1 prose-only \u00b7 1 missed (one false S14 edge). DROPPED: `apps/web/src/app/PersistGate.test.tsx:18` `vi.mock(\"@auth/useAuth\", () => ({ useAuth: () => au",
+     "evidence": "scratchpad/d6b.py run on /home/khujta/projects/apps/gustify: apply_recipe_filters totals code 8 / prose 7 with the two docstring lines above as code; useAuth totals code 29 / prose 13 with PersistGate.test.tsx:18 and useRecipeFilterModes.rollback.test.tsx:26,28 as prose; `graft callers useAuth . --json --no-refresh` \u2192 12 files, neither test file among them. design-draft.md:59-63, 234-235.",
+     "fix": "Invert the gate to a PROSE detector: default = code; a hit is prose only when it sits inside a comment or string token. Python: stdlib `tokenize` over the hit file (exact for multi-line docstrings). TS/JS: a ~30-line state machine for `//`, `/* */`, quotes and template literals. Keep per-line `shape` in the result. Battery: docstring-continuation line containing `sym(` \u2192 prose; `vi.mock(\"\u2026sym\"\u2026)` \u2192 code; `<Sym />` \u2192 code; `Sym.attr` \u2192 code."
+    },
+    {
+     "id": "reach-emit-refactor-grep-arm-unspecified",
+     "severity": "high",
+     "section": "4.4 / D12 / \u00a76 / \u00a78",
+     "claim": "The refactor of reach-emit.py onto `mapquery.two_arm` does not say which grep arm red's LIVE path uses afterwards; both answers break a stated property, and the battery's 10 FIRE/NO-DELTA asserts pin the graft-grep JSON shape.",
+     "failure_scenario": "Today reach-emit's live arm is `graft grep '\\b<sym>\\b' --json` (reach-emit.py:147) and asserts 2\u201311 (tests/reach-emit/run.sh:59-75) inject graft-grep JSON (`groups[].hits[].line/text`) via `--grep-json`. (i) If red moves to `git grep` (\"ONE emitter\"), red-spec L146-150 and the reach-emit docstring go stale, `_parse`'s grep branch (reach-emit.py:68-74) becomes test-only dead code (P1: the fixture validates a parser no production path runs), and red's Reach set silently changes from index-time files to tracked-now files. (ii) If red keeps `graft grep`, there are two grep arms with different reca",
+     "evidence": "skills/gabe-red/scripts/reach-emit.py:56-75, 146-147; tests/reach-emit/run.sh:27-51 (fixtures in graft-grep shape), :59-75; skills/gabe-red/references/red-spec.md:146-150; design-draft.md:87-91, 150-151.",
+     "fix": "Choose (i) explicitly. Core API `two_arm(callers_json, grep_hits:[{path,line,text}], \u2026)`; reach-emit keeps its CLI shell (`no index` early return, `--dry-run`, Reach print) and its `--grep-json` injection becomes a \u226410-line test adapter that converts graft-grep JSON to the hit list (or rewrite the fixtures as `path:line:text`). Edit red-spec \u00a7Reach (the `graft grep` sentence) in the same commit and list it in \u00a76. Walk: asserts 1\u201317 stay green because gate (a) sees a match in both fixtures, gate (b) sees `thing()`-shaped text, gate (c) sees a truncated LIVE, and `no index`/usage stay in reach-e"
+    },
+    {
+     "id": "gitignore-seed-not-gated",
+     "severity": "high",
+     "section": "D6 / \u00a79 risk 5",
+     "claim": "The emit fires whenever `.kdbp/` exists, but the twin has no `.gitignore` entry for the accumulator and `.kdbp/` is tracked there \u2014 the first `who_calls` plants an untracked bookkeeping file that the next `git add -A`/`/gabe-commit` commits; \u00a79 leaves this to a remembered handoff item.",
+     "failure_scenario": "gustify: `grep -n map-deltas .gitignore` \u2192 rc 1 (the uncommitted .gitignore diff adds only `/graft/` and `sim.data.js`); `.kdbp/DECISIONS.md` is tracked (`M` in status). `who_calls apply_recipe_filters` with the false emit from finding 1 \u2192 `.kdbp/map-deltas.jsonl` appears untracked inside a tracked dir \u2192 staged by the operator's habitual add \u2192 committed; the commit sweep then truncates it every beat, so the committed file churns forever. The operator ruling (no remembered process) forbids 'propagate the seed first' as the safeguard.",
+     "evidence": "/home/khujta/projects/apps/gustify/.gitignore (no `map-deltas` line; diff shows `/graft/`, `sim.data.js` only); `git status --porcelain` shows `M .kdbp/DECISIONS.md`; skills/gabe-init/SKILL.md:29 (the seed exists only in gabe-init); design-draft.md:250-251.",
+     "fix": "Gate (d) in the core, before the writer: `git -C <root> check-ignore -q .kdbp/map-deltas.jsonl` must succeed; otherwise skip the emit and return `emit_skipped: \".kdbp/map-deltas.jsonl is not gitignored \u2014 run /gabe-init update\"` (still `isError:false`). Battery: fixture repo WITHOUT the seed \u2192 0 lines + the skipped reason; WITH the seed \u2192 1 line. Apply the same gate in reach-emit via the shared core."
+    },
+    {
+     "id": "center-js-blob-in-grep-text",
+     "severity": "medium",
+     "section": "D12 / 4.4",
+     "claim": "D12's rationale is wrong: the source globs do NOT keep the single-line center JSON out \u2014 `*.js` matches the committed `c4-graph.js`; only reach-emit's `_EXCL_DIR` drops it post-hoc, and that filter does not cover the suite repo's own tracked copy, so `who_calls` there returns a ~1 MB `text` field.",
+     "failure_scenario": "gustify: `git grep -nwI -- apply_recipe_filters -- '*.py' '*.ts' '*.tsx' '*.js' '*.jsx' '*.mjs'` returns `docs/site/center/c4-graph.js:1:window.GABE_C4 = {\u2026` (906,756-byte file, one line) \u2014 saved only by `_noise`'s `docs/site/center/` pattern. Suite repo: `templates/center/shell/example/codebase-graph-station/c4-graph.js` is tracked, max line length 975,798 chars, not matched by `_EXCL_DIR` or `_EXCL_BASE` \u2192 `who_calls GABE_C4` (or any symbol present in that data) puts a 975 KB `text` in one hit \u2192 the 25k-token cap truncates the whole result \u2192 an unusable answer in the repo the operator works ",
+     "evidence": "Measured: `git grep -lwI -- GABE_C4 -- '*.js'` in gabe_lens lists templates/center/shell/example/codebase-graph-station/c4-graph.js; `awk` max line 975798; reach-emit.py:29-32 (`_EXCL_DIR`/`_EXCL_BASE`); design-draft.md:87-91.",
+     "fix": "Add pathspec excludes to the grep call (`':(exclude)docs/site/center' ':(exclude)docs/center' ':(exclude)**/*.min.js' ':(exclude)**/c4-graph*.js' ':(exclude)**/*.data.js'`), add a generated-line rule to `_noise` (line length > 2,000 chars \u2192 noise, labelled), and cap each returned `text` at ~200 chars. Battery: a fixture `.js` with one 5,000-char line must not appear in `grep` and must not emit."
+    },
+    {
+     "id": "git-grep-rc-and-untracked",
+     "severity": "medium",
+     "section": "D12 / 4.4",
+     "claim": "Reusing reach-emit's `_run` for `git grep` conflates 'no matches' with 'grep could not run', and `git grep` without `--untracked` never sees a phase's newborn files \u2014 both make an empty arm read as absence.",
+     "failure_scenario": "Measured: `git grep` rc 1 on no match, rc 128 outside a work tree (`fatal: not a git repository`). `_run` (reach-emit.py:43-48) returns None for any rc\u22600 \u2192 on the mandated twin dry-run against a COPY (not a git repo) or a mistyped pathspec, `who_calls` returns `grep{code_files:[]}` with no reason \u2192 the model reads 'no callers'. Separately, work_scope.py:52-56 documents that a phase's first files are born untracked; `git grep` (tracked only) omits a caller added in a new file during execute \u2192 the missed-caller delta and the Reach record both skip the newest code.",
+     "evidence": "Shell probe this session: rc 1 / rc 128; `git grep -lwI --untracked -- PantryItem -- '*.py'` works on git 2.43.0; skills/gabe-red/scripts/reach-emit.py:43-48; skills/gabe-pulse/scripts/work_scope.py:52-56; design-draft.md:87-91.",
+     "fix": "Core grep runner distinct from `_run`: rc 0/1 \u2192 hits/empty, rc \u2265 2 \u2192 `grep_arm: \"unavailable: <first stderr line>\"` surfaced in the result (and no emit). Add `--untracked` (respects .gitignore, so build output stays out). Battery: non-git root \u2192 the unavailable reason; untracked caller file \u2192 present in `grep.code_files`."
+    },
+    {
+     "id": "entity-context-parity-vs-caps",
+     "severity": "medium",
+     "section": "4.2 / \u00a78",
+     "claim": "`detail:\"full\"` is defined as a CAPPED pack and, in the same sentence, as byte-identical to `entity-context.py --json` minus additions \u2014 on the twin these are incompatible, so the parity proof can only pass on an undersized fixture.",
+     "failure_scenario": "gustify archmap: 9 models exceed 10 cols (PantryItem 15, CookingSession 17, Notification 12\u2026), and the web layer has 53/72/77 files for cooking/pantry/recipe (> the 40/layer cap). `entity_context(\"pantry\", detail:\"full\")` minus additions \u2260 `entity-context.py pantry --json` by construction; the fixture parity assert passes while the twin dry-run would fail \u2014 template validates the template (meta-review P1). Also `source.center` is `str(center)` (absolute) from the reused module, contradicting D4's repo-relative paths and making parity depend on passing the identical path string.",
+     "evidence": "python census of /home/khujta/projects/apps/gustify/docs/site/center/archmap.json this session; skills/gabe-cc-entity/scripts/entity-context.py:130-132, 140; design-draft.md:120-122, 220.",
+     "fix": "`full` = the uncapped pack (parity provable on the twin; name the 146 KB cost in the tool description), caps live in `brief` (default) \u2014 or add `detail:\"capped\"`. Run the parity assert in the twin dry-run too and record the numbers in the commit. Rewrite `source.center` to repo-relative in the server's additions layer, never inside the reused module."
+    },
+    {
+     "id": "dedupe-duplicates-writer-and-outlives-sweep",
+     "severity": "medium",
+     "section": "D6(c)",
+     "claim": "Gate (c) re-implements the ledger's edge key in the server and adds a per-process set that survives the commit sweep, under-counting the persistence tally 11a defines.",
+     "failure_scenario": "The key `(gen, subject, _edge_file(pointer))` lives in map-deltas.py `_edge_file`/`_bump` (lines 95-102, 130-134); a second copy in mapquery drifts the day `_edge_file` changes (e.g. `path:line:col`). The per-process `(symbol,file)` set: `who_calls(x)` emits \u2192 `/gabe-commit` sweeps (LIVE truncated, count 1) \u2192 `who_calls(x)` later in the same session is suppressed although graft still misses the edge \u2192 `count` stays 1 for the session while red's reach-emit on the next phase would have bumped it; count = recurrence-across-sweeps is exactly what S14 reads.",
+     "evidence": "skills/gabe-commit/scripts/map-deltas.py:95-102, 105-127, 130-143, 206; tests/map-deltas/run.sh:51-62 (plain append must still tally 3); design-draft.md:64-66.",
+     "fix": "Add `map-deltas.py append --once` (skip when an identical un-swept `(gen,subject,file)` line exists \u2014 the writer already owns `_read_live`/`_edge_file`); the server and reach-emit call it; execute/review's manual appends can too. Drop the per-process set. map-deltas battery +2 asserts (`--once` skips a dup; plain append still counts 3 \u2192 asserts at :51-62 untouched)."
+    },
+    {
+     "id": "reach-line-claims-graft-when-absent",
+     "severity": "medium",
+     "section": "4.4 vs red-spec / tests/reach-emit assert 15",
+     "claim": "With the grep arm answering when `graft/` is absent, the unconditional `reach_line \"- **Reach:** \u2026 (graft@sha)\"` stamps a graft state that never existed, while reach-emit must keep printing `no index` for the same input \u2014 one core, two record semantics.",
+     "failure_scenario": "A twin without an index: `who_calls foo` \u2192 `map_claim: absent`, grep arm returns 3 files, `reach_line` = `- **Reach:** a \u00b7 b \u00b7 c (graft@1a2b3c)`; red pastes it; review's REACH DRIFT (review-spec:253) reads `graft@<sha>` as 'the graph at sha missed nothing here' and prices unreached files against a graph that was never consulted. Meanwhile tests/reach-emit/run.sh:87 (`grep -qx \"no index\"`) forces reach-emit to bypass the core's grep arm for the identical input.",
+     "evidence": "design-draft.md:145-151; skills/gabe-red/references/red-spec.md:154-155; skills/gabe-review/references/review-spec.md:252-253; tests/reach-emit/run.sh:85-88.",
+     "fix": "`reach_line` = `no index` when `map_claim` is absent (or `- **Reach:** \u2026 (grep-only@sha)` if the record must carry files) \u2014 decide once in the core and let reach-emit print the core's line. gabe-map battery: no `graft/` dir \u2192 `reach_line` never contains `graft@`."
+    },
+    {
+     "id": "mutant-sibling-resolution",
+     "severity": "medium",
+     "section": "\u00a78 mutation proof",
+     "claim": "The `SERVER_OVERRIDE`/`MQ_OVERRIDE` hooks inherit a trap already present in reach-emit: an out-of-tree mutant cannot find its sibling scripts, so it emits 0 for the wrong reason and every mutant 'fails an assert' vacuously.",
+     "failure_scenario": "Measured: copying reach-emit.py to the scratchpad and running `RE_OVERRIDE=<copy> bash tests/reach-emit/run.sh` fails 5 asserts with 0 deltas (12/17) \u2014 `_MAP_DELTAS` is `dirname(__file__)/../../gabe-commit/scripts/map-deltas.py`. mapquery will have four such siblings (gabe-commit, gabe-cc-entity, gabe-pulse, server\u2192mapquery). A `dedupe-off` or `prose-emitted` mutant placed in a temp dir fails the FIRE assert because the writer was never found, not because the mutation was caught \u2014 non-evidence (meta-review P2).",
+     "evidence": "Shell run this session: `reach-emit battery: 12 passed, 5 failed` under an out-of-tree RE_OVERRIDE vs 17/17 baseline; skills/gabe-red/scripts/reach-emit.py:33-34; design-draft.md:213, 232-233.",
+     "fix": "State the mutant placement rule in \u00a78: mutants are same-dir temp files (`mapquery.mut.py`, removed in the battery's `trap`), or mapquery resolves siblings via `GABE_SKILLS_DIR` (default `dirname(__file__)/../..`) which the battery sets. First assert of the mutation run: the UN-mutated override passes FIRE, so a later failure is attributable to the mutation."
+    },
+    {
+     "id": "emit-ignores-root-outside-roots",
+     "severity": "low",
+     "section": "D4 / D6",
+     "claim": "D4 promises a `root` outside the session's roots is read-only, but the D6 gate list never checks it and the writer runs with `cwd=<root>`.",
+     "failure_scenario": "From the suite session, `who_calls(apply_recipe_filters, root=\"/home/khujta/projects/apps/gustify\")` \u2192 `.kdbp/` exists there \u2192 `map-deltas.py append` writes gustify's `.kdbp/map-deltas.jsonl` from another project's session (and, per finding 3, untracked in a tracked dir).",
+     "evidence": "design-draft.md:44-46 (read-only promise) vs :52-66 (gates a\u2013c only); skills/gabe-commit/scripts/map-deltas.py:41-47, 73-81 (writes under whatever toplevel cwd resolves to).",
+     "fix": "Gate (e): emit only when `root` \u2208 {`CLAUDE_PROJECT_DIR`, `roots[]`}; otherwise `emit_skipped: \"root outside session roots (read-only)\"`. One battery case with an explicit foreign root \u2192 0 lines."
+    },
+    {
+     "id": "cap-notes-and-child-stdout",
+     "severity": "low",
+     "section": "4.4 / D3 / \u00a75",
+     "claim": "reach-emit's per-symbol CAP note and dry-run lines are `print`ed, and its writer child inherits fd 1 \u2014 neither fits a core that must have no stdout when fd 1 is the JSON-RPC wire.",
+     "failure_scenario": "`process()` prints `note: \u2026 capped` (reach-emit.py:96-98) and `_emit` prints `DELTA \u2026` under `--dry-run` (:80-82); `redirect_stdout(sys.stderr)` catches Python prints but NOT the child `subprocess.run([\u2026 map-deltas.py append \u2026], cwd=repo)` (:83-86) which inherits the wire \u2014 any future stdout from the writer (a warning, a print) corrupts a frame. A >20-file delta also loses its 'capped' notice silently in `who_calls` unless the note is returned.",
+     "evidence": "skills/gabe-red/scripts/reach-emit.py:78-99; design-draft.md:38-40 (mapquery 'no stdout'), :174-176.",
+     "fix": "Core returns `notes[]` and `capped:bool` (reach-emit prints them; the server puts them in `structuredContent`); every child process gets `stdout=subprocess.DEVNULL` or `PIPE`. Battery: fixture with 21 grep-only files \u2192 `capped:true`, 20 lines."
+    },
+    {
+     "id": "gate-a-match-definition",
+     "severity": "low",
+     "section": "D6(a) / \u00a78",
+     "claim": "'callers arm returned \u22651 match' is ambiguous between symbol-resolved-with-zero-hits and unresolved, and the battery only covers the unresolved case.",
+     "failure_scenario": "Measured on gustify: unknown symbol \u2192 rc 1, stdout empty, stderr `\u2717 no symbol \"\u2026\" in the graph \u2014 check spelling or run graft build` (a directive-shaped string that must never be echoed); a resolved symbol returns `matches:[{symbol:{\u2026}, hits:[\u2026]}]` and a resolved-but-uncalled one returns `hits:[]`. Under the literal text, a builder could treat `hits:[]` as 'no match' and suppress legit `_a3_graft.calls` deltas for a symbol graft indexed but whose call edges it missed \u2014 the clearest recall-gap signal the loop has.",
+     "evidence": "Shell probe: `graft callers zzz\u2026 --json --no-refresh` rc=1, stdout 0 bytes, stderr 88 bytes; `graft callers _rows` \u2192 two matches (alembic + account_export) with 1 hit each; design-draft.md:56-58, 226-227.",
+     "fix": "Define match = `matches[]` non-empty (symbol resolved), hits may be empty; add the resolved-zero-hits fixture (expect emits for code-shaped grep-only files) next to `matches: []` (expect 0); assert graft's stderr text never appears in any result field."
+    }
+   ]
+  },
+  {
+   "lens": "protocol",
+   "verdict": "land-with-fixes",
+   "note": "Lens: MCP wire + harness correctness. Evidence base: MCP spec 2025-11-25 (lifecycle/transports/tools/roots/basic), spec 2026-07-28 versioning page, Claude Code docs (mcp, permissions, hooks, env-vars), string/code scans of the installed Claude Code 2.1.258 bundle (/home/khujta/.local/share/claude/versions/2.1.258 \u2014 Bun bundle, JS source recoverable), empirical probes (redirect_stdout vs child fd 1, git grep rc/subdir/--full-name semantics, graft callers rc/streams/timing, gustify head law), and the repo scripts the design reuses. HELD (checked, no finding): CLAUDE_PROJECT_DIR is set in the ser",
+   "findings": [
+    {
+     "id": "structured-content-drops-text",
+     "severity": "high",
+     "section": "\u00a75 tools/call \u00b7 D5 \u00b7 D11",
+     "claim": "Claude Code feeds the model the serialized structuredContent and DROPS every text content block whenever structuredContent is present, so the design's compact human text (and the D5 honest-empty guidance carried in it) never reaches the model and the 25k budget is spent on the JSON, not the \u22642k-token text.",
+     "failure_scenario": "`map_status` on a no-center root returns content:[text:'no command center under <root> \u2026 Grep/Glob are the source of truth here. Build one: /gabe-cc-init.'] + structuredContent:{present:false,\u2026} \u2192 the model receives only `{\"present\":false,\u2026}`; the guidance/nudge text is gone. `entity_context detail:\"full\"` returns a small text + the full JSON pack \u2192 the JSON is what is measured against MAX_MCP_OUTPUT_TOKENS (25000) and, above the threshold, is persisted to disk and replaced by a file reference \u2014 the '\u2264 ~2k tokens typical' sizing describes a payload the model never gets.",
+     "evidence": "Claude Code 2.1.258 bundle, MCP result\u2192model converter: `if(\"structuredContent\"in e&&e.structuredContent!==void 0){let h=b(e.structuredContent)\u2026if(\"content\"in e&&Array.isArray(e.content)){let w=e.content.filter((v)=>\u2026v.type!==\"text\");\u2026}return{content:h,type:\"structuredContent\",schema:y}}` (text blocks filtered out; only non-text blocks survive alongside the JSON). Cap: `var C=0.5,l=1600,d=25000;function c(){let e=a.MAX_MCP_OUTPUT_TOKENS;\u2026return d}`. Design \u00a75 L187-188 and D5 L47-48 assume both channels are delivered.",
+     "fix": "Pick ONE channel: v1 returns content:[{type:'text'}] only (the model sees exactly the rendering the design sized), OR keep structuredContent and move every human-facing string (D5 honest-empty guidance, D7 nudge, `reach_line`, freshness stamp, `+N more (cap 40)` notes, `floors[]`) INTO the JSON and size the JSON. Either way make tests/gabe-map/client.py assert on what the model gets (json.dumps(structuredContent) size when present), not on content[0].text."
+    },
+    {
+     "id": "fd1-inheritance",
+     "severity": "medium",
+     "section": "\u00a75 framing/stdout purity \u00b7 D6 emit",
+     "claim": "contextlib.redirect_stdout(sys.stderr) only rebinds Python's sys.stdout; child processes inherit the real fd 1 (the MCP wire), and the emit path the server is refactored onto spawns map-deltas.py with inherited stdio.",
+     "failure_scenario": "reach-emit._emit \u2192 subprocess.run([python, map-deltas.py, 'append', \u2026], cwd=repo) with no stdout capture; any child stdout (a future confirmation print in append, a graft banner if capture is dropped, a shell echo) lands on the wire. A stray write WITHOUT a trailing newline glues onto the server's next JSON frame \u2192 the client's ReadBuffer fails JSON.parse on that line and skips it \u2192 the tools/call response is lost and the call hangs until the tool timeout. A clean stray line is silently dropped by the client but a valid-JSON non-RPC line raises onerror.",
+     "evidence": "Demo this session: `with redirect_stdout(sys.stderr): subprocess.run([sys.executable,'-c','print(...)'])` \u2192 child output appeared on fd 1 (`python3 fd1demo.py 2>/dev/null` printed 'CHILD PRINT -> inherits fd 1'). reach-emit.py:83-86 (`subprocess.run([...map-deltas.py append...], cwd=repo)` \u2014 no capture). Bundle ReadBuffer: `this._buffer=this._buffer.subarray(e+1);try{return _Dt(t)}catch(r){if(r instanceof SyntaxError)continue;throw r}` (bad line consumed+skipped). Spec 2025-11-25 transports: 'The server MUST NOT write anything to its stdout that is not a valid MCP message.'",
+     "fix": "At server start: `wire=os.dup(1); os.dup2(2,1)` so fd 1 IS stderr for everything (Python prints, C-level writes, children); write frames only through `os.fdopen(wire,'wb',buffering=0)` with a full-write loop + no interleaving; drop redirect_stdout; still pass stdout=DEVNULL/PIPE to every child. Read stdin via sys.stdin.buffer.readline() decoded errors='replace' (a stray invalid UTF-8 byte must not kill the loop). Battery mutant: a fake `graft` that prints a banner without newline \u2192 every response still arrives."
+    },
+    {
+     "id": "allowedtools-glob",
+     "severity": "medium",
+     "section": "\u00a72 row 8 \u00b7 \u00a78 harness e2e",
+     "claim": "`--allowedTools \"mcp__gabe-map__.*\"` is a permission GLOB, not a regex: `.*` requires a literal dot, matches no tool, and auto-approves nothing; the cited 'probe exit 0' cannot detect this because a denied tool call still exits 0 in -p mode.",
+     "failure_scenario": "`GABE_MAP_E2E=1 bash tests/gabe-map/run.sh` \u2192 `claude -p \u2026 --allowedTools \"mcp__gabe-map__.*\"` \u2192 the model's `mcp__gabe-map__map_status` call is denied (no interactive prompt in -p), the model reports it could not call the tool, exit 0; the \u00a78 assertion 'the model called map_status' fails or, if asserted on exit code, passes falsely.",
+     "evidence": "code.claude.com/docs/en/permissions: 'Allow rules accept tool-name globs only after a literal mcp__<server>__ prefix \u2026 `mcp__puppeteer__*` matches every tool from the puppeteer server'; `mcp__puppeteer` (bare) matches all tools. The `.*` form is hook-MATCHER regex syntax (docs/en/hooks 'mcp__<server>__.*'), not permission syntax. Design \u00a72 row 8 and \u00a78 L236-237.",
+     "fix": "Use `--allowedTools mcp__gabe-map` (or `\"mcp__gabe-map__*\"`); assert the tool_use via `--output-format stream-json` (a `tool_use` block named mcp__gabe-map__map_status), never on exit code; correct \u00a72 row 8's evidence."
+    },
+    {
+     "id": "root-not-toplevel",
+     "severity": "medium",
+     "section": "D4 \u00b7 D12 \u00b7 D6(c)",
+     "claim": "CLAUDE_PROJECT_DIR is the directory the session started in, not the git toplevel; running `git grep` with cwd=<root> from a subdirectory restricts the search to that subtree and prints cwd-relative paths, breaking the grep arm's recall, the delta path keys, and the `.kdbp` gate.",
+     "failure_scenario": "Session launched from gustify/apps/api \u2192 root=\u2026/apps/api; center found by walk-up at the toplevel, but `who_calls(list_recipes)`: (i) grep arm never sees apps/web callers; (ii) found/pointer = `services/recipes.py:38` instead of `apps/api/services/recipes.py:38` \u2192 the ledger key (gen,subject,file) differs from red's reach-emit key for the SAME edge, splitting the S14 tally; (iii) `<root>/.kdbp` does not exist (it is at the toplevel) \u2192 the server emits 0 while map-deltas.py (which resolves .kdbp via `git rev-parse --show-toplevel`) would have written.",
+     "evidence": "docs/en/hooks: '`${CLAUDE_PROJECT_DIR}`: the project root where the session started' (worktree note: cwd moves, CLAUDE_PROJECT_DIR stays). Demo: from skills/gabe-red, `git grep -nwI -e _noise -- '*.py'` printed `scripts/reach-emit.py:38\u2026` (subtree-restricted, cwd-relative); `--full-name` + `:/*.py` printed `skills/gabe-red/scripts/reach-emit.py:38\u2026`. map-deltas.py:41-55 (`_git_root` \u2192 toplevel; `_kdbp(root)`). Design D4 L42-44, D12 L87-91, D6 L55.",
+     "fix": "Normalize root := `git -C <root> rev-parse --show-toplevel` when it succeeds (else the dir containing the center walk-up hit); run `git grep --full-name \u2026 -- ':/*.py' ':/*.ts' \u2026` from the toplevel; report `root` as the toplevel; battery case: CLAUDE_PROJECT_DIR=<fixture>/sub resolves the fixture toplevel and emits toplevel-relative paths."
+    },
+    {
+     "id": "grep-rc-conflation",
+     "severity": "medium",
+     "section": "\u00a74.4 who_calls \u00b7 D12 \u00b7 D5",
+     "claim": "`git grep` exits 1 on no match and 128 when not in a git repo, and `graft callers` exits 1 for an un-indexed symbol vs FileNotFoundError when the binary is absent; the reused `_run` collapses every non-zero rc to None, so 'arm unavailable' is reported as a clean zero.",
+     "failure_scenario": "`--mcp-config` from a non-git dir (or CLAUDE_PROJECT_DIR at an un-git'd copy): grep arm rc=128 \u2192 grep{code_files:[]}, missed_by_map:[] \u2192 who_calls answers 'no callers' with no signal that the arm did not run \u2014 the exact trap the design's own `floors[]` string warns about. Same for graft: binary missing, index broken, and symbol-not-indexed all render as `map_claim:\"absent\"`.",
+     "evidence": "Probes: `git grep \u2026 zzz` rc=1; `cd /tmp && git grep \u2026` rc=128 'fatal: not a git repository'; `graft callers zzz_nope_zzz . --json --no-refresh` rc=1, stdout empty, stderr '\u2717 no symbol \"zzz_nope_zzz\" in the graph \u2014 check spelling or run graft build'. reach-emit.py:43-48 (`return r.stdout if r.returncode == 0 else None`). Design D5 L49 ('Unknown symbol in graft \u2192 map_claim: absent (not indexed)') and D12 L87-90 give no not-a-repo path.",
+     "fix": "In mapquery.two_arm return per-arm status: grep rc 0/1 \u2192 ran (matches/none), rc \u22652 or OSError \u2192 `grep_arm:{status:'unavailable', reason:<stderr first line>}`; graft rc 1 + 'no symbol' \u2192 `absent (not indexed)`, FileNotFoundError \u2192 `unavailable (graft not on PATH)`, other \u2192 `unavailable (<stderr>)`. Battery: a non-git root \u2192 who_calls carries status 'unavailable' and emits nothing."
+    },
+    {
+     "id": "append-exit-ambiguous",
+     "severity": "low",
+     "section": "D6(c) \u00b7 \u00a74.4 deltas_emitted",
+     "claim": "map-deltas.py append returns 0 both when it wrote a line and when it silently no-op'd (no .kdbp at the git toplevel), so `deltas_emitted:n` can only count attempts, not writes.",
+     "failure_scenario": "Root is a subdir (see root-not-toplevel) or .kdbp is missing at the toplevel while the server's own `<root>/.kdbp` check passed \u2192 the server reports `deltas_emitted:1` and `reach_line` implies a recorded delta, but .kdbp/map-deltas.jsonl gained nothing; the dedupe gate (c) reading `<root>/.kdbp/map-deltas.jsonl` and the writer's `<toplevel>/.kdbp/` can also point at different files.",
+     "evidence": "map-deltas.py:73-76 (`if not kd: return 0  # not a KDBP project \u2014 silent no-op`) and :80-82 (write path also returns 0); design \u00a74.4 L148 `deltas_emitted:n`, D6 L55 'ONLY when .kdbp/ exists'.",
+     "fix": "Import map-deltas.py via spec_from_file_location and call `append()` in-process (still the one validated writer) using the SAME `_git_root()/_kdbp()` resolution for the gate and the dedupe read, and count only calls that actually wrote (check `os.path.getsize` before/after, or extend append to return a distinct code for no-op)."
+    },
+    {
+     "id": "discover-probe-unpinned",
+     "severity": "low",
+     "section": "\u00a72 \u00b7 \u00a75 pre-initialize handling",
+     "claim": "Claude Code 2.1.258 ships the dual-era MCP client: in `MCP_PROTOCOL_NEGOTIATION=auto` (default today is `legacy`) the FIRST frame is a `server/discover` request with a string id before any `initialize`; the design's pre-init rule works by accident (-32602 is 'a non-modern error') but uses the wrong code for an unknown method and has no battery case, and a server that closes on a pre-init unknown method fails negotiation outright.",
+     "failure_scenario": "Operator or a future default flips negotiation to `auto` \u2192 client sends `{\"id\":\"server-discover-probe-1\",\"method\":\"server/discover\"}` pre-init. A build that (a) answers with id null/int-coerced, (b) exits on a pre-init protocol violation, or (c) answers -32022 \u2192 'treating the server as pre-2026-07-28' fallback is skipped or 'Version negotiation failed: the transport was closed during the server/discover probe' \u2192 gabe-map never connects in any project.",
+     "evidence": "Bundle strings: 'server/discover probe reply did not echo the request id (expected \u2026) \u2014 treating the server as pre-2026-07-28', 'Version negotiation failed: the transport was closed during the server/discover probe', probe id `server-discover-probe-${++this._probeCounter}`, env `MCP_PROTOCOL_NEGOTIATION` ('expected legacy or auto'), SDK default `var ol=\"legacy\"`. Spec 2026-07-28 versioning: stdio clients 'probe with server/discover and fall back on any error that is not a recognized modern error' (modern = -32022 UnsupportedProtocolVersionError). Design \u00a75 L182 ('Pre-initialize requests other ",
+     "fix": "Pre-init unknown method \u2192 -32601 with the request id echoed verbatim (preserve string ids), never -32022, never close/exit; add a battery case: `server/discover` before initialize \u2192 error code \u2209 {-32022} with the same string id, then `initialize` still succeeds; document `MCP_PROTOCOL_NEGOTIATION` in map-spec."
+    },
+    {
+     "id": "version-fallback-not-latest",
+     "severity": "low",
+     "section": "\u00a72 row 1 \u00b7 \u00a78 handshake asserts",
+     "claim": "On an unsupported requested protocolVersion the server answers 2025-06-18 although it supports 2025-11-25; the spec says the fallback SHOULD be the server's latest, and the battery pins the SHOULD-violation.",
+     "failure_scenario": "A future client whose supported list has dropped 2025-06-18 but still lists 2025-11-25 sends a newer version string \u2192 server answers 2025-06-18 \u2192 client `if(!r.includes(a.protocolVersion)) throw \"Server's protocol version is not supported\"` \u2192 connection refused, though the server actually speaks a version the client accepts.",
+     "evidence": "Spec 2025-11-25 lifecycle: 'Otherwise, the server MUST respond with another protocol version it supports. This SHOULD be the latest version supported by the server.' Bundle client check: `if(!r.includes(a.protocolVersion))throw Error(\"Server's protocol version is not supported: \u2026\")`. Design \u00a72 row 1 L21 and \u00a78 L214-215 ('garbage version \u2192 2025-06-18').",
+     "fix": "Supported set = {2025-11-25, 2025-06-18}; echo the request when in the set, else answer 2025-11-25; update the battery assert accordingly."
+    },
+    {
+     "id": "roots-uri-and-error-reply",
+     "severity": "low",
+     "section": "D4 \u00b7 \u00a75 routing",
+     "claim": "`roots/list` results carry file:// URIs (percent-encoded) and may be an error response (-32601 when the client lacks roots); the design treats `roots[0]` as a path and its 'id no method \u2192 a response' branch names only results, and it does not say tool calls must not block on the roots reply.",
+     "failure_scenario": "CLAUDE_PROJECT_DIR unset and a project at `/home/u/My Project` \u2192 roots uri `file:///home/u/My%20Project` \u2192 isdir False \u2192 fallback to os.getcwd() (= ~/.claude at user scope) \u2192 false honest-empty 'no command center'. A client error reply to srv-1 that isn't handled \u2192 the pending-roots state never resolves.",
+     "evidence": "Spec 2025-11-25 roots: 'uri \u2026 MUST be a file:// URI'; error handling: 'Client does not support roots: -32601'. Design D4 L42-43 ('roots[0] \u2026 matched by a srv-N id'), \u00a75 L178.",
+     "fix": "Decode with `urllib.parse.unquote(urlparse(uri).path)`; accept `error` responses for srv-N ids; never block a tools/call on the roots reply (root resolution reads whatever has arrived)."
+    },
+    {
+     "id": "hook-visibility-premise",
+     "severity": "low",
+     "section": "D14 \u00b7 \u00a711 Q2",
+     "claim": "Hooks DO fire for MCP tools (PreToolUse/PostToolUse with matcher `mcp__<server>__.*` and tool_input = the arguments); the 'HOOK-VISIBILITY COLLISION' exists only because the KDBP hook matchers are `Write|Edit|MultiEdit` and `Bash`, so Q2's 'never, or design a hook-visible write path first' premise is off \u2014 the path exists.",
+     "failure_scenario": "The operator rules 'never' on mutation tools based on a stated impossibility that is not one; conversely, the D6 delta emit is presented as guarded by no hook when a PostToolUse on `mcp__gabe-map__who_calls` could observe it today.",
+     "evidence": "docs/en/hooks: 'MCP server tools appear as regular tools in tool events (PreToolUse, PostToolUse, PostToolUseFailure, PermissionRequest, PermissionDenied)\u2026 mcp__<server>__.* (the .* is required)'; templates/hooks.json matchers: PLAN-PROOF-GUARD `Write|Edit|MultiEdit`, KDBP CHECKPOINT/PUSH-GATE-GUARD `Bash`. Design D14 L96-98, \u00a711 Q2 L259-260.",
+     "fix": "Reword D14: 'the KDBP hooks' matchers do not include mcp__gabe-map__.*; a mutation tool would need the matcher extended (`Write|Edit|MultiEdit|mcp__gabe-map__.*`) and tool_input-based path checks' \u2014 no v1 change."
+    },
+    {
+     "id": "fact-table-citations",
+     "severity": "low",
+     "section": "\u00a72 facts table",
+     "claim": "Three \u00a72 rows cite 'docs' for claims the current docs do not make, and the wire's 10 MiB per-frame cap is unnamed.",
+     "failure_scenario": "A reader trusts the table: (a) 'Restart required after claude mcp add \u2014 docs' \u2014 the MCP page has no such statement (only /reload-plugins for plugin servers); (b) 'docs: user-scope cwd = ~/.claude' \u2014 the table with that cwd is for `headersHelper`, not the server process; (c) the env-vars page says MAX_MCP_OUTPUT_TOKENS default 8000 while the bundle uses 25000 \u2014 a builder reading env-vars sizes to 8k and mis-reports the cap name; (d) a result frame >10 MiB clears the client ReadBuffer and the response is lost (no design law forbids it beyond D11's soft caps).",
+     "evidence": "code.claude.com/docs/en/mcp (no restart statement; headersHelper cwd table); docs/en/env-vars MAX_MCP_OUTPUT_TOKENS 'default: 8000' vs bundle `d=25000`; bundle `var za=10485760 \u2026 ReadBuffer exceeded maximum size of ${this._maxBufferSize} bytes` with `this.clear()`. Design \u00a72 rows L24, L26, L27.",
+     "fix": "Re-cite rows 24/27 as 'probe' or drop 'docs'; state 'cap 25k (bundle-verified; env-vars page stale)'; add a map-spec wire law: one frame \u2264 1 MiB (well under the client's 10 MiB ReadBuffer) enforced by projection, with a battery assert on the largest fixture result."
+    }
+   ]
+  }
+ ]
+}

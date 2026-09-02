@@ -140,7 +140,7 @@ An 18-agent, 3-axis wiring audit (artifact "Map Loop Wiring Audit") found the sh
 dead-ended, the same class as the retired TASK CONTRACT (0-for-19). The operator chose: land the two
 CHEAP fixes, defer the heavy one.
 
-- **Fix 1 — axis 2 → WIRED (LANDED).** `skills/gabe-red/scripts/reach-emit.py` runs the two-arm graft
+- **Fix 1 — axis 2 → WIRED (LANDED; CAVEAT §14: the "2 real test-caller edges" below were docstring mentions, not calls).** `skills/gabe-red/scripts/reach-emit.py` runs the two-arm graft
   query (`callers` ∪ word-boundary `grep '\b<sym>\b'`), prints the Reach line AND auto-emits the
   arm-difference (`grep_files − caller_files − def_files`, noise-filtered, through `map-deltas.py append`).
   red-spec now calls it in place of the manual two-arm + hand-typed append, so producing the gated Reach
@@ -299,3 +299,14 @@ that skill fire reliably? This reframes the MCP from "codebase-graph tool" to "t
 **Discipline:** Path C is a real new capability — design pass → multi-agent review → land-it → build → verify
 → commit+push BOTH remotes, same as 11a/Fix-1. Deferred siblings still open: **11b** (park + resurface +
 decision-debt, its brief in §11b) and the map loop's axes 2+3 already shipped (§10, §11a).
+
+## 14 · Axis 1 → Path C: DESIGNED + ANALYSED, not built (2026-09-01/02)
+
+The §13 plan ran one session: the harness mechanics were PROBED (not remembered — `CLAUDE_PROJECT_DIR` in the server
+env, `roots/list`, `instructions` reaching the system prompt, one result channel, the `server/discover` first frame), the
+operator's wider question — *which suite processes should be tools at all* — was answered by a scored analysis (58
+candidates · 3 judges; artifact "Gabe Suite Tool Surface"), and the `gabe-map` server was designed and 4/7-lens reviewed.
+**v1 roster (seven unanimous `now` verdicts):** `map_status` · `entity_context` · `touches` · `who_calls` · `entity_shape` ·
+`cases_for` · `owner_of`. Two emit findings feed back into THIS loop: the grep arm's prose hits (the only two gustify deltas
+were docstring mentions — §10's "2 real test-caller edges" claim is WRONG) and `reach-emit.py`'s untested branch (an empty
+graft arm emits every grep file). Record, roster, review findings and build order: [docs/design/gabe-map/README.md](../gabe-map/README.md).
