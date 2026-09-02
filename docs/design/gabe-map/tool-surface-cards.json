@@ -1,0 +1,843 @@
+{
+ "entity_context": {
+  "pain_point": "One entity's map slice exists but no beat consumes it — entity-spec calls it 'a context pack that no beat consumes yet', and execute names the slice with no command. Only a human typing /gabe-cc-entity reaches it.",
+  "called_by": [
+   "/gabe-execute",
+   "/gabe-review",
+   "/gabe-cc-entity",
+   "/gabe-plan",
+   "/gabe-assess"
+  ],
+  "inputs": "Entity slug (or 'list'); optional fields selection (endpoints|models|schemas|files|defines|relations|bindings); optional center dir; format brief|raw.",
+  "process": "Runs build_pack in gabe-cc-entity/scripts/entity-context.py: joins the committed archmap entity slice, the adoption.json row and center.config.json bindings on the slug, adds FK-related entities. Read-only, zero source read, 0.05 s.",
+  "output": "A capped brief (~300 tokens): endpoints, models, schemas, files, defines, bindings, FK relations — each list naming 'N more' — stamped map@head with commits_behind. Raw pack (145,979 B on gustify) only on request; honest STOP with no center.",
+  "if_not_built": "The slice stays behind a human-typed command: execute keeps entering phases with no context A and agents re-derive from source, while nobody pastes a 146 KB pack by hand either.",
+  "verdict_why": "Unanimous now — all three judges call it THE axis-1 case (two reviews, 69 agents, proved no gate can force consumption), build_pack already exists, and the only real risk is size: ~40k raw tokens against a 25k cap.",
+  "recommendation": "Ship in wave 1 with the capped brief as default, a fields selector, per-list caps naming 'N more', and a map@head + commits_behind stamp. Guard: the description must say 'floor, never scope' — an uncapped pack is the graft-ask blob red-spec bans and re-teaches map-as-scope (recall 0.560 vs 0.900)."
+ },
+ "who_calls": {
+  "pain_point": "The two-arm reach is prose in two specs and barely happens: Reach records appear in 1 of 8 gustify plans, map-deltas.jsonl is absent (zero emits ever), and plan-proof-guard never validates Reach — the 'gated Reach' claim is hollow.",
+  "called_by": [
+   "/gabe-red",
+   "/gabe-execute",
+   "/gabe-review",
+   "/gabe-assess",
+   "/gabe-cc-entity"
+  ],
+  "inputs": "One or more symbol names; optional project root (cwd project only).",
+  "process": "Runs reach-emit.py's two arms — graft callers UNION word-boundary graft grep — building the index and defusing graft's .ignore inside the call, filtering to source, attributing files to entities, then appending the arm-difference to map-deltas.jsonl.",
+  "output": "The verbatim '- **Reach:** … (graft@<sha>)' line, a Searched-class evidence line, up to 20 attributed files per symbol, emitted:N for deltas appended, and an index: reason; honest 'no index' when graft is absent. 0.62-0.68 s per symbol.",
+  "if_not_built": "The mandatory build-then-remove-.ignore trap stays remembered prose, Reach records stay at 1 in 8 plans, and execute and review keep emitting zero map deltas so the S14 tally never fills.",
+  "verdict_why": "Unanimous now: one call makes both arms, the .ignore trap and the emit unskippable by construction, over a script with a 17-assert 3-mutant-proven battery — the judges only require the hidden writes be cwd-only and reported.",
+  "recommendation": "Ship in wave 1, building the index inside the call, cwd-project only, returning emitted:N and index:. Guard: the description carries the two-arm law (1 arm 4/10 vs 2 arms 8/10) and 'floor, never scope'; a single-arm variant is pure graft overlap and must not ship."
+ },
+ "touches": {
+  "pain_point": "Assess D1 blast radius has no deterministic input at all: direction-guard injects the assess rule on every steering prompt, yet gustify's LEDGER carries 0 ASSESS rows.",
+  "called_by": [
+   "/gabe-assess",
+   "/gabe-execute",
+   "/gabe-review",
+   "/gabe-red",
+   "/gabe-cc-entity"
+  ],
+  "inputs": "A model, endpoint or function name; optional entity scope.",
+  "process": "Reads the committed c4-graph.json cross_edges (reads_from, writes_to, touches, bridge, nests — 214 on gustify) plus l1 edge kinds and the endpoint 'behind' {fns,depth} floor, joined to the archmap entity slice. No source read, under 100 ms.",
+  "output": "A domain-keyed access map — who reads it, who writes it, which endpoints touch it, the behind call-mass — with confidence: extracted|inferred per row, an archmap.head stamp and per-entity caps naming 'N more'.",
+  "if_not_built": "Blast radius stays judgment over whatever the agent happened to read, and the read/write DIRECTION no other surveyed server exposes stays locked inside a 1.28 MB JSON and a render page.",
+  "verdict_why": "Unanimous now: suite-unique read/write direction, a ~100-line reader over schemas already pinned by tests/arch-graph and tests/orm-access, under 100 ms — the only worry is tone, since an inferred floor reads as a census unless labelled.",
+  "recommendation": "Ship in wave 1 with a confidence field (cross-file calls are inferred by design), the archmap.head stamp and per-entity caps. Guard: the render's muted view-only cue does not survive into text, so the FLOOR caveat has to be written into the result itself."
+ },
+ "owner_of": {
+  "pain_point": "Slugs are hand-matched from center.config globs, so guesses creep in — gustify's current phase declares entities: [] — and nothing tells an agent when the map simply does not cover a path.",
+  "called_by": [
+   "/gabe-plan",
+   "/gabe-execute",
+   "/gabe-review",
+   "/gabe-assess",
+   "/gabe-cc-init"
+  ],
+  "inputs": "One or more file paths; optional project root.",
+  "process": "Imports work_scope.py (the ONE glob resolver by the 2026-08-07 ruling, handling both center layouts) to map path to entity slug, then reads the archmap file/route/model census so every answer also carries claimed_by_census.",
+  "output": "The owning entity slug per path plus claimed_by_census saying whether the map covers that path at all; under 300 tokens, under 0.1 s.",
+  "if_not_built": "Every other map tool inherits a guessed join key, and agents never learn where the map is blind — the retro-trace found 82% of map misses are center.config coverage, not design.",
+  "verdict_why": "Unanimous now: ~50 lines importing the ruled single resolver plus one census loader, batteries already exist (tests/pulse-scripts, tests/pulse-angles), and it is the join key every other tool needs.",
+  "recommendation": "Ship in wave 1. Guard: import work_scope rather than re-implement globs — a second resolver is exactly the drift the 2026-08-07 ruling killed — and honor angles.py's rule that absent census keys mean full coverage only at archmap version 2 or higher."
+ },
+ "blast_radius": {
+  "pain_point": "The same D1 gap as touches, but change-seeded: build_sim only runs inside a full regen, so gustify sits at GABE_SIM=null while phase P7 is active with a dirty tree — the impact answer is stale or absent exactly when a change is in flight.",
+  "called_by": [
+   "/gabe-assess",
+   "/gabe-review",
+   "/gabe-execute",
+   "/gabe-roast",
+   "/gabe-handoff"
+  ],
+  "inputs": "No argument (reads the working tree), or an explicit changed-file list or phase id.",
+  "process": "Composes _a3_sim.build_sim (touched entities, FK blast, changed pieces with class-level line attribution from git hunks) with work_scope, touches and who_calls read as-found — graft is never rebuilt per prompt — plus a STRUCTURE.md D5 match.",
+  "output": "Touched entities, the FK blast set, changed pieces per stage and a Contained / Local / Cross-cutting / External reading, explicitly labelled a FLOOR (sim blast is FK-only), capped; under 2 s.",
+  "if_not_built": "Assess keeps answering D1 from memory, and the direction guard keeps firing into a beat with no data behind it (0 ASSESS rows on gustify).",
+  "verdict_why": "Unanimous next: real value, but a heavy composite whose 'Contained' reads authoritative when graft missed a caller — its inputs (touches, owner_of, who_calls) ship in v1 and the composition waits for evidence they are used.",
+  "recommendation": "Wave 2, after v1 uptake is measured (touches/entity_context appearing in at least half of execute and red beats). Prerequisites: those three tools shipped and a fresh archmap. Guard: label the answer a FLOOR and never rebuild graft per steering prompt."
+ },
+ "entity_shape": {
+  "pain_point": "'Will this route land in a URL domain no entity owns?' is a mid-reasoning question with no call: review's --diff arm catches it only if remembered, and ENTITY-SHAPE DRIFT has 0 mentions on gustify.",
+  "called_by": [
+   "/gabe-plan",
+   "/gabe-execute",
+   "/gabe-review",
+   "/gabe-cc-init",
+   "/gabe-pulse"
+  ],
+  "inputs": "Optional project root; optional URL domain to look up.",
+  "process": "Calls entity_shape.py's pure function over the committed archmap — orphan URL domains and aspect entities against its fixed thresholds — computed fresh with nothing stored. The --diff arm stays with review so pulse and review never double-report.",
+  "output": "Who owns a given URL domain, plus the orphan-domain and aspect-entity lists, with explicit 'no finding' text so a clean answer is not read as a failed check. About 0.05 s.",
+  "if_not_built": "The pre-route ownership question keeps having no answer until after a regen, and the check stays three remembered invocations.",
+  "verdict_why": "Unanimous now, but on the thinnest measured need of the seven: gustify is clean (24 domains, 0 unclaimed since the allergen fix), so the seat is bought by it being a pure function with a hermetic battery and a ~20-line wrapper.",
+  "recommendation": "Ship in wave 1 as the STANDING mode only, returning explicit 'no finding' text. Guard: the --diff arm stays review's. This is the seat to surrender if the operator wants a six-tool v1, or to lend to endpoint_for's method+path mode."
+ },
+ "endpoint_for": {
+  "pain_point": "'Does PATCH /api/v1/pantry/{id} resolve to a declared endpoint?' has no pre-regen answer except review's remembered --diff; WEB-BRIDGE DRIFT has 0 mentions on gustify.",
+  "called_by": [
+   "/gabe-execute",
+   "/gabe-review",
+   "/gabe-cc-init",
+   "/gabe-pulse"
+  ],
+  "inputs": "An HTTP method plus path (or a path alone).",
+  "process": "Execs fetch_bridge.py's endpoint key-space loader and norm_path (strip /api/vN, collapse path params, snake-camel) and matches the given method+path; also lists the standing unmatched fetches recorded in c4 stats.web.",
+  "output": "The matched endpoint (entity, file, handler) or an explicit no-match, plus the standing unmatched list; 1-6 lines, 0.04 s; honest NOT RUN when the web arm is absent.",
+  "if_not_built": "A fetch typed against a path no endpoint declares is only discovered after the next regen, by a pulse nag.",
+  "verdict_why": "Unanimous next: a narrow moment with low signal today — gustify sits at 2 unmatched fetches, both dynamic paths pulse S10 already owns — so the seventh v1 seat went to cases_for instead.",
+  "recommendation": "Wave 2, folded in as a method+path MODE of touches or entity_shape rather than its own tool. Prerequisite: those shipped. Guard: exec fetch_bridge.py (a re-implementation would be a THIRD copy of norm_path) and never claim completeness over dynamic-arg fetch paths."
+ },
+ "cases_for": {
+  "pain_point": "Every red beat hand-runs 'grep C-ids, allocate max+1' against three restatements of one regex (spec, hooks, three scripts); a bare C-digit pattern matches RFC1234 and inflates the allocation, and Cases records land in a minority of gustify plans.",
+  "called_by": [
+   "/gabe-red",
+   "/gabe-review",
+   "/gabe-execute",
+   "/gabe-cc-init",
+   "/gabe-cc-update"
+  ],
+  "inputs": "A function, model, endpoint or file; test roots (REQUIRED for next_id).",
+  "process": "Reads archmap test_insight (gustify: by_function 218, by_model 137, by_endpoint 61, by_file 389) plus guard_insight for existing cases, then greps the named roots with the anchored ERE from pre-checkpoint.sh so next_id comes from the CORPUS, never the map.",
+  "output": "Existing case ids with state and test file (the REUSE candidates), next_id, max_seen with its file so id burn is visible, and the verbatim Searched: roots+pattern line red quotes as E1 evidence.",
+  "if_not_built": "Red keeps re-deriving the regex and risking inflated ids, REUSE-vs-NEW stays a memory exercise, and cases keep going unrecorded.",
+  "verdict_why": "Unanimous now: suite-unique (no surveyed server maps tests to code identity), about 80 lines, and it collapses a wrong-pattern hazard restated in three places into one anchored implementation.",
+  "recommendation": "Ship in wave 1 with test roots as a REQUIRED argument — inferring them is the rehearsal-proven failure recorded in backfill-sweep.py's header — computing next_id from the corpus and returning max_seen with its file. Guard: minting stays /gabe-red's; the tool never writes."
+ },
+ "map_census": {
+  "pain_point": "Four rails each re-open the 2.1 MB archmap with near-identical loaders to ask the same coverage question, and nothing tells a reader whether an area is mapped at all. gustify's S13 fires on 5 unclaimed backend files.",
+  "called_by": [
+   "/gabe-cc-init",
+   "/gabe-pulse",
+   "/gabe-review",
+   "/gabe-plan"
+  ],
+  "inputs": "Optional project root; optional census kind (model|route|file|schema).",
+  "process": "One loader over the archmap census blocks — model_census.unclaimed (S11), route_census and file_census unclaimed with their reach hops (S13), schema_homing.unwired (S12) — applying the version semantics rule once.",
+  "output": "Unclaimed models, routes and files plus unwired schemas, closest-to-the-request-path first, capped with 'N more'; 'full coverage' asserted only when the archmap version allows that reading.",
+  "if_not_built": "Four loaders stay four loaders, and the honesty flag rides only on pulse's single top line.",
+  "verdict_why": "Unanimous next: the useful half folds into owner_of's claimed_by_census, and the standalone v2 tree-walk scripts (archmap-census.py, archmap-reach.py) have zero callers, are not installed, and need a denominator ruling (88% vs 49% on the same repo).",
+  "recommendation": "Wave 2 at the earliest; ship the read as owner_of's claimed_by_census field first. Guard: keep it a LOOKUP, never a nag — a raw census query bypasses the PULSE.jsonl decay record — and any tree-walk must print its resolution rate rather than imply completeness."
+ },
+ "map_status": {
+  "pain_point": "Nobody computes map freshness, so staleness is discovered when a file:line turns out wrong. On gustify the archmap is 1 commit behind HEAD and inflight.json is 20 commits / 17 days behind — both unnoticed.",
+  "called_by": [
+   "/gabe-execute",
+   "/gabe-review",
+   "/gabe-commit",
+   "/gabe-cc-update",
+   "/gabe-handoff"
+  ],
+  "inputs": "Optional project root.",
+  "process": "A read-only join no script does today: archmap head/version against git HEAD plus a commit count; c4 index_hash against a fresh sha256 of wiring.json (instant — never graft check, 18.7 s); per-arm presence; inflight.json head; junit head_sha.",
+  "output": "A freshness report — map@head with N behind, per-arm presence, index-hash match, inflight and junit heads — ending in the exact next command (scripts/refresh_center.sh regen). Never regenerates. Under 100 ms.",
+  "if_not_built": "Every other map answer stays unqualified, and the operator keeps discovering the map was stale by acting on a wrong line number.",
+  "verdict_why": "Unanimous now: stale-map confidence is the roster's top failure mode and nothing measures it; ~80 lines of stdlib over readers that already exist, and every other v1 answer needs its commits_behind field.",
+  "recommendation": "Build it FIRST in wave 1. Guard: it stays a REPORT that names the regen command — a status tool that also refreshes lies, which is why graft excluded its own freshness check from auto-refresh — and an index_hash mismatch means the committed topology is behind, not that the map is wrong."
+ },
+ "map_delta_status": {
+  "pain_point": "The map-versus-grep tally is visible only at commit time or when S14 wins the pulse row, so a consumer asking 'how much does this arm miss here' has no read. The rollup ledger is EMPTY on every twin today.",
+  "called_by": [
+   "/gabe-commit",
+   "/gabe-pulse",
+   "/gabe-red",
+   "/gabe-review"
+  ],
+  "inputs": "Optional project root; optional generator arm.",
+  "process": "Runs map-deltas.py analyze WITHOUT --sweep over .kdbp/map-deltas-rollup.jsonl, computing active versus cold fresh (commits since last_n against the horizon) so a fixed or dormant arm self-silences.",
+  "output": "Active missed edges per generator arm with counts and the top recurring edge — or an honest 'no ledger yet'. Milliseconds.",
+  "if_not_built": "The trust-but-verify loop stays one-directional: deltas go in, but no answer carries how much its own arm has been missing.",
+  "verdict_why": "Unanimous next, for the plainest reason: no twin has a rollup file yet, so the tool would serve an empty file; all three judges want it as a confidence field on who_calls and touches once data exists.",
+  "recommendation": "Wave 2, and as a confidence LINE on who_calls/touches ('_a3_graft.calls: 8 active missed edges — confirm with grep'), never a subcommand. Trigger: a twin's map-deltas-rollup.jsonl carries at least one active edge. Guard: --sweep is never reachable — it truncates the live accumulator."
+ },
+ "map_diff": {
+  "pain_point": "Reviewers face a raw git diff of a 2.1 MB sorted JSON — the #150 churn incident — or skip it entirely; no script summarizes what the map changed between two shas.",
+  "called_by": [
+   "/gabe-review",
+   "/gabe-cc-update",
+   "/gabe-handoff"
+  ],
+  "inputs": "Two shas (or one sha and the working tree).",
+  "process": "git show's the committed archmap and c4 at each sha and runs a keyed recursive diff over the sort_keys'd JSON, rolled up per entity: endpoints, models, schemas and files added or removed, census deltas, schema_homing changes, c4 stats deltas.",
+  "output": "A per-entity architecture-change summary (200-1500 tokens) capped with 'N more', and an explicit 'not regenerated between these shas' when both share an archmap head. Under 1 s.",
+  "if_not_built": "The architecture change inside a PR stays either unread or read as raw JSON churn.",
+  "verdict_why": "Unanimous next: genuinely useful for review and release notes, but twins regenerate rarely between review shas — gustify shares one archmap head across shas — so today it would mostly report 'no regen'.",
+  "recommendation": "Wave 3, once a twin shows two or more distinct archmap heads between review shas; map_status ships first. Guard: key the diff to leaves so a flipped endpoint gate cannot hide inside a rollup, and say 'not regenerated' rather than 'no change'."
+ },
+ "center_overview": {
+  "pain_point": "Session entry has no map-aware orientation: the agent opens the center HTML or CLAUDE.md prose, and the suite's SessionStart hooks inject plan awareness but never the map.",
+  "called_by": [
+   "/gabe-execute",
+   "/gabe-red",
+   "/gabe-assess",
+   "/gabe-help",
+   "/gabe-cc-init"
+  ],
+  "inputs": "Optional project root; a token budget.",
+  "process": "Reads archmap entities, adoption.json and c4 stats into a budgeted orientation — entities with adoption and coverage columns, per-entity hubs, hotspots, arm presence. About 80 lines, under 150 ms.",
+  "output": "A 300-600 token orientation table; the adoption and coverage columns are the only suite-unique part.",
+  "if_not_built": "Orientation stays the visual stations plus prose — which is what the operator ruled anyway — and twins keep receiving graft's SessionStart injection instead.",
+  "verdict_why": "Two later, one next: the shape is covered externally (graft_repo_map, codesight summary), the visual stations ARE the orientation by operator ruling, and a line printed every session becomes wallpaper the eye learns to skip.",
+  "recommendation": "Wave 4, together with the session_start_orientation channel. Prerequisites: the gustify graft-hooks.cjs contradiction ruled (two orientations compete for the same attention) and one measurement window on server_instructions alone; then inject only where map_status reports a present center."
+ },
+ "file_api": {
+  "pain_point": "Before editing a file the agent Reads the whole thing; graft's per-file cards are not grep-reachable in twins because the suite deliberately removes graft's .ignore.",
+  "called_by": [
+   "/gabe-execute",
+   "/gabe-review",
+   "/gabe-red",
+   "/gabe-cc-entity"
+  ],
+  "inputs": "A file path.",
+  "process": "Reads graft's wiring.json (10.6 MB on gustify, 0.07 s, cached per index sha) for the file's definition skeleton, then annotates each symbol with its owning entity (owner_of) and its tests (test_insight.by_function).",
+  "output": "One line per definition — span, kind, name, signature — plus entity and cases columns; about 200 tokens per file, versus a whole-file Read.",
+  "if_not_built": "Whole-file Reads continue; where graft's own MCP is enabled in a twin, graft_file_api already covers the plain half.",
+  "verdict_why": "Unanimous later: pure duplication of graft_file_api unless the domain columns ride along, and it leans on graft's external, versioned NodeV1 schema.",
+  "recommendation": "Wave 4, and only as the domain-ANNOTATED variant. Prerequisites: the graft-coexistence ruling in twins, plus owner_of and cases_for already shipped so the columns are joins rather than new reads. Guard: honest-empty when graft is absent."
+ },
+ "find_code": {
+  "pain_point": "'Where does behaviour X live' is answered by raw Grep; graft's injected pointers are ignored in practice — its own trace records the agent grepping 38 times instead of pulling.",
+  "called_by": [
+   "/gabe-execute",
+   "/gabe-assess",
+   "/gabe-review",
+   "/gabe-lens"
+  ],
+  "inputs": "A natural-language or lexical query; optional limit and scope.",
+  "process": "Would need a ranker the suite does not have — a stdlib BM25 / graph-rank build (graft's own ask, fuse and graphrank are hundreds of lines) or a shell to graft ask, which red-spec bans for its 3,000-token blobs.",
+  "output": "A ranked top-N list of code locations, 300-3,000 tokens.",
+  "if_not_built": "Nothing changes: Grep and, where enabled, graft's own tool already cover it.",
+  "verdict_why": "Unanimous never: the largest build in the roster or a banned graft-ask shell, total overlap with graft_find_code, and ranked top-N contradicts the exhaustive two-arm law — 'will miss instances' is the failure the reach exists to prevent.",
+  "recommendation": "Do not build. Leave lexical search to Grep and to graft's own tool where it is enabled; the one suite-unique angle — scoping a search to an entity — is owner_of plus Grep. A ranker would re-teach map-as-scope, the 0.560-versus-0.900 recall trap."
+ },
+ "find_all": {
+  "pain_point": "Exhaustive pattern search grouped by enclosing symbol is a nice shape to have; today it is Claude Code's Grep plus the grep arm already inside who_calls.",
+  "called_by": [
+   "/gabe-red",
+   "/gabe-execute",
+   "/gabe-review",
+   "/gabe-health"
+  ],
+  "inputs": "A regex or fixed pattern; optional scope and case-sensitivity.",
+  "process": "Would wrap graft grep --json (about 30 lines) and group hits by enclosing symbol, ranked by in-degree.",
+  "output": "Hits grouped by symbol with a searched-files header and a truncation note.",
+  "if_not_built": "Nothing is lost: Grep already gives totality, and who_calls' grep arm already groups by symbol for the one case that matters.",
+  "verdict_why": "Unanimous never: pure overlap with Grep and graft_find_all, and E4 'context B' is DEFINED as the raw grep — an indexed stand-in (graft indexes 47% of gustify's files) changes what a map delta MEANS and would poison the S14 tally.",
+  "recommendation": "Do not build. Keep raw Grep as context B — its totality over unindexed files is the only admissible absence proof red-spec accepts — and take symbol grouping from who_calls' grep arm wherever it is actually wanted."
+ },
+ "center_status": {
+  "pain_point": "Asking what the center still owes costs a 15-23 s regen through /gabe-cc-update status, even though the actionable list itself computes in 0.03 s.",
+  "called_by": [
+   "/gabe-cc-update",
+   "/gabe-next",
+   "/gabe-cc-init",
+   "/gabe-pulse",
+   "/gabe-plan"
+  ],
+  "inputs": "Optional project root; optional entity slug.",
+  "process": "Execs three read-only emitters — center_status.py (the actionable list with links and a next step), next_feature.py (backfill queue) and risk_sweep.py (the P0-P3 ladder) — as one result, skipping the regen /gabe-cc-update pays first.",
+  "output": "The actionable list relayed verbatim with its links, the backfill queue and the risk ladder; about 0.6 s, 200-800 tokens.",
+  "if_not_built": "Status keeps costing a regen, and /gabe-next's Center routing and pulse S8 keep reading it only indirectly.",
+  "verdict_why": "Unanimous next: cheap and read-only, but its consumers are human-initiated and the status-to-fresh-regen coupling is deliberate — a stale-center answer needs map_status beside it.",
+  "recommendation": "Wave 3, or fold the availability half into entity_context sooner. Prerequisite: map_status shipped so the answer carries commits_behind. Guard: relay the script's links untouched, and never expose the approve or stamp writes cc-init keeps human-initiated."
+ },
+ "review_drift": {
+  "pain_point": "Review's diff detectors are ~8 sub-procedures walked out of a 1,335-line spec, three prose-only with 3-10 git commands each — the 0-for-19 class. gustify: 20 REVIEW vs 113 COMMIT rows, ENTITY-SHAPE and WEB-BRIDGE DRIFT at 0 mentions.",
+  "called_by": [
+   "/gabe-review",
+   "/gabe-cc-update",
+   "/gabe-commit"
+  ],
+  "inputs": "A base ref; optional subject filter.",
+  "process": "One orchestrator running entity_shape.py --diff, fetch_bridge.py --diff, check_workflow_drift.py and the work_scope touched-vs-declared check, plus the three script-less procedures: REACH DRIFT against the Reach record, ENTITY DRIFT, STALE ANCHOR's git walk.",
+  "output": "Findings per subject with attribution and per-subject caps, and NOT RUN as a first-class state — so 'no findings' can never be confused with 'could not run'.",
+  "if_not_built": "Three detectors stay prose the reviewer re-derives, and the four-times-repeated rule 'never report zero findings when the check could not run' stays a hope rather than a fact.",
+  "verdict_why": "Unanimous next: the highest-leverage collapse in the roster with the lowest hook exposure, but rail-shaped — all three judges want it built as the --diff script the review beat RUNS before it is exposed as a tool.",
+  "recommendation": "Wave 2: land it first as review's --diff script, then expose. Trigger: REVIEW LEDGER rows start carrying drift subjects. Guards: it becomes THE copy of the runtime-gated types list (three specs hold it today), returns attribution but never emits deltas itself, and keeps standing versus diff as two modes."
+ },
+ "workflow_census_drift": {
+  "pain_point": "Four callers each remember the census path and its flags — and on gustify there is no workflows/*.json census at all, so every site prints 'unavailable' and the checker exits 2.",
+  "called_by": [
+   "/gabe-review",
+   "/gabe-cc-update",
+   "/gabe-cc-init",
+   "/gabe-pulse"
+  ],
+  "inputs": "An entity slug (resolved to <center>/workflows/<slug>.json); optional archmap and junit globs.",
+  "process": "Execs check_workflow_drift.py, which prices capture-debt (a step with no capture, or a capture file that is gone), claim-drift (a C-id no longer running, a spec file gone) and census-lag (writable model fields no step writes) against the archmap and junit.",
+  "output": "Up to 12 findings, each carrying its own fix, with 'no census' rendered as a named absence distinct from 'clean'. Sub-second.",
+  "if_not_built": "Nothing measurable changes today — the accumulator it checks does not exist on the twins.",
+  "verdict_why": "Two later, one never: cheap and battery-covered, but vacuous everywhere the census was never authored, and pulse S8 already nags the standing half.",
+  "recommendation": "Wave 2 at best, and as ONE subject inside review_drift rather than its own tool. Prerequisite: an authored census on at least one twin. Guard: render 'no census' as a named absence — a tool cannot fix an accumulator nobody wrote, and a vacuous pass reads as clean."
+ },
+ "map_delta_emit": {
+  "pain_point": "Execute and review are meant to append a map delta whenever grep contradicts the map, but that is 'notice it, then remember to append': gustify's map-deltas.jsonl is absent — zero emits ever from those two beats.",
+  "called_by": [
+   "/gabe-execute",
+   "/gabe-review",
+   "/gabe-red"
+  ],
+  "inputs": "type add|subtract|modify, gen (generator arm), cmd, subject, found, pointer as file:line, optional entity.",
+  "process": "Would wrap map-deltas.py append — the one schema-validated writer — appending a line to the gitignored .kdbp/map-deltas.jsonl, and staying a silent no-op outside a KDBP project.",
+  "output": "The appended delta line and nothing else; under 0.1 s.",
+  "if_not_built": "Execute and review emits stay at zero unless the tool that computed the divergence emits for them — which is exactly what who_calls, touches and review_drift are designed to do.",
+  "verdict_why": "Split 1 next / 2 never: the dissenter sees a ~30-line discoverability win, but the majority holds the agent must still NOTICE and choose to call, and a one-arg writer loses the 'clear contradiction, never a hunch' friction — hunches turn S14 into wallpaper.",
+  "recommendation": "Do not expose it standalone; let the emit ride as the SIDE EFFECT of the tool that computed the divergence (who_calls to _a3_graft.calls, touches to _a3_code.access, review_drift to route and bridge) — the shape reach-emit already proves. If ever exposed: pointer must be an existing file:line, and analyze --sweep never."
+ },
+ "graft_index_refresh": {
+  "pain_point": "graft build followed by removing .ignore is MANDATORY prose in two specs, because forgetting the removal poisons every later Grep with graft's own cards (measured 1 hit becoming 2).",
+  "called_by": [
+   "/gabe-red",
+   "/gabe-execute",
+   "/gabe-cc-update"
+  ],
+  "inputs": "Project root; an allow-build flag.",
+  "process": "Would expose _a3_graft.ensure_index plus _defuse_ignore — build the index (1.7 s warm, 22 s cold, 180 s cap) and surgically drop only graft's own .ignore lines — writing .ignore, .gitignore and graft/ into the tree.",
+  "output": "Index path, a reason (rebuilt, as-found, no binary, build failed), the index sha and node/edge counts; about 40 tokens.",
+  "if_not_built": "Nothing is lost, provided who_calls performs the refresh inside its own call — which is the recommendation.",
+  "verdict_why": "Unanimous never: an index refresh is an EVENT, not a question; standalone it is the 'the rm is MANDATORY' prose in a new costume, and it writes into the tree — a suite session could dirty a twin, the hazard the LAB guard already refuses.",
+  "recommendation": "Fold it INSIDE who_calls — ensure_index plus defuse per call, cwd-project only — so the trap disappears by construction, and report the index: reason in the result. Keep the LAB rule: never build against a tree that is not the current project."
+ },
+ "center_regen": {
+  "pain_point": "Regenerating the center is already one command, but its safety layer is the printed log — PRESENCE FLIP, the LAB-run warning, undeclared layers — and none of those is an exit code.",
+  "called_by": [
+   "/gabe-cc-update",
+   "/gabe-cc-init",
+   "/gabe-docsite"
+  ],
+  "inputs": "Project root; mode.",
+  "process": "Would shell the project's own refresh_center.sh regen — build_center_a3.py, then the link and chrome gates — writing committed archmap, c4 and pages, appending accumulators and rebuilding graft. 12-23 s on a twin, unbounded with new mermaid.",
+  "output": "A gate summary plus WARN list, 500-2K tokens, instead of the tens-of-KB log.",
+  "if_not_built": "Nothing: refresh_center.sh is already ONE entry point, and the 'is a regen owed?' question belongs to map_status.",
+  "verdict_why": "Unanimous never at risk 5: it writes committed files, appends accumulators and rebuilds graft, its tripwires are stdout rather than exit codes, and a user-scope server running a project's own scripts crosses the suite-owns-machinery seam.",
+  "recommendation": "Leave it on /gabe-cc-update as a human-visible CLI run so the operator SEES the presence flips and LAB warnings. Answer the regen-trigger question with map_status; if a preview is ever wanted, that is map_build_preview into a scratch dir, never a write to the committed center."
+ },
+ "map_build_preview": {
+  "pain_point": "'Would a regen actually change the map?' — the question map_status cannot answer — is done by hand from a recipe that lives in a generators README and in memory.",
+  "called_by": [
+   "/gabe-review",
+   "/gabe-commit",
+   "/gabe-cc-update"
+  ],
+  "inputs": "Project root; optional arms to include.",
+  "process": "Runs build_center_a3.py with the graft build disabled into a scratch output dir, then keyed-diffs the scratch archmap and c4 against the committed ones. 12-15 s and 373 MB per call.",
+  "output": "The entity, endpoint, model, census and stats deltas a regen would produce, with an explicit 'preview only — the committed center is untouched'. The survey's scratch build on gustify gave a 4-line archmap diff and 288 lines of c4.",
+  "if_not_built": "Review keeps pricing drift against a map that may already be out of date, and the dry-run-on-a-COPY numbers a commit message must state stay hand-collected.",
+  "verdict_why": "Two later, one next: it answers a real review question and the survey proved the recipe works, but the mermaid cache and the frontend arm's typescript resolution can touch the tree, and 15 s per call is a real cost inside stdio.",
+  "recommendation": "Wave 4. Prerequisites: a hermetic fixture proving zero writes outside the scratch dir including the mermaid cache, and caching by (HEAD, dirty-tree hash) so one call per review beat is the ceiling. Guard: the loud LAB-run banner goes implicit, so the result must say 'preview only'."
+ },
+ "evidence_capture": {
+  "pain_point": "A full-suite capture is a minutes-long run the operator schedules — pytest 1,168 plus vitest 856 plus playwright journeys — and a partial run poisons the committed run-history.",
+  "called_by": [
+   "/gabe-cc-update",
+   "/gabe-commit"
+  ],
+  "inputs": "Capture mode (junit | coverage | e2e | all).",
+  "process": "Would run the shell lines declared in center.config commands.* from the repo root, then regen, then append the committed run-history.jsonl when totals move.",
+  "output": "Run totals per suite.",
+  "if_not_built": "Nothing changes; the freshness half agents actually need is junit head_sha, which rides on map_status.",
+  "verdict_why": "Unanimous never at risk 5: it runs arbitrary project shell for minutes and writes committed records — the textbook silent-long-process hazard — and the operator deciding WHEN a capture runs is the point, not an inconvenience.",
+  "recommendation": "Never expose it; keep captures human-initiated through refresh_center.sh. Surface junit head_sha freshness as a FIELD on map_status instead, so an agent can see the evidence is stale without being able to start a run."
+ },
+ "map_claim": {
+  "pain_point": "Claiming files into an entity is a hand edit of center.config.json followed by a 15-23 s regen just to see which globs actually resolved, then a trim.",
+  "called_by": [
+   "/gabe-cc-update",
+   "/gabe-cc-init",
+   "/gabe-plan"
+  ],
+  "inputs": "Entity slug, layer, candidate globs.",
+  "process": "Preview: reuses _a3_code's glob resolution to report which files the globs resolve to and which census entries would clear. Apply (the write) would edit the committed center.config.json — the file that encodes ownership.",
+  "output": "Preview: the resolved file list, undeclared-layer warnings and the census entries cleared; under 0.2 s, capped.",
+  "if_not_built": "The hand-edit, regen, read, trim loop stays a 20-second cycle per attempt.",
+  "verdict_why": "Unanimous later, and only for the preview half: config is OWNERSHIP, hand-reviewed in PRs, and an agent-callable apply would let the S13 nag be 'fixed' by auto-claiming files — the drift class D123 exists to kill.",
+  "recommendation": "Wave 4, preview only. Prerequisites: owner_of and the census read shipped. Guard: apply stays an operator line or is omitted entirely; if it ever ships it must write the TODO(verify-glob) marker and validate slug and layer before touching the file."
+ },
+ "census_scaffold": {
+  "pain_point": "Nobody writes a workflow census because there is nothing to start from — which is why a script exists that seeds a valid skeleton from a card's FLOWS.",
+  "called_by": [
+   "/gabe-cc-update",
+   "/gabe-cc-init"
+  ],
+  "inputs": "Project root, entity slug, optional --stdout preview.",
+  "process": "Would run scaffold_census.py, writing a drift-checker-valid skeleton (one state per FLOWS line, every step ghost and capture-owed) into the committed workflows dir; it already refuses to overwrite an existing census.",
+  "output": "The skeleton census JSON, sized by the card's flows.",
+  "if_not_built": "Nothing: the skill already runs the script the moment the operator answers 'author now'.",
+  "verdict_why": "Unanimous never: the four-way ASK — author, extend, defer, decline — IS the design, and a writer tool makes 'author now' the path of least resistance, erasing the dispositions pulse S8 and the named-absence render depend on.",
+  "recommendation": "Keep it a skill step behind the operator's ASK, and keep 'never author silently'. If a preview is ever wanted, the script's --stdout mode can ride entity_context — but there is no mid-reasoning consumer for it, and the write lands in a committed accumulator."
+ },
+ "center_bootstrap_preview": {
+  "pain_point": "Before adopting a center in a brownfield repo you want to know what would be copied and what has drifted from the suite.",
+  "called_by": [
+   "/gabe-cc-init",
+   "/gabe-cc-update"
+  ],
+  "inputs": "Target project path.",
+  "process": "Would list what cc-init's init step would copy (generators, shell, config template, adoption tracker) and diff the twin's generators against the suite — which is exactly what propagate.sh --check already does in under a second.",
+  "output": "Would-copy, would-update and new lists plus a config skeleton diff; 200-500 tokens.",
+  "if_not_built": "Nothing: propagate.sh --check exists, takes under a second, and is operator-run.",
+  "verdict_why": "Unanimous never: it IS an existing CLI, its consumers are disable-model-invocation skills, and it runs once per adoption — roster dilution with no reliability gain.",
+  "recommendation": "Leave it as propagate.sh --check. The COPY half must never become agent-callable: the archive-never-delete checkpoint, the operator-approved shortlist and one-section-per-run at human speed are precisely why /gabe-cc-init is human-initiated."
+ },
+ "rank_signals": {
+  "pain_point": "cc-init's ranking walks seven machine signal sources by hand — SCOPE REQs, PLAN phases, route tables, test density, 90-day churn, walks.jsonl, BEHAVIOR critical paths — under a rule that every candidate cites machine sources only.",
+  "called_by": [
+   "/gabe-cc-init",
+   "/gabe-cc-update",
+   "/gabe-pulse"
+  ],
+  "inputs": "Project root; optional churn window.",
+  "process": "Would gather those seven collectors plus the entity_shape second lens and the archmap census claim columns into one candidate table. Read-only: shortlist approval and the tracker write stay in the skill.",
+  "output": "A machine-cited candidate table, 1-3K tokens, with each signal's evidence returned as a clickable path. 2-10 s.",
+  "if_not_built": "Adoption ranking stays a hand walk — bounded, because it happens once per adoption plus occasional re-ranks.",
+  "verdict_why": "Two later, one never: 250-350 lines and a new battery for a once-per-adoption operation, in a skill where human-speed review IS the feature, and where owner_of and entity_shape already serve the census lens.",
+  "recommendation": "Wave 4, and only if a second brownfield adoption shows re-ranks are frequent. Prerequisites: owner_of, entity_shape and the census read shipped so its census slice is a join. Guards: strictly read-only, never a tracker-write flag, and census absence serialized as full coverage rather than null."
+ },
+ "center_gate": {
+  "pain_point": "The center's link and chrome checks are only reachable through refresh_center.sh, so running them alone means paying for a regen you may not need.",
+  "called_by": [
+   "/gabe-cc-update",
+   "/gabe-cc-init",
+   "/gabe-commit"
+  ],
+  "inputs": "Center dir.",
+  "process": "Would exec check_center_links.py (every href, anchor and asset resolves; an empty crawl fails) and verify_center_chrome.mjs (a shell-JS harness in a node vm, no browser) — measured 3.0 s and 1.6 s on gustify, 565 checks passed.",
+  "output": "Dead-link and chrome summaries with capped WARN lines; 100-400 tokens.",
+  "if_not_built": "Nothing: both already chain under set -e in refresh_center.sh and suite-doctor, where their exit codes actually stop the build.",
+  "verdict_why": "Unanimous never: this is a GATE by design — the one place the center departs from report-never-gate — and a tool result reading 'dead links: 3' is weaker than a failing exit, which is what /gabe-commit's staged-center gate would need.",
+  "recommendation": "Leave it chained in refresh_center.sh and suite-doctor. If it were ever wrapped, a node-absent SKIP would have to be surfaced loudly — a skipped chrome harness reading as green is the failure that makes the wrapper worse than the CLI."
+ },
+ "beat_tail": {
+  "pain_point": "The E8 tail is three commands across six beats, and the measured failure is INSIDE it: on gustify the PULSE leg fires (28 offers recorded) while the inflight leg is forgotten — inflight.json sits 20 commits / 17 days behind, for a script that takes 0.07 s.",
+  "called_by": [
+   "/gabe-execute",
+   "/gabe-review",
+   "/gabe-commit",
+   "/gabe-red",
+   "/gabe-plan"
+  ],
+  "inputs": "Project root; the beat name.",
+  "process": "Would run next.mjs --json, write-inflight.py and angles.py --one-line in one call and merge them (about 0.3 s), writing inflight.json/.js and the PULSE.jsonl decay record as side effects.",
+  "output": "{now_line, next_line, advance_to, center_pointer, pulse_line, ran} in under 600 characters.",
+  "if_not_built": "The tail stays three remembered commands — but a tool would also be a remembered call, so the forgotten-leg leak stays open either way.",
+  "verdict_why": "Split later/next/never, landing on never-as-a-tool: the highest-frequency collapse in the roster, but the failure is a FORGOTTEN LEG inside a tail that IS invoked, a tool cannot enforce 'after the E5 writes' ordering, and it risks double PULSE.jsonl records.",
+  "recommendation": "Build it in wave 0 as a RAIL instead: a PostToolUse hook on .kdbp/PLAN.json|md writes calling write-inflight.py (about 20 lines of hooks.json plus a shim), so the refresh fires on the event that changes it. NOW/NEXT sugar can ride the next shim later; keep the standing S9-S14 nags as the after-the-fact backstop."
+ },
+ "next": {
+  "pain_point": "next.mjs is the most-wired script in the suite — six beat tails plus a SessionStart hook — and every site recalls its path verbatim; the exit-2 fallback is a 50-line prose procedure.",
+  "called_by": [
+   "/gabe-next",
+   "/gabe-execute",
+   "/gabe-review",
+   "/gabe-commit",
+   "/gabe-pulse"
+  ],
+  "inputs": "Project root.",
+  "process": "Spawns node next.mjs --json — a read-only decision table over PLAN cells with a prior-row sweep and a mirror refusal, 0.03 s — and maps its exit codes 0/1/2 to explicit fields.",
+  "output": "{next, reason, phase, name, state, now_line, next_line, advance_to, warnings, project_type} plus mirror_unusable and no_active_plan flags; about 450 characters.",
+  "if_not_built": "The router stays a path the agent must recall, and the exit-2 fallback stays a prose branch.",
+  "verdict_why": "Two next, one later: pure discovery gain over an already-reliable zero-side-effect script, with the caveat that a node spawn inside a Python-stdlib server is a new dependency and a PORT would duplicate the 152-line decision table.",
+  "recommendation": "Wave 3, in the sibling gabe-kdbp namespace so gabe-map stays at seven. Prerequisite: the wave-0 inflight hook is live so this is sugar, not the rail. Guards: spawn node rather than port (second source of truth), keep advance_to caller-written, and add no git state."
+ },
+ "pulse": {
+  "pain_point": "Pulse's ten banded signals are model-assembled from 6+ commands, and the first live run produced a vacuous P10 pass from a wrong invocation — size-budget with nothing staged inspected zero files and was reported clean.",
+  "called_by": [
+   "/gabe-pulse",
+   "/gabe-handoff",
+   "/gabe-help"
+  ],
+  "inputs": "Project root; optional band filter.",
+  "process": "Would run the nine collectors (ledger-gap.sh, git status and log, next.mjs, PLAN cells, PENDING rows, walks.jsonl, size-budget) plus angles.py, then apply the band, cap and headline rules. ledger-gap.sh alone costs about 2.5 s.",
+  "output": "At most 5 rows across 4 bands plus the unavailable roster, 400-900 tokens, with 'undetermined' kept distinct from 'clean'.",
+  "if_not_built": "The remembered-invocation bug stays possible, but the tail's one-line angle already carries the signal that matters most often.",
+  "verdict_why": "Two later, one next: it would kill the vacuous-invocation class, but pulse-spec section 7 says 'never fires automatically, human-invoked only, never writes', and angles.py records the decay ledger — ad-hoc calls forge offers and silence true signals after two.",
+  "recommendation": "Wave 4, and only the angles half with --no-record hard-coded. Prerequisite: a ruling revising pulse-spec section 7. Guards: keep 'unavailable' first-class (a JSON null read as clean is the named E3 failure) and never let a tool replace the tail nag."
+ },
+ "commit_gate": {
+  "pain_point": "Step 2 says 'run these scripts, no LLM, 2-10 seconds', yet 8 checks and 5 aux scripts are model-orchestrated at every checkpoint, and gustify's BEHAVIOR Verify Commands section is EMPTY so the commands are re-derived every commit.",
+  "called_by": [
+   "/gabe-commit",
+   "/gabe-execute",
+   "/gabe-red",
+   "/gabe-push"
+  ],
+  "inputs": "Project root; the staged scope; the maturity level.",
+  "process": "Would run CHECK 1-8 (lint, types, tests, coverage by maturity, shape census, PENDING glob vs staged diff, doc drift, structure) plus five aux scripts — two of which WRITE: map-deltas --sweep truncates the live accumulator, evidence-freshness appends a log.",
+  "output": "Per-check evidence rows in the form '<check>: <cmd> -> exit <code>, <count>', with the skip glyph preserved; 1-3K tokens. Runtime is the project's own lint/types/tests.",
+  "if_not_built": "Checkpoint checks stay model-orchestrated — but the real leak is upstream: 34 raw commits against 1 gate run on gustify, which nothing inside the beat can close.",
+  "verdict_why": "Two later, one never: the highest blast radius in the roster (every checkpoint of every KDBP project), 400-600 new lines including three new table parsers, two writers inside, and E2 still requires a green check to mean the command ran via Bash this session.",
+  "recommendation": "Wave 4 at the earliest. Prerequisites: the wave-0 fail-closed commit hook live, verify_commands shipped, E2 amended to admit tool-returned cmd+exit+count, and the second design review section 12 demands. Guards: git commit stays OUTSIDE the tool so pre-checkpoint keeps firing, and both writing scripts stay on the rail."
+ },
+ "verify_commands": {
+  "pain_point": "Every gate run re-derives the project's lint, type and test commands from prose, because gustify's BEHAVIOR Verify Commands section is empty and the 'write the binding back' offer never landed.",
+  "called_by": [
+   "/gabe-commit",
+   "/gabe-execute",
+   "/gabe-red",
+   "/gabe-push"
+  ],
+  "inputs": "Project root; optional language hint.",
+  "process": "Resolves commands three-tier — BEHAVIOR.md Verify Commands, then package.json/pyproject/Makefile/CI jobs, then per-language fallbacks — probing each candidate ONCE to classify non-evidence (exit-0 no-op, 0 collected, continue-on-error). Probing RUNS commands.",
+  "output": "{lint, types, tests, source: a|b|c, non_evidence_reasons, results_out} in under 1 KB; results_out only when actually authored, and never an invented reporter flag.",
+  "if_not_built": "commit_gate, case_thread and execute's task-local verify all keep guessing, and the never-guess-a-reporter-flag rule stays prose.",
+  "verdict_why": "Unanimous next: quiet, low-risk, and the shared INPUT three other candidates need — building it first de-risks all of them, which is why the judges put the script ahead of the packaging.",
+  "recommendation": "Wave 2, built as a SCRIPT the beats run first and packaged as a tool after. Trigger is already true (gustify's Verify Commands is empty). Guards: never append a reporter flag to a resolved command, and leave the BEHAVIOR.md write-back offer a skill step with a human yes."
+ },
+ "case_thread": {
+  "pain_point": "Four skills instruct the same case-scoped runner in prose with a hand-built -k expression; on gustify green@ stamps appear in 1 of 8 plans against 42 EXEC rows.",
+  "called_by": [
+   "/gabe-execute",
+   "/gabe-review",
+   "/gabe-red",
+   "/gabe-commit"
+  ],
+  "inputs": "Phase id; the run command (REQUIRED); assert-red or assert-green; optional plan path.",
+  "process": "Would wrap case-thread.py: read the phase's declared case ids from PLAN.json minus guards, run the case-scoped command, and classify RED-PROVEN / GREEN-PROVEN, NOT-RED / NOT-GREEN, or INCONCLUSIVE. It writes nothing; the caller applies the stamp.",
+  "output": "{verdict, reason, declared, guards, unseen_ids, stamp, runner cmd, exit, tail} — the exact command and exit must return verbatim for the E2 evidence line. Seconds to about a minute per run.",
+  "if_not_built": "The runner stays hand-composed, but the thread itself is already hook-enforced: plan-proof-guard blocks a Review tick without the green@ stamp.",
+  "verdict_why": "Two later, one never: it is the exemplar of a correctly railed event (stamp hook-FORCED, entry assert-red backed by red-entry-guard), so a tool adds little while hiding live runner output and inviting a guessed runner where Verify Commands is empty.",
+  "recommendation": "Wave 4. Prerequisites: verify_commands bound, and run_cmd a REQUIRED argument so the tool can never guess a runner (gate-spec forbids guessing). Guards: return the exact cmd and exit verbatim, handle timeouts and partial output, and keep the hook as the enforcement."
+ },
+ "prove_guard": {
+  "pain_point": "Guards go void silently — a twin measured 1 in 6 hand-authored guards void — and re-proving one is a judgment-triggered hand run. gustify proved 158 guards with its own local script while the suite's sink .kdbp/guard-proofs.jsonl was never created.",
+  "called_by": [
+   "/gabe-red",
+   "/gabe-review"
+  ],
+  "inputs": "A file:line target; the run command; case id; symbol.",
+  "process": "Would wrap prove-guard.py, which MUTATES the guarded source line, runs the guard, asserts it goes red and restores the original bytes (verified byte-for-byte on every path), then optionally appends guard-proofs.jsonl.",
+  "output": "PROVEN / VOID / INCONCLUSIVE plus the old-versus-new mutation diff. Two test runs per guard.",
+  "if_not_built": "Guard re-proving stays a hand run — which is what happens today anyway; a tool would not make it fire.",
+  "verdict_why": "Unanimous never, and the highest-risk SHAPE in the roster at risk 5: it edits source inside a call, invisible to red-entry-guard's PreToolUse Write|Edit matcher, and the model never sees the mutation or the restore confirmation.",
+  "recommendation": "Do not expose. The firmer moves are mechanizing it into /gabe-red step 5 per GUARD id (the reach-emit pattern) or a pre-checkpoint WARN when a Cases record carries GUARD ids with no PROVEN record. If ever exposed: one target per call, dry_run default true, the diff returned, the dirty-file refusal kept."
+ },
+ "plan_write": {
+  "pain_point": "Eight writers each re-implement the paired PLAN.md/PLAN.json write from prose, and the result is the softest measured link in the suite: on gustify review records land in 1 of 8 plans, green@ stamps in 1 of 8, Cases in a minority.",
+  "called_by": [
+   "/gabe-execute",
+   "/gabe-review",
+   "/gabe-commit",
+   "/gabe-red",
+   "/gabe-plan"
+  ],
+  "inputs": "Phase id; the cell or record to write (Exec / Review / Red / Center tick, Cases, Reach, proof, review record); project root.",
+  "process": "Would tick the PLAN.md table cell, bump Last Updated, mirror PLAN.json, cross-check the footer and honor the six skip codes — becoming the ONE writer of the file next.mjs, four hooks and the board all read.",
+  "output": "The cells written, or a skip code naming the precondition that failed.",
+  "if_not_built": "Eight prose implementations continue, and the records that gate the lifecycle keep going unwritten.",
+  "verdict_why": "Unanimous later at maximum value AND maximum risk (5/4/5/5): the D7 lie-block is a PostToolUse hook on harness Write|Edit, so an MCP writer is the invisible path pre-checkpoint.sh warns about — every tick through it goes dark to the suite's only lie-block.",
+  "recommendation": "Wave 4, blocked on the hook-visibility ruling: extract plan-proof-guard's inline python to a shared module the tool imports and REFUSES on (tests/hooks must stay 121/121), or write through the harness, or prove an mcp__ matcher fires. Then it must be the ONLY writer and honor regen-mirror's preservation rule."
+ },
+ "pending_defer": {
+  "pain_point": "Six writers hand-edit a 120 KB PENDING table by Read-then-Edit, and they forget the 'Verified: @<sha>' anchor often enough that CHECK 6 exists to warn when that cell is prose.",
+  "called_by": [
+   "/gabe-review",
+   "/gabe-commit",
+   "/gabe-push",
+   "/gabe-execute",
+   "/gabe-cc-update"
+  ],
+  "inputs": "The finding (dimension, entity, severity, description, fix, source, file); project root.",
+  "process": "Wraps disposition.py --defer, which appends a header-resolved, closure-aware PENDING row with the next P-id, the Verified anchor, a class-tag prefix and recurring-match (same File plus over 50% Finding overlap bumps Times Deferred).",
+  "output": "The written row, echoed back; under 0.1 s.",
+  "if_not_built": "Hand edits of a 120 KB table continue (163 KB on gastify), Verified anchors keep landing as prose, and Times Deferred keeps under-counting.",
+  "verdict_why": "Two next, one later: the safest mutation in the roster — an existing header-resolved writer with its own battery, and no D7 hook watches PENDING so the visibility collision is mild — the hold-up is that disposition.py is a project copy with no install path.",
+  "recommendation": "Wave 3, in the gabe-kdbp sibling namespace. Prerequisites: an install path (install.sh copies only hooks today) and a two-twin PENDING schema battery, since the schemas diverge. Guards: never rewrite headers or renumber rows, and the defer DECISION stays human."
+ },
+ "ledger_append": {
+  "pain_point": "Every beat hand-appends a LEDGER row newest-first, and the vocabulary has drifted: gustify carries 321 rows across 21 Entry tags, several off-spec, that ledger-gap.sh and review Step 0.3 must regex around.",
+  "called_by": [
+   "/gabe-commit",
+   "/gabe-review",
+   "/gabe-execute",
+   "/gabe-push",
+   "/gabe-cc-update"
+  ],
+  "inputs": "Entry tag, date, theme/scope, commits, and the Gates cell taken verbatim; project root.",
+  "process": "Detects the LEDGER header, inserts the row newest-first directly under it in the house format, and mints the DEPLOYMENTS P-id for push rows. The Gates cell is copied as a string, never composed.",
+  "output": "The written row; under 0.1 s.",
+  "if_not_built": "Free-form rows keep accumulating (gastify's LEDGER is already 1,178,891 B), pulse P1 keeps paying about 2.5 s partly to parse prose, and review's Phase-N scope resolution stays brittle.",
+  "verdict_why": "Unanimous next: low risk since no D7 hook watches LEDGER, and a real hardening for two downstream readers — but no measured failure hinges on row format, so it pairs with pending_defer rather than standing alone.",
+  "recommendation": "Wave 3, beside pending_defer in the sibling namespace. Trigger: LEDGER vocabulary drift stays measurable. Guards: take the Gates cell verbatim so E2 provenance survives, and report an off-vocabulary Entry tag as a WARN field, never a refusal (report-never-gate)."
+ },
+ "kdbp_snapshot": {
+  "pain_point": "Handoff and help re-read PENDING.md (gustify 120,748 B, about 30K tokens) and LEDGER.md (116,148 B, about 29K) just to extract the open rows and the most recent row; gastify's LEDGER is 1,178,891 B.",
+  "called_by": [
+   "/gabe-handoff",
+   "/gabe-help",
+   "/gabe-pulse",
+   "/gabe-init"
+  ],
+  "inputs": "Project root; optional section selection.",
+  "process": "Collects branch, recent commits, porcelain status and ahead/behind counts, the PLAN current phase and table, PENDING open rows via header-resolved parsers honoring the resolved-comment closure model, the most recent LEDGER row, and SCOPE section Phases.",
+  "output": "A 400-800 token state snapshot in place of roughly 60K raw tokens; under 1 s.",
+  "if_not_built": "Every handoff and help run keeps paying tens of thousands of tokens to re-read two tables, and three session hooks keep re-parsing them in bash.",
+  "verdict_why": "Unanimous next: the largest token saving in the roster and entirely read-only — the caution is that PENDING schemas diverge across twins, so a positional parser would be wrong on day one.",
+  "recommendation": "Wave 3, in the gabe-kdbp sibling namespace so gabe-map stays at seven. Prerequisite: the header-resolved parsers reused (disposition.py plus the board's row loader). Guards: share collectors with pulse P2/P3/P8, and keep the snapshot out of the durable record — PLAN, LEDGER and PENDING stay canonical."
+ },
+ "phase_context": {
+  "pain_point": "Execute re-reads 4-5 files with regexes every run — the PENDING File-match read alone costs about 30K tokens on gustify — and skips the entity slice entirely, which is the axis-1 gap in one sentence.",
+  "called_by": [
+   "/gabe-execute",
+   "/gabe-red",
+   "/gabe-review",
+   "/gabe-next",
+   "/gabe-plan"
+  ],
+  "inputs": "Project root; optional phase id.",
+  "process": "Runs execute's Step 0-1 preflight: .kdbp presence, active plan, Exec and Red cells with skip codes, project-type dispatch, tier and dim overrides, BEHAVIOR maturity and mode, PENDING rows matching Scope — plus the slice for ALL declared entities.",
+  "output": "One 1-3K token preflight in place of about 35K raw tokens, with the 'Red is unstarted' warning returned as a field so the human ask survives. Under 1 s plus about 0.3 s per entity.",
+  "if_not_built": "Execute keeps entering phases unscoped and the entity pack keeps having no consumer — precisely the gap v1 exists to close.",
+  "verdict_why": "Unanimous next: this is where axis-1 lands INSIDE the execute beat, but it is a composite over entity_context whose cap contract must be measured first, and it risks becoming a second reader of PLAN cells.",
+  "recommendation": "Wave 2, once entity_context's capped pack measures within budget on gustify's largest entity. Guards: import next.mjs and regen-mirror parsers rather than re-parsing, iterate ALL declared entities (never the first), report md-versus-json drift since the agent stops reading PLAN.md, and ship the slice 'floor, never ceiling'."
+ },
+ "phase_complete_check": {
+  "pain_point": "Before an Exec tick the agent ls-es each declared proof path and re-reads PLAN twice; plan-proof-guard then re-runs the same check AFTER the write and BLOCKS — so the agent learns of the lie only by being blocked.",
+  "called_by": [
+   "/gabe-execute",
+   "/gabe-review"
+  ],
+  "inputs": "Phase id; project root.",
+  "process": "Would check the hook's invariants BEFORE the write: proof artifacts with its tolerance (literal path, then brace-glob, then non-empty parent), staging-proof exclusions, the Commit-column invariant, every task row ticked, and the case-thread green condition.",
+  "output": "Pass or fail per invariant with the missing paths named; under 0.1 s.",
+  "if_not_built": "The hook keeps catching lies after the fact — which works, at the cost of a blocked write and a retry each time.",
+  "verdict_why": "Unanimous later: low risk and genuinely useful pre-write honesty, but a divergent reimplementation would be worse than today — the tool must import the SAME evidence check the hook runs, and that code is currently an inline bash heredoc.",
+  "recommendation": "Wave 4, on the same prerequisite as plan_write: extract plan-proof-guard's inline python to a shared module with tests/hooks still 121/121. Guard: the hook stays the backstop — a query can never replace a PostToolUse block, and two implementations would mean PASS here, BLOCK there."
+ },
+ "review_target": {
+  "pain_point": "Review's no-arg mode is model-walked: parse two markdown tables, grep up to 314 LEDGER rows for a Phase N mention in free prose, run N git shows, union the files, then print a fixed banner.",
+  "called_by": [
+   "/gabe-review",
+   "/gabe-commit"
+  ],
+  "inputs": "Project root; optional phase id or base ref.",
+  "process": "Finds the PLAN row with Review unstarted and Exec done or in progress, resolves its LEDGER rows to shas via the Commits column, unions git show --name-only minus deletes and renames, and falls back to git diff HEAD.",
+  "output": "The target phase, the changed-file list (capped or paginated) and the three spec-fixed banner strings verbatim — and the base ref review_drift needs. Sub-second.",
+  "if_not_built": "Every review re-walks two tables and N git shows, and the base ref stays hand-resolved.",
+  "verdict_why": "Unanimous next: read-only and straightforward, but no measured failure cites it, and its LEDGER matching is a regex over free prose that stays brittle inside a tool exactly as it is in prose.",
+  "recommendation": "Wave 3, paired with ledger_append (which hardens the Commits column its regex depends on) and folded into review_drift's base-ref resolution. Guards: return the three banner strings verbatim, and cap or paginate the file list on large phases."
+ },
+ "plan_check": {
+  "pain_point": "The twelve CHK structural rules are walked by prose per phase, and the one detector for a table row missing from the mirror — regen-mirror.py — WRITES the mirror as it computes drift, so no read-only probe exists.",
+  "called_by": [
+   "/gabe-plan",
+   "/gabe-next"
+  ],
+  "inputs": "Project root; optional phase id.",
+  "process": "Would apply C1-C12 over PLAN.md, DECISIONS.md and the HTML artifact and import regen-mirror's parsers for an md-versus-json drift summary — strictly read-only.",
+  "output": "A C1-C12 compliance matrix plus the drift summary, 1-2K tokens; under 0.2 s.",
+  "if_not_built": "Plans stay hand-checked, which is tolerable because plans change rarely; the real loss is the diagnostic behind next.mjs exit-2 refusals.",
+  "verdict_why": "Unanimous later: low value at low frequency, and it needs a script change first — regen-mirror has no dry-run mode, and the 61-assert plan-mirror battery covers the producer, not a probe.",
+  "recommendation": "Wave 4. Prerequisite: regen-mirror.py gains --dry-run. Guards: import its parsers rather than copying them, and leave the retrofit writes and their double-confirm human. Worth it mainly if mirror-unusable refusals start recurring."
+ },
+ "push_preflight": {
+  "pain_point": "Push walks about 10 shell commands out of a 604-line spec before the first decision, and the PUSH.md parse exists twice — once in spec prose, once inside the 255-line push-gate-guard hook that fails closed.",
+  "called_by": [
+   "/gabe-push",
+   "/gabe-pulse",
+   "/gabe-cc-update"
+  ],
+  "inputs": "Project root; optional target env.",
+  "process": "The READ-ONLY half only: gh presence and auth, remotes, the PUSH.md envs / default_env / known_branches parse, git fetch --prune plus remote-minus-known drift, current branch, ahead/behind, dirty count, and whether this push is gated plus marker validity.",
+  "output": "One preflight block, 300 B to 1 KB, with gated true or false returned as a REMINDER of the marker step, never as permission. 1-5 s, network-bound.",
+  "if_not_built": "The ten-command walk continues and the 'is this gated' classification stays duplicated between prose and the hook.",
+  "verdict_why": "One next, two later: valuable as a query, but two implementations of 'is this push gated' is precisely the disagreement class the hook fails closed on — the parser has to be shared before the tool exists.",
+  "recommendation": "Wave 4, read-only half ONLY — no mutation twin ever, since push-gate-guard is a PreToolUse Bash hook a pushing tool would bypass entirely. Prerequisite: extract the PUSH.md parser from push-gate-guard.sh with its battery green. The ONE blocking ask, the marker write and the push stay outside."
+ },
+ "health_scan": {
+  "pain_point": "The four numeric analyses — god files, churn, coupling, bug concentration — are shell pipelines re-typed per run inside a fork, under a rule that every number must come from a command executed this run.",
+  "called_by": [
+   "/gabe-health",
+   "/gabe-push",
+   "/gabe-pulse"
+  ],
+  "inputs": "Project root; window in days.",
+  "process": "Would run the four git pipelines plus the commit-count checksum, returning top-20 lists per analysis. Only the numeric half: the decision-debt and skill-estate lenses have no deterministic source.",
+  "output": "Four top-20 lists with the checksum count and the exact pipelines that produced them, 1-2K tokens; 1-5 s on a 60-day window.",
+  "if_not_built": "The pipelines keep being retyped — but the scan itself already rarely runs: pulse S2 offered it 16 times on gustify and it was taken 0 times.",
+  "verdict_why": "One next, two later: cheap numbers, but the consumer is a fork satellite that does not run (only push Step 3.7 fires it), and E1 provenance shifts from pasted output to 'the tool said' unless the exact pipelines return.",
+  "recommendation": "Wave 4. Prerequisite: a LEDGER PUSH row proving Step 3.7 actually dispatches /gabe-health. Guards: return the exact pipelines plus the checksum so provenance survives, keep the severity thresholds visible as constants, and leave the push gate's ONE blocking ask outside the tool."
+ },
+ "scope_validate": {
+  "pain_point": "A deterministic validator ships installed under ~/.claude/schemas/gabe-scope/, and /gabe-scope still says 'validate coverage and anchors' with no command — the remembered-process class in miniature.",
+  "called_by": [
+   "/gabe-scope",
+   "/gabe-scope-change",
+   "/gabe-scope-pivot",
+   "/gabe-plan"
+  ],
+  "inputs": "Project root; the scope-session.json and scope-references.yaml paths.",
+  "process": "Would spawn schemas/validate.py against the two schemas (a stdlib server cannot import jsonschema or pyyaml) and add the finalize coverage check — every SC to REQ to phase covered, every anchor resolving.",
+  "output": "Validation result plus coverage gaps, 100-400 tokens, with validator exit 2 preserved as an E6 STOP rather than degraded to a pass. Under 1 s.",
+  "if_not_built": "Scope validation stays a hand walk while the validator sits installed and unwired — though the flow only runs on new projects and scope changes.",
+  "verdict_why": "Two later, one never: all three judges agree the gap is real and all three agree the fix is a RAIL — a spec step naming the installed command, or a PostToolUse hook on scope-session.json writes — not a tool for a rare flow.",
+  "recommendation": "Fix it as a spec step or a PostToolUse hook on scope-session.json naming the installed validator; only that prerequisite opens the wave-4 tool seat. Guards: spawn the validator rather than import it, and keep E6-STOP-on-unavailable — a gate that could not run has proven nothing."
+ },
+ "artifact_gate": {
+  "pain_point": "Two node gates must run before every publish and both are remembered; under WSL the bundled chromium crashes under resource pressure and the system-chrome workaround lives in a memory file rather than in the tool.",
+  "called_by": [
+   "/gabe-artifact",
+   "/gabe-imagine"
+  ],
+  "inputs": "The HTML file path; which gates to run.",
+  "process": "Would spawn verify-artifact-chrome.mjs (36 checks) and verify-motion.mjs (computed-style fingerprint sampling at uneven gaps with an 800 ms settle), 10-40 s per file.",
+  "output": "Per-check pass, fail or SKIP with the count to paste into the report; SKIP never collapsed into pass.",
+  "if_not_built": "The gates stay two remembered node invocations and the WSL fallback stays tribal knowledge — probe-render exists precisely because gates were remembered-and-green while the page was broken.",
+  "verdict_why": "Two later, one never: worth encoding the environment knowledge once, but pre-publish is an EVENT, and a heavy Playwright and chromium spawn out of a stdlib server is the wrong home for it.",
+  "recommendation": "Wave 4, and as a PreToolUse hook on the Artifact tool (the push-gate pattern) rather than a tool. Prerequisite: land the WSL system-chrome fallback inside verify-artifact-chrome.mjs so it stops living in memory. Guard: never collapse a SKIP into a pass — a skip on a page that should move is a failure."
+ },
+ "prism_gate": {
+  "pain_point": "The I5 gates are one bash command, but browser-gated for 20 s to 2 minutes per page, and the fast loop is a per-page recipe the model follows from a doc.",
+  "called_by": [
+   "/gabe-imagine",
+   "/gabe-artifact"
+  ],
+  "inputs": "The prism slug or page path.",
+  "process": "Would compose verify-prism.mjs (contract), probe-render.mjs (proof the authored script actually ran) and check-prism-fit.mjs through the suite's own refresh_suite_center.sh.",
+  "output": "Gate verdicts per check, 300-800 tokens.",
+  "if_not_built": "Nothing for twins: these are suite-repo gates run inside gabe-imagine's build loop.",
+  "verdict_why": "Unanimous never: suite-repo-specific paths on a user-scope server would advertise suite-only machinery to every twin session, the runs are browser-gated minutes, and check 3's hole — it verifies a number is PRESENT, not traceable — is oversold by a green.",
+  "recommendation": "Keep it inside gabe-imagine's build loop as the I5 step, with the I2 ASK checkpoint as the real control point. If portability is ever wanted, that is a skill change and an honest degrade path, not an MCP tool every twin session can see."
+ },
+ "docsite_build": {
+  "pain_point": "Building the docs site is one command in center mode (browser-gated minutes) or two standalone, and the staleness checker is consulted only through pulse S4.",
+  "called_by": [
+   "/gabe-docsite",
+   "/gabe-cc-update",
+   "/gabe-pulse"
+  ],
+  "inputs": "Config, shell and nav paths; mode.",
+  "process": "Would compose build_docsite.py with diagram-compliance.mjs and the docsite-staleness checker, writing site pages. Standalone 5-20 s, center mode minutes.",
+  "output": "Which mode the build took, which diagram path ran, and the staleness result; 200-600 tokens.",
+  "if_not_built": "Nothing: the chain already has one entry point and S4 already nags staleness on the beat tail.",
+  "verdict_why": "Unanimous never: a pre-ship event with an existing single entry point, another headless-browser dependency, and an agent-callable writer of committed pages — zero measured gap to close.",
+  "recommendation": "Leave it as the CLI step inside /gabe-docsite and keep S4 as the staleness nag. If the 'which mode / which diagram path' lines matter, surface them in the skill's own report rather than behind a tool result."
+ },
+ "mockup_resolve": {
+  "pain_point": "L0 RESOLVE parses a YAML manifest block and matches a screen name against per-project markdown, then composes a reuse-roots grep by hand — and the skill auto-triggers on path globs, so this happens often in React-first twins.",
+  "called_by": [
+   "/gabe-mockup",
+   "/gabe-execute",
+   "/gabe-next",
+   "/gabe-commit"
+  ],
+  "inputs": "The target screen or component name; project root.",
+  "process": "Would parse the BEHAVIOR.md mockup block (or MOCKUP.md), resolve the target through the screen map to its canonical reference, and run the reuse_roots grep that backs the E4 REUSE-versus-NEW verdict.",
+  "output": "The resolved reference, or an unmapped / archived STOP, plus the E4 REUSE or NEW line with its grep evidence; 200-500 tokens, under 1 s.",
+  "if_not_built": "The resolve step stays hand-composed — which is safer than a wrong answer, since a false 'not mapped' STOPs real work.",
+  "verdict_why": "Unanimous later: screen maps are per-project markdown with no schema and no fixtures exist, and because the skill auto-triggers on globs a wrong resolver would fire often — high wrong-answer cost at high frequency.",
+  "recommendation": "Wave 4. Prerequisites: a screen-map schema and a fixture manifest, neither of which exists today. Guards: the verdict must always carry the evidence that produced it, and the Playwright validate half stays a separate long-running step, never folded in."
+ },
+ "meme_render": {
+  "pain_point": "Meme URLs are composed by hand against a gotcha table (special characters are literal percent-encodes, not memegen's tilde escapes), then fetched, saved and visually checked.",
+  "called_by": [
+   "/gabe-meme"
+  ],
+  "inputs": "Template id, text fields, output dir.",
+  "process": "Would build the memegen.link URL, confirm an HTTP 200 and download the PNG — the only candidate with an external network dependency inside the server.",
+  "output": "The saved file path and dimensions, about 50 tokens; 1-3 s per meme.",
+  "if_not_built": "The encoder gotchas stay in the skill's reference, where the render already happens.",
+  "verdict_why": "Unanimous never: not a map or lifecycle process, it puts a network dependency inside a stdio server, and it lowers the cost of shipping an unapproved concept — authored satire is a human call, never auto-shipped.",
+  "recommendation": "Leave it in /gabe-meme; a skill-local helper is the most it should ever become. Concept approval must precede any render, and the model still has to Read the PNG — a tool renders, it cannot see whether the joke landed."
+ },
+ "commit_hook_fail_closed": {
+  "pain_point": "The largest open remembered-process leak on record: gustify shows 34 raw commits against 1 gate run, with pre-checkpoint's reminder firing each time — so every Step-2 aux check (trailer, sweep, budgets, freshness) was skipped each time.",
+  "called_by": [
+   "/gabe-commit",
+   "/gabe-execute",
+   "/gabe-red",
+   "/gabe-push"
+  ],
+  "inputs": "Not a tool — a PreToolUse hook on git commit, keyed on an active KDBP phase and the marker /gabe-commit mints.",
+  "process": "Fires at the commit itself: in a KDBP project with an active phase, a raw git commit without the gate marker gets a blocking ask (the push-gate-guard pattern); /gabe-commit's own commit passes silently, as do non-KDBP trees and phases with nothing active.",
+  "output": "A blocking ask or a silent pass, plus a loud GABE_COMMIT_EMERGENCY escape hatch.",
+  "if_not_built": "The map-delta sweep's 'reliable host' assumption stays false, and every deterministic commit check remains skippable by typing git commit.",
+  "verdict_why": "Unanimous never as a TOOL and unanimous 5/5 on importance as a HOOK: commit_gate cannot close a bypass OF the beat from inside MCP — the leak sits upstream of anything a tool can reach.",
+  "recommendation": "Build it in wave 0, BESIDE v1: about 60-100 lines modeled on push-gate-guard.sh plus a marker minted by /gabe-commit, with FIRE and SILENT cases added to tests/hooks (121 asserts must stay green). Guard: blocking-ask or marker shape, never a blanket deny — that strands agents, the graphify lesson."
+ },
+ "existing_hook_rails": {
+  "pain_point": "Hooks are the only machinery that fires without memory — and they are also what an MCP writer would silently bypass, since they match harness Write, Edit and Bash calls, not mcp__ calls.",
+  "called_by": [
+   "/gabe-execute",
+   "/gabe-review",
+   "/gabe-push",
+   "/gabe-red",
+   "/gabe-commit"
+  ],
+  "inputs": "Not tools — event matchers in templates/hooks.json installed into the machine-wide settings.",
+  "process": "push-gate-guard fails closed without the marker; plan-proof-guard blocks lies at the PLAN write; red-entry-guard, direction-guard, pre-checkpoint, post-structure-warning and the session hooks each fire on their own event. Battery 121/121.",
+  "output": "Blocks, warnings and injected rules at the moment of the event, with no memory required.",
+  "if_not_built": "Not applicable — they exist. The risk is thinning them because tools now appear to cover the same ground.",
+  "verdict_why": "Unanimous never as tools and unanimous 5/5 on importance: they are the backstop that holds AT the write, and they price the hook-visibility collision every mutation verdict in this roster rests on.",
+  "recommendation": "Change nothing and do not thin them on the tools' account: firing is not the same as taken (direction-guard fires on every steering prompt and gustify still has 0 ASSESS rows). Tools inform BEFORE the edit, rails hold AT it, nags remind AFTER — keep all three."
+ },
+ "graft_mcp": {
+  "pain_point": "graft's own server would hand over a ranker and per-query freshness for free — and it is banned, because it puts a third-party binary's directives into every tool result.",
+  "called_by": [
+   "(none - third-party server, banned by red-spec)"
+  ],
+  "inputs": "Not applicable — graft mcp exposes its own six tools (find_code, trace_calls, find_all, file_api, repo_map, check_freshness).",
+  "process": "Would register graft's server alongside or instead of a suite server, and graft init would additionally install its own session hooks, statusline and tokens-saved directive.",
+  "output": "graft's own result formats, including the tokens-saved footer the suite's specs forbid echoing.",
+  "if_not_built": "The suite forgoes graft's ranker and per-query refresh — accepted — and instead adds what graft cannot: the second grep arm, the domain join, ownership, cases, drift and deltas.",
+  "verdict_why": "Unanimous never at risk 5: ruled out by red-spec, with a contradiction to settle first — gustify's untracked .mcp.json declares graft mcp (not enabled) while its untracked settings.json injects 'reach for graft first, plus a tokens-saved tally' every session.",
+  "recommendation": "Keep the ban, and RULE the twin contradiction before v1 registers: remove gustify's graft hooks or knowingly accept two orientations. Set the naming policy too — suite tool names must not compete with graft's on the bare noun, since deferred tools collide exactly there."
+ },
+ "maintenance_scripts": {
+  "pain_point": "Suite maintenance — backfill-sweep, suite-doctor (2-4 minutes), propagate.sh, refresh_suite_center.sh, register-lint, curate_proof, the icon factory — is operator-run by ruling or by nature.",
+  "called_by": [
+   "(none - operator / suite maintainer only)"
+  ],
+  "inputs": "Not applicable — each has its own CLI, run by the operator.",
+  "process": "Would expose suite-repo maintenance actions through a server registered at user scope, meaning every twin session could see and call them.",
+  "output": "Each script's own report.",
+  "if_not_built": "Nothing: none of these is a per-beat runtime process, and R8 rules the suite is built with the advisory arm only.",
+  "verdict_why": "Unanimous never at risk 5: a user-scope server exposing suite maintenance to every twin session is the foreign-tree hazard in its purest form — a twin session could run the suite's own center regen or propagation against the wrong tree.",
+  "recommendation": "Leave every one of them as an operator CLI. The boundary is the point: R8 keeps the suite on the advisory arm (doctor, roast, dry-run-on-a-COPY), and nothing about a tool surface changes who should be pressing those buttons."
+ },
+ "judgment_satellites": {
+  "pain_point": "Fifteen manual-only skills depend on someone remembering them, and the nags do fire: on gustify S1 was offered 12 times and taken once, S2 offered 16 times and taken zero.",
+  "called_by": [
+   "/gabe-pulse"
+  ],
+  "inputs": "Not applicable — these are skills (assess D2-D4, roast, health's judgment lenses, myopic) and disable-model-invocation skills (init, cc-init, scope-pivot).",
+  "process": "Would wrap 'run the satellite' as a callable tool, which changes nothing about whether the reasoning actually happens.",
+  "output": "Whatever the satellite reports — which is judgment, not a computation.",
+  "if_not_built": "Nothing: their deterministic INPUTS are already on the roster (touches and blast_radius for assess D1, owner_of and entity_shape for cc-init's census lens, health_scan's numbers).",
+  "verdict_why": "Unanimous never: a reliably-firing nag could not make a satellite run (1-of-12 and 0-of-16 taken), and a tool cannot either — a 'run assess' tool is a remembered process in a new costume, and it violates disable-model-invocation for three of them.",
+  "recommendation": "Put their deterministic INPUTS on the roster and leave the satellites off it. Give the injected direction-guard rule something concrete to reach for (touches, owner_of, entity_shape) rather than another way to ask the model to please run a fork."
+ },
+ "out_of_roster_external_shapes": {
+  "pain_point": "The external survey shows shapes the suite deliberately does not have: memory tools, LSP-backed symbolic edits, and PR-impact queries.",
+  "called_by": [
+   "(none - calibration boundary, no suite consumer)"
+  ],
+  "inputs": "Not applicable — these are other servers' tool shapes (Serena memories and symbol edits, codemap handoff, graphify PR triage, Sourcegraph commit search).",
+  "process": "Would duplicate harness-native memory, bundle language servers to edit symbols, or make network calls for PR impact.",
+  "output": "Not applicable.",
+  "if_not_built": "Nothing: memory is the harness's, the durable record is PLAN, LEDGER and PENDING, edits are Claude Code's own Edit and Write, and PR work goes through gh inside skills.",
+  "verdict_why": "Unanimous never: high cost against zero suite-unique value — memory duplicates the harness, symbolic edits need bundled LSPs (Serena's whole architecture) and conflict with the harness edit tools, and PR impact is network-bound.",
+  "recommendation": "Leave them out; they mark the boundary between a generic codebase-understanding MCP and the suite's domain layer. The one novel angle worth remembering is graphify's 'does a PR already cover this area', which would compose blast_radius with gh — much later, if ever."
+ }
+}
