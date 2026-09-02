@@ -216,7 +216,6 @@ line each shape below owes. It READS only: the map-delta emit stays this beat's 
 price, cap and triage outcome stays judgment (D6). Each subject's procedure below remains binding — it
 is what the shape MEANS, and it is the path on a project with no center, or where the server is not
 registered.
-standard Fix Cost × Defer Risk × Maturity Gate fields and rides the normal Step 5 triage.
 
 **Deterministic opener — the red→green check.** When the phase under review carries a
 red@-bearing `Cases:` record, run it before judging any subject:
@@ -236,9 +235,9 @@ into a hook block, never into silence.
   commit-gate grep (design record D6).
 - **WORKFLOW DRIFT** — the diff moved the product away from what the entity's WORKFLOW CENSUS
   (`docs/site/center/workflows/<entity>.json`) says it is. Three machine-derived shapes, produced
-  by `mcp__gabe-map__review_drift`'s `workflow_census` subject, which runs the project's own
-  `scripts/check_workflow_drift.py` over every `docs/site/center/workflows/*.json` census (first 10)
-  and relays each result — the hand form `scripts/check_workflow_drift.py <census> --archmap … --junit …`
+  by `mcp__gabe-map__review_drift`'s `workflow_census` subject, which runs the SUITE's own copy of
+  `check_workflow_drift.py` against this project (never the repo's — WS-2) over every
+  `docs/site/center/workflows/*.json` census (first 10) and relays each result — the hand form `scripts/check_workflow_drift.py <census> --archmap … --junit …`
   still works where the server is not registered (report-never-gate, D1):
   **census-lag** a writable field or surface this diff added that NO step covers · **claim-drift**
   a step naming a C-id that no junit report ran, or a spec file no longer in the repo ·

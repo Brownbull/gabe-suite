@@ -28,8 +28,7 @@ component AND its i18n/string source, and quote ≥1 on-screen string per step i
 you cannot quote what the screen says, you have not reconstructed the step. Where the project carries
 a command center, `mcp__gabe-map__find` (kinds `screen` and `fe`) locates the component's file and
 `mcp__gabe-map__outline` then names its definitions — but the map carries names, spans, signatures and
-owners, never rendered text, so the quote always comes from the source you opened. If
-you cannot quote what the screen says, you have not reconstructed the step.
+owners, never rendered text, so the quote always comes from the source you opened.
 
 Also fix the **goal**: what is the user actually here to accomplish? Every step is judged against
 whether it moves a horizon-N user toward that goal *using only what they can see and hold*.

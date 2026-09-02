@@ -4,7 +4,7 @@
 > E1–E7: see `../../gabe-docs/references/execution-contract.md`.
 
 `/gabe-cc-entity <slug>` assembles one application entity's slice into a **context pack**
-from the command center's committed data. from the command center's committed data. It is a deterministic reader
+from the command center's committed data. It is a deterministic reader
 (`scripts/entity-context.py`) — a pure consumer of the `archmap.json` contract, never a
 producer — and it is also the BODY of `mcp__gabe-map__entity_context`: the server imports
 this script's `build_pack`, so tool and CLI answer from ONE implementation and this spec
