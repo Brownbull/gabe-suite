@@ -53,10 +53,13 @@ class MapStop(Exception):
 
 
 # ── shell (list args only, never a shell string) ──────────────────────────────
-def sh(args: list[str], cwd: str | Path | None = None, timeout: int = 60) -> tuple[int, str, str]:
+def sh(args: list[str], cwd: str | Path | None = None, timeout: int = 60,
+       env: dict | None = None) -> tuple[int, str, str]:
+    """env overlays os.environ (None = inherit unchanged)."""
     try:
+        _env = {**os.environ, **env} if env else None
         r = subprocess.run(args, capture_output=True, text=True, cwd=str(cwd) if cwd else None,
-                           timeout=timeout, stdin=subprocess.DEVNULL)
+                           timeout=timeout, stdin=subprocess.DEVNULL, env=_env)
         return r.returncode, r.stdout, r.stderr
     except FileNotFoundError as exc:
         return 127, "", str(exc)

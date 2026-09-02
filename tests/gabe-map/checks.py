@@ -395,8 +395,26 @@ def run(T):
     ok(d and d["regenerated"] is False and "not regenerated" in d["note"], "map_diff: same head → regenerated:false, named", d)
     d, _, _, _ = call_json(c, "map_diff", {"base": "HEAD~2"})
     ok(d and d.get("regenerated") is None and "git show failed" in (d.get("reason") or ""), "map_diff: a ref without a committed map → reason, never a crash", d)
+    # ── WS-2: the generators run from the SUITE, never from the target repo ───────
     d, _, _, _ = call_json(c, "center_status", {})
-    ok(d and "reason" in d["status"] and "center_status.py" in d["status"]["reason"], "center_status: no installed script → reason", d and d.get("status"))
+    ok(d and d["status"].get("ran") is True and (d["status"].get("text") or "").startswith("CENTER STATUS"),
+       "center_status: runs the SUITE's own generator against the target root (WS-2)", d and d.get("status"))
+    # the invariant the fix exists for: neither call site may execute a script out of the target tree
+    _w2 = open(os.path.join(os.path.dirname(SERVER), "tools_wave2.py"), encoding="utf-8").read()
+    ok('Path(root) / "scripts"' not in _w2,
+       "WS-2: tools_wave2 never builds a script path under the target root", _w2.count('Path(root) / "scripts"'))
+    ok(_w2.count('"-I"') == 2 and _w2.count('"GABE_REPO_ROOT"') == 2,
+       "WS-2: both generator call sites run isolated (-I) AND pass GABE_REPO_ROOT", (_w2.count('"-I"'), _w2.count('"GABE_REPO_ROOT"')))
+    # GABE_REPO_ROOT is REQUIRED, not cosmetic: _center_data.REPO_ROOT defaults to the
+    # generator's OWN tree, so without it the suite copy reads the SUITE's center. Prove it.
+    _gen = next((p for p in (os.path.join(REPO, r, "center_status.py")
+                             for r in ("templates/center/generators", "templates/gabe/center/generators"))
+                 if os.path.isfile(p)), None)
+    ok(_gen is not None, "WS-2: the suite ships its own center_status.py for the resolver to find", REPO)
+    if _gen:
+        _r = sh([sys.executable, "-I", _gen, root], cwd=root)
+        _o = _r.stdout
+        ok("not a center project" in _o, "WS-2: the suite generator WITHOUT GABE_REPO_ROOT reads the wrong tree — the env var is load-bearing", _o[:120])
     d, _, _, _ = call_json(c, "review_drift", {"base": "HEAD~1"})
     ok(d and d["subjects"]["entity_shape"]["ran"] and d["subjects"]["web_bridge"]["ran"] and not d["subjects"]["reach"]["ran"] and not d["subjects"]["entity"]["ran"] and set(d["not_run"]) == {"reach", "entity", "workflow_census"},
        "review_drift: script-backed subjects run, record-backed ones NOT RUN with reasons", d and {k: v.get("ran") for k, v in (d or {}).get("subjects", {}).items()})

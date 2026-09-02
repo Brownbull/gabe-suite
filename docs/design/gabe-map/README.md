@@ -518,10 +518,17 @@ individually before applying). Full findings: [tools-review-findings.json](tools
   canonical token `(^|[^A-Za-z0-9])C[0-9]{1,5}([^0-9]|$)`.
 
 **OWED (verify + apply next pass; none blocks the tools' current use):**
-- **WS-2 (high, OPERATOR RULING):** `center_status` and `review_drift`'s workflow_census run Python from the TARGET
-  repo (`<root>/scripts/*.py`). For a user-scope server that auto-loads on any project the user opens, that executes
-  arbitrary target-repo code. Options: run the suite's installed copy with `-I`; or gate on a trust marker; or accept it
-  (same trust model as the suite's own generators). Decide before wide twin use.
+- ~~**WS-2**~~ **APPLIED 2026-09-02** — operator ruled: run the suite's OWN copy with `-I`, never the target repo's.
+  `suite_generator()` resolves the generator beside the server (installed `templates/gabe/center/generators` or repo
+  `templates/center/generators`); the target copy is never a fallback — no suite copy → the subject names the absence.
+  **The trap this exposed:** identical bytes are NOT identical behavior. `_center_data.REPO_ROOT` defaults to the
+  generator's OWN parent tree, so the relocated copy read the SUITE's center and answered "not a center project" on a
+  project that has one. `GABE_REPO_ROOT=<root>` (the same lever the twin read-only regen recipe uses) is therefore
+  load-bearing, not cosmetic; `mq.sh` gained an optional env overlay to pass it. `-I` implies `-E`, which strips
+  `PYTHON*` only, so the var survives. Verified: `center_status` output BYTE-IDENTICAL to the old path on both twins
+  (gustify 370 B, gastify 841 B). The workflow_census site could NOT be exercised on either twin (neither has a
+  `docs/site/center/workflows/*.json` census) — it is covered statically instead. Battery +5 asserts, 3-mutant-proven
+  (drop `-I` · drop `GABE_REPO_ROOT` · revert to the target script) — `tests/gabe-map` 89 → 94.
 - **High:** F3 `_census_entry` says `claimed:true` for paths outside `scanned_dirs`/nonexistent · F4 path normalization
   (`lstrip("./")` char-strip, no abs→rel) in owner_of/touches/cases_for · Q1 `classify_hit` treats f-string middle text
   as code on 3.12 (false map-delta) · Q2 freshness false "uncommitted regen" when `head` is not an ancestor on a clean tree.

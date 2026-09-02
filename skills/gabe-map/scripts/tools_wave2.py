@@ -341,17 +341,52 @@ def t_map_diff(args: dict, roots) -> dict:
     return out
 
 
+# ── the generator resolver (WS-2, ruled 2026-09-02) ────────────────────────────
+# A user-scope server auto-loads on EVERY project the operator opens, so running
+# `<target repo>/scripts/<gen>.py` would execute arbitrary target-repo code. These two
+# generators are suite-installed by /gabe-cc-init, so the suite's OWN copy is the one we
+# run — with `-I` (isolated: no PYTHONPATH, no user site-packages, no cwd on sys.path),
+# so nothing in the target tree can shadow an import. Measured 2026-09-02: the suite copy
+# and both twins' copies of center_status.py, check_workflow_drift.py and the two siblings
+# center_status.py imports (_center_data.py, _a3_evidence.py) are BYTE-IDENTICAL.
+# BUT identical bytes are not identical behavior: `_center_data.REPO_ROOT` defaults to the
+# generator's OWN parent tree, so running the suite's copy would read the SUITE's center
+# unless the target root is passed explicitly. GABE_REPO_ROOT (the same lever the twin
+# read-only regen recipe uses) is therefore REQUIRED here, not optional — without it the
+# tool answers "not a center project" on a project that has one. `-I` implies `-E`, which
+# strips PYTHON* only, so GABE_REPO_ROOT survives it.
+# The target copy is never a fallback — if the suite has no copy the subject reports the
+# absence, because "run the repo's version instead" is the thing this exists to prevent.
+_GEN_DIRS = ("templates/gabe/center/generators",  # installed layout (~/.claude)
+             "templates/center/generators")        # repo layout (suite checkout)
+
+
+def suite_generator(name: str) -> Path | None:
+    """The suite's own copy of a center generator, or None. Never the target repo's."""
+    base = Path(__file__).resolve().parents[3]
+    for rel in _GEN_DIRS:
+        cand = base / rel / name
+        if cand.is_file():
+            return cand
+    return None
+
+
 # ── center_status ──────────────────────────────────────────────────────────────
 def t_center_status(args: dict, roots) -> dict:
     center, root, source, reason = T._ctx(args, roots)
     if not center:
         return T._absent(root, source, reason)
     out = T._base(center, root, source)
-    script = Path(root) / "scripts" / "center_status.py"
-    if not script.is_file():
-        out["status"] = {"reason": "no scripts/center_status.py in this project (installed by /gabe-cc-init)"}
+    script = suite_generator("center_status.py")
+    if script is None:
+        out["status"] = {"reason": "the suite's own center_status.py is not installed beside this server; "
+                                   "the target repo's copy is deliberately NOT run (WS-2)"}
         return out
-    rc, text, err = mq.sh([sys.executable, str(script), root], cwd=root, timeout=60)
+    if not (center.dir / "center.config.json").is_file():
+        out["status"] = {"reason": "no docs/site/center/center.config.json in this project (built by /gabe-cc-init)"}
+        return out
+    rc, text, err = mq.sh([sys.executable, "-I", str(script), root], cwd=root, timeout=60,
+                          env={"GABE_REPO_ROOT": root})
     out["status"] = {"ran": rc == 0, "exit": rc, "text": text[:6000], "truncated": len(text) > 6000, "stderr": err.strip()[:300] or None}
     out["not_run"] = ["next_feature.py (backfill queue) and risk_sweep.py (P0–P3 ladder) are /gabe-cc-update's — heavier; not run here"]
     return out
@@ -457,13 +492,16 @@ def t_review_drift(args: dict, roots) -> dict:
         if not censuses:
             subj["workflow_census"] = {"ran": False, "reason": "no docs/site/center/workflows/*.json census on this project"}
         else:
-            script = Path(root) / "scripts" / "check_workflow_drift.py"
-            if not script.is_file():
-                subj["workflow_census"] = {"ran": False, "reason": "census present but scripts/check_workflow_drift.py missing"}
+            script = suite_generator("check_workflow_drift.py")
+            if script is None:
+                subj["workflow_census"] = {"ran": False, "reason": "census present but the suite's own "
+                                           "check_workflow_drift.py is not installed beside this server; "
+                                           "the target repo's copy is deliberately NOT run (WS-2)"}
             else:
                 res = []
                 for cpath in censuses[:10]:
-                    rc, o, e = mq.sh([sys.executable, str(script), str(cpath), "--center", str(center.dir), "--json"], cwd=root, timeout=90)
+                    rc, o, e = mq.sh([sys.executable, "-I", str(script), str(cpath), "--center", str(center.dir),
+                                      "--json"], cwd=root, timeout=90, env={"GABE_REPO_ROOT": root})
                     try:
                         res.append({"census": cpath.name, "exit": rc, "result": json.loads(o) if o.strip() else None})
                     except json.JSONDecodeError:
