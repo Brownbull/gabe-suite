@@ -128,6 +128,17 @@ offered S6 · 0 `Reach:` records in the live PLAN · inflight.json 20 commits be
   files load on first call, keyed `(path, mtime, size)`; inverse indexes built once per load (bare-fn→keys ·
   class→(slug,kind,file) · table→model · model→fns-with-access · c4 node-id→(slug,node) · edge target→sources ·
   web-stem→node). A mid-session regen re-loads on the next call.
+- **D15 naming (operator check 2026-09-02): the SERVER name is the prefix; tool names carry none.** Claude Code namespaces
+  every MCP tool `mcp__<server>__<tool>` (verified: the 7-tool probe surfaced as `mcp__probe7__who_calls`, …), so two servers
+  may both ship a `find` and never collide, and permissions scope at the server (`--allowedTools mcp__gabe-map`). Graft's
+  `graft_` prefix exists for clients that flatten names and reads doubled here (`mcp__graft__graft_find_code`); the suite
+  targets Claude Code only, so a doubled prefix would only lengthen the names the model scans in the deferred list. Rules:
+  (1) the namespace lives in the server name — `gabe-map` now, `gabe-*` for any sibling; (2) tool names stay short and
+  question-shaped (`who_calls` · `touches` · `owner_of` · `cases_for` · `entity_context` · `entity_shape` · `map_status`;
+  wave 2 `find` · `outline` · `center_overview`) and NEVER reuse a built-in tool's name (Grep · Glob · Read · Edit · Write ·
+  Bash · Agent · Skill · WebFetch · WebSearch · ToolSearch); (3) the D7 routing block cites the FULL id
+  (`mcp__gabe-map__who_calls`) so the instructions and the deferred list read identically. Tool names satisfy
+  `^[A-Za-z0-9._-]{1,128}$`; schema property names `[A-Za-z0-9_.-]{1,64}`.
 - **D14 no mutation tools:** the D7 hooks (plan-proof-guard etc.) watch harness Write/Edit/Bash — an MCP tool
   writing `.kdbp` bypasses them (the HOOK-VISIBILITY COLLISION). v1 has zero `.kdbp`/center/source writers; the
   gitignored delta emit is the one write and no hook guards it today either.
