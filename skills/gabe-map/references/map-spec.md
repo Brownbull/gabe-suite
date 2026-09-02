@@ -157,13 +157,18 @@ Per file: `owners[]` from `entities[].files` (a list), `config_glob_owners` via 
 - **`map_diff(base, head?)`** — `git show <ref>:docs/site/center/archmap.json` at each ref (head defaults to the worktree);
   same `head` on both → `regenerated:false` + note; else per entity `endpoints/models/schemas/files {added, removed, more}`,
   entities added/removed, `census_delta`, `functions{base, head}`. A ref without a committed map → `reason`.
-- **`center_status()`** — runs the project's `scripts/center_status.py <root>` (installed by /gabe-cc-init) and relays its text
-  verbatim (≤ 6,000 chars, `truncated` flag); never a regen; names `next_feature.py`/`risk_sweep.py` as not run.
+- **`center_status()`** — runs the SUITE's own `center_status.py` (resolved beside the server: installed `templates/gabe/center/generators/`
+  or the repo's `templates/center/generators/`; the target repo's `scripts/` copy is never run and never a fallback — WS-2) as
+  `python -I <gen> <root>` with `GABE_REPO_ROOT=<root>` (load-bearing: `_center_data.REPO_ROOT` otherwise reads the suite's own tree)
+  and relays its text verbatim (≤ 6,000 chars, `truncated` flag); never a regen; names `next_feature.py`/`risk_sweep.py` as not run.
+  No suite copy → `status.reason` names it; no `center.config.json` → `status.reason` names that.
 - **`review_drift(base, phase?, subjects?)`** — one call for review Step 3.4's deterministic subjects vs `git diff <base>`:
   `entity_shape` (new routes classified vs the fresh shape) · `web_bridge` (new fetches vs declared endpoint keys) · `reach`
   (the phase's `- **Reach:** … (graft|grep-only@sha)` record from PLAN.md → `unreached` = changed source not in the record,
-  `unused_reach`) · `entity` (PLAN.json declared vs touched via owners) · `workflow_census` (`scripts/check_workflow_drift.py`
-  per `docs/site/center/workflows/*.json`); every subject is `{ran, …}` or `{ran:false, reason}`, `not_run[]` lists them —
+  `unused_reach`; a `- **Reach:** no index` line → `ran:false, reason: no graft index`) · `entity` (PLAN.json declared vs touched via
+  owners) · `workflow_census` (the suite's own `check_workflow_drift.py`, same resolution and `-I`/`GABE_REPO_ROOT`, `--center` plus
+  `--archmap` when the project's archmap exists, never `--junit` — the junit half of claim-drift is named in the subject's own
+  `not_run`; per `docs/site/center/workflows/*.json`, first 10); every subject is `{ran, …}` or `{ran:false, reason}`, `not_run[]` lists them —
   "no findings" can never mean "could not run". Pricing stays judgment; STALE ANCHOR lives in gabe-kdbp.
 - **`who_calls` grew `direction` (`in` callers · `out` callees → `callees[]`) and `depth` (`1` · N · `all`, graft's transitive
   walk); only `direction=in depth=1` may emit (the delta semantics are "a DIRECT caller the index missed"). Every answer now
@@ -192,5 +197,5 @@ freshness (stale after a mapped edit; fresh after a mapped-file-free commit; unk
 (two owners · fk_in · r/w fns · ambiguous · endpoint normalization · case) · `entity_context` raw byte-parity with
 `entity-context.py --json` · `who_calls` (code hit emitted with `cmd:mcp`; prose-only not emitted; def site never;
 repeat → 0 new lines; `matches: []` → 0 emits + `absent`; `GABE_MAP_NO_EMIT=1` → 0; un-ignored accumulator → skipped +
-named; no `graft/` → grep arm still answers) · `cases_for` split · `owner_of` two owners + unclaimed · the wave-2 equivalents (`find` ranking, kind filter and a 1-char stop; `outline` with and without a graft index; `center_overview` per-entity coverage + census gaps; `blast_radius` contained vs unmapped; `map_census` unclaimed + an absent block's reason + a bad-kind stop; `map_diff` same-head and a ref with no committed map; `center_status` the no-script reason; `review_drift` ran vs not_run) · `who_calls` `direction=out` (callees, never an emit) + `map_confidence` from the tally ledger · a harness e2e that calls `mcp__gabe-map__map_status` through the real client. Mutation hooks:
+named; no `graft/` → grep arm still answers) · `cases_for` split · `owner_of` two owners + unclaimed · the wave-2 equivalents (`find` ranking, kind filter and a 1-char stop; `outline` with and without a graft index; `center_overview` per-entity coverage + census gaps; `blast_radius` contained vs unmapped; `map_census` unclaimed + an absent block's reason + a bad-kind stop; `map_diff` same-head and a ref with no committed map; `center_status` runs the suite generator — no script path built under the target root, `-I` + `GABE_REPO_ROOT` pinned; `review_drift` ran vs not_run) · `who_calls` `direction=out` (callees, never an emit) + `map_confidence` from the tally ledger · a harness e2e that calls `mcp__gabe-map__map_status` through the real client. Mutation hooks:
 `SERVER_OVERRIDE` · `MQ_OVERRIDE` (mutants are SAME-DIR temp copies so sibling imports resolve).

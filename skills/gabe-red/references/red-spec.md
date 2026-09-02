@@ -161,7 +161,7 @@ append is a silent no-op. `--dry-run` previews without writing. The accumulator 
 is clustered, digested and swept by `/gabe-commit`. Design record: `../../../docs/design/map-delta-loop/README.md`.
 
 **The core is shared with the MCP tool.** `reach-emit.py` runs `gabe-map/scripts/mapquery.two_arm` — the same
-function behind `mcp__gabe-map__who_calls`, so a reach taken mid-reasoning in ANY beat emits the same gated deltas. Grep
+function behind `mcp__gabe-map__who_calls`, so a reach taken mid-reasoning in any WRITING beat emits the same gated deltas (a read-only or `context: fork` beat passes `emit: false` or asks `direction=out` — tool floor, law 5). Grep
 hits are classified code vs prose (Python via `tokenize`; a docstring mention is never a missed caller — gustify's only two
 early deltas were exactly that), the emit needs a MAP CLAIM (an empty graft arm emits nothing), goes through
 `map-deltas.py append --once`, and is skipped when `.kdbp/map-deltas.jsonl` is not gitignored.

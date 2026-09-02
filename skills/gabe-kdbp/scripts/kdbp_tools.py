@@ -323,7 +323,7 @@ def t_phase_context(args: dict, roots) -> dict:
     sec = phase_section(pm, pid)
     out["records"] = phase_records(sec) if sec else {}
     out["details_excerpt"] = sec[:2000] if sec else None
-    if row and _state(row["cells"].get("red", "")) == "todo" and "skip" not in row["cells"].get("red", "").lower():
+    if row and "red" in row["cells"] and _state(row["cells"]["red"]) == "todo" and "skip" not in row["cells"]["red"].lower():
         out["warnings"].append("Red is unstarted for %s — /gabe-red declares cases before any source edit (red-entry-guard warns on writes)" % pid)
     if row and _state(row["cells"].get("exec", "")) == "done":
         out["warnings"].append("Exec is already ✅ for %s" % pid)

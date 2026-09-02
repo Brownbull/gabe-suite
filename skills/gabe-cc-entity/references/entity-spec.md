@@ -98,13 +98,12 @@ grouped by layer), `## Relations` (related entities + unresolved tables), `## Bi
 - **Emits** a context pack `mcp__gabe-kdbp__phase_context` now consumes: for every entity a
   phase declares in PLAN.json (capped at 8) it calls `mcp__gabe-map__entity_context`, whose body
   is this reader — so execute's preflight carries each declared entity's brief and no beat
-  re-derives it (execute-spec §context A names the map tools directly; with gabe-map absent the
-  field says so, and with no declared entities the preflight warns and falls back to `owner_of`
-  on the scope globs). The `--entity` beat-flag that would make red/review entity-aware the same
-  way is still a **deferred, coordinated** phase — it edits those specs and is out of scope here.
-  No current seam breaks. First cut is standalone (a human or agent reads the brief / `--json`). The
-  `--entity` beat-flag that would make execute/red/review entity-aware is a **deferred,
-  coordinated** phase — it edits those specs and is out of scope here. No current seam breaks.
+  re-derives it (execute-spec Step 4, the **The map as tools** bullet, names the map tools
+  directly; with gabe-map absent the field says so, and with no declared entities the preflight
+  returns `entities: {reason}` plus a warning that NAMES `owner_of` on the scope globs as the
+  fallback — the caller makes that call, the tool does not). Red and review are not entity-aware
+  yet: the `--entity` beat-flag that would make them so is a **deferred, coordinated** phase — it
+  edits those specs and is out of scope here. No current seam breaks.
 - **Reads** exactly what `/gabe-cc-init` and the promoted `templates/center/generators/` write.
   The reader depends on their output contract, not their internals; if the files are absent it
   STOPs toward the producer rather than guessing. It never writes center data (E5: it records

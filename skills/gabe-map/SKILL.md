@@ -4,7 +4,7 @@ description: "The suite's MCP server — the project's committed codebase map as
 when_to_use: "Manage the gabe-map MCP server: is it registered at user scope, is it disabled in this project, does the running server match the install, does this project have a map. Human-initiated only; the TOOLS themselves are reached for by every skill through mcp__gabe-map__*."
 disable-model-invocation: true
 metadata:
-  version: 1.1.3
+  version: 1.1.4
 ---
 
 # Gabe Map — the codebase map as tools
@@ -38,7 +38,7 @@ Design record: `../../docs/design/gabe-map/README.md`. Binding contract: `refere
 | `blast_radius` | what a change touches — entities, functions, models, endpoints reached, tests, FE pieces, a reading (floor) | archmap · c4 · git |
 | `map_census` | where the map is blind: unclaimed files/models/routes, unwired/ambiguous schemas | archmap |
 | `map_diff` | how the committed map changed between two refs, per entity | git show · archmap |
-| `center_status` | the center's actionable list, relayed verbatim | scripts/center_status.py |
+| `center_status` | the center's actionable list, relayed verbatim | the suite's own `center_status.py` (WS-2) |
 | `review_drift` | a review's deterministic drift subjects vs a base ref; NOT RUN is first-class | archmap · c4 · PLAN · git |
 
 ## Procedure

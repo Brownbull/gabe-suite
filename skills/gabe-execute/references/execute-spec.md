@@ -37,9 +37,13 @@ Parse `$ARGUMENTS`:
 1. `.kdbp/` exists → else print `⚠ No KDBP. Run /gabe-init first.` and exit.
 2. `.kdbp/PLAN.md` contains `<!-- status: active -->` → else print `ℹ No active plan. Run /gabe-plan [goal] first.` and exit.
 3. Phases table includes `Exec` column → else print legacy warning and exit (do not auto-migrate; recommend `/gabe-plan update` or manual edit).
-4. **Red-thread precondition (warn, never halt).** `mcp__gabe-kdbp__phase_context` carries both
-   inputs — `plan_md_row.raw.red` (the cell as written; `cells.red` is its normalized state) and
-   `records.cases` — and raises its own `Red is unstarted` warning on a `⬜` cell. The predicate
+4. **Red-thread precondition (warn, never halt).** Make THE `mcp__gabe-kdbp__phase_context` call
+   here, once, with `phase: N` (N = the `$ARGUMENTS` override, else the `## Current Phase` pointer
+   in the PLAN.md precondition 2 already opened — unset, the tool resolves the phase from
+   PLAN.json's `current_phase` or the first table row, never from that pointer); precondition 5
+   and Step 1 reuse this answer, never a second call. It carries both inputs — `plan_md_row.raw.red`
+   (the cell as written; `cells.red` is its normalized state) and `records.cases` — and raises its
+   own `Red is unstarted` warning on a `⬜` cell. The predicate
    below stays this step's: the tool's warning does NOT fire on `🔄`, and it looks for `skip` in the
    CELL, not in the Cases record. When the phases table carries a `Red` column
    and the target phase's Red cell is `⬜`/`🔄` with no `skip:*` in its Cases record, print
@@ -53,12 +57,12 @@ Parse `$ARGUMENTS`:
 5. **Project type preflight.** Parse `<!-- project_type: ... -->` comment. Apply dispatch matrix:
    - `code` or missing → proceed with Step 1.
    - `mockup` → print `⚠ Mockup plan active — use /gabe-mockup instead` and exit 0. Do not redirect silently; print full message so user understands why.
-   - `hybrid` → the target phase's `types` list comes from `mcp__gabe-kdbp__phase_context`'s `plan_json.types` (the same call Step 1 makes, made once here, with `phase:` set to the target phase); parse the PLAN.md Phase Details when the mirror carries no record for the phase, or no `types` on that record. If `types ⊆ mockup-tag-set` (`{design-system, ui-kit, mockup-flows, mockup-index, mockup-docs, mockup-validation}`) → print `⚠ Hybrid plan — current phase is mockup-type. Use /gabe-mockup` and exit 0. Otherwise proceed with Step 1.
+   - `hybrid` → the target phase's `types` list is the precondition-4 `phase_context` answer's `plan_json.types` (no second call); parse the PLAN.md Phase Details when the mirror carries no record for the phase, or no `types` on that record. If `types ⊆ mockup-tag-set` (`{design-system, ui-kit, mockup-flows, mockup-index, mockup-docs, mockup-validation}`) → print `⚠ Hybrid plan — current phase is mockup-type. Use /gabe-mockup` and exit 0. Otherwise proceed with Step 1.
 
 ### Step 1: Load execution context
 
-1. Ask `mcp__gabe-kdbp__phase_context` first — pass `phase: N`, because unset it resolves the phase from PLAN.json's `current_phase` (or the first table row), not from PLAN.md's Current Phase pointer. One call returns `plan_json` (name, tier, complexity, types, cells, proof, proof_type, cases, scope, entities), `plan_md_row` (states in `cells`, the literal cells in `raw`, and the row's line), `records` (`Cases:` · `Reach:` · `Class:` · `Proof:` · `Searched:`) and a `details_excerpt` of the phase section. Then read `.kdbp/PLAN.md` for the pointer itself and for what that call caps or does not carry — the row's Description cell, the `## Phase Details` YAML `dim_overrides:` block (the excerpt stops at 2,000 chars), the Checkpoint verification commands, and any phase the mirror never recorded:
-   - Current Phase pointer → integer N (or arg override)
+1. Reuse the precondition-4 `mcp__gabe-kdbp__phase_context` answer (made with `phase: N`; unset, the tool resolves the phase from PLAN.json's `current_phase` or the first table row, not from PLAN.md's Current Phase pointer). It carries `plan_json` (name, tier, complexity, types, cells, proof, proof_type, cases, scope, entities), `plan_md_row` (states in `cells`, the literal cells in `raw`, and the row's line), `records` (`Cases:` · `Reach:` · `Class:` · `Proof:` · `Searched:`) and a `details_excerpt` of the phase section. Then read `.kdbp/PLAN.md` for what that call caps or does not carry — the row's Description cell, the `## Phase Details` YAML `dim_overrides:` block (the excerpt stops at 2,000 chars), the Checkpoint verification commands, and any phase the mirror never recorded:
+   - Target phase N — the one precondition 4 resolved (arg override, else the `## Current Phase` pointer)
    - Target phase row: Phase name, Description, **Tier**, Complexity, Exec state
    - **Tier column lookup:**
      - If Tier cell = `mvp` / `ent` / `scale` → use it directly as `phase_tier`
@@ -191,8 +195,11 @@ For each task T_i in order:
      A never-ran red may not dress as a skip.
    - `Class:` names the task's case relationship: `red` = advances declared red cases (must cite
      ≥1 C-id) · `guard` = refactor under held guards · `wiring` = no red claim · `growth` =
-     execute-minted case (observed red at execute time); mint its id at or above the corpus floor
-     `mcp__gabe-map__cases_for` reports (`corpus.next_cid_floor` — the corpus is the registry, the map may lag).
+     execute-minted case (observed red at execute time); mint its id above the corpus floor
+     `mcp__gabe-map__cases_for` reports (`corpus.next_cid_floor` is a `git grep` over TRACKED test
+     files, so this task's own uncommitted test file is exactly what it cannot see — re-grep the
+     test roots with `grep -rn` before minting, as its `corpus.note` says; the corpus is the
+     registry, the map may lag).
    - `/gabe-commit` validates both deterministically (`scripts/checkpoint-trailer.sh` — WARN
      finding, never a block; fire/silent fixtures in `tests/commit-scripts/run.sh`).
 
@@ -238,7 +245,7 @@ For each task T_i in order:
    - Write/edit files per task scope; follow project conventions (CLAUDE.md, existing patterns)
    - Respect Scope section — only modify listed files unless deviation flagged (Step 6)
 
-4. **Run task-local verification** — the binding comes from `mcp__gabe-kdbp__verify_commands`: BEHAVIOR's `## Verify Commands` when it binds (`source: a: BEHAVIOR.md …`), else the manifest candidates it found (`source: b: package.json / pyproject / Makefile — candidates, not yet bound`), else `source: none: …` and the step names its own commands. It returns `probed: false` always — the tool never runs a command, this step does, via Bash, so every number in the evidence rows below is copied from a real run:
+4. **Run task-local verification** — the binding comes from `mcp__gabe-kdbp__verify_commands`: BEHAVIOR's `## Verify Commands` when it binds (`source: a: BEHAVIOR.md ## Verify Commands`), else the manifest candidates it found (`source: b: package.json / pyproject / Makefile (candidates — not yet bound)`), else `source: none: no BEHAVIOR binding and no manifests found` and the step names its own commands. It returns `probed: false` always — the tool never runs a command, this step does, via Bash, so every number in the evidence rows below is copied from a real run:
    - Lint the changed files (project tool from BEHAVIOR.md: ruff / biome / etc)
    - Types on changed files
    - Unit tests that exercise changed code (scoped, not full suite)

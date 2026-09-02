@@ -14,7 +14,7 @@ Env-aware shipping. One command pushes local work to the configured target env, 
 1. Verify `gh` CLI: `gh --version 2>/dev/null`. If missing: "Install GitHub CLI: https://cli.github.com/" — stop.
 2. Verify auth: `gh auth status 2>/dev/null`. If not authenticated: "Run `gh auth login` first" — stop.
 3. Verify git repo with remote: `git remote -v`. If no remote: "No remote configured. Run `git remote add origin <url>` first" — stop.
-4. Read `.kdbp/PUSH.md`. If it exists, skip to Step 2.5. If not, continue to Step 2. No tool serves PUSH.md — it is push's own config. Open `mcp__gabe-kdbp__kdbp_snapshot` once here for the state the rest of this run otherwise re-derives by hand: `git{branch, ahead, behind, dirty}` for Step 3's pre-flight, `plan{status, current_phase, phases[{cells}]}` for Step 10's orientation (`status`/`current_phase` come from the PLAN.json mirror — `plan.mirror` names its absence), and `pending{columns, open, top}` for Step 7.5b's classifier re-surface. It ORIENTS; the git commands in Step 3 still decide — a safety abort reads the working tree, never a snapshot.
+4. Open `mcp__gabe-kdbp__kdbp_snapshot` once here for the state the rest of this run otherwise re-derives by hand: `git{branch, ahead, behind, dirty}` for Step 3's pre-flight, `plan{status, current_phase, phases[{cells}]}` for Step 10's orientation (`status`/`current_phase` come from the PLAN.json mirror — `plan.mirror` names its absence), and `pending{columns, open, top}` for Step 7.5b's classifier re-surface. It ORIENTS; the git commands in Step 3 still decide — a safety abort reads the working tree, never a snapshot. Then read `.kdbp/PUSH.md`. If it exists, skip to Step 2.5. If not, continue to Step 2. No tool serves PUSH.md — it is push's own config.
 
 ### Non-interactive defaults
 
@@ -323,7 +323,7 @@ Only runs when Step 7.5a appended a row AND the BEHAVIOR.md frontmatter doesn't 
 
 **Pre-step — Re-surface deferred classifier candidates (runs BEFORE trigger layer):**
 
-Ask `mcp__gabe-kdbp__kdbp_snapshot` first — `pending{columns, open, top}` names the file's OWN headers and the open count this pass reconciles against. Then read `.kdbp/PENDING.md` for the full row set — `top` caps at 10 and does not carry the Source cell — and take every row where the `Source` column (a twin may head it `Gate`) = `classifier` AND the `Status` column = `open`:
+Take `pending{columns, open, top}` from the Step 1 `mcp__gabe-kdbp__kdbp_snapshot` answer (opened once there — do not ask again) — it names the file's OWN headers and the open count this pass reconciles against. Then read `.kdbp/PENDING.md` for the full row set — `top` caps at 10 and does not carry the Source cell — and take every row where the `Source` column (a twin may head it `Gate`) = `classifier` AND the `Status` column = `open`:
 
 1. Render each as an original proposal block using the same format as the Interactive triage output below. Use the `Finding` column as `title`. Rationale/alternatives/review_trigger are not re-stored in PENDING.md — if present from the original defer, pull from a `Notes` suffix; otherwise render the row as a minimal candidate (title only + "originally deferred YYYY-MM-DD") and skip alternatives.
 2. User picks `[accept]` / `[note]` / `[defer]` / `[drop]` per row. Action handlers behave identically to current-run handlers. `accept`/`note`/`drop` set the PENDING row's `Status` to `resolved` with today's date. `defer` (explicit or drop-through) keeps `Status = open` and increments `Times Deferred`.

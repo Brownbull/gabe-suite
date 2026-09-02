@@ -45,7 +45,7 @@ Check each probe silently. Do NOT run commands that modify anything. On a `.kdbp
 | **Cognitive profile** | Check if `~/.claude/gabe-lens-profile.md` exists | yes (suit name) / no |
 | **Checkpoint ledger** | `mcp__gabe-kdbp__kdbp_snapshot` `ledger` (its `reason` when absent) settles presence and shows the last rows; count the rows in `.kdbp/LEDGER.md` | yes (count of entries) / no |
 | **Deferred items** | `mcp__gabe-kdbp__kdbp_snapshot` `pending.open` — the canonical surface is `.kdbp/PENDING.md` (its `top` list caps at 10, the count does not); fall back to `.kdbp/deferred-cr.md` or `.planning/deferred-cr.md`, the legacy read-only names `/gabe-review` still honours | count of open items / none |
-| **Active phase** | `mcp__gabe-kdbp__kdbp_snapshot` — `plan.status` (`active` / `none`) + `plan.current_phase` and that row's cells; when `plan.mirror` reads `no PLAN.json mirror`, take the pointer from `## Current Phase` in `.kdbp/PLAN.md` | phase number + the cell it owes, or none |
+| **Active phase** | `mcp__gabe-kdbp__kdbp_snapshot` — `plan.status` (the mirror's `active | none | completed | defer | cancelled`, relayed verbatim) + `plan.current_phase` and that row's cells; when `plan.mirror` reads `no PLAN.json mirror`, take the pointer from `## Current Phase` in `.kdbp/PLAN.md` | phase number + the cell it owes, or none |
 
 ### Step 2: Classify Situation
 
@@ -60,7 +60,7 @@ Based on the scan, classify into one of these situations:
 | **Mid-work** | Uncommitted changes exist | Review before committing |
 | **Pre-PR** | Changes staged or branch ahead of main | Review + prepare to ship |
 | **Deferred debt** | Deferred items exist (any count) | Surface and triage deferred items |
-| **Post-milestone** | A plan exists and no phase is active — `plan.status` is `none` (archived/complete), or every phase row's cells are done | Retro + health check |
+| **Post-milestone** | A plan exists and no phase is active — `plan.status` is not `active` (`none` after archive, or `completed` / `defer` / `cancelled`), or every phase row's cells are done | Retro + health check |
 
 Multiple situations can be true simultaneously (e.g., "mid-work" + "deferred debt"). List all that apply, ordered by priority. Full per-situation command sequences (New Machine, Greenfield, Brownfield, Configured-Idle, Mid-Work, Pre-PR, Post-Commit, Deferred Debt, Post-Milestone): `references/help-spec.md` § "Recommendation Logic".
 

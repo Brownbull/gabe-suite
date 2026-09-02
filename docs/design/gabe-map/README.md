@@ -583,6 +583,16 @@ after they were written, two false tool claims (`owner_of`'s directory branch ha
 walks up from the git toplevel, not CWD), one one-directional L2 rule in gabe-mockup. The other five lenses re-run from cache;
 their findings are batch 2.
 
+**Batch 2 (all six lenses, 13 agents):** 69 confirmed → 41 distinct defects → 58 exact-string sites in 22 specs + 2
+servers, all applied. Three were SOURCE bugs the spec edits had faithfully described: `phase_context` nagged "Red is unstarted"
+on every plan with NO Red column (S1); `review_drift` read `- **Reach:** no index` as "no Reach: record" (S2); `workflow_census`
+passed `--center` only, so census-lag could never fire and the junit half was silently off under `ran: true` (S3 — the exact
+"a check that cannot fire must never look like a clean bill" the checker itself states). Each got a hermetic battery assert,
+each mutation-proven (gabe-kdbp 40→41, gabe-map 94→97). Spec classes: six more WS-2 residues, default-phase reads without
+`phase:`, the preview's fixed cells left uncorrected in review 5b / plan 6c, `next_cid_floor` being tracked-files-only, and
+applier residue the sentence detector could not see (intra-paragraph re-emits). The triage's not-worth-fixing list is
+recorded in `skill-sweep-findings.json` `review_2026_09_02.batch2`.
+
 **Price to land the rest (historical, now paid):** 44 more spec files, 20 more skills, and every one needs its CLAUDE.md version cell in the
 same commit (doctor P3 parity). No live battery asserts on skill markdown — verified — so spec edits cannot turn a
 battery red; a green doctor proves parity, not correctness.

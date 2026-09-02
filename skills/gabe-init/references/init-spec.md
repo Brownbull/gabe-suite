@@ -68,11 +68,12 @@ created: [today's date]
 
 <!-- The binding section shapes come from ~/.claude/templates/gabe/BEHAVIOR.md (E6 if missing) —
      the commands the gates trust (gate-spec Step 2.0), authored from the interview, never guessed.
-     Where a `.kdbp/` is already present (a `reset` over an existing project), `mcp__gabe-kdbp__verify_commands`
-     resolves what is already bound — `source: a` quotes the existing BEHAVIOR.md ## Verify Commands, `source: b`
-     names the package.json / pyproject / Makefile candidates it can SEE — and it never runs one, never invents a
-     reporter flag. Offer what it names to the interview; the human's answer still binds. A tree with no `.kdbp/`
-     yet (fresh init) answers absent — the interview stands alone there. -->
+     Where a `.kdbp/` is already present, ask `mcp__gabe-kdbp__verify_commands` at Step 1 item 1 — BEFORE a `reset`
+     wipes the directory — and carry its answer into the interview (items 2–5): `source: a` quotes the existing
+     BEHAVIOR.md ## Verify Commands, `source: b` names the package.json / pyproject / Makefile candidates it can
+     SEE — it never runs one, never invents a reporter flag. Offer what it named to the interview; the human's
+     answer still binds. After the wipe, and on a fresh init, the tool answers absent — the interview stands
+     alone there. -->
 - lint: [from tech interview]
 - types: [from tech interview]
 - tests: [from tech interview — greenfield: author the reporter flag in, e.g. --junitxml=tests/results/junit.xml]
@@ -192,7 +193,7 @@ The project's `.gitignore` gets these entries appended so machine-written, tree-
 
 - `.kdbp/reviews-archive/` — resolved gabe-review documents archive locally without bloating history.
 - `.kdbp/.push-gate-ok` — the push-gate marker (ruling 2026-08-07). It is sha-bound and single-use; committing it would let a clone's checkout-fresh copy authorize a foreign tree, and its whole security value is that it is written by /gabe-push on THIS machine after the scan.
-- `.kdbp/map-deltas.jsonl` and `.kdbp/map-deltas-rollup.jsonl` — the map↔grep delta accumulator and its edge-keyed tally ledger. Both are per-project working state, not history: `/gabe-red` and the spine append live deltas, `/gabe-commit`'s sweep upserts them into the rollup, and every emit is GATED on the live file being ignored (`git check-ignore -q .kdbp/map-deltas.jsonl` — `mapquery.py` gate (d)). Without these two lines the loop reports the gate and drops every delta, so seeding them here is what makes the accumulator work at all.
+- `.kdbp/map-deltas.jsonl` and `.kdbp/map-deltas-rollup.jsonl` — the map↔grep delta accumulator and its edge-keyed tally ledger. Both are per-project working state, not history: `/gabe-red`, `/gabe-execute`, `/gabe-review` and `mcp__gabe-map__who_calls` append live deltas, `/gabe-commit`'s sweep upserts them into the rollup, and every emit is GATED on the live file being ignored (`git check-ignore -q .kdbp/map-deltas.jsonl` — `mapquery.py` gate (d)). Without these two lines every delta is dropped and the skip is NAMED (`.kdbp/map-deltas.jsonl is not gitignored — run /gabe-init update to seed it`) until `/gabe-init update` tops it up — seeding them here is what makes the accumulator work at all.
 - `docs/site/center/inflight.json` and `docs/site/center/inflight.js` — the in-flight projection the E8 beat tail rewrites every beat (its `head` field changes on every commit). Tracking them would re-dirty the tree forever and re-blind the pulse signals; the board reads them locally and renders absence as absence when they are gone (ruling 2026-08-07).
 - `docs/site/center/sim.data.js` — the change-simulation projection `_a3_sim.build_sim` derives from the live inflight + git each build (its `commit`/`head`/line counts churn every commit; `window.GABE_SIM = null` at rest). Same reasoning as inflight — a beat-tail artifact that would re-dirty the tree; the codebase-graph station reads it locally and degrades to the plain map when it is null/absent.
 - `docs/site/center/commits.js` — the recent-commits journeys feed `_a3_commits.build_commits` derives from `git log` each build (its newest sha changes on every commit). Same reasoning — a beat-tail artifact; the Universe station reads it locally and shows no commits kind when it is empty/absent.

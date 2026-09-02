@@ -31,8 +31,10 @@ ladder — **TD 2** promotes a `medium`/`low` finding to `high` (caps there); **
 > entity field. Pass an entity code path as `file`, or the card renders **cross-cutting** and drops
 > out of the entity's column. `disposition.py` validates against `archmap.json` and WARNs
 > (report-never) when it would. Ask `mcp__gabe-map__owner_of` for the path BEFORE composing the
-> flag — it names the owning entity, the `center.config` glob that claims it, and whether the census
-> says the map is blind there; unowned or blind means the card will land cross-cutting, so pick an
+> flag — it names the owning entity (`owners`), the entities whose `center.config` code globs claim it
+> (`config_glob_owners` — slugs, never the pattern; the glob itself is read from `center.config.json`),
+> and whether the census says the map is blind there (`census` + the blind `note`); unowned or blind
+> means the card will land cross-cutting, so pick an
 > owned path or say so in the `Finding`. No map → the tool says so and `disposition.py`'s WARN is
 > the only check.
 

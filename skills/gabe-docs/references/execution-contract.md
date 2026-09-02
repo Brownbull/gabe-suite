@@ -35,8 +35,11 @@ session; they are not re-listed here. Five laws govern how a skill reaches for t
   both paths; a step that only works with the tools is a defect.
 - **TOOLS ARE NOT RAILS.** Enforcement stays on hooks, gates, and the deterministic scripts a
   skill already owns; the D7 hooks watch Write/Edit, never `mcp__*` — a `_preview` tool composes
-  a row, the harness Write persists it. A tool supersedes a script only where it relays that same
-  script verbatim (`center_status` → `scripts/center_status.py`).
+  a row, the harness Write persists it. A tool supersedes a script only where it relays that
+  script's own output — `center_status` runs the SUITE's copy of `center_status.py` against the
+  project (never the installed `scripts/center_status.py` — WS-2, as the findings contract below states)
+  and relays it capped at 6,000 chars with `truncated` named; a truncated or absent relay sends
+  the beat back to the script.
 - **READ-ONLY, WITH ONE EXCEPTION.** Every tool answers without writing — except `who_calls`,
   whose default run appends the gitignored map-delta line for a code hit the map missed. A
   read-only or `context: fork` beat passes `emit: false`, or asks with `direction=out`, which

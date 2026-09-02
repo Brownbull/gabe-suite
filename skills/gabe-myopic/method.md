@@ -26,7 +26,8 @@ ambiguous, ask; otherwise state your assumption and proceed.
 For code input, the information state at step K = the LITERAL strings the code renders — read the
 component AND its i18n/string source, and quote ≥1 on-screen string per step in the Step ledger. If
 you cannot quote what the screen says, you have not reconstructed the step. Where the project carries
-a command center, `mcp__gabe-map__find` (kinds `screen` and `fe`) locates the component's file and
+a command center, `mcp__gabe-map__find` (`kind: fe` — one kind per call, a list is not rejected but
+silently drops the filter; a `screen` hit names only its owning entity, never a file) locates the component's file and
 `mcp__gabe-map__outline` then names its definitions — but the map carries names, spans, signatures and
 owners, never rendered text, so the quote always comes from the source you opened.
 

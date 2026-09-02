@@ -76,8 +76,7 @@ Optional — rendered where present:
 - `# CODE` — the Code tab's authored outro, rendered at the END of the tab
   (the machine half — endpoints · code map · data model — renders from
   archmap, never from prose; `mcp__gabe-map__entity_context <slug> detail=full` shows what that
-  half will say, so the outro complements it instead of restating a number the build can read)
-  archmap, never from prose).
+  half will say, so the outro complements it instead of restating a number the build can read).
 - `# RISKS` — grammar `SEV · status · Kind · what is at stake · detail`
   (older 3/4-field forms still parse); an unparseable line renders MALFORMED,
   never dropped. A severity with no consequence is a number nobody can argue
@@ -233,11 +232,11 @@ already exists.
 
 `/gabe-cc-update release [--since <deployments-row>]` renders `releases/<id>.html` for
 stakeholders: the covered set = phases whose `Center` cell went ✅ since the last TERMINAL-env
-row in `.kdbp/DEPLOYMENTS.md` (`mcp__gabe-kdbp__kdbp_snapshot` gives the phase table's `center`
-cells as they stand now; the SINCE half — which of them flipped after that row — stays a read of
-DEPLOYMENTS.md plus PLAN.md's git history, which no tool answers)
 row in `.kdbp/DEPLOYMENTS.md` (the trigger is derived — `/gabe-push` detects the terminal-env
 ship and prints the pointer; staging ships fire nothing; projects without a center: silent skip).
+`mcp__gabe-kdbp__kdbp_snapshot` gives the phase table's `center` cells as they stand now; the SINCE
+half — which of them flipped after that row — stays a read of DEPLOYMENTS.md plus PLAN.md's git
+history, which no tool answers.
 Contents v1 (design record D3): curated proof shots + diagrams + each feature's summary/narration
 — **video slots render as named gaps** ("recording available on the build machine") until video
 custody is decided at the first real release. Pure re-runnable join over committed data: no new
@@ -250,8 +249,11 @@ terminal-env row that bounds the covered set carries no sha column — its shas 
 Notes cell — so the base comes from that ship's `.kdbp/LEDGER.md` `PUSH` row, whose `Commits` cell is a
 sha field. No PUSH row, or a `Commits` cell that names none → the block renders as a named gap; a base
 read out of prose is not a base. Render two things from its answer and nothing
-else — per-entity endpoints/models/schemas/files added and removed (`per_entity`, capped at 20 each with
-the cap named), and the `census_delta` reading: unclaimed files/models/routes at base vs at head, which
+else — per-entity endpoints/models/schemas/files added and removed (its `entities` block, keyed by slug:
+per kind `{added[≤20], removed[≤20], more}`, `more` = the overflow the cap dropped; a slug carrying
+`entity: added|removed` is a whole entity that appeared or vanished; `entities.note` = `no entity-level
+change` is a clean diff; `regenerated: false` + `note` = both refs carry the same map head, nothing to
+render), and the `census_delta` reading: unclaimed files/models/routes at base vs at head, which
 says whether adoption CLOSED blindness this release or grew it. Both are floors, not audits (L1) — the
 block says "the map records", never "the release contains". No map · no prior terminal row · the base
 sha's map absent → the tool names the reason and the block renders as a named gap, exactly like the

@@ -418,6 +418,31 @@ def run(T):
     d, _, _, _ = call_json(c, "review_drift", {"base": "HEAD~1"})
     ok(d and d["subjects"]["entity_shape"]["ran"] and d["subjects"]["web_bridge"]["ran"] and not d["subjects"]["reach"]["ran"] and not d["subjects"]["entity"]["ran"] and set(d["not_run"]) == {"reach", "entity", "workflow_census"},
        "review_drift: script-backed subjects run, record-backed ones NOT RUN with reasons", d and {k: v.get("ran") for k, v in (d or {}).get("subjects", {}).items()})
+    # ── S2 (review batch 2): a `no index` Reach record is a real record — the reason must say so, not "no Reach: record".
+    write(root, ".kdbp/PLAN.md", "# Plan\n\n## Phases\n\n| Phase | Exec | Review |\n|---|---|---|\n| P1 | ✅ | ⬜ |\n\n### Phase P1 — Noindex\n\n- **Reach:** no index\n")
+    d, _, _, _ = call_json(c, "review_drift", {"base": "HEAD~1", "subjects": ["reach"]})
+    _rr = (d or {}).get("subjects", {}).get("reach", {})
+    ok(d and not _rr.get("ran") and "no index" in (_rr.get("reason") or "") and "no Reach: record" not in (_rr.get("reason") or ""),
+       "S2: `- **Reach:** no index` → REACH NOT RUN names the no-index record, never 'no Reach: record'", _rr)
+    os.remove(os.path.join(root, ".kdbp", "PLAN.md"))   # leave .kdbp/ itself — the who_calls emit gate below needs it
+    # ── S3 (review batch 2): workflow_census must pass --archmap so census-lag can fire, and must NAME the junit half it
+    # cannot run. Before: --center only → census-lag silently off, ran:true, nothing in not_run (a clean bill that was not one).
+    _am_path = os.path.join(root, "docs", "site", "center", "archmap.json")
+    _am_orig = open(_am_path, encoding="utf-8").read()
+    _am = json.loads(_am_orig)
+    _am["model_insight"] = {"Thing": {"columns": [{"name": "id"}, {"name": "name"}, {"name": "color"}]}}
+    write(root, "docs/site/center/archmap.json", json.dumps(_am))
+    write(root, "docs/site/center/workflows/thing.json",
+          json.dumps({"entity": "thing", "states": {"s1": {"l": "Create thing", "shot": [], "writes": [["Thing.name", "", ""]]}}}))
+    d, _, _, _ = call_json(c, "review_drift", {"base": "HEAD~1", "subjects": ["workflow_census"]})
+    _wc = (d or {}).get("subjects", {}).get("workflow_census", {})
+    _kinds = [f.get("kind") for r in (_wc.get("results") or []) for f in (r.get("result") or [])]
+    ok(_wc.get("ran") is True and "census-lag" in _kinds and any(f.get("label") == "Thing.color" for r in (_wc.get("results") or []) for f in (r.get("result") or [])),
+       "S3: workflow_census passes --archmap → census-lag fires on the uncovered column (Thing.color)", {"kinds": _kinds, "ran": _wc.get("ran")})
+    ok(any("claim-drift (junit half)" in x for x in (_wc.get("not_run") or [])),
+       "S3: the junit half it cannot run is NAMED in the subject's not_run, never silent", _wc.get("not_run"))
+    write(root, "docs/site/center/archmap.json", _am_orig)
+    os.remove(os.path.join(root, "docs", "site", "center", "workflows", "thing.json")); os.rmdir(os.path.join(root, "docs", "site", "center", "workflows"))
     d, _, _, _ = call_json(c, "who_calls", {"symbol": "thing", "direction": "out", "depth": "2"})
     ok(d and d["direction"] == "out" and "callees" in d and "callers" not in d and d["emitted"] == 0 and any("transitive" in s for s in d["emit_skipped"]), "who_calls direction=out: callees named, never emits", d and {k: d.get(k) for k in ("direction", "emitted", "emit_skipped")})
     ok(d and d["map_confidence"]["active_missed_edges"] is None and "no map-delta ledger" in d["map_confidence"]["note"], "who_calls: map_confidence field present (no ledger → honest)", d and d.get("map_confidence"))

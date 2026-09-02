@@ -3101,6 +3101,35 @@
     "fix": "consumers-found ⇒ EXTEND was stated; empty-answer ⇒ nothing-licensed was not. Added: an empty who_calls is a floor; edit-in-place needs the grep-arm 0-hit search cited in the ledger and no string-keyed registry reach; default EXTEND."
    }
   ],
-  "status": "15/15 law-lens findings fixed in the working tree; resumed run pending for the other five lenses"
+  "status": "batch 1 (15) + batch 2 (41 defects · 58 sites · 3 source fixes) FIXED; 3 new batteries mutation-proven",
+  "batch2": {
+   "lenses": {
+    "seam": 8,
+    "law": 9,
+    "tool-truth": 7,
+    "regression": 14,
+    "consistency": 21,
+    "dead-ref": 10
+   },
+   "confirmed_raw": 69,
+   "refuted": 11,
+   "distinct_defects": 41,
+   "edit_sites": 58,
+   "source_fixes": {
+    "S1 kdbp_tools.py:326": "'Red is unstarted' fired on every plan with NO Red column (_state('')→todo); guard now requires the column. Battery: no-Red-column fixture, 1-mutant-proven (tests/gabe-kdbp 40→41).",
+    "S2 tools_wave2.py _phase_reach": "'- **Reach:** no index' did not match _REACH_RE → 'no Reach: record' (wrong NOT RUN reason); a no-index branch now names it. Battery: PLAN fixture with the record, 1-mutant-proven.",
+    "S3 tools_wave2.py workflow_census": "passed --center only → census-lag could never fire and the junit half was silently off while ran:true; now passes --archmap when archmap.json exists and NAMES the junit half in the subject's not_run. Battery: census+archmap fixture asserts a census-lag on the uncovered column + the named not_run, 1-mutant-proven (tests/gabe-map 94→97)."
+   },
+   "notable_spec_classes": [
+    "WS-2 residue in 6 more sites (L4 law text, map-spec binding contract ×3, cc-update bindings, gabe-map SKILL)",
+    "default-phase reads without `phase:` (review 5a/tier-drift, cc-update Center cell, health scope-creep)",
+    "pending_row_preview fixed cells not corrected by review 5b / plan 6c (Status blank, Times Deferred 1)",
+    "next_cid_floor is tracked-files-only git grep — review/execute must re-grep untracked tests before minting",
+    "find takes ONE kind; screen hits carry file:null (myopic)",
+    "map_diff key is `entities` + `more`, not `per_entity` (feature-spec)",
+    "applier residue the sentence detector could not see: intra-paragraph re-emits (feature-spec ×2, entity-spec, init-spec ×2, adopt-spec doubled marker)"
+   ],
+   "not_fixed_by_ruling": "the triage's 'Not worth fixing — do not re-raise' list (r2-triage.md tail) — recorded in the design README §17"
+  }
  }
 }

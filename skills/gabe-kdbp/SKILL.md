@@ -1,10 +1,10 @@
 ---
 name: gabe-kdbp
 description: "The suite's second MCP server — a project's .kdbp/ lifecycle state as 7 read-only tools the spine skills reach for (kdbp_snapshot · phase_context · review_target · next_beat · verify_commands · pending_row_preview · ledger_row_preview); previews write nothing. Usage: /gabe-kdbp status | register | probe [root]"
-when_to_use: "Manage the gabe-kdbp MCP server: registered at user scope, disabled in this project, install parity. Human-initiated only; the TOOLS are reached for by /gabe-execute, /gabe-review, /gabe-commit, /gabe-handoff, /gabe-next through mcp__gabe-kdbp__*."
+when_to_use: "Manage the gabe-kdbp MCP server: registered at user scope, disabled in this project, install parity. Human-initiated only; the TOOLS are reached for by every skill that touches lifecycle state — the spine (/gabe-plan, /gabe-red, /gabe-execute, /gabe-review, /gabe-commit, /gabe-push), /gabe-handoff, /gabe-next, /gabe-pulse and the satellites — through mcp__gabe-kdbp__*."
 disable-model-invocation: true
 metadata:
-  version: 1.0.1
+  version: 1.0.2
 ---
 
 # Gabe KDBP — the lifecycle state as tools

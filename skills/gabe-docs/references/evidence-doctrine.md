@@ -73,9 +73,11 @@ non-null `proof`. Deterministic script, not model judgment: `gabe-commit/scripts
 For `proof: visual | journey` phases, **the verifier of the evidence is not its author**: a
 read-only evaluator (an Explore/read-only agent — no Write/Edit) receives the phase's acceptance
 criteria + the proof folder and returns PASS / NEEDS_WORK with the failing artifact named. The
-evaluator's brief is assembled from `mcp__gabe-kdbp__phase_context` — `details_excerpt` (the phase's
-own `### Phase` section, first 2000 chars), `plan_json.proof` and `plan_json.proof_type` — not from
-a hand-copied summary of the plan; tool absent → PLAN.md's phase section is the read.
+evaluator's brief is assembled from `mcp__gabe-kdbp__phase_context` — `plan_json.proof`,
+`plan_json.proof_type` and `details_excerpt` (the phase's own `### Phase` section, first 2,000
+chars, cut silently) — not from a hand-copied summary of the plan; when the excerpt does not reach
+the `- **Acceptance:**` bullet, the criteria come from PLAN.md's section itself, never from memory.
+Tool absent → PLAN.md's phase section is the read.
 "Plausibility is not correctness; a reasonable diff plus a broken screenshot is NEEDS_WORK."
 gabe-review runs this during its runtime-evidence check; the executing session never grades its own
 screenshots.

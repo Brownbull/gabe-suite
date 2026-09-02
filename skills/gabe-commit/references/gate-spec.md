@@ -51,7 +51,7 @@ Every printed number is copy-pasted from this run's output — never composed. S
 
 - (a) `## Verify Commands` section of `.kdbp/BEHAVIOR.md` — the tool's `source: a:`
 - (b) package.json scripts / pyproject / Makefile / CI job definitions — the tool's `source: b:`, plus any CI job definition it does not read
-- (c) the per-language fallbacks below, only if (a)-(b) yield nothing, or when the project has no `.kdbp/` and the tool answers honest-empty
+- (c) the per-language fallbacks below, only if (a)-(b) yield nothing. On a project with no `.kdbp/` the tool answers `present: false` before it has read any manifest — (a) is empty there by definition, but (b) is still read BY HAND (package.json scripts / pyproject / Makefile / CI) before (c) is allowed; honest-empty from the tool is never a licence to guess
 
 A checker that cannot fail (exit-0 no-op, 0 tests collected, continue-on-error) is NON-EVIDENCE → report `⤫ skipped(non-evidence: <reason>)`. When resolved via (b), offer to write the binding into BEHAVIOR.md `## Verify Commands` so it is never re-derived.
 

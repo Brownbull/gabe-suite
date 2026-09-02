@@ -80,7 +80,7 @@ This step only fires when `/gabe-review` is invoked with no arguments — no exp
 
 **Why this step exists.** The authoritative "what's pending review" signal in a Gabe project lives in `.kdbp/PLAN.md` (phase row with `Exec=✅ Review=⬜`) plus `.kdbp/LEDGER.md` (checkpoint rows whose Commits column resolves scope via git). A raw `git diff HEAD` misses the target when code is already committed (HEAD clean), includes unrelated WIP, or ignores the plan-declared scope. Step 0.3 consults the plan first, falls back to git-diff only when no KDBP context resolves.
 
-**Procedure — ask `mcp__gabe-kdbp__review_target` first** (zero-LLM, deterministic; it IS this PLAN+LEDGER parse, header-resolved and closure-aware, so the parse is never re-authored here). It returns the pending row (`target.phase`, `target.name`, `target.cells`), the LEDGER `commits` it resolved, their union as `changed_files` (+ `changed_more` when the 40-file cap bit), a `base` ref, and the `source`/`banner` lines the print below quotes; `present: false` (no `.kdbp/`) or `target: null` (nothing pending) routes straight to the no-match handling and the Fallback below. Step 1's `<!-- status: active -->` precondition stays a file check — the tool does not read plan status, so a completed or pivoted plan must still fall through to Fallback. Steps 2–5 read the tool's answer; run them by hand where the server is not registered:
+**Procedure — ask `mcp__gabe-kdbp__review_target` first** (zero-LLM, deterministic; it IS this PLAN+LEDGER parse, header-resolved and closure-aware, so the parse is never re-authored here). It returns the pending row (`target.phase`, `target.name`, `target.cells`), the LEDGER `commits` it resolved, their union as `changed_files` (+ `changed_more` when the 40-file cap bit), a `base` ref, and the `source`/`banner` lines the print below quotes; `present: false` (no `.kdbp/`) routes to the Fallback (step 1). `target: null` means no row has Review ⬜ with Exec ∈ {✅, 🔄} — the tool filters an Exec ⬜ row out and returns one generic reason, so on `target: null` scan the Phases table once by hand for a Review ⬜ / Exec ⬜ row (step 3, second bullet) before printing the all-reviewed line; either no-match print exits 0, and the `fallback` / `changed_files` / `base: HEAD` the tool attaches to a null target are NOT taken — the Fallback runs only when step 1 fails. Step 1's `<!-- status: active -->` precondition stays a file check — the tool does not read plan status, so a completed or pivoted plan must still fall through to Fallback. Steps 2, 4 and 5 read the tool's answer; run them by hand where the server is not registered:
 
 1. **Check KDBP presence.** If `.kdbp/PLAN.md` is missing, or lacks `<!-- status: active -->` → jump to "Fallback" below.
 2. **Parse PLAN.md.** Find the `## Phases` table. Scan rows top-to-bottom for the first row where `Review` column = `⬜` AND `Exec` column ∈ {`✅`, `🔄`}. Record phase number N, phase name, Exec state, and phase `Types` cell when available.
@@ -88,7 +88,7 @@ This step only fires when `/gabe-review` is invoked with no arguments — no exp
    - No row satisfies the Review=⬜ condition (all reviewed) → print `ℹ No phase pending review. Pass an explicit target to review something else.` and exit 0.
    - Target row has `Exec=⬜` (Review pending but work not started) → print `⚠ Phase N Exec not complete — run /gabe-next to finish Exec before reviewing.` and exit 0.
    - Target row has `Exec=🔄` and phase types include any runtime-gated type (`mcp__gabe-kdbp__phase_context` → `plan_json.types`; the BEHAVIOR staging-proof rule is not in its `behavior` facts, so read `.kdbp/BEHAVIOR.md` for that half) (`user-facing`, `native-mobile`, `web`, `upload`, `realtime`, `streaming`, `file-media`, `auth`, `session`, `notifications`, `DB`) OR `.kdbp/BEHAVIOR.md` contains a runtime staging proof rule → print `⚠ Phase N staging proof still pending — run /gabe-next to finish /gabe-execute before reviewing.` and exit 0.
-4. **Take the scope from `review_target`.** `commits` are the LEDGER shas it resolved for phase N (rows whose `Entry` or `Theme / scope` names Phase N), `changed_files` their union with deleted paths already dropped, `base` the earliest resolved commit's parent — the ref Step 3.4's drift subjects and Sub-check 5c measure against. Prune anything no longer present under that path at HEAD; when `changed_more > 0` the answer hit the 40-file cap, so take the full set from `git diff --name-only <base>`. When `source` reports that no LEDGER rows resolved for the phase, scan for `COMMIT` rows dated since the phase's Exec start before accepting the git-diff fallback.
+4. **Take the scope from `review_target`.** `commits` are the LEDGER shas it resolved for phase N (rows whose `Entry` or `Theme / scope` names Phase N), `changed_files` their union with deleted paths already dropped, `base` the earliest resolved commit's parent — the ref Step 3.4's drift subjects and Sub-check 5c measure against. The tool matches ONLY rows that name the phase: `COMMIT` rows dated since the phase's Exec start (their theme is the commit subject — gate-spec Step 6 — which rarely says `Phase N`) are still unioned in by hand, as before, whether or not the tool resolved rows. Prune anything no longer present under that path at HEAD; when `changed_more > 0` the answer hit the 40-file cap, so rebuild the full set from the `commits` list with the `git show --name-only <sha>` union below (`commits` is capped at 40 as well — past that, the shas come from the LEDGER rows) — never from `git diff --name-only <base>`, which is base-to-worktree and drags in unrelated later commits and WIP. When `source` reports that no LEDGER rows resolved for the phase, the dated `COMMIT` scan is the last source before the git-diff fallback.
 
    For each collected sha, run `git show --name-only <sha>` and union the resulting file lists across all shas, minus any file that was deleted or renamed away (no longer present under that path at HEAD).
 5. **Resolve scope:**
@@ -118,7 +118,7 @@ If no `.kdbp/LEDGER.md` exists, skip this step silently.
 Before reviewing new code, check for existing deferred items:
 
 1. Ask `mcp__gabe-kdbp__kdbp_snapshot` first — its `pending` block names the file's own `columns`, the open/closed counts and the top 10 open rows, and its closure test is the house one (a Status verdict token OR a `<!-- P<n> resolved -->` comment on the line below the row), so a row closed by comment is never re-surfaced as open. Then read the backlog itself for the full set: `.kdbp/PENDING.md` (preferred), `.kdbp/deferred-cr.md`, or `.planning/deferred-cr.md`
-2. If found, load all entries with `Status != Resolved`
+2. If found, load every row the snapshot's closure test calls open — a Status that starts with none of `CLOSED / RESOLVED / WONT-DO / SUPERSEDED / DONE / FIXED` and no `<!-- P<n> … resolved -->` comment on the line below it (not merely `Status != Resolved`)
 3. For each deferred item, check if the current diff addresses it:
    - **Match by file path** (exact match)
    - If file matches, compare Finding text with >50% word overlap
@@ -168,10 +168,13 @@ For each modified source file:
 
 Red-beat projects (PLAN phases carry `cases` records): emit the gap as a KNOWN subject with a
 RESERVED id — `NEW CASE C[next] — <behavior> — no case asserts this` (allocate per gabe-red
-`references/red-spec.md`: corpus `max(grep)+1` — `mcp__gabe-map__cases_for` returns it as
-`corpus.next_cid_floor`, taken over the same test-glob grep and printed with the command it ran;
-`max_cid_in_map` is the map's lagging copy and never mints an id. No center, or an empty
-`corpus` block → do the grep by hand). A triage **fix** then lands as a real case under
+`references/red-spec.md`: corpus `max(grep)+1` over the test roots — `mcp__gabe-map__cases_for`
+hands back `corpus.next_cid_floor` from the same anchored pattern and prints the command it ran,
+but that scan is `git grep` over TRACKED files only (no `--untracked`, unlike `who_calls`'s grep
+arm), so a C-id sitting in a not-yet-committed test file is invisible to it; the floor is a FLOOR —
+re-run the red-spec grep over the test roots (untracked included) before reserving, as the tool's
+own `corpus.note` says. `max_cid_in_map` is the map's lagging copy and never mints an id. No
+center, or an empty `corpus` block → the grep alone). A triage **fix** then lands as a real case under
 the reserved id; a **defer** lands the id in PENDING so the promise has a reader.
 
 ### Step 3.2: Runtime Journey Evidence Gap Detection
@@ -234,11 +237,18 @@ into a hook block, never into silence.
   the id stays put). Judgment-shaped by design — this check lives HERE, deliberately not in a
   commit-gate grep (design record D6).
 - **WORKFLOW DRIFT** — the diff moved the product away from what the entity's WORKFLOW CENSUS
-  (`docs/site/center/workflows/<entity>.json`) says it is. Three machine-derived shapes, produced
-  by `mcp__gabe-map__review_drift`'s `workflow_census` subject, which runs the SUITE's own copy of
-  `check_workflow_drift.py` against this project (never the repo's — WS-2) over every
-  `docs/site/center/workflows/*.json` census (first 10) and relays each result — the hand form `scripts/check_workflow_drift.py <census> --archmap … --junit …`
-  still works where the server is not registered (report-never-gate, D1):
+  (`docs/site/center/workflows/<entity>.json`) says it is. Three machine-derived shapes
+  (report-never-gate, D1). `mcp__gabe-map__review_drift`'s `workflow_census` subject runs the
+  SUITE's own copy of `check_workflow_drift.py` against this project (never the repo's — WS-2)
+  over every `docs/site/center/workflows/*.json` census (first 10) with `--center` and, where the
+  project's `archmap.json` exists, `--archmap` — never `--junit`, so its answer carries
+  **capture-debt**, **census-lag** and the spec-file half of **claim-drift**; the junit half (a
+  step naming a C-id no report ran) is OFF there and the subject names it in its own `not_run`.
+  Take that half from the hand form — `scripts/check_workflow_drift.py <census> --archmap
+  docs/site/center/archmap.json --junit <each results_out glob>` (the globs are
+  `mcp__gabe-kdbp__verify_commands`' `commands.results_out`, else BEHAVIOR.md's `## Verify
+  Commands`) — or print `claim-drift(junit) NOT RUN — review_drift passes no --junit`. A
+  tool-only answer is never a clean census. The three shapes:
   **census-lag** a writable field or surface this diff added that NO step covers · **claim-drift**
   a step naming a C-id that no junit report ran, or a spec file no longer in the repo ·
   **capture-debt** a step with no capture, or whose capture file left disk. Priced like any
@@ -258,8 +268,11 @@ into a hook block, never into silence.
   or a case is owed there. `mcp__gabe-map__who_calls` recomputes a reach for any symbol on demand (a `grep-only@` stamp marks a reach taken
   without an index); `mcp__gabe-map__review_drift`'s `reach` subject computes the whole shape in one
   read — the record it parsed, its `graft_at` sha, `unreached` (changed source files no recorded reach
-  named) and `unused_reach` — and returns `ran: false` with the reason when the phase carries no
-  `Reach:` record, which is the `REACH DRIFT NOT RUN` print below. Compare against the record's
+  named) and `unused_reach` — and returns `ran: false` with a reason when the phase carries no
+  STAMPED record: `no Reach: record` when the block has no Reach line at all, `no graft index` when
+  the line reads `no index` (red-spec § Recorded, never binding; `mcp__gabe-kdbp__phase_context`
+  shows it as `records.reach = "no index"`). Either is the `REACH DRIFT NOT RUN` print below, with
+  THAT reason — never the other. Compare against the record's
   `graft@<sha>` stamp: a diff that moved well past that sha explains drift by growth, not by a missing
   edge, and the finding says which.
   Priced like any finding; the triage outcome is authoritative. **Detection lives HERE for the
@@ -518,7 +531,7 @@ Purpose: "Does this diff accomplish what the current plan phase says it should?"
 
 Procedure (deterministic):
 
-1. Ask `mcp__gabe-kdbp__phase_context` first — `phase` + `plan_json.name` are the phase and its name, `plan_json.scope` the declared file list and `details_excerpt` the Phase Details section, which is steps 1 and 3 in one read; the Phases table's `Description` cell is not in the mirror's projection, so step 2 stays a PLAN.md read. Where the server is not registered, read `.kdbp/PLAN.md`. Extract `## Current Phase` section → phase number N + phase name.
+1. Ask `mcp__gabe-kdbp__phase_context` first, passing `phase:` = the phase Step 0.3 resolved (`review_target.target.phase`, or the explicit target) — unset, the tool takes PLAN.json's `current_phase` or the FIRST table row, never PLAN.md's `## Current Phase`, so on a stale or absent mirror this sub-check would grade the diff against the wrong phase. `phase` + `plan_json.name` are the phase and its name, `plan_json.scope` the declared file list and `details_excerpt` the Phase Details section (first 2,000 chars — read the section itself when it runs longer), which is steps 1 and 3 in one read; the Phases table's `Description` cell is not in the mirror's projection, so step 2 stays a PLAN.md read. Where the server is not registered, read `.kdbp/PLAN.md`. Extract `## Current Phase` section → phase number N + phase name.
 2. Extract phase row N from `## Phases` table → `Description` column.
 3. Extract `## Scope` section if present → explicit file list.
 4. Build **expected change set** from:
@@ -681,7 +694,7 @@ Precondition: trigger hit AND no row in `.kdbp/DOCS.md` references any file in t
 |--------|----------|
 | `accept` | Read DECISIONS.md → compute next `D[N]` (max existing + 1) → append row with today's date, title, rationale, alternatives joined by `<br>`, `active` status, review_trigger. Use Edit tool to append before the closing fence if DECISIONS uses a frontmatter fence, else append at EOF. Mark any open PENDING.md classifier row with matching title as `resolved` (today's date). |
 | `edit` | Show each field inline-editable (prompt per field, default = proposed value). On confirm, proceed to `accept`. |
-| `defer` | Compose the row with `mcp__gabe-kdbp__pending_row_preview` (`flag.source` = `classifier`, `flag.description` = the title verbatim so re-surface dedup still matches, `flag.severity` = `low`) — it returns the row in the FILE's own column order with the next P-id and a `@<sha> <date>` Verified anchor — and paste it with Edit, never through a tool, so the D7 hooks see the write; where the server is not registered, compose the row by hand against the file's existing header (writing rule 1). Source column = `classifier`. Title stored verbatim in Finding for dedup on re-surface. If an open classifier row already exists with matching title (case-insensitive), increment `Times Deferred` on that row instead of creating a duplicate. |
+| `defer` | Compose the row with `mcp__gabe-kdbp__pending_row_preview` (`flag.source` = `classifier`, `flag.description` = the title verbatim so re-surface dedup still matches, `flag.file` = `-`, `flag.scale` = `small`, `flag.severity` = `medium` — the preview maps `severity` to the Priority cell — `flag.impact` = `low`) — it returns the row in the FILE's own column order with the next P-id — then set the three cells the preview fixes differently before pasting (kdbp-spec §4.6): `Status` → `open` (the preview leaves it blank, and the re-surface pre-step above and push 7.5b select on `Status = open`, so a blank row would vanish), `Times Deferred` → `0` (the preview stamps `1`; the classifier ladder starts at 0 and re-surface `defer` increments it), `Verified` → `-` (it stamps `@<sha> <date>`; a candidate title with no File cell has nothing to re-derive). The row still reads `\| P[N] \| today \| classifier \| [title] \| - \| small \| medium \| low \| 0 \| open \| - \|`. Paste it with Edit, never through a tool, so the D7 hooks see the write; where the server is not registered, compose that row by hand against the file's existing header (writing rule 1). Source column = `classifier`. Title stored verbatim in Finding for dedup on re-surface. If an open classifier row already exists with matching title (case-insensitive), increment `Times Deferred` on that row instead of creating a duplicate. |
 | `drop` | No write. Session-scoped dedup set to this title (same title won't re-propose this run). Mark any open PENDING.md classifier row with matching title as `resolved` (today's date) to prevent re-surface loop. |
 
 **Default-on-drop-through:** If the command completes without the user picking an action (common in non-interactive flow — agent continues before user can choose), treat as `defer`. The unresolved candidate is persisted to PENDING.md so it re-surfaces instead of vanishing. Session-scoped dedup still applies per-title to prevent double-persist within a single run.
@@ -700,7 +713,7 @@ Skip silently if any of:
 
 **Procedure (deterministic + pattern scan):**
 
-1. Ask `mcp__gabe-kdbp__phase_context` for `plan_json.tier` (the Tier cell) and `plan_json.types` (the Types list), then read `.kdbp/PLAN.md` for what the mirror does not carry — the `dim_overrides` YAML block:
+1. Ask `mcp__gabe-kdbp__phase_context` with `phase:` = the phase under review (unset, it resolves PLAN.json's `current_phase` or the FIRST table row — never PLAN.md's `## Current Phase` — so a stale or absent mirror prices the diff against another phase's tier) for `plan_json.tier` (the Tier cell) and `plan_json.types` (the Types list), then read `.kdbp/PLAN.md` for what the mirror does not carry — the `dim_overrides` YAML block:
    - Current Phase N → Tier cell: parse `phase_tier` = leading token (strip `(overrides...)` compact notation)
    - `## Phase Details → Phase N` YAML block → `dim_overrides` list (each entry `{section, dim, tier, reason}`); empty/missing = no overrides
    - `## Phase Details → Phase N → Types:` list

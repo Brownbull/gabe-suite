@@ -404,6 +404,8 @@ def _phase_reach(root: str, phase_id: str | None) -> tuple[list[str], str | None
     if phase_id:
         m = re.search(r"### Phase %s\b.*?(?=\n### Phase |\n## |\Z)" % re.escape(phase_id), text, re.S)
         text = m.group(0) if m else ""
+    if re.search(r"- \*\*Reach:\*\* no index\b", text):
+        return [], None, "Reach: record reads `no index`%s — red ran with no graft index (REACH DRIFT NOT RUN — no graft index)" % (" for phase %s" % phase_id if phase_id else "")
     m = _REACH_RE.search(text)
     if not m:
         return [], None, "no Reach: record%s" % (" for phase %s" % phase_id if phase_id else "")
@@ -499,14 +501,19 @@ def t_review_drift(args: dict, roots) -> dict:
                                            "the target repo's copy is deliberately NOT run (WS-2)"}
             else:
                 res = []
+                archmap = center.dir / "archmap.json"
                 for cpath in censuses[:10]:
-                    rc, o, e = mq.sh([sys.executable, "-I", str(script), str(cpath), "--center", str(center.dir),
-                                      "--json"], cwd=root, timeout=90, env={"GABE_REPO_ROOT": root})
+                    cmd = [sys.executable, "-I", str(script), str(cpath), "--center", str(center.dir), "--json"]
+                    if archmap.is_file():
+                        cmd += ["--archmap", str(archmap)]
+                    rc, o, e = mq.sh(cmd, cwd=root, timeout=90, env={"GABE_REPO_ROOT": root})
                     try:
                         res.append({"census": cpath.name, "exit": rc, "result": json.loads(o) if o.strip() else None})
                     except json.JSONDecodeError:
                         res.append({"census": cpath.name, "exit": rc, "text": o[:800]})
-                subj["workflow_census"] = {"ran": True, "results": res}
+                subj["workflow_census"] = {"ran": True, "results": res,
+                                           "not_run": ["claim-drift (junit half): no --junit passed — the results_out globs live in .kdbp/BEHAVIOR.md ## Verify Commands; hand form"]
+                                                      + ([] if archmap.is_file() else ["census-lag: no docs/site/center/archmap.json to pass as --archmap"])}
     out["not_run"] = [k for k, v in subj.items() if not v.get("ran")]
     out["note"] = "STALE ANCHOR (PENDING rows' cited files moved past their Verified sha) lives in gabe-kdbp; pricing stays judgment (review D6)"
     return out

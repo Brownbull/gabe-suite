@@ -209,6 +209,24 @@ def run(T):
     ok(d and not any("Red is unstarted" in w for w in d["warnings"]), "no Red warning when Red ✅", d and d.get("warnings"))
     d, _, _, _ = call_json(c, "phase_context", {"phase": "P3"})
     ok(d and any("Red is unstarted" in w for w in d["warnings"]) and any("no declared entities" in w for w in d["warnings"]), "P3: Red-unstarted + no-entities warnings", d and d.get("warnings"))
+    # ── S1 (review batch 2): a plan with NO Red column is a non-TDD project — the Red warning must NOT fire.
+    # Before the guard, a missing `red` cell went through _state("") → "todo" and every such plan was nagged.
+    _plan_path = os.path.join(root, ".kdbp", "PLAN.md")
+    _plan_orig = open(_plan_path, encoding="utf-8").read()
+    _no_red = []
+    for _l in _plan_orig.splitlines():
+        if _l.startswith("| Phase | Name | Tier | Red |"):
+            _l = _l.replace("| Red |", "|", 1)
+        elif _l.startswith("|---|---|---|---|---|---|---|---|---|"):
+            _l = _l[:-4]                                   # one fewer column
+        elif _l.startswith("| P") and _l.count("|") == 10:  # a phase row: drop the 4th cell (Red)
+            _c = _l.split("|"); del _c[4]; _l = "|".join(_c)
+        _no_red.append(_l)
+    W(root, ".kdbp/PLAN.md", "\n".join(_no_red) + "\n")
+    d, _, _, _ = call_json(c, "phase_context", {"phase": "P3"})
+    ok(d and "red" not in (d.get("plan_md_row") or {}).get("cells", {}) and not any("Red is unstarted" in w for w in d["warnings"]),
+       "S1: no Red column → no Red warning (a non-TDD plan is not nagged)", d and {"cells": (d.get("plan_md_row") or {}).get("cells"), "warnings": d.get("warnings")})
+    W(root, ".kdbp/PLAN.md", _plan_orig)
     d, _, _, _ = call_json(c, "phase_context", {"phase": "P9"})
     ok(d and "reason" in d["plan_json"] and "reason" in d["plan_md_row"], "unknown phase → reasons, not a crash", d)
     # ── review_target ──
