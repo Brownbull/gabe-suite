@@ -98,7 +98,21 @@ offered S6 · 0 `Reach:` records in the live PLAN · inflight.json 20 commits be
   `./install.sh --register-mcp` runs `claude mcp add -s user gabe-map -- python3 "$HOME/.claude/skills/gabe-map/scripts/server.py"`
   (idempotent; shell expands `$HOME`). `--uninstall` prints `claude mcp remove -s user gabe-map` (never runs it).
   The doctor has NO warn level (DRIFT · SKIP · INFO only) → the registration state is an INFO line, never DRIFT.
-- **D10 no third-party directives:** never `graft mcp` / `graft init` / `graft ask` / `--deep` / a refresh from the
+- **D10 — AMENDED by operator ruling 2026-09-02: graft serves map CREATION only.** `graft build` stays as the structural
+  arm the generators consume (center regen, the red beat's index refresh); everything agent-facing graft ships — `graft mcp`
+  (6 tools), `graft init`'s SessionStart/UserPromptSubmit hooks, statusline, tokens-saved footer — RETIRES from the twins
+  (gustify carries `graft mcp` live + graft hooks, both untracked → propagation step owed; gabe-map never depends on them).
+  The skills use the suite's tools, which sit on top of graft's index and add entities · ownership · cases · coverage ·
+  drift · deltas. Every graft tool gets a suite equivalent or better: `graft_check_freshness` → `map_status` (v1) ·
+  `graft_trace_calls` → `who_calls` (v1 callers; `direction:out` + `depth` = callees/blast in wave 2) · `graft_find_code` →
+  `find` (search over the map's names + docs, hits carry owner/file:line/cases; wave 2) · `graft_file_api` → `outline(file)`
+  (signatures from graft's wiring.json when present + owner + models + tests; wave 2) · `graft_repo_map` → `center_overview`
+  (entity-level orientation ≤ 600 tok; wave 2) · `graft_find_all` → `who_calls` grep arm + built-in Grep (symbol-grouped grep
+  later) · graft's injection/statusline → the D7 `instructions` block. This settles §11 Q1: red-spec L191-193 STANDS;
+  graft-adoption README's "Enforcement (solved by installation)" section is SUPERSEDED. The judges' `never` on `find_code`/
+  `find_all` and `later` on `file_api`/`center_overview` rested on graft covering them — re-verdicted `next`/`later` on the
+  artifact as a visible ruling chip beside the judges' scores (their scores untouched).
+- **D10 (original) no third-party directives:** never `graft mcp` / `graft init` / `graft ask` / `--deep` / a refresh from the
   server. The server shells ONLY to `graft callers <sym> . --json --no-refresh` and drops the `saved` object (the
   `--json` output carries no directive — verified: 0 occurrences of "token"). Ruling seam (open question for the
   operator, §11): red-spec L191-193 (2026-08-05, "never graft init/mcp") vs graft-adoption README (2026-08-16,
@@ -124,6 +138,9 @@ offered S6 · 0 `Reach:` records in the live PLAN · inflight.json 20 commits be
 every one `now/now/now`; medians importance 5·5·5·5·3·4·4, cost ≤3, risk ≤3). `endpoint_for` scored `next` (folded
 later as a method+path mode of `touches`, reusing `fetch_bridge.norm_path`); 14 `next` · 17 `later` · 20 `never` form
 the ranked backlog in the published analysis (§10). `entity_shape` is the seat to yield if the operator wants six.
+**Wave 2 = the graft equivalents (ruling 2026-09-02, D10):** `find` · `outline` · `center_overview` · `who_calls direction/depth`
+(+ `endpoint_for` as a `touches` mode). They ship AFTER v1 is measured, in a second server or as a v1.1 growth — the ≤7
+discoverability rule decides which (D7: the routing block must still fit).
 Contracts (4.1–4.8; 4.6 `endpoint_for` is documented but NOT in v1):
 
 ### 4.1 `map_status(root?)` — freshness + presence, the "is there a map here" answer
@@ -285,7 +302,7 @@ run; inflight.json 20 commits behind) is closed only by two hooks beside the ser
 PostToolUse inflight refresh) = **wave 0**, its own designed pass.
 
 ## 11 · Open questions for the operator
-1. Ruling seam: red-spec L191-193 vs graft-adoption README on `graft init` (gabe-map needs neither).
+1. ~~Ruling seam: red-spec vs graft-adoption on `graft init`~~ — **RULED 2026-09-02 (D10):** graft = map creation only; agent surface retires; equivalents owed.
 2. Mutation tools (`plan_tick`, PENDING rows) are blocked by the hook-visibility collision — rule: never, or design
    a hook-visible write path first.
 3. Registration cadence: `--register-mcp` once per machine; twins' `disabledMcpServers` must not list gabe-map.

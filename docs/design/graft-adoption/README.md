@@ -128,6 +128,12 @@ One-line rule: **graft owns codebase FACTS (backend + frontend); the suite owns 
 
 ## Enforcement (the recurring miss — solved by installation, not by us)
 
+> **SUPERSEDED — operator ruling 2026-09-02** ([gabe-map design record, D10](../gabe-map/README.md)): graft serves map
+> CREATION only (`graft build` at regen + the red beat). Its agent-facing surface — `graft mcp`, `graft init` hooks, statusline,
+> tokens-saved footer — retires from the twins; the skills use the suite's own MCP tools (gabe-map), which provide equivalents
+> or better for every graft tool. red-spec's "never `graft mcp` / `graft init`" stands. The paragraphs below record the
+> 2026-08-16 position for provenance only.
+
 Install graft properly (`npm i @nanonets/graft` + `graft init`) in the twins → get, for FREE:
 - **UserPromptSubmit injection** — graft runs `graft ask` on each prompt and drops ranked map
   pointers into context BEFORE the agent decides to grep. The strongest lever; needs no cooperation.
