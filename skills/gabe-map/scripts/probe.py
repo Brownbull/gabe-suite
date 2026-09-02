@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """probe — one handshake + tools/list + map_status against a root, through a minimal stdio client.
 
-  probe.py [root]          (root defaults to the current directory)
+  probe.py [--server gabe-map|gabe-kdbp] [root]     (root defaults to the current directory)
 
 Prints the tool names and the map_status text the server returns. Read-only; emits nothing
 (GABE_MAP_NO_EMIT is set for the child). Exit 0 when the server answered, 2 when it did not.
@@ -15,13 +15,18 @@ import sys
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SERVER = os.path.join(HERE, "server.py")
 
 
 def main() -> int:
-    root = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else os.getcwd())
+    argv = sys.argv[1:]
+    server_name = "gabe-map"
+    if "--server" in argv:
+        i = argv.index("--server"); server_name = argv[i + 1]; argv = argv[:i] + argv[i + 2:]
+    server = os.path.join(HERE, "server.py") if server_name == "gabe-map" else os.path.join(HERE, "..", "..", server_name, "scripts", "server.py")
+    first_tool = "map_status" if server_name == "gabe-map" else "kdbp_snapshot"
+    root = os.path.abspath(argv[0] if argv else os.getcwd())
     env = dict(os.environ, CLAUDE_PROJECT_DIR=root, GABE_MAP_NO_EMIT="1")
-    p = subprocess.Popen([sys.executable, SERVER], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, env=env)
+    p = subprocess.Popen([sys.executable, server], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, env=env)
     buf = b""
 
     def send(o):
@@ -65,7 +70,7 @@ def main() -> int:
         tools = ask("tools/list", None, 2) or {}
         names = [t["name"] for t in (tools.get("result") or {}).get("tools") or []]
         print("tools: %d (%s)" % (len(names), " · ".join(names)))
-        st = ask("tools/call", {"name": "map_status", "arguments": {"root": root}}, 3) or {}
+        st = ask("tools/call", {"name": first_tool, "arguments": {"root": root}}, 3) or {}
         text = "".join(c.get("text", "") for c in ((st.get("result") or {}).get("content") or []))
         print(text)
         return 0

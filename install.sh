@@ -57,7 +57,7 @@ if $UNINSTALL; then
     # Retired surface — clean up any straggler command mirrors from older installs
     run "rm -f ~/.claude/commands/gabe-*.md"
     run "rm -rf ~/.claude/scripts/hooks/kdbp"
-    echo "  NOTE: the gabe-map MCP registration is NOT removed by this script — if registered, run: claude mcp remove -s user gabe-map"
+    echo "  NOTE: MCP registrations are NOT removed by this script — if registered, run: claude mcp remove -s user gabe-map; claude mcp remove -s user gabe-kdbp"
     run "rm -rf ~/.claude/templates/gabe"
     run "rm -rf ~/.claude/prompts/gabe-scope"
     run "rm -rf ~/.claude/schemas/gabe-scope"
@@ -178,21 +178,23 @@ fi
 echo ""
 echo "Installed $INSTALLED/${#GABE_SKILLS[@]} skills."
 
-# gabe-map MCP server — registration is ASK-FIRST (never automatic): report the state; register only on --register-mcp.
+# MCP servers (gabe-map · gabe-kdbp) — registration is ASK-FIRST (never automatic): report the state; register only on --register-mcp.
 if [ "$DRY_RUN" != true ]; then
-    MCP_SERVER="$HOME/.claude/skills/gabe-map/scripts/server.py"
-    echo "  $(bash "$SCRIPT_DIR/scripts/checkers/mcp-registration.sh" --installed "$MCP_SERVER" 2>/dev/null)"
+    bash "$SCRIPT_DIR/scripts/checkers/mcp-registration.sh" 2>/dev/null | sed 's/^/  /'
     if [ "$REGISTER_MCP" = true ]; then
-        if python3 "$SCRIPT_DIR/skills/gabe-map/scripts/mcp-status.py" --installed "$MCP_SERVER" --json 2>/dev/null | grep -q '"registered": true'; then
-            echo "  OK: gabe-map already registered at user scope"
-        elif command -v claude >/dev/null 2>&1; then
-            if claude mcp add -s user gabe-map -- python3 "$MCP_SERVER"; then
-                echo "  OK: gabe-map registered at user scope — RESTART the Claude Code session for the tools to appear"
+        for srv in gabe-map gabe-kdbp; do
+            MCP_SERVER="$HOME/.claude/skills/$srv/scripts/server.py"
+            if python3 "$SCRIPT_DIR/skills/gabe-map/scripts/mcp-status.py" --server "$srv" --installed "$MCP_SERVER" --json 2>/dev/null | grep -q '"registered": true'; then
+                echo "  OK: $srv already registered at user scope"
+            elif command -v claude >/dev/null 2>&1; then
+                if claude mcp add -s user "$srv" -- python3 "$MCP_SERVER"; then
+                    echo "  OK: $srv registered at user scope — RESTART the Claude Code session for the tools to appear"
+                else
+                    echo "  WARN: claude mcp add failed for $srv (continuing — register by hand: claude mcp add -s user $srv -- python3 \"$MCP_SERVER\")"
+                fi
             else
-                echo "  WARN: claude mcp add failed (continuing — register by hand: claude mcp add -s user gabe-map -- python3 \"$MCP_SERVER\")"
+                echo "  WARN: claude CLI not found — register by hand: claude mcp add -s user $srv -- python3 \"$MCP_SERVER\""
             fi
-        else
-            echo "  WARN: claude CLI not found — register by hand: claude mcp add -s user gabe-map -- python3 \"$MCP_SERVER\""
-        fi
+        done
     fi
 fi

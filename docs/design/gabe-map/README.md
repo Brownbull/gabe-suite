@@ -1,7 +1,7 @@
 # gabe-map — the suite's reliability surface (Path C) — design record
 
-> **Status (2026-09-02): BUILT — v1 landed** (`skills/gabe-map/`, `tests/gabe-map` 73 asserts · 4-mutant-proven, twin dry-run on a
-> local CLONE of gustify, harness e2e). §3 v2-amendments list below records which §12 findings the code applies. Registration
+> **Status (2026-09-02): BUILT — v1 + wave 2 landed** (`skills/gabe-map/` fifteen tools, `tests/gabe-map` 89 asserts · 7-mutant-proven,
+> twin dry-run on a local CLONE of gustify, harness e2e; sibling `skills/gabe-kdbp/` seven tools, `tests/gabe-kdbp` 38 asserts · 2-mutant-proven). §3 v2-amendments list below records which §12 findings the code applies. Registration
 > stays ask-first (`./install.sh --register-mcp`). Earlier status: DESIGNED + REVIEWED (partial).** Successor of
 > [map-delta-loop §13](../map-delta-loop/README.md). The operator's tool-surface ANALYSIS is published
 > (artifact "Gabe Suite Tool Surface", source: [tool-surface-analysis.html](tool-surface-analysis.html);
@@ -166,9 +166,11 @@ D15 naming · D7 routing block. Not applied (deferred, named): `map_build_previe
 every one `now/now/now`; medians importance 5·5·5·5·3·4·4, cost ≤3, risk ≤3). `endpoint_for` scored `next` (folded
 later as a method+path mode of `touches`, reusing `fetch_bridge.norm_path`); 14 `next` · 17 `later` · 20 `never` form
 the ranked backlog in the published analysis (§10). `entity_shape` is the seat to yield if the operator wants six.
-**Wave 2 = the graft equivalents (ruling 2026-09-02, D10):** `find` · `outline` · `center_overview` · `who_calls direction/depth`
-(+ `endpoint_for` as a `touches` mode). They ship AFTER v1 is measured, in a second server or as a v1.1 growth — the ≤7
-discoverability rule decides which (D7: the routing block must still fit).
+**Wave 2 = the graft equivalents + map lifecycle — BUILT 2026-09-02 (operator: build now + next together, then review):**
+`find` · `outline` · `center_overview` · `blast_radius` · `map_census` · `map_diff` · `center_status` · `review_drift` in
+`tools_wave2.py`; `who_calls` grew `direction`/`depth` + `map_confidence`; `touches` ENDPOINT grew `web_unmatched_fetches`
+(`endpoint_for` as a mode). Fifteen tools on ONE server (the operator chose speed over the ≤7 rule for the MAP family; the
+routing block grew to ~1,500 chars); the KDBP-STATE readers went to the sibling `gabe-kdbp`. Contracts: map-spec §5.8.
 Contracts (4.1–4.8; 4.6 `endpoint_for` is documented but NOT in v1):
 
 ### 4.1 `map_status(root?)` — freshness + presence, the "is there a map here" answer
@@ -472,3 +474,18 @@ frame (CONFIRMED). The rest are the build's amendment list, highest severity fir
    opt-in harness e2e (`--mcp-config`, `--allowedTools mcp__gabe-map`, assert the call in the server log) → commit + push both.
 4. Registration stays ask-first: `./install.sh --register-mcp` (never automatic). Twins need the `.gitignore` seed for
    `.kdbp/map-deltas*.jsonl` before `who_calls` emits there.
+
+## 15 · gabe-kdbp — the sibling server for the KDBP-STATE readers (BUILT 2026-09-02)
+
+The analysis put the kdbp-state readers in a SIBLING namespace so gabe-map's roster stayed discoverable; the operator's
+"build now + next together" made them wave 2 of the same day. `skills/gabe-kdbp/` — `scripts/server.py` (a thin launcher on
+gabe-map's `mcpwire.py`, one wire implementation for both servers) + `scripts/kdbp_tools.py` + `references/kdbp-spec.md` +
+`tests/gabe-kdbp` (38 asserts, 2-mutant-proven). Seven read-only tools: `kdbp_snapshot` (handoff's ~60k-token gather in ≤ 1k) ·
+`phase_context` (execute Step 0–1: PLAN.json record + table row states + `Cases:`/`Reach:` records + Verify Commands + PENDING
+rows in scope + declared entities' briefs via gabe-map) · `review_target` (review Step 0.3: the Review ⬜ ∧ Exec ✅/🔄 row →
+LEDGER shas → changed files + base; git-diff fallback) · `next_beat` (next.mjs --json, exit codes mapped) · `verify_commands`
+(gate Step 2.0 binding: BEHAVIOR first, else manifest candidates; NEVER probed) · `pending_row_preview` · `ledger_row_preview`
+(the analysis's two writers as PREVIEWS — the exact row to paste, nothing written; D14's hook-visibility ruling stays open).
+Parsers are header-resolved (gustify's `| # | Phase | Description | … |` and `| # | Gate | Finding |` both parse) and
+closure-aware (Status token OR a following `<!-- P<n> resolved -->` comment). Registration: `./install.sh --register-mcp`
+registers both servers; `mcp-status.py --server` · `probe.py --server` · the checker print one line per server.

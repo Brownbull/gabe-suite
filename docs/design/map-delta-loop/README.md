@@ -305,7 +305,7 @@ decision-debt, its brief in §11b) and the map loop's axes 2+3 already shipped (
 The §13 plan ran one session: the harness mechanics were PROBED (not remembered — `CLAUDE_PROJECT_DIR` in the server
 env, `roots/list`, `instructions` reaching the system prompt, one result channel, the `server/discover` first frame), the
 operator's wider question — *which suite processes should be tools at all* — was answered by a scored analysis (58
-candidates · 3 judges; artifact "Gabe Suite Tool Surface"), and the `gabe-map` server was designed, 4/7-lens reviewed, then BUILT the same day (`skills/gabe-map/`, seven tools, 73-assert battery, 4-mutant-proven; `reach-emit.py` now runs the shared `mapquery.two_arm` core with the empty-arm and prose fixes, +6 battery cases).
+candidates · 3 judges; artifact "Gabe Suite Tool Surface"), and the `gabe-map` server was designed, 4/7-lens reviewed, then BUILT the same day (`skills/gabe-map/`, seven tools → FIFTEEN with the graft equivalents by evening, 89-assert battery; sibling `gabe-kdbp` with seven KDBP-state readers; `reach-emit.py` now runs the shared `mapquery.two_arm` core with the empty-arm and prose fixes, +6 battery cases).
 **v1 roster (seven unanimous `now` verdicts):** `map_status` · `entity_context` · `touches` · `who_calls` · `entity_shape` ·
 `cases_for` · `owner_of`. Two emit findings feed back into THIS loop: the grep arm's prose hits (the only two gustify deltas
 were docstring mentions — §10's "2 real test-caller edges" claim is WRONG) and `reach-emit.py`'s untested branch (an empty

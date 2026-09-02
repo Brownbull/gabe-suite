@@ -8,7 +8,7 @@
 # it FIRES (unregistered · disabled · path mismatch) and stays SILENT-green (registered) against
 # fixture configs — an inline doctor check could only ever run against this machine.
 #
-#   mcp-registration.sh [--config FILE] [--project DIR] [--installed PATH]
+#   mcp-registration.sh [--config FILE] [--project DIR]     (prints one line per server: gabe-map, gabe-kdbp)
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 STATUS="$HERE/../../skills/gabe-map/scripts/mcp-status.py"
@@ -17,5 +17,8 @@ if [ ! -f "$STATUS" ]; then
   echo "gabe-map: status probe missing (skills/gabe-map/scripts/mcp-status.py)"
   exit 0
 fi
-python3 "$STATUS" "$@" 2>/dev/null || echo "gabe-map: status probe failed to run"
+# one line per server; extra args (e.g. --config/--project for the battery) pass through to both
+for srv in gabe-map gabe-kdbp; do
+  python3 "$STATUS" --server "$srv" "$@" 2>/dev/null || echo "$srv: status probe failed to run"
+done
 exit 0

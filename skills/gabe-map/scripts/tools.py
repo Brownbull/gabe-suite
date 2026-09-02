@@ -298,6 +298,9 @@ def t_touches(args: dict, roots) -> dict:
                     "edges_out": [{"target": t, "kind": k} for t, k, _ in idx["edges_out"].get(nid, [])][:mq.CAP],
                     "screens_in": [{"source": s, "kind": k} for s, k, _ in idx["edges_in"].get(nid, []) if k == "bridge"][:mq.CAP],
                     "tests": {"cases": cases[:mq.CAP], "covered_by_test_files": files[:mq.CAP]}})
+        web = ((center.c4.get("stats") or {}).get("web") or {})
+        unm = web.get("unmatched") if isinstance(web.get("unmatched"), list) else []
+        out["web_unmatched_fetches"] = [u for u in unm if isinstance(u, dict) and norm_path(str(u.get("path", ""))) == want and str(u.get("method", "")).upper() == method][:mq.CAP] or None
         return out
     if kind == "function":
         out["function"] = _fn_record(center, key)
@@ -407,14 +410,47 @@ def _model_touches(center: mq.Center, cls: str, kind: str, out: dict) -> dict:
 
 
 # ── who_calls ──────────────────────────────────────────────────────────────────
+def _map_confidence(root: str) -> dict:
+    """The S14 tally read as a per-answer field: ACTIVE missed edges for the callers arm (fresh tier, no store)."""
+    ledger = os.path.join(root, ".kdbp", "map-deltas-rollup.jsonl")
+    if not os.path.isfile(ledger):
+        return {"active_missed_edges": None, "note": "no map-delta ledger yet — the index has not been contradicted by grep here"}
+    rc, cnt, _ = mq.sh(["git", "-C", root, "rev-list", "--count", "HEAD"])
+    n_now = int(cnt.strip()) if rc == 0 and cnt.strip().isdigit() else 0
+    horizon = int(os.environ.get("MAP_DELTAS_H", "40"))
+    active, total = 0, 0
+    try:
+        for line in open(ledger, encoding="utf-8"):
+            try:
+                o = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if o.get("v") != 2 or o.get("gen") != "_a3_graft.calls":
+                continue
+            total += 1
+            if n_now - int(o.get("last_n") or 0) < horizon:
+                active += 1
+    except OSError:
+        pass
+    return {"active_missed_edges": active, "edges_total": total,
+            "note": ("%d active missed caller edge(s) tallied — confirm with grep" % active) if active else "no active missed caller edges tallied"}
+
+
 def t_who_calls(args: dict, roots) -> dict:
     sym = (args.get("symbol") or "").strip()
     if not mq.SYMBOL_RE.match(sym):
         raise mq.MapStop("symbol must be an identifier ([A-Za-z_][A-Za-z0-9_]*)")
+    direction = (args.get("direction") or "in").lower()
+    if direction not in ("in", "out"):
+        raise mq.MapStop("direction must be in (callers) or out (callees)")
+    depth = str(args.get("depth") or "1")
+    if not (depth == "all" or depth.isdigit()):
+        raise mq.MapStop("depth must be an integer or 'all'")
     root, source = mq.resolve_root(args.get("root"), roots)
     center, reason = mq.open_center(root)
-    emit = bool(args.get("emit", True)) and not os.environ.get("GABE_MAP_NO_EMIT")
-    cj, cstat = mq.graft_callers(sym, root)
+    transitive = direction == "out" or depth != "1"
+    emit = bool(args.get("emit", True)) and not os.environ.get("GABE_MAP_NO_EMIT") and not transitive
+    cj, cstat = mq.graft_callers(sym, root, direction=direction, depth=depth)
     hits, gstat = mq.git_grep_hits(sym, root)
     allowed = list(roots or [])
     if os.environ.get("CLAUDE_PROJECT_DIR"):
@@ -427,6 +463,13 @@ def t_who_calls(args: dict, roots) -> dict:
     else:
         out["map_note"] = reason
     out.update(res)
+    out["direction"], out["depth"] = direction, depth
+    if direction == "out":
+        out["callees"] = out.pop("callers", [])
+        out["callees_detail"] = out.pop("callers_detail", [])
+    if transitive:
+        out["emit_skipped"] = list(out.get("emit_skipped") or []) + ["transitive/callee queries never emit — the delta semantics are 'a DIRECT caller the index missed'"]
+    out["map_confidence"] = _map_confidence(root) if center else None
     out["reach_line"] = mq.reach_line(res, root)
     out["floors"] = ["graft indexes .py/.ts/.tsx/.js/.jsx only; an empty reach is never an absence proof — grep -rn is",
                      "grep hits classified code vs prose (Python via tokenize, exact; others by line shape) — prose hits are listed, never emitted"]
@@ -599,8 +642,10 @@ TOOLS = [
      "description": "What touches X in the map: for a file, model/schema, function (bare or file::fn), entity, endpoint 'METHOD /path' or case id — owners, r/w functions, endpoints, tests, edges.",
      "inputSchema": _schema({"target": {"type": "string", "description": "File path · Model/Schema/Class · function · file::fn · entity slug · 'GET /path' · C123"}, **ROOT_PROP}, ["target"])},
     {"name": "who_calls", "fn": t_who_calls, "annotations": {**RO, "readOnlyHint": False},
-     "description": "Who calls / where is symbol X used: graft callers ∪ word-boundary git grep, hits classified code vs prose, map misses emitted as deltas. Returns the Reach line.",
+     "description": "Who calls / where is symbol X used (or what it calls: direction=out, depth=N|all): graft callers ∪ word-boundary git grep, hits code vs prose, misses emitted as deltas. Returns the Reach line.",
      "inputSchema": _schema({"symbol": {"type": "string", "description": "An identifier (function, class, hook name)."},
+                             "direction": {"type": "string", "enum": ["in", "out"], "description": "in = callers (default) · out = callees."},
+                             "depth": {"type": "string", "description": "1 (default), N hops, or 'all' — transitive blast radius via graft; only direction=in depth=1 emits deltas."},
                              "emit": {"type": "boolean", "description": "Append map-delta lines for code hits the map missed (default true; gated)."}, **ROOT_PROP}, ["symbol"])},
     {"name": "entity_shape", "fn": t_entity_shape, "annotations": RO,
      "description": "Which entity owns URL domain /x; orphan URL domains and aspect entities, computed fresh from the map. Optional diff=<base> classifies routes a diff adds.",
@@ -625,6 +670,10 @@ When a project has a command center (docs/site/center/), ask the map BEFORE grep
 - one entity's endpoints/models/files → mcp__gabe-map__entity_context (omit slug to list entities)
 - who owns URL domain /x, orphan domains → mcp__gabe-map__entity_shape
 - is there a map here, how stale → mcp__gabe-map__map_status (call first when unsure)
+- find X by name (entity/endpoint/model/function/screen) → mcp__gabe-map__find · a file's definitions + signatures → mcp__gabe-map__outline
+- orient in the codebase → mcp__gabe-map__center_overview · what does this change touch → mcp__gabe-map__blast_radius
+- where is the map blind → mcp__gabe-map__map_census · how did the map change between refs → mcp__gabe-map__map_diff
+- the center's actionable list → mcp__gabe-map__center_status · a review's drift subjects vs a base → mcp__gabe-map__review_drift
 The map is a FLOOR, never a scope: absence in an answer is not proof of absence — grep -rn remains the absence proof. Every answer stamps map@<head> · freshness. No center → the tools say so and point to Grep/Glob."""
 
 
@@ -637,3 +686,9 @@ def call(name: str, args: dict, roots: list[str] | None) -> tuple[dict, bool]:
         return t["fn"](args or {}, roots), False
     except mq.MapStop as exc:
         return {"stop": str(exc), "tool": name}, True
+
+
+# ── wave 2 (the graft equivalents + map lifecycle) — registered after the helpers exist ──
+import tools_wave2 as _w2  # noqa: E402
+TOOLS.extend(_w2.TOOLS)
+BY_NAME.update({t["name"]: t for t in _w2.TOOLS})

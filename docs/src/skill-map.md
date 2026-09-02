@@ -1,6 +1,6 @@
-# The skill map — 29 skills, and what fires each one
+# The skill map — 30 skills, and what fires each one
 
-The suite is 29 skills. This page answers two questions the roster alone cannot: **what each one is for**, and **how it is reached** — because a skill nothing fires is only as available as your memory of it.
+The suite is 30 skills. This page answers two questions the roster alone cannot: **what each one is for**, and **how it is reached** — because a skill nothing fires is only as available as your memory of it.
 
 Everything below is derived from the repo, not from recollection: hook scripts under `scripts/hooks/kdbp/`, the router's own dispatch table in `next.mjs`, and each skill's frontmatter flags. Measured 2026-07-31.
 
@@ -17,11 +17,11 @@ Six ways, and a skill can be reached by more than one — `/gabe-commit` is both
 | ⛓ **Hook-fired** | a shipped hook injects it; it can start without anyone typing | 4 | `/gabe-assess` `/gabe-commit` `/gabe-plan` `/gabe-red` |
 | ⟳ **Router-dispatched** | `/gabe-next` reads PLAN state and names it as the next beat | 8 | `/gabe-cc-update` `/gabe-commit` `/gabe-execute` `/gabe-mockup` `/gabe-plan` `/gabe-push` `/gabe-red` `/gabe-review` |
 | ◎ **Path-triggered** | frontmatter `paths:` offers it when matching files are touched | 1 | `/gabe-mockup` |
-| ✋ **Human-only** | `disable-model-invocation` — a model may not start it | 4 | `/gabe-cc-init` `/gabe-init` `/gabe-map` `/gabe-scope-pivot` |
+| ✋ **Human-only** | `disable-model-invocation` — a model may not start it | 5 | `/gabe-cc-init` `/gabe-init` `/gabe-kdbp` `/gabe-map` `/gabe-scope-pivot` |
 | ▽ **Background** | `user-invocable: false` — loads with other skills, never called alone | 1 | `/gabe-docs` |
 | ☝ **Manual only** | nothing fires it; it runs when you ask, and not otherwise | **15** | `/gabe-artifact` `/gabe-cc-entity` `/gabe-docsite` `/gabe-handoff` `/gabe-health` `/gabe-help` `/gabe-lens` `/gabe-meme` `/gabe-myopic` `/gabe-next` `/gabe-imagine` `/gabe-pulse` `/gabe-roast` `/gabe-scope` `/gabe-scope-change` |
 
-**Fifteen of twenty-nine have nothing pointing at them.** That is not a defect — a satellite that fired itself would be worse, and `/gabe-next` is manual by definition since it is the thing you call to be told what is next. But it does mean more than half the suite depends on the operator remembering it exists, which is exactly what the estate sweep in `/gabe-health` was built to surface.
+**Fifteen of thirty have nothing pointing at them.** That is not a defect — a satellite that fired itself would be worse, and `/gabe-next` is manual by definition since it is the thing you call to be told what is next. But it does mean more than half the suite depends on the operator remembering it exists, which is exactly what the estate sweep in `/gabe-health` was built to surface.
 
 The extreme case is `/gabe-help`: nothing fires it **and** no other skill routes to it. Correct for a skill written for repo visitors rather than for the loop — and worth knowing before wondering why it never runs.
 
@@ -46,7 +46,7 @@ Seven hooks ship; five name a skill. The router adds eight more beats, and `path
 - **Verification satellites (4)** — `/gabe-roast`, `/gabe-myopic`, `/gabe-pulse`, `/gabe-health`. All read-only, all forked, all manual.
 - **Command center (3 + 1)** — `/gabe-cc-init`, `/gabe-cc-entity` and `/gabe-map` (the map served as MCP tools — its TOOLS are reached for by every skill, only its status/register command is human-only); `/gabe-cc-update` is the fourth member but lives in the spine as a router beat.
 - **Documentation (2)** — `/gabe-docs` (background standards, the E1–E7 contract) and `/gabe-docsite`, which since the shell merge renders these very pages into the command center.
-- **Session ops (3)** — `/gabe-init`, `/gabe-help`, `/gabe-handoff`.
+- **Session ops (4)** — `/gabe-init`, `/gabe-help`, `/gabe-handoff`, and `/gabe-kdbp` (the .kdbp state served as MCP tools — its TOOLS are reached for by the spine, only its status/register command is human-only).
 - **Craft & communication (5)** — `/gabe-lens`, `/gabe-mockup`, `/gabe-meme`, `/gabe-artifact`, and `/gabe-imagine`.
 
 ## 4. Reading the machinery

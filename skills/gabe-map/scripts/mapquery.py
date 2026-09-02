@@ -303,11 +303,17 @@ def parse_callers(callers_json: str | None) -> tuple[set, set, list, str]:
     return callers, defs, hits, "present"
 
 
-def graft_callers(sym: str, root: str) -> tuple[str | None, str]:
-    """Arm A. → (json_text|None, status). Never a build/refresh (D10): --json --no-refresh only."""
+def graft_callers(sym: str, root: str, direction: str = "in", depth: str = "1") -> tuple[str | None, str]:
+    """Arm A. → (json_text|None, status). Never a build/refresh (D10): --json --no-refresh only.
+    direction=out gives callees; depth N|all walks transitively (graft's own blast radius)."""
     if not os.path.isdir(os.path.join(root, "graft")):
         return None, "no index (no graft/ dir)"
-    rc, out, err = sh(["graft", "callers", sym, ".", "--json", "--no-refresh"], cwd=root)
+    args = ["graft", "callers", sym, ".", "--json", "--no-refresh"]
+    if direction != "in":
+        args += ["--direction", direction]
+    if str(depth) != "1":
+        args += ["--depth", str(depth)]
+    rc, out, err = sh(args, cwd=root, timeout=120)
     if rc == 127:
         return None, "unavailable: graft binary not found"
     if rc != 0:
@@ -488,10 +494,9 @@ def cap_list(items, n: int = CAP) -> tuple[list, str | None]:
     return items[:n], "+%d more (cap %d)" % (len(items) - n, n)
 
 
-def server_sha() -> str:
+def server_sha(scripts_dir: Path | None = None) -> str:
+    """md5 over every .py in the server's scripts dir — the install-vs-running identity."""
     h = hashlib.md5()
-    for n in ("server.py", "mapquery.py", "tools.py"):
-        p = HERE / n
-        if p.is_file():
-            h.update(p.read_bytes())
+    for p in sorted((scripts_dir or HERE).glob("*.py")):
+        h.update(p.name.encode()); h.update(p.read_bytes())
     return h.hexdigest()[:12]

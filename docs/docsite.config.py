@@ -49,7 +49,7 @@ SECTIONS = [
              "swatch": "#b65a2b"},
             {"slug": "skill-map", "source_md": "skill-map.md", "title": "The skill map — and what fires each skill",
              "nav_label": "The skill map", "kicker": "Tier 2 · Reference",
-             "summary": "All 29 skills by group, the machinery behind each, and the wiring question the roster cannot answer: which skills can start on their own, and which fifteen only run when you remember them.",
+             "summary": "All 30 skills by group, the machinery behind each, and the wiring question the roster cannot answer: which skills can start on their own, and which fifteen only run when you remember them.",
              "swatch": "#7a5a2b"},
             {"slug": "commands", "source_md": "commands.md", "title": "Lifecycle beats & command reference",
              "nav_label": "Beats & commands", "kicker": "Tier 2 · Reference",

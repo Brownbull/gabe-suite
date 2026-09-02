@@ -191,7 +191,7 @@ PY
   # gabe-map MCP registration — INFO only, never DRIFT: registration is the operator's ask-first
   # consent, but an unregistered server must be VISIBLE ("the tools aren't showing" is not a
   # re-install). Own script + battery (tests/mcp-registration) so it can be proven to fire.
-  echo "  INFO   $(bash "$REPO/scripts/checkers/mcp-registration.sh" --installed "$HOME/.claude/skills/gabe-map/scripts/server.py" 2>/dev/null)"
+  while IFS= read -r line; do echo "  INFO   $line"; done < <(bash "$REPO/scripts/checkers/mcp-registration.sh" 2>/dev/null)
 }
 check_invariants
 

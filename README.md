@@ -35,7 +35,7 @@ Skills and hooks for understanding, reviewing, deciding, and shipping — with a
 | **Gabe Mockup** | `/gabe-mockup` | UX/mockup execution — legacy HTML recipes plus React-first Storybook modes |
 | **Gabe Docs** | _(consulted)_ | Documentation house style — CommonMark, Mermaid library, per-well diagram recommendations (used by `/gabe-init`, `/gabe-commit`) |
 
-### Command Surface (29 skills)
+### Command Surface (30 skills)
 
 Every capability is one skill under `skills/<name>/` — the skill name gives the slash
 invocation (`skills/gabe-plan/` ⇒ `/gabe-plan`). Each SKILL.md is a lean core that loads
@@ -57,9 +57,10 @@ covers the full KDBP lifecycle from project init through ship:
 | `/gabe-health` | The suite scanner — structural health (god files, churn, coupling, bugs) · `debt` decision-debt lens with AP citations · `estate` ask-first promote/archive sweep |
 | `/gabe-help` | Context-aware guide — scans environment and suggests the right workflow |
 | `/gabe-imagine` | Give it a context — a concept, an app, a use case, a phenomenon, a code map — and it dissects the material (seats, spheres, gravity worlds), proposes representations ranked critical/recommended/nice-to-have, asks, then builds command-center pages: component-led, register-voiced captions under a hard surface budget, assets lifted from the pattern libraries before anything is invented. Five floor grammars by material shape; console or article pages, or a published artifact |
+| `/gabe-kdbp` | The .kdbp lifecycle state as 7 read-only MCP tools (kdbp_snapshot · phase_context · review_target · next_beat · verify_commands · pending_row_preview · ledger_row_preview); status / register / probe |
 | `/gabe-init` | Project setup — creates `.kdbp/`, installs hooks, selects project type + maturity |
 | `/gabe-lens` | Cognitive translation — analogies, constraint boxes, Gabe Blocks |
-| `/gabe-map` | The codebase map as MCP tools (who_calls · touches · owner_of · cases_for · entity_context · entity_shape · map_status); status / register / probe |
+| `/gabe-map` | The codebase map as 15 MCP tools (who_calls · touches · owner_of · cases_for · entity_context · entity_shape · map_status · find · outline · center_overview · blast_radius · map_census · map_diff · center_status · review_drift); status / register / probe |
 | `/gabe-meme` | Oblique-meme generation — persona-matched visual metaphors via memegen.link, verified PNGs, punch-up only; + surface-wit mode for rendered HTML surfaces (absorbed gabe-quip) |
 | `/gabe-mockup` | Mockup/UX workflow — legacy static mockups plus React-first Storybook and `design-ref` |
 | `/gabe-myopic` | Short-sighted-user walkthrough — panel of 3 planning horizons flags foresight traps, overwhelm, recall demands, no-undo dead-ends |

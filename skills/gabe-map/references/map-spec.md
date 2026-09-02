@@ -59,9 +59,9 @@ generated from; the tools sit on top and add entities · ownership · cases · c
 
 ## 4 · The instructions block (the discovery surface)
 
-Injected in full every session even when every schema is deferred. Routes one line per tool, states the floor law
-once, names `map_status` as the first call when unsure. Text: `tools.INSTRUCTIONS` (≤ ~1,000 chars). Any change to a
-tool name changes this block in the same commit.
+Injected in full every session even when every schema is deferred. Routes one line per tool (grouped two per line for
+wave 2), states the floor law once, names `map_status` as the first call when unsure. Text: `tools.INSTRUCTIONS`
+(≤ ~1,600 chars with the fifteen tools). Any change to a tool name changes this block in the same commit.
 
 ## 5 · Tools — inputs · process · output · caps
 
@@ -135,6 +135,40 @@ the corpus is the registry; the map may lag. Absence = no census row (a floor).
 Per file: `owners[]` from `entities[].files` (a list), `config_glob_owners` via `work_scope.entity_code_globs` +
 `matches`, `census` (claimed / unclaimed + reason), a `note` when the map is blind. A directory (`…/` or an existing dir)
 → `mapped_files`, `owners{entity: n}`, `unclaimed_in_census[]`.
+
+### 5.8 Wave 2 — the graft equivalents + map lifecycle (`tools_wave2.py`, ruling 2026-09-02 D10) — all read-only
+- **`find(query, kind?, limit?)`** — graft_find_code's equivalent over the MAP: entities · endpoints (`METHOD path`) · models ·
+  schemas · functions (`file::qual`) · defines · FE pieces · screens, by name or doc text; ranking exact 100 · qualified-tail 90 ·
+  prefix 70 · substring 50 · in-doc 20; `limit` ≤ 40, `total` + `+N more`; every hit carries `entity` + `file`. Floor: a name the
+  map lacks is a Grep question.
+- **`outline(file)`** — graft_file_api's equivalent: definitions in span order with `signature` from `graft/.graph/wiring.json`
+  when the index exists (cached per mtime/size; `signatures: "graft index (<hash>)"`), else from `function_insight` with
+  `signatures: "unavailable — <why>"`; each carries `returns`, `async`, `access_ops`, `doc ≤120`; plus `owners`, `models_defined`,
+  `models_referenced`, `tests_reaching`, `census`.
+- **`center_overview()`** — graft_repo_map's equivalent by ENTITY: per entity rank · status · endpoints · models · schemas ·
+  files · coverage `covered/total` · fe_pieces; `arms{graft, web, fe}`; `census_gaps`; `web.unmatched`; `unregistered`
+  (archmap slugs missing from adoption.json). ≤ 600 tokens.
+- **`blast_radius(files?)`** — files default to the worktree diff vs HEAD + untracked (source extensions, noise-filtered):
+  `touched_entities{slug: n}`, `unowned_files`, `functions`, `models_defined`, `fk_neighbor_entities`, `endpoints_reached`
+  (`via: handler in changed file | behind.names (floor, cap 12)`), `tests_reaching` (by_file.reach), `fe_pieces`, `reading:
+  contained | local | cross-cutting | unmapped` — labelled a FLOOR; run `who_calls` on the changed symbols before trusting it.
+- **`map_census(kind?)`** — the S11/S12/S13 blocks in one read: `file` · `model` · `route` (`claimed`, `scanned_dirs`, `unclaimed`
+  capped) · `schema` (`unwired`, `ambiguous`, `moved`, `fn_wires`); an absent block is a `reason` naming the archmap version.
+- **`map_diff(base, head?)`** — `git show <ref>:docs/site/center/archmap.json` at each ref (head defaults to the worktree);
+  same `head` on both → `regenerated:false` + note; else per entity `endpoints/models/schemas/files {added, removed, more}`,
+  entities added/removed, `census_delta`, `functions{base, head}`. A ref without a committed map → `reason`.
+- **`center_status()`** — runs the project's `scripts/center_status.py <root>` (installed by /gabe-cc-init) and relays its text
+  verbatim (≤ 6,000 chars, `truncated` flag); never a regen; names `next_feature.py`/`risk_sweep.py` as not run.
+- **`review_drift(base, phase?, subjects?)`** — one call for review Step 3.4's deterministic subjects vs `git diff <base>`:
+  `entity_shape` (new routes classified vs the fresh shape) · `web_bridge` (new fetches vs declared endpoint keys) · `reach`
+  (the phase's `- **Reach:** … (graft|grep-only@sha)` record from PLAN.md → `unreached` = changed source not in the record,
+  `unused_reach`) · `entity` (PLAN.json declared vs touched via owners) · `workflow_census` (`scripts/check_workflow_drift.py`
+  per `docs/site/center/workflows/*.json`); every subject is `{ran, …}` or `{ran:false, reason}`, `not_run[]` lists them —
+  "no findings" can never mean "could not run". Pricing stays judgment; STALE ANCHOR lives in gabe-kdbp.
+- **`who_calls` grew `direction` (`in` callers · `out` callees → `callees[]`) and `depth` (`1` · N · `all`, graft's transitive
+  walk); only `direction=in depth=1` may emit (the delta semantics are "a DIRECT caller the index missed"). Every answer now
+  carries `map_confidence{active_missed_edges, edges_total, note}` from the S14 tally ledger (fresh tier, nothing stored).
+- **`touches` ENDPOINT** adds `web_unmatched_fetches` (the c4 `stats.web.unmatched` rows naming this method+path).
 
 ## 6 · Registration · status · doctor
 

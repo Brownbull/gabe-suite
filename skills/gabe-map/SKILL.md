@@ -1,10 +1,10 @@
 ---
 name: gabe-map
-description: "The suite's MCP server — the project's committed codebase map as tools the agent reaches for mid-reasoning (who_calls · touches · owner_of · cases_for · entity_context · entity_shape · map_status), read-only, honest-empty without a center. Usage: /gabe-map status | register | probe [root]"
+description: "The suite's MCP server — the project's committed codebase map as 15 tools the agent reaches for mid-reasoning (who_calls · touches · owner_of · cases_for · entity_context · entity_shape · map_status + the graft equivalents find · outline · center_overview · blast_radius · map_census · map_diff · center_status · review_drift), read-only, honest-empty without a center. Usage: /gabe-map status | register | probe [root]"
 when_to_use: "Manage the gabe-map MCP server: is it registered at user scope, is it disabled in this project, does the running server match the install, does this project have a map. Human-initiated only; the TOOLS themselves are reached for by every skill through mcp__gabe-map__*."
 disable-model-invocation: true
 metadata:
-  version: 1.0.0
+  version: 1.1.0
 ---
 
 # Gabe Map — the codebase map as tools
@@ -17,11 +17,11 @@ This skill runs under the suite execution contract — E1 EVIDENCE · E2 RUN-BEF
 
 ## What this does
 
-`scripts/server.py` is a stdio MCP server (Python stdlib only) that serves a project's committed command-center map — `docs/site/center/{archmap,c4-graph,center.config,adoption}.json` — as seven tools. Registered once at **user scope**, it answers in every project from that project's OWN map, and says plainly when a project has none. It is the suite's **reliability surface**: the questions a skill used to answer by remembering to run a script (who calls this, what touches that, which entity owns this path, which cases cover it) become tools advertised to the harness every session. It is NOT a rail — lifecycle moments stay on hooks and gates — and it writes nothing except the gitignored map-delta lines `who_calls` appends when grep finds a code reference the map missed (five gates; see the spec).
+`scripts/server.py` is a stdio MCP server (Python stdlib only; the wire framework `mcpwire.py` is shared with gabe-kdbp) that serves a project's committed command-center map — `docs/site/center/{archmap,c4-graph,center.config,adoption}.json` — as fifteen tools: the v1 seven plus the graft equivalents (ruling 2026-09-02: graft serves map creation only; the skills use these). Registered once at **user scope**, it answers in every project from that project's OWN map, and says plainly when a project has none. It is the suite's **reliability surface**: the questions a skill used to answer by remembering to run a script (who calls this, what touches that, which entity owns this path, which cases cover it) become tools advertised to the harness every session. It is NOT a rail — lifecycle moments stay on hooks and gates — and it writes nothing except the gitignored map-delta lines `who_calls` appends when grep finds a code reference the map missed (five gates; see the spec).
 
 Design record: `../../docs/design/gabe-map/README.md`. Binding contract: `references/map-spec.md`.
 
-## The seven tools (`mcp__gabe-map__<name>`)
+## The fifteen tools (`mcp__gabe-map__<name>`)
 
 | Tool | Answers | Reads |
 |---|---|---|
@@ -32,6 +32,14 @@ Design record: `../../docs/design/gabe-map/README.md`. Binding contract: `refere
 | `entity_shape` | who owns URL domain /x; orphan domains; a diff's new routes | archmap (fresh) |
 | `cases_for` | which C-ids cover X; the corpus's max C-id and next-id floor | archmap · git grep |
 | `owner_of` | which entity owns these paths or this directory; where the map is blind | archmap · center.config |
+| `find` | X by name/doc across entities, endpoints, models, schemas, functions, screens, FE pieces (graft_find_code's equivalent) | archmap · c4 |
+| `outline` | a file's definitions with spans + signatures, owner, models, tests (graft_file_api's equivalent) | graft index · archmap |
+| `center_overview` | orientation by entity: rank, status, counts, coverage, arms, census gaps (graft_repo_map's equivalent) | archmap · adoption · c4 |
+| `blast_radius` | what a change touches — entities, functions, models, endpoints reached, tests, FE pieces, a reading (floor) | archmap · c4 · git |
+| `map_census` | where the map is blind: unclaimed files/models/routes, unwired/ambiguous schemas | archmap |
+| `map_diff` | how the committed map changed between two refs, per entity | git show · archmap |
+| `center_status` | the center's actionable list, relayed verbatim | scripts/center_status.py |
+| `review_drift` | a review's deterministic drift subjects vs a base ref; NOT RUN is first-class | archmap · c4 · PLAN · git |
 
 ## Procedure
 
@@ -48,5 +56,5 @@ Design record: `../../docs/design/gabe-map/README.md`. Binding contract: `refere
 
 - **status:** `gabe-map · registered: yes|no (user scope) · disabled here: yes|no · install parity: ok|MISMATCH <path> · server_sha <12hex>` + the `map_status` text for the cwd project.
 - **register:** the command, the confirmation, the result line, the restart reminder.
-- **probe:** `tools: 7 (…names…)` + the `map_status` text.
+- **probe:** `tools: 15 (…names…)` + the `map_status` text.
 - Every tool answer the server returns is ONE text block: a header `gabe-map · <tool> · map@<head> · <fresh|stale|unknown>` and the JSON result; lists are capped and the cap is named; absence is a named `reason`, never silence.

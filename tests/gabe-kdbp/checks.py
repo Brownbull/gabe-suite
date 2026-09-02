@@ -1,0 +1,250 @@
+#!/usr/bin/env python3
+"""gabe-kdbp battery — the KDBP-state server's executable contract (run by tests/gabe-kdbp/run.sh).
+
+Hermetic: a synthetic .kdbp/ (PLAN.md table + PLAN.json mirror + Phase Details records · PENDING.md in the
+11-column canon with token- and comment-closed rows · LEDGER.md with Phase P2 rows carrying REAL fixture shas ·
+BEHAVIOR.md with ## Verify Commands · DECISIONS.md) inside a temp git repo, plus a divergent second repo
+(3-column PENDING, no BEHAVIOR binding, a package.json). Reuses tests/gabe-map's client and fixture center so
+phase_context's entity briefs are exercised through gabe-map's bodies. Previews are proven to write NOTHING.
+
+Env: SERVER_OVERRIDE (mutation proof; same-dir copies) · GABE_SKILLS_DIR.
+"""
+from __future__ import annotations
+import hashlib
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
+SERVER = os.environ.get("SERVER_OVERRIDE") or os.path.join(REPO, "skills", "gabe-kdbp", "scripts", "server.py")
+os.environ.setdefault("GABE_SKILLS_DIR", os.path.join(REPO, "skills"))
+sys.path.insert(0, os.path.join(REPO, "tests", "gabe-map"))
+from client import Client, parse_text  # noqa: E402
+import checks as mapfx  # noqa: E402  (fixture center + write + fake graft from the gabe-map battery)
+
+PASS = FAIL = 0
+
+
+def ok(cond, msg, extra=""):
+    global PASS, FAIL
+    if cond:
+        PASS += 1
+    else:
+        FAIL += 1
+        print("FAIL: %s%s" % (msg, (" — " + str(extra)[:300]) if extra else ""))
+
+
+def sh(args, cwd=None):
+    return subprocess.run(args, cwd=cwd, capture_output=True, text=True)
+
+
+def git(root, *a):
+    return sh(["git", "-C", root, *a]).stdout.strip()
+
+
+W = mapfx.write
+
+
+def make_repo(T: str) -> tuple[str, dict]:
+    """A KDBP project with a center: returns (root, shas)."""
+    root = mapfx.make_repo(T)                      # source + center + 3 commits, .kdbp/ dir exists
+    # two more commits "for phase P2" so review_target can resolve LEDGER shas
+    W(root, "apps/api/services/thing.py", '"""Service for things."""\n\n\ndef thing():\n    return 2\n')
+    git(root, "add", "-A"); git(root, "commit", "-q", "-m", "P2: thing returns 2")
+    sha1 = git(root, "rev-parse", "--short", "HEAD")
+    W(root, "apps/api/other.py", open(os.path.join(root, "apps/api/other.py")).read() + "\n\ndef extra():\n    return 3\n")
+    git(root, "add", "-A"); git(root, "commit", "-q", "-m", "P2: extra")
+    sha2 = git(root, "rev-parse", "--short", "HEAD")
+    W(root, ".kdbp/PLAN.md", """# Plan
+
+## Goal
+Fixture goal.
+
+## Current Phase
+P2
+
+## Phases
+
+| Phase | Name | Tier | Red | Exec | Review | Commit | Push | Center |
+|---|---|---|---|---|---|---|---|---|
+| P1 | Bootstrap | mvp | ✅ | ✅ | ✅ | ✅ | ✅ | ⏸ deferred |
+| P2 | Things v2 | mvp | ✅ | ✅ | ⬜ | ⬜ | ⬜ | ⬜ |
+| P3 | Widgets | enterprise | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+
+## Phase Details
+
+### Phase P2 — Things v2
+- **Cases:** C7 (REUSE) · C9 (NEW)
+- **Reach:** apps/api/services/thing.py · apps/api/other.py (graft@%s)
+- **Class:** feature
+
+### Phase P3 — Widgets
+- Tasks TBD.
+""" % sha1)
+    W(root, ".kdbp/PLAN.json", json.dumps({"version": 1, "status": "active", "project_type": "code", "goal": "Fixture goal.", "maturity": "mvp",
+                                          "current_phase": "P2", "phases": [
+        {"id": "P1", "name": "Bootstrap", "tier": "mvp", "cells": {"red": "done", "exec": "done", "review": "done", "commit": "done", "push": "done", "center": "deferred"}, "entities": ["thing"]},
+        {"id": "P2", "name": "Things v2", "tier": "mvp", "complexity": "low", "types": ["core-only"], "proof": "pytest -k thing", "proof_type": "test", "cases": ["C7", "C9"],
+         "scope": ["apps/api/services/*.py", "apps/api/other.py"], "entities": ["thing"],
+         "cells": {"red": "done", "exec": "done", "review": "todo", "commit": "todo", "push": "todo", "center": "todo"}},
+        {"id": "P3", "name": "Widgets", "tier": "enterprise", "cells": {"red": "todo", "exec": "todo", "review": "todo", "commit": "todo", "push": "todo", "center": "todo"}, "entities": [], "scope": []}]}))
+    W(root, ".kdbp/PENDING.md", """# Pending
+
+| # | Date | Source | Finding | File | Scale | Priority | Impact | Times Deferred | Status | Verified |
+|---|---|---|---|---|---|---|---|---|---|---|
+| P1 | 2026-08-01 | review | [security] thing leaks ids | apps/api/services/thing.py | mvp | high | data | 2 |  | @abc1234 2026-08-01 |
+| P2 | 2026-08-02 | review | [perf] other.py loops twice | apps/api/other.py | mvp | medium | slow | 1 | RESOLVED 2026-08-10 | @abc1234 2026-08-02 |
+| P3 | 2026-08-03 | health | [debt] widget model unowned | apps/api/models/widget.py | mvp | low | none | 1 |  | @abc1234 2026-08-03 |
+<!-- P3 resolved 2026-08-11: claimed by the other entity -->
+| P4 | 2026-08-04 | roast | [ux] no undo on delete | apps/web/src/things.ts | mvp | critical | trust | 3 |  | @abc1234 2026-08-04 |
+""")
+    W(root, ".kdbp/LEDGER.md", """# Session Ledger — thin index
+
+| Date | Entry | Theme / scope | Commits | Gates / results |
+|---|---|---|---|---|
+| 2026-09-02 | EXEC | Phase P2 — tasks 2/2 | %s %s | lint ✓ · tests 3 passed |
+| 2026-09-01 | RED | Phase P2 — C9 declared | %s | 1 NEW fails by assertion |
+| 2026-08-30 | PUSH | main ← main @ deadbee | deadbee | push ✓ |
+""" % (sha1, sha2, sha1))
+    W(root, ".kdbp/BEHAVIOR.md", """# Behavior
+
+**Maturity:** mvp
+**Mode:** standard
+
+## Verify Commands
+
+- lint: `ruff check .`
+- types: `mypy apps`
+- tests: `pytest -q --junitxml=tests/results/api-junit.xml` · `npm test`
+- results_out: tests/results/api-junit.xml
+""")
+    W(root, ".kdbp/DECISIONS.md", "# Decisions\n\n| # | Date | Decision |\n|---|---|---|\n| D1 | 2026-08-01 | keep things |\n| D2 | 2026-08-02 | drop widgets |\n")
+    W(root, ".kdbp/archive/PENDING-resolved_2026-08.md", "| # | Date | Source | Finding | File | Scale | Priority | Impact | Times Deferred | Status | Verified |\n|---|---|---|---|---|---|---|---|---|---|---|\n| P9 | 2026-07-01 | review | old | x.py | mvp | low | none | 1 | RESOLVED | @a 2026-07-01 |\n")
+    git(root, "add", "-A"); git(root, "commit", "-q", "-m", "kdbp fixture")
+    return root, {"sha1": sha1, "sha2": sha2}
+
+
+def make_variant(T: str) -> str:
+    root = os.path.join(T, "variant"); os.makedirs(os.path.join(root, ".kdbp"))
+    sh(["git", "init", "-q", root]); git(root, "config", "user.email", "t@t"); git(root, "config", "user.name", "t")
+    W(root, ".kdbp/PENDING.md", "# Pending\n\n| # | Gate | Finding |\n|---|---|---|\n| #20 | founder | Multi-user deferred FAR |\n| #21 | review | Closed one |\n<!-- #21 resolved 2026-08-01 -->\n")
+    W(root, ".kdbp/PLAN.md", "# Plan\n\n## Phases\n\n| # | Phase | Exec | Review |\n|---|---|---|---|\n| 1 | Alpha | 🔄 | ⬜ |\n")
+    W(root, "package.json", json.dumps({"name": "v", "scripts": {"lint": "eslint .", "typecheck": "tsc --noEmit", "test": "vitest run"}}))
+    W(root, "README.md", "v\n")
+    git(root, "add", "-A"); git(root, "commit", "-q", "-m", "variant")
+    return root
+
+
+def spawn(root, T, cwd=None):
+    env = {"PATH": os.environ.get("PATH", ""), "GABE_SKILLS_DIR": os.environ["GABE_SKILLS_DIR"], "GABE_MAP_NO_EMIT": "1"}
+    return Client(SERVER, root, env=env, cwd=cwd or T)
+
+
+def call_json(c, name, args):
+    text, is_err, raw = c.call(name, args)
+    return parse_text(text), is_err, text, raw
+
+
+def md5(path):
+    return hashlib.md5(open(path, "rb").read()).hexdigest()
+
+
+def main() -> int:
+    T = tempfile.mkdtemp(prefix="gabe-kdbp-")
+    try:
+        run(T)
+    finally:
+        shutil.rmtree(T, ignore_errors=True)
+    print("gabe-kdbp battery: %d passed, %d failed" % (PASS, FAIL))
+    return 0 if FAIL == 0 else 1
+
+
+def run(T):
+    root, shas = make_repo(T)
+    # ── wire laws on THIS server too ──
+    c = spawn(root, T)
+    r = c.request("server/discover", {}, id_="server-discover-probe-1")
+    ok(r and r.get("error", {}).get("code") == -32601 and r.get("id") == "server-discover-probe-1", "pre-init server/discover → -32601, string id echoed", r)
+    init = c.initialize("2025-11-25")
+    res = (init or {}).get("result") or {}
+    ok(res.get("serverInfo", {}).get("name") == "gabe-kdbp" and "mcp__gabe-kdbp__kdbp_snapshot" in (res.get("instructions") or ""), "serverInfo + routing instructions", res.get("serverInfo"))
+    names = sorted(t["name"] for t in c.tools())
+    ok(names == sorted(["kdbp_snapshot", "phase_context", "review_target", "next_beat", "verify_commands", "pending_row_preview", "ledger_row_preview"]), "seven kdbp tools listed", names)
+    ok(all(t["annotations"]["readOnlyHint"] is True for t in c.tools()), "every kdbp tool is readOnly (previews included)")
+    # ── snapshot ──
+    d, is_err, text, raw = call_json(c, "kdbp_snapshot", {})
+    ok(d and d["present"] and not is_err and "structuredContent" not in (raw["result"]), "snapshot answers on one text channel", text[:80])
+    ok(d and d["plan"]["current_phase"] == "P2" and [p["id"] for p in d["plan"]["phases"]] == ["P1", "P2", "P3"], "plan table parsed header-resolved (3 phases, current P2)", d and d.get("plan"))
+    ok(d and d["plan"]["phases"][1]["cells"] == {"red": "done", "exec": "done", "review": "todo", "commit": "todo", "push": "todo", "center": "todo"}, "cell states normalized", d and d["plan"]["phases"][1])
+    ok(d and d["plan"]["phases"][0]["cells"]["center"] == "skipped", "⏸ deferred reads as skipped", d and d["plan"]["phases"][0])
+    ok(d and d["pending"]["open"] == 2 and d["pending"]["closed"] == 2, "PENDING closure: token-closed + comment-closed = 2 closed, 2 open", d and d.get("pending"))
+    ok(d and d["pending"]["top"][0]["id"] == "P4" and d["pending"]["top"][0]["priority"] == "critical", "open rows ranked critical first", d and d["pending"]["top"])
+    ok(d and d["ledger"]["last"][0]["entry"] == "EXEC" and shas["sha1"] in d["ledger"]["last"][0]["commits"], "ledger rows parsed newest-first", d and d.get("ledger"))
+    ok(d and d["decisions"]["rows"] == 2 and d["git"]["branch"] and d["git"]["dirty"]["total"] == 0, "decisions count + git facts", d and {k: d.get(k) for k in ("decisions", "git")})
+    ok(len(text) < 6000, "snapshot stays small (%d bytes)" % len(text))
+    # ── phase_context ──
+    d, _, _, _ = call_json(c, "phase_context", {})
+    ok(d and d["phase"] == "P2" and d["plan_json"]["entities"] == ["thing"] and d["plan_md_row"]["cells"]["review"] == "todo", "phase_context defaults to current_phase, joins PLAN.json + table row", d and {k: d.get(k) for k in ("phase", "plan_md_row")})
+    ok(d and d["records"].get("cases") == "C7 (REUSE) · C9 (NEW)" and d["records"].get("reach", "").startswith("apps/api/services/thing.py"), "Cases:/Reach: records extracted", d and d.get("records"))
+    ok(d and d["behavior"]["maturity"] == "mvp" and d["behavior"]["verify_commands"]["tests"] == ["pytest -q --junitxml=tests/results/api-junit.xml", "npm test"] and d["behavior"]["verify_commands"]["results_out"] == ["tests/results/api-junit.xml"], "BEHAVIOR facts + Verify Commands parsed", d and d.get("behavior"))
+    ok(d and [r["id"] for r in d["pending_in_scope"]] == ["P1"], "open PENDING rows matched to the phase scope globs (closed P2 excluded)", d and d.get("pending_in_scope"))
+    ok(d and isinstance(d["entities"], dict) and "thing" in d["entities"] and isinstance(d["entities"]["thing"], dict) and d["entities"]["thing"].get("slug") == "thing", "declared entities get gabe-map briefs", d and str(d.get("entities"))[:200])
+    ok(d and not any("Red is unstarted" in w for w in d["warnings"]), "no Red warning when Red ✅", d and d.get("warnings"))
+    d, _, _, _ = call_json(c, "phase_context", {"phase": "P3"})
+    ok(d and any("Red is unstarted" in w for w in d["warnings"]) and any("no declared entities" in w for w in d["warnings"]), "P3: Red-unstarted + no-entities warnings", d and d.get("warnings"))
+    d, _, _, _ = call_json(c, "phase_context", {"phase": "P9"})
+    ok(d and "reason" in d["plan_json"] and "reason" in d["plan_md_row"], "unknown phase → reasons, not a crash", d)
+    # ── review_target ──
+    d, _, _, _ = call_json(c, "review_target", {})
+    ok(d and d["target"]["phase"] == "P2" and set(d["commits"]) == {shas["sha1"], shas["sha2"]}, "review_target: P2 (Exec ✅ Review ⬜) via LEDGER shas", d and {k: d.get(k) for k in ("target", "commits")})
+    ok(d and set(d["changed_files"]) == {"apps/api/services/thing.py", "apps/api/other.py"} and d["base"] == git(root, "rev-parse", "--short", shas["sha1"] + "^"), "changed files = union of the phase commits; base = parent of the earliest", d and {k: d.get(k) for k in ("changed_files", "base", "source")})
+    d, _, _, _ = call_json(c, "review_target", {"phase": "P3"})
+    ok(d and d["target"]["phase"] == "P3" and "git diff HEAD" in d["source"], "forced phase without LEDGER rows falls back to git diff", d and d.get("source"))
+    # ── next_beat ──
+    d, _, _, _ = call_json(c, "next_beat", {})
+    has_node = shutil.which("node") is not None
+    ok(d and ((d["exit"] == 0 and (d.get("decision") or {}).get("phase") == "P2") if has_node else d["exit"] == 127), "next_beat: decision for P2 (or 127 without node)", d and {k: d.get(k) for k in ("exit", "meaning", "decision")})
+    # ── verify_commands ──
+    d, _, _, _ = call_json(c, "verify_commands", {})
+    ok(d and d["source"].startswith("a:") and d["commands"]["lint"] == ["ruff check ."] and d["probed"] is False, "verify_commands: BEHAVIOR binding wins, never probed", d)
+    # ── previews never write ──
+    before = {n: md5(os.path.join(root, ".kdbp", n)) for n in ("PENDING.md", "LEDGER.md")}
+    d, _, _, _ = call_json(c, "pending_row_preview", {"flag": {"dimension": "security", "severity": "high", "description": "thing leaks ids again", "file": "apps/api/services/thing.py", "source": "review"}})
+    ok(d and d["preview"] and d["next_id"] == 10 and d["row"].startswith("| P10 | ") and "[security] thing leaks ids again" in d["row"] and d["columns"][0] == "#", "pending preview: next id over live+archive (P9 archived → P10), canon columns", d and {k: d.get(k) for k in ("next_id", "row")})
+    ok(d and d["recurring_candidates"] == ["P1"], "pending preview flags the recurring open row (same file, overlapping words)", d and d.get("recurring_candidates"))
+    d, _, _, _ = call_json(c, "ledger_row_preview", {"entry": "REVIEW", "theme": "Phase P2 — WARNING", "commits": "abc1234", "gates": "raw 5 → 2"})
+    ok(d and d["row"].endswith("| REVIEW | Phase P2 — WARNING | abc1234 | raw 5 → 2 |") and d["header_found"], "ledger preview in header order, gates verbatim", d and d.get("row"))
+    d, is_err, _, _ = call_json(c, "ledger_row_preview", {"entry": "BOGUS", "theme": "x"})
+    ok(is_err and "entry must be" in (d or {}).get("stop", ""), "ledger preview rejects an unknown entry", d)
+    after = {n: md5(os.path.join(root, ".kdbp", n)) for n in ("PENDING.md", "LEDGER.md")}
+    ok(before == after, "previews wrote NOTHING (byte-identical PENDING.md + LEDGER.md)")
+    c.close()
+    # ── variant: divergent schemas, manifest-only verify ──
+    v = make_variant(T)
+    c = spawn(v, T); c.initialize()
+    d, _, _, _ = call_json(c, "kdbp_snapshot", {})
+    ok(d and d["pending"]["open"] == 1 and d["pending"]["closed"] == 1 and d["pending"]["columns"] == ["#", "Gate", "Finding"], "3-column PENDING parsed; #21 closed by comment", d and d.get("pending"))
+    ok(d and d["plan"]["phases"] and d["plan"]["phases"][0]["cells"]["exec"] == "active", "variant PLAN table (# | Phase | Exec | Review) resolves by header", d and d.get("plan"))
+    d, _, _, _ = call_json(c, "verify_commands", {})
+    ok(d and d["source"].startswith("b:") and d["commands"]["lint"] == ["npm run lint"] and d["commands"]["types"] == ["npm run typecheck"] and d["commands"]["tests"] == ["npm run test"] and d.get("offer"), "verify_commands: package.json candidates with the BEHAVIOR offer", d and d.get("commands"))
+    d, _, _, _ = call_json(c, "pending_row_preview", {"flag": {"description": "new debt"}})
+    ok(d and d["row"] == "| #22 | review | new debt |", "preview follows the file's own 3 columns and #-style ids", d and d.get("row"))
+    d, _, _, _ = call_json(c, "review_target", {})
+    ok(d and d["target"]["phase"] == "1" and d["target"]["cells"]["exec"] == "active", "review_target picks Exec 🔄 + Review ⬜ in the variant table", d and d.get("target"))
+    c.close()
+    # ── honest-empty ──
+    plain = os.path.join(T, "plain"); os.makedirs(plain); sh(["git", "init", "-q", plain])
+    c = spawn(plain, T); c.initialize()
+    d, is_err, _, _ = call_json(c, "kdbp_snapshot", {})
+    ok(d and d["present"] is False and not is_err and "/gabe-init" in d["reason"], "no .kdbp → present:false with the init pointer", d)
+    d, is_err, _, _ = call_json(c, "pending_row_preview", {"flag": {"description": "x"}})
+    ok(d and d["present"] is False, "previews honest-empty too", d)
+    c.close()
+
+
+if __name__ == "__main__":
+    sys.exit(main())
