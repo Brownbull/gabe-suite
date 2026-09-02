@@ -186,11 +186,11 @@ Per file: `owners[]` from `entities[].files` (a list), `config_glob_owners` via 
 Hermetic: a synthetic center (archmap · c4 · config · adoption) in a temp git repo with commits past the map head, a
 fake `graft` on `PATH` returning canned JSON, real `git grep`, read deadlines in `client.py` and `timeout` around every
 invocation. Pins: handshake (echo · fallback · pre-init `server/discover` → `-32601` with the string id · `ping` ·
-`instructions` non-empty · `roots/list` requested + consumed) · `tools/list` (7 names, object schemas, annotations) ·
+`instructions` non-empty · `roots/list` requested + consumed) · `tools/list` (15 names — the v1 seven ∪ the wave-2 eight — object schemas, annotations, descriptions ≤ 200 chars) ·
 unknown method/tool · garbage line survives · `CLAUDE_PROJECT_DIR` law (cwd elsewhere) · no-center + suite-center texts ·
 freshness (stale after a mapped edit; fresh after a mapped-file-free commit; unknown head) · every `touches` kind
 (two owners · fk_in · r/w fns · ambiguous · endpoint normalization · case) · `entity_context` raw byte-parity with
 `entity-context.py --json` · `who_calls` (code hit emitted with `cmd:mcp`; prose-only not emitted; def site never;
 repeat → 0 new lines; `matches: []` → 0 emits + `absent`; `GABE_MAP_NO_EMIT=1` → 0; un-ignored accumulator → skipped +
-named; no `graft/` → grep arm still answers) · `cases_for` split · `owner_of` two owners + unclaimed. Mutation hooks:
+named; no `graft/` → grep arm still answers) · `cases_for` split · `owner_of` two owners + unclaimed · the wave-2 equivalents (`find` ranking, kind filter and a 1-char stop; `outline` with and without a graft index; `center_overview` per-entity coverage + census gaps; `blast_radius` contained vs unmapped; `map_census` unclaimed + an absent block's reason + a bad-kind stop; `map_diff` same-head and a ref with no committed map; `center_status` the no-script reason; `review_drift` ran vs not_run) · `who_calls` `direction=out` (callees, never an emit) + `map_confidence` from the tally ledger · a harness e2e that calls `mcp__gabe-map__map_status` through the real client. Mutation hooks:
 `SERVER_OVERRIDE` · `MQ_OVERRIDE` (mutants are SAME-DIR temp copies so sibling imports resolve).

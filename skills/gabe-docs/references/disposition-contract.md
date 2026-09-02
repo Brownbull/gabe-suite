@@ -30,7 +30,11 @@ ladder — **TD 2** promotes a `medium`/`low` finding to `high` (caps there); **
 > ⚠ **GAP-A** — the board attributes the debt card via the `File` cell's archmap-owned path, NOT any
 > entity field. Pass an entity code path as `file`, or the card renders **cross-cutting** and drops
 > out of the entity's column. `disposition.py` validates against `archmap.json` and WARNs
-> (report-never) when it would.
+> (report-never) when it would. Ask `mcp__gabe-map__owner_of` for the path BEFORE composing the
+> flag — it names the owning entity, the `center.config` glob that claims it, and whether the census
+> says the map is blind there; unowned or blind means the card will land cross-cutting, so pick an
+> owned path or say so in the `Finding`. No map → the tool says so and `disposition.py`'s WARN is
+> the only check.
 
 ## TACKLE-NOW → a /gabe-plan phase (a contract, not a writer)
 
@@ -51,7 +55,12 @@ DEFER arm reuses review's disposition.
   `next.mjs` · the board's build-card read.
 
 The six model-authored PENDING sites (gabe-review/commit/push/assess/init/plan) **may adopt**
-`disposition.py --defer` to replace hand-authored rows with the deterministic writer.
+`disposition.py --defer` to replace hand-authored rows with the deterministic writer. Until a site
+adopts it, the hand-authored row is composed by `mcp__gabe-kdbp__pending_row_preview` — this file's
+own column order, the next `P-id` (archive included), the `Verified: @<sha> <date>` stamp and the
+recurring candidates (same `File` + overlapping `Finding`) — and then written with Write/Edit, which
+is what the D7 hooks watch; the preview writes nothing and reports whether the project even has
+`scripts/disposition.py`.
 
 **Consumed by:** the risk sweep (`/gabe-cc-update`, slice 3) routes each dispositioned flag through
 this contract. **Battery:** `tests/disposition/run.sh` (14 asserts — canonical row · board-parse ·

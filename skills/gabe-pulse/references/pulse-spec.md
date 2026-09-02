@@ -27,7 +27,7 @@ Pulse runs anywhere. It does **not** require `.kdbp/`. What varies is which sign
 | Repo shape | Detection | Signal set |
 |---|---|---|
 | KDBP project | `.kdbp/BEHAVIOR.md` exists | all ten |
-| Command-center project, no KDBP | a center config exists and declares `paths.ledger` | P1–P3, P10, plus any the config names |
+| Command-center project, no KDBP | a center config exists and declares `paths.ledger` (`mcp__gabe-map__map_status` settles the center half — honest-empty, with its reason, where there is none) | P1–P3, P10, plus any the config names |
 | Plain git repo | `git rev-parse` succeeds | P2, P3, P10 |
 | Not a git repo | — | STOP: `pulse: not a git repository — nothing to measure` |
 
@@ -95,7 +95,7 @@ No upstream configured → `undetermined — no upstream for <branch>`, not clea
 node ../gabe-next/scripts/next.mjs --json
 ```
 
-Report its decision **verbatim**. Exit `1` → its terminal message (no plan / plan complete)
+`mcp__gabe-kdbp__next_beat` relays this same script with its exit codes mapped to fields — ask it first; the node invocation above stays for a repo where the server is not registered. Report its decision **verbatim**. Exit `1` → its terminal message (no plan / plan complete)
 becomes the row. Exit `2` → `undetermined — PLAN.json unusable`.
 
 Pulse never re-derives this. Two readers of PLAN cells that disagree is a second source of
@@ -109,13 +109,21 @@ cells are outstanding. Clearing command: the beat each cell names.
 ### P6 · Center coverage — LIFECYCLE
 
 Phases whose `Center` cell is `⬜` **and** whose `Push` cell is `✅` — shipped but uncovered.
+Read the cells from `mcp__gabe-kdbp__kdbp_snapshot` `plan.phases[]` (header-resolved, so an optional
+column is never read off a shifted position; each cell arrives as `todo` / `active` / `done` / `skipped`,
+not the raw glyph — `⬜` is `todo`, `✅` is `done`, `n/a` or `⏸` is `skipped`). Its list caps at 40 rows and
+names the cap — count a longer plan from `.kdbp/PLAN.md` itself, since a capped list is not an absence
+proof.
 Column absent → `unavailable — no Center column` (normal, not a defect). Clearing command:
 `/gabe-cc-update <phase>`.
 
 ### P7 · Red debt — LIFECYCLE
 
 Phases whose `Red` cell is `⬜` **and** whose `Exec` cell is not `⬜` — executed without a
-committed red checkpoint. Column absent → `unavailable — no Red column`. Clearing command:
+committed red checkpoint, read from `mcp__gabe-kdbp__kdbp_snapshot` `plan.phases[]` (header-resolved;
+cells arrive as `todo` / `active` / `done` / `skipped`, not the raw glyph — `⬜` is `todo`; capped at 40
+rows with the cap named — a longer plan is counted from `.kdbp/PLAN.md`).
+Column absent → `unavailable — no Red column`. Clearing command:
 `/gabe-red <phase>`.
 
 > A phase with `Red ⬜` and `Exec ⬜` is not debt — it is simply not started. Reporting it
@@ -123,7 +131,10 @@ committed red checkpoint. Column absent → `unavailable — no Red column`. Cle
 
 ### P8 · PENDING escalations — AGING
 
-`.kdbp/PENDING.md` rows with `status=open`. Report two numbers: total open, and how many sit
+`.kdbp/PENDING.md` rows with `status=open` — `mcp__gabe-kdbp__kdbp_snapshot` `pending.open` is the exact
+total and resolves closure the way the file declares it (a Status verdict token or a `<!-- P<n> resolved -->`
+comment); its `top` list caps at 10, so the `Times Deferred ≥ 3` tally is still counted from the file.
+Report two numbers: total open, and how many sit
 at `Times Deferred ≥ 3` (gate-spec's forced-decision threshold). Only the second is a row;
 the total is context. Clearing command: `/gabe-review deferred`.
 
@@ -259,7 +270,7 @@ Checked against the adjacent specs at authoring time (CLAUDE.md's handshake-walk
 
 | Neighbor | Seam | Resolution |
 |---|---|---|
-| `/gabe-next` | both read PLAN cells | pulse **calls** `next.mjs --json` and quotes it; it never parses cells itself for P4/P5 |
+| `/gabe-next` | both read PLAN cells | pulse **calls** `next.mjs --json` — directly, or through `mcp__gabe-kdbp__next_beat`, which relays that same script — and quotes it; it never parses cells itself for P4/P5 |
 | `/gabe-health` | both survey the project | health = code condition (god files, churn, coupling); pulse = lifecycle completeness. No overlapping signal |
 | `/gabe-review` | both surface owed work | review prices and triages a diff; pulse counts and points. Pulse never opens a finding |
 | `/gabe-commit` | both read the LEDGER | commit **writes** rows; pulse only subtracts against them. Pulse writes nothing |

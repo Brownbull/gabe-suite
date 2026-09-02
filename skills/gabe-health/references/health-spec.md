@@ -80,7 +80,7 @@ for (a,b),n in pair.most_common(20):
     d=min(tot[a],tot[b]); print(f"{n}/{d} ({100*n//d}%)  {a} <-> {b}")'
 ```
 
-Report a pair ONLY with counts copied from this run's output. If the command did not execute this run, print `coupling analysis skipped` — never estimate or reuse the example percentages below.
+Report a pair ONLY with counts copied from this run's output. If the command did not execute this run, print `coupling analysis skipped` — never estimate or reuse the example percentages below. For a pair above threshold, and only where the project carries a command center, `mcp__gabe-map__blast_radius` with BOTH files passed in `files` says whether they are structurally related — one shared entity in `touched_entities`, a link in `fk_neighbor_entities`, or a shared row in `endpoints_reached` upgrades the row from *co-changes* to *coupled*. Its silence proves nothing (the map is a floor) and the co-change count stands on its own.
 
 **Output:**
 ```
@@ -122,7 +122,7 @@ Examples are FORMAT ONLY — never reuse their names or numbers.
 Compare what was planned (from GSD phase plan or CE brainstorm) against what files were actually changed. Surfaces unplanned work and missed scope.
 
 **Detection:**
-- Read the plan, first match wins: `.kdbp/PLAN.md` (active phase block — extract file references from Scope/Description) → `.planning/phases/*/PLAN.md` → `docs/plans/*.md` → `docs/brainstorms/*-requirements.md`. Print the source used in the section header (`Scope Creep — Phase 3 (source: .kdbp/PLAN.md)`); if none found: `no plan found (searched 4 paths) — skipping scope analysis`.
+- Read the plan, first match wins: `.kdbp/PLAN.md` (active phase block — extract file references from Scope/Description) → `.planning/phases/*/PLAN.md` → `docs/plans/*.md` → `docs/brainstorms/*-requirements.md`. For the `.kdbp/PLAN.md` branch, ask `mcp__gabe-kdbp__phase_context` instead of parsing the block by hand — it returns `plan_json.scope` (the phase's declared globs), the `records.reach` and `records.cases` lines, a `details_excerpt` of the phase section (capped at 2,000 chars — read PLAN.md itself when the section runs longer), and the `pending_in_scope` rows already owed there; honest-empty without `.kdbp/`, and a FLOOR — a file named in the phase prose but outside `scope` still counts as planned. Print the source used in the section header (`Scope Creep — Phase 3 (source: .kdbp/PLAN.md)`); if none found: `no plan found (searched 4 paths) — skipping scope analysis`. Print the source used in the section header (`Scope Creep — Phase 3 (source: .kdbp/PLAN.md)`); if none found: `no plan found (searched 4 paths) — skipping scope analysis`.
 - Extract file references from the plan
 - Run `git diff --stat [base-branch]..HEAD` to get actual changed files
 - Compare: planned vs touched, unplanned touches, planned but untouched
@@ -157,7 +157,7 @@ Scope Creep — Phase 3 (Recipe Detail View):
 Track the health of deferred technical decisions and, for legacy projects, maintenance obligations.
 
 **Detection:**
-- Read `.kdbp/PENDING.md` — count open items by priority
+- Ask `mcp__gabe-kdbp__kdbp_snapshot` first — `pending{open, closed, columns, top}` (top = 10 rows sorted priority then Times Deferred, closure-aware) answers the counts and the escalation candidates in one read — then read `.kdbp/PENDING.md` itself for the full priority tally, for row ages (the snapshot carries no dates), and for any Times Deferred ≥ 2 row that fell outside the top 10
 - `.kdbp/MAINTENANCE.md` is retired from the default KDBP inventory (A2) — most projects won't have one. If a legacy copy exists (current `.kdbp/` or `.kdbp/archive/retired/`), read it and check "Last completed" date against today; otherwise skip this sub-check silently.
 - Flag items approaching escalation (Times Deferred >= 2)
 
@@ -207,7 +207,7 @@ Summary:
   Suggest: [one action — e.g., /gabe-roast architect functions/src/]
 ```
 
-This report obeys the **findings contract** (`../../gabe-docs/references/execution-contract.md` §"The findings contract"): every `<path>` and every `<fileA> ↔ <fileB>` pair in analyses 1–6 renders as a clickable workspace-relative link — the detection commands already surface the paths, so it costs nothing. And **each finding carries its own `→ next` step**, taken from the Integration table below (a god file → `/gabe-roast architect [file]` · a coupling pair → `/gabe-assess` · a churn hotspot → `/gabe-review [file]`) — not just the one global `Suggest:` line. Churn Hotspots and Coupling Clusters, which render no per-finding step today, must each name theirs per row.
+This report obeys the **findings contract** (`../../gabe-docs/references/execution-contract.md` §"The findings contract"): every `<path>` and every `<fileA> ↔ <fileB>` pair in analyses 1–6 renders as a clickable workspace-relative link — the detection commands already surface the paths, so it costs nothing. And **each finding carries its own `→ next` step**, taken from the Integration table below (a god file → `/gabe-roast architect [file]` · a coupling pair → `/gabe-assess` · a churn hotspot → `/gabe-review [file]`) — not just the one global `Suggest:` line. Churn Hotspots and Coupling Clusters, which render no per-finding step today, must each name theirs per row. Where the project carries a command center, run `mcp__gabe-map__owner_of` once over the flagged paths (and the fix-concentration directory — it takes a directory and returns per-entity file counts plus its `unclaimed_in_census` list) and name the owning entity beside each path; a path the map does not claim is itself the census gap the tool names. The entity is an ANNOTATION on the finding, never a replacement: the git numbers stay the finding, and the `→ next` step stays the one the Integration table gives.
 
 ### Single Analysis Mode
 

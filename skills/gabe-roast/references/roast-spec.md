@@ -18,7 +18,7 @@ Every roast requires two inputs. If either is missing, ask before proceeding.
 | **Inline** | A plan, concept, or design described in conversation |
 | **Context** | "this conversation" or "what we just discussed" |
 
-When the target is a file or folder, read it fully before starting. For folders, read enough files to understand the system (entry points, core logic, configuration).
+When the target is a file or folder, read it fully before starting. For folders, read enough files to understand the system (entry points, core logic, configuration) — where the project carries a command center, `mcp__gabe-map__owner_of` names the entity that owns the directory and `mcp__gabe-map__entity_context` returns its endpoints, models, files and coverage, so the reading order is chosen rather than guessed. The answer never counts as having read a file: it says where to start, and every citation still comes from a file opened this roast.
 
 ### 2. Perspective — Who is attacking
 
@@ -34,7 +34,7 @@ The perspective is **never optional**. Always require it. Examples:
 | Domain Expert | Business logic errors, domain model gaps, real-world mismatches |
 | End User | Confusing flows, dead ends, broken expectations |
 
-The reviewer adopts the perspective fully — think like that person, worry about what they worry about, catch what they would catch.
+The reviewer adopts the perspective fully — think like that person, worry about what they worry about, catch what they would catch. Where the project carries a command center, the perspective's cheapest opening question is a tool: an **Architect** asks `mcp__gabe-map__center_overview` and `blast_radius`; a **QA/Testing Lead** asks `mcp__gabe-map__cases_for` before calling a behavior untested; a **Sweeper** or **Maintainer** asks `mcp__gabe-map__map_census` for what the map does not claim. Each answer is a FLOOR that points the reading — the gap itself is still proved from files opened this roast, and an absence claim still needs its recorded 0-hit search (rule 6).
 
 #### Canonical archetype perspectives
 
@@ -221,7 +221,7 @@ TOTAL: [X] gaps — [Y] critical, [Z] high
    (c) never cite or roast a file you did not open this session;
    (d) print a read ledger in the output header, directly under Perspective:
        `Read: 14/38 files — skipped: tests/, assets/`.
-4. If the target references other files (imports, links, config), read those too — gaps often hide at boundaries.
+4. If the target references other files (imports, links, config), read those too — gaps often hide at boundaries. Where the project carries a command center, `mcp__gabe-map__touches` on the target file and `mcp__gabe-map__outline` (`owners`, `models_referenced`, `tests_reaching`) name those boundaries without opening anything, and `mcp__gabe-map__who_calls` with `direction=out` walks the callees — that direction never emits a delta, so the roast stays read-only. What the tools name, you still open before citing.
 
 ### During the Roast
 5. Stay in character as the perspective. An architect doesn't flag typos. A UX designer doesn't flag missing database indexes.

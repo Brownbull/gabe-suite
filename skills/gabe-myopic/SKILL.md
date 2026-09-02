@@ -4,7 +4,7 @@ description: "Short-sighted-user walkthrough — role-plays shallow planning hor
 when_to_use: "Review a UX flow / onboarding / checkout / wizard for whether normal people get confused or trapped; sanity-check a spec before shipping any multi-step flow."
 context: fork
 metadata:
-  version: 1.2.0
+  version: 1.2.1
   origin: "Neo case 20260701_myopic-user-skill"
   method: "Cognitive Walkthrough (NN/g) tuned by bounded planning horizon / present-bias myopia"
 ---

@@ -81,11 +81,26 @@ nothing.
   declared a fixed ghost with its price (the compound-interest one-shot
   silently dropped P and n for two rounds; a vanilla answer had them).
 - **system/app** — entities, stores, surfaces, jobs; the center's committed
-  data (archmap/registry) is the census when one exists.
+  data (archmap/registry) is the census when one exists — READ through the map
+  tools first, never re-derived by hand: `mcp__gabe-map__map_status` says
+  whether there is a map here at all, `center_overview` gives the entity roster
+  with counts and coverage, `entity_context` opens one entity's endpoints,
+  models and files. What comes back is a FLOOR — count first, cut never — so
+  what the map does not carry is still measured by hand; where the tools do not
+  answer, the committed JSON is still the census.
 - **use case** — the steps, the actors touched, the payloads exchanged, the
-  failure gates along the walk.
+  failure gates along the walk. Where a command center exists, name the walk's
+  entry with `mcp__gabe-map__find` and take the actors touched from `touches`
+  (an endpoint, model, file or case names its owners, r/w functions, endpoints,
+  tests and edges); read `cases_for` as a HINT at which failures are already
+  declared, never as the gate census. All three are floors — the walk through
+  the code is what finds the payloads and the gates.
 - **code map** — functions/modules/endpoints and their call/data edges; the
-  census is measured (grep/registry), never recalled.
+  census is measured, never recalled. Where a command center exists, ask the map
+  first — `mcp__gabe-map__find` + `outline` for the definitions,
+  `mcp__gabe-map__who_calls` for the call edges (graft callers ∪ word-boundary
+  grep, hits marked code vs prose) — then `grep -rn`, which stays the census's
+  absence proof: only grep proves a part is not there.
 
 ## The queue's durable home (I3 writes it, I0 reads it)
 

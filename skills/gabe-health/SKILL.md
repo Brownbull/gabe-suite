@@ -5,7 +5,7 @@ when_to_use: "How healthy is the codebase, are we accumulating mess, unexplained
 context: fork
 agent: Explore
 metadata:
-  version: 1.2.0
+  version: 1.2.1
 ---
 
 # Gabe Health — Codebase Health Analysis
@@ -37,7 +37,7 @@ The six analyses: (1) God Files — touched in >25% of commits, (2) Churn Hotspo
 
 ## Decision-debt lens (absorbed from gabe-debt, 2026-07-30)
 
-`/gabe-health debt` — scan SCOPE + PLAN + code + commit history + retrospectives for decisions that were never made explicitly or that silently contradict each other, citing AP evidence (`templates/architecture-principles.md`). Same read-only discipline as the other lenses. In KDBP projects, findings target the four KDBP surfaces (DECISIONS.md, SCOPE.md §14, RULES.md, PENDING.md) — proposed, never auto-written from the fork. Deep spec preserved at `../_archive/gabe-debt/references/`.
+`/gabe-health debt` — scan SCOPE + PLAN + code + commit history + retrospectives for decisions that were never made explicitly or that silently contradict each other, citing AP evidence (`templates/architecture-principles.md`). Same read-only discipline as the other lenses. In KDBP projects, open with `mcp__gabe-kdbp__kdbp_snapshot` — the phase table, the open PENDING rows, the last LEDGER rows and the DECISIONS row count in one read — then open the four KDBP surfaces (DECISIONS.md, SCOPE.md §14, RULES.md, PENDING.md) the findings target; proposed, never auto-written from the fork. Deep spec preserved at `../_archive/gabe-debt/references/`.
 
 ## Estate-sweep lens (new, 2026-07-30 — ask-first, never auto)
 
@@ -49,8 +49,8 @@ The six analyses: (1) God Files — touched in >25% of commits, (2) Churn Hotspo
 2. Read `references/health-spec.md` IN FULL before executing — the binding spec. If missing, E6 applies — STOP.
 3. Resolve the lookback window (`--days`, default 60) and threshold (`--threshold`, default 5).
 4. Run every git-log detection command needed for the requested analysis (or all six for full mode) — every number in the report must come from a command executed THIS run.
-5. For Scope Creep, resolve the plan source in priority order (`.kdbp/PLAN.md` active phase → `.planning/phases/*/PLAN.md` → `docs/plans/*.md` → `docs/brainstorms/*-requirements.md`) and diff against `git diff --stat`.
-6. For Deferred Items, read `.kdbp/PENDING.md` if `.kdbp/` exists; skip silently otherwise. Also read `.kdbp/MAINTENANCE.md` if a legacy copy is present (retired from the default KDBP inventory in A2) — skip that sub-check silently when absent.
+5. For Scope Creep, resolve the plan source in priority order — `.kdbp/PLAN.md` active phase via `mcp__gabe-kdbp__phase_context` (it returns the phase's declared `scope` globs, its `Cases:`/`Reach:` records and a capped excerpt of the phase section, so the file references come from a parsed record rather than a hand read; honest-empty without `.kdbp/`) → `.planning/phases/*/PLAN.md` → `docs/plans/*.md` → `docs/brainstorms/*-requirements.md` — and diff against `git diff --stat`. The globs are a FLOOR: a file named in the phase prose but outside `scope` still counts as planned.
+6. For Deferred Items, ask `mcp__gabe-kdbp__kdbp_snapshot` first — its `pending` block gives open/closed counts and the top 10 rows sorted by priority then Times Deferred, closure-aware (a `<!-- P<n> resolved -->` comment counts as closed, not just a Status verdict) — then read `.kdbp/PENDING.md` for the full priority tally and row ages, which the snapshot does not carry; skip silently when `.kdbp/` is absent. Also read `.kdbp/MAINTENANCE.md` if a legacy copy is present (retired from the default KDBP inventory in A2) — skip that sub-check silently when absent. Also read `.kdbp/MAINTENANCE.md` if a legacy copy is present (retired from the default KDBP inventory in A2) — skip that sub-check silently when absent.
 7. Apply the severity legend (🔴/⚠️/✅ thresholds per analysis) and render the requested mode: full report (all applicable analyses + summary) or single-analysis mode (just the requested check).
 
 ## Output contract (summary)

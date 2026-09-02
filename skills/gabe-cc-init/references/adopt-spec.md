@@ -7,7 +7,7 @@
 
 ## Preconditions (all modes)
 
-- Git repository + `.kdbp/` present — else exit: `⛔ No KDBP. Run /gabe-init first.`
+- Git repository + `.kdbp/` present — `mcp__gabe-kdbp__kdbp_snapshot` answers both in one call (branch · ahead/behind · dirty · the `.kdbp/` files it found) and says plainly when there is no `.kdbp/` — else exit: `⛔ No KDBP. Run /gabe-init first.`
 - `section`/`status`/`rank` require the tracker (`docs/site/center/adoption.json`) — else exit
   with the init pointer. `init` with an existing tracker asks: resume (report status) or
   re-adopt (archives the current center again — rare, confirm twice).
@@ -123,9 +123,9 @@ Small, append-only in spirit: rows change status, never vanish.
 ## Mode `rank`
 
 1. **Gather signals — every candidate cites machine sources only:**
-   - `.kdbp/SCOPE.md` REQs + §Phases entities; `.kdbp/PLAN.md` phases **including archived
+   -    - `.kdbp/SCOPE.md` REQs + §Phases entities; `.kdbp/PLAN.md` phases (`mcp__gabe-kdbp__kdbp_snapshot` returns the LIVE phase table — ids, names, per-beat cells, capped with a `+N more` note; the archived plans it does not read, so those stay a file read) **including archived
      plans** (`.kdbp/archive/`); routes/modules (framework route tables, top-level feature
-     dirs); test density per entity (corpus grep + junit name matches); churn
+          dirs); test density per entity (where a map already exists, `mcp__gabe-map__center_overview` gives per-entity counts, flow coverage and the entities the registry does not yet carry, and `mcp__gabe-map__cases_for` names the cases already covering a candidate's endpoints/models; corpus grep + junit name matches stay the floor — and the only signal available for a candidate the map has never seen); churn
      (`git log --since=90.days` commits per dir); existing `walks.jsonl` subjects;
      `.kdbp/BEHAVIOR.md` `critical_paths` (hotfix-sensitive globs rank critical by default).
 2. **Render the candidate table:** entity · proposed rank (critical/high/medium) · the signal
@@ -135,7 +135,7 @@ Small, append-only in spirit: rows change status, never vanish.
    workspace-relative link (findings contract).
 2b. **The URL-domain SECOND LENS (advisory, alongside — never replaces the ranking).** When
    `docs/site/center/archmap.json` exists (a re-rank, or after the first bootstrap pass), also run
-   `python3 ~/.claude/skills/gabe-pulse/scripts/entity_shape.py .` and present its output beside
+      ask `mcp__gabe-map__entity_shape` (it loads that same `entity_shape.py` module against the committed map and returns the shape plus its one-line finding; `python3 ~/.claude/skills/gabe-pulse/scripts/entity_shape.py .` is the fallback when the server is not registered) and present its output beside
    the candidate table: **orphan domains** (a URL surface no proposed entity owns — a candidate
    entity the churn/test ranking may have missed, named via the optional `url_domain_map`) and
    **aspect entities** (a candidate that co-claims many URL domains and solely-owns almost none —
@@ -161,7 +161,7 @@ and the entity row exists and is `pending`/`building`.
 1. **Testing inventory** (machine): on entering the build, set the row's `status: "building"`
    (and persist every checklist tick to `adoption.json` AS IT FLIPS — an aborted run must leave
    honest partial state, not a `pending` row with invisible progress). Then: corpus tests
-   matching the entity (grep + junit), counts per corpus (api/web/e2e), angle classification
+      matching the entity — `mcp__gabe-map__touches <slug>` for the entity's slice once that slug is on the map (an unregistered slug is NOT an entity to the map: detect_kind falls through to a bare-name search, so read the `kind` it answers with) and `mcp__gabe-map__cases_for` per endpoint/model for the C-ids and test files already covering it, THEN grep + junit for what the map does not carry (the map is a FLOOR: no case in an answer is not proof the corpus has none) — counts per corpus (api/web/e2e), angle classification
    (automated angles present; manual angles from `walks.jsonl`; **absent angles NAMED** — the
    gap list is content, not shame). Tick `testing_inventory`.
 2. **Legacy mining:** read the archived docs for this entity (`archived_to` + git history).
@@ -169,7 +169,7 @@ and the entity row exists and is `pending`/`building`.
    center; claims that no longer verify go to a `Not carried forward` list on the section page
    with one-line reasons. Bulk import is forbidden — a legacy page is testimony, not truth.
    Tick `legacy_reverified`.
-3. **Build:** feature card (entity primacy, gabe-cc-update's card contract where applicable),
+3. **Build:** start from the machine surface — `mcp__gabe-map__entity_context <slug> detail=full` returns the entity's endpoints, models, schemas and files-by-layer without re-reading the codebase (the *Machine-surface-first section builds* rail below; an entity the map does not yet carry answers `code: null`, and the corpus is then the only surface) — then the feature card (entity primacy, gabe-cc-update's card contract where applicable),
    diagrams per `gabe-docs` standards (or the card states why fewer), testing page (angles +
    verdicts from machine facts), proofs — curate real shots/artifacts where they exist; absent
    proofs render as named gaps, never staged. Tick `card` / `diagrams` / `proofs`.
@@ -197,7 +197,7 @@ and the entity row exists and is `pending`/`building`.
 
 ## Mode `status`
 
-Read tracker + `walks.jsonl`; render the board: per-section status/checklist glyphs, approved
+Read tracker + `walks.jsonl` — the tracker stays the authority for per-section checklist glyphs and walk age; `mcp__gabe-map__entity_context` with no slug returns the registry rows (slug · display_name · rank · status · mapped) and `mcp__gabe-map__center_status` relays the forward track's own actionable list, which already names cardless entities and cards whose `# REVIEWED` stamp is missing, so the reconciliation below reads from it instead of re-scanning `cards/`. Render the board: per-section status/checklist glyphs, approved
 n/of-shortlist convergence, stalest approved section (walk age), suggested next entity (highest
 rank still pending). **Reconciliation with the forward track:** a `pending`/`building` section
 whose entity already carries a `# REVIEWED`-stamped center card (built by `/gabe-cc-update`) is
@@ -228,7 +228,7 @@ feature-spec (card contract). This section states what adoption must OBEY.
   (per documented class: usage on both axes, base/god flags, closest structural
   twin) and `function_insight` (the same signals function-shaped, per mapped def) —
   computed by the same build pass off the same cached parses: no extra step, no authored
-  input; agents read the signals here instead of re-deriving them. `rows-seen.json` sits
+    input; agents read the signals here instead of re-deriving them — served as tools by `mcp__gabe-map__entity_context` · `touches` · `find` · `outline`, and the map stays a FLOOR: absence in an answer is never proof of absence, `grep -rn` is. `rows-seen.json` sits
   beside it as the second committed
   machine-state file: the per-row snapshot the NEW-badge layer diffs against (baseline =
   the snapshot at HEAD, so iteration boundary = commit boundary; regens inside one
@@ -256,7 +256,7 @@ feature-spec (card contract). This section states what adoption must OBEY.
   open; GAP rows link their growth row); a severity needs its stake (4-field RISKS grammar);
   a card must not restate a number the build can read; every truncation carries its expander;
   every chrome number links to a section that leads with it; one fact, one word.
-- **Verification reach:** BEHAVIOR.md Verify Commands MUST include the center's own tests
+- **Verification reach:** BEHAVIOR.md Verify Commands MUST include the center's own tests — `mcp__gabe-kdbp__verify_commands` returns the binding as it stands (the BEHAVIOR section first, manifest candidates otherwise; it never runs them and never guesses a flag), so the gap is read, not remembered
   (e.g. `uv run pytest ../tests/center --junitxml=../tests/results/center-junit.xml` +
   results_out entry) — the trial shipped 49 tests reachable by neither the local gate nor
   push-to-main CI. The shell JS layer ships only with its committed harness — the suite's
@@ -280,11 +280,11 @@ entity claims as `archmap.json → model_census.unclaimed` (`{cls, table, file, 
 write/read access wires still land (the C3 arm mints them into the `__unclaimed__` bucket).
 
 Rails, so no session has to remember it:
-- **`rank`** — the candidate table MUST list `model_census.unclaimed` (count + names) as a claim
+- **`rank`** — the candidate table MUST list `model_census.unclaimed` (count + names — read it with `mcp__gabe-map__map_census kind=model`, the same archmap block capped and named, with each entry's `reason` intact) as a claim
   column; an entity is not approvable while a table class its handlers write sits unclaimed.
 - **`section <entity>`** — the checklist gains one line: *every table class this entity's
-  endpoints write or read is in its `models` list, and its file in `code.models`* — verified
-  against `model_census`, not by eye. A deliberate exclusion (a table hidden from the map on
+    endpoints write or read is in its `models` list, and its file in `code.models`* — verified
+  against `model_census` (`mcp__gabe-map__map_census kind=model` for the unclaimed list, `mcp__gabe-map__entity_context <slug> detail=full` for the models this entity actually carries), not by eye. A deliberate exclusion (a table hidden from the map on
   purpose) is recorded in the tracker with a reason; silence is never an exclusion.
 - **Standing reminder** — pulse angle **S11** prints the unclaimed count at the end of every
   spine beat until the list is empty; `/gabe-review` prices a diff-added table class the same way
@@ -305,11 +305,11 @@ are emitted NON-EMPTY-ONLY, so their absence is full coverage, never a stale blo
 to the request path, so the closest-to-live file is claimed first.
 
 Rails, so no session has to remember it:
-- **`rank`** — the candidate table SHOULD list `route_census.unclaimed` and `file_census.unclaimed`
+- **`rank`** — the candidate table SHOULD list `route_census.unclaimed` and `file_census.unclaimed` (`mcp__gabe-map__map_census` returns both blocks in one read — `kind=route` / `kind=file` for one at a time — each entry keeping its `reason` and its `reach`)
   (count + the reach-nearest names) beside the model-census claim column; a route file that
   belongs to a candidate entity is claimed into its `code.api`, a backend file into the right
   layer. A claim is the operator's — the census only makes the file visible.
-- **`section <entity>`** — when a shortlisted entity owns any unclaimed route/backend file, claim
+- **`section <entity>`** — when a shortlisted entity owns any unclaimed route/backend file (`mcp__gabe-map__map_census` names them; `mcp__gabe-map__owner_of <path>` says whether the map, the config globs, or nobody claims a given file), claim
   it in the same pass (route → `code.api`, service → the layer list). A file deliberately left
   unclaimed (a runtime not yet on the map) is recorded in the tracker with a reason; silence is
   never an exclusion. **A claim under a layer `code_layers` does not declare is a silent no-op**

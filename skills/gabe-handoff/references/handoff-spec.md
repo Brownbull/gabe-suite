@@ -54,12 +54,12 @@ git status --porcelain
 git rev-list --count @{u}..HEAD 2>/dev/null   # commits ahead of upstream (0 = pushed)
 git rev-list --count HEAD..@{u} 2>/dev/null   # commits behind (drift)
 ```
-Record: branch, HEAD sha + subject, uncommitted/untracked files, unpushed commit count, upstream drift.
+`mcp__gabe-kdbp__kdbp_snapshot` returns branch, ahead/behind, the dirty counts (modified · untracked · total) and the last 8 commits in one call — ask it first, and run only what it does not cover (the 20-commit window, the per-file status); no `.kdbp/` → it says so and the block above runs as written. Record: branch, HEAD sha + subject, uncommitted/untracked files, unpushed commit count, upstream drift.
 
 **KDBP state (read):**
-- `.kdbp/PLAN.md` — `## Current Phase` pointer + the `## Phases` table (columns `# | Phase | Description | Tier | Complexity | Exec | Review | Commit | Push`, plus optional `Red` (TDD projects, before Exec) and `Center` (command-center projects) columns; symbols ⬜ not started · 🔄 in progress · ✅ complete). Identify the active phase row(s) touched this session.
-- `.kdbp/PENDING.md` — open deferred items (table; `Status != resolved/closed`).
-- `.kdbp/LEDGER.md` — the most recent row (for continuity + to avoid duplicating).
+- `.kdbp/PLAN.md` — via `mcp__gabe-kdbp__kdbp_snapshot`: `plan.current_phase` (the PLAN.json mirror) + `plan.phases[]`, the `## Phases` table read header-resolved so the optional `Red` (TDD projects, before Exec) and `Center` (command-center projects) columns are never read off a shifted position; each cell comes back as `done` / `active` / `todo` / `skipped`, not the raw ⬜ 🔄 ✅. The list caps at 40 rows and names the cap — read the table itself for a longer plan, or when the pointer lives only in `## Current Phase` (no PLAN.json mirror). `mcp__gabe-kdbp__phase_context` adds the active phase's record. Identify the active phase row(s) touched this session.
+- `.kdbp/PENDING.md` — open deferred items from `mcp__gabe-kdbp__kdbp_snapshot` `pending`: `open` is the exact count, `top` the ten highest by priority then deferrals, closure resolved by the file's own Status verdict token (or a `<!-- P<n> resolved -->` comment). Read the table itself when more than the top ten matter.
+- `.kdbp/LEDGER.md` — the most recent rows from `mcp__gabe-kdbp__kdbp_snapshot` `ledger.last` (for continuity + to avoid duplicating), or its `reason` when the project has none.
 - `.kdbp/SCOPE.md` `## Phases` (if present) — the larger arc the session sits inside. (Pre-A2 projects that still carry a separate `.kdbp/ROADMAP.md` — or its archived copy under `.kdbp/archive/retired/` — read the same field there.)
 
 **This session's work (from the conversation, cited):**
@@ -99,7 +99,7 @@ Also refresh: `## Current Phase` pointer (if the session advanced/retreated the 
 
 Any cell fixed here also mirrors into `.kdbp/PLAN.json` (`phases[id==N].cells.<col>`, plus `current_phase` / `last_updated` when those changed) per the `gabe-plan` "Shared: auto-tick phase column" Step 4b mirror step. If PLAN.json is missing or unparseable, note `ℹ PLAN.json: mirror skipped (missing|invalid) — run /gabe-plan update to regenerate` in the sync report and continue — the .md write still lands.
 
-**3b — LEDGER.md.** Append ONE row to the thin session index (`gabe-plan/references/plan-spec.md` § "Shared: LEDGER.md thin session index"), directly under the header, newest first:
+**3b — LEDGER.md.** Compose the row with `mcp__gabe-kdbp__ledger_row_preview` (`entry: HANDOFF`; it returns the row in the FILE's own column order and writes nothing), then append it with Write/Edit — the KDBP hooks watch the harness's writes, not `mcp__*` — directly under the header of the thin session index (`gabe-plan/references/plan-spec.md` § "Shared: LEDGER.md thin session index"), newest first:
 
 ```
 | [YYYY-MM-DD] | HANDOFF | [focus, ≤8 words] | HEAD [short sha] | resume → HANDOFF.md |
@@ -109,7 +109,7 @@ Any cell fixed here also mirrors into `.kdbp/PLAN.json` (`phases[id==N].cells.<c
 - `HEAD [short sha]` — the current HEAD sha at handoff time (cites where the repo stood, not necessarily new work).
 - Richer detail — landed work, in-flight task, gates run this session, PLAN cells changed, new PENDING rows, the next command — lives in the resume prompt (Step 4) and `.kdbp/HANDOFF.md` (Step 5), not in this thin row.
 
-**3c — PENDING.md.** For each IN-FLIGHT-that-could-be-dropped or DEFERRED item not already tracked, add a row (respect the existing table columns; don't duplicate an open row — match by file + finding overlap, as `/gabe-review` does).
+**3c — PENDING.md.** For each IN-FLIGHT-that-could-be-dropped or DEFERRED item not already tracked, compose the row with `mcp__gabe-kdbp__pending_row_preview` (the file's own columns, the next P-id, the `Verified` anchor and the recurring-row flag; it writes nothing) and add it with Write/Edit. Don't duplicate an open row — match by file + finding overlap, as `/gabe-review` does.
 
 **3d — Print the sync report** (E5, visible — every state write is shown):
 
@@ -135,15 +135,15 @@ READ FIRST: .kdbp/HANDOFF.md, then .kdbp/PLAN.md (Phase <N>)<, + key docs>.
 STATE
 - Landed this session: <bullets, each cited — sha / file:line>.
 - Verified: <build/test/lint cmd + exit/count>, or <what's unverified>.
-- In-flight: <the exact task + how far it got + the partially-touched files with paths>.
+- In-flight: <the exact task + how far it got + the partially-touched files with paths, and the entity that owns them where the project has a map (`mcp__gabe-map__owner_of`) — a cold session orients by entity faster than by path>.
 
 TASK (do this next)
 <The single next step, quoted verbatim from the user/PLAN/SCOPE §Phases — no silent downgrade (E3). Include the APPROACH CONSTRAINT (e.g. "adopt the real design-lab component, don't reconstruct"). Fold in the <focus note> arg if given.>
 
 RUNBOOK
 - Start: <server/dev commands with flags + ports>.
-- Verify: <the real typecheck/test/e2e commands for this repo>.
-- Gotchas: <traps from LEDGER rows/DECISIONS/memory that would bite a fresh session>.
+- Verify: <the real typecheck/test/e2e commands for this repo, from `mcp__gabe-kdbp__verify_commands` — BEHAVIOR's binding first, else the manifest candidates it names, marked as candidates; no `.kdbp/` → the commands this session actually ran, cited. Never a guessed flag>.
+- Gotchas: <traps from LEDGER rows/DECISIONS/memory that would bite a fresh session — the Step 1 snapshot's `ledger.last` names the recent rows and `decisions.rows` says whether a DECISIONS file exists to open>.
 
 AFTER THAT
 <the queued follow-ups, in order, one line each>.

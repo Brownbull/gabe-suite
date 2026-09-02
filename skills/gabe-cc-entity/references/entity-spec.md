@@ -4,9 +4,11 @@
 > E1–E7: see `../../gabe-docs/references/execution-contract.md`.
 
 `/gabe-cc-entity <slug>` assembles one application entity's slice into a **context pack**
-from the command center's committed data. It is a deterministic reader
+from the command center's committed data. from the command center's committed data. It is a deterministic reader
 (`scripts/entity-context.py`) — a pure consumer of the `archmap.json` contract, never a
-producer. This spec is the binding contract for what it reads and emits.
+producer — and it is also the BODY of `mcp__gabe-map__entity_context`: the server imports
+this script's `build_pack`, so tool and CLI answer from ONE implementation and this spec
+binds both. This spec is the binding contract for what it reads and emits.
 
 ## Why a reader, not a per-entity skill (D7)
 
@@ -93,8 +95,14 @@ grouped by layer), `## Relations` (related entities + unresolved tables), `## Bi
 
 ## Handshake walk (adjacent beats)
 
-- **Emits** a context pack that **no beat consumes yet** — execute/red/review are not
-  entity-aware. First cut is standalone (a human or agent reads the brief / `--json`). The
+- **Emits** a context pack `mcp__gabe-kdbp__phase_context` now consumes: for every entity a
+  phase declares in PLAN.json (capped at 8) it calls `mcp__gabe-map__entity_context`, whose body
+  is this reader — so execute's preflight carries each declared entity's brief and no beat
+  re-derives it (execute-spec §context A names the map tools directly; with gabe-map absent the
+  field says so, and with no declared entities the preflight warns and falls back to `owner_of`
+  on the scope globs). The `--entity` beat-flag that would make red/review entity-aware the same
+  way is still a **deferred, coordinated** phase — it edits those specs and is out of scope here.
+  No current seam breaks. First cut is standalone (a human or agent reads the brief / `--json`). The
   `--entity` beat-flag that would make execute/red/review entity-aware is a **deferred,
   coordinated** phase — it edits those specs and is out of scope here. No current seam breaks.
 - **Reads** exactly what `/gabe-cc-init` and the promoted `templates/center/generators/` write.

@@ -4,7 +4,7 @@ description: "Project setup — creates .kdbp/, installs hooks, configures by pr
 when_to_use: "Set up KDBP, initialize the Gabe stack — human-initiated only; never auto-invoke."
 disable-model-invocation: true
 metadata:
-  version: 2.3.4
+  version: 2.3.5
 ---
 
 # Gabe Init — KDBP project scaffolder
@@ -23,7 +23,7 @@ One-command project setup wrapping three operations: (1) creates `.kdbp/` — BE
 
 1. Treat any text after the invocation as `$ARGUMENTS` (optional project name).
 2. Read `references/init-spec.md` IN FULL before executing — it is the binding spec. If missing, E6 applies — STOP.
-3. If `.kdbp/` already exists, ask reset / update / skip and follow the mode routing table (each mode runs a fixed step sequence — reset: full create → CLAUDE.md → .gitignore seed → hooks → project type → readiness report; update: scan-missing → schema migration → hooks → condensed Update Report, skipping the full create/project-type steps).
+3. If `.kdbp/` already exists, show where the project stands (`mcp__gabe-kdbp__kdbp_snapshot` — branch, phase table, open PENDING, last LEDGER rows; the `.kdbp/` files themselves when no server is registered), ask reset / update / skip and follow the mode routing table (each mode runs a fixed step sequence — reset: full create → CLAUDE.md → .gitignore seed → hooks → project type → readiness report; update: scan-missing → schema migration → hooks → condensed Update Report, skipping the full create/project-type steps). (each mode runs a fixed step sequence — reset: full create → CLAUDE.md → .gitignore seed → hooks → project type → readiness report; update: scan-missing → schema migration → hooks → condensed Update Report, skipping the full create/project-type steps).
 4. On create/reset: interview for project name, one-sentence domain, maturity, project type, tech stack; render `.kdbp/` files and root `CLAUDE.md` from the templates, substituting the interview answers; never overwrite existing user content.
 5. On update: diff the existing `.kdbp/` against the expected file/dir set, report present/missing/unrecognized, and on confirm create ONLY the missing items — never touch `BEHAVIOR.md`, `VALUES.md`, or any file with existing content. (The `~/.claude/gabe-arch/` lazy bootstrap is retired — gabe-arch is archived; existing user state is left untouched.)
 6. Seed `.gitignore` with `.kdbp/reviews-archive/`, `.kdbp/.push-gate-ok`, `docs/site/center/inflight.{json,js}`, `docs/site/center/sim.data.js`, `docs/site/center/commits.js`, `.kdbp/map-deltas.jsonl`, and `.kdbp/map-deltas-rollup.jsonl` (idempotent, grep-before-append per entry) — local-only runtime artifacts (the three `center/` files are beat-tail projections whose `head`/newest-sha churns every commit; the two `map-deltas` files are the map↔grep delta accumulator emitted at red/execute/review and its swept rollup) that must never ride a commit.

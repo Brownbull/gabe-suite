@@ -10,7 +10,10 @@
 - The human declares `proof:` per phase at plan time (the same moment as the tier call). It lives in
   the PLAN.json mirror (`phases[].proof`): the required journey command / spec path / artifact dir —
   or `null` for phases with no runtime requirement. A gate-time classifier is incentivized to
-  classify down; the executing AI never gets to decide what deserves proof.
+classify down; the executing AI never gets to decide what deserves proof. Read the field with
+  `mcp__gabe-kdbp__phase_context` — its `plan_json` carries `proof` and `proof_type` beside `cases`,
+  `scope` and `entities` — so a gate learns what it must prove without re-reading PLAN.json; no
+  `.kdbp/` → the tool says so and PLAN.json is the read.
 - Ad-hoc work without a plan phase inherits `proof: test` when it touches paths the manifest marks
   critical (`critical_paths` in `.kdbp/BEHAVIOR.md`), else none.
 - Everything else is explicitly NOT proof-gated. Enforcement scales with importance.
@@ -25,7 +28,7 @@
 | Schema/migration | migration up+down run output + row-count/shape check |
 | Deploy/promotion | deployed-bundle-hash-changed check + smoke journey on the deployed URL |
 
-The project manifest names the tools (`verify_commands`, `capture`); this table names the forms.
+The project manifest names the tools (`verify_commands`, `capture`); this table names the forms. `mcp__gabe-kdbp__verify_commands` relays the `verify_commands` binding (BEHAVIOR first, else manifest candidates) without running it; `capture` stays a manifest read.
 
 ## 3. The living proof set (accumulation convention)
 
@@ -69,7 +72,10 @@ non-null `proof`. Deterministic script, not model judgment: `gabe-commit/scripts
 
 For `proof: visual | journey` phases, **the verifier of the evidence is not its author**: a
 read-only evaluator (an Explore/read-only agent — no Write/Edit) receives the phase's acceptance
-criteria + the proof folder and returns PASS / NEEDS_WORK with the failing artifact named.
+criteria + the proof folder and returns PASS / NEEDS_WORK with the failing artifact named. The
+evaluator's brief is assembled from `mcp__gabe-kdbp__phase_context` — `details_excerpt` (the phase's
+own `### Phase` section, first 2000 chars), `plan_json.proof` and `plan_json.proof_type` — not from
+a hand-copied summary of the plan; tool absent → PLAN.md's phase section is the read.
 "Plausibility is not correctness; a reasonable diff plus a broken screenshot is NEEDS_WORK."
 gabe-review runs this during its runtime-evidence check; the executing session never grades its own
 screenshots.

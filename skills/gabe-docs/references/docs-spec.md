@@ -54,7 +54,7 @@ Required standard:
 - Use no network dependencies, no remote fonts, no remote scripts, and no dev server requirement.
 - Keep visual scale consistent: cards, tables, diagrams, side navigation, section widths, and spacing should feel like one document system.
 - Include this banner text exactly: `HTML review artifact; .kdbp/PLAN.md and .kdbp/DECISIONS.md remain canonical.`
-- Include provenance: generated date, command name, canonical Markdown paths, decision range, and ledger entry.
+- Include provenance: generated date, command name, canonical Markdown paths, decision range, and ledger entry. Ask `mcp__gabe-kdbp__kdbp_snapshot` for the DECISIONS row count and the last LEDGER rows before opening those files by hand; no `.kdbp/` → the tool says so and the files are the read.
 - Include a visible `Detail paths`, `More detail`, or equivalent section that links or points to the Markdown/README files containing deeper details for each major HTML section. HTML is the review entrypoint; critical detail still belongs in canonical docs and must be easy to find from the artifact.
 - Prefer inline SVG for diagrams that must render directly from disk. Mermaid may be included as source text only when the document also provides a rendered/static equivalent.
 - Do not write Gabe Plan HTML artifacts under `docs/mockups/**/*.html`; that path belongs to mockup/reference workflows.

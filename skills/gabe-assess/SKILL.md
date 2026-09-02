@@ -3,7 +3,7 @@ name: gabe-assess
 description: "The direction guard — rapid impact assessment (blast radius, maturity-appropriate scope, prerequisites) before committing to an 'obvious' change, plus the boundary check absorbed from gabe-align (values + AP advisory at commit/PR boundaries)."
 when_to_use: "A new direction appears mid-development, the scope is being steered or expanded, 'this change feels obvious' — evaluate pros/cons and proceed-vs-backlog before code; also pre-flight before a risky or irreversible change. Cheaper than a full plan."
 metadata:
-  version: 1.3.0
+  version: 1.3.1
 ---
 
 # Gabe Assess — Change Impact Assessment Skill
@@ -43,7 +43,7 @@ Every full-mode assessment covers five dimensions: **D1** Blast Radius (Containe
 1. Treat any text after the invocation as `$ARGUMENTS` (the proposed change, or "this").
 2. Read `references/assess-spec.md` IN FULL before executing — the binding spec. If missing, E6 applies — STOP.
 3. Identify the proposed change and its context; if either is vague, ask rather than guess.
-4. Read enough to understand what the change touches — files, configs, environments — before classifying D1.
+4. Read enough to understand what the change touches — files, configs, environments — before classifying D1; where the project carries a command center, orient with `mcp__gabe-map__center_overview` and take the floor reading from `mcp__gabe-map__blast_radius` on the paths the change names, then open them.
 5. Assess D1-D4 concretely and specifically (never inflate or deflate); run D5 only when `.kdbp/STRUCTURE.md` exists, extracting anticipated file paths from the change description and matching them against Allowed Patterns.
 6. Produce the mode-appropriate output. The recommendation is a suggestion, not a gate — the user decides.
 7. When multiple changes are proposed together, assess each separately in brief mode, then produce a combined batch recommendation (independent/coupled/sequenced + order).

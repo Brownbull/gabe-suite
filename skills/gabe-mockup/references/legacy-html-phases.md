@@ -77,7 +77,7 @@ Per-phase recipes for `/gabe-mockup` execute step. Covers the canonical 13-phase
 
 ## Modes (dispatch — full mode set)
 
-`/gabe-mockup` runs the next phase recipe by default (M0 → M13 sequenced by `.kdbp/PLAN.md`). It also accepts **named modes** via positional argument that bypass the phase ladder for targeted vertical-slice work.
+`/gabe-mockup` runs the next phase recipe by default (M0 → M13 sequenced by `.kdbp/PLAN.md` — ask `mcp__gabe-kdbp__kdbp_snapshot` for the phase table states before re-reading the file; no `.kdbp/` → the tool says so and the file is read as before). It also accepts **named modes** via positional argument that bypass the phase ladder for targeted vertical-slice work.
 
 **Dispatch:** the skill reads `$ARGUMENTS`. If the first positional arg matches a known mode name, it runs the mode's recipe instead of advancing the phase ladder. If the first positional arg is not in the mode table: do NOT silently advance the phase ladder. Print the mode table and ask: `Unknown mode <arg> — advance the phase ladder, or did you mean <closest mode>?`
 
@@ -192,7 +192,7 @@ The `react-story`/`design-ref`/`spike`/`validate`/`refine` mode recipes now live
 
 **Steps:**
 
-1. **Assemble the entity list** — from `SCOPE.md` REQs / the project's data model (legacy projects may still carry an archived `.kdbp/archive/retired/ENTITIES.md`; read it if present, never recreate it).
+1. **Assemble the entity list** — ask `mcp__gabe-map__entity_context` with no slug first (it returns the registered entity list where the project carries a command center), then from `SCOPE.md` REQs / the project's data model (legacy projects may still carry an archived `.kdbp/archive/retired/ENTITIES.md`; read it if present, never recreate it).
 2. **Write `docs/mockups/INDEX.md`** from `templates/mockup/INDEX.md`:
    - §1 Decisions log — port from `.kdbp/DECISIONS.md` D-entries
    - §2 Workflows — list flows F1..Fn with REQ mappings
@@ -216,7 +216,7 @@ The `react-story`/`design-ref`/`spike`/`validate`/`refine` mode recipes now live
 
 **Steps per phase:**
 
-1. **Read phase's REQs covered** from PLAN.md Phase Details.
+1. **Read phase's REQs covered** — ask `mcp__gabe-kdbp__phase_context <phase>` first (the phase record, its row states, and any declared entities); PLAN.md Phase Details stays the source for whatever the record does not carry.
 2. **For each screen in phase scope:**
    a. **Wireframe first.** Emit `docs/mockups/wireframes/<screen>.html` with `data-slot` dropdowns — users pick component options per slot (header: topbar-sidebar / topbar-only / hero-nav; list: compact / spacious; footer: nav-bottom / none). See `templates/mockup/wireframe-template.html`.
    b. **User reviews wireframe + picks components.** Dropdown selection locks the wireframe layout.
@@ -259,7 +259,7 @@ The `react-story`/`design-ref`/`spike`/`validate`/`refine` mode recipes now live
 - **Missing canonical tokens CSS** during M2+ phase → recipe aborts with `⚠ M1 not complete — no stylesheet in docs/mockups/assets/css/ defines [data-theme="X"] selectors. Run /gabe-mockup M1 first or --reconfigure.`
 - **Atom referenced in molecule but not in atoms/** → recipe surfaces which atom missing + asks to back-port.
 - **Screen references molecule not in molecules/** → same surfacing, back-port pattern.
-- **No entity source at M4** → assemble the list from SCOPE.md REQs and prompt the user to review it before populating CRUD.
+- **No entity source at M4** → ask `mcp__gabe-map__entity_context` with no slug (the registered entity list) before falling back; otherwise assemble the list from SCOPE.md REQs and prompt the user to review it before populating CRUD.
 - **Tier-cap violation** (e.g., MVP-tier phase tries to land multi-theme runtime) → recipe flags + offers escalation prompt (same mechanic as `/gabe-execute` Step 4.1).
 
 ## Non-goals

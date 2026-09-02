@@ -4,7 +4,7 @@ description: "The suite's MCP server — the project's committed codebase map as
 when_to_use: "Manage the gabe-map MCP server: is it registered at user scope, is it disabled in this project, does the running server match the install, does this project have a map. Human-initiated only; the TOOLS themselves are reached for by every skill through mcp__gabe-map__*."
 disable-model-invocation: true
 metadata:
-  version: 1.1.1
+  version: 1.1.2
 ---
 
 # Gabe Map — the codebase map as tools
@@ -28,7 +28,7 @@ Design record: `../../docs/design/gabe-map/README.md`. Binding contract: `refere
 | `map_status` | is there a map here, how fresh, graft index state, regen command | archmap · c4 · inflight · git |
 | `entity_context` | one entity's slice (brief · full · raw); omit slug → the registered list | archmap · adoption · config · c4 |
 | `touches` | what touches a file / model / schema / function / entity / endpoint / case | archmap · c4 |
-| `who_calls` | who calls or uses a symbol — graft callers ∪ word-boundary git grep, code vs prose | graft index · git grep (+ the emit) |
+| `who_calls` | who calls or uses a symbol — graft callers ∪ word-boundary git grep, code vs prose; `direction=out` walks callees, `depth` the transitive reach, every answer stamped with `map_confidence` | graft index · git grep (+ the emit) |
 | `entity_shape` | who owns URL domain /x; orphan domains; a diff's new routes | archmap (fresh) |
 | `cases_for` | which C-ids cover X; the corpus's max C-id and next-id floor | archmap · git grep |
 | `owner_of` | which entity owns these paths or this directory; where the map is blind | archmap · center.config |

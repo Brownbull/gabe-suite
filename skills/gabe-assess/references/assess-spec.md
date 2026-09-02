@@ -53,6 +53,8 @@ If context is ambiguous, state it: "I'm assessing this as a mid-task detour."
 
 What does this change touch?
 
+Where the project carries a command center, ask `mcp__gabe-map__blast_radius` with the paths the change names before classifying: `touched_entities`, `endpoints_reached`, `models_defined`, `tests_reaching` and `fe_pieces` are a FLOOR reading, and its own `reading` (`contained | local | cross-cutting | unmapped`) is a PROPOSAL for the table below, never the verdict. Two rules keep it honest: `unmapped` is not **Contained** — it means the map does not claim those paths — and **External** is never derivable from a map (deployed environments, other teams, users, third-party services are judgment, always).
+
 | Scope | Meaning |
 |---|---|
 | **Contained** | Single file, single config, no downstream effects |
@@ -80,6 +82,8 @@ Current level := the `maturity:` frontmatter field of `.kdbp/BEHAVIOR.md` (same 
 
 What must be true or verified before this change is safe?
 
+In a KDBP project, open with `mcp__gabe-kdbp__kdbp_snapshot` — a dirty tree, unpushed commits, a phase mid-flight, or an open PENDING row over the same files (top 10 by priority) are prerequisites the change inherits, and they are one read away. Honest-empty without `.kdbp/`.
+
 - Dependencies that must exist
 - State that must be checked
 - Permissions or access required
@@ -101,7 +105,7 @@ Does this change land in known folder patterns, or does it propose new locations
 
 Requires `.kdbp/STRUCTURE.md`. Skip silently if missing.
 
-From the change description, extract the anticipated file paths (explicit paths, inferred `new file X.py`, or "add Y under Z/"). For each:
+From the change description, extract the anticipated file paths (explicit paths, inferred `new file X.py`, or "add Y under Z/"). Run them through `mcp__gabe-map__owner_of` first — for a path that does not exist yet it answers from `config_glob_owners` (which entity's code globs would claim it), so a path no glob claims is drift evidence before STRUCTURE.md is even consulted; for anticipated API ROUTES, `mcp__gabe-map__entity_shape` with `domain` says which entity owns that URL domain, the same check `/gabe-review` prices later as ENTITY-SHAPE DRIFT. The map arm is advisory — STRUCTURE.md Allowed Patterns remain the verdict, and D5 still skips silently when that file is absent. For each:
 
 | Outcome | Flag |
 |---|---|
@@ -195,12 +199,12 @@ Use when the assessment should feel like a colleague's aside, not a document.
 
 1. Identify the proposed change clearly. If vague, ask.
 2. Identify the context (mid-task, planning, post-review, blocker).
-3. Read enough to understand what the change touches — files, configs, environments.
+3. Read enough to understand what the change touches — files, configs, environments. Where the project carries a command center, the first look is a tool: `mcp__gabe-map__center_overview` for orientation by entity, `mcp__gabe-map__blast_radius` on the paths the change names for the floor reading. Honest-empty without a center — then the reading is only the files you opened.
 
 ### During Assessment
 
 4. Be concrete. "Cross-cutting" alone is not enough. State what crosses what.
-4b. D1 verdicts need receipts: claim Contained/Local only after opening the files/configs the change names. With `Checked: none — description-only`, append `(unverified)` to the D1 classification and name what to open to confirm it.
+4b. D1 verdicts need receipts: claim Contained/Local only after opening the files/configs the change names. `mcp__gabe-map__blast_radius` is a receipt for what the MAP reaches and `mcp__gabe-map__who_calls` on the symbols the change names is the confirming arm the map's own floor note asks for before `contained` is trusted — but a claim that nothing else uses X still needs the `grep -rn` that found nothing, because a tool's silence is not absence. With `Checked: none — description-only`, append `(unverified)` to the D1 classification and name what to open to confirm it; tool answers alone do not clear `(unverified)` — a file opened this assessment does.
 5. Don't inflate. A contained change is contained. Don't manufacture risk.
 6. Don't deflate. If a "quick fix" touches production config, say so.
 7. Alternatives must be real options, not straw men. "Do nothing" should state the actual consequence, which might be "nothing bad happens."
@@ -221,7 +225,7 @@ When multiple changes are proposed together (e.g., "fix these two staging issues
 
 1. Assess each separately in brief mode
 2. Then produce a combined recommendation:
-   - Are they independent or coupled?
+   - Are they independent or coupled? (With a command center, `mcp__gabe-map__blast_radius` per change: overlapping `touched_entities` or a shared file is coupling evidence; disjoint radii are a floor, not proof of independence.)
    - Should they be done together or sequenced?
    - What's the combined blast radius?
 

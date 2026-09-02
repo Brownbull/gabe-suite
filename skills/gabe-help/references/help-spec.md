@@ -27,7 +27,7 @@ Reference: `docs/workflows/greenfield.md`.
 ### Brownfield Project (existing codebase, no .kdbp/)
 
 ```
-1. Read-only inventory       — Inspect layout, tests, CI, docs, git history, and risks before writing
+1. Read-only inventory       — `mcp__gabe-map__map_status` first (a committed map answers with entities + counts; no map → it says so and points at Grep/Glob), then layout, tests, CI, docs, git history, and risks
 2. /gabe-health              — Map structural hotspots and coupling before planning changes
 3. /gabe-health debt          — Capture evidence-backed decision debt and AP concerns
 4. /gabe-init [name]         — Create a cautious KDBP baseline only after inventory

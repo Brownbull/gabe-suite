@@ -75,6 +75,8 @@ Optional — rendered where present:
   leaves with the entity's shape.
 - `# CODE` — the Code tab's authored outro, rendered at the END of the tab
   (the machine half — endpoints · code map · data model — renders from
+  archmap, never from prose; `mcp__gabe-map__entity_context <slug> detail=full` shows what that
+  half will say, so the outro complements it instead of restating a number the build can read)
   archmap, never from prose).
 - `# RISKS` — grammar `SEV · status · Kind · what is at stake · detail`
   (older 3/4-field forms still parse); an unparseable line renders MALFORMED,
@@ -231,6 +233,9 @@ already exists.
 
 `/gabe-cc-update release [--since <deployments-row>]` renders `releases/<id>.html` for
 stakeholders: the covered set = phases whose `Center` cell went ✅ since the last TERMINAL-env
+row in `.kdbp/DEPLOYMENTS.md` (`mcp__gabe-kdbp__kdbp_snapshot` gives the phase table's `center`
+cells as they stand now; the SINCE half — which of them flipped after that row — stays a read of
+DEPLOYMENTS.md plus PLAN.md's git history, which no tool answers)
 row in `.kdbp/DEPLOYMENTS.md` (the trigger is derived — `/gabe-push` detects the terminal-env
 ship and prints the pointer; staging ships fire nothing; projects without a center: silent skip).
 Contents v1 (design record D3): curated proof shots + diagrams + each feature's summary/narration

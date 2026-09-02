@@ -11,7 +11,7 @@ One-command project setup. Wraps three operations into a single flow.
 
 Create the baseline (absorbs the project-init behavior formerly invoked as `gabe-align init`):
 
-1. If `.kdbp/` already exists, show status and ask: "Reset, update, or skip init?"
+1. If `.kdbp/` already exists, show status — `mcp__gabe-kdbp__kdbp_snapshot` names it in one call (branch · PLAN phase-table states · open PENDING rows · last LEDGER rows, under 1k tokens); with no server registered, read `.kdbp/PLAN.md` + `PENDING.md` + `LEDGER.md` as before — and ask: "Reset, update, or skip init?"
    - **reset** — wipe `.kdbp/` and start fresh (destructive, loses LEDGER history and any active plan)
    - **update** — keep existing files, add missing KDBP files/directories from the current template set, verify and install missing hooks. Non-destructive. No existing files modified.
    - **skip** — do nothing (exit init)
@@ -67,7 +67,12 @@ created: [today's date]
 ## Verify Commands
 
 <!-- The binding section shapes come from ~/.claude/templates/gabe/BEHAVIOR.md (E6 if missing) —
-     the commands the gates trust (gate-spec Step 2.0), authored from the interview, never guessed. -->
+     the commands the gates trust (gate-spec Step 2.0), authored from the interview, never guessed.
+     Where a `.kdbp/` is already present (a `reset` over an existing project), `mcp__gabe-kdbp__verify_commands`
+     resolves what is already bound — `source: a` quotes the existing BEHAVIOR.md ## Verify Commands, `source: b`
+     names the package.json / pyproject / Makefile candidates it can SEE — and it never runs one, never invents a
+     reporter flag. Offer what it names to the interview; the human's answer still binds. A tree with no `.kdbp/`
+     yet (fresh init) answers absent — the interview stands alone there. -->
 - lint: [from tech interview]
 - types: [from tech interview]
 - tests: [from tech interview — greenfield: author the reporter flag in, e.g. --junitxml=tests/results/junit.xml]
@@ -86,11 +91,11 @@ created: [today's date]
 **Trigger phrases:** "can we work on", "should we", "I'm wondering", "explore the possibility", "what do you think about", "how can we approach", "is it possible to". Treat as diagnose-prompts, not build-prompts.
 
 **Mandatory inventory before any proposal:**
-1. Read existing project state: `.kdbp/PLAN.md`, `.kdbp/SCOPE.md`, `.kdbp/STRUCTURE.md`, `.kdbp/AUDIT.md` (if present) — the phase arc lives in `SCOPE.md` §Phases
+1. Read existing project state: `mcp__gabe-kdbp__kdbp_snapshot` FIRST where a server answers (branch · PLAN phase-table states · open PENDING · last LEDGER rows, under 1k tokens) to orient, then the files it does not carry — `.kdbp/PLAN.md` (the phase DETAILS and per-phase records the snapshot summarizes but does not quote), `.kdbp/SCOPE.md` (the phase arc lives in its §Phases), `.kdbp/STRUCTURE.md`, `.kdbp/AUDIT.md` (if present). No server or no `.kdbp/` → read all four as before.
 2. Read suite skill(s) being extended: `~/.claude/skills/gabe-*/SKILL.md`
 3. Read relevant catalog: `~/.claude/templates/gabe/tier-sections/*.md`
 4. If proposing external dep: clone repo, verify license + actual surface (not just README)
-5. List what already exists for this question before proposing what's missing
+5. List what already exists for this question before proposing what's missing — where the project has a command center, `mcp__gabe-map__find` (by name or doc, across entities/endpoints/models/functions/screens) and `mcp__gabe-map__center_overview` (the entity estate in ≤600 tokens) name what is already there; the map is a FLOOR, so `grep -rn` still settles absence
 
 **Proactive suggestions on detection:**
 - Suggest user run `/plan` (your `feedback_plan_overrides_auto` rule then enforces wait-for-confirm)
@@ -191,6 +196,7 @@ The project's `.gitignore` gets these entries appended so machine-written, tree-
 - `docs/site/center/inflight.json` and `docs/site/center/inflight.js` — the in-flight projection the E8 beat tail rewrites every beat (its `head` field changes on every commit). Tracking them would re-dirty the tree forever and re-blind the pulse signals; the board reads them locally and renders absence as absence when they are gone (ruling 2026-08-07).
 - `docs/site/center/sim.data.js` — the change-simulation projection `_a3_sim.build_sim` derives from the live inflight + git each build (its `commit`/`head`/line counts churn every commit; `window.GABE_SIM = null` at rest). Same reasoning as inflight — a beat-tail artifact that would re-dirty the tree; the codebase-graph station reads it locally and degrades to the plain map when it is null/absent.
 - `docs/site/center/commits.js` — the recent-commits journeys feed `_a3_commits.build_commits` derives from `git log` each build (its newest sha changes on every commit). Same reasoning — a beat-tail artifact; the Universe station reads it locally and shows no commits kind when it is empty/absent.
+- `.kdbp/map-deltas.jsonl` and `.kdbp/map-deltas-rollup.jsonl` — the map↔grep delta accumulator (emitted at /gabe-red, /gabe-execute, /gabe-review and by `mcp__gabe-map__who_calls`) and the tally ledger /gabe-commit sweeps it into. Per-project bookkeeping that would re-dirty the tree every beat — and gabe-map's emit gate (d) REQUIRES `git check-ignore -q .kdbp/map-deltas.jsonl` to succeed, so an un-seeded project silently drops every delta (the emit is skipped and NAMED: `.kdbp/map-deltas.jsonl is not gitignored — run /gabe-init update to seed it`) until `/gabe-init update` tops it up.
 
 (`.kdbp/archive/` — PLAN/SCOPE archives — stays tracked as before.)
 
@@ -202,7 +208,7 @@ The project's `.gitignore` gets these entries appended so machine-written, tree-
 | Present, entry missing | Append the missing entries |
 | Present, all present | No-op |
 
-Display a single line at the end: `✅ .gitignore: local-artifact entries [added N | already present]`. `reset` mode re-runs this check (idempotent). `update` mode includes it as part of the readiness scan — an existing project that predates this ruling gets the two new entries topped up.
+Display a single line at the end: `✅ .gitignore: local-artifact entries [added N | already present]`. `reset` mode re-runs this check (idempotent). `update` mode includes it as part of the readiness scan — an existing project that predates these rulings gets whichever entries it is missing topped up.
 
 ### Step 1.5: Update Mode (only when user picked `update`)
 

@@ -5,7 +5,7 @@ when_to_use: "Roast this, find what's missing in a plan/spec/diff/implementation
 context: fork
 agent: Explore
 metadata:
-  version: 1.1.0
+  version: 1.1.1
 ---
 
 # Gabe Roast — Adversarial Gap Review Skill
@@ -35,7 +35,7 @@ Two inputs are required — target (file, folder, inline plan/concept, or "this 
 2. Read `references/roast-spec.md` IN FULL before executing — the binding spec. If missing, E6 applies — STOP.
 3. Confirm both target and perspective are present; ask if either is missing.
 4. **Pre-roast gate:** run `/gabe-assess brief` on the target (skip if no `.kdbp/VALUES.md` or `~/.kdbp/VALUES.md` exists). PASS → proceed; CONCERN → warn and proceed; FAIL → warn and confirm before continuing.
-5. Read before attacking: list the folder tree, open every entry point + config, never cite a file not opened this session, print a read ledger (`Read: 14/38 files — skipped: ...`) directly under the perspective line.
+5. Read before attacking: where the project carries a command center, orient first with `mcp__gabe-map__center_overview` (and `owner_of` on the target directory) and pick entry points with `mcp__gabe-map__outline` — then list the folder tree, open every entry point + config, never cite a file not opened this session (a tool answer is not a read), print a read ledger (`Read: 14/38 files — skipped: ...`) directly under the perspective line.
 6. Stay fully in character for the perspective; classify each gap by maturity level and importance, filling every required per-gap field with cited evidence (or a recorded 0-hit search for absence claims).
 7. **Kill-gate (mandatory before printing):** re-verify every gap against its Evidence; a gap with an empty Evidence field is deleted, not demoted. Print `drafted N → killed X → reported Y` above the total line.
 8. Render the requested mode's output; if zero gaps survive, say so explicitly rather than manufacturing findings.

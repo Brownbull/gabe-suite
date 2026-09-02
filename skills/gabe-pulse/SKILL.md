@@ -5,7 +5,7 @@ when_to_use: "After a long or sprawling stretch: did everything that should have
 context: fork
 agent: Explore
 metadata:
-  version: 1.7.2
+  version: 1.7.3
 ---
 
 # Gabe Pulse — is anything important owed?
@@ -67,15 +67,15 @@ All deterministic. No signal is inferred from prose or from a session transcript
 | P1 | Unregistered commits | `scripts/ledger-gap.sh` | `/gabe-commit`, or a ledger row |
 | P2 | Uncommitted changes | `git status --porcelain` | `/gabe-commit` |
 | P3 | Unpushed commits | `git log @{u}..HEAD` | `/gabe-push` |
-| P4 | Router's next step | `../gabe-next/scripts/next.mjs --json` | whatever it names |
+| P4 | Router's next step | `mcp__gabe-kdbp__next_beat` → `../gabe-next/scripts/next.mjs --json` | whatever it names |
 | P5 | Prior-phase debt | same, its prior-row sweep | the beat each row names |
-| P6 | Center coverage ⬜ | PLAN `Center` column | `/gabe-cc-update <phase>` |
-| P7 | Red debt ⬜ | PLAN `Red` column | `/gabe-red <phase>` |
-| P8 | PENDING escalations | `.kdbp/PENDING.md` | `/gabe-review deferred` |
+| P6 | Center coverage ⬜ | `mcp__gabe-kdbp__kdbp_snapshot` `plan.phases[]` (cells as `todo`/`done`, capped at 40), else the PLAN `Center` column | `/gabe-cc-update <phase>` |
+| P7 | Red debt ⬜ | `mcp__gabe-kdbp__kdbp_snapshot` `plan.phases[]` (cells as `todo`/`done`, capped at 40), else the PLAN `Red` column | `/gabe-red <phase>` |
+| P8 | PENDING escalations | `mcp__gabe-kdbp__kdbp_snapshot` `pending` + `.kdbp/PENDING.md` | `/gabe-review deferred` |
 | P9 | Never-walked stations | `.kdbp/walks.jsonl` | append walk record (walks.jsonl) |
 | P10 | Size-budget breaches | `../gabe-commit/scripts/size-budget.sh` | report-never-gate (R9) |
 
-**P4/P5 defer to `next.mjs` rather than re-deriving the routing decision.** Two readers of PLAN
+**P4/P5 defer to `next.mjs` rather than re-deriving the routing decision** — directly, or through `mcp__gabe-kdbp__next_beat`, which relays that same script. Two readers of PLAN
 cells that disagree is a second source of truth; pulse reports what the router says, verbatim.
 
 ## Output contract (summary)

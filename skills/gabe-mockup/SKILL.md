@@ -9,7 +9,7 @@ paths:
   - "**/design-lab/**"
   - "docs/mockups/**"
 metadata:
-  version: 2.1.0
+  version: 2.1.1
 ---
 
 # Gabe Mockup — the lift SOP
@@ -50,11 +50,13 @@ No manifest → legacy mockup-project flow (`references/legacy-html-phases.md`) 
 
 ## The lift SOP (L0–L4)
 
-- **L0 RESOLVE** — read `<screen_map>`; resolve target → canonical reference. Unmapped or archived → STOP: "not mapped — map it or confirm NEW." Print the E4 line: `REUSE <path> | EXTEND <path> | NEW (searched <reuse_roots> — none fit)`; a NEW verdict requires the search evidence.
-- **L1 INVENTORY** — open the reference; list its real component imports. Output a REUSE LEDGER: component → keep / extend(prop) / genuinely-new.
+Where the project carries a committed command center, the map answers the resolve/inventory questions ahead of the hand search, never instead of it: `mcp__gabe-map__map_status` first (is there a map, how fresh), then `find` / `owner_of` / `who_calls` / `outline`. The map is a FLOOR, never a scope — a NEW verdict still requires the `reuse_roots` search (E1); no center → the tools say so and L0–L4 run exactly as written.
+
+- **L0 RESOLVE** — read `<screen_map>`; resolve target → canonical reference. Unmapped or archived → STOP: "not mapped — map it or confirm NEW." Print the E4 line: `REUSE <path> | EXTEND <path> | NEW (searched <reuse_roots> — none fit)`; a NEW verdict requires the search evidence — ask `mcp__gabe-map__find <target>` first (it indexes screens and FE pieces), then search `<reuse_roots>` anyway: an empty tool answer is not a NEW verdict.
+- **L1 INVENTORY** — open the reference; list its real component imports (where the reference is a source file, `mcp__gabe-map__outline <path>` gives its definitions, spans and owner without a full read — it indexes definitions, not imports, so the file is still read). Ask `mcp__gabe-map__who_calls <component>` per candidate before the verdict: a component with other live consumers is EXTEND, never edit-in-place. Output a REUSE LEDGER: component → keep / extend(prop) / genuinely-new.
 - **L2 SPIKE** — only if exploring. Spike story under `<spikes_root>` composing the L1 inventory. A stand-in shell mimicking an existing component is a DEFECT (`references/spike.md`). Options stay story-only until the operator picks.
 - **L3 LIFT** — `in-tree`: the production screen RENDERS the showcase component via additive default-off props (`live`/`chromeless`); stories stay byte-identical; pure logic graduates spike → `features/<area>/model/`. `cross-package`: faithful adoption of the design-lab component + its token/asset maps into `<app_root>` — adopt, don't re-author. Either way: archive the spike, update `<screen_map>`.
-- **L4 WIRE + VERIFY** — wire real data; run `<verify_commands>`; render gate: capture the LIVE screen (not the showcase story) at the manifest's breakpoints, side-by-side vs the reference. A defect found here re-enters at L3, never by re-authoring. `refine` mode is the same machine entered directly at L4, with fix recipes for already-shipped screens.
+- **L4 WIRE + VERIFY** — wire real data (ask `mcp__gabe-map__entity_context <entity>` first for the endpoints + models this screen consumes; no center → it says so and the API tree is read as before); run `<verify_commands>`; render gate: capture the LIVE screen (not the showcase story) at the manifest's breakpoints, side-by-side vs the reference. A defect found here re-enters at L3, never by re-authoring. `refine` mode is the same machine entered directly at L4, with fix recipes for already-shipped screens.
 
 ## Modes
 
@@ -66,10 +68,10 @@ No manifest → legacy mockup-project flow (`references/legacy-html-phases.md`) 
 | `refine` | `/gabe-mockup refine <screen>` | `references/refine.md` |
 | `spike` | `/gabe-mockup spike <component>` | `references/spike.md` |
 | `validate` | `/gabe-mockup validate [<screen>\|--all]` | `references/validate.md` |
-| legacy phase ladder (M0–M13) | advances per `.kdbp/PLAN.md` | `references/legacy-html-phases.md` |
+| legacy phase ladder (M0–M13) | advances per `.kdbp/PLAN.md` (`mcp__gabe-kdbp__kdbp_snapshot` for the phase table) | `references/legacy-html-phases.md` |
 
 Before executing any mode, read its reference file IN FULL — E6 applies if missing. If `$ARGUMENTS`' first positional arg is not a known mode, do NOT silently advance the phase ladder: print this table and ask `Unknown mode <arg> — advance the phase ladder, or did you mean <closest mode>?`
 
 ## Output contract (summary)
 
-Every mode ends with: the artifact(s) it produced (screen/story/doc paths), the `<verify_commands>` run + their result, and — for visual work — side-by-side/screenshot evidence at the manifest's breakpoints (E7: exact URL/screen, env, what to look at, absolute paths). Mode-specific bookkeeping (PLAN.md rows, LEDGER.md entries, INDEX.md updates, HANDOFF.json, KDBP decisions) is documented per mode in its reference file. The full contracts in the reference files are binding.
+Every mode ends with: the artifact(s) it produced (screen/story/doc paths), the `<verify_commands>` run + their result, and — for visual work — side-by-side/screenshot evidence at the manifest's breakpoints (E7: exact URL/screen, env, what to look at, absolute paths). Mode-specific bookkeeping (PLAN.md rows, LEDGER.md entries, INDEX.md updates, HANDOFF.json, KDBP decisions) is documented per mode in its reference file. A deferral's PENDING row is drafted with `mcp__gabe-kdbp__pending_row_preview` and then WRITTEN by the harness — the preview writes nothing, and the KDBP hooks only see a real Write/Edit; the LEDGER row template stays each mode's own (the preview tool's entry vocabulary does not carry `MOCKUP`). The full contracts in the reference files are binding.

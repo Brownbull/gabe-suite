@@ -4,7 +4,7 @@ description: "Direction-change scope rewrite — archives SCOPE.md vN, re-derive
 when_to_use: "Destructive — only via /gabe-scope-change routing or an explicit human request."
 disable-model-invocation: true
 metadata:
-  version: 2.1.0
+  version: 2.1.1
 ---
 
 # Gabe Scope Pivot — direction-change rewrite
@@ -30,7 +30,7 @@ Handles direction-shifting scope changes. Unlike addition, a pivot restructures 
 
 ### Step 1: Pre-flight
 
-Same as `/gabe-scope-change` — SCOPE.md must exist, no active session.
+Same as `/gabe-scope-change` — SCOPE.md must exist, no active session. Then ask `mcp__gabe-kdbp__kdbp_snapshot` and print ONE line directly beneath the warning block naming what the pivot puts at risk: phases already ✅ or 🔄 in the PLAN table, and the open PENDING rows the new arc will orphan (the warning template itself is literal — do not edit its lines). Nothing to print when the snapshot is honest-empty; the typed confirm stands either way.
 
 Announce the pivot intent:
 

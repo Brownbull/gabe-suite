@@ -3,7 +3,7 @@ name: gabe-scope-change
 description: "Scope evolution, one entry point — classifies pivot vs addition; additions execute inline, pivots route to the safety-flagged /gabe-scope-pivot."
 when_to_use: "The scope needs to change — add, drop, or switch direction on an existing SCOPE.md. Entry point for all scope evolution."
 metadata:
-  version: 2.2.0
+  version: 2.2.1
 ---
 
 # Gabe Scope Change — classify, then evolve
@@ -28,7 +28,8 @@ Single entry point for modifying a finalized SCOPE.md — its premise sections o
 - If `.kdbp/scope-session.json` exists (in-progress scope): exit with "Active scope session in progress. Finish or abort `/gabe-scope` first."
 - Parse `$ARGUMENTS`: extract `--force-addition`, `--force-pivot`, `--force` (coverage bypass, Addition path only), and description text.
 - If no description provided: prompt "What do you want to change? (one paragraph describing the desired change)"
-- Read SCOPE.md (incl. `## Phases`) + `scope-references.yaml` into structured state.
+- Ask `mcp__gabe-kdbp__kdbp_snapshot` first — branch, PLAN phase-table states, open PENDING rows — and surface it with the classification, so the human sees what is in flight before an addition writes beside a running phase; it carries lifecycle STATE only (the classifier's inputs stay `{current_scope, proposed_change, user_intent}`), and answers honest-empty without `.kdbp/`.
+- Read SCOPE.md (incl. `## Phases`) + `scope-references.yaml` into structured state — SCOPE.md stays the arc's only authority.
 
 ### Step 2: Classify
 
