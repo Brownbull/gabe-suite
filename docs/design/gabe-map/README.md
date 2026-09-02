@@ -572,6 +572,17 @@ sweeps/routers — help 12 (incl. the two legacy `.planning/` scan defects) · h
 assess 7 · roast 4 · myopic 1. Tier 4 authoring — mockup 19 · docs 6 · init 7 · map 5 · imagine 4 · scope-change 1 ·
 scope-pivot 1. Apply hazards recorded per file (descending-by-line where a tier has an INSERT or a RETIRE).
 
-**Price to land the rest:** 44 more spec files, 20 more skills, and every one needs its CLAUDE.md version cell in the
+**LANDED IN FULL 2026-09-02 (`4322c58` Tier 1 · `dd21113` tiers 2–4):** 219/219 applied; `staged` is empty. Two applier
+defects surfaced and were fixed in the artifact: the anchor fold joined on (file, line) and two edits shared a line, so both got
+one anchor (join key is now file+line+tool); two sweep lines were off-by-one and their anchors were re-derived from the files.
+
+**Review (six lenses, adversarial):** the first run lost 6/7 agents to the session limit; only the LAW lens finished. Its 15
+findings were all real and are fixed in batch 1: nine applier duplicates (the sweep's `proposed_text` re-emitted a neighbouring
+sentence the anchor did not cover — a deterministic count-now-vs-base detector confirms 0 remain), three texts WS-2 invalidated
+after they were written, two false tool claims (`owner_of`'s directory branch has no `config_glob_owners`/`note`; `map_status`
+walks up from the git toplevel, not CWD), one one-directional L2 rule in gabe-mockup. The other five lenses re-run from cache;
+their findings are batch 2.
+
+**Price to land the rest (historical, now paid):** 44 more spec files, 20 more skills, and every one needs its CLAUDE.md version cell in the
 same commit (doctor P3 parity). No live battery asserts on skill markdown — verified — so spec edits cannot turn a
 battery red; a green doctor proves parity, not correctness.
