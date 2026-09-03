@@ -812,15 +812,24 @@
   #uni-jrnref .jdhd b{ display:inline-flex; align-items:center; gap:7px; font:800 13px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.04em; color:var(--ink); }
   #uni-jrnref .jdhd b svg{ color:var(--accent); }
   #uni-jrnref .jdsub{ font:400 11px/1.3 var(--font-ui); color:var(--muted); }
+  #uni-jrnref .jdmxleg{ display:inline-flex; align-items:center; gap:5px; font:500 10px/1 var(--font-ui); color:var(--muted); padding-left:10px; margin-left:2px; border-left:1px solid var(--line); }
+  #uni-jrnref .jdmxleg .cell{ display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; border-radius:4px; font:800 8px/1 var(--font-mono); color:#0c1220; margin-left:6px; }
+  #uni-jrnref .jdmxleg .cell:first-child{ margin-left:0; }
   #uni-jrnref .jdclose{ margin-left:auto; font:400 17px/1 var(--font-ui); color:var(--muted); background:none; border:1px solid var(--line); border-radius:7px; width:28px; height:28px; cursor:pointer; }
   #uni-jrnref .jdclose:hover{ color:var(--ink); border-color:var(--accent); }
-  #uni-jrnref .jdbody{ flex:1; min-height:0; overflow-y:auto; padding:0 12px 22px; }
+  #uni-jrnref .jdbody{ flex:1; min-height:0; overflow:auto; padding:0 0 22px; }
   /* the COLUMN HEADER — one row naming every column, pinned to the top of the scrolling list */
   /* header row + every step share ONE grid template → columns ALWAYS align (flex measured each cell
      independently and drifted — operator). FROM · TO are two columns; a model's fields wrap under them. */
   #uni-jrnref .jdcols, #uni-jrnref .jdstep{ display:grid;
-    grid-template-columns:26px 22px minmax(92px,1.2fr) 132px 104px minmax(0,1fr) minmax(0,1fr);
-    column-gap:11px; row-gap:2px; align-items:start; }
+    grid-template-columns:26px 22px 190px 130px 100px 196px 196px;   /* default (no matrix); #jd-grid overrides with the element columns */
+    column-gap:11px; row-gap:2px; align-items:start; width:max-content; min-width:100%; }
+  /* FROZEN identity — # · icon · element stay put while you slide right into the matrix (operator 2026-09-03) */
+  #uni-jrnref .jdnum{ position:sticky; left:0; z-index:3; background:var(--panel); }
+  #uni-jrnref .jdico{ position:sticky; left:37px; z-index:3; background:var(--panel); }
+  #uni-jrnref .jdmain{ position:sticky; left:70px; z-index:3; background:var(--panel); box-shadow:1px 0 0 var(--line); }
+  #uni-jrnref .jdstep.on .jdnum, #uni-jrnref .jdstep.on .jdico, #uni-jrnref .jdstep.on .jdmain{ background:color-mix(in srgb, var(--accent) 16%, var(--panel)); }
+  #uni-jrnref .jdcols .jdnum, #uni-jrnref .jdcols .jdico, #uni-jrnref .jdcols .jdmain{ z-index:4; }   /* header corner above frozen body cells */
   #uni-jrnref .jdcols{ position:sticky; top:0; z-index:2; margin:0; padding:9px 6px;
     background:var(--panel); border-bottom:1px solid var(--line); font:700 9px/1 var(--font-ui);
     text-transform:uppercase; letter-spacing:.09em; color:var(--accent); }
@@ -850,7 +859,23 @@
   #uni-jrnref .jdg{ min-width:0; display:flex; flex-direction:column; }
   #uni-jrnref .jdrel{ font:700 8px/1.4 var(--font-ui); text-transform:uppercase; letter-spacing:.05em; color:color-mix(in srgb, var(--accent) 70%, var(--muted)); }
   #uni-jrnref .jdfrom .jdtgt, #uni-jrnref .jdto .jdtgt{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  #uni-jrnref .jdextra{ grid-column:6 / -1; min-width:0; margin-top:2px; }
+  #uni-jrnref .jdextra{ grid-column:6 / 8; min-width:0; margin-top:2px; }   /* fields wrap under from·to only, never across the matrix */
+  /* ── the DATA-LINEAGE MATRIX — one column per data structure the journey touches; a cell shows the
+     structure's ROLE at that step: read (input) · write (output/modified) · both (operator 2026-09-03) ── */
+  #uni-jrnref .jdmh{ align-self:stretch; display:flex; align-items:flex-end; justify-content:center; padding-bottom:4px; overflow:visible; }
+  #uni-jrnref .jdmh span{ writing-mode:vertical-rl; transform:rotate(180deg); font:600 9.5px/1 var(--font-ui); color:var(--muted); text-transform:none; letter-spacing:0; max-height:118px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #uni-jrnref .jdcols .jdmh{ border-left:1px solid color-mix(in srgb, var(--line) 60%, transparent); }
+  #uni-jrnref .jdmx{ align-self:stretch; display:flex; align-items:center; justify-content:center; border-left:1px solid color-mix(in srgb, var(--line) 45%, transparent); min-height:28px; }
+  #uni-jrnref .jdmx .cell{ width:18px; height:18px; border-radius:4px; display:flex; align-items:center; justify-content:center; font:800 9px/1 var(--font-mono); color:#0c1220; }
+  #uni-jrnref .jdmx .r-in{ background:#22c55e; }        /* read — input */
+  #uni-jrnref .jdmx .r-out{ background:#f97316; }       /* write — output / modified */
+  #uni-jrnref .jdmx .r-both{ background:linear-gradient(135deg,#22c55e 0 50%,#f97316 50% 100%); }
+  #uni-jrnref .jdmx .r-self{ background:#12b886; }      /* the structure's own definition step */
+  #uni-jrnref .jdmx.empty{ opacity:.5; }
+  #uni-jrnref .jdmx.empty::before{ content:""; width:4px; height:4px; border-radius:50%; background:var(--line); }
+  /* current-walk-step column highlight — the touched columns light down the whole journey */
+  #uni-jrnref .jdcol-hot{ background:color-mix(in srgb, var(--accent) 12%, transparent); }
+  #uni-jrnref .jdmh.jdcol-hot span{ color:var(--accent); }
   #uni-jrnref .jddline{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
   #uni-jrnref .jdop{ flex:none; font:700 9px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.05em; padding:3px 7px; border-radius:5px; color:#fff; }
   #uni-jrnref .jdop-read{ background:#22c55e; } #uni-jrnref .jdop-write{ background:#f97316; } #uni-jrnref .jdop-gate{ background:#eab308; color:#1a1400; }
@@ -2870,6 +2895,7 @@ function _walkGo(di){ if(!WALK.steps.length) return;
   else if(WALK.mode==="journey" && HL.on && HL.exact){ try{ _hlCompute(); _hlRestyle(); }catch(e){} }                  // journey: the ring follows the CURRENT step, the path keeps its context glow
   _walkRender(); }
 function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document.getElementById("jrnpill");
+  if(window.__uniJdSync && document.getElementById("uni-jrnref")) try{ window.__uniJdSync(); }catch(e){}   // journey overlay open → sync its row + matrix to the walk
   /* JOURNEY controls live CENTERED in the header bar: [‹] [i/N · name] [›] [✕] — real buttons,
      Lucide chevrons (the text glyphs sat skewed in their circles). */
   if(pill){ if(WALK.mode==="journey" && HL.jrObj){ var j=HL.jrObj, stepN=(NIDS[WALK.steps[WALK.i]]||{}).label||"";
@@ -4377,7 +4403,7 @@ function _lrEsc(e){ if(e.key==="Escape" && document.getElementById("uni-legref")
    label, entity and leg — far more room than the tiny walk chips. A step row → walk the graph to that step +
    close. Only opens while a JOURNEY walk is active. ── */
 window.__uniJrnDetail=function(){
-  var old=document.getElementById("uni-jrnref"); if(old){ old.remove(); document.removeEventListener("keydown", _jdEsc, true); return; }   // toggle
+  var old=document.getElementById("uni-jrnref"); if(old){ old.remove(); window.__uniJdSync=null; document.removeEventListener("keydown", _jdEsc, true); return; }   // toggle
   if(typeof WALK==="undefined" || WALK.mode!=="journey" || !WALK.steps || !WALK.steps.length || typeof HL==="undefined" || !HL.jrObj) return;
   var j=HL.jrObj, KC=(typeof KINDCOL!=="undefined")?KINDCOL:{};
   function _esc(x){ return String(x==null?"":x).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
@@ -4444,14 +4470,37 @@ window.__uniJrnDetail=function(){
     return gs.map(function(g){ return '<div class="jdg"><span class="jdrel">'+_esc(g.rel)+'</span><span class="jdtgt">'+g.names.slice(0,3).map(_esc).join(" · ")+(g.names.length>3?(' <i>+'+(g.names.length-3)+'</i>'):'')+'</span></div>'; }).join(""); }
   function _fieldsHTML(sd){ if(!sd.fields||!sd.fields.length) return "";
     return '<div class="jdfields"><i>'+sd.fields.length+' field'+(sd.fields.length>1?"s":"")+':</i> '+sd.fields.slice(0,6).map(function(c){return _esc(c[0]);}).join(" · ")+(sd.fields.length>6?(' +'+(sd.fields.length-6)):'')+'</div>'; }
+  // ── DATA-LINEAGE MATRIX: columns = distinct data structures (model/schema/store) the journey touches;
+  // each step's cell shows the structure's ROLE at that step — read (input) · write (output/modified) ·
+  // both. Read a column top-to-bottom to trace one structure's life across the journey. (operator 2026-09-03)
+  var _DK={model:1, schema:1, store:1};
+  function _rolesOf(n){ var m={};
+    function scan(dir, spec){ var ls=(dir==="out"?_srcIdx:_dstIdx)[n.id]||[];
+      for(var q=0;q<ls.length;q++){ var l=ls[q], role=spec[l.rel]; if(!role) continue;
+        var oid=(dir==="out"?l.target:l.source), o=NIDS[oid]||(typeof _fnById==="function"?_fnById(oid):null);
+        if(!o||!_DK[o.kind]) continue; var lbl=o.label||String(oid).split("#").pop();
+        var cur=m[lbl]; m[lbl]={kind:o.kind, role:(cur&&cur.role&&cur.role!==role&&cur.role!=="self")?"both":role}; } }
+    scan("out",{reads_from:"in",fnreads:"in",touches:"in"}); scan("out",{writes_to:"out",fnwrites:"out"});
+    if(n.kind==="model"||n.kind==="schema"){ if(!m[n.label]) m[n.label]={kind:n.kind, role:"self"}; }
+    return m; }
+  var _rowRoles=WALK.steps.map(function(id){ var n=NIDS[id]; return n?_rolesOf(n):{}; });
+  var _colOrder=[], _colKind={}; _rowRoles.forEach(function(rm){ Object.keys(rm).forEach(function(k){ if(!(k in _colKind)){ _colKind[k]=rm[k].kind; _colOrder.push(k); } }); });
+  var _NCOL=_colOrder.length;
+
   var jg='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>';
   var meta=[WALK.steps.length+" steps", (j.ents&&j.ents.length?j.ents.length+" entities":""), (_fe?_fe+" frontend":""), (_be?_be+" backend":""), (j.corpus||"")].filter(Boolean).join(" · ");
   var ov=document.createElement("div"); ov.id="uni-jrnref";
-  var head='<div class="jdhd"><b>'+jg+' '+_esc(j.name||j.cid)+'</b><span class="jdsub">'+_esc(meta)+'</span><button class="jdclose" title="close (Esc)">✕</button></div>';
+  var head='<div class="jdhd"><b>'+jg+' '+_esc(j.name||j.cid)+'</b><span class="jdsub">'+_esc(meta)+'</span>'+(_NCOL?'<span class="jdmxleg" title="the data-lineage matrix on the right: each column is a data structure, each cell its role at that step"><span class="cell r-in">R</span>read <span class="cell r-out">W</span>write <span class="cell r-both">RW</span>both <span class="cell r-self">◆</span>defined</span>':"")+'<button class="jdclose" title="close (Esc)">✕</button></div>';
   // COLUMN HEADER (operator): the entity is a column, so no per-entity group rows — one header names every
   // column and stays pinned while the list scrolls; each row wears its entity color as a faint tint.
+  var _mxHead=_colOrder.map(function(k){ return '<div class="jdmh" data-col="'+_esc(k)+'" title="'+_esc(k)+' · '+_esc(_colKind[k])+'"><span>'+_esc(k)+'</span></div>'; }).join("");
+  function _mxCells(i){ return _colOrder.map(function(k){ var r=_rowRoles[i][k];
+    var ttl=r?(_esc(k)+" — "+(r.role==="in"?"read (input)":r.role==="out"?"written / modified (output)":r.role==="both"?"read + written":"defined here")):"";
+    var gl=r?(r.role==="in"?"R":r.role==="out"?"W":r.role==="both"?"RW":"◆"):"";
+    return '<div class="jdmx'+(r?"":" empty")+'" data-col="'+_esc(k)+'">'+(r?('<span class="cell r-'+r.role+'" title="'+ttl+'">'+gl+'</span>'):"")+'</div>'; }).join(""); }
+
   var body='<div class="jdbody"><div class="jdcols"><span class="jdnum">#</span><span class="jdico"></span><div class="jdmain">element</div>'
-    +'<div class="jdenc">entity · cluster</div><div class="jdopc">operation</div><div class="jdfrom">data · from (input)</div><div class="jdto">→ to (output)</div></div>';
+    +'<div class="jdenc">entity · cluster</div><div class="jdopc">operation</div><div class="jdfrom">data · from (input)</div><div class="jdto">→ to (output)</div>'+_mxHead+'</div>';
   WALK.steps.forEach(function(id,i){ var n=NIDS[id]; if(!n) return;
     var ic=(typeof svgInline==="function")?svgInline(n.kind, KC[n.kind]||n.col||"#9ecbff", 16):"";
     var entC=((typeof ENT!=="undefined"&&ENT[n.ent])||"#4a5568"), sd=_stepData(n);
@@ -4461,9 +4510,21 @@ window.__uniJrnDetail=function(){
       +'<div class="jdopc" title="operation">'+_dataHTML(sd)+'</div>'
       +'<div class="jdfrom" title="where this operation\'s data comes from (input), grouped by relation">'+_groupsHTML(sd.fromG)+'</div>'
       +'<div class="jdto" title="where this operation\'s data goes (output), grouped by relation">'+_groupsHTML(sd.toG)+'</div>'
+      +_mxCells(i)
       +(sd.fields&&sd.fields.length?('<div class="jdextra">'+_fieldsHTML(sd)+'</div>'):"")+'</div>'; });
   body+='</div>';
   ov.innerHTML=head+body; document.body.appendChild(ov);
+  // the grid template gains one 64px track per data column; frozen offsets stay in the base CSS.
+  if(_NCOL){ var _gs=document.createElement("style"); _gs.id="jd-grid";
+    _gs.textContent='#uni-jrnref .jdcols, #uni-jrnref .jdstep{ grid-template-columns:26px 22px 190px 130px 100px 196px 196px repeat('+_NCOL+',64px) !important; }';
+    ov.appendChild(_gs); }
+  // walk sync — highlight the current step's row + light the data columns it touches, down the whole matrix
+  window.__uniJdSync=function(){ var o=document.getElementById("uni-jrnref"); if(!o) return; var i=WALK.i;
+    var was=o.querySelector(".jdstep.on"); if(was) was.classList.remove("on");
+    var row=o.querySelector('.jdstep[data-si="'+i+'"]'); if(row){ row.classList.add("on"); try{ row.scrollIntoView({block:"nearest"}); }catch(e){} }
+    var hot={}; if(row) [].forEach.call(row.querySelectorAll(".jdmx"), function(c){ if(!c.classList.contains("empty")) hot[c.getAttribute("data-col")]=1; });
+    [].forEach.call(o.querySelectorAll(".jdmh, .jdmx"), function(c){ c.classList.toggle("jdcol-hot", !!hot[c.getAttribute("data-col")]); }); };
+  try{ window.__uniJdSync(); }catch(e){}
   // RESIZABLE width (operator): a left-edge handle drags the panel's left boundary (right stays pinned),
   // double-click resets to the CSS default (var(--navw)); the chosen left persists per viewer.
   var _rz=document.createElement("div"); _rz.className="jdrz"; _rz.title="drag to resize · double-click to reset width"; ov.appendChild(_rz);
@@ -4479,7 +4540,7 @@ window.__uniJrnDetail=function(){
   _rz.addEventListener("dblclick", function(e){ e.preventDefault(); ov.style.left=""; try{ window.localStorage.removeItem("gabe:universe:jrnLeft"); }catch(e){} });
   // a step row → jump the graph walk to that step, then close (the 3D view follows)
   [].forEach.call(ov.querySelectorAll("[data-si]"), function(r){ r.onclick=function(){ var i=+r.getAttribute("data-si");
-    if(typeof WALK!=="undefined"){ WALK.i=i; try{ _walkGo(0); }catch(e){} } __uniJrnDetail(); }; });
+    if(typeof WALK!=="undefined"){ WALK.i=i; try{ _walkGo(0); }catch(e){} try{ window.__uniJdSync&&window.__uniJdSync(); }catch(e){} } }; });   // keep the overlay OPEN so you can step + watch the matrix (operator)
   // scroll the current step into view
   var _cur=ov.querySelector(".jdstep.on"); if(_cur) try{ _cur.scrollIntoView({block:"center"}); }catch(e){}
   ov.querySelector(".jdclose").onclick=function(){ __uniJrnDetail(); };

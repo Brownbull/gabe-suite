@@ -1036,7 +1036,7 @@ check('function _stepData(n){' in page and 'function _dataHTML(sd){' in page and
       "the journey-detail merged entity·cluster cell, the OPERATION column, or the RELATION-labelled FROM/TO groups (_grp/_groupsHTML/.jdrel) are gone")
 # journey-detail COLUMN HEADER + entity-tinted rows (operator 2026-09-03): the entity is a column, so the per-entity
 # group rows are gone; ONE sticky header names every column; each row carries its entity color as --ec.
-check('class="jdcols"' in page and '#uni-jrnref .jdcols, #uni-jrnref .jdstep{ display:grid;' in page and 'grid-template-columns:26px 22px minmax(92px,1.2fr) 132px 104px minmax(0,1fr) minmax(0,1fr);' in page and 'background:var(--panel);' in page and 'padding:0 12px 22px' in page and 'class="jdgrp"' not in page and 'class="jdclu"' not in page and 'style="--ec:' in page and 'var(--ec, transparent) 9%' in page and 'function _srcsOf(id, rels){' in page and 'function _feEndpoints(id){' in page,
+check('class="jdcols"' in page and '#uni-jrnref .jdcols, #uni-jrnref .jdstep{ display:grid;' in page and 'grid-template-columns:26px 22px 190px 130px 100px 196px 196px;' in page and 'jd-grid' in page and 'class="jdmh"' in page and 'class="jdmx' in page and 'background:var(--panel);' in page and 'padding:0 0 22px' in page and 'class="jdgrp"' not in page and 'class="jdclu"' not in page and 'style="--ec:' in page and 'var(--ec, transparent) 9%' in page and 'function _srcsOf(id, rels){' in page and 'function _feEndpoints(id){' in page,
       "the 7-column GRID (element · entity·cluster · operation · from · to), the FLUSH opaque sticky header, entity-tinted rows, or the incoming-edge resolver are gone; or a retired group-row/standalone-cluster came back")
 # journey overlay RESIZER (operator 2026-09-03): a left-edge handle drags the panel width, double-click resets.
 check('_rz.className="jdrz"' in page and '#uni-jrnref .jdrz{' in page and 'cursor:ew-resize' in page and 'removeItem("gabe:universe:jrnLeft")' in page and 'setItem("gabe:universe:jrnLeft"' in page,
@@ -1411,7 +1411,7 @@ const { chromium } = require(process.argv[3]);
     // scrolled rows cannot show through above it. Assert the pixel gap is ~0.
     const hcell=ov.querySelector('.jdcols'), flush=(bd.getBoundingClientRect().top - hcell.getBoundingClientRect().top) < 1.5;
     // GRID ALIGNMENT (operator): a header column and its row column must share the SAME left edge (flex drifted).
-    const hc=[].slice.call(ov.querySelectorAll('.jdcols>*')).map(e=>Math.round(e.getBoundingClientRect().left));
+    const hc=[].slice.call(ov.querySelectorAll('.jdcols>*')).slice(0,7).map(e=>Math.round(e.getBoundingClientRect().left));
     const r0=all[0], rc=[r0.querySelector('.jdnum'),r0.querySelector('.jdico'),r0.querySelector('.jdmain'),r0.querySelector('.jdenc'),r0.querySelector('.jdopc'),r0.querySelector('.jdfrom'),r0.querySelector('.jdto')].map(e=>e?Math.round(e.getBoundingClientRect().left):-1);
     const aligned=hc.length===rc.length && hc.every((x,k)=>Math.abs(x-rc[k])<=1);
     const rz=ov.querySelector('.jdrz'), defL=Math.round(ov.getBoundingClientRect().left);
@@ -1421,13 +1421,24 @@ const { chromium } = require(process.argv[3]);
       document.dispatchEvent(new MouseEvent('mouseup',{bubbles:true})); dragL=Math.round(ov.getBoundingClientRect().left);
       rz.dispatchEvent(new MouseEvent('dblclick',{bubbles:true})); resetL=Math.round(ov.getBoundingClientRect().left); }
     const resizeOk=!!rz && dragL>defL+200 && Math.abs(resetL-defL)<=2;
-    const s=ov.querySelector('.jdstep[data-si="2"]'); if(s) s.onclick();
-    const closed=!document.getElementById('uni-jrnref'), walkI=WALK.i;
-    // Esc/backdrop path: re-open then close via the toggle so nothing bleeds forward
-    if(document.querySelector('#jrnpill .wname')) document.querySelector('#jrnpill .wname').onclick();
+    // DATA-LINEAGE MATRIX: data-structure columns, filled role cells, horizontally scrollable (operator 2026-09-03)
+    const mh=ov.querySelectorAll('.jdmh').length, mxCells=ov.querySelectorAll('.jdstep .jdmx').length, filled=ov.querySelectorAll('.jdmx .cell').length;
+    const bd2=ov.querySelector('.jdbody'); const scrollableX=bd2.scrollWidth>bd2.clientWidth+2;
+    const matrixOk = mh>0 && mxCells===mh*all.length && filled>0 && scrollableX;
+    // frozen identity: the element column stays put when scrolled right
+    const _fz0=Math.round(all[0].querySelector('.jdmain').getBoundingClientRect().left); bd2.scrollLeft=300;
+    const _fz1=Math.round(all[0].querySelector('.jdmain').getBoundingClientRect().left); bd2.scrollLeft=0;
+    const frozenOk = Math.abs(_fz0-_fz1) < 40;   // sticky-left: moves only a few px while content scrolls 300 (non-frozen would move ~300)
+    // WALK SYNC: row-click keeps the overlay OPEN + moves the walk; jump to a data-touching step lights its columns
+    const dataRow=all.find(r=>r.querySelector('.jdmx .cell')); const dsi=dataRow?+dataRow.getAttribute('data-si'):-1;
+    if(dataRow) dataRow.onclick();
+    const stillOpen=!!document.getElementById('uni-jrnref'), walkI=WALK.i;
+    const hotHdr=document.querySelectorAll('#uni-jrnref .jdmh.jdcol-hot').length, hotCells=document.querySelectorAll('#uni-jrnref .jdmx.jdcol-hot').length;
+    const walkSyncOk = stillOpen && walkI===dsi && hotHdr>0 && hotCells>0;
     if(document.getElementById('uni-jrnref')) window.__uniJrnDetail();
-    return { clickable, nsteps, steps, groups, icons, stepsMatch:(steps===nsteps), walkedToStep:(closed && walkI===2),
-      entDots, clus, ops, tgts, fields, gates, noHOverflow, cols, colsSticky, tinted, opcs, flows, fromTo, flush, aligned, rels, resizeOk };
+    return { clickable, nsteps, steps, groups, icons, stepsMatch:(steps===nsteps),
+      entDots, clus, ops, tgts, fields, gates, cols, colsSticky, tinted, opcs, flows, fromTo, flush, aligned, rels, resizeOk,
+      mh, filled, matrixOk, frozenOk, walkSyncOk };
   }).catch(e=>({err:String(e)}));
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
@@ -1477,8 +1488,9 @@ const { chromium } = require(process.argv[3]);
     && lr.flag && lr.flag.before==='all' && lr.flag.after==='off' && lr.flag.rebuilt===true;
   // the journey-detail overlay opens from the walk-bar name, lists every step (icon + entity groups), and a
   // step row walks the graph to it + closes.
-  const jd=jrnDetail, jrnDetailOk = jd && !jd.err && jd.clickable && jd.steps>0 && jd.stepsMatch && jd.groups===0 && jd.cols===1 && jd.colsSticky && jd.tinted===jd.steps && jd.opcs===jd.ops && jd.flows===jd.steps && jd.fromTo>0 && jd.icons===jd.steps && jd.walkedToStep
-    && jd.entDots===jd.steps && jd.clus===jd.steps && jd.ops>0 && jd.tgts>0 && jd.fields>0 && jd.rels>0 && jd.noHOverflow && jd.flush && jd.aligned && jd.resizeOk;
+  const jd=jrnDetail, jrnDetailOk = jd && !jd.err && jd.clickable && jd.steps>0 && jd.stepsMatch && jd.groups===0 && jd.cols===1 && jd.colsSticky && jd.tinted===jd.steps && jd.opcs===jd.ops && jd.flows===jd.steps && jd.fromTo>0 && jd.icons===jd.steps
+    && jd.entDots===jd.steps && jd.clus===jd.steps && jd.ops>0 && jd.tgts>0 && jd.fields>0 && jd.rels>0 && jd.flush && jd.aligned && jd.resizeOk
+    && jd.matrixOk && jd.frozenOk && jd.walkSyncOk;
   const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk && focusOk && keyOk && legRefOk && jrnDetailOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
   else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'fcbOk='+fcbOk+' '+JSON.stringify(fcb), 'focusOk='+focusOk+' click='+JSON.stringify(clickFocus)+' tier='+JSON.stringify(afterTier), 'keyOk='+keyOk+' '+JSON.stringify(keyReg), 'legRefOk='+legRefOk+' '+JSON.stringify(legRef).slice(0,600), 'jrnDetailOk='+jrnDetailOk+' '+JSON.stringify(jrnDetail), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
