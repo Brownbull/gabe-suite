@@ -782,7 +782,8 @@
   #uni-legref .lrplain{ width:15px; height:15px; border-radius:3px; background:color-mix(in srgb, #d946ef 55%, transparent); border:1px solid #d946ef; }
   #uni-legref .lrswatch{ width:14px; height:14px; border-radius:4px; display:inline-block; }
   #uni-legref .lrcv{ width:36px; height:30px; display:block; border-radius:5px; background:radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--accent) 10%, transparent), color-mix(in srgb, var(--ink) 4%, transparent)); }
-  #uni-legref .lrtx{ flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
+  #uni-legref .lrtx{ flex:0 0 190px; min-width:0; display:flex; flex-direction:column; gap:1px; }
+  #uni-legref .lrdef{ flex:1; min-width:0; font:400 11px/1.35 var(--font-ui); color:var(--ink-soft); }   /* WHAT IT IS, IN YOUR WORDS — the reader's definition, one per row (operator 2026-09-03) */
   #uni-legref .lrtx b{ font:600 12px/1.2 var(--font-ui); color:var(--ink); }
   #uni-legref .lrtx i{ font:400 10.5px/1.35 var(--font-ui); font-style:normal; color:var(--muted); }
   #uni-legref .lrex{ flex:none; max-width:190px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
@@ -4313,6 +4314,60 @@ window.__uniLegRef=function(){
     model:"a database table — a persistent domain record",
     external:"a table in another entity, reached by a foreign key",
     entity:"a domain area — the cluster grouping one feature's elements" };
+  // WHAT IT IS, IN YOUR WORDS (operator 2026-09-03) — the reader's definition of every row in the reference: written from
+  // the user's side of the screen, one per type · badge · connector · fleet item. The system-voiced line under the name
+  // stays; this column says what the thing IS. Keys: kind · "feclass:x" · "method:X" · "role:x" · "count:N" · "x:<roster name>".
+  var _LRDEF={
+    route:"a screen you navigate to — where a journey naturally starts",
+    component:"a piece of UI that draws something on a screen",
+    hook:"reusable logic a component calls — it remembers state for it",
+    type:"a shape of data — describes things, never runs",
+    store:"frontend state that outlives one screen (a context, a store)",
+    module:"the leftover shelf — helpers, API calls and feature logic that aren't UI",
+    web:"a place in the frontend that calls the API",
+    endpoint:"the API door the frontend knocks on — one URL and a verb",
+    "function":"one backend step — the work behind an endpoint",
+    schema:"the shape of what an endpoint takes in or hands back",
+    model:"a database table — where the data actually lives",
+    external:"a table this area points at but doesn't own",
+    entity:"a business area — a planet of related screens, endpoints and tables",
+    view:"a whole screen — the top-level component a route mounts",
+    "feclass:connector":"the component that fetches and wires data into a screen",
+    "feclass:container":"arranges its children — the screen's structure",
+    "feclass:leaf":"a small widget reused everywhere (a button, a chip)",
+    "feclass:private":"used inside one screen only — never shared",
+    "method:GET":"reads — asks for data, changes nothing",
+    "method:POST":"creates — sends something new to be stored",
+    "method:PUT":"replaces — overwrites the whole thing",
+    "method:PATCH":"updates — changes some fields",
+    "method:DELETE":"removes it",
+    "method:BOOT":"runs once when the app starts",
+    "role:accessor":"the function that actually touches the database",
+    "role:caller":"coordinates other functions — touches no data itself",
+    "role:gate":"checks you're allowed (auth, consent) before the work runs",
+    "role:pure":"computes from its inputs — no database, no side effects",
+    "count:N":"how many nested shapes are tucked inside this one",
+    "x:fk":"one table points at a row in another",
+    "x:calls":"one backend function calls another, across areas",
+    "x:imports":"one file pulls another in, across areas",
+    "x:bridge":"the frontend calling the API",
+    "x:rollup":"an endpoint reaching a table through the functions it calls",
+    "x:access":"the actual read or write of a table by a function",
+    "x:Cargo":"data moving between areas — a bigger ship carries a bigger payload",
+    "x:Test chip":"a test that crosses areas end to end",
+    "x:api":"backend tests (pytest)",
+    "x:web":"frontend tests (vitest)",
+    "x:e2e":"browser tests (playwright)",
+    "x:T1":"too big",
+    "x:T2":"much too big",
+    "x:T3":"split it now",
+    "x:Unguarded":"changed, and no test covers it",
+    "x:Blast":"touching this touches a lot — high coupling",
+    "x:Flak":"failing or untested while a change is in flight",
+    "x:Satellites":"who calls this — its users",
+    "x:Star":"used all over the area, but never shown on its own" };
+  function _defOf(label){ var nm=_splitLabel(label).name; return _LRDEF["x:"+nm]||""; }
+
   // TIER GATING (operator): each kind/class turns visible at a MIN tier, read LIVE from _TIER_PRESETS
   // (koff = kinds hidden at that tier · fcoff = classes hidden). null → never in a preset: a manual-only kind
   // (type) or, for a wire/ship, not tier-gated at all ("any"). The current tier is window.__uniTier.
@@ -4341,10 +4396,10 @@ window.__uniLegRef=function(){
     var _desc=_LRDESC[k]||((Kd.usage&&Kd.usage[1])||"");
     return '<div class="lrrow'+_dimCls(_t)+'"><button class="lrflag'+(_on?" on":"")+'" data-flagk="'+k+'" title="'+(_on?"drawn — click to hide":"hidden — click to show")+'"></button>'
       +'<span class="lrico">'+ico+'</span><div class="lrtx"><b style="color:'+Kd.col+'">'+_esc(Kd.type||k)+'</b>'
-      +'<i>'+_esc(_desc)+'</i></div>'+(noEx?'':_exChip(_exKind(k)))+_tierCell(_t,"kind")+'</div>'; }   // TIER is the LAST column (operator: one right axis)
+      +'<i>'+_esc(_desc)+'</i></div><div class="lrdef">'+_esc(_LRDEF[k]||"")+'</div>'+(noEx?'':_exChip(_exKind(k)))+_tierCell(_t,"kind")+'</div>'; }   // TIER is the LAST column (operator: one right axis)
   // a BADGE row (indented under its type): badge glyph · name · description · example · TIER (last)
   function _badgeRow(kind,key,name,desc,ex,tier){ return '<div class="lrrow lrb'+_dimCls(tier)+'"><span class="lrico">'+_badgeCanvas(kind,key)+'</span>'
-      +'<div class="lrtx"><b>'+_esc(name)+'</b><i>'+_esc(desc)+'</i></div>'+_exChip(ex)+_tierCell(tier,"kind")+'</div>'; }
+      +'<div class="lrtx"><b>'+_esc(name)+'</b><i>'+_esc(desc)+'</i></div><div class="lrdef">'+_esc(_LRDEF[kind+":"+key]||"")+'</div>'+_exChip(ex)+_tierCell(tier,"kind")+'</div>'; }
   var BD=(window.__BADGE_DESC)||{}, hasFe=!!(window.GABE_C4&&GABE_C4.fe);
   function _feSection(){ var h='<div class="lrsec"><div class="lrsh">FRONTEND</div>';
     ["route","component","hook","type","store","module","web"].forEach(function(k){ if(!K[k]) return;
@@ -4352,7 +4407,7 @@ window.__uniLegRef=function(){
       if(_kids){ ["connector","container","leaf","private"].forEach(function(fc){ h+=_badgeRow("feclass", fc, fc, (BD.feclass&&BD.feclass[fc])||"", _exFc(fc), _minTierFc(fc)); }); } });
     if(hasFe){ var vico=(typeof svgInline==="function")?svgInline("screen","#d946ef",18):"";   // View = a screen-glyph type (the merged view+screen), toggled as a feClass
       var _von=!(window.__uniFeClassState&&__uniFeClassState.view===false), _vt=_minTierFc("view");
-      h+='<div class="lrrow'+_dimCls(_vt)+'"><button class="lrflag'+(_von?" on":"")+'" data-flagfc="view" title="'+(_von?"drawn — click to hide":"hidden — click to show")+'"></button><span class="lrico">'+vico+'</span><div class="lrtx"><b style="color:#d946ef">View</b><i>a screen — the top-level view component</i></div>'+_exChip(_exFc("view"))+_tierCell(_vt,"kind")+'</div>'; }
+      h+='<div class="lrrow'+_dimCls(_vt)+'"><button class="lrflag'+(_von?" on":"")+'" data-flagfc="view" title="'+(_von?"drawn — click to hide":"hidden — click to show")+'"></button><span class="lrico">'+vico+'</span><div class="lrtx"><b style="color:#d946ef">View</b><i>a screen — the top-level view component</i></div><div class="lrdef">'+_esc(_LRDEF.view)+'</div>'+_exChip(_exFc("view"))+_tierCell(_vt,"kind")+'</div>'; }
     return h+'</div>'; }
   function _beSection(){ var h='<div class="lrsec"><div class="lrsh">BACKEND</div>';
     ["endpoint","function","schema","model","external","entity"].forEach(function(k){ if(!K[k]) return;
@@ -4433,16 +4488,16 @@ window.__uniLegRef=function(){
   function _connSection(){ var items=(typeof LEGEND!=="undefined"&&LEGEND.Connectors)||[];
     var h='<div class="lrsec"><div class="lrsh">CONNECTORS · what wires elements together</div>';
     items.forEach(function(it){ if(it.t==="grp"){ h+='<div class="lrgrp">'+it.l+'</div>'; return; }
-      h+='<div class="lrrow lrb"><span class="lrico">'+_refIco(it)+'</span><div class="lrtx">'+_refTx(it.l)+'</div>'+_tierCell(null,"any")+'</div>'; });
+      h+='<div class="lrrow lrb"><span class="lrico">'+_refIco(it)+'</span><div class="lrtx">'+_refTx(it.l)+'</div><div class="lrdef">'+_esc(_defOf(it.l))+'</div>'+_tierCell(null,"any")+'</div>'; });
     return h+'</div>'; }
   function _planetSection(){ var P=(typeof LEGEND!=="undefined"&&LEGEND.Planet)||null; if(!P) return "";
     var h='<div class="lrsec"><div class="lrsh">FLEET · planets &amp; ships</div>';
     (P.sub||[]).forEach(function(sk){ h+='<div class="lrgrp">'+sk+'</div>'; (P[sk]||[]).forEach(function(it){ if(it.t==="grp"){ h+='<div class="lrgrp lrsub">'+it.l+'</div>'; return; }
-      h+='<div class="lrrow lrb"><span class="lrico">'+_refIco(it)+'</span><div class="lrtx">'+_refTx(it.l)+'</div>'+_tierCell(null,"any")+'</div>'; }); });
+      h+='<div class="lrrow lrb"><span class="lrico">'+_refIco(it)+'</span><div class="lrtx">'+_refTx(it.l)+'</div><div class="lrdef">'+_esc(_defOf(it.l))+'</div>'+_tierCell(null,"any")+'</div>'; }); });
     return h+'</div>'; }
   var ov=document.createElement("div"); ov.id="uni-legref";
   var head='<div class="lrhd"><b><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg> Legend reference</b>'
-    +'<span class="lrsubtitle">every type &amp; badge — its tier column, and a live example. click an example to find it in the graph</span>'
+    +'<span class="lrsubtitle">every type &amp; badge — name · <em style="font-style:normal;color:var(--ink)">what it is, in your words</em> · a live example · its tier. click an example to find it in the graph</span>'
     +'<button class="lrclose" title="close (Esc)">✕</button></div>';
   var body='<div class="lrbody"><div class="lrcols">'+_feSection()+_beSection()+'</div><div class="lrcols">'+_connSection()+_planetSection()+'</div>'
     +'<div class="lrfoot">click a flag ● to show / hide a type · the <b>tier</b> dots (last column) show where a row appears — a dim row is hidden at the current tier · click an example to jump to it</div></div>';
