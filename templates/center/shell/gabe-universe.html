@@ -836,7 +836,7 @@
   #uni-jrnref .jdopc{ position:sticky; left:368px; z-index:4; align-self:stretch; padding-left:6px; grid-row:1 / -1; background:linear-gradient(0deg, var(--rowbg) 0%, var(--rowbg) 100%), var(--panel); border-right:1px solid color-mix(in srgb, var(--line) 55%, transparent); }
 
   #uni-jrnref .jdcols .jdnum, #uni-jrnref .jdcols .jdico, #uni-jrnref .jdcols .jdmain, #uni-jrnref .jdcols .jdenc, #uni-jrnref .jdcols .jdopc{ z-index:6; align-self:stretch !important; display:flex; flex-direction:column; justify-content:flex-end; padding-bottom:9px; background:var(--panel) !important; }   /* full-height opaque + text bottom-aligned like the from/to header */
-  #uni-jrnref .jdcols{ position:sticky; top:0; z-index:5; margin:0; padding:9px 6px;
+  #uni-jrnref .jdcols{ position:sticky; top:0; z-index:5; margin:0; padding:9px 6px 0;
     background:var(--panel); border-bottom:1px solid var(--line); font:700 9px/1 var(--font-ui);
     text-transform:uppercase; letter-spacing:.09em; color:var(--accent); }
   #uni-jrnref .jdcols>*{ font:inherit !important; color:inherit !important; margin:0 !important; background:none !important; border:none !important; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; align-self:end; }
@@ -891,7 +891,7 @@
   #uni-jrnref .jdmx.empty::before{ content:""; width:4px; height:4px; border-radius:50%; background:var(--line); }
   /* current-walk-step column highlight — the touched columns light down the whole journey */
   /* a selected step highlights only the TITLES of the columns it touches — never the column cells (operator 2026-09-03) */
-  #uni-jrnref .jdmh.jdcol-hot{ background:color-mix(in srgb, var(--accent) 18%, transparent) !important; border-top:2px solid var(--accent) !important; border-radius:0 0 7px 7px !important; }
+  #uni-jrnref .jdmh.jdcol-hot{ background:color-mix(in srgb, var(--accent) 18%, transparent) !important; border-top:2px solid var(--accent) !important; border-radius:7px 7px 0 0 !important; }
   #uni-jrnref .jdmh.jdcol-hot span{ color:var(--accent); }
   #uni-jrnref .jddline{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
   #uni-jrnref .jdop{ flex:none; font:700 9px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.05em; padding:3px 7px; border-radius:5px; color:#fff; }
