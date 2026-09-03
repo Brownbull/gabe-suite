@@ -890,7 +890,8 @@
   #uni-jrnref .jdmx.empty{ opacity:.5; }
   #uni-jrnref .jdmx.empty::before{ content:""; width:4px; height:4px; border-radius:50%; background:var(--line); }
   /* current-walk-step column highlight — the touched columns light down the whole journey */
-  #uni-jrnref .jdcol-hot{ background:color-mix(in srgb, var(--accent) 12%, transparent); }
+  /* a selected step highlights only the TITLES of the columns it touches — never the column cells (operator 2026-09-03) */
+  #uni-jrnref .jdmh.jdcol-hot{ background:color-mix(in srgb, var(--accent) 18%, transparent) !important; border-top:2px solid var(--accent) !important; border-radius:0 0 7px 7px !important; }
   #uni-jrnref .jdmh.jdcol-hot span{ color:var(--accent); }
   #uni-jrnref .jddline{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
   #uni-jrnref .jdop{ flex:none; font:700 9px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.05em; padding:3px 7px; border-radius:5px; color:#fff; }
@@ -926,6 +927,7 @@
   .jdcolpop .cpsep{ border-top:1px dashed var(--line); margin:9px 0 7px; }
   .jdcolpop .cpsw{ width:11px; height:11px; border-radius:3px; flex:none; }
   #uni-jrnref .jdinfo{ display:inline-flex; vertical-align:-1px; margin-left:4px; color:var(--muted); opacity:.55; cursor:help; }
+  #uni-jrnref .jdcols .jdhl{ display:inline-flex; align-items:center; white-space:nowrap; }   /* the header label + its info icon stay on ONE row (operator 2026-09-03) */
   #uni-jrnref .jdinfo:hover{ color:var(--accent); opacity:1; }
   @media (max-width:1080px){ #uni-jrnref .jdcols, #uni-jrnref .jdstep{ grid-template-columns:26px 22px minmax(88px,1.1fr) 120px minmax(0,1fr) minmax(0,1fr); } #uni-jrnref .jdopc{ grid-column:1 / 3; grid-row:2; } #uni-jrnref .jdextra{ grid-column:4 / -1; } }
   @media (max-width:820px){ #uni-jrnref .jdcols, #uni-jrnref .jdstep{ grid-template-columns:24px 20px minmax(72px,1fr) minmax(0,1fr) minmax(0,1fr); } #uni-jrnref .jdenc{ display:none; } #uni-jrnref .jdextra{ grid-column:3 / -1; } }
@@ -4618,8 +4620,8 @@ window.__uniJrnDetail=function(){
       var ttl=r?(_esc(k)+" — "+base+(r.indirect?" · via the call chain (indirect)":"")):"";
       var gl=r?(r.role==="in"?"R":r.role==="out"?"W":r.role==="both"?"RW":"◆"):"";
       return '<div class="jdmx'+(r?"":" empty")+'" data-col="'+_esc(k)+'">'+(r?('<span class="cell r-'+r.role+(r.indirect?" ind":"")+'">'+gl+'</span>'):"")+'</div>'; }).join(""); }
-    var body='<div class="jdbody"><div class="jdcols"><span class="jdnum">#</span><span class="jdico"></span><div class="jdmain">element'+_ii("element")+'</div>'
-      +'<div class="jdenc">entity · cluster'+_ii("ent")+'</div><div class="jdopc">operation'+_ii("op")+'</div><div class="jdfrom">data · from (input)'+_ii("from")+'</div><div class="jdto">→ to (output)'+_ii("to")+'</div>'+_mxHead+'</div>';
+    var body='<div class="jdbody"><div class="jdcols"><span class="jdnum">#</span><span class="jdico"></span><div class="jdmain"><span class="jdhl">element'+_ii("element")+'</span></div>'
+      +'<div class="jdenc"><span class="jdhl">entity · cluster'+_ii("ent")+'</span></div><div class="jdopc"><span class="jdhl">operation'+_ii("op")+'</span></div><div class="jdfrom"><span class="jdhl">data · from (input)'+_ii("from")+'</span></div><div class="jdto"><span class="jdhl">→ to (output)'+_ii("to")+'</span></div>'+_mxHead+'</div>';
     var _sdCache={}, _snCache={};
     WALK.steps.forEach(function(id,i){ var n=NIDS[id]; if(!n) return;
       var ic=(typeof svgInline==="function")?svgInline(n.kind, KC[n.kind]||n.col||"#9ecbff", 16):"";

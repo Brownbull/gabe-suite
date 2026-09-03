@@ -1042,7 +1042,7 @@ check('class="jdcols"' in page and '#uni-jrnref .jdcols, #uni-jrnref .jdstep{ di
 check('TRANSITIVE data reach' in page and '.cell.ind{' in page and 'jdopc{ position:sticky; left:368px' in page and '_HOP={calls:1' in page,
       "the transitive call-chain reach (indirect cells / .cell.ind style) or the operation-column freeze regressed")
 # journey matrix KIND FLAGS + diagonal headers + kind icon + no legend (operator 2026-09-03)
-check('class="jdflags"' in page and 'class="jdflag' in page and 'data-kd="' in page and 'gabe:universe:jdKinds4' in page and 'data-kd="function"' not in page and 'var _DK={model:1, schema:1, store:1};' in page and 'class="jdmhn"' in page and 'color:var(--mc' in page and 'class="jdmhk"' in page and 'pop.className="jdcolpop"' in page and '.jdcolpop{' in page and 'function _jdColPop(' in page and 'function _jdCellPop(' in page and 'var _OPC={read:' in page and '.jdcolpop .cpsep{' in page and '_snCache' in page and '_HOP={calls:1' in page and 'class="jdmxleg"' not in page,
+check('class="jdflags"' in page and 'class="jdflag' in page and 'data-kd="' in page and 'gabe:universe:jdKinds4' in page and 'data-kd="function"' not in page and 'var _DK={model:1, schema:1, store:1};' in page and 'class="jdmhn"' in page and 'color:var(--mc' in page and 'class="jdmhk"' in page and 'pop.className="jdcolpop"' in page and '.jdcolpop{' in page and 'function _jdColPop(' in page and 'function _jdCellPop(' in page and 'class="jdhl"' in page and '.jdmh.jdcol-hot{' in page and '.jdcols .jdhl{' in page and 'var _OPC={read:' in page and '.jdcolpop .cpsep{' in page and '_snCache' in page and '_HOP={calls:1' in page and 'class="jdmxleg"' not in page,
       "the matrix kind-flags (jdflag/jdKinds persist), diagonal headers (rotate -45), the per-column kind icon (jdmhk), or the legend-removal regressed")
 # journey overlay RESIZER (operator 2026-09-03): a left-edge handle drags the panel width, double-click resets.
 check('_rz.className="jdrz"' in page and '#uni-jrnref .jdrz{' in page and 'cursor:ew-resize' in page and 'removeItem("gabe:universe:jrnLeft")' in page and 'setItem("gabe:universe:jrnLeft"' in page,
@@ -1463,6 +1463,32 @@ const { chromium } = require(process.argv[3]);
       entDots, clus, ops, tgts, fields, gates, cols, colsSticky, tinted, opcs, flows, fromTo, flush, aligned, rels, resizeOk,
       mh, filled, matrixOk, frozenOk, walkSyncOk, flagsOk, opcFrozen, indirect };
   }).catch(e=>({err:String(e)}));
+  // STORE VISIBILITY (operator 2026-09-03): a FRESH viewer (empty localStorage — a private window) opening a
+  // store-touching journey MUST see the store flag ON, store columns, and lit store cells. Also: header info
+  // icons INLINE with their label · a selected step highlights column TITLES, never tints the column cells.
+  const storeCheck = await p.evaluate(() => {
+    // simulate a FRESH viewer (private window): clear the accumulated flag cache + tier state the prior evals left
+    try{ if(window.__uniSetTier) window.__uniSetTier(3); if(window.__uniHLClear) window.__uniHLClear(); }catch(e){}
+    try{ delete window.__uniJdKinds; localStorage.removeItem('gabe:universe:jdKinds4'); }catch(e){}
+    const js=(typeof _jrnCollect==='function')?_jrnCollect():[];
+    const j=js.find(x=>/Look for recipes/i.test(x.name||''))||js[0]; if(!j) return {err:'no journey'};
+    window.__uniJrnStart(j.cid); const wn=document.querySelector('#jrnpill .wname'); if(wn&&wn.onclick) wn.onclick();
+    const ov=document.getElementById('uni-jrnref'); if(!ov) return {err:'no overlay'};
+    const kindOf={}; (typeof nodes!=='undefined'?nodes:[]).forEach(n=>{ if(!(n.label in kindOf)) kindOf[n.label]=n.kind; });
+    const cols=[].slice.call(ov.querySelectorAll('.jdmh')).map(x=>x.getAttribute('data-col'));
+    const storeCols=cols.filter(c=>kindOf[c]==='store').length;
+    const flags=[].slice.call(ov.querySelectorAll('.jdflag')).map(x=>({kd:x.getAttribute('data-kd'),on:x.classList.contains('on')}));
+    const sf=flags.find(f=>f.kd==='store'); const storeFlagOn=!!(sf&&sf.on);
+    let litStore=0; [].forEach.call(ov.querySelectorAll('.jdstep .jdmx:not(.empty)'),m=>{ if(kindOf[m.getAttribute('data-col')]==='store') litStore++; });
+    const hl=ov.querySelector('.jdcols .jdmain .jdhl'), info=hl&&hl.querySelector('.jdinfo');
+    const iconInline=!!(hl&&info)&&Math.abs(hl.getBoundingClientRect().top-info.getBoundingClientRect().top)<10;
+    const drow=[].slice.call(ov.querySelectorAll('.jdstep')).find(r=>r.querySelector('.jdmx .cell')); if(drow) drow.onclick();
+    const hh=document.querySelector('#uni-jrnref .jdmh.jdcol-hot'), hc=document.querySelector('#uni-jrnref .jdmx.jdcol-hot');
+    const titleHot=!!hh && getComputedStyle(hh).backgroundColor!=='rgba(0, 0, 0, 0)';
+    const cellClean=!hc || getComputedStyle(hc).backgroundColor==='rgba(0, 0, 0, 0)';
+    if(document.getElementById('uni-jrnref')) window.__uniJrnDetail();
+    return { journey:j.name, storeCols, storeFlagOn, litStore, iconInline, titleHot, cellClean };
+  }).catch(e=>({err:String(e)}));
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
   // types held back (toggle present) — a feed WITHOUT fe must leave all of that at zero (honest-empty)
@@ -1514,9 +1540,10 @@ const { chromium } = require(process.argv[3]);
   const jd=jrnDetail, jrnDetailOk = jd && !jd.err && jd.clickable && jd.steps>0 && jd.stepsMatch && jd.groups===0 && jd.cols===1 && jd.colsSticky && jd.tinted===jd.steps && jd.opcs===jd.ops && jd.flows===jd.steps && jd.fromTo>0 && jd.icons===jd.steps
     && jd.entDots===jd.steps && jd.clus===jd.steps && jd.ops>0 && jd.tgts>0 && jd.fields>0 && jd.rels>0 && jd.flush && jd.aligned && jd.resizeOk
     && jd.matrixOk && jd.frozenOk && jd.walkSyncOk && jd.flagsOk && jd.opcFrozen && jd.indirect>0;
-  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk && focusOk && keyOk && legRefOk && jrnDetailOk;
+  const sc=storeCheck, storeOk = sc && !sc.err && sc.storeCols>=1 && sc.storeFlagOn && sc.litStore>=1 && sc.iconInline && sc.titleHot && sc.cellClean;
+  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk && focusOk && keyOk && legRefOk && jrnDetailOk && storeOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
-  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'fcbOk='+fcbOk+' '+JSON.stringify(fcb), 'focusOk='+focusOk+' click='+JSON.stringify(clickFocus)+' tier='+JSON.stringify(afterTier), 'keyOk='+keyOk+' '+JSON.stringify(keyReg), 'legRefOk='+legRefOk+' '+JSON.stringify(legRef).slice(0,600), 'jrnDetailOk='+jrnDetailOk+' '+JSON.stringify(jrnDetail), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
+  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'fcbOk='+fcbOk+' '+JSON.stringify(fcb), 'focusOk='+focusOk+' click='+JSON.stringify(clickFocus)+' tier='+JSON.stringify(afterTier), 'keyOk='+keyOk+' '+JSON.stringify(keyReg), 'legRefOk='+legRefOk+' '+JSON.stringify(legRef).slice(0,600), 'jrnDetailOk='+jrnDetailOk+' '+JSON.stringify(jrnDetail), 'storeOk='+storeOk+' '+JSON.stringify(storeCheck), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
 })();
 JS
   RENDER=$?
