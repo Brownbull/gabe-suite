@@ -288,7 +288,7 @@
     background:var(--accent); border-radius:6px; padding:1.5px 4px; }
   .topbar .tbico.on .tbnum{ background:var(--chip-bg); }
   /* journeys dropdown — CENTERED under the topbar-middle journey button (operator) */
-  #jrn{ position:fixed; left:50%; transform:translateX(-50%); top:calc(var(--topbarh) + 6px); z-index:55; width:min(520px, calc(100vw - 16px)); max-height:64vh; overflow-y:auto;
+  #jrn{ position:fixed; left:50%; transform:translateX(-50%); top:calc(var(--topbarh) + 6px); z-index:140; width:min(520px, calc(100vw - 16px)); max-height:64vh; overflow-y:auto;
     background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:6px; scrollbar-width:thin; box-shadow:0 8px 30px #0007; }
   #jrn .jrnkindtabs{ display:flex; gap:5px; padding:2px 6px 7px; border-top:1px dotted var(--line); margin-top:2px; }
   #jrn .jrnkindtabs button{ flex:1; display:inline-flex; align-items:center; justify-content:center; gap:6px; font:700 10px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.04em; padding:7px 8px; border:1px solid var(--line); border-radius:7px; background:transparent; color:var(--muted); cursor:pointer; }
@@ -802,7 +802,7 @@
 
   /* ── THE JOURNEY DETAIL overlay (operator) — full graph-area, same chrome as the legend reference ── */
   #uni-jrnref{ position:fixed; left:var(--navw); right:0; top:var(--topbarh); bottom:0; z-index:120;
-    background:color-mix(in srgb, var(--panel) 97%, transparent); backdrop-filter:blur(3px);
+    background:var(--panel);
     display:flex; flex-direction:column; animation:lrfade .16s ease; }
   #uni-jrnref .jdhd{ display:flex; align-items:center; gap:12px; padding:12px 14px 12px 16px; border-bottom:1px solid var(--line); flex:none; }
   /* left-edge RESIZER — drag the panel's left boundary; double-click resets to default width (operator 2026-09-03) */
@@ -825,7 +825,7 @@
   /* header row + every step share ONE grid template → columns ALWAYS align (flex measured each cell
      independently and drifted — operator). FROM · TO are two columns; a model's fields wrap under them. */
   #uni-jrnref .jdcols, #uni-jrnref .jdstep{ display:grid;
-    grid-template-columns:26px 22px 190px 130px 100px 196px 196px;   /* default (no matrix); #jd-grid overrides with the element columns */
+    grid-template-columns:26px 22px 190px 130px 130px 196px 196px;   /* default (no matrix); #jd-grid overrides with the element columns */
     column-gap:0; row-gap:2px; align-items:start; width:max-content; min-width:100%; }
   /* FROZEN LEFT — # · icon · element · entity·cluster · operation stay put while you slide right into the
      matrix; opaque so nothing shows behind, and UNDER the sticky header when you scroll down (operator 2026-09-03) */
@@ -914,6 +914,15 @@
   .jdcolpop .cpmore{ font:500 9.5px/1 var(--font-ui); color:var(--muted); margin-top:4px; }
   .jdcolpop .cpempty{ font:400 10.5px/1.4 var(--font-ui); color:var(--muted); border-top:1px solid var(--line); padding-top:6px; }
   .jdcolpop .cpclick{ font:600 8.5px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.05em; color:var(--accent); margin-top:8px; }
+  .jdcolpop .cpgrp{ margin-bottom:7px; }
+  .jdcolpop .cpgrl{ font:700 8.5px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.05em; color:color-mix(in srgb, var(--accent) 70%, var(--muted)); margin-bottom:2px; }
+  .jdcolpop .cpfn2{ font:600 10.5px/1.4 var(--font-mono); color:var(--ink); padding-left:2px; }
+  .jdcolpop .cpbody{ font:400 10.5px/1.55 var(--font-ui); color:var(--muted); border-top:1px solid var(--line); padding-top:6px; }
+  .jdcolpop .cpbody b{ color:var(--ink); font-weight:600; }
+  .jdcolpop .cpil{ display:flex; align-items:center; gap:7px; font:500 10px/1.6 var(--font-ui); color:var(--ink); }
+  .jdcolpop .cpsw{ width:11px; height:11px; border-radius:3px; flex:none; }
+  #uni-jrnref .jdinfo{ display:inline-flex; vertical-align:-1px; margin-left:4px; color:var(--muted); opacity:.55; cursor:help; }
+  #uni-jrnref .jdinfo:hover{ color:var(--accent); opacity:1; }
   @media (max-width:1080px){ #uni-jrnref .jdcols, #uni-jrnref .jdstep{ grid-template-columns:26px 22px minmax(88px,1.1fr) 120px minmax(0,1fr) minmax(0,1fr); } #uni-jrnref .jdopc{ grid-column:1 / 3; grid-row:2; } #uni-jrnref .jdextra{ grid-column:4 / -1; } }
   @media (max-width:820px){ #uni-jrnref .jdcols, #uni-jrnref .jdstep{ grid-template-columns:24px 20px minmax(72px,1fr) minmax(0,1fr) minmax(0,1fr); } #uni-jrnref .jdenc{ display:none; } #uni-jrnref .jdextra{ grid-column:3 / -1; } }
 </style></head><body>
@@ -4530,22 +4539,35 @@ window.__uniJrnDetail=function(){
   var _rowRoles=WALK.steps.map(function(id){ var n=NIDS[id]; return n?_rolesOf(n):{}; });
   var _colNode={}; (typeof nodes!=="undefined"?nodes:[]).forEach(function(nn){ if(_DK[nn.kind] && !(nn.label in _colNode)) _colNode[nn.label]=nn; });   // structure label → its graph node (click-to-focus + field popover)
   function _jdColPopHide(){ var e=document.getElementById("jd-colpop"); if(e) e.remove(); }
-  function _jdColPop(anchor, node){ _jdColPopHide(); if(!node) return;
-    var kd=node.kind, ec=((node.ent&&typeof ENT!=="undefined"&&ENT[node.ent])||KC[kd]||"#9ab");
-    var fields=(node.det&&node.det.cols)?node.det.cols.map(function(c){return {n:c[0], t:c[1]||""};})
-              :(node.det&&node.det.exports)?node.det.exports.map(function(x){return {n:(""+x), t:""};}):[];
-    var kindLbl=kd==="model"?"model · a table":kd==="schema"?"schema · a body shape":kd==="store"?"store · FE state (context)":kd;
-    var pop=document.createElement("div"); pop.id="jd-colpop"; pop.className="jdcolpop";
-    pop.innerHTML='<div class="cphd">'+(typeof svgInline==="function"?svgInline(kd,KC[kd]||ec,15):"")+'<b style="color:'+ec+'">'+_esc(node.label)+'</b></div>'
-      +'<div class="cpsub">'+_esc(kindLbl)+(node.ent?(' · <span style="color:'+ec+'">'+_esc(node.ent)+'</span>'):'')+'</div>'
-      +(fields.length?('<div class="cpf">'+fields.slice(0,26).map(function(f){ return '<div class="cpfr"><span class="cpfn">'+_esc(f.n)+'</span>'+(f.t?('<span class="cpft">'+_esc(f.t)+'</span>'):'')+'</div>'; }).join("")+(fields.length>26?('<div class="cpmore">+'+(fields.length-26)+' more</div>'):'')+'</div>')
-         :'<div class="cpempty">no fields recorded'+(kd==="store"?" — a context; see its exports on the card":"")+'</div>')
-      +'<div class="cpclick">click → open it in the graph</div>';
-    document.body.appendChild(pop);
+  function _jdPop(anchor, html){ _jdColPopHide(); var pop=document.createElement("div"); pop.id="jd-colpop"; pop.className="jdcolpop"; pop.innerHTML=html; document.body.appendChild(pop);
     var r=anchor.getBoundingClientRect(), pw=pop.offsetWidth||220;
     pop.style.left=Math.max(8, Math.min((window.innerWidth||1200)-pw-8, r.left-8))+"px";
     pop.style.top=(r.bottom+4)+"px";
     if(r.bottom+4+pop.offsetHeight > (window.innerHeight||900)) pop.style.top=Math.max(8,(r.top-pop.offsetHeight-4))+"px"; }
+  function _jdColPop(anchor, node){ if(!node){ _jdColPopHide(); return; }
+    var kd=node.kind, ec=((node.ent&&typeof ENT!=="undefined"&&ENT[node.ent])||KC[kd]||"#9ab");
+    var fields=(node.det&&node.det.cols)?node.det.cols.map(function(c){return {n:c[0], t:c[1]||""};})
+              :(node.det&&node.det.exports)?node.det.exports.map(function(x){return {n:(""+x), t:""};}):[];
+    var kindLbl=kd==="model"?"model · a table":kd==="schema"?"schema · a body shape":kd==="store"?"store · FE state (context)":kd;
+    _jdPop(anchor, '<div class="cphd">'+(typeof svgInline==="function"?svgInline(kd,KC[kd]||ec,15):"")+'<b style="color:'+ec+'">'+_esc(node.label)+'</b></div>'
+      +'<div class="cpsub">'+_esc(kindLbl)+(node.ent?(' · <span style="color:'+ec+'">'+_esc(node.ent)+'</span>'):'')+'</div>'
+      +(fields.length?('<div class="cpf">'+fields.slice(0,26).map(function(f){ return '<div class="cpfr"><span class="cpfn">'+_esc(f.n)+'</span>'+(f.t?('<span class="cpft">'+_esc(f.t)+'</span>'):'')+'</div>'; }).join("")+(fields.length>26?('<div class="cpmore">+'+(fields.length-26)+' more</div>'):'')+'</div>')
+         :'<div class="cpempty">no fields recorded'+(kd==="store"?" — a context; see its exports on the card":"")+'</div>')
+      +'<div class="cpclick">click → open it in the graph</div>'); }
+  // FROM/TO cell popover — the FULL grouped content (every relation + every name, uncut) (operator 2026-09-03)
+  function _jdFlowPop(anchor, groups, title, side){ if(!groups||!groups.length){ _jdPop(anchor, '<div class="cphd"><b>'+_esc(title)+'</b></div><div class="cpempty">nothing '+(side==="from"?"comes in":"goes out")+' at this step</div>'); return; }
+    _jdPop(anchor, '<div class="cphd"><b>'+_esc(title)+'</b></div><div class="cpf">'+groups.map(function(g){
+      return '<div class="cpgrp"><div class="cpgrl">'+_esc(g.rel)+'</div>'+g.names.map(function(n){ return '<div class="cpfn2">'+_esc(n)+'</div>'; }).join("")+'</div>'; }).join("")+'</div>'); }
+  // header INFO popovers — what each column means (operator 2026-09-03)
+  var _sw=function(c,l){ return '<div class="cpil"><span class="cpsw" style="background:'+c+'"></span>'+l+'</div>'; };
+  var _COLINFO={
+    element:'<div class="cphd"><b>Element</b></div><div class="cpsub">the step, and what it is</div><div class="cpbody">The element\'s name, its <b>kind</b> (component · hook · function · endpoint · model · schema · store) and its <b>side</b> — frontend or backend.</div>',
+    ent:'<div class="cphd"><b>Entity · Cluster</b></div><div class="cpsub">where it lives</div><div class="cpbody">Line 1 the <b>entity</b> (domain) it belongs to, its colour dot; line 2 the <b>cluster</b> — the sub-group inside that entity.</div>',
+    op:'<div class="cphd"><b>Operation</b></div><div class="cpsub">what the step does</div><div class="cpf">'+_sw("#f97316","writes / a write endpoint")+_sw("#22c55e","reads / reads·renders")+_sw("#3b82f6","calls")+_sw("#8794ab","computes (pure)")+_sw("#12b886","a table (a model)")+_sw("#f59f00","a body shape (schema)")+_sw("#eab308","guards / gates")+'</div>',
+    from:'<div class="cphd"><b>Data · From (input)</b></div><div class="cpsub">where the step\'s data comes from, by relation</div><div class="cpbody"><b>uses</b> a hook · <b>imports</b> a module · <b>reads</b> a store/model · <b>called by</b> · <b>fetched by</b> a screen · <b>written by</b> · <b>returned by</b>. Hover a FROM cell to see the full list.</div>',
+    to:'<div class="cphd"><b>→ To (output)</b></div><div class="cpsub">where the step\'s data goes, by relation</div><div class="cpbody"><b>renders</b> a child · <b>fetches</b> an endpoint · <b>calls</b> · <b>writes</b> a model · <b>read by</b> · <b>mounts</b>. Hover a TO cell to see the full list.</div>' };
+  function _jdColInfo(anchor, which){ _jdPop(anchor, _COLINFO[which]||''); }
+  function _ii(k){ return '<span class="jdinfo" data-info="'+k+'" title="what this column shows"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4.5"/><circle cx="12" cy="8" r=".6" fill="currentColor" stroke="none"/></svg></span>'; }
   // every element label seen, in first-seen order, with its kind — the flags filter this into columns
   var _allCols=[], _colKind={}, _colEnt={}, _present={};
   _rowRoles.forEach(function(rm){ Object.keys(rm).forEach(function(k){ if(!(k in _colKind)){ _colKind[k]=rm[k].kind; _colEnt[k]=rm[k].ent; _allCols.push(k); } _present[rm[k].kind]=1; }); });
@@ -4574,23 +4596,24 @@ window.__uniJrnDetail=function(){
       var ttl=r?(_esc(k)+" — "+base+(r.indirect?" · via the call chain (indirect)":"")):"";
       var gl=r?(r.role==="in"?"R":r.role==="out"?"W":r.role==="both"?"RW":"◆"):"";
       return '<div class="jdmx'+(r?"":" empty")+'" data-col="'+_esc(k)+'">'+(r?('<span class="cell r-'+r.role+(r.indirect?" ind":"")+'" title="'+ttl+'">'+gl+'</span>'):"")+'</div>'; }).join(""); }
-    var body='<div class="jdbody"><div class="jdcols"><span class="jdnum">#</span><span class="jdico"></span><div class="jdmain">element</div>'
-      +'<div class="jdenc">entity · cluster</div><div class="jdopc">operation</div><div class="jdfrom">data · from (input)</div><div class="jdto">→ to (output)</div>'+_mxHead+'</div>';
+    var body='<div class="jdbody"><div class="jdcols"><span class="jdnum">#</span><span class="jdico"></span><div class="jdmain">element'+_ii("element")+'</div>'
+      +'<div class="jdenc">entity · cluster'+_ii("ent")+'</div><div class="jdopc">operation'+_ii("op")+'</div><div class="jdfrom">data · from (input)'+_ii("from")+'</div><div class="jdto">→ to (output)'+_ii("to")+'</div>'+_mxHead+'</div>';
+    var _sdCache={};
     WALK.steps.forEach(function(id,i){ var n=NIDS[id]; if(!n) return;
       var ic=(typeof svgInline==="function")?svgInline(n.kind, KC[n.kind]||n.col||"#9ecbff", 16):"";
-      var entC=((typeof ENT!=="undefined"&&ENT[n.ent])||"#4a5568"), sd=_stepData(n);
+      var entC=((typeof ENT!=="undefined"&&ENT[n.ent])||"#4a5568"), sd=_stepData(n); _sdCache[i]=sd;
       body+='<div class="jdstep'+(i===WALK.i?" on":"")+'" data-si="'+i+'" style="--ec:'+entC+'"><span class="jdnum"><b>'+(i+1)+'</b></span><span class="jdico">'+ic+'</span>'
         +'<div class="jdmain"><b>'+_esc(n.label||id)+'</b><i>'+_esc(n.kind||"")+(n.fe?" · frontend":" · backend")+'</i></div>'
         +'<div class="jdenc"><div class="jdencE" title="entity"><span class="jdentdot" style="background:'+entC+'"></span><span class="jdentnm">'+_esc(_entLbl(n.ent))+'</span></div><div class="jdencC" title="cluster">'+_esc(n.sub||"—")+'</div></div>'
         +'<div class="jdopc" title="operation">'+_dataHTML(sd)+'</div>'
-        +'<div class="jdfrom" title="where this operation\'s data comes from (input), grouped by relation">'+_groupsHTML(sd.fromG)+'</div>'
-        +'<div class="jdto" title="where this operation\'s data goes (output), grouped by relation">'+_groupsHTML(sd.toG)+(sd.fields&&sd.fields.length?_fieldsHTML(sd):"")+'</div>'
+        +'<div class="jdfrom">'+_groupsHTML(sd.fromG)+'</div>'
+        +'<div class="jdto">'+_groupsHTML(sd.toG)+(sd.fields&&sd.fields.length?_fieldsHTML(sd):"")+'</div>'
         +_mxCells(i)+'</div>'; });
     body+='</div>';
     ov.innerHTML=head+body;
     var _og=document.getElementById("jd-grid"); if(_og) _og.remove();
     if(_NCOL){ var _gs=document.createElement("style"); _gs.id="jd-grid";
-      _gs.textContent='#uni-jrnref .jdcols, #uni-jrnref .jdstep{ grid-template-columns:26px 22px 190px 130px 100px 196px 196px repeat('+_NCOL+',50px) !important; }';
+      _gs.textContent='#uni-jrnref .jdcols, #uni-jrnref .jdstep{ grid-template-columns:26px 22px 190px 130px 130px 196px 196px repeat('+_NCOL+',50px) !important; }';
       ov.appendChild(_gs); }
     ov.appendChild(_rz);   // resizer survives the innerHTML rebuild
     // flag chips → toggle the kind, persist, re-render the matrix in place
@@ -4604,6 +4627,12 @@ window.__uniJrnDetail=function(){
         try{ if(window.__uniReveal) window.__uniReveal(node.id); }catch(e){}
         try{ if(typeof _aimAt==="function") _aimAt(node); }catch(e){} };
       h.onmouseenter=function(){ _jdColPop(h, node); }; h.onmouseleave=function(){ _jdColPopHide(); }; });
+    [].forEach.call(ov.querySelectorAll(".jdinfo"), function(ic){ var w=ic.getAttribute("data-info");
+      ic.onmouseenter=function(e){ e.stopPropagation(); _jdColInfo(ic, w); }; ic.onmouseleave=function(){ _jdColPopHide(); }; });
+    [].forEach.call(ov.querySelectorAll(".jdstep .jdfrom, .jdstep .jdto"), function(cell){
+      var row=cell.closest(".jdstep"), si=row?+row.getAttribute("data-si"):-1, side=cell.classList.contains("jdfrom")?"from":"to";
+      cell.onmouseenter=function(){ var sd=_sdCache[si]; if(!sd) return; _jdFlowPop(cell, side==="from"?sd.fromG:sd.toG, side==="from"?"Data · from (input)":"→ to (output)", side); };
+      cell.onmouseleave=function(){ _jdColPopHide(); }; });
     [].forEach.call(ov.querySelectorAll(".jdstep[data-si]"), function(r){ r.onclick=function(){ var i=+r.getAttribute("data-si");
       if(typeof WALK!=="undefined"){ WALK.i=i; try{ _walkGo(0); }catch(e){} try{ window.__uniJdSync&&window.__uniJdSync(); }catch(e){} } }; });
     ov.querySelector(".jdclose").onclick=function(){ __uniJrnDetail(); };
