@@ -1036,8 +1036,11 @@ check('function _stepData(n){' in page and 'function _dataHTML(sd){' in page and
       "the journey-detail merged entity·cluster cell, the OPERATION column, or the RELATION-labelled FROM/TO groups (_grp/_groupsHTML/.jdrel) are gone")
 # journey-detail COLUMN HEADER + entity-tinted rows (operator 2026-09-03): the entity is a column, so the per-entity
 # group rows are gone; ONE sticky header names every column; each row carries its entity color as --ec.
-check('class="jdcols"' in page and '#uni-jrnref .jdcols, #uni-jrnref .jdstep{ display:grid;' in page and 'grid-template-columns:26px 22px minmax(92px,1.2fr) 132px 104px minmax(0,1fr) minmax(0,1fr);' in page and 'background:var(--panel);' in page and 'padding:0 18px 22px' in page and 'class="jdgrp"' not in page and 'class="jdclu"' not in page and 'style="--ec:' in page and 'var(--ec, transparent) 9%' in page and 'function _srcsOf(id, rels){' in page and 'function _feEndpoints(id){' in page,
+check('class="jdcols"' in page and '#uni-jrnref .jdcols, #uni-jrnref .jdstep{ display:grid;' in page and 'grid-template-columns:26px 22px minmax(92px,1.2fr) 132px 104px minmax(0,1fr) minmax(0,1fr);' in page and 'background:var(--panel);' in page and 'padding:0 12px 22px' in page and 'class="jdgrp"' not in page and 'class="jdclu"' not in page and 'style="--ec:' in page and 'var(--ec, transparent) 9%' in page and 'function _srcsOf(id, rels){' in page and 'function _feEndpoints(id){' in page,
       "the 7-column GRID (element · entity·cluster · operation · from · to), the FLUSH opaque sticky header, entity-tinted rows, or the incoming-edge resolver are gone; or a retired group-row/standalone-cluster came back")
+# journey overlay RESIZER (operator 2026-09-03): a left-edge handle drags the panel width, double-click resets.
+check('_rz.className="jdrz"' in page and '#uni-jrnref .jdrz{' in page and 'cursor:ew-resize' in page and 'removeItem("gabe:universe:jrnLeft")' in page and 'setItem("gabe:universe:jrnLeft"' in page,
+      "the journey-overlay resizer handle (_rz.jdrz / ew-resize / persisted left / double-click reset) is gone")
 # fleet-side tier config pills (control-system phase 3)
 check('pillHTML("tier"' in page and 'fcPill.className="pill fcpill"' in page and 'entPane.unshift(tierGrp)' in page,
       "the fleet Entity pane's tier + fold + component-class pills are gone")
@@ -1411,13 +1414,20 @@ const { chromium } = require(process.argv[3]);
     const hc=[].slice.call(ov.querySelectorAll('.jdcols>*')).map(e=>Math.round(e.getBoundingClientRect().left));
     const r0=all[0], rc=[r0.querySelector('.jdnum'),r0.querySelector('.jdico'),r0.querySelector('.jdmain'),r0.querySelector('.jdenc'),r0.querySelector('.jdopc'),r0.querySelector('.jdfrom'),r0.querySelector('.jdto')].map(e=>e?Math.round(e.getBoundingClientRect().left):-1);
     const aligned=hc.length===rc.length && hc.every((x,k)=>Math.abs(x-rc[k])<=1);
+    const rz=ov.querySelector('.jdrz'), defL=Math.round(ov.getBoundingClientRect().left);
+    let dragL=defL, resetL=defL;
+    if(rz){ rz.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,clientX:rz.getBoundingClientRect().left+2,clientY:400}));
+      document.dispatchEvent(new MouseEvent('mousemove',{bubbles:true,clientX:rz.getBoundingClientRect().left+320,clientY:400}));
+      document.dispatchEvent(new MouseEvent('mouseup',{bubbles:true})); dragL=Math.round(ov.getBoundingClientRect().left);
+      rz.dispatchEvent(new MouseEvent('dblclick',{bubbles:true})); resetL=Math.round(ov.getBoundingClientRect().left); }
+    const resizeOk=!!rz && dragL>defL+200 && Math.abs(resetL-defL)<=2;
     const s=ov.querySelector('.jdstep[data-si="2"]'); if(s) s.onclick();
     const closed=!document.getElementById('uni-jrnref'), walkI=WALK.i;
     // Esc/backdrop path: re-open then close via the toggle so nothing bleeds forward
     if(document.querySelector('#jrnpill .wname')) document.querySelector('#jrnpill .wname').onclick();
     if(document.getElementById('uni-jrnref')) window.__uniJrnDetail();
     return { clickable, nsteps, steps, groups, icons, stepsMatch:(steps===nsteps), walkedToStep:(closed && walkI===2),
-      entDots, clus, ops, tgts, fields, gates, noHOverflow, cols, colsSticky, tinted, opcs, flows, fromTo, flush, aligned, rels };
+      entDots, clus, ops, tgts, fields, gates, noHOverflow, cols, colsSticky, tinted, opcs, flows, fromTo, flush, aligned, rels, resizeOk };
   }).catch(e=>({err:String(e)}));
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
@@ -1468,7 +1478,7 @@ const { chromium } = require(process.argv[3]);
   // the journey-detail overlay opens from the walk-bar name, lists every step (icon + entity groups), and a
   // step row walks the graph to it + closes.
   const jd=jrnDetail, jrnDetailOk = jd && !jd.err && jd.clickable && jd.steps>0 && jd.stepsMatch && jd.groups===0 && jd.cols===1 && jd.colsSticky && jd.tinted===jd.steps && jd.opcs===jd.ops && jd.flows===jd.steps && jd.fromTo>0 && jd.icons===jd.steps && jd.walkedToStep
-    && jd.entDots===jd.steps && jd.clus===jd.steps && jd.ops>0 && jd.tgts>0 && jd.fields>0 && jd.rels>0 && jd.noHOverflow && jd.flush && jd.aligned;
+    && jd.entDots===jd.steps && jd.clus===jd.steps && jd.ops>0 && jd.tgts>0 && jd.fields>0 && jd.rels>0 && jd.noHOverflow && jd.flush && jd.aligned && jd.resizeOk;
   const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk && focusOk && keyOk && legRefOk && jrnDetailOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
   else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'fcbOk='+fcbOk+' '+JSON.stringify(fcb), 'focusOk='+focusOk+' click='+JSON.stringify(clickFocus)+' tier='+JSON.stringify(afterTier), 'keyOk='+keyOk+' '+JSON.stringify(keyReg), 'legRefOk='+legRefOk+' '+JSON.stringify(legRef).slice(0,600), 'jrnDetailOk='+jrnDetailOk+' '+JSON.stringify(jrnDetail), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }

@@ -804,25 +804,29 @@
   #uni-jrnref{ position:fixed; left:var(--navw); right:0; top:var(--topbarh); bottom:0; z-index:120;
     background:color-mix(in srgb, var(--panel) 97%, transparent); backdrop-filter:blur(3px);
     display:flex; flex-direction:column; animation:lrfade .16s ease; }
-  #uni-jrnref .jdhd{ display:flex; align-items:center; gap:12px; padding:12px 18px; border-bottom:1px solid var(--line); flex:none; }
+  #uni-jrnref .jdhd{ display:flex; align-items:center; gap:12px; padding:12px 14px 12px 16px; border-bottom:1px solid var(--line); flex:none; }
+  /* left-edge RESIZER — drag the panel's left boundary; double-click resets to default width (operator 2026-09-03) */
+  #uni-jrnref .jdrz{ position:absolute; left:0; top:0; bottom:0; width:8px; cursor:ew-resize; z-index:6; }
+  #uni-jrnref .jdrz::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--line); transition:background .12s, width .12s; }
+  #uni-jrnref .jdrz:hover::before, #uni-jrnref .jdrz.on::before{ width:4px; background:var(--accent); }
   #uni-jrnref .jdhd b{ display:inline-flex; align-items:center; gap:7px; font:800 13px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.04em; color:var(--ink); }
   #uni-jrnref .jdhd b svg{ color:var(--accent); }
   #uni-jrnref .jdsub{ font:400 11px/1.3 var(--font-ui); color:var(--muted); }
   #uni-jrnref .jdclose{ margin-left:auto; font:400 17px/1 var(--font-ui); color:var(--muted); background:none; border:1px solid var(--line); border-radius:7px; width:28px; height:28px; cursor:pointer; }
   #uni-jrnref .jdclose:hover{ color:var(--ink); border-color:var(--accent); }
-  #uni-jrnref .jdbody{ flex:1; min-height:0; overflow-y:auto; padding:0 18px 22px; max-width:1180px; }
+  #uni-jrnref .jdbody{ flex:1; min-height:0; overflow-y:auto; padding:0 12px 22px; }
   /* the COLUMN HEADER — one row naming every column, pinned to the top of the scrolling list */
   /* header row + every step share ONE grid template → columns ALWAYS align (flex measured each cell
      independently and drifted — operator). FROM · TO are two columns; a model's fields wrap under them. */
   #uni-jrnref .jdcols, #uni-jrnref .jdstep{ display:grid;
     grid-template-columns:26px 22px minmax(92px,1.2fr) 132px 104px minmax(0,1fr) minmax(0,1fr);
     column-gap:11px; row-gap:2px; align-items:start; }
-  #uni-jrnref .jdcols{ position:sticky; top:0; z-index:2; margin:0; padding:9px 8px;
+  #uni-jrnref .jdcols{ position:sticky; top:0; z-index:2; margin:0; padding:9px 6px;
     background:var(--panel); border-bottom:1px solid var(--line); font:700 9px/1 var(--font-ui);
     text-transform:uppercase; letter-spacing:.09em; color:var(--accent); }
   #uni-jrnref .jdcols>*{ font:inherit !important; color:inherit !important; margin:0 !important; background:none !important; border:none !important; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; align-self:center; }
   /* the step is now a ROW OF COLUMNS: # · icon · identity(flex) · ENTITY · CLUSTER · DATA block — aligned to the top */
-  #uni-jrnref .jdstep{ padding:8px; border-radius:8px; cursor:pointer; border-bottom:1px solid color-mix(in srgb, var(--line) 55%, transparent);
+  #uni-jrnref .jdstep{ padding:8px 6px; border-radius:8px; cursor:pointer; border-bottom:1px solid color-mix(in srgb, var(--line) 55%, transparent);
     background:color-mix(in srgb, var(--ec, transparent) 9%, transparent); }   /* the row wears its ENTITY color, faintly (operator) */
   #uni-jrnref .jdstep:hover{ background:var(--hov-bg); }
   #uni-jrnref .jdstep.on{ background:color-mix(in srgb, var(--accent) 14%, transparent); }
@@ -4460,6 +4464,19 @@ window.__uniJrnDetail=function(){
       +(sd.fields&&sd.fields.length?('<div class="jdextra">'+_fieldsHTML(sd)+'</div>'):"")+'</div>'; });
   body+='</div>';
   ov.innerHTML=head+body; document.body.appendChild(ov);
+  // RESIZABLE width (operator): a left-edge handle drags the panel's left boundary (right stays pinned),
+  // double-click resets to the CSS default (var(--navw)); the chosen left persists per viewer.
+  var _rz=document.createElement("div"); _rz.className="jdrz"; _rz.title="drag to resize · double-click to reset width"; ov.appendChild(_rz);
+  var _clampL=function(x){ return Math.max(8, Math.min((window.innerWidth||1200)-480, x)); };
+  try{ var _sv=window.localStorage.getItem("gabe:universe:jrnLeft"); if(_sv) ov.style.left=_clampL(+_sv)+"px"; }catch(e){}
+  _rz.addEventListener("mousedown", function(e){ e.preventDefault(); _rz.classList.add("on");
+    var sx=e.clientX, sl=ov.getBoundingClientRect().left; document.body.style.cursor="ew-resize";
+    var mv=function(ev){ ov.style.left=_clampL(sl+(ev.clientX-sx))+"px"; };
+    var up=function(){ document.body.style.cursor=""; _rz.classList.remove("on");
+      try{ window.localStorage.setItem("gabe:universe:jrnLeft", Math.round(ov.getBoundingClientRect().left)); }catch(e){}
+      document.removeEventListener("mousemove",mv,true); document.removeEventListener("mouseup",up,true); };
+    document.addEventListener("mousemove",mv,true); document.addEventListener("mouseup",up,true); });
+  _rz.addEventListener("dblclick", function(e){ e.preventDefault(); ov.style.left=""; try{ window.localStorage.removeItem("gabe:universe:jrnLeft"); }catch(e){} });
   // a step row → jump the graph walk to that step, then close (the 3D view follows)
   [].forEach.call(ov.querySelectorAll("[data-si]"), function(r){ r.onclick=function(){ var i=+r.getAttribute("data-si");
     if(typeof WALK!=="undefined"){ WALK.i=i; try{ _walkGo(0); }catch(e){} } __uniJrnDetail(); }; });
