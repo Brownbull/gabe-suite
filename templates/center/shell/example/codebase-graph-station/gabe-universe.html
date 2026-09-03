@@ -833,21 +833,22 @@
   #uni-jrnref .jdico{ position:sticky; left:26px; z-index:4; align-self:stretch; background:linear-gradient(0deg, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 0%, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 100%), var(--panel); }
   #uni-jrnref .jdmain{ position:sticky; left:48px; z-index:4; align-self:stretch; padding-left:2px; background:linear-gradient(0deg, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 0%, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 100%), var(--panel); }
   #uni-jrnref .jdenc{ position:sticky; left:238px; z-index:4; align-self:stretch; padding-left:6px; background:linear-gradient(0deg, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 0%, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 100%), var(--panel); }
-  #uni-jrnref .jdopc{ position:sticky; left:368px; z-index:4; align-self:stretch; padding-left:6px; background:linear-gradient(0deg, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 0%, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 100%), var(--panel); box-shadow:2px 0 0 var(--line); }
+  #uni-jrnref .jdopc{ position:sticky; left:368px; z-index:4; align-self:stretch; padding-left:6px; background:linear-gradient(0deg, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 0%, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 100%), var(--panel); box-shadow:6px 0 8px -6px rgba(0,0,0,.5); }
   #uni-jrnref .jdstep.on .jdnum, #uni-jrnref .jdstep.on .jdico, #uni-jrnref .jdstep.on .jdmain, #uni-jrnref .jdstep.on .jdenc, #uni-jrnref .jdstep.on .jdopc{ background:color-mix(in srgb, var(--accent) 16%, var(--panel)); }
-  #uni-jrnref .jdcols .jdnum, #uni-jrnref .jdcols .jdico, #uni-jrnref .jdcols .jdmain, #uni-jrnref .jdcols .jdenc, #uni-jrnref .jdcols .jdopc{ z-index:6; align-self:stretch !important; display:flex; align-items:flex-end; background:var(--panel) !important; }   /* full-height opaque → covers diagonal labels in its x-range */
+  #uni-jrnref .jdcols .jdnum, #uni-jrnref .jdcols .jdico, #uni-jrnref .jdcols .jdmain, #uni-jrnref .jdcols .jdenc, #uni-jrnref .jdcols .jdopc{ z-index:6; align-self:stretch !important; display:flex; flex-direction:column; justify-content:flex-end; padding-bottom:9px; background:var(--panel) !important; }   /* full-height opaque + text bottom-aligned like the from/to header */
   #uni-jrnref .jdcols{ position:sticky; top:0; z-index:5; margin:0; padding:9px 6px;
     background:var(--panel); border-bottom:1px solid var(--line); font:700 9px/1 var(--font-ui);
     text-transform:uppercase; letter-spacing:.09em; color:var(--accent); }
   #uni-jrnref .jdcols>*{ font:inherit !important; color:inherit !important; margin:0 !important; background:none !important; border:none !important; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; align-self:end; }
   /* the step is now a ROW OF COLUMNS: # · icon · identity(flex) · ENTITY · CLUSTER · DATA block — aligned to the top */
-  #uni-jrnref .jdstep{ padding:8px 6px; border-radius:8px; cursor:pointer; border-bottom:1px solid color-mix(in srgb, var(--line) 55%, transparent);
+  #uni-jrnref .jdstep{ padding:8px 6px; border-radius:8px; cursor:pointer; isolation:isolate; border-bottom:1px solid color-mix(in srgb, var(--line) 55%, transparent);
     background:color-mix(in srgb, var(--ec, transparent) 9%, transparent); }   /* the row wears its ENTITY color, faintly (operator) */
   #uni-jrnref .jdstep:hover{ background:var(--hov-bg); }
   #uni-jrnref .jdstep.on{ background:color-mix(in srgb, var(--accent) 14%, transparent); }
-  #uni-jrnref .jdnum{ width:24px; height:24px; margin-top:1px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font:600 11px/1 var(--font-mono); color:var(--muted); border:1px solid var(--line); }
-  #uni-jrnref .jdstep.on .jdnum{ color:#fff; background:var(--accent); border-color:var(--accent); }
-  #uni-jrnref .jdico{ width:20px; margin-top:3px; display:flex; align-items:center; justify-content:center; }
+  #uni-jrnref .jdnum{ display:flex; justify-content:center; align-items:flex-start; padding-top:9px; }
+  #uni-jrnref .jdstep .jdnum>b{ width:24px; height:24px; margin-top:1px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font:600 11px/1 var(--font-mono); font-weight:600; color:var(--muted); border:1px solid var(--line); }
+  #uni-jrnref .jdstep.on .jdnum>b{ color:#fff; background:var(--accent); border-color:var(--accent); }
+  #uni-jrnref .jdico{ width:20px; display:flex; align-items:flex-start; justify-content:center; padding-top:11px; }
   #uni-jrnref .jdmain{ min-width:0; display:flex; flex-direction:column; gap:1px; }
   #uni-jrnref .jdmain b{ font:600 12.5px/1.25 var(--font-ui); color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   #uni-jrnref .jdmain i{ font:400 10.5px/1.3 var(--font-ui); font-style:normal; color:var(--muted); }
@@ -862,13 +863,14 @@
   /* FROM (input) · TO (output) — each a stack of RELATION-labelled groups (the panel's vocabulary):
      a sub-line names uses/renders/fetches/reads/writes/called-by/read-by … then its targets */
   #uni-jrnref .jdfrom, #uni-jrnref .jdto{ min-width:0; margin-top:1px; padding-left:8px; display:flex; flex-direction:column; gap:4px; overflow:hidden; }
+  #uni-jrnref .jdcols .jdfrom, #uni-jrnref .jdcols .jdto{ position:relative; z-index:3; align-self:stretch; justify-content:flex-end; padding-bottom:9px; background:var(--panel); }   /* header from/to sit ABOVE the diagonal labels extending left */
   #uni-jrnref .jdg{ min-width:0; display:flex; flex-direction:column; }
   #uni-jrnref .jdrel{ font:700 8px/1.4 var(--font-ui); text-transform:uppercase; letter-spacing:.05em; color:color-mix(in srgb, var(--accent) 70%, var(--muted)); }
   #uni-jrnref .jdfrom .jdtgt, #uni-jrnref .jdto .jdtgt{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  #uni-jrnref .jdextra{ grid-column:6 / 8; min-width:0; margin-top:2px; }   /* fields wrap under from·to only, never across the matrix */
+  #uni-jrnref .jdextra{ grid-column:6 / 8; min-width:0; margin-top:2px; overflow:hidden; }   /* fields wrap under from·to only, never across the matrix */
   /* ── the DATA-LINEAGE MATRIX — one column per data structure the journey touches; a cell shows the
      structure's ROLE at that step: read (input) · write (output/modified) · both (operator 2026-09-03) ── */
-  #uni-jrnref .jdmh{ position:relative; align-self:stretch; height:150px; overflow:visible; border-left:1px solid color-mix(in srgb, var(--line) 55%, transparent); }
+  #uni-jrnref .jdmh{ position:relative; align-self:stretch; height:150px; overflow:visible; border-left:1px solid color-mix(in srgb, var(--line) 40%, transparent); }
   #uni-jrnref .jdmh span:first-child{ position:absolute; left:8px; bottom:26px; transform-origin:left bottom; transform:rotate(-45deg); white-space:nowrap; font:600 9.5px/1 var(--font-ui); text-transform:none; letter-spacing:0; color:var(--mc, var(--muted)); max-width:170px; overflow:hidden; text-overflow:ellipsis; }
   #uni-jrnref .jdmh.jdcol-hot span:first-child{ color:var(--accent); }
   #uni-jrnref .jdmhk{ position:absolute; right:3px; bottom:3px; display:flex; opacity:.85; }
@@ -4486,35 +4488,40 @@ window.__uniJrnDetail=function(){
   // model ON by default) choose which element kinds become columns. (operator 2026-09-03)
   var _INREL={reads_from:"in", fnreads:"in", touches:"in", uses:"in", imports:"in", reads:"in", takes:"in", resp:"in"};
   var _OUTREL={writes_to:"out", fnwrites:"out", renders:"out", fecall:"out", bridge:"out", dispatches:"out", calls:"out", returns:"out"};
+  // the matrix shows DATA CARRIERS — the things that HOLD data, the principal read/receive/emit points.
+  // Code/transport (component · hook · module · endpoint · function) is NOT a column; a FE component's
+  // data is the STORES it reads + the models/schemas behind the endpoints it fetches (operator 2026-09-03).
+  var _DK={model:1, schema:1, store:1};
+  var _HOP={calls:1, fecall:1, bridge:1, fetches:1, handler:1};   // walk these to reach the data behind a call/fetch/handler
   function _rolesOf(n){ var m={};
-    function add(o, role, indirect){ if(!o||!o.kind||o.kind==="function") return;   // functions execute, not store — never a column (operator)
+    function add(o, role, indirect){ if(!o||!_DK[o.kind]) return;   // DATA carriers only
       var lbl=o.label||o.id, cur=m[lbl];
-      if(cur && !cur.indirect && indirect) return;   // a DIRECT data touch outranks an indirect (call-chain) one
+      if(cur && !cur.indirect && indirect) return;   // a DIRECT data touch outranks a transitive one
       role=(cur&&cur.role&&cur.role!==role&&cur.role!=="self")?"both":role;
       m[lbl]={kind:o.kind, ent:o.ent||null, indirect:!!indirect, role:role}; }
     function scan(id, indirect){ var ls=_srcIdx[id]||[];
       for(var q=0;q<ls.length;q++){ var l=ls[q], role=_INREL[l.rel]||_OUTREL[l.rel]; if(!role) continue;
         add(NIDS[l.target]||(typeof _fnById==="function"?_fnById(l.target):null), role, indirect); } }
     scan(n.id, false);
-    // a step that only CALLS other functions has no direct data cells — follow its calls (depth 2) and inherit
-    // the data those callees touch, marked INDIRECT (a step's data reach through its call tree). (operator 2026-09-03)
+    // TRANSITIVE data reach — walk calls/fetches/handler (depth 3) so a component reaches the data behind the
+    // endpoint it fetches (component → fetch → endpoint → model), marked INDIRECT (outlined, not filled).
     var seen={}; seen[n.id]=1; var frontier=[n.id];
-    for(var d=0; d<2; d++){ var next=[];
-      frontier.forEach(function(id){ (_srcIdx[id]||[]).forEach(function(l){ if(l.rel!=="calls") return;
+    for(var d=0; d<3; d++){ var next=[];
+      frontier.forEach(function(id){ (_srcIdx[id]||[]).forEach(function(l){ if(!_HOP[l.rel]) return;
         var tid=(l.target&&l.target.id)||l.target; if(seen[tid]) return; seen[tid]=1;
-        var o=NIDS[tid]||(typeof _fnById==="function"?_fnById(tid):null); if(o){ scan(tid, true); if(o.kind==="function") next.push(tid); } }); });
+        var o=NIDS[tid]||(typeof _fnById==="function"?_fnById(tid):null); if(o){ scan(tid, true); next.push(tid); } }); });
       frontier=next; }
-    if(n.kind==="model"||n.kind==="schema"){ if(!m[n.label]) m[n.label]={kind:n.kind, ent:n.ent||null, role:"self"}; }
+    if(_DK[n.kind]){ if(!m[n.label]) m[n.label]={kind:n.kind, ent:n.ent||null, role:"self"}; }
     return m; }
   var _rowRoles=WALK.steps.map(function(id){ var n=NIDS[id]; return n?_rolesOf(n):{}; });
   // every element label seen, in first-seen order, with its kind — the flags filter this into columns
   var _allCols=[], _colKind={}, _colEnt={}, _present={};
   _rowRoles.forEach(function(rm){ Object.keys(rm).forEach(function(k){ if(!(k in _colKind)){ _colKind[k]=rm[k].kind; _colEnt[k]=rm[k].ent; _allCols.push(k); } _present[rm[k].kind]=1; }); });
-  var _KORD=["model","schema","store","endpoint","component","hook","module","route","web","middleware","type","external"];
+  var _KORD=["model","schema","store"];
   var _kinds=_KORD.filter(function(k){return _present[k];}).concat(Object.keys(_present).filter(function(k){return _KORD.indexOf(k)<0;}));
-  // kind flags — persisted per viewer; model ON by default, every other present kind OFF (toggle to add its columns)
-  var _flags=window.__uniJdKinds||{}; try{ if(!window.__uniJdKinds){ var _fs=window.localStorage.getItem("gabe:universe:jdKinds2"); if(_fs) _flags=JSON.parse(_fs)||{}; } }catch(e){}
-  _kinds.forEach(function(kd){ if(!(kd in _flags)) _flags[kd]=true; }); window.__uniJdKinds=_flags;   // all resource kinds ON by default so a step's from/to shows on the right (operator)
+  // kind flags — data carriers, all ON by default; persisted per viewer (new key: the roster changed to data-only)
+  var _flags=window.__uniJdKinds||{}; try{ if(!window.__uniJdKinds){ var _fs=window.localStorage.getItem("gabe:universe:jdKinds3"); if(_fs) _flags=JSON.parse(_fs)||{}; } }catch(e){}
+  _kinds.forEach(function(kd){ if(!(kd in _flags)) _flags[kd]=true; }); window.__uniJdKinds=_flags;
 
   var jg='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>';
   var meta=[WALK.steps.length+" steps", (j.ents&&j.ents.length?j.ents.length+" entities":""), (_fe?_fe+" frontend":""), (_be?_be+" backend":""), (j.corpus||"")].filter(Boolean).join(" · ");
@@ -4540,7 +4547,7 @@ window.__uniJrnDetail=function(){
     WALK.steps.forEach(function(id,i){ var n=NIDS[id]; if(!n) return;
       var ic=(typeof svgInline==="function")?svgInline(n.kind, KC[n.kind]||n.col||"#9ecbff", 16):"";
       var entC=((typeof ENT!=="undefined"&&ENT[n.ent])||"#4a5568"), sd=_stepData(n);
-      body+='<div class="jdstep'+(i===WALK.i?" on":"")+'" data-si="'+i+'" style="--ec:'+entC+'"><span class="jdnum">'+(i+1)+'</span><span class="jdico">'+ic+'</span>'
+      body+='<div class="jdstep'+(i===WALK.i?" on":"")+'" data-si="'+i+'" style="--ec:'+entC+'"><span class="jdnum"><b>'+(i+1)+'</b></span><span class="jdico">'+ic+'</span>'
         +'<div class="jdmain"><b>'+_esc(n.label||id)+'</b><i>'+_esc(n.kind||"")+(n.fe?" · frontend":" · backend")+'</i></div>'
         +'<div class="jdenc"><div class="jdencE" title="entity"><span class="jdentdot" style="background:'+entC+'"></span><span class="jdentnm">'+_esc(_entLbl(n.ent))+'</span></div><div class="jdencC" title="cluster">'+_esc(n.sub||"—")+'</div></div>'
         +'<div class="jdopc" title="operation">'+_dataHTML(sd)+'</div>'
@@ -4557,7 +4564,7 @@ window.__uniJrnDetail=function(){
     ov.appendChild(_rz);   // resizer survives the innerHTML rebuild
     // flag chips → toggle the kind, persist, re-render the matrix in place
     [].forEach.call(ov.querySelectorAll(".jdflag"), function(b){ b.onclick=function(){ var kd=b.getAttribute("data-kd"); _flags[kd]=!_flags[kd];
-      try{ window.localStorage.setItem("gabe:universe:jdKinds2", JSON.stringify(_flags)); }catch(e){} _render(); }; });
+      try{ window.localStorage.setItem("gabe:universe:jdKinds3", JSON.stringify(_flags)); }catch(e){} _render(); }; });
     // a step row → jump the graph walk to that step; the overlay STAYS open so you can step + watch the matrix
     [].forEach.call(ov.querySelectorAll(".jdstep[data-si]"), function(r){ r.onclick=function(){ var i=+r.getAttribute("data-si");
       if(typeof WALK!=="undefined"){ WALK.i=i; try{ _walkGo(0); }catch(e){} try{ window.__uniJdSync&&window.__uniJdSync(); }catch(e){} } }; });
