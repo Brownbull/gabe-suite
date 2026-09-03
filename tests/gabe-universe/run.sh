@@ -1042,7 +1042,7 @@ check('class="jdcols"' in page and '#uni-jrnref .jdcols, #uni-jrnref .jdstep{ di
 check('TRANSITIVE data reach' in page and '.cell.ind{' in page and 'jdopc{ position:sticky; left:368px' in page and '_HOP={calls:1' in page,
       "the transitive call-chain reach (indirect cells / .cell.ind style) or the operation-column freeze regressed")
 # journey matrix KIND FLAGS + diagonal headers + kind icon + no legend (operator 2026-09-03)
-check('class="jdflags"' in page and 'class="jdflag' in page and 'data-kd="' in page and 'gabe:universe:jdKinds4' in page and 'data-kd="function"' not in page and 'var _DK={model:1, schema:1, store:1};' in page and 'class="jdmhn"' in page and 'color:var(--mc' in page and 'class="jdmhk"' in page and 'pop.className="jdcolpop"' in page and '.jdcolpop{' in page and 'function _jdColPop(' in page and 'function _jdCellPop(' in page and 'class="jdhl"' in page and '.jdmh.jdcol-hot{' in page and '.jdcols .jdhl{' in page and 'var _OPC={read:' in page and '.jdcolpop .cpsep{' in page and '_snCache' in page and '_HOP={calls:1' in page and 'class="jdmxleg"' not in page,
+check('class="jdflags"' in page and 'class="jdflag' in page and 'data-kd="' in page and 'gabe:universe:jdKinds4' in page and 'data-kd="function"' not in page and 'var _DK={model:1, schema:1, store:1};' in page and 'class="jdmhn"' in page and 'color:var(--mc' in page and 'class="jdmhk"' in page and 'pop.className="jdcolpop"' in page and '.jdcolpop{' in page and 'function _jdColPop(' in page and 'function _jdCellPop(' in page and 'var _COMPOSE={route:1, module:1};' in page and 'var _FANOUT=8;' in page and 'function _jrnRouteAnchor(' in page and 'fe.unshift(_anc)' in page and '.jdstep .jdico::after' in page and 'class="jdhl"' in page and '.jdmh.jdcol-hot{' in page and '.jdcols .jdhl{' in page and 'var _OPC={read:' in page and '.jdcolpop .cpsep{' in page and '_snCache' in page and '_HOP={calls:1' in page and 'class="jdmxleg"' not in page,
       "the matrix kind-flags (jdflag/jdKinds persist), diagonal headers (rotate -45), the per-column kind icon (jdmhk), or the legend-removal regressed")
 # journey overlay RESIZER (operator 2026-09-03): a left-edge handle drags the panel width, double-click resets.
 check('_rz.className="jdrz"' in page and '#uni-jrnref .jdrz{' in page and 'cursor:ew-resize' in page and 'removeItem("gabe:universe:jrnLeft")' in page and 'setItem("gabe:universe:jrnLeft"' in page,
@@ -1486,8 +1486,10 @@ const { chromium } = require(process.argv[3]);
     const hh=document.querySelector('#uni-jrnref .jdmh.jdcol-hot'), hc=document.querySelector('#uni-jrnref .jdmx.jdcol-hot');
     const titleHot=!!hh && getComputedStyle(hh).backgroundColor!=='rgba(0, 0, 0, 0)';
     const cellClean=!hc || getComputedStyle(hc).backgroundColor==='rgba(0, 0, 0, 0)';
+    const r0=ov.querySelector('.jdstep[data-si="0"]'); const row0Lit=r0?r0.querySelectorAll('.jdmx .cell').length:-1;   // DE-FLOOD: a composition root lights only what IT touches (was 83 of 85)
     if(document.getElementById('uni-jrnref')) window.__uniJrnDetail();
-    return { journey:j.name, storeCols, storeFlagOn, litStore, iconInline, titleHot, cellClean };
+    const j2=js.find(x=>/Initial setup/i.test(x.name||'')); let anchorKind=null; if(j2){ window.__uniJrnStart(j2.cid); const n0=NIDS[WALK.steps[0]]; anchorKind=n0?n0.kind:null; }   // JOURNEY STARTS AT A VIEW: the route leads when one is in reach
+    return { journey:j.name, storeCols, storeFlagOn, litStore, iconInline, titleHot, cellClean, row0Lit, anchorKind };
   }).catch(e=>({err:String(e)}));
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
@@ -1540,7 +1542,7 @@ const { chromium } = require(process.argv[3]);
   const jd=jrnDetail, jrnDetailOk = jd && !jd.err && jd.clickable && jd.steps>0 && jd.stepsMatch && jd.groups===0 && jd.cols===1 && jd.colsSticky && jd.tinted===jd.steps && jd.opcs===jd.ops && jd.flows===jd.steps && jd.fromTo>0 && jd.icons===jd.steps
     && jd.entDots===jd.steps && jd.clus===jd.steps && jd.ops>0 && jd.tgts>0 && jd.fields>0 && jd.rels>0 && jd.flush && jd.aligned && jd.resizeOk
     && jd.matrixOk && jd.frozenOk && jd.walkSyncOk && jd.flagsOk && jd.opcFrozen && jd.indirect>0;
-  const sc=storeCheck, storeOk = sc && !sc.err && sc.storeCols>=1 && sc.storeFlagOn && sc.litStore>=1 && sc.iconInline && sc.titleHot && sc.cellClean;
+  const sc=storeCheck, storeOk = sc && !sc.err && sc.storeCols>=1 && sc.storeFlagOn && sc.litStore>=1 && sc.iconInline && sc.titleHot && sc.cellClean && sc.row0Lit>=0 && sc.row0Lit<=5 && sc.anchorKind==='route';
   const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk && focusOk && keyOk && legRefOk && jrnDetailOk && storeOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
   else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'fcbOk='+fcbOk+' '+JSON.stringify(fcb), 'focusOk='+focusOk+' click='+JSON.stringify(clickFocus)+' tier='+JSON.stringify(afterTier), 'keyOk='+keyOk+' '+JSON.stringify(keyReg), 'legRefOk='+legRefOk+' '+JSON.stringify(legRef).slice(0,600), 'jrnDetailOk='+jrnDetailOk+' '+JSON.stringify(jrnDetail), 'storeOk='+storeOk+' '+JSON.stringify(storeCheck), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }

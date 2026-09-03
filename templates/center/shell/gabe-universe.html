@@ -838,6 +838,8 @@
   #uni-jrnref .jdcols .jdnum, #uni-jrnref .jdcols .jdico, #uni-jrnref .jdcols .jdmain, #uni-jrnref .jdcols .jdenc, #uni-jrnref .jdcols .jdopc{ z-index:6; align-self:stretch !important; display:flex; flex-direction:column; justify-content:flex-end; padding-bottom:9px; background:var(--panel) !important; }   /* full-height opaque + text bottom-aligned like the from/to header */
   /* the hardcoded sticky-left offsets don't perfectly match rendered column widths → a sub-pixel gap lets matrix headers peek between the frozen columns; a panel shadow to the right bridges it (not jdopc — it owns the divider to the matrix) (operator 2026-09-03) */
   #uni-jrnref .jdcols .jdnum, #uni-jrnref .jdcols .jdico, #uni-jrnref .jdcols .jdmain, #uni-jrnref .jdcols .jdenc{ box-shadow:2px 0 0 0 var(--panel); }
+  /* BODY rows carry the same seam — a 2px ::after to the right with background:inherit (the cell's OWN tinted layered bg, so hover/selected rows stay uniform); only on cells without overflow:hidden, which would clip it (operator 2026-09-03) */
+  #uni-jrnref .jdstep .jdnum::after, #uni-jrnref .jdstep .jdico::after, #uni-jrnref .jdstep .jdmain::after{ content:""; position:absolute; top:0; bottom:0; right:-2px; width:2px; background:inherit; pointer-events:none; }
   #uni-jrnref .jdcols{ position:sticky; top:0; z-index:5; margin:0; padding:9px 6px 0;
     background:var(--panel); border-bottom:1px solid var(--line); font:700 9px/1 var(--font-ui);
     text-transform:uppercase; letter-spacing:.09em; color:var(--accent); }
@@ -2734,6 +2736,25 @@ function _jrnFeLeg(carriers){ var cs={}; carriers.forEach(function(id){ cs[id]=1
   FL.forEach(function(l){ if((l.rel==="uses"||l.rel==="renders"||l.rel==="fecall"||l.rel==="reads") && scr[lid(l.target)]) use[lid(l.source)]=1; });   // fecall/reads too: a fetching MODULE or store has callers, not renderers
   Object.keys(scr).forEach(function(id){ delete use[id]; });               // a screen is a screen, never doubled as its own user
   return { screens:Object.keys(scr).sort(), users:Object.keys(use).sort() }; }
+// A JOURNEY STARTS AT A VIEW (operator 2026-09-03): the nearest ROUTE that renders/uses/imports its way down to the
+// frontend leg (≤3 hops up the in-edges) leads the walk. Screen-like routes win (`*Page/Screen/View`, under /pages/ or
+// /features/); route CONFIG files (router.* / routes.*) are skipped — a router table is not a screen. Idiom rules only,
+// never a project name-list. Honest-empty: no route in reach → the leg starts as before. Measured 2026-09-03 on the
+// example: 29 of 113 journeys anchor — the rest are severed by pascal_no_jsx `module` pieces that carry no `renders`
+// chain (see the classification analysis).
+function _jrnRouteAnchor(ids){ if(typeof links==="undefined"||!ids.length) return null;
+  var T=function(x){ return (x&&x.id)||x; }, dst={};
+  for(var q=0;q<links.length;q++){ var l=links[q]; if(l.rel!=="renders"&&l.rel!=="uses"&&l.rel!=="imports"&&l.rel!=="mounts") continue;
+    var t=T(l.target); (dst[t]=dst[t]||[]).push(T(l.source)); }
+  var isCfg=function(n){ return /(^|\/)(router|routes)\.[jt]sx?(#|$)/.test(n.file||n.id||""); };
+  var isScreen=function(n){ return /(Page|Screen|View)$/.test(n.label||"") || /\/(pages|features)\//.test(n.file||n.id||""); };
+  var seen={}, fr=ids.slice(), best=null; ids.forEach(function(i){ seen[i]=1; });
+  for(var d=0; d<=3 && fr.length; d++){ var nx=[];
+    for(var i=0;i<fr.length;i++){ var n=NIDS[fr[i]];
+      if(n&&n.kind==="route"&&!isCfg(n)){ if(isScreen(n)) return n.id; if(!best) best=n.id; }
+      (dst[fr[i]]||[]).forEach(function(s){ if(!seen[s]){ seen[s]=1; nx.push(s); } }); }
+    fr=nx; }
+  return best; }
 window.__uniJrnStart=function(cid){ var p=document.getElementById("jrn"); if(p) p.style.display="none";
   if(!cid){ __uniHLClear(); return; }
   var j=_jrnCollect().filter(function(x){ return x.cid===cid; })[0]; if(!j||!j.carriers.length) return;
@@ -2743,6 +2764,7 @@ window.__uniJrnStart=function(cid){ var p=document.getElementById("jrn"); if(p) 
   // (the old visN filter emptied the leg at T1, where hooks are hidden → journeys started at the endpoint).
   var fe=j.fe?j.fe.users.concat(j.fe.screens).filter(function(id){
     return !!(NIDS[id] || (_CAPST&&_CAPST.byPiece[id]&&_fieldN(id))); }):[];
+  var _anc=_jrnRouteAnchor(fe); if(_anc){ var _ai=fe.indexOf(_anc); if(_ai>=0) fe.splice(_ai,1); fe.unshift(_anc); }   // the view leads
   if((j.bk||j.wf) && window.__uniKindState && window.__uniSetKindState){   // the chain's steps are fns — an OFF function layer would make every step dead
     var _fs=__uniKindState["function"]||(typeof _kindDefault==="function"?_kindDefault("function"):"all");
     if(_fs==="off") __uniSetKindState("function","all"); }
@@ -4525,24 +4547,36 @@ window.__uniJrnDetail=function(){
   // data is the STORES it reads + the models/schemas behind the endpoints it fetches (operator 2026-09-03).
   var _DK={model:1, schema:1, store:1};
   var _HOP={calls:1, fecall:1, bridge:1, fetches:1, handler:1, uses:1};   // walk these to reach the data behind a call/fetch/hook
+  var _COMPOSE={route:1, module:1};   // composition roots — they wire pieces together; their data is the following rows', not theirs
+  var _FANOUT=8;                       // …and any step using ≥8 hooks is a composition root too, whatever its kind (operator 2026-09-03)
   function _rolesOf(n){ var m={};
     function add(o, role, indirect){ if(!o||!_DK[o.kind]) return;   // DATA carriers only
       var lbl=o.label||o.id, cur=m[lbl];
       if(cur && !cur.indirect && indirect) return;   // a DIRECT data touch outranks a transitive one
       role=(cur&&cur.role&&cur.role!==role&&cur.role!=="self")?"both":role;
       m[lbl]={kind:o.kind, ent:o.ent||null, indirect:!!indirect, role:role}; }
-    function scan(id, indirect){ var ls=_srcIdx[id]||[];
+    function scan(id, indirect){ var ls=_srcIdx[id]||[], hit=0;
       for(var q=0;q<ls.length;q++){ var l=ls[q], role=_INREL[l.rel]||_OUTREL[l.rel]; if(!role) continue;
         var tid=(l.target&&l.target.id)||l.target;   // force-graph rewrites link.target to a NODE OBJECT after the sim runs — normalize to its id (matches the transitive walk below), else NIDS[object] misses every store/schema
-        add(NIDS[tid]||(typeof _fnById==="function"?_fnById(tid):null), role, indirect); } }
+        var o=NIDS[tid]||(typeof _fnById==="function"?_fnById(tid):null); if(o&&_DK[o.kind]) hit++;
+        add(o, role, indirect); }
+      return hit; }   // hit = this node touches data itself → the walk stops here (its downstream is another row's business)
     scan(n.id, false);
     // TRANSITIVE data reach — walk calls/fetches/handler (depth 3) so a component reaches the data behind the
     // endpoint it fetches (component → fetch → endpoint → model), marked INDIRECT (outlined, not filled).
+    // DE-FLOODED (operator 2026-09-03 — a container lit 83 of 85 columns, 1 direct): a step shows what IT touches.
+    //   · `uses` (its hooks) is followed only from the step itself, never from a node reached transitively;
+    //   · a COMPOSITION ROOT — a route, a module, or any step using ≥ _FANOUT hooks — never follows `uses` at all
+    //     (its hooks are the following rows; measured: the container uses 32 hooks — that was the flood engine);
+    //   · a node that yields a data touch is not expanded further (first data-touching layer).
+    var usesN=0; (_srcIdx[n.id]||[]).forEach(function(l){ if(l.rel==="uses") usesN++; });
+    var noUses=!!_COMPOSE[n.kind] || usesN>=_FANOUT, depthMax=(n.kind==="route")?0:3;   // a view composes; nothing transitive
     var seen={}; seen[n.id]=1; var frontier=[n.id];
-    for(var d=0; d<3; d++){ var next=[];
+    for(var d=0; d<depthMax; d++){ var next=[];
       frontier.forEach(function(id){ (_srcIdx[id]||[]).forEach(function(l){ if(!_HOP[l.rel]) return;
+        if(l.rel==="uses" && (d>0 || noUses)) return;
         var tid=(l.target&&l.target.id)||l.target; if(seen[tid]) return; seen[tid]=1;
-        var o=NIDS[tid]||(typeof _fnById==="function"?_fnById(tid):null); if(o){ scan(tid, true); next.push(tid); } }); });
+        var o=NIDS[tid]||(typeof _fnById==="function"?_fnById(tid):null); if(o){ if(!scan(tid, true)) next.push(tid); } }); });
       frontier=next; }
     if(_DK[n.kind]){ if(!m[n.label]) m[n.label]={kind:n.kind, ent:n.ent||null, role:"self"}; }
     return m; }
