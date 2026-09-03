@@ -1032,12 +1032,12 @@ check('class="jdstep' in page and 'data-si="' in page and 'WALK.i=i; try{ _walkG
 # journey-detail COLUMNS + deterministic DATA semantics (operator): the entity-dot + cluster columns, and a DATA
 # block — op badge (from endpoint method / function role) · read/write model TARGETS (reads_from/writes_to/
 # fnreads/fnwrites edges) · structure FIELDS (det.cols) · gate CONDITION (evaluates …).
-check('function _stepData(n){' in page and 'function _dataHTML(sd){' in page and 'function _flowHTML(sd){' in page and 'class="jdentdot"' in page and 'class="jdclu"' in page and 'class="jdopc"' in page and 'class="jddata jdflow"' in page and '"fnwrites","writes_to"' in page and 'op="guards"; opk="gate"; note="evaluates "' in page,
-      "the journey-detail entity/cluster columns, the OPERATION column, or the deterministic FROM → TO data column (op/targets/fields/gate condition) are gone")
+check('function _stepData(n){' in page and 'function _dataHTML(sd){' in page and 'function _sideHTML(arr){' in page and 'function _fieldsHTML(sd){' in page and 'class="jdentdot"' in page and 'class="jdclu"' in page and 'class="jdopc"' in page and 'class="jdfrom"' in page and 'class="jdto"' in page and '"fnwrites","writes_to"' in page and 'op="guards"; opk="gate"; note="evaluates "' in page,
+      "the journey-detail entity/cluster columns, the OPERATION column, or the deterministic FROM / TO data columns (op/targets/fields/gate condition) are gone")
 # journey-detail COLUMN HEADER + entity-tinted rows (operator 2026-09-03): the entity is a column, so the per-entity
 # group rows are gone; ONE sticky header names every column; each row carries its entity color as --ec.
-check('class="jdcols"' in page and '.jdcols{ position:sticky; top:0;' in page and 'class="jdgrp"' not in page and 'style="--ec:' in page and 'var(--ec, transparent) 9%' in page and 'function _srcsOf(id, rels){' in page and 'function _feEndpoints(id){' in page,
-      "the journey-detail sticky column header / entity-tinted rows / the incoming-edge (FROM) resolver are gone, or the retired entity group rows came back")
+check('class="jdcols"' in page and '#uni-jrnref .jdcols, #uni-jrnref .jdstep{ display:grid;' in page and 'background:var(--panel);' in page and 'padding:0 18px 22px' in page and 'class="jdgrp"' not in page and 'style="--ec:' in page and 'var(--ec, transparent) 9%' in page and 'function _srcsOf(id, rels){' in page and 'function _feEndpoints(id){' in page,
+      "the journey-detail GRID layout (header+rows share one template) / the FLUSH opaque sticky header (body padding-top:0) / entity-tinted rows / the incoming-edge (FROM) resolver are gone, or the retired entity group rows came back")
 # fleet-side tier config pills (control-system phase 3)
 check('pillHTML("tier"' in page and 'fcPill.className="pill fcpill"' in page and 'entPane.unshift(tierGrp)' in page,
       "the fleet Entity pane's tier + fold + component-class pills are gone")
@@ -1400,16 +1400,23 @@ const { chromium } = require(process.argv[3]);
     const entDots=all.filter(x=>x.querySelector('.jdent .jdentdot')).length, clus=all.filter(x=>x.querySelector('.jdclu')).length;
     const ops=all.filter(x=>x.querySelector('.jdop')).length, tgts=all.filter(x=>x.querySelector('.jdtgt')).length;
     const fields=all.filter(x=>x.querySelector('.jdfields')).length, gates=all.filter(x=>x.querySelector('.jdop-gate')).length;
-    const opcs=all.filter(x=>x.querySelector('.jdopc .jdop')).length, flows=all.filter(x=>x.querySelector('.jdflow .jdarrow')).length,
-          fromTo=all.filter(x=>x.querySelectorAll('.jdflow .jdtgt').length>0).length;
+    const opcs=all.filter(x=>x.querySelector('.jdopc .jdop')).length, flows=all.filter(x=>x.querySelector('.jdfrom')&&x.querySelector('.jdto')).length,
+          fromTo=all.filter(x=>x.querySelectorAll('.jdfrom .jdtgt, .jdto .jdtgt').length>0).length;
     const bd=ov.querySelector('.jdbody'); const noHOverflow=!(bd.scrollWidth>bd.clientWidth+1);
+    // FLUSH header (operator): body has no top padding, so the sticky header's top edge meets the body's top —
+    // scrolled rows cannot show through above it. Assert the pixel gap is ~0.
+    const hcell=ov.querySelector('.jdcols'), flush=(bd.getBoundingClientRect().top - hcell.getBoundingClientRect().top) < 1.5;
+    // GRID ALIGNMENT (operator): a header column and its row column must share the SAME left edge (flex drifted).
+    const hc=[].slice.call(ov.querySelectorAll('.jdcols>*')).map(e=>Math.round(e.getBoundingClientRect().left));
+    const r0=all[0], rc=[r0.querySelector('.jdnum'),r0.querySelector('.jdico'),r0.querySelector('.jdmain'),r0.querySelector('.jdent'),r0.querySelector('.jdclu'),r0.querySelector('.jdopc'),r0.querySelector('.jdfrom'),r0.querySelector('.jdto')].map(e=>e?Math.round(e.getBoundingClientRect().left):-1);
+    const aligned=hc.length===rc.length && hc.every((x,k)=>Math.abs(x-rc[k])<=1);
     const s=ov.querySelector('.jdstep[data-si="2"]'); if(s) s.onclick();
     const closed=!document.getElementById('uni-jrnref'), walkI=WALK.i;
     // Esc/backdrop path: re-open then close via the toggle so nothing bleeds forward
     if(document.querySelector('#jrnpill .wname')) document.querySelector('#jrnpill .wname').onclick();
     if(document.getElementById('uni-jrnref')) window.__uniJrnDetail();
     return { clickable, nsteps, steps, groups, icons, stepsMatch:(steps===nsteps), walkedToStep:(closed && walkI===2),
-      entDots, clus, ops, tgts, fields, gates, noHOverflow, cols, colsSticky, tinted, opcs, flows, fromTo };
+      entDots, clus, ops, tgts, fields, gates, noHOverflow, cols, colsSticky, tinted, opcs, flows, fromTo, flush, aligned };
   }).catch(e=>({err:String(e)}));
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
@@ -1460,7 +1467,7 @@ const { chromium } = require(process.argv[3]);
   // the journey-detail overlay opens from the walk-bar name, lists every step (icon + entity groups), and a
   // step row walks the graph to it + closes.
   const jd=jrnDetail, jrnDetailOk = jd && !jd.err && jd.clickable && jd.steps>0 && jd.stepsMatch && jd.groups===0 && jd.cols===1 && jd.colsSticky && jd.tinted===jd.steps && jd.opcs===jd.ops && jd.flows===jd.steps && jd.fromTo>0 && jd.icons===jd.steps && jd.walkedToStep
-    && jd.entDots===jd.steps && jd.clus===jd.steps && jd.ops>0 && jd.tgts>0 && jd.fields>0 && jd.noHOverflow;
+    && jd.entDots===jd.steps && jd.clus===jd.steps && jd.ops>0 && jd.tgts>0 && jd.fields>0 && jd.noHOverflow && jd.flush && jd.aligned;
   const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk && focusOk && keyOk && legRefOk && jrnDetailOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
   else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'fcbOk='+fcbOk+' '+JSON.stringify(fcb), 'focusOk='+focusOk+' click='+JSON.stringify(clickFocus)+' tier='+JSON.stringify(afterTier), 'keyOk='+keyOk+' '+JSON.stringify(keyReg), 'legRefOk='+legRefOk+' '+JSON.stringify(legRef).slice(0,600), 'jrnDetailOk='+jrnDetailOk+' '+JSON.stringify(jrnDetail), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }

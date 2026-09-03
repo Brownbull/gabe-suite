@@ -810,35 +810,41 @@
   #uni-jrnref .jdsub{ font:400 11px/1.3 var(--font-ui); color:var(--muted); }
   #uni-jrnref .jdclose{ margin-left:auto; font:400 17px/1 var(--font-ui); color:var(--muted); background:none; border:1px solid var(--line); border-radius:7px; width:28px; height:28px; cursor:pointer; }
   #uni-jrnref .jdclose:hover{ color:var(--ink); border-color:var(--accent); }
-  #uni-jrnref .jdbody{ flex:1; min-height:0; overflow-y:auto; padding:12px 18px 22px; max-width:1180px; }
+  #uni-jrnref .jdbody{ flex:1; min-height:0; overflow-y:auto; padding:0 18px 22px; max-width:1180px; }
   /* the COLUMN HEADER — one row naming every column, pinned to the top of the scrolling list */
-  #uni-jrnref .jdcols{ position:sticky; top:0; z-index:2; display:flex; align-items:center; gap:11px; padding:6px 8px 7px; margin:-12px -18px 4px; padding-left:26px; padding-right:26px;
-    background:var(--panel-bg, var(--bg)); border-bottom:1px solid var(--line); font:700 9px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.09em; color:var(--accent); }
-  #uni-jrnref .jdcols .jdnum{ height:auto; border:none; background:none; color:var(--accent); font:700 9px/1 var(--font-ui); justify-content:flex-start; }
-  #uni-jrnref .jdcols .jdmain, #uni-jrnref .jdcols .jdent, #uni-jrnref .jdcols .jdclu, #uni-jrnref .jdcols .jdopc, #uni-jrnref .jdcols .jddata{ font:inherit; color:inherit; margin-top:0; }
+  /* header row + every step share ONE grid template → columns ALWAYS align (flex measured each cell
+     independently and drifted — operator). FROM · TO are two columns; a model's fields wrap under them. */
+  #uni-jrnref .jdcols, #uni-jrnref .jdstep{ display:grid;
+    grid-template-columns:26px 22px minmax(92px,1.3fr) 118px 88px 104px minmax(0,1fr) minmax(0,1fr);
+    column-gap:11px; row-gap:2px; align-items:start; }
+  #uni-jrnref .jdcols{ position:sticky; top:0; z-index:2; margin:0; padding:9px 8px;
+    background:var(--panel); border-bottom:1px solid var(--line); font:700 9px/1 var(--font-ui);
+    text-transform:uppercase; letter-spacing:.09em; color:var(--accent); }
+  #uni-jrnref .jdcols>*{ font:inherit !important; color:inherit !important; margin:0 !important; background:none !important; border:none !important; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; align-self:center; }
   /* the step is now a ROW OF COLUMNS: # · icon · identity(flex) · ENTITY · CLUSTER · DATA block — aligned to the top */
-  #uni-jrnref .jdstep{ display:flex; align-items:flex-start; gap:11px; padding:8px; border-radius:8px; cursor:pointer; border-bottom:1px solid color-mix(in srgb, var(--line) 55%, transparent);
+  #uni-jrnref .jdstep{ padding:8px; border-radius:8px; cursor:pointer; border-bottom:1px solid color-mix(in srgb, var(--line) 55%, transparent);
     background:color-mix(in srgb, var(--ec, transparent) 9%, transparent); }   /* the row wears its ENTITY color, faintly (operator) */
   #uni-jrnref .jdstep:hover{ background:var(--hov-bg); }
   #uni-jrnref .jdstep.on{ background:color-mix(in srgb, var(--accent) 14%, transparent); }
-  #uni-jrnref .jdnum{ flex:none; width:24px; height:24px; margin-top:1px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font:600 11px/1 var(--font-mono); color:var(--muted); border:1px solid var(--line); }
+  #uni-jrnref .jdnum{ width:24px; height:24px; margin-top:1px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font:600 11px/1 var(--font-mono); color:var(--muted); border:1px solid var(--line); }
   #uni-jrnref .jdstep.on .jdnum{ color:#fff; background:var(--accent); border-color:var(--accent); }
-  #uni-jrnref .jdico{ flex:none; width:20px; margin-top:3px; display:flex; align-items:center; justify-content:center; }
-  #uni-jrnref .jdmain{ flex:1 1 auto; min-width:88px; display:flex; flex-direction:column; gap:1px; }
+  #uni-jrnref .jdico{ width:20px; margin-top:3px; display:flex; align-items:center; justify-content:center; }
+  #uni-jrnref .jdmain{ min-width:0; display:flex; flex-direction:column; gap:1px; }
   #uni-jrnref .jdmain b{ font:600 12.5px/1.25 var(--font-ui); color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   #uni-jrnref .jdmain i{ font:400 10.5px/1.3 var(--font-ui); font-style:normal; color:var(--muted); }
   /* ENTITY column — a coloured dot + the entity name */
-  #uni-jrnref .jdent{ flex:0 1 128px; min-width:0; display:flex; align-items:center; gap:6px; font:600 11px/1.3 var(--font-ui); color:var(--ink); margin-top:2px; overflow:hidden; }
+  #uni-jrnref .jdent{ min-width:0; display:flex; align-items:center; gap:6px; font:600 11px/1.3 var(--font-ui); color:var(--ink); margin-top:2px; overflow:hidden; }
   #uni-jrnref .jdstep .jdent{ text-overflow:ellipsis; white-space:nowrap; }
   #uni-jrnref .jdentdot{ flex:none; width:9px; height:9px; border-radius:50%; }
+  #uni-jrnref .jdent .jdentnm{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   /* CLUSTER column */
-  #uni-jrnref .jdclu{ flex:0 1 108px; min-width:0; font:500 10.5px/1.3 var(--font-mono); color:var(--muted); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #uni-jrnref .jdclu{ min-width:0; font:500 10.5px/1.3 var(--font-mono); color:var(--muted); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   /* OPERATION column — the badge (+ a gate's condition) · DATA column — FROM → TO, then fields */
-  #uni-jrnref .jdopc{ flex:0 1 104px; min-width:64px; display:flex; flex-direction:column; gap:3px; }
-  #uni-jrnref .jddata{ flex:1 1 300px; min-width:0; display:flex; flex-direction:column; gap:3px; }
-  #uni-jrnref .jdflowline{ flex-wrap:nowrap; min-width:0; }
-  #uni-jrnref .jdflowline .jdtgt{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
-  #uni-jrnref .jdarrow{ flex:none; color:var(--muted); font:600 11px/1 var(--font-mono); }
+  #uni-jrnref .jdopc{ min-width:0; display:flex; flex-direction:column; gap:3px; align-items:flex-start; }
+  /* FROM · TO — the data path split into two grid columns; a model's fields wrap under them */
+  #uni-jrnref .jdfrom, #uni-jrnref .jdto{ min-width:0; margin-top:1px; display:flex; flex-direction:column; gap:2px; }
+  #uni-jrnref .jdfrom .jdtgt, #uni-jrnref .jdto .jdtgt{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #uni-jrnref .jdextra{ grid-column:7 / -1; min-width:0; margin-top:2px; }
   #uni-jrnref .jddline{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
   #uni-jrnref .jdop{ flex:none; font:700 9px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.05em; padding:3px 7px; border-radius:5px; color:#fff; }
   #uni-jrnref .jdop-read{ background:#22c55e; } #uni-jrnref .jdop-write{ background:#f97316; } #uni-jrnref .jdop-gate{ background:#eab308; color:#1a1400; }
@@ -850,8 +856,9 @@
   #uni-jrnref .jdfields i{ font-style:normal; color:color-mix(in srgb, var(--accent) 75%, var(--muted)); font-weight:600; }
   #uni-jrnref .jdnote{ font:400 10px/1.35 var(--font-ui); color:var(--muted); font-style:italic; }
   #uni-jrnref .jdno{ font:400 11px/1 var(--font-ui); color:var(--muted); }
-  @media (max-width:1080px){ #uni-jrnref .jdclu{ display:none; } }
-  @media (max-width:900px){ #uni-jrnref .jdent{ flex-basis:96px; } #uni-jrnref .jddata{ flex-basis:220px; } #uni-jrnref .jdopc{ flex-basis:88px; } }
+  @media (max-width:1080px){ #uni-jrnref .jdcols, #uni-jrnref .jdstep{ grid-template-columns:26px 22px minmax(90px,1.2fr) 110px 96px minmax(0,1fr) minmax(0,1fr); }
+    #uni-jrnref .jdclu{ display:none; } #uni-jrnref .jdextra{ grid-column:6 / -1; } }
+  @media (max-width:820px){ #uni-jrnref .jdcols, #uni-jrnref .jdstep{ grid-template-columns:24px 20px minmax(80px,1.1fr) 92px 92px minmax(0,1fr) minmax(0,1fr); } }
 </style></head><body>
 <nav class="side">
   <div class="brand">
@@ -4414,10 +4421,8 @@ window.__uniJrnDetail=function(){
     if(sd.note){ h+='<div class="jdnote">'+_esc(sd.note.length>96?sd.note.slice(0,94)+"…":sd.note)+'</div>'; }
     return h; }
   function _sideHTML(arr){ if(!arr||!arr.length) return '<span class="jdno">—</span>'; return '<span class="jdtgt">'+arr.slice(0,3).map(_esc).join(" · ")+(arr.length>3?(' <i>+'+(arr.length-3)+'</i>'):'')+'</span>'; }
-  function _flowHTML(sd){ if(!sd.op) return '<span class="jdno">—</span>';
-    var h='<div class="jddline jdflowline">'+_sideHTML(sd.from)+'<span class="jdarrow" title="from → to">→</span>'+_sideHTML(sd.to)+'</div>';
-    if(sd.fields&&sd.fields.length){ h+='<div class="jdfields"><i>'+sd.fields.length+' field'+(sd.fields.length>1?"s":"")+':</i> '+sd.fields.slice(0,6).map(function(c){return _esc(c[0]);}).join(" · ")+(sd.fields.length>6?(' +'+(sd.fields.length-6)):'')+'</div>'; }
-    return h; }
+  function _fieldsHTML(sd){ if(!sd.fields||!sd.fields.length) return "";
+    return '<div class="jdfields"><i>'+sd.fields.length+' field'+(sd.fields.length>1?"s":"")+':</i> '+sd.fields.slice(0,6).map(function(c){return _esc(c[0]);}).join(" · ")+(sd.fields.length>6?(' +'+(sd.fields.length-6)):'')+'</div>'; }
   var jg='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>';
   var meta=[WALK.steps.length+" steps", (j.ents&&j.ents.length?j.ents.length+" entities":""), (_fe?_fe+" frontend":""), (_be?_be+" backend":""), (j.corpus||"")].filter(Boolean).join(" · ");
   var ov=document.createElement("div"); ov.id="uni-jrnref";
@@ -4425,16 +4430,18 @@ window.__uniJrnDetail=function(){
   // COLUMN HEADER (operator): the entity is a column, so no per-entity group rows — one header names every
   // column and stays pinned while the list scrolls; each row wears its entity color as a faint tint.
   var body='<div class="jdbody"><div class="jdcols"><span class="jdnum">#</span><span class="jdico"></span><div class="jdmain">element</div>'
-    +'<div class="jdent">entity</div><div class="jdclu">cluster</div><div class="jdopc">operation</div><div class="jddata jdflow">data · from → to</div></div>';
+    +'<div class="jdent">entity</div><div class="jdclu">cluster</div><div class="jdopc">operation</div><div class="jdfrom">data · from</div><div class="jdto">→ to</div></div>';
   WALK.steps.forEach(function(id,i){ var n=NIDS[id]; if(!n) return;
     var ic=(typeof svgInline==="function")?svgInline(n.kind, KC[n.kind]||n.col||"#9ecbff", 16):"";
     var entC=((typeof ENT!=="undefined"&&ENT[n.ent])||"#4a5568"), sd=_stepData(n);
     body+='<div class="jdstep'+(i===WALK.i?" on":"")+'" data-si="'+i+'" style="--ec:'+entC+'"><span class="jdnum">'+(i+1)+'</span><span class="jdico">'+ic+'</span>'
       +'<div class="jdmain"><b>'+_esc(n.label||id)+'</b><i>'+_esc(n.kind||"")+(n.fe?" · frontend":" · backend")+'</i></div>'
-      +'<div class="jdent" title="entity"><span class="jdentdot" style="background:'+entC+'"></span>'+_esc(_entLbl(n.ent))+'</div>'
+      +'<div class="jdent" title="entity"><span class="jdentdot" style="background:'+entC+'"></span><span class="jdentnm">'+_esc(_entLbl(n.ent))+'</span></div>'
       +'<div class="jdclu" title="cluster">'+_esc(n.sub||"—")+'</div>'
       +'<div class="jdopc" title="operation">'+_dataHTML(sd)+'</div>'
-      +'<div class="jddata jdflow" title="the data path: where the operation\'s input comes from → where its effect lands">'+_flowHTML(sd)+'</div></div>'; });
+      +'<div class="jdfrom" title="where this operation\'s data comes from">'+_sideHTML(sd.from)+'</div>'
+      +'<div class="jdto" title="where this operation\'s data goes">'+_sideHTML(sd.to)+'</div>'
+      +(sd.fields&&sd.fields.length?('<div class="jdextra">'+_fieldsHTML(sd)+'</div>'):"")+'</div>'; });
   body+='</div>';
   ov.innerHTML=head+body; document.body.appendChild(ov);
   // a step row → jump the graph walk to that step, then close (the 3D view follows)
