@@ -1039,7 +1039,7 @@ check('function _stepData(n){' in page and 'function _dataHTML(sd){' in page and
 check('class="jdcols"' in page and '#uni-jrnref .jdcols, #uni-jrnref .jdstep{ display:grid;' in page and 'grid-template-columns:26px 22px 190px 130px 100px 196px 196px;' in page and 'jd-grid' in page and 'class="jdmh"' in page and 'class="jdmx' in page and 'background:var(--panel);' in page and 'padding:0 0 22px' in page and 'class="jdgrp"' not in page and 'class="jdclu"' not in page and 'style="--ec:' in page and 'var(--ec, transparent) 9%' in page and 'function _srcsOf(id, rels){' in page and 'function _feEndpoints(id){' in page,
       "the 7-column GRID (element · entity·cluster · operation · from · to), the FLUSH opaque sticky header, entity-tinted rows, or the incoming-edge resolver are gone; or a retired group-row/standalone-cluster came back")
 # journey matrix KIND FLAGS + diagonal headers + kind icon + no legend (operator 2026-09-03)
-check('class="jdflags"' in page and 'class="jdflag' in page and 'data-kd="' in page and 'gabe:universe:jdKinds' in page and 'transform:rotate(-45deg)' in page and 'class="jdmhk"' in page and 'class="jdmxleg"' not in page,
+check('class="jdflags"' in page and 'class="jdflag' in page and 'data-kd="' in page and 'gabe:universe:jdKinds2' in page and 'data-kd="function"' not in page and 'o.kind==="function"' in page and 'transform:rotate(-45deg)' in page and 'color:var(--mc' in page and 'class="jdmhk"' in page and 'class="jdmxleg"' not in page,
       "the matrix kind-flags (jdflag/jdKinds persist), diagonal headers (rotate -45), the per-column kind icon (jdmhk), or the legend-removal regressed")
 # journey overlay RESIZER (operator 2026-09-03): a left-edge handle drags the panel width, double-click resets.
 check('_rz.className="jdrz"' in page and '#uni-jrnref .jdrz{' in page and 'cursor:ew-resize' in page and 'removeItem("gabe:universe:jrnLeft")' in page and 'setItem("gabe:universe:jrnLeft"' in page,
@@ -1427,12 +1427,15 @@ const { chromium } = require(process.argv[3]);
     // DATA-LINEAGE MATRIX: data-structure columns, filled role cells, horizontally scrollable (operator 2026-09-03)
     const mh=ov.querySelectorAll('.jdmh').length, mxCells=ov.querySelectorAll('.jdstep .jdmx').length, filled=ov.querySelectorAll('.jdmx .cell').length;
     // KIND FLAGS: chips present, model ON by default only, each column carries a kind icon, toggling widens the matrix
-    const flagN=ov.querySelectorAll('.jdflag').length, flagsOn=[].slice.call(ov.querySelectorAll('.jdflag.on')).map(x=>x.getAttribute('data-kd'));
+    const flagKinds=[].slice.call(ov.querySelectorAll('.jdflag')).map(x=>x.getAttribute('data-kd'));
+    const flagN=flagKinds.length, flagsOn=[].slice.call(ov.querySelectorAll('.jdflag.on')).length;
     const mhk=ov.querySelectorAll('.jdmhk svg').length, noLegend=ov.querySelectorAll('.jdmxleg').length===0;
-    const _mhBefore=mh; const _fb=ov.querySelector('.jdflag:not(.on)'); if(_fb) _fb.onclick();
+    const colored=[].slice.call(ov.querySelectorAll('.jdmh')).filter(x=>/--mc:/.test(x.getAttribute('style')||'')).length;
+    const step0cells=(all[0]?all[0].querySelectorAll('.jdmx .cell').length:0);   // a FE component step now shows its from/to on the right
+    const _mhBefore=mh; const _fon=ov.querySelector('.jdflag.on'); if(_fon) _fon.onclick();   // toggle one OFF → columns shrink
     const mhAfter=ov.querySelectorAll('.jdmh').length;
-    const flagsOk = flagN>0 && flagsOn.length===1 && flagsOn[0]==='model' && mhk===_mhBefore && noLegend && mhAfter>_mhBefore;
-    if(_fb) _fb.onclick();   // restore
+    const flagsOk = flagN>0 && flagsOn===flagN && flagKinds.indexOf('function')<0 && mhk===_mhBefore && colored===_mhBefore && noLegend && mhAfter<_mhBefore && step0cells>0;
+    if(_fon) _fon.onclick();   // restore
     const bd2=ov.querySelector('.jdbody'); const scrollableX=bd2.scrollWidth>bd2.clientWidth+2;
     const matrixOk = mh>0 && mxCells===mh*all.length && filled>0 && scrollableX;
     // frozen identity: the element column stays put when scrolled right
