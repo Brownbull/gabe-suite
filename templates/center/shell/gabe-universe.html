@@ -875,7 +875,6 @@
   #uni-jrnref .jdmh:hover{ background:color-mix(in srgb, var(--accent) 12%, transparent); }
   #uni-jrnref .jdmhk{ display:flex; opacity:.95; flex:none; }
   #uni-jrnref .jdmhn{ font:600 8px/1.25 var(--font-ui); color:var(--mc, var(--muted)); text-transform:none; letter-spacing:0; text-align:center; width:46px; display:block; white-space:normal; word-break:normal; overflow-wrap:anywhere; hyphens:auto; max-height:30px; overflow:hidden; position:relative; }
-  #uni-jrnref .jdmhn::after{ content:""; position:absolute; right:0; bottom:0; width:10px; height:10px; background:linear-gradient(to right, transparent, var(--panel)); }
   #uni-jrnref .jdmh.jdcol-hot .jdmhn, #uni-jrnref .jdmh:hover .jdmhn{ color:var(--accent); }
   #uni-jrnref .jdmx{ align-self:stretch; display:flex; align-items:center; justify-content:center; border-left:1px solid color-mix(in srgb, var(--line) 45%, transparent); min-height:28px; }
   #uni-jrnref .jdmx .cell{ width:18px; height:18px; border-radius:4px; display:flex; align-items:center; justify-content:center; font:800 9px/1 var(--font-mono); color:#0c1220; }
@@ -4532,7 +4531,8 @@ window.__uniJrnDetail=function(){
       m[lbl]={kind:o.kind, ent:o.ent||null, indirect:!!indirect, role:role}; }
     function scan(id, indirect){ var ls=_srcIdx[id]||[];
       for(var q=0;q<ls.length;q++){ var l=ls[q], role=_INREL[l.rel]||_OUTREL[l.rel]; if(!role) continue;
-        add(NIDS[l.target]||(typeof _fnById==="function"?_fnById(l.target):null), role, indirect); } }
+        var tid=(l.target&&l.target.id)||l.target;   // force-graph rewrites link.target to a NODE OBJECT after the sim runs — normalize to its id (matches the transitive walk below), else NIDS[object] misses every store/schema
+        add(NIDS[tid]||(typeof _fnById==="function"?_fnById(tid):null), role, indirect); } }
     scan(n.id, false);
     // TRANSITIVE data reach — walk calls/fetches/handler (depth 3) so a component reaches the data behind the
     // endpoint it fetches (component → fetch → endpoint → model), marked INDIRECT (outlined, not filled).
