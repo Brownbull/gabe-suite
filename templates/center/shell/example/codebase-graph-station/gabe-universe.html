@@ -826,14 +826,17 @@
      independently and drifted — operator). FROM · TO are two columns; a model's fields wrap under them. */
   #uni-jrnref .jdcols, #uni-jrnref .jdstep{ display:grid;
     grid-template-columns:26px 22px 190px 130px 100px 196px 196px;   /* default (no matrix); #jd-grid overrides with the element columns */
-    column-gap:11px; row-gap:2px; align-items:start; width:max-content; min-width:100%; }
-  /* FROZEN identity — # · icon · element stay put while you slide right into the matrix (operator 2026-09-03) */
-  #uni-jrnref .jdnum{ position:sticky; left:0; z-index:3; background:color-mix(in srgb, var(--ec, transparent) 9%, var(--panel)); }
-  #uni-jrnref .jdico{ position:sticky; left:37px; z-index:3; background:color-mix(in srgb, var(--ec, transparent) 9%, var(--panel)); }
-  #uni-jrnref .jdmain{ position:sticky; left:70px; z-index:3; background:color-mix(in srgb, var(--ec, transparent) 9%, var(--panel)); box-shadow:1px 0 0 var(--line); }
-  #uni-jrnref .jdstep.on .jdnum, #uni-jrnref .jdstep.on .jdico, #uni-jrnref .jdstep.on .jdmain{ background:color-mix(in srgb, var(--accent) 16%, var(--panel)); }
-  #uni-jrnref .jdcols .jdnum, #uni-jrnref .jdcols .jdico, #uni-jrnref .jdcols .jdmain{ z-index:4; background:var(--panel) !important; }   /* header corner above frozen body cells */
-  #uni-jrnref .jdcols{ position:sticky; top:0; z-index:2; margin:0; padding:9px 6px;
+    column-gap:0; row-gap:2px; align-items:start; width:max-content; min-width:100%; }
+  /* FROZEN LEFT — # · icon · element · entity·cluster · operation stay put while you slide right into the
+     matrix; opaque so nothing shows behind, and UNDER the sticky header when you scroll down (operator 2026-09-03) */
+  #uni-jrnref .jdnum{ position:sticky; left:0; z-index:4; align-self:stretch; background:linear-gradient(0deg, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 0%, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 100%), var(--panel); }
+  #uni-jrnref .jdico{ position:sticky; left:26px; z-index:4; align-self:stretch; background:linear-gradient(0deg, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 0%, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 100%), var(--panel); }
+  #uni-jrnref .jdmain{ position:sticky; left:48px; z-index:4; align-self:stretch; padding-left:2px; background:linear-gradient(0deg, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 0%, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 100%), var(--panel); }
+  #uni-jrnref .jdenc{ position:sticky; left:238px; z-index:4; align-self:stretch; padding-left:6px; background:linear-gradient(0deg, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 0%, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 100%), var(--panel); }
+  #uni-jrnref .jdopc{ position:sticky; left:368px; z-index:4; align-self:stretch; padding-left:6px; background:linear-gradient(0deg, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 0%, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 100%), var(--panel); box-shadow:2px 0 0 var(--line); }
+  #uni-jrnref .jdstep.on .jdnum, #uni-jrnref .jdstep.on .jdico, #uni-jrnref .jdstep.on .jdmain, #uni-jrnref .jdstep.on .jdenc, #uni-jrnref .jdstep.on .jdopc{ background:color-mix(in srgb, var(--accent) 16%, var(--panel)); }
+  #uni-jrnref .jdcols .jdnum, #uni-jrnref .jdcols .jdico, #uni-jrnref .jdcols .jdmain, #uni-jrnref .jdcols .jdenc, #uni-jrnref .jdcols .jdopc{ z-index:6; align-self:stretch !important; display:flex; align-items:flex-end; background:var(--panel) !important; }   /* full-height opaque → covers diagonal labels in its x-range */
+  #uni-jrnref .jdcols{ position:sticky; top:0; z-index:5; margin:0; padding:9px 6px;
     background:var(--panel); border-bottom:1px solid var(--line); font:700 9px/1 var(--font-ui);
     text-transform:uppercase; letter-spacing:.09em; color:var(--accent); }
   #uni-jrnref .jdcols>*{ font:inherit !important; color:inherit !important; margin:0 !important; background:none !important; border:none !important; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; align-self:end; }
@@ -858,15 +861,15 @@
   #uni-jrnref .jdopc{ min-width:0; display:flex; flex-direction:column; gap:3px; align-items:flex-start; }
   /* FROM (input) · TO (output) — each a stack of RELATION-labelled groups (the panel's vocabulary):
      a sub-line names uses/renders/fetches/reads/writes/called-by/read-by … then its targets */
-  #uni-jrnref .jdfrom, #uni-jrnref .jdto{ min-width:0; margin-top:1px; display:flex; flex-direction:column; gap:4px; }
+  #uni-jrnref .jdfrom, #uni-jrnref .jdto{ min-width:0; margin-top:1px; padding-left:8px; display:flex; flex-direction:column; gap:4px; overflow:hidden; }
   #uni-jrnref .jdg{ min-width:0; display:flex; flex-direction:column; }
   #uni-jrnref .jdrel{ font:700 8px/1.4 var(--font-ui); text-transform:uppercase; letter-spacing:.05em; color:color-mix(in srgb, var(--accent) 70%, var(--muted)); }
   #uni-jrnref .jdfrom .jdtgt, #uni-jrnref .jdto .jdtgt{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   #uni-jrnref .jdextra{ grid-column:6 / 8; min-width:0; margin-top:2px; }   /* fields wrap under from·to only, never across the matrix */
   /* ── the DATA-LINEAGE MATRIX — one column per data structure the journey touches; a cell shows the
      structure's ROLE at that step: read (input) · write (output/modified) · both (operator 2026-09-03) ── */
-  #uni-jrnref .jdmh{ position:relative; align-self:stretch; height:118px; overflow:visible !important; border-left:1px solid color-mix(in srgb, var(--line) 55%, transparent); }
-  #uni-jrnref .jdmh span:first-child{ position:absolute; left:9px; bottom:24px; transform-origin:left bottom; transform:rotate(-45deg); white-space:nowrap; font:600 9.5px/1 var(--font-ui); text-transform:none; letter-spacing:0; color:var(--mc, var(--muted)); max-width:150px; overflow:hidden; text-overflow:ellipsis; }
+  #uni-jrnref .jdmh{ position:relative; align-self:stretch; height:150px; overflow:visible; border-left:1px solid color-mix(in srgb, var(--line) 55%, transparent); }
+  #uni-jrnref .jdmh span:first-child{ position:absolute; left:8px; bottom:26px; transform-origin:left bottom; transform:rotate(-45deg); white-space:nowrap; font:600 9.5px/1 var(--font-ui); text-transform:none; letter-spacing:0; color:var(--mc, var(--muted)); max-width:170px; overflow:hidden; text-overflow:ellipsis; }
   #uni-jrnref .jdmh.jdcol-hot span:first-child{ color:var(--accent); }
   #uni-jrnref .jdmhk{ position:absolute; right:3px; bottom:3px; display:flex; opacity:.85; }
   #uni-jrnref .jdmx{ align-self:stretch; display:flex; align-items:center; justify-content:center; border-left:1px solid color-mix(in srgb, var(--line) 45%, transparent); min-height:28px; }
@@ -875,6 +878,10 @@
   #uni-jrnref .jdmx .r-out{ background:#f97316; }       /* write — output / modified */
   #uni-jrnref .jdmx .r-both{ background:linear-gradient(135deg,#22c55e 0 50%,#f97316 50% 100%); }
   #uni-jrnref .jdmx .r-self{ background:#12b886; }      /* the structure's own definition step */
+  /* INDIRECT — reached through the step's call chain, not a direct edge: outlined, not filled */
+  #uni-jrnref .jdmx .cell.ind{ background:transparent !important; box-shadow:inset 0 0 0 1.3px currentColor; }
+  #uni-jrnref .jdmx .cell.ind.r-in{ color:#22c55e; } #uni-jrnref .jdmx .cell.ind.r-out{ color:#f97316; }
+  #uni-jrnref .jdmx .cell.ind.r-both{ color:#a855f7; } #uni-jrnref .jdmx .cell.ind.r-self{ color:#12b886; }
   #uni-jrnref .jdmx.empty{ opacity:.5; }
   #uni-jrnref .jdmx.empty::before{ content:""; width:4px; height:4px; border-radius:50%; background:var(--line); }
   /* current-walk-step column highlight — the touched columns light down the whole journey */
@@ -4479,11 +4486,24 @@ window.__uniJrnDetail=function(){
   // model ON by default) choose which element kinds become columns. (operator 2026-09-03)
   var _INREL={reads_from:"in", fnreads:"in", touches:"in", uses:"in", imports:"in", reads:"in", takes:"in", resp:"in"};
   var _OUTREL={writes_to:"out", fnwrites:"out", renders:"out", fecall:"out", bridge:"out", dispatches:"out", calls:"out", returns:"out"};
-  function _rolesOf(n){ var m={}, ls=_srcIdx[n.id]||[];
-    for(var q=0;q<ls.length;q++){ var l=ls[q], role=_INREL[l.rel]||_OUTREL[l.rel]; if(!role) continue;
-      var o=NIDS[l.target]||(typeof _fnById==="function"?_fnById(l.target):null); if(!o||!o.kind||o.kind==="function") continue;   // functions execute, they don't store — not a matrix column (operator)
-      var lbl=o.label||String(l.target).split("#").pop(), cur=m[lbl];
-      m[lbl]={kind:o.kind, ent:o.ent||null, role:(cur&&cur.role&&cur.role!==role&&cur.role!=="self")?"both":role}; }
+  function _rolesOf(n){ var m={};
+    function add(o, role, indirect){ if(!o||!o.kind||o.kind==="function") return;   // functions execute, not store — never a column (operator)
+      var lbl=o.label||o.id, cur=m[lbl];
+      if(cur && !cur.indirect && indirect) return;   // a DIRECT data touch outranks an indirect (call-chain) one
+      role=(cur&&cur.role&&cur.role!==role&&cur.role!=="self")?"both":role;
+      m[lbl]={kind:o.kind, ent:o.ent||null, indirect:!!indirect, role:role}; }
+    function scan(id, indirect){ var ls=_srcIdx[id]||[];
+      for(var q=0;q<ls.length;q++){ var l=ls[q], role=_INREL[l.rel]||_OUTREL[l.rel]; if(!role) continue;
+        add(NIDS[l.target]||(typeof _fnById==="function"?_fnById(l.target):null), role, indirect); } }
+    scan(n.id, false);
+    // a step that only CALLS other functions has no direct data cells — follow its calls (depth 2) and inherit
+    // the data those callees touch, marked INDIRECT (a step's data reach through its call tree). (operator 2026-09-03)
+    var seen={}; seen[n.id]=1; var frontier=[n.id];
+    for(var d=0; d<2; d++){ var next=[];
+      frontier.forEach(function(id){ (_srcIdx[id]||[]).forEach(function(l){ if(l.rel!=="calls") return;
+        var tid=(l.target&&l.target.id)||l.target; if(seen[tid]) return; seen[tid]=1;
+        var o=NIDS[tid]||(typeof _fnById==="function"?_fnById(tid):null); if(o){ scan(tid, true); if(o.kind==="function") next.push(tid); } }); });
+      frontier=next; }
     if(n.kind==="model"||n.kind==="schema"){ if(!m[n.label]) m[n.label]={kind:n.kind, ent:n.ent||null, role:"self"}; }
     return m; }
   var _rowRoles=WALK.steps.map(function(id){ var n=NIDS[id]; return n?_rolesOf(n):{}; });
@@ -4511,9 +4531,10 @@ window.__uniJrnDetail=function(){
     var _mxHead=_colOrder.map(function(k){ var kd=_colKind[k], ec=((_colEnt[k]&&typeof ENT!=="undefined"&&ENT[_colEnt[k]])||KC[kd]||"#9ab");
       return '<div class="jdmh" data-col="'+_esc(k)+'" style="--mc:'+ec+'" title="'+_esc(k)+' · '+_esc(kd)+(_colEnt[k]?(" · "+_esc(_colEnt[k])):"")+'"><span>'+_esc(k)+'</span><span class="jdmhk">'+(typeof svgInline==="function"?svgInline(kd, ec, 12):"")+'</span></div>'; }).join("");
     function _mxCells(i){ return _colOrder.map(function(k){ var r=_rowRoles[i][k];
-      var ttl=r?(_esc(k)+" — "+(r.role==="in"?"read (input)":r.role==="out"?"written / modified (output)":r.role==="both"?"read + written":"defined here")):"";
+      var base=(r?(r.role==="in"?"read (input)":r.role==="out"?"written / modified (output)":r.role==="both"?"read + written":"defined here"):"");
+      var ttl=r?(_esc(k)+" — "+base+(r.indirect?" · via the call chain (indirect)":"")):"";
       var gl=r?(r.role==="in"?"R":r.role==="out"?"W":r.role==="both"?"RW":"◆"):"";
-      return '<div class="jdmx'+(r?"":" empty")+'" data-col="'+_esc(k)+'">'+(r?('<span class="cell r-'+r.role+'" title="'+ttl+'">'+gl+'</span>'):"")+'</div>'; }).join(""); }
+      return '<div class="jdmx'+(r?"":" empty")+'" data-col="'+_esc(k)+'">'+(r?('<span class="cell r-'+r.role+(r.indirect?" ind":"")+'" title="'+ttl+'">'+gl+'</span>'):"")+'</div>'; }).join(""); }
     var body='<div class="jdbody"><div class="jdcols"><span class="jdnum">#</span><span class="jdico"></span><div class="jdmain">element</div>'
       +'<div class="jdenc">entity · cluster</div><div class="jdopc">operation</div><div class="jdfrom">data · from (input)</div><div class="jdto">→ to (output)</div>'+_mxHead+'</div>';
     WALK.steps.forEach(function(id,i){ var n=NIDS[id]; if(!n) return;
