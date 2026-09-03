@@ -836,6 +836,8 @@
   #uni-jrnref .jdopc{ position:sticky; left:368px; z-index:4; align-self:stretch; padding-left:6px; grid-row:1 / -1; background:linear-gradient(0deg, var(--rowbg) 0%, var(--rowbg) 100%), var(--panel); border-right:1px solid color-mix(in srgb, var(--line) 55%, transparent); }
 
   #uni-jrnref .jdcols .jdnum, #uni-jrnref .jdcols .jdico, #uni-jrnref .jdcols .jdmain, #uni-jrnref .jdcols .jdenc, #uni-jrnref .jdcols .jdopc{ z-index:6; align-self:stretch !important; display:flex; flex-direction:column; justify-content:flex-end; padding-bottom:9px; background:var(--panel) !important; }   /* full-height opaque + text bottom-aligned like the from/to header */
+  /* the hardcoded sticky-left offsets don't perfectly match rendered column widths → a sub-pixel gap lets matrix headers peek between the frozen columns; a panel shadow to the right bridges it (not jdopc — it owns the divider to the matrix) (operator 2026-09-03) */
+  #uni-jrnref .jdcols .jdnum, #uni-jrnref .jdcols .jdico, #uni-jrnref .jdcols .jdmain, #uni-jrnref .jdcols .jdenc{ box-shadow:2px 0 0 0 var(--panel); }
   #uni-jrnref .jdcols{ position:sticky; top:0; z-index:5; margin:0; padding:9px 6px 0;
     background:var(--panel); border-bottom:1px solid var(--line); font:700 9px/1 var(--font-ui);
     text-transform:uppercase; letter-spacing:.09em; color:var(--accent); }
