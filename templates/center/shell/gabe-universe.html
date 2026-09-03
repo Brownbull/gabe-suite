@@ -829,23 +829,22 @@
     column-gap:0; row-gap:2px; align-items:start; width:max-content; min-width:100%; }
   /* FROZEN LEFT — # · icon · element · entity·cluster · operation stay put while you slide right into the
      matrix; opaque so nothing shows behind, and UNDER the sticky header when you scroll down (operator 2026-09-03) */
-  #uni-jrnref .jdnum{ position:sticky; left:0; z-index:4; align-self:stretch; background:linear-gradient(0deg, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 0%, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 100%), var(--panel); }
-  #uni-jrnref .jdico{ position:sticky; left:26px; z-index:4; align-self:stretch; background:linear-gradient(0deg, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 0%, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 100%), var(--panel); }
-  #uni-jrnref .jdmain{ position:sticky; left:48px; z-index:4; align-self:stretch; padding-left:2px; background:linear-gradient(0deg, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 0%, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 100%), var(--panel); }
-  #uni-jrnref .jdenc{ position:sticky; left:238px; z-index:4; align-self:stretch; padding-left:6px; background:linear-gradient(0deg, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 0%, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 100%), var(--panel); }
-  #uni-jrnref .jdopc{ position:sticky; left:368px; z-index:4; align-self:stretch; padding-left:6px; background:linear-gradient(0deg, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 0%, color-mix(in srgb, var(--ec, transparent) 9%, transparent) 100%), var(--panel); box-shadow:6px 0 8px -6px rgba(0,0,0,.5); }
-  #uni-jrnref .jdstep.on .jdnum, #uni-jrnref .jdstep.on .jdico, #uni-jrnref .jdstep.on .jdmain, #uni-jrnref .jdstep.on .jdenc, #uni-jrnref .jdstep.on .jdopc{ background:color-mix(in srgb, var(--accent) 16%, var(--panel)); }
+  #uni-jrnref .jdnum{ position:sticky; left:0; z-index:4; align-self:stretch; grid-row:1 / -1; background:linear-gradient(0deg, var(--rowbg) 0%, var(--rowbg) 100%), var(--panel); }
+  #uni-jrnref .jdico{ position:sticky; left:26px; z-index:4; align-self:stretch; grid-row:1 / -1; background:linear-gradient(0deg, var(--rowbg) 0%, var(--rowbg) 100%), var(--panel); }
+  #uni-jrnref .jdmain{ position:sticky; left:48px; z-index:4; align-self:stretch; padding-left:2px; grid-row:1 / -1; background:linear-gradient(0deg, var(--rowbg) 0%, var(--rowbg) 100%), var(--panel); }
+  #uni-jrnref .jdenc{ position:sticky; left:238px; z-index:4; align-self:stretch; padding-left:6px; grid-row:1 / -1; background:linear-gradient(0deg, var(--rowbg) 0%, var(--rowbg) 100%), var(--panel); }
+  #uni-jrnref .jdopc{ position:sticky; left:368px; z-index:4; align-self:stretch; padding-left:6px; grid-row:1 / -1; background:linear-gradient(0deg, var(--rowbg) 0%, var(--rowbg) 100%), var(--panel); border-right:1px solid color-mix(in srgb, var(--line) 55%, transparent); }
+
   #uni-jrnref .jdcols .jdnum, #uni-jrnref .jdcols .jdico, #uni-jrnref .jdcols .jdmain, #uni-jrnref .jdcols .jdenc, #uni-jrnref .jdcols .jdopc{ z-index:6; align-self:stretch !important; display:flex; flex-direction:column; justify-content:flex-end; padding-bottom:9px; background:var(--panel) !important; }   /* full-height opaque + text bottom-aligned like the from/to header */
   #uni-jrnref .jdcols{ position:sticky; top:0; z-index:5; margin:0; padding:9px 6px;
     background:var(--panel); border-bottom:1px solid var(--line); font:700 9px/1 var(--font-ui);
     text-transform:uppercase; letter-spacing:.09em; color:var(--accent); }
   #uni-jrnref .jdcols>*{ font:inherit !important; color:inherit !important; margin:0 !important; background:none !important; border:none !important; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; align-self:end; }
   /* the step is now a ROW OF COLUMNS: # · icon · identity(flex) · ENTITY · CLUSTER · DATA block — aligned to the top */
-  #uni-jrnref .jdstep{ padding:8px 6px; border-radius:8px; cursor:pointer; isolation:isolate; border-bottom:1px solid color-mix(in srgb, var(--line) 55%, transparent);
-    background:color-mix(in srgb, var(--ec, transparent) 9%, transparent); }   /* the row wears its ENTITY color, faintly (operator) */
-  #uni-jrnref .jdstep:hover{ background:var(--hov-bg); }
-  #uni-jrnref .jdstep:hover .jdnum, #uni-jrnref .jdstep:hover .jdico, #uni-jrnref .jdstep:hover .jdmain, #uni-jrnref .jdstep:hover .jdenc, #uni-jrnref .jdstep:hover .jdopc{ background:linear-gradient(0deg, var(--hov-bg) 0%, var(--hov-bg) 100%), var(--panel); }
-  #uni-jrnref .jdstep.on{ background:color-mix(in srgb, var(--accent) 14%, transparent); }
+  #uni-jrnref .jdstep{ --rowbg:color-mix(in srgb, var(--ec, transparent) 9%, transparent); padding:8px 6px; border-radius:8px; cursor:pointer; isolation:isolate; border-bottom:1px solid color-mix(in srgb, var(--line) 55%, transparent);
+    background:var(--rowbg); }   /* the row wears its ENTITY color, faintly (operator) */
+  #uni-jrnref .jdstep:hover{ --rowbg:color-mix(in srgb, var(--accent) 10%, transparent); }
+  #uni-jrnref .jdstep.on{ --rowbg:color-mix(in srgb, var(--accent) 16%, transparent); }
   #uni-jrnref .jdnum{ display:flex; justify-content:center; align-items:flex-start; padding-top:9px; }
   #uni-jrnref .jdstep .jdnum>b{ width:24px; height:24px; margin-top:1px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font:600 11px/1 var(--font-mono); font-weight:600; color:var(--muted); border:1px solid var(--line); }
   #uni-jrnref .jdstep.on .jdnum>b{ color:#fff; background:var(--accent); border-color:var(--accent); }
@@ -4537,7 +4536,7 @@ window.__uniJrnDetail=function(){
               :(node.det&&node.det.exports)?node.det.exports.map(function(x){return {n:(""+x), t:""};}):[];
     var kindLbl=kd==="model"?"model · a table":kd==="schema"?"schema · a body shape":kd==="store"?"store · FE state (context)":kd;
     var pop=document.createElement("div"); pop.id="jd-colpop"; pop.className="jdcolpop";
-    pop.innerHTML='<div class="cphd">'+(typeof svgInline==="function"?svgInline(kd,ec,15):"")+'<b style="color:'+ec+'">'+_esc(node.label)+'</b></div>'
+    pop.innerHTML='<div class="cphd">'+(typeof svgInline==="function"?svgInline(kd,KC[kd]||ec,15):"")+'<b style="color:'+ec+'">'+_esc(node.label)+'</b></div>'
       +'<div class="cpsub">'+_esc(kindLbl)+(node.ent?(' · <span style="color:'+ec+'">'+_esc(node.ent)+'</span>'):'')+'</div>'
       +(fields.length?('<div class="cpf">'+fields.slice(0,26).map(function(f){ return '<div class="cpfr"><span class="cpfn">'+_esc(f.n)+'</span>'+(f.t?('<span class="cpft">'+_esc(f.t)+'</span>'):'')+'</div>'; }).join("")+(fields.length>26?('<div class="cpmore">+'+(fields.length-26)+' more</div>'):'')+'</div>')
          :'<div class="cpempty">no fields recorded'+(kd==="store"?" — a context; see its exports on the card":"")+'</div>')
@@ -4569,7 +4568,7 @@ window.__uniJrnDetail=function(){
     var _flagHTML=_kinds.map(function(kd){ return '<button class="jdflag'+(_flags[kd]?" on":"")+'" data-kd="'+kd+'" title="'+(_flags[kd]?"hide":"show")+' '+kd+' columns in the matrix">'+(typeof svgInline==="function"?svgInline(kd, KC[kd]||"#9ab", 12):"")+'<span>'+_esc(kd)+'</span></button>'; }).join("");
     var head='<div class="jdhd"><b>'+jg+' '+_esc(j.name||j.cid)+'</b><span class="jdsub">'+_esc(meta)+'</span><span class="jdflags" title="which element kinds appear as matrix columns">'+_flagHTML+'</span><button class="jdclose" title="close (Esc)">✕</button></div>';
     var _mxHead=_colOrder.map(function(k){ var kd=_colKind[k], ec=((_colEnt[k]&&typeof ENT!=="undefined"&&ENT[_colEnt[k]])||KC[kd]||"#9ab");
-      return '<div class="jdmh" data-col="'+_esc(k)+'" style="--mc:'+ec+'"><span class="jdmhk">'+(typeof svgInline==="function"?svgInline(kd, ec, 13):"")+'</span><span class="jdmhn">'+_esc(k)+'</span></div>'; }).join("");
+      return '<div class="jdmh" data-col="'+_esc(k)+'" style="--mc:'+ec+'"><span class="jdmhk">'+(typeof svgInline==="function"?svgInline(kd, KC[kd]||"#9ab", 13):"")+'</span><span class="jdmhn">'+_esc(k)+'</span></div>'; }).join("");
     function _mxCells(i){ return _colOrder.map(function(k){ var r=_rowRoles[i][k];
       var base=(r?(r.role==="in"?"read (input)":r.role==="out"?"written / modified (output)":r.role==="both"?"read + written":"defined here"):"");
       var ttl=r?(_esc(k)+" — "+base+(r.indirect?" · via the call chain (indirect)":"")):"";
@@ -4585,9 +4584,8 @@ window.__uniJrnDetail=function(){
         +'<div class="jdenc"><div class="jdencE" title="entity"><span class="jdentdot" style="background:'+entC+'"></span><span class="jdentnm">'+_esc(_entLbl(n.ent))+'</span></div><div class="jdencC" title="cluster">'+_esc(n.sub||"—")+'</div></div>'
         +'<div class="jdopc" title="operation">'+_dataHTML(sd)+'</div>'
         +'<div class="jdfrom" title="where this operation\'s data comes from (input), grouped by relation">'+_groupsHTML(sd.fromG)+'</div>'
-        +'<div class="jdto" title="where this operation\'s data goes (output), grouped by relation">'+_groupsHTML(sd.toG)+'</div>'
-        +_mxCells(i)
-        +(sd.fields&&sd.fields.length?('<div class="jdextra">'+_fieldsHTML(sd)+'</div>'):"")+'</div>'; });
+        +'<div class="jdto" title="where this operation\'s data goes (output), grouped by relation">'+_groupsHTML(sd.toG)+(sd.fields&&sd.fields.length?_fieldsHTML(sd):"")+'</div>'
+        +_mxCells(i)+'</div>'; });
     body+='</div>';
     ov.innerHTML=head+body;
     var _og=document.getElementById("jd-grid"); if(_og) _og.remove();
