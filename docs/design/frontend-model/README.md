@@ -344,3 +344,6 @@ Gustify @ `3ea8a8af` after the change: promoted 2 · residue 0 · renders 837→
 **Trap recorded:** `universe-build/regen-example.sh` re-assembles `gabe-universe.html` from `parts/` (last touched
 `fa67dee`) and lands it over the template — the station has since been edited directly (10+ commits). Only the four
 feed files were landed by hand; the parts pipeline needs a re-split-or-retire decision before it is run again.
+**Ruled (same day, `8521ba2`): `parts/` RETIRED.** The template is the source of record (`build_center_a3.py` ships it
+to every project); `fill-example.py` rehomes the template into the example; `regen-example.sh` no longer assembles or
+lands onto the template. `--check` after the change: the 4 feeds OK · codebase-graph.html OK · example page OK.
