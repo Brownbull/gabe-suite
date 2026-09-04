@@ -3,12 +3,12 @@ name: gabe-cc-update
 description: "Command-center feature coverage — translate shipped work into its entity's lens card, diagrams, and evidence narration; keep the center regenerating green. Also owns scripts/write-inflight.py, the deterministic in-flight projection the E8 beat tail refreshes (inflight.json + .js, read by the board at view time)."
 when_to_use: "Cover a shipped feature, center status, backfill entity-by-entity, curate proof after a green run — ONLY where docs/site/center/center.config.json exists; elsewhere STOP → /gabe-cc-init."
 metadata:
-  version: 1.7.4
+  version: 1.7.5
 ---
 
 # Gabe Feature — the command center's per-feature ritual
 
-**Usage:** `/gabe-cc-update [<phase>|--range A..B] | status | backfill | curate <artifact-subdir> <shot-nums…> | release [--since <row>]`
+**Usage:** `/gabe-cc-update [<phase>|--range A..B] | status | backfill | curate <artifact-subdir> <shot-nums…> | curate-workflows | release [--since <row>]`
 
 ## Gabe execution contract (E1–E7)
 
@@ -35,6 +35,7 @@ All machinery ships in the suite (`templates/center/` — generators, gate, help
 | Proof curation | `scripts/curate_proof.py <artifact-subdir> <shot-nums…>` |
 | Backfill queue | `scripts/next_feature.py` |
 | Status actionables | `scripts/center_status.py` — the `status` mode's linked findings + `→ next` steps (reads registry/cards/config; prints, gates nothing); `mcp__gabe-map__center_status` runs the SUITE's own copy of this generator against the project — never this installed file (WS-2; byte-identical at install, so a locally edited `scripts/center_status.py` is NOT what the tool relays) — capped at 6,000 chars (`truncated` named), and never triggers a regen of its own |
+| Workflow drafts | `scripts/draft-workflows.py <root> [--json] [--min N]` — the `curate-workflows` mode's drafter (reads the committed c4-graph + workflows.js; writes `docs/site/center/workflows.draft.js`; honest-empty without a center) |
 | Census scaffold | `scripts/scaffold_census.py <root> <slug>` — seeds a valid skeleton workflow census from a card's `# FLOWS` (the census ASK's *author now*; a convenience, not E6-mandatory — absent, the census is hand-authored) |
 | Risk sweep | `scripts/risk_sweep.py <root> <slug>` — the P0–P3 ladder collector (step 6); ranked + capped flags routed through `scripts/disposition.py <root> --defer\|--tackle --flag '<json>'` (the disposition contract) |
 | Shell-JS harness | `scripts/verify_center_chrome.mjs <page.html…\|center-dir>` |
@@ -75,3 +76,20 @@ After a green e2e run: pick the shots that PROVE the claims (selection is the ju
 ## Output contract
 
 Per feature, on completion: a validated `entities.<slug>` block with human-confirmed `test_rx`/globs · a card with zero TODO markers and a `# REVIEWED` stamp · 3 diagrams (or the card states why fewer) · narration + `role:`/`flows:` wherever a proof set exists · gate green with this entity contributing zero WARNs · the phase's PLAN `Center` cell flipped ✅ (PLAN.md + PLAN.json) where that column exists, else the one-line adopt-the-column pointer. The verification changelog needs nothing from you — the builder appends `run-history.jsonl` itself on every regen whose totals moved. Card-only tier: the same minus evidence (ANGLES carry the reasons). Skip: one registry-row reason. E7: report page paths + the gate's closing line.
+
+### `/gabe-cc-update curate-workflows`
+
+Journey CREATION for the one journey kind that needs a human (ruling 2026-09-04). Backend, test and
+commit journeys derive themselves; the curated user workflows (`docs/site/center/workflows.js`) did
+not — a new project's tab stayed empty until someone remembered the file. This mode PROPOSES, never
+curates: run `scripts/draft-workflows.py .` — every endpoint no curated workflow names, clustered by
+entity · the screen that drives it, steps read→write, level SUGGESTED (no writes → 1 · single-entity
+writes → 2 · cross-entity → 3), written as `draft:true` entries to `workflows.draft.js`. The station
+lists them in the workflows tab under **drafts — review & name**, walkable like any workflow.
+Print the script's line verbatim (drafts · uncovered · covered · infra skipped · unreached), then
+hand the operator the review: walk a draft, rename it in their words, reorder, set the level, move
+it into `workflows.js`; the next run drops it. **Unreached** endpoints (no screen calls them) are
+reported, never drafted — a bridge gap or a dead endpoint is the human's call. Pulse S16 nags the
+standing coverage; `/gabe-cc-update status` shows the draft count. Deterministic (no wallclock; the
+c4 head sha stamps the file); honest-empty without a center or a c4-graph; report-never-gate.
+

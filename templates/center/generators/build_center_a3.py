@@ -2216,7 +2216,15 @@ def main() -> int:
         _wff.write_text("// curated user workflows for the Gabe Universe journeys picker — none yet.\n"
                         "// window.GABE_WORKFLOWS = [{name, note, steps:[\"METHOD /path\", …]}]; see the\n"
                         "// suite's example/codebase-graph-station/workflows.js. Honest-empty until curated.\n"
+                        "// Draft candidates: `/gabe-cc-update curate-workflows` → workflows.draft.js (review, then move in).\n"
                         "window.GABE_WORKFLOWS = [];\n", encoding="utf-8")
+    # The DRAFT feed (window.GABE_WORKFLOWS_DRAFT — `/gabe-cc-update curate-workflows`, 2026-09-04): machine-proposed
+    # candidates the human reviews in the station's workflows tab. Copied through like the curated file when the build
+    # writes elsewhere; NO stub when absent — the station shows no drafts (the loader's onerror is silent).
+    _wfd = CENTER_OUT / "workflows.draft.js"
+    _wfdsrc = CENTER / "workflows.draft.js"
+    if _wfdsrc.is_file() and _wfdsrc.resolve() != _wfd.resolve():
+        _wfd.write_text(_wfdsrc.read_text(encoding="utf-8"), encoding="utf-8")
 
     # The per-phase ARCHIVE (Graph 2 replays past changes) — accumulate the CURRENT
     # phase's projection, keyed by phase id; completed phases stay frozen. COMMITTED +

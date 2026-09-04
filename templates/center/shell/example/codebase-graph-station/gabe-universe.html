@@ -329,6 +329,7 @@
   #jrn .jglvln{ font:700 9px/1 var(--font-mono); color:var(--muted); }
   #jrn .jglvlhint{ flex-basis:100%; font:400 9px/1.3 var(--font-ui); text-transform:none; letter-spacing:0; color:var(--muted); padding-left:18px; }
   #jrn .jrnlvl{ display:inline-flex; align-items:center; flex:none; color:var(--accent); }
+  .jrndraft{ flex:none; font:700 8px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.06em; color:var(--muted); border:1px dashed var(--muted); border-radius:5px; padding:2px 4px; margin-right:5px; }   /* a DRAFT workflow (curate-workflows) — dashed, like the unknown kind: nothing dashed is curated */
   #jrn .jrnrow.on .jrnlvl{ color:#fff; }   /* on the selected (accent-bg) row the bars go white for contrast; the count still reads */
   /* the graph NEVER resizes with the right panel — the panel overlays the canvas */
   #g{ right:0 !important; }
@@ -1015,6 +1016,7 @@
 <script src="./levels.js"></script>
 <script src="./sim.data.js"></script>
 <script>(function(){ var s=document.createElement("script"); s.src="./workflows.js"; s.onerror=function(){}; document.head.appendChild(s); })();</script>
+<script>(function(){ var s=document.createElement("script"); s.src="./workflows.draft.js"; s.onerror=function(){}; document.head.appendChild(s); })();</script>   <!-- machine DRAFTS (/gabe-cc-update curate-workflows) — reviewed in the workflows tab, moved into workflows.js by a human -->
 <script>(function(){ var s=document.createElement("script"); s.src="./commits.js"; s.onerror=function(){}; document.head.appendChild(s); })();</script>
 <script>
 window.addEventListener("error", function(ev){ var d=document.getElementById("err")||document.createElement("div"); d.id="err";
@@ -2704,22 +2706,27 @@ function _bkCollect(){ if(!_FNNODES){ try{ _buildFnData(); }catch(e){} } if(!_FN
    center's workflows.js; absent → no tab content, never fabricated). A workflow = its endpoints'
    backend chains walked in the curated order; an endpoint the map has no chain for is COUNTED
    in the row (unmapped), never silently dropped. */
-function _wfCollect(bk){ var W=window.GABE_WORKFLOWS; if(!W||!W.length) return [];
+function _wfCollect(bk){ var W=window.GABE_WORKFLOWS||[], D=window.GABE_WORKFLOWS_DRAFT||[]; if(!W.length && !D.length) return [];
   var byLabel={}; bk.forEach(function(j){ var ep=_fieldN(j.ep); if(ep&&ep.label) byLabel[ep.label]=j; });
-  return W.map(function(w,i){ var steps=[], ents={}, miss=[], writes=0, epn=0;
+  // DRAFTS (operator 2026-09-04): window.GABE_WORKFLOWS_DRAFT — machine-proposed by `/gabe-cc-update curate-workflows` from the
+  // graph's uncovered endpoints. Same mapper as the curated list, but draft:true · level 0 (grouped LAST, "drafts — review & name") ·
+  // cid wfd:N. Walkable like any workflow; accepted by a human moving it into workflows.js — the next drafter run drops it.
+  return W.map(function(w,i){ return _wfOne(w,i,false); }).concat(D.map(function(w,i){ return _wfOne(w,i,true); })).map(function(j){ j.feN=j.fe.users.length+j.fe.screens.length; return j; });
+  function _wfOne(w,i,draft){ var steps=[], ents={}, miss=[], writes=0, epn=0;
     (w.steps||[]).forEach(function(lbl){ var j=byLabel[lbl]; if(!j){ miss.push(lbl); return; } epn++;
       j.meta.forEach(function(m){ steps.push({id:m.id, hop:m.hop, why:m.why, from:m.from, ep:j.ep}); });
       j.ents.forEach(function(e){ ents[e]=1; }); writes+=j.writes; });
     var eps=(w.steps||[]).filter(function(l){ return byLabel[l]; }).map(function(l){ return byLabel[l].ep; });
-    return { cid:"wf:"+i, wf:true, corpora:{workflow:1}, corpus:"workflow", agg:false, e2e:false,
+    return { cid:(draft?"wfd:":"wf:")+i, wf:true, draft:!!draft, corpora:{workflow:1}, corpus:"workflow", agg:false, e2e:false,
       ents:Object.keys(ents), carriers:steps.map(function(s){ return s.id; }), meta:steps, writes:writes,
-      epn:epn, miss:miss, note:w.note||"", name:w.name||("workflow "+(i+1)), start:"user workflows",
-      level:(w.level>=1&&w.level<=3)?w.level:0,                // dev-onboarding level (1/2/3; anything else → 0 = unleveled, ONE "other" bucket)
-      fe:_bkFeLeg(eps), feN:0 }; }).map(function(j){ j.feN=j.fe.users.length+j.fe.screens.length; return j; }); }   // an all-unmapped workflow KEEPS its row (unmapped counted) — the start is a no-op
+      epn:epn, miss:miss, note:w.note||"", name:w.name||("workflow "+(i+1)), start:draft?"drafts":"user workflows",
+      level:draft?0:((w.level>=1&&w.level<=3)?w.level:0),   // dev-onboarding level (1/2/3); a DRAFT is 0 — the human sets it on acceptance
+      fe:_bkFeLeg(eps), feN:0 }; } }   // an all-unmapped workflow KEEPS its row (unmapped counted) — the start is a no-op
 function _jrnRow(j){ var badge=j.bk?j.method:(j.wf?(j.epn+" ep"+(j.miss.length?(" · "+j.miss.length+" unmapped"):"")):(j.commit?(j.nTouched+" el"):(j.agg?"agg":j.cid)));
   var tt=(j.commit?("commit "+(j.short||"")+(j.date?(" · "+String(j.date).slice(0,10)):"")+(j.author?(" · "+j.author):"")+" · touched "+j.nTouched+" element(s) across "+(j.nFiles||0)+" file(s)"+(j.ents.length?(" · "+j.ents.join(", ")):"")):(j.ents.join(" → ")))+(j.feN?(" · reaches "+j.feN+" frontend piece(s) over the bridge"):"")+(j.bk?(" · "+j.writes+" write(s) · "+j.reads+" read(s)"+(j.gates?(" · "+j.gates+" gate(s)"):"")+(j.disps?(" · "+j.disps+" dispatch(es)"):"")+" · ordered by hops"):"")+(j.wf?(" · "+(j.note||"curated user workflow")+(j.miss.length?(" · unmapped: "+j.miss.join(", ")):"")):"");
   return '<div class="jrnrow'+(HL.jr===j.cid?" on":"")+'" data-jr="'+j.cid+'" title="'+tt.replace(/"/g,"&quot;")+'">'
   +(j.wf&&j.level&&_JRNLEVELS[j.level]?('<span class="jrnlvl l'+j.level+'" title="level '+j.level+' · '+_JRNLEVELS[j.level].label+'">'+_JRNLEVELS[j.level].ico+'</span>'):"")
+  +(j.draft?'<span class="jrndraft" title="a machine DRAFT — proposed from the graph, not curated">draft</span>':'')
   +'<span class="jrnname">'+(j.name||j.cid)+'</span><b>'+badge+'</b><span class="jrncorp">'+j.corpus+'</span>'
   +(j.feN?('<span class="jrnfe">'+svgInline("component", KINDCOL.component, 10)+j.feN+'</span>'):"")
   +'<span class="jrnn">'+j.ents.length+' ents</span></div>'; }
@@ -2839,10 +2846,11 @@ function _jrnGroupsHTML(){ var sel=window.__uniJrnKind, bySpan=function(a,b){ re
   var h='<div class="jrnrow jrnnone" data-jr="">— none (clear)</div>';
   if(!vis.length) return h+'<div class="jrnnone" style="padding:8px 7px">no '+sel+' journeys for the included entities</div>';
   if(sel==="wf"){                                              // WORKFLOWS group by DEV-ONBOARDING LEVEL (operator): a new dev reads ①→②→③ top-down
-    var byLvl={}; vis.forEach(function(j){ var L=j.level||99; (byLvl[L]=byLvl[L]||[]).push(j); });
+    var byLvl={}; vis.forEach(function(j){ var L=j.draft?9:(j.level||99); (byLvl[L]=byLvl[L]||[]).push(j); });   // drafts sit LAST (9), after the ladder and before 'other' (99)
     h+='<div class="jrnlede">a learning ladder — start at the top and work down. click a level to collapse it · middle-click to focus just that level.</div>';
     Object.keys(byLvl).map(Number).sort(function(a,b){ return a-b; }).forEach(function(L){
-      var m=_JRNLEVELS[L]||{label:"other",hint:"unleveled — no level assigned",ico:_lvlBars(0)}, key="lvl"+L, cl=!!window.__uniJrnCollapse[key];
+      var m=(L===9)?{label:"drafts — review & name",hint:"machine-drafted from the graph's uncovered endpoints (/gabe-cc-update curate-workflows): walk it, then rename · reorder · set the level and move it into workflows.js",ico:_lvlBars(0),vars:"Classified here: machine DRAFTS — an endpoint no curated workflow names, reached from a screen; clustered by entity · screen, steps read→write, level SUGGESTED from writes and entity span. Not curated until a human moves it into workflows.js."}
+                   :(_JRNLEVELS[L]||{label:"other",hint:"unleveled — no level assigned",ico:_lvlBars(0)}), key="lvl"+L, cl=!!window.__uniJrnCollapse[key];
       h+='<div class="jrngrp jgcl jglvl'+(cl?" cl":"")+'" data-ge="'+key+'" title="'+m.hint+' — middle-click to focus"><span class="jcar">'+_JCHEV+'</span><span class="jglvlico">'+m.ico+'</span><span class="jglvlnm">'+m.label+'</span><b class="jglvln">'+byLvl[L].length+'</b><span class="jglvlinfo" title="'+String(m.vars||"").replace(/"/g,"&quot;")+'">'+_JINFO+'</span><span class="jglvlhint">'+m.hint+'</span></div>';
       if(!cl) byLvl[L].forEach(function(j){ h+=_jrnRow(j); });   // curated order within a level — never re-sorted
     });
@@ -2861,7 +2869,7 @@ function _jrnGroupsHTML(){ var sel=window.__uniJrnKind, bySpan=function(a,b){ re
     h+='<div class="jrngrp jgcl'+(cl?" cl":"")+'" data-ge="'+g+'" style="color:'+(ENT[g]||"var(--muted)")+'"><span class="jcar">'+_JCHEV+'</span>'+g+' · '+groups[g].length+'</div>';
     if(!cl) (g==="user workflows"?groups[g]:groups[g].sort(bySpan)).forEach(function(j){ h+=_jrnRow(j); }); });   // curated order is the operator's — never re-sorted
   return h; }
-function _jrnPaint(p){ if(!window.__uniJrnKind) window.__uniJrnKind=((window.GABE_WORKFLOWS||[]).length?"wf":"bk");   // workflows when curated, else the derived backend chains
+function _jrnPaint(p){ if(!window.__uniJrnKind) window.__uniJrnKind=(((window.GABE_WORKFLOWS||[]).length||(window.GABE_WORKFLOWS_DRAFT||[]).length)?"wf":"bk");   // workflows when curated, else the derived backend chains
   var js=_jrnCollect();
   var _nt=js.filter(function(j){ return !j.bk&&!j.wf; }).length, _nb=js.filter(function(j){ return j.bk; }).length, _nw=js.filter(function(j){ return j.wf; }).length;
   p.innerHTML='<div class="jrnhd">journeys · '+_nw+' workflow(s) · '+_nb+' backend chain(s) · '+_nt+' cross-entity test(s)</div>'+_jrnChipsHTML()+_jrnTabsHTML()+'<div class="jrnlist">'+_jrnGroupsHTML()+'</div>';

@@ -115,6 +115,7 @@ What it lands here (see that dir's README for the mechanism):
 | `c4-graph.js` · `levels.js` · `levels.json` · `sim-archive.js` | one `GABE_GRAFT_BUILD=0` twin-read-only build (twin tree never written) |
 | `codebase-graph.html` · `codebase-archive.html` | the build's pages, `assets/` rehomed to `../../assets/` |
 | `gabe-universe.html` | the TEMPLATE `templates/center/shell/gabe-universe.html` + `fill-example.py` (rehome tokens; `parts/` retired 2026-09-03) |
+| `workflows.draft.js` | DERIVED by `skills/gabe-cc-update/scripts/draft-workflows.py` over this dir's own `c4-graph.js` + `workflows.js` (machine-drafted workflow candidates; `workflows.js` itself is curated suite content, never landed from a build) |
 | `sim.data.js` | **DERIVED** from a real twin commit by `derive-seeded-sim.py` — a regenerable seed, **never** the build's `null` stub (that renders the change-graph blank; committing the stub was the 77fe3cd defect) |
 
 `sim-archive.js` is a committed accumulator; the wrapper regenerates it from the twin's

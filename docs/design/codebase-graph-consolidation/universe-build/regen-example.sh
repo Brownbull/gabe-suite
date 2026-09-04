@@ -14,6 +14,8 @@
 #   gabe-universe.html                                       ← the TEMPLATE + fill-example.py (rehome tokens only;
 #                                                              parts/ + assemble.py RETIRED 2026-09-03 — operator ruling)
 #   codebase-graph.html                                      ← $TMP page with assets rehomed ../../assets/
+#   workflows.draft.js                                       ← draft-workflows.py over the example's OWN c4 + workflows.js
+#                                                              (derived, --check'd; the curated workflows.js itself is suite content, never landed)
 #   (templates/center/shell/gabe-universe.html is the SOURCE of record — edited directly, never landed from here)
 #
 # A fresh machine additionally needs the proof workspace once:
@@ -71,6 +73,16 @@ land() { # $1=src $2=dst $3=label
   else cp "$1" "$2"; echo "  landed $3"; fi
 }
 for f in $FEEDS; do land "$TMP/$f" "$EX/$f" "$f"; done
+# workflows.draft.js (2026-09-04): the example's DRAFT workflows are DERIVED — the drafter run over the
+# example's OWN c4 + curated workflows.js (the suite's 16, not the twin's file), so a regen keeps the
+# drafts in step with the landed graph and --check catches a stale draft file. Scratch center, never the twin.
+DC="$TMP/draftcenter"; mkdir -p "$DC/docs/site/center"; printf '{}' > "$DC/docs/site/center/center.config.json"
+python3 - "$EX/c4-graph.js" "$DC/docs/site/center/c4-graph.json" <<'PY'
+import json,sys; s=open(sys.argv[1],encoding="utf-8").read(); j=json.JSONDecoder().raw_decode(s,s.index("{"))[0]; json.dump(j,open(sys.argv[2],"w",encoding="utf-8"))
+PY
+cp "$EX/workflows.js" "$DC/docs/site/center/workflows.js"
+python3 "$ROOT/skills/gabe-cc-update/scripts/draft-workflows.py" "$DC" >/dev/null
+land "$DC/docs/site/center/workflows.draft.js" "$EX/workflows.draft.js" "workflows.draft.js (drafted from the landed graph)"
 # codebase-graph.html: rehome assets/ → ../../assets/ exactly as the README prescribes
 sed 's#src="assets/#src="../../assets/#g; s#href="assets/#href="../../assets/#g' "$TMP/codebase-graph.html" > "$TMP/codebase-graph.rehomed.html"
 land "$TMP/codebase-graph.rehomed.html" "$EX/codebase-graph.html" "codebase-graph.html (assets rehomed)"
