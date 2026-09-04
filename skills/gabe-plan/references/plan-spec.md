@@ -779,6 +779,9 @@ This logic is invoked by the four trigger commands to update the Phases table in
    - `.kdbp/PLAN.md` exists
    - File contains `<!-- status: active -->`
    - File contains a `## Current Phase` section
+   - The commit message carries NO `RED:` trailer — a red checkpoint (`/gabe-red`'s commit of failing cases, `Task:`/`RED:` footered)
+     is not the phase's commit; ticking `Commit` on it would mark a phase done that has not been executed (gustify P8, 2026-09-04).
+     Skip code `red-checkpoint`.
    - The Phases table header includes the target column name (`Exec`, `Review`, `Commit`, or `Push`) — **detection is by column name, not position**. If the plan uses the legacy `Status` column, this logic no-ops so old plans keep working. If the `Exec` column is missing on a pre-v2.9 plan, `/gabe-execute` auto-tick is a silent no-op.
 
 2. **Find the target row:**
@@ -797,7 +800,7 @@ This logic is invoked by the four trigger commands to update the Phases table in
 
 5. **Cross-check the phase footer.** If the triggering commit message carries a `Phase: M` footer and M ≠ N (Current Phase): do NOT tick. Print `⚠ Phase footer M ≠ Current Phase N — fix the pointer or the footer before ticking.` (one deterministic string compare; /gabe-execute Step 5 already generates the footer).
 
-6. **Skip codes.** On any precondition failure or footer mismatch, print exactly one line: `ℹ PLAN: <col> tick skipped (no-plan | not-active | phase-not-found | column-missing | legacy-format | footer-mismatch)`. Callers surface this line verbatim in their output.
+6. **Skip codes.** On any precondition failure or footer mismatch, print exactly one line: `ℹ PLAN: <col> tick skipped (no-plan | not-active | phase-not-found | column-missing | legacy-format | footer-mismatch | red-checkpoint)`. Callers surface this line verbatim in their output.
 
 7. **Exit. Do NOT:**
    - Advance the Current Phase (manual via `/gabe-plan update` or automatic via `/gabe-next`)

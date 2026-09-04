@@ -45,6 +45,12 @@ session; they are not re-listed here. Five laws govern how a skill reaches for t
   read-only or `context: fork` beat passes `emit: false`, or asks with `direction=out`, which
   never emits: the emit happens inside the server's own process, so an `agent: Explore`
   Write/Edit restriction does not stop it.
+- **GRAFT SERVES MAP CREATION ONLY — its agent skill is DELETE-ON-ADOPTION (ruling 2026-09-02, stated
+  here 2026-09-04).** `graft build` runs inside the center regen and the red beat's reach, always anchored
+  to the repo toplevel (`cd "$(git rev-parse --show-toplevel)"` — a persisted `cd apps/web` once indexed a
+  subtree and wrote a stray `.gitignore`); no skill reaches for graft's MCP or hooks. A project's
+  `.claude/skills/graft/` ("get your context from graft before grepping") contradicts the first law and is
+  removed on adoption: `propagate.sh` names it, the operator removes it — a twin never re-decides it.
 
 ## The findings contract — stated once, ruled 2026-08-10
 

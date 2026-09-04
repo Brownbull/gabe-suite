@@ -30,6 +30,11 @@ for f in "$GEN"/*.py "$GEN"/*.mjs; do
   else new_gen+=("$b"); fi
 done
 [ ${#new_gen[@]} -gt 0 ] && echo "  NEW (not vendored by this twin — adopt deliberately): ${new_gen[*]}"
+# graft's AGENT SKILL ("get your context from graft before grepping") contradicts the suite's tool floor
+# (the map tools first — execution-contract.md); graft serves map CREATION only (ruling 2026-09-02). The dir is
+# graft-authored + untracked, so a twin re-decides it every time it is noticed → name it here, once, as
+# DELETE-ON-ADOPTION. Reported, never deleted by this script (a user-side dir is the operator's to remove).
+[ -d "$TWIN/.claude/skills/graft" ] && echo "  ⚠ $TWIN/.claude/skills/graft/ exists — graft's agent skill; DELETE-ON-ADOPTION (tool floor): rm -rf '$TWIN/.claude/skills/graft'"
 
 echo "── shell (minus example/) → $TSHELL"
 if [ -d "$TSHELL" ]; then

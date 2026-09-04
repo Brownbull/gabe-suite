@@ -162,6 +162,14 @@ rc=$(run_evid)
 rc=$(run_evid)
 [ "$rc" = 0 ] && grep -q "fresher than the staged changes" "$T/evid.out" \
   && ok || bad "evidence: proof mtime newer than staged src must stay SILENT (got $rc)"
+# SOURCE = app code only (gustify P8, 2026-09-04): a red checkpoint stages TESTS, a tombstone stages DOCS — neither is the change
+# the proof must be fresher than. MUTATION: drop the docs/tests exemption in the case → this FIRES "OLDER than staged change".
+(cd "$T/evid" && git reset -q HEAD -- src/app2.py && mkdir -p tests docs && printf 'def test_red(): assert 0\n' > tests/test_red.py \
+   && printf '# tombstone\n' > docs/gone.md && touch -d '2036-01-01' tests/test_red.py docs/gone.md && git add tests/test_red.py docs/gone.md)
+rc=$(run_evid)
+[ "$rc" = 0 ] && ! grep -q "OLDER than staged change" "$T/evid.out" \
+  && ok || bad "evidence: a tests-only + docs-only staging (red checkpoint / tombstone) must stay SILENT — never a false bypass (got $rc)"
+(cd "$T/evid" && git reset -q HEAD -- tests/test_red.py docs/gone.md)
 
 # =====================================================================
 # checkpoint-trailer.sh — <message-file|->; exit 0=clean/not-applicable,

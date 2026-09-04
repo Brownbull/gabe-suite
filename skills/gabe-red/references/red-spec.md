@@ -127,6 +127,13 @@ that a cases record EXISTS and that every sha it CITES is reachable — a record
 passes; the hook never re-runs tests or verifies the failure itself (that is the gate's
 carve-out at commit time and review's CASE DRIFT afterward).
 
+**The ORDER, stated once (gustify P8, 2026-09-04 — the gate's carve-out and this spec disagreed):** the
+SHA-LESS record (`- **Cases:** NEW C148 · GUARD C091`, mirrored to PLAN.json `phases[].cases`) is written
+BEFORE the red commit and RIDES IT — so `/gabe-commit`'s carve-out (`case-thread.py`, which reads
+`phases[].cases`) finds the record at commit time instead of returning INCONCLUSIVE. Only the `red@sha`
+lands in the follow-up write, because the sha exists only after that commit. Record first, commit second,
+sha third.
+
 Refactor form: `- **Cases:** — · GUARD: C091, C147, C203 (behavior unchanged; must stay green)`
 with `RED: n/a (guard-only — no new claim)` in the report.
 
@@ -172,7 +179,7 @@ early deltas were exactly that), the emit needs a MAP CLAIM (an empty graft arm 
 making it fresh.
 
 ```
-graft build && rm -f .ignore     # the rm is MANDATORY — see below
+( cd "$(git rev-parse --show-toplevel)" && graft build && rm -f .ignore )   # ANCHORED to the repo toplevel — a persisted `cd apps/web` once built the index under apps/web/ and wrote apps/web/.gitignore (gustify 2026-09-04); the rm is MANDATORY — see below
 ```
 
 ⚠ **`graft build` writes a repo-root `.ignore` containing `!graft/`, which re-admits its own

@@ -139,10 +139,20 @@ try:
     toks = shlex.split(cmd)
 except ValueError:
     out("REQUIRE unparseable")  # unbalanced quoting on a push-shaped command → fail closed
+# PUSH-SHAPED or not — decided BEFORE any fail-close (gustify P8, 2026-09-04: the bash prefilter admits any
+# command that merely MENTIONS "push" — a test filename `test_pre_push_api_gate.py`, the config key
+# `push.default`, a table cell inside a python heredoc — and the fail-closes below then blocked read-only
+# work three times in one session). A command is push-shaped only when some token IS `push`, or a token
+# that could HIDE a push (a substitution/backtick/embedded newline) carries BOTH `git` and `push`.
+# Everything else is not a push: ALLOW here, so no later fail-close ever fires on it.
+def _hides(t):
+    return ("`" in t) or ("$(" in t) or ("\n" in t)
+if not any(t == "push" for t in toks) and not any(_hides(t) and "git" in t and "push" in t for t in toks):
+    out("ALLOW")                        # mentions push, is not a push
 # A command SUBSTITUTION (`…` or $(…)) or an embedded newline can hide a push the token walk never
 # sees as `git` (e.g. `… && echo \`git push origin main\``) → fail closed for the WHOLE command,
 # regardless of any clean leading segment. Sequence operators (&&/||/;/|) are handled per-segment below.
-if any(("`" in t) or ("$(" in t) or ("\n" in t) for t in toks):
+if any(_hides(t) for t in toks):
     out("REQUIRE substitution")
 
 def resolve_current():
@@ -245,7 +255,7 @@ case "$verdict" in
       fi
     fi
     {
-      echo "⛔ PUSH-GATE-GUARD blocked this push (${reason})."
+      echo "⛔ PUSH-GATE-GUARD blocked this push-shaped command (${reason}) — it carries a \`push\` token, or a substitution that could hide \`git push\`."
       echo "The production gate has not run for THIS tree: no .kdbp/.push-gate-ok whose recorded HEAD matches $(printf %.8s "${head:-?}") (the marker is written by /gabe-push Step 3.5 ONLY after the /gabe-health findings are presented and the operator answers the ONE proceed/hold question; any commit since re-arms the gate)."
       echo "Fix: run /gabe-push <terminal-env> — it runs the scan, asks, writes the sha-bound marker, and performs this push itself."
       echo "Emergency only: prefix the push with GABE_PUSH_EMERGENCY=1 — allowed with a loud warning, reviewable after the fact."

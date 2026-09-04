@@ -304,6 +304,11 @@ PROMO='{"tool_input":{"command":"git push origin origin/staging:main"}}'
 [ "$(pg '{"tool_input":{"command":"git push origin main"}}')" = 2 ] && ok || bad "push-gate: direct terminal push w/o marker must BLOCK"
 [ "$(pg '{"tool_input":{"command":"git push --force-with-lease origin HEAD:refs/heads/main"}}')" = 2 ] && ok || bad "push-gate: HEAD:refs/heads/main + force flag must BLOCK"
 [ "$(pg '{"tool_input":{"command":"git push origin feature-x"}}')" = 0 ] && ok || bad "push-gate: feature-branch push must stay SILENT"
+# push-SHAPED only (gustify P8, 2026-09-04): a command that merely MENTIONS push is not a push — the three observed false blocks
+[ "$(pg '{"tool_input":{"command":"pytest apps/api/tests/test_pre_push_api_gate.py -q"}}')" = 0 ] && ok || bad "push-gate: a test FILENAME containing push must stay SILENT"
+[ "$(pg '{"tool_input":{"command":"git config push.default simple"}}')" = 0 ] && ok || bad "push-gate: the config key push.default must stay SILENT (git, but not a push)"
+[ "$(pg '{"tool_input":{"command":"python3 - <<PY\nrow = [\"Push\", \"⬜\"]\nprint(row)\nPY"}}')" = 0 ] && ok || bad "push-gate: a table cell named Push inside a python heredoc must stay SILENT"
+[ "$(pg '{"tool_input":{"command":"echo done && echo $(git push origin main)"}}')" = 2 ] && ok || bad "push-gate: a substitution HIDING git push must still BLOCK (the both-words rule is the FIRE side)"
 [ "$(pg '{"tool_input":{"command":"git push origin HEAD:staging"}}')" = 0 ] && ok || bad "push-gate: staging (non-terminal) push must stay SILENT"
 [ "$(pg '{"tool_input":{"command":"git log --grep \"git push origin main\""}}')" = 0 ] && ok || bad "push-gate: quoted decoy must stay SILENT"
 [ "$(pg '{"tool_input":{"command":"npm test"}}')" = 0 ] && ok || bad "push-gate: non-push command must stay SILENT"

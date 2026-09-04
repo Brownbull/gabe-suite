@@ -6,6 +6,10 @@
 # evidence => visible WARN + one line appended to .kdbp/archive/evidence-bypass.log.
 # Exit codes: 0 = ok/skipped, 2 = warned. NEVER blocks (stage-2 promotion is a Wave-2 decision
 # made from the bypass log).
+# SOURCE means app code: .kdbp bookkeeping, the proof folder, PROSE (docs/, *.md) and TEST ROOTS are never
+# the staged change this check measures — a red checkpoint (tests only) and a docs tombstone each logged a
+# false bypass into the Wave-2 promotion evidence (gustify P8, 2026-09-04). No message channel exists here
+# (the gate runs this before the commit), so the exemption is on the staged PATHS, deterministically.
 set -u
 
 kdbp=".kdbp"
@@ -48,6 +52,9 @@ newest_src_file=""
 while IFS= read -r f; do
   case "$f" in
     .kdbp/*|"$proof_root"/*) continue ;;
+    docs/*|*.md) continue ;;                                   # prose is not source
+    tests/*|test/*|*/tests/*|*/test/*|*/__tests__/*|__tests__/*|e2e/*|*/e2e/*|playwright/*|*/playwright/*) continue ;;   # test roots
+    *.spec.*|*.test.*|*_test.py|test_*.py|*/test_*.py|conftest.py|*/conftest.py) continue ;;                          # test files by name
   esac
   [ -f "$f" ] || continue
   m=$(stat -c %Y "$f" 2>/dev/null || echo 0)
