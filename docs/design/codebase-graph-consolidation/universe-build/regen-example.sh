@@ -7,7 +7,10 @@
 #   GABE_TWIN=<repo> bash regen-example.sh   # default twin: /home/khujta/projects/apps/gustify
 #
 # WHAT THE ESTATE IS (templates/center/shell/example/codebase-graph-station/):
-#   c4-graph.js · levels.js · levels.json · sim-archive.js   ← emitted by ONE twin-read-only build
+#   c4-graph.js · levels.js · levels.json · sim-archive.js · commits.js
+#                                                            ← emitted by ONE twin-read-only build (commits.js =
+#                                                              the twin's last 30 commits as journeys; landed since
+#                                                              2026-09-04 — it sat frozen at Aug-7 before)
 #   sim.data.js                                              ← FROZEN-SEEDED (arch-graph-lab fixture;
 #                                                              the build emits the null stub — NEVER ship it:
 #                                                              commit 77fe3cd shipped the stub by mistake)
@@ -50,7 +53,7 @@ fi
 # 3 · land / compare each artifact. Volatile stamps (twin HEAD sha · regen date ·
 #     graft index_hash) are NORMALIZED under --check — the no-wallclock law: content
 #     must reproduce byte-identically, stamps churn by design.
-FEEDS="c4-graph.js levels.js levels.json sim-archive.js"
+FEEDS="c4-graph.js levels.js levels.json sim-archive.js commits.js"
 fail=0
 # Provenance stamps are volatile w.r.t. CONTENT: `head` = which twin commit the feed was
 # built from (moves on ANY twin commit), `index_hash` = graft's index state, wallclock date.
