@@ -48,6 +48,11 @@ THRESHOLDS = {
     "prism_layers": 2,
     "prism_actors": 3,
     "scope_outside": 1,
+    # S16 — screen-reachable endpoints in no curated workflow; below this a curate run
+    # proposes noise, at it the workflows tab is lying by omission. cluster_min mirrors the
+    # drafter's --min default so the "proposable" count equals what a run writes.
+    "workflow_uncovered": 3,
+    "workflow_cluster_min": 1,
     # S14 — a codebase-map generator arm whose ACTIVE missed edges have this many
     # distinct entries is diverging enough to be worth a generator look; horizon =
     # commits since an edge last recurred beyond which it reads COLD (self-silencing).
@@ -543,6 +548,80 @@ def s15_fe_unknown(root: Path, plan: dict | None, cfg: dict | None):
             "universe legend → Unknown (FE): render it somewhere, or add the O3 proof (return-null / render-call)")
 
 
+def _drafter():
+    """The curate-workflows drafter (gabe-cc-update/scripts/draft-workflows.py), imported by FILE —
+    a hyphenated name beside another skill, resolved relative to THIS file so the repo layout
+    (skills/gabe-pulse/scripts → skills/gabe-cc-update/scripts) and the install layout (~/.claude/skills)
+    both work. None when the script is absent (a partial install) — S16 goes honest-empty, never guesses."""
+    p = Path(__file__).resolve().parents[2] / "gabe-cc-update" / "scripts" / "draft-workflows.py"
+    if not p.is_file():
+        return None
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("gabe_draft_workflows", p)
+    if spec is None or spec.loader is None:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _pending_drafts(p: Path) -> int:
+    """Proposals still sitting in workflows.draft.js — every `draft: true` entry the human has not yet
+    moved into workflows.js. Tolerant of the honest-empty stub and of a hand-edited file (0 on any parse
+    failure: a broken draft file is the drafter's next run to fix, not a pulse crash)."""
+    if not p.is_file():
+        return 0
+    try:
+        s = p.read_text(encoding="utf-8")
+        i = s.index("=", s.index("window.GABE_WORKFLOWS_DRAFT")) + 1
+        while i < len(s) and s[i].isspace():
+            i += 1
+        arr = json.JSONDecoder().raw_decode(s, i)[0]
+        return sum(1 for d in arr if isinstance(d, dict) and d.get("draft"))
+    except Exception:  # noqa: BLE001
+        return 0
+
+
+def s16_workflow_coverage(root: Path, plan: dict | None, cfg: dict | None):
+    """Workflow coverage — the curated user workflows (window.GABE_WORKFLOWS, docs/site/center/workflows.js)
+    are hand-authored and go stale as endpoints land. The DRAFTER (`/gabe-cc-update curate-workflows`)
+    proposes candidates from the graph's screen-reachable endpoints no curated workflow names; this angle
+    runs the drafter's ANALYSIS read-only over the committed c4-graph.json + workflows.js (nothing stored)
+    and fires when (a) uncovered endpoints reach the threshold — a curate run is worth it — or (b)
+    workflows.draft.js still carries proposals nobody moved into workflows.js — the REVIEW is owed, not
+    the run (2026-09-04, the journeys dive). Report-never-gate; honest-empty without a c4, without
+    endpoints (no API arm), or when the drafter script is not installed."""
+    if cfg is None:
+        return Unavailable("no center config — workflows live in docs/site/center/")
+    center = fetch_bridge._center(root)
+    c4p = center / "c4-graph.json"
+    if not c4p.exists():
+        return Unavailable("no c4-graph.json yet — the center regen builds it")
+    drafter = _drafter()
+    if drafter is None:
+        return Unavailable("draft-workflows.py not found beside gabe-cc-update — reinstall the suite")
+    try:
+        c4 = json.loads(c4p.read_text(encoding="utf-8"))
+        covered, _n = drafter.curated_labels(center)
+        res = drafter.analyse(c4, covered, THRESHOLDS["workflow_cluster_min"])
+    except Exception as e:  # noqa: BLE001
+        return Unavailable(f"coverage analysis failed ({e.__class__.__name__})")
+    if int(res.get("endpoints") or 0) < 1:
+        return Unavailable("no endpoints in c4-graph.json (no API arm)")
+    unc = int(res.get("uncovered") or 0)
+    total = int(res.get("covered") or 0) + unc   # the denominator = the REAL endpoints; infra (_-prefixed) + BOOT sit outside it
+    pending = _pending_drafts(center / "workflows.draft.js")
+    if unc < THRESHOLDS["workflow_uncovered"] and pending < 1:
+        return None
+    clusters = len(res.get("drafts") or [])
+    head = (f"workflow coverage — {unc}/{total} endpoint(s) in no curated workflow "
+            f"({clusters} draft cluster(s) proposable)")
+    if pending:
+        return (head + f"; {pending} draft(s) already proposed, awaiting review",
+                "universe → workflows tab → 'drafts — review & name': walk it, rename, set the level, move it into workflows.js")
+    return (head, "/gabe-cc-update curate-workflows")
+
+
 SIGNALS = [
     ("S1", "adversarial", s1_roast),
     ("S8", "evidence debt", s8_evidence),
@@ -559,6 +638,7 @@ SIGNALS = [
     ("S13", "route/file census", s13_route_file_census),
     ("S14", "map deltas", s14_map_deltas),
     ("S15", "fe classification", s15_fe_unknown),
+    ("S16", "workflow coverage", s16_workflow_coverage),
 ]
 
 

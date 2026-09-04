@@ -332,5 +332,41 @@ run "$r" | grep -q "fe-unknown residue" && bad "S15 fired with no residue" || ok
 r=$(repo s15c); mkc4 "$r" '{"stats":{"fe":{"present":false,"reason":"no web source"}}}'
 run "$r" | grep -q "fe-unknown residue" && bad "S15 fired when the fe arm is absent" || ok "S15 silent when the fe arm is absent"
 
+# ── S16 · workflow coverage — screen-reachable endpoints no curated workflow names (the curate-workflows drafter's
+#    analysis run read-only over the committed c4 + workflows.js; fixture = tests/workflow-drafts' synthetic c4: 3 real
+#    endpoints + 1 infra (_e2e) + BOOT; 2026-09-04) ──
+C4WF='{"head":"abc1234","l2":{
+ "pantry":{"nodes":[
+   {"id":"endpoint:GET /pantry/history","kind":"endpoint","label":"GET /pantry/history","slug":"pantry","access":{"ops":[{"model":"PantryItem","rw":"r"}]}},
+   {"id":"endpoint:POST /pantry/reset","kind":"endpoint","label":"POST /pantry/reset","slug":"pantry","access":{"ops":[{"model":"PantryItem","rw":"r"},{"model":"PantryItem","rw":"w"}]}},
+   {"id":"model:PantryItem","kind":"model","label":"PantryItem","slug":"pantry"}]},
+ "cooking":{"nodes":[
+   {"id":"endpoint:GET /cooking/active","kind":"endpoint","label":"GET /cooking/active","slug":"cooking","access":{"ops":[{"model":"CookingSession","rw":"r"}]}},
+   {"id":"endpoint:POST /_e2e/seed","kind":"endpoint","label":"POST /_e2e/seed","slug":"cooking","access":{"ops":[{"model":"CookingSession","rw":"w"}]}},
+   {"id":"model:CookingSession","kind":"model","label":"CookingSession","slug":"cooking"}]},
+ "__unclaimed__":{"nodes":[{"id":"endpoint:BOOT lifespan","kind":"endpoint","label":"BOOT lifespan","slug":"__unclaimed__","access":{"ops":[]}}]}},
+ "cross_edges":[
+   {"kind":"bridge","from":"web:src/features/pantry/usePantry","to":"endpoint:GET /pantry/history"},
+   {"kind":"bridge","from":"web:src/features/pantry/usePantry","to":"endpoint:POST /pantry/reset"},
+   {"kind":"bridge","from":"web:src/features/cooking/useCooking","to":"endpoint:GET /cooking/active"}],
+ "fe":{"pieces":[
+   {"id":"fe:src/routes/PantryRoute.tsx#PantryRoute","name":"PantryRoute","kind":"route","file":"src/routes/PantryRoute.tsx"},
+   {"id":"fe:src/features/pantry/usePantry.ts#usePantry","name":"usePantry","kind":"hook","file":"src/features/pantry/usePantry.ts","screen":"web:src/features/pantry/usePantry"},
+   {"id":"fe:src/routes/CookingRoute.tsx#CookingRoute","name":"CookingRoute","kind":"route","file":"src/routes/CookingRoute.tsx"},
+   {"id":"fe:src/features/cooking/useCooking.ts#useCooking","name":"useCooking","kind":"hook","file":"src/features/cooking/useCooking.ts","screen":"web:src/features/cooking/useCooking"}],
+  "edges":[[0,1,"uses-hook"],[2,3,"uses-hook"]]}}'
+r=$(repo s16a); mkc4 "$r" "$C4WF"
+run "$r" | grep -q "workflow coverage — 3/3 endpoint(s) in no curated workflow" && ok "S16 fires: 3 screen-reachable endpoints sit in no curated workflow (>= threshold 3; infra + BOOT never counted)" || bad "S16 did not fire on uncovered endpoints"
+run "$r" | grep -q "curate-workflows" && ok "S16 names the drafter as the move" || bad "S16 move is not the drafter"
+r=$(repo s16b); mkc4 "$r" "$C4WF"; printf 'window.GABE_WORKFLOWS = [{"name":"cook","steps":["GET /cooking/active"]}];\n' > "$r/docs/site/center/workflows.js"
+run "$r" | grep -q "workflow coverage" && bad "S16 fired below the threshold (2 uncovered < 3)" || ok "S16 silent below the >=3 uncovered threshold (the mutation of the fire case)"
+r=$(repo s16c); mkc4 "$r" "$C4WF"; printf 'window.GABE_WORKFLOWS = [{"name":"all","steps":["GET /cooking/active","GET /pantry/history","POST /pantry/reset"]}];\n' > "$r/docs/site/center/workflows.js"
+printf 'window.GABE_WORKFLOWS_DRAFT = [{"name":"Pantry · browse (1 endpoint)","draft":true,"level":1,"steps":["GET /pantry/history"]}];\n' > "$r/docs/site/center/workflows.draft.js"
+run "$r" | grep -q "1 draft(s) already proposed, awaiting review" && ok "S16 fires on an unreviewed draft even at full coverage — the review is owed, not the run" || bad "S16 ignored a pending draft"
+printf 'window.GABE_WORKFLOWS_DRAFT = [];\n' > "$r/docs/site/center/workflows.draft.js"
+run "$r" | grep -q "workflow coverage" && bad "S16 fired at full coverage with the honest-empty draft stub" || ok "S16 silent at full coverage once the drafts are moved (stub = [])"
+r=$(repo s16d); mkc4 "$r" '{"stats":{"web":{"present":false}}}'
+run "$r" | grep -q "workflow coverage" && bad "S16 fired with no endpoints" || ok "S16 silent without endpoints (no API arm — honest-empty)"
+
 echo "pulse-angles: $pass passed, $fail failed"
 [ "$fail" -eq 0 ] || exit 1
