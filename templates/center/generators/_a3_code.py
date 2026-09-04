@@ -2744,10 +2744,23 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         for r in rels:
             tgt = by_cls.get(r["target"])
             _tent = ins.get(r["target"], {}).get("entity", "")
-            link = (f'<a class="dlink" href="{_href("dm", _anchor("dm", slug, r["target"]))}">'
-                    f'{E(r["target"])}</a>'
-                    + (" " + entity_badge(_tent, _adopt_name(_tent), 12)
-                       if _tent else ""))
+            # The target link is minted THREE ways, never blindly (gastify 2026-09-04: `User` is an FK
+            # target with no card on any page and no home entity — the unconditional same-page anchor
+            # was a dead link the center gate rightly failed): a CARD on this page → its anchor; a class
+            # some other entity documents → that page's anchor (+ chip); neither → the to-be-designed
+            # reference every other undocumented app type already gets (counted, never a dead anchor).
+            if tgt is not None:
+                link = (f'<a class="dlink" href="{_href("dm", _anchor("dm", slug, r["target"]))}">'
+                        f'{E(r["target"])}</a>'
+                        + (" " + entity_badge(_tent, _adopt_name(_tent), 12)
+                           if _tent else ""))
+            elif _tent and _tent != slug:
+                _xh, _xc = _xref("dm", r["target"], _tent)
+                link = f'<a class="dlink" href="{_xh}">{E(r["target"])}</a>{_xc}'
+            else:
+                link = ('<a class="dlink" href="entity-index.html" title="to be designed — an app '
+                        'type not documented in any entity map yet; the entity index is its '
+                        f'placeholder home">{E(r["target"])}<span class="tag ic t-tbd">tbd</span></a>')
             if r["many"]:
                 kind = "one → many"
                 via = next((f'{r["target"]}.{c} → {t2}'

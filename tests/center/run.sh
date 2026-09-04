@@ -625,6 +625,45 @@ grep -q " 0 dead" "$T/gate.out" && ok || bad "gate: clean center reports 0 dead"
 grep -q "to-be-designed reference" "$T/gate.out" \
   && ok || bad "gate: the pending-links sweep must WARN on t-tbd references"
 
+# --- FK-target links (gastify 2026-09-04): a relationship() whose target has NO card on any page and
+#     no home entity (an app type outside the mapped tree — gastify's `User`) rendered a same-page
+#     anchor that did not exist → 2 dead links, regen failed closed. Now: card → its anchor · another
+#     entity's class → that page · neither → the to-be-designed reference. Separate mini-fixture so the
+#     main fixture's pinned counts never shift. MUTATION: restore the unconditional `_anchor(slug, target)`
+#     link in _a3_code.rel_rows → the gate reports 1 dead and the tbd grep fails.
+RELFIX="$T/relfix"; mk_fixture "$RELFIX"
+cat > "$RELFIX/src/models.py" <<'PYM'
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+
+class Widget(Base):
+    __tablename__ = "widgets"
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+
+class Gadget(Base):
+    __tablename__ = "gadgets"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    widget_id: Mapped[int] = mapped_column(ForeignKey("widgets.id"))
+    widget: Mapped["Widget"] = relationship("Widget")
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    owner: Mapped["User"] = relationship("User", back_populates="gadgets")
+PYM
+python3 - "$RELFIX/docs/site/center/center.config.json" <<'PY2'
+import json, sys
+p = sys.argv[1]; cfg = json.load(open(p)); cfg["entities"]["gadget"]["code"]["models"] = ["src/models.py"]
+json.dump(cfg, open(p, "w"), indent=1)
+PY2
+[ "$(build "$RELFIX" "$SHELL_SRC")" = 0 ] && ok || { bad "relfix: a model file with an undocumented FK target must still build"; tail -5 "$T/build.out"; }
+[ "$(gate "$RELFIX")" = 0 ] && ok || { bad "relfix gate: an undocumented FK target must not be a dead anchor"; grep "dead\|✗" "$T/gate.out" | head -3; }
+grep -q " 0 dead" "$T/gate.out" && ok || bad "relfix gate: 0 dead"
+RELDM="$RELFIX/docs/site/center/arch-data-model.html"
+grep -q '>User<span class="tag ic t-tbd">tbd</span></a>' "$RELDM" \
+  && ok || bad "relfix: the undocumented target (User) must render as the to-be-designed reference"
+grep -q 'id="dm-app-Widget"' "$RELDM" && grep -q 'href="[^"]*#dm-app-Widget">Widget</a>' "$RELDM" \
+  && ok || bad "relfix SILENT: a documented target (Widget) keeps its real anchor"
+
 # Dead internal href → exit 1.
 DEAD="$T/dead"; mk_fixture "$DEAD"
 build "$DEAD" "$SHELL_SRC" >/dev/null
