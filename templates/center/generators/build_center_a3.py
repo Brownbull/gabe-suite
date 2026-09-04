@@ -2220,11 +2220,17 @@ def main() -> int:
                         "window.GABE_WORKFLOWS = [];\n", encoding="utf-8")
     # The DRAFT feed (window.GABE_WORKFLOWS_DRAFT — `/gabe-cc-update curate-workflows`, 2026-09-04): machine-proposed
     # candidates the human reviews in the station's workflows tab. Copied through like the curated file when the build
-    # writes elsewhere; NO stub when absent — the station shows no drafts (the loader's onerror is silent).
+    # writes elsewhere; an honest-empty stub when absent — the same law as workflows.js: a clean center has NO dead
+    # script target (the center link gate counts a referenced-but-missing file as dead). The drafter overwrites it.
     _wfd = CENTER_OUT / "workflows.draft.js"
     _wfdsrc = CENTER / "workflows.draft.js"
     if _wfdsrc.is_file() and _wfdsrc.resolve() != _wfd.resolve():
         _wfd.write_text(_wfdsrc.read_text(encoding="utf-8"), encoding="utf-8")
+    elif not _wfd.is_file():
+        _wfd.write_text("// DRAFT user workflows — none yet. `/gabe-cc-update curate-workflows` proposes candidates here\n"
+                        "// (docs/site/center/workflows.draft.js) from the graph's uncovered endpoints; review in the station's\n"
+                        "// workflows tab, then move an accepted entry into workflows.js. Honest-empty until drafted.\n"
+                        "window.GABE_WORKFLOWS_DRAFT = [];\n", encoding="utf-8")
 
     # The per-phase ARCHIVE (Graph 2 replays past changes) — accumulate the CURRENT
     # phase's projection, keyed by phase id; completed phases stay frozen. COMMITTED +
