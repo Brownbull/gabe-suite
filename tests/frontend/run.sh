@@ -13,7 +13,8 @@
 #   * HONEST-EMPTY: GABE_FE_EXTRACT=0 · no web source · no typescript → present=False + reason;
 #     fold_fe(fe=None) leaves GABE_C4 byte-identical; present=False → only stats.fe.
 #   * DETERMINISM: byte-identical on a re-run (sorted inputs, index-triple wires).
-#   * MUTATION: a JSX-less Pascal export is NOT a component (it folds into module + is counted).
+#   * MUTATION (O2/O1): a JSX-less Pascal export is a component only on RENDERED-BY evidence (promoted +
+#     counted); rendered nowhere it is fe-unknown (counted) — never folded into the file's module.
 #   * LIVE (when a `typescript` resolves — GABE_TS_DIR, else the twins' web node_modules):
 #     the extractor re-derives the FROZEN fixture JSON byte-for-byte; else SKIPPED by name.
 # FIRE and SILENT both exercised. Exit 0 = all pass.
@@ -241,16 +242,24 @@ check("screen" not in P["fe:src/features/recipe/RecipeCard.tsx#RecipeCard"], "a 
 # ── determinism ────────────────────────────────────────────────────────────────────────
 fe2 = _a3_fe.build_fe(json.loads(json.dumps(X)), {"recipe": {}}, screens)
 check(json.dumps(fe, sort_keys=True) == json.dumps(fe2, sort_keys=True), "byte-identical on a re-run")
-# ── MUTATION: a Pascal export WITHOUT JSX is not a component ──────────────────────────
+# ── MUTATION: a Pascal export WITHOUT JSX — rendered-by evidence decides (O2/O1, 2026-09-03) ────────────
 Xm = copy.deepcopy(X)
 for ex in Xm["byFile"]["src/design-system/Badge.tsx"]["exports"]:
     if ex["name"] == "Badge": ex["hasJsx"] = False; ex["jsx"] = []
 fm = _a3_fe.build_fe(Xm, {"recipe": {}}, screens)
 km = {p["name"]: p["kind"] for p in fm["pieces"]}
-check(km.get("Badge") == "module" and fm["stats"]["excluded"]["pascal_no_jsx"] == 1,
-      "MUTATION: JSX removed → Badge is a module piece (the file's value export) and pascal_no_jsx counts it")
+check(km.get("Badge") == "component" and fm["stats"]["promoted"] == 1 and fm["stats"]["excluded"]["pascal_no_jsx"] == 0,
+      "MUTATION (O2): JSX removed from Badge → STILL a component, promoted on rendered-by evidence (RecipeCard renders <Badge/>); nothing falls through")
 Em = {(fm["pieces"][a]["name"], fm["pieces"][b]["name"]): r for a, b, r, *_ in fm["edges"]}
-check(Em.get(("RecipeCard", "Badge")) == "renders", "MUTATION: the JSX tag still wires (renders) onto the module piece")
+check(Em.get(("RecipeCard", "Badge")) == "renders", "MUTATION (O2): the renders edge binds onto the promoted component")
+# …and with the render ALSO gone nothing proves it → fe-unknown, counted (O1) — never the file's module
+Xu = copy.deepcopy(Xm)
+for ex in Xu["byFile"]["src/features/recipe/RecipeCard.tsx"]["exports"]:
+    if ex["name"] == "RecipeCard": ex["jsx"] = [t for t in ex.get("jsx", []) if t != "Badge"]
+fu = _a3_fe.build_fe(Xu, {"recipe": {}}, screens)
+ku = {p["name"]: p["kind"] for p in fu["pieces"]}
+check(ku.get("Badge") == "fe-unknown" and fu["stats"]["excluded"]["pascal_no_jsx"] == 1 and fu["stats"]["promoted"] == 0,
+      "MUTATION (O1): JSX removed AND no file renders it → fe-unknown, counted in pascal_no_jsx — an honest kind, not a module")
 # ── the C4 fold ────────────────────────────────────────────────────────────────────────
 base = {"version": 1, "stats": {"entities": 1}, "l2": {}}
 check(json.dumps(_a3_graph.fold_fe(copy.deepcopy(base), None), sort_keys=True) == json.dumps(base, sort_keys=True),
@@ -310,6 +319,46 @@ if ts_dir and shutil.which("node"):
 else:
     skipped.append("LIVE extractor case — no `typescript` resolvable (set GABE_TS_DIR)")
 
+
+# ── O2 · RENDERED-BY promotion + O1 · fe-unknown (2026-09-03) — a Pascal .tsx function/class export with NO JSX of its own:
+#    rendered as a tag anywhere → COMPONENT (delegated render · headless effect) and the renders edge BINDS;
+#    rendered nowhere → fe-unknown, an honest kind — never the file's module. Both counted. ──
+_X8 = {"byFile": {
+    "src/routes/screens.tsx": {"exports": [{"name": "RecipesRoute", "kind": "function", "hasJsx": True, "jsx": ["BrowseContainer"]}],
+        "bindings": {"BrowseContainer": {"file": "src/features/cook/BrowseContainer.tsx", "name": "BrowseContainer"}}},
+    "src/features/cook/BrowseContainer.tsx": {"exports": [{"name": "BrowseContainer", "kind": "function", "hasJsx": False, "calls": ["renderBrowseView"]}],
+        "bindings": {"renderBrowseView": {"file": "src/features/cook/renderBrowseView.tsx", "name": "renderBrowseView"}}},
+    "src/features/cook/renderBrowseView.tsx": {"exports": [{"name": "renderBrowseView", "kind": "function", "hasJsx": True, "jsx": []}], "bindings": {}},
+    "src/i18n/Orphan.tsx": {"exports": [{"name": "Orphan", "kind": "function", "hasJsx": False}], "bindings": {}},
+    "src/features/cook/helpers.ts": {"exports": [{"name": "score", "kind": "function", "hasJsx": False}], "bindings": {}}}}
+_fe8 = _a3_fe.build_fe(_X8, {"cook": {}}, [])
+_k8 = {p["name"]: p["kind"] for p in _fe8["pieces"]}
+_E8 = {(_fe8["pieces"][a]["name"], _fe8["pieces"][b]["name"]): r for a, b, r, *_ in _fe8["edges"]}
+check(_k8.get("BrowseContainer") == "component" and _fe8["stats"].get("promoted") == 1,
+      f"O2 FIRE: a JSX-less Pascal .tsx export RENDERED by a route is promoted to component (+ counted) ({_k8})")
+check(_E8.get(("RecipesRoute", "BrowseContainer")) == "renders",
+      "O2: the promotion binds the route's renders edge — the severed view chain is restored")
+check(_k8.get("Orphan") == "fe-unknown" and _fe8["stats"]["excluded"]["pascal_no_jsx"] == 1
+      and _fe8["stats"]["by_kind"].get("fe-unknown") == 1,
+      "O1 FIRE: a JSX-less Pascal .tsx export rendered NOWHERE is fe-unknown — an honest kind, never a module claim (+ counted)")
+check(_k8.get("helpers") == "module" and "score" not in _k8,
+      "O2/O1 SILENT: a camelCase helper still folds into its file's module piece")
+_mc8 = {p["name"]: p.get("mclass") for p in _fe8["pieces"] if p["kind"] == "module"}
+check(_mc8.get("renderBrowseView") == "render-fn" and _mc8.get("helpers") == "logic",
+      f"mclass: a JSX-bearing camelCase .tsx module is render-fn · a feature helper is logic ({_mc8})")
+check(all("jsx" not in p for p in _fe8["pieces"]), "mclass: the transient jsx marker never ships on a piece")
+# ── module CLASSES — api (fetch sites absorbed from the web arm) · model · config · lib, by directory IDIOM ──
+_X9 = {"byFile": {
+    "src/lib/api/client.ts": {"exports": [{"name": "getRecipes", "kind": "function", "hasJsx": False}], "bindings": {}},
+    "src/features/cook/model/mappers.ts": {"exports": [{"name": "mapRecipe", "kind": "function", "hasJsx": False}], "bindings": {}},
+    "src/app/queryClient.ts": {"exports": [{"name": "queryClient", "kind": "const", "hasJsx": False}], "bindings": {}},
+    "src/design-system/cx.ts": {"exports": [{"name": "cx", "kind": "function", "hasJsx": False}], "bindings": {}}}}
+_fe9 = _a3_fe.build_fe(_X9, {"cook": {}}, [{"id": "web:src/lib/api/client", "calls": [{"method": "GET", "path": "/recipes"}]}])
+_mc9 = {p["name"]: p.get("mclass") for p in _fe9["pieces"] if p["kind"] == "module"}
+check(_mc9 == {"client": "api", "mappers": "model", "queryClient": "config", "cx": "lib"},
+      f"mclass: api (fetch sites) · model (/model/) · config (/app/) · lib (/design-system/) ({_mc9})")
+check(_fe9["stats"]["by_mclass"] == {"api": 1, "config": 1, "lib": 1, "model": 1},
+      "mclass: the by_mclass stat tallies module classes")
 for s in skipped: print("  SKIP ⚠:", s)   # the doctor-recognized coverage-skip marker (else a skipped LIVE-extractor case reads as false CLEAN)
 print(f"frontend battery: {pass_} passed, {fail} failed" + (f", {len(skipped)} skipped" if skipped else ""))
 sys.exit(1 if fail else 0)

@@ -16,6 +16,11 @@ pieces by resolving each ref through its binding:
     fe-type     type · interface · enum                 typed          (type ref)
     module      ONE piece per file of plain value        fecall         (call)  · imports (ident)
                 exports (feature logic, lib, api)
+                · mclass = what it DOES: render-fn · api · model · config · lib · logic
+    fe-unknown  Pascal .tsx function/class export with   —
+                no JSX of its own and NO rendered-by
+                evidence (O1). A rendered-by hit promotes
+                it to component instead (O2) — 2026-09-03
 
 Measured on gustify 2026-08-23 (P0, docs/design/frontend-model/README.md §9): the
 compiler proves 458 JSX components where graft's name convention claimed 637, and resolves
@@ -99,11 +104,15 @@ def _area_of(path: str, home: str = "") -> str:
         mid = []
     return "/".join(mid[:2]) if mid else "root"
 _PASCAL_RX = re.compile(r"^[A-Z]")
+# module CLASSES — directory IDIOMS (the same footing as the callee rosters above), never a project name-list
+_MODEL_SEGS = frozenset({"model", "models", "types", "schema", "schemas", "dto"})
+_CONFIG_SEGS = frozenset({"app", "config", "setup", "bootstrap", "env"})
+_LIB_SEGS = frozenset({"lib", "utils", "helpers", "shared", "common", "design-system", "i18n", "assets", "styles"})
 # precedence when two refs hit the same (from, to): the MOST specific relation wins
 _REL_RANK = {"renders": 0, "uses-store": 1, "uses-hook": 2, "fecall": 3, "typed": 4, "imports": 5}
 # the file's PRINCIPAL piece — where a screen flag / a module-scope ref / a ref to a
 # non-piece export lands. Lower = more principal.
-_PRINCIPAL = {"route": 0, "store": 1, "hook": 2, "component": 3, "module": 4, "fe-type": 5}
+_PRINCIPAL = {"route": 0, "store": 1, "hook": 2, "component": 3, "fe-unknown": 4, "module": 5, "fe-type": 6}
 
 
 # ── classification ──────────────────────────────────────────────────────────────────────
@@ -151,6 +160,24 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
     alias_cut: set[tuple[str, str]] = set()
     scaffold_files: set[str] = set()
     scaffold_cut: set[tuple[str, str]] = set()          # (file, export) name-level cuts — a ref to one must COUNT, never rewire
+    # O2 · RENDERED-BY evidence (2026-09-03): every (file, name) some export renders as a JSX tag, resolved through
+    # that file's bindings (a same-file tag resolves to the sibling). A Pascal .tsx function/class export with NO JSX
+    # of its own but a rendered-by hit IS a component (delegated render · headless effect) — promoted below, never
+    # folded into the file's module. Evidence the extractor already collects; no name-list.
+    rendered: set[tuple[str, str]] = set()
+    promoted = 0
+    for _p, _rec in by_file.items():
+        if _rec.get("story") or any(seg in _p for seg in _SCAFFOLD_PATH):
+            continue
+        _binds = _rec.get("bindings") or {}
+        _names = {e.get("name") for e in _rec.get("exports") or []}
+        for _ex in _rec.get("exports") or []:
+            for _tag in _ex.get("jsx") or []:
+                _b = _binds.get(_tag)
+                if _b and _b.get("file") and not _b.get("ext"):
+                    rendered.add((_b["file"], _b.get("name") or _tag))
+                elif not _b and _tag in _names:
+                    rendered.add((_p, _tag))
     for path in sorted(by_file):
         rec = by_file[path]
         if rec.get("story"):
@@ -169,6 +196,7 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
         home, cand = _fe_home(path, slugs)
         ids: list[str] = []
         leftovers: list[str] = []
+        left_jsx = False                                    # a leftover export holds JSX → mclass render-fn
         for ex in sorted(local, key=lambda e: e.get("name") or ""):
             if (ex.get("name") or "").endswith("Spike"):       # a stray spike export in an app path
                 stats_x["scaffold_exports"] = stats_x.get("scaffold_exports", 0) + 1
@@ -180,10 +208,19 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
                 continue
             k = classify_export(ex, path)
             if k is None:
-                if _PASCAL_RX.match(ex.get("name") or "") and path.endswith(".tsx") and ex.get("kind") in ("function", "class"):
-                    stats_x["pascal_no_jsx"] += 1
-                leftovers.append(ex.get("name") or "")
-                continue
+                _nm = ex.get("name") or ""
+                if _PASCAL_RX.match(_nm) and path.endswith(".tsx") and ex.get("kind") in ("function", "class"):
+                    if (path, _nm) in rendered:                 # O2: rendered as a tag somewhere → the component the JSX proof missed
+                        k = "component"
+                        promoted += 1
+                    else:                                       # O1: an honest unknown — never claimed as a module
+                        k = "fe-unknown"
+                        stats_x["pascal_no_jsx"] += 1          # the residue the pulse line reads
+                else:
+                    if ex.get("hasJsx"):
+                        left_jsx = True
+                    leftovers.append(_nm)
+                    continue
             pid = _piece_id(path, ex["name"])
             pieces[pid] = {"id": pid, "name": ex["name"], "kind": k, "file": path, "home": home,
                            "candidate": bool(cand), "span": ex.get("span"), "area": _area_of(path, home)}
@@ -199,6 +236,8 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
                 stem = path.rsplit("/", 1)[-1].rsplit(".", 1)[0]
                 pieces[pid] = {"id": pid, "name": stem, "kind": "module", "file": path, "home": home,
                                "candidate": bool(cand), "exports": sorted(leftovers), "area": _area_of(path, home)}
+                if left_jsx:
+                    pieces[pid]["jsx"] = True
                 if _FIXTURE_RX.search(path):
                     pieces[pid]["fixture"] = True
                 ids.append(pid)
@@ -224,6 +263,26 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
                     pieces[pid]["wsites"] = w          # write-method fetch count (a subset of `sites`)
                 absorbed += 1
                 break
+
+    # module CLASSES (operator 2026-09-03) — what a module DOES, the way feClass reads a component and role a function:
+    #   render-fn · a .tsx whose leftover exports hold JSX (a view drawn by a plain function)
+    #   api       · it fetches the API (the web arm absorbed call sites onto it)
+    #   model     · the feature's data layer (a model/models/types/schema path segment — shapes + mappers)
+    #   config    · app wiring (an app/config/setup/bootstrap segment)
+    #   lib       · shared plumbing (lib/utils/helpers/shared/common/design-system/i18n/assets/styles)
+    #   logic     · everything else — feature rules and calculations
+    by_mclass: dict[str, int] = {}
+    for p in pieces.values():
+        if p["kind"] != "module":
+            continue
+        segs = set(p["file"].split("/")[:-1])
+        mc = ("render-fn" if p.pop("jsx", False) else
+              "api" if p.get("sites") else
+              "model" if segs & _MODEL_SEGS else
+              "config" if segs & _CONFIG_SEGS else
+              "lib" if segs & _LIB_SEGS else "logic")
+        p["mclass"] = mc
+        by_mclass[mc] = by_mclass.get(mc, 0) + 1
 
     # edges: each piece's refs → binding → target piece, typed by the channel
     edges: dict[tuple[str, str], str] = {}
@@ -429,7 +488,7 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
                   "by_home": dict(sorted(by_home.items())), "edges": len(edge_list),
                   "by_rel": dict(sorted(by_rel.items())), "cross": sum(1 for e in edge_list if e["cross"]),
                   "screens_absorbed": absorbed, "unresolved": unresolved, "local_refs": local["refs"],
-                  "samefile_renders": local.get("samefile", 0), "by_feclass": dict(sorted(by_class.items())),
+                  "samefile_renders": local.get("samefile", 0), "by_feclass": dict(sorted(by_class.items())), "by_mclass": dict(sorted(by_mclass.items())), "promoted": promoted,
                   "by_channel": by_channel, "state_pieces": len(touches_state),
                   "cache_pieces": sum(1 for p in pieces.values() if p.get("cache")),
                   "write_pieces": len(touches_write),

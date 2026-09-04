@@ -45,6 +45,8 @@ DONE4='{"goal":"the merge","phases":[
  {"id":"1","cells":{"exec":"done"}},{"id":"2","cells":{"exec":"done"}},
  {"id":"3","cells":{"exec":"done"}},{"id":"4","cells":{"exec":"done"}}]}'
 
+
+
 echo "pulse-angles battery"
 
 # ── S1 · adversarial ───────────────────────────────────────────────────────
@@ -320,6 +322,15 @@ out=$(python3 "$ANGLES" "$r" --one-line 2>&1)
 if echo "$out" | grep -q "structural scan" && [ ! -e "$r/.kdbp" ]; then
   ok "no .kdbp ⇒ stateless mode still surfaces the signal"
 else bad "stateless mode broke: $out"; fi
+
+
+# ── S15 · fe-unknown residue — Pascal .tsx exports the frontend classifier could not prove (reads stats.fe; O1 2026-09-03) ──
+r=$(repo s15a); mkc4 "$r" '{"stats":{"fe":{"present":true,"by_kind":{"component":3,"fe-unknown":2,"module":4},"excluded":{"pascal_no_jsx":2}}}}'
+run "$r" | grep -q "fe-unknown residue — 2" && ok "S15 fires: 2 unproven Pascal .tsx exports carry the honest kind" || bad "S15 did not fire on fe-unknown residue"
+r=$(repo s15b); mkc4 "$r" '{"stats":{"fe":{"present":true,"by_kind":{"component":3,"module":4},"excluded":{"pascal_no_jsx":0}}}}'
+run "$r" | grep -q "fe-unknown residue" && bad "S15 fired with no residue" || ok "S15 silent when every Pascal export is proven (residue 0)"
+r=$(repo s15c); mkc4 "$r" '{"stats":{"fe":{"present":false,"reason":"no web source"}}}'
+run "$r" | grep -q "fe-unknown residue" && bad "S15 fired when the fe arm is absent" || ok "S15 silent when the fe arm is absent"
 
 echo "pulse-angles: $pass passed, $fail failed"
 [ "$fail" -eq 0 ] || exit 1

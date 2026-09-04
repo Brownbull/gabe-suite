@@ -516,6 +516,33 @@ def s14_map_deltas(root: Path, plan: dict | None, cfg: dict | None):
     return (ev, "inspect .kdbp/map-deltas-rollup.jsonl → improve the arm")
 
 
+def s15_fe_unknown(root: Path, plan: dict | None, cfg: dict | None):
+    """Frontend classification residue — a Pascal .tsx function/class export the classifier could
+    NOT prove (no JSX of its own, rendered nowhere) carries the honest kind ``fe-unknown`` instead
+    of a ``module`` claim (O1, 2026-09-03; a rendered-by hit promotes it to component — O2).
+    READS the committed c4-graph.json ``stats.fe.by_kind["fe-unknown"]``. Zero on the example after
+    O2; any residue is a component the extractor cannot see (a delegated render nobody tags · a
+    headless effect nobody mounts) → the O3 proofs, or a genuinely dead export. Report-never-gate;
+    silent when the fe arm is absent."""
+    if cfg is None:
+        return Unavailable("no center config — the fe stats live in c4-graph.json")
+    c4 = fetch_bridge._center(root) / "c4-graph.json"
+    if not c4.exists():
+        return Unavailable("no c4-graph.json yet — the center regen builds the fe arm")
+    try:
+        fe = (json.loads(c4.read_text(encoding="utf-8")).get("stats") or {}).get("fe") or {}
+    except Exception as e:  # noqa: BLE001
+        return Unavailable(f"c4-graph.json unreadable ({e.__class__.__name__})")
+    if not fe.get("by_kind"):
+        return Unavailable("fe arm absent (no web source / no typescript)")
+    n = int((fe.get("by_kind") or {}).get("fe-unknown", 0) or 0)
+    if n < 1:
+        return None
+    return (f"fe-unknown residue — {n} Pascal .tsx export(s) the classifier could not prove "
+            f"(no JSX of their own, rendered nowhere)",
+            "universe legend → Unknown (FE): render it somewhere, or add the O3 proof (return-null / render-call)")
+
+
 SIGNALS = [
     ("S1", "adversarial", s1_roast),
     ("S8", "evidence debt", s8_evidence),
@@ -531,6 +558,7 @@ SIGNALS = [
     ("S12", "schema homing", s12_schema_homing),
     ("S13", "route/file census", s13_route_file_census),
     ("S14", "map deltas", s14_map_deltas),
+    ("S15", "fe classification", s15_fe_unknown),
 ]
 
 

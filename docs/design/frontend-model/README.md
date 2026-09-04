@@ -290,3 +290,42 @@ A published decision surface (four live-sample forks) → the operator ruled:
 - The node RING / `wsites` 3D pill sprite (D2) — awaiting the operator's look at the wire gradient.
 - RTK-Query generated-hook detection (pattern-named, not in the `_CACHE_CALLEES` roster).
 - Store-object (`zustand set()`) write detection — not method-visible; revisit on a store-write-heavy twin.
+
+## 11. BUILT — 2026-09-03 (classification honesty: O2 rendered-by promotion · O1 `fe-unknown` · module classes)
+
+Trigger: the journey matrix opened "Look for recipes" on a `module` that lit 83 of 85 data columns. Root cause
+(analysis artifact `9e481f6b`): `classify_export` returns None for a Pascal `.tsx` function/class export whose own
+body holds no JSX, and every None folded into the file's `module` piece — a false claim for two REAL components on
+gustify (`RecipeBrowseContainer`, delegated render via imported render-fns; `LocaleSync`, a headless effect
+component returning null). The false label severed their parents' `renders` edges (a `<X/>` tag binds only to a
+component piece), so the route→container chain was cut: 3 of the 13 routes in `routes/screens.tsx` render the
+container and none reached it; 29/113 journeys anchored on a view. The backend has no equivalent — its unknowns are
+named (`__unclaimed__` · `external` + `unresolved_tables` · `schema_homing.ambiguous`) and a role it cannot prove
+stays empty. Of the 110 modules, 108 were legitimate helper files; the extractor already counted the two misses
+(`stats.fe.excluded.pascal_no_jsx: 2`).
+
+### Rulings (operator)
+- **O2 first — promote on evidence.** `build_fe` pre-walks every file's export `jsx` tag sets through that file's
+  `bindings` (a same-file tag → the sibling) into a `rendered` set of `(file, name)`. A Pascal `.tsx` function/class
+  export with no JSX of its own but a rendered-by hit becomes a **component** (counted in `stats.fe.promoted`) and its
+  `renders` edge binds. Evidence the extractor already collects; no name-list.
+- **O1 second — name the residue.** The same export with NO rendered-by hit becomes kind **`fe-unknown`** (never the
+  file's module); `stats.fe.excluded.pascal_no_jsx` now counts exactly that residue. The universe registers it as
+  `unknown` (dashed-ring `?` glyph, own colour, its own legend row + definition, hidden at T0–T2 like `module`).
+  Pulse **S15** reads `stats.fe.by_kind["fe-unknown"]` from the committed c4-graph — report-never-gate; the residue
+  is nagged, not remembered.
+- **Module classes (`mclass`)** — what a module DOES, the way `feClass` reads a component and `role` a function:
+  `render-fn` (a `.tsx` whose leftover exports hold JSX) · `api` (fetch call sites absorbed from the web arm) ·
+  `model` / `config` / `lib` (directory idioms — `_MODEL_SEGS` / `_CONFIG_SEGS` / `_LIB_SEGS`, the same footing as the
+  callee rosters, never a project name-list) · `logic` (everything else). Badge on the 3D node, legend rows under
+  `module` with a definition each, `stats.fe.by_mclass`.
+- **Definitions column** in the legend reference — "what it is, in your words": every type · badge · connector ·
+  fleet item carries a reader-voiced definition beside its name (`_LRDEF`, 60 entries).
+- **Deferred with triggers:** O3 (`returnsNull` / `returnsCall` proofs in the extractor) until S15 reports a
+  residue > 0; O4 (a `render-fn` KIND rather than a module class) until a render-function must be a journey step.
+
+### Batteries
+`tests/frontend` (O2 FIRE + edge binds · O1 FIRE · SILENT camelCase helper · mclass render-fn/logic · mclass
+api/model/config/lib + `by_mclass`; the old "JSX removed → module" MUTATION now proves promotion, and a second
+mutant with the render removed proves `fe-unknown`) · `tests/gabe-universe` (kind registration + badge + legend +
+definition pins; render gates) · `tests/pulse-angles` (S15 FIRE · silent at residue 0 · silent without the fe arm).

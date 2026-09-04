@@ -857,7 +857,7 @@ check('out.push(aboveSec(n)); return out;' in page,
 check('KINDS.module={' in page and 'form:"slab"' in page and 'if(f==="slab")' in page,
       "the `module` kind (slab form) is gone — plain TS modules have no glyph")
 check("GLYPH.module='<rect x=\"3\" y=\"3\"" in page, "the module legend glyph (grid) is gone")
-check('var FE_KIND={ "fe-type":"type" };' in page and 'var FE_REL={ "uses-hook":"uses", "uses-store":"reads" };' in page,
+check('var FE_KIND={ "fe-type":"type", "fe-unknown":"unknown" };' in page and 'var FE_REL={ "uses-hook":"uses", "uses-store":"reads" };' in page,
       "the feed→spike kind/rel vocabulary maps are gone")
 check('var _FE=(_C4.fe&&_C4.fe.pieces&&_C4.fe.pieces.length)?_C4.fe:null' in page,
       "the fe fold must gate on a NON-EMPTY pieces list (honest-empty feed = no fold)")
@@ -902,7 +902,7 @@ check('id="jrnEntTog"' in page and 'window.__uniJrnEntOpen=!window.__uniJrnEntOp
       "the ENTITY picker is COLLAPSED behind a one-line toggle (operator: all-at-once was too much)")
 check('class="jglvlinfo"' in page and 'vars:"Classified here:' in page and 'var _JINFO=' in page,
       "each LEVEL header carries a classification INFO icon (operator): hover shows what variables put a journey in that tier (like the connector legend)")
-check('feclass:{connector:"#3b82f6",container:"#a855f7",leaf:"#84cc16",private:"#8794ab"}' in page and 'function feclassBadge(fc)' in page and 'n.feClass==="connector"||n.feClass==="container"||n.feClass==="leaf"||n.feClass==="private"' in page and 'n.feClass==="view"&&billTex["screen"]' in page
+check('feclass:{connector:"#3b82f6",container:"#a855f7",leaf:"#84cc16",private:"#8794ab"}' in page and 'function feclassBadge(fc, kind)' in page and 'n.feClass==="connector"||n.feClass==="container"||n.feClass==="leaf"||n.feClass==="private"' in page and 'n.feClass==="view"&&billTex["screen"]' in page
       and '(it.fc==="view")?svgInline("screen",_COMPCOL,15)' in page,
       "COMPONENT CLASS palette (operator): view=SCREEN glyph; connector=blue arrow · container=VIOLET layers · leaf=LIME leaf · private=gray star — container off gray (2-gray clash), leaf off green (GET/hook collision); all four badged")
 check('window.__uniJrnStart=function(cid)' in page and '__uniJrnStart(r.getAttribute("data-jr"))' in page,
@@ -1042,7 +1042,7 @@ check('class="jdcols"' in page and '#uni-jrnref .jdcols, #uni-jrnref .jdstep{ di
 check('TRANSITIVE data reach' in page and '.cell.ind{' in page and 'jdopc{ position:sticky; left:368px' in page and '_HOP={calls:1' in page,
       "the transitive call-chain reach (indirect cells / .cell.ind style) or the operation-column freeze regressed")
 # journey matrix KIND FLAGS + diagonal headers + kind icon + no legend (operator 2026-09-03)
-check('class="jdflags"' in page and 'class="jdflag' in page and 'data-kd="' in page and 'gabe:universe:jdKinds4' in page and 'data-kd="function"' not in page and 'var _DK={model:1, schema:1, store:1};' in page and 'class="jdmhn"' in page and 'color:var(--mc' in page and 'class="jdmhk"' in page and 'pop.className="jdcolpop"' in page and '.jdcolpop{' in page and 'function _jdColPop(' in page and 'function _jdCellPop(' in page and 'var _COMPOSE={route:1, module:1};' in page and 'var _FANOUT=8;' in page and 'function _jrnRouteAnchor(' in page and 'fe.unshift(_anc)' in page and '.jdstep .jdico::after' in page and 'var _LRDEF={' in page and 'class="lrdef"' in page and 'function _defOf(' in page and 'class="jdhl"' in page and '.jdmh.jdcol-hot{' in page and '.jdcols .jdhl{' in page and 'var _OPC={read:' in page and '.jdcolpop .cpsep{' in page and '_snCache' in page and '_HOP={calls:1' in page and 'class="jdmxleg"' not in page,
+check('class="jdflags"' in page and 'class="jdflag' in page and 'data-kd="' in page and 'gabe:universe:jdKinds4' in page and 'data-kd="function"' not in page and 'var _DK={model:1, schema:1, store:1};' in page and 'class="jdmhn"' in page and 'color:var(--mc' in page and 'class="jdmhk"' in page and 'pop.className="jdcolpop"' in page and '.jdcolpop{' in page and 'function _jdColPop(' in page and 'function _jdCellPop(' in page and 'var _COMPOSE={route:1, module:1};' in page and 'var _FANOUT=8;' in page and 'function _jrnRouteAnchor(' in page and 'fe.unshift(_anc)' in page and '.jdstep .jdico::after' in page and 'var _LRDEF={' in page and 'class="lrdef"' in page and 'function _defOf(' in page and 'FE_KIND={ "fe-type":"type", "fe-unknown":"unknown" }' in page and 'KINDS.unknown={' in page and 'GLYPH.unknown=' in page and 'mclass:{api:' in page and '_badgeRow("mclass"' in page and 'mclass:p.mclass||null' in page and 'kind==="mclass"' in page and 'class="jdhl"' in page and '.jdmh.jdcol-hot{' in page and '.jdcols .jdhl{' in page and 'var _OPC={read:' in page and '.jdcolpop .cpsep{' in page and '_snCache' in page and '_HOP={calls:1' in page and 'class="jdmxleg"' not in page,
       "the matrix kind-flags (jdflag/jdKinds persist), diagonal headers (rotate -45), the per-column kind icon (jdmhk), or the legend-removal regressed")
 # journey overlay RESIZER (operator 2026-09-03): a left-edge handle drags the panel width, double-click resets.
 check('_rz.className="jdrz"' in page and '#uni-jrnref .jdrz{' in page and 'cursor:ew-resize' in page and 'removeItem("gabe:universe:jrnLeft")' in page and 'setItem("gabe:universe:jrnLeft"' in page,

@@ -1116,6 +1116,15 @@ KINDS.module={ col:"#f59e0b", form:"slab", label:"recipeScoring", type:"Module (
   doc:"A plain TS module — ONE piece for the file's value exports (feature logic, lib, api client). Components and hooks call into it (fecall) or import its values (imports)." };
 KINDCOL.module="#f59e0b";
 if(typeof GLYPH!=="undefined"){ GLYPH.module='<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'; }
+/* ── fe-unknown → `unknown` (O1, operator 2026-09-03): a Pascal .tsx function/class export with NO JSX of its own and NO
+   rendered-by evidence. The classifier used to fold it into the file's module — a false claim; now it says "we could not
+   tell". A dashed ring with a ? — nothing else in the station is dashed. (A rendered-by hit promotes to component — O2.) */
+KINDS.unknown={ col:"#9aa3b2", form:"panel", label:"LocaleSync", type:"Unknown (FE)", layer:"web", usage:[0,"unclassified — no JSX of its own, rendered nowhere"],
+  conns:[], tests:0, ident:[["kind","fe-unknown — could not be proven a component"],["fix","render it somewhere, or add a return-null / render-call proof (O3)"]],
+  doc:"A Pascal .tsx export the frontend classifier could NOT prove: no JSX in its body and no file renders it as a tag. Honest residue (stats.fe.excluded.pascal_no_jsx) — never claimed as a module." };
+KINDCOL.unknown="#9aa3b2";
+if(typeof GLYPH!=="undefined"){ GLYPH.unknown='<circle cx="12" cy="12" r="9" stroke-dasharray="3 2.5"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7"/><circle cx="12" cy="17" r=".6" fill="currentColor" stroke="none"/>'; }
+if(order.indexOf("unknown")<0) order.push("unknown");   // the billboard preload rasterises every kind in `order`
 LINKMETA.fecall={w:3,pv:1}; LINKMETA.imports={w:2,pv:1}; LINKMETA.bundle={w:4,pv:1};
 LINKMETA.returns={w:2,pv:1}; LINKMETA.takes={w:2,pv:1}; LINKMETA.uses={w:2,pv:0};   // fn→schema wires (levels schema_edges): returns/takes are signature facts, uses a body-name floor
 KINDS.capsule={ col:"#94a3b8", form:"pod", label:"model · 160", type:"Capsule (area)", layer:"web", usage:[0,"a folded AREA"],
@@ -1124,7 +1133,7 @@ KINDS.capsule={ col:"#94a3b8", form:"pod", label:"model · 160", type:"Capsule (
 KINDCOL.capsule="#94a3b8";
 if(typeof GLYPH!=="undefined"){ GLYPH.capsule='<path d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z"/><path d="M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z"/><path d="M14.97 3.62a2 2 0 0 0-1.94 0l-3 1.8A2 2 0 0 0 9 7.13v3.24a2 2 0 0 0 .97 1.71L12 13.5l2.03-1.42A2 2 0 0 0 15 10.37V7.13a2 2 0 0 0-.97-1.71l-3-1.8Z"/>'; }
 var FE_HOME_COL={ bucket:"#7c3aed", candidate:"#f97316" };   // a shared FE bucket (design-system · app-shell) · a feature the backend never modeled
-var FE_KIND={ "fe-type":"type" };                              // the feed's kind name → the spike's KINDS key
+var FE_KIND={ "fe-type":"type", "fe-unknown":"unknown" };                              // the feed's kind name → the spike's KINDS key
 var FE_REL={ "uses-hook":"uses", "uses-store":"reads" };       // the feed's rel → LINKMETA/REL2KIND vocabulary
 
 /* ══ PRE-C: wave-C kind + wire extensibility (2026-08-27) — plumbing only, draws NO nodes until
@@ -1226,7 +1235,7 @@ if(_FE){
     var m={ behind:0, depth:0, tests:0, cols:0, fanin:0, god:false, method:null };
     var n={ id:p.id, kind:kind, ent:p.home, label:p.name, col:KINDS[kind].col, K:KINDS[kind], layer:KINDS[kind].layer, sub:KINDS[kind].layer||"web",
       m:m, det:det, behind:{}, fe:true, screen:p.screen||null, sites:p.sites||0, candidate:!!p.candidate,
-      area:p.area||null, fixture:!!p.fixture, feClass:p.feClass||null,   // AREA + showcase tag + the fold-control class (phase 1)
+      area:p.area||null, fixture:!!p.fixture, feClass:p.feClass||null, mclass:p.mclass||null,   // AREA + showcase tag + the fold-control class (phase 1)
       write:!!p.write, wsites:p.wsites||0, fed2w:(p.fed2w==null?null:p.fed2w) };   // FE d2w: on the WRITE spine · write-method fetch count · hops-to-write (the gradient's number, 0 at the write)
     nodes.push(n); NIDS[n.id]=n; });
 }
@@ -1688,7 +1697,7 @@ function massR(n){ if(!ENC.mass) return bubR(); return bubR()*(0.85+nodeVal("mas
 function methodBadge(m, br){ var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); if(window.__badgeGlyph) window.__badgeGlyph(c,'method',m); else { var col=(typeof METHOD!=='undefined'&&METHOD[m])||'#8794ab'; c.fillStyle=col; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); } var _o=(typeof CFG!=='undefined'&&CFG.mbOp!=null)?CFG.mbOp:0.6, _z=(typeof CFG!=='undefined'&&CFG.mbSize!=null)?CFG.mbSize:3.5, _x=(typeof CFG!=='undefined'&&CFG.mbX!=null)?CFG.mbX:2, _y=(typeof CFG!=='undefined'&&CFG.mbY!=null)?CFG.mbY:-2.5; var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, opacity:_o, depthWrite:false, depthTest:false })); s.scale.set(_z,_z,1); s.position.set(_x,_y,4); s.raycast=function(){}; if(window.__uniBadges) window.__uniBadges.push(s); return s; }
 function roleBadge(role){ var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); if(window.__badgeGlyph) window.__badgeGlyph(c,'role',role); else { c.fillStyle='#8794ab'; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); } var _o=(typeof CFG!=='undefined'&&CFG.mbOp!=null)?CFG.mbOp:0.6, _z=(typeof CFG!=='undefined'&&CFG.mbSize!=null)?CFG.mbSize:3.5, _x=(typeof CFG!=='undefined'&&CFG.mbX!=null)?CFG.mbX:2, _y=(typeof CFG!=='undefined'&&CFG.mbY!=null)?CFG.mbY:-2.5; var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, opacity:_o, depthWrite:false, depthTest:false })); s.scale.set(_z,_z,1); s.position.set(_x,_y,4); s.raycast=function(){}; if(window.__uniBadges) window.__uniBadges.push(s); return s; }
 function countBadge(nn){ var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); if(window.__badgeGlyph) window.__badgeGlyph(c,'count',nn); else { c.fillStyle='#0e9aa7'; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); } var _o=(typeof CFG!=='undefined'&&CFG.mbOp!=null)?CFG.mbOp:0.6, _z=(typeof CFG!=='undefined'&&CFG.mbSize!=null)?CFG.mbSize:3.5, _x=(typeof CFG!=='undefined'&&CFG.mbX!=null)?CFG.mbX:2, _y=(typeof CFG!=='undefined'&&CFG.mbY!=null)?CFG.mbY:-2.5; var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, opacity:_o, depthWrite:false, depthTest:false })); s.scale.set(_z,_z,1); s.position.set(_x,_y,4); s.raycast=function(){}; if(window.__uniBadges) window.__uniBadges.push(s); return s; }
-function feclassBadge(fc){ var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); if(window.__badgeGlyph) window.__badgeGlyph(c,'feclass',fc); else { c.fillStyle='#8a8f98'; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); } var _o=(typeof CFG!=='undefined'&&CFG.mbOp!=null)?CFG.mbOp:0.6, _z=(typeof CFG!=='undefined'&&CFG.mbSize!=null)?CFG.mbSize:3.5, _x=(typeof CFG!=='undefined'&&CFG.mbX!=null)?CFG.mbX:2, _y=(typeof CFG!=='undefined'&&CFG.mbY!=null)?CFG.mbY:-2.5; var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, opacity:_o, depthWrite:false, depthTest:false })); s.scale.set(_z,_z,1); s.position.set(_x,_y,4); s.raycast=function(){}; if(window.__uniBadges) window.__uniBadges.push(s); return s; }
+function feclassBadge(fc, kind){ var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); if(window.__badgeGlyph) window.__badgeGlyph(c,kind||'feclass',fc); else { c.fillStyle='#8a8f98'; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); } var _o=(typeof CFG!=='undefined'&&CFG.mbOp!=null)?CFG.mbOp:0.6, _z=(typeof CFG!=='undefined'&&CFG.mbSize!=null)?CFG.mbSize:3.5, _x=(typeof CFG!=='undefined'&&CFG.mbX!=null)?CFG.mbX:2, _y=(typeof CFG!=='undefined'&&CFG.mbY!=null)?CFG.mbY:-2.5; var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, opacity:_o, depthWrite:false, depthTest:false })); s.scale.set(_z,_z,1); s.position.set(_x,_y,4); s.raycast=function(){}; if(window.__uniBadges) window.__uniBadges.push(s); return s; }
 function buildNode(n){ var grp=new T.Group(); var col=iconCol(n), br=massR(n);
   var ic, is=ENC.iconSize;
   var _ik=(n.kind==="component"&&n.feClass==="view"&&billTex["screen"])?"screen":n.kind;   /* VIEW wears the SCREEN glyph (operator) */ if(billTex[_ik]){ ic=billboardMesh(_ik,col); ic.scale.set(is,is,1); }   // ICON = a CONSTANT display size (operator-set), same for every element
@@ -1697,7 +1706,7 @@ function buildNode(n){ var grp=new T.Group(); var col=iconCol(n), br=massR(n);
   if(n.kind==="endpoint" && n.m && n.m.method){ try{ grp.add(methodBadge(n.m.method, br)); }catch(_mb){} }
   else if(n.kind==="function" && n.role){ try{ grp.add(roleBadge(n.role)); }catch(_rb){} }   // C1: function ROLE badge (accessor/caller/gate/pure) at the icon lower-right
   else if(n.kind==="schema" && n.__foldN>0){ try{ var _cb=countBadge(n.__foldN); _cb.__n=n.__foldN; grp.add(_cb); grp.__cnt=_cb; }catch(_cb0){} }   // schema FOLD COUNT badge (kept in sync by __uniSyncCountBadges)
-  else if(n.kind==="component" && (n.feClass==="connector"||n.feClass==="container"||n.feClass==="leaf"||n.feClass==="private")){ try{ grp.add(feclassBadge(n.feClass)); }catch(_fb){} }   // component CLASS badge (operator) — connector/container/leaf/private all badged; view wears the screen icon
+  else if(n.kind==="component" && (n.feClass==="connector"||n.feClass==="container"||n.feClass==="leaf"||n.feClass==="private")){ try{ grp.add(feclassBadge(n.feClass)); }catch(_fb){} }   else if(n.kind==="module" && n.mclass){ try{ grp.add(feclassBadge(n.mclass,"mclass")); }catch(_mb2){} }   // module CLASS badge (operator 2026-09-03)   // component CLASS badge (operator) — connector/container/leaf/private all badged; view wears the screen icon
   grp.add(bubble(br));
   if(ENC.verts){ var vv=Math.min(8,Math.round(num(nodeVal("verts",n).raw))); if(vv>0) radarVerts(grp, br, vv); }   // N sphere vertices lit by a radar sweep = used-by
   if(ENC.glow){ var g=nodeVal("glow",n); if(g.r>0) grp.add(glowSprite(col, 14+g.r*22, 0.5)); }
@@ -3928,11 +3937,13 @@ window.__uniDrawBundles=function(grp){ if(!UNIWIRE.r3) return;
 window.__BADGE_COL={ method:{GET:"#22c55e",POST:"#3b82f6",PUT:"#f97316",PATCH:"#eab308",DELETE:"#ef4444",BOOT:"#8a8f98"},
                      role:{accessor:"#ef4444",caller:"#3b82f6",gate:"#eab308",pure:"#8794ab"},
                      feclass:{connector:"#3b82f6",container:"#a855f7",leaf:"#84cc16",private:"#8794ab"},   // component CLASS badge (operator palette) — connector=blue data-in · container=violet compose · leaf=lime atom · private=gray internal (pure-like); container off gray (private owns gray), leaf off green (collided with GET/hook/view)
+                     mclass:{api:"#3b82f6","render-fn":"#ff8c00",model:"#14b8a6",config:"#8794ab",lib:"#84cc16",logic:"#f59e0b"},   // module CLASS badge (operator 2026-09-03): api=blue phone-line · render-fn=component orange · model=table teal · config=grey wiring · lib=lime shared · logic=module amber
                      count:{"*":(typeof KINDS!=="undefined"&&KINDS.schema&&KINDS.schema.col)||"#0e9aa7"} };   // schema fold count — the schema colour
 window.__BADGE_DESC={
   method:{ GET:"reads — returns data, no write", POST:"creates — writes a new row", PUT:"replaces — overwrites a row", PATCH:"updates — mutates fields", DELETE:"removes — deletes a row", BOOT:"boot — runs ONCE at app startup (the lifespan seeder), not a request verb" },
   role:{ accessor:"touches the store — reads/writes a DB table or a durable sink", caller:"orchestrates — calls other functions, no store of its own", gate:"guards — auth / consent / idempotency before the work runs", pure:"pure — computes from its inputs, no store, no callee that writes" },
   feclass:{ connector:"connector — wires data into a view (the FE's controller)", container:"container — composes children, the screen's structure", leaf:"leaf — a shared, reused atom (Button, Chip…)", private:"private — internal to one view, not shared or reused" },
+  mclass:{ api:"api — fetches the backend (call sites absorbed from the web arm)", "render-fn":"render-fn — a plain function whose body holds JSX", model:"model — the feature's data layer (a model/types/schema path)", config:"config — app wiring (an app/config/setup path)", lib:"lib — shared plumbing (lib/utils/design-system/i18n/assets)", logic:"logic — feature rules and calculations" },
   count:{ "*":"nested-only schemas folded into this one — composition helpers no endpoint or function names; double-click the parent to reveal them" } };
 /* connection KINDS (REL2KIND buckets) — shown on the link card + the connectors legend */
 window.__CONNDESC={ fk:"foreign-key data coupling", calls:"a function / handler call", imports:"a component / module import", bridge:"a frontend fetch reaching an API", rollup:"endpoint→model — the call-tree ROLLUP (reaches this table through its functions)", access:"function→model — the TRUE data access (this fn reads/writes this table)" };
@@ -3941,12 +3952,19 @@ window.__badgeGlyph=function(c, kind, key){
   c.fillStyle=col; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill();
   if(kind==="count"){ var t=String(key==null?"":key); c.fillStyle='#0b0f18'; c.textAlign='center'; c.textBaseline='middle';
     c.font='700 '+(t.length>1?60:72)+'px ui-monospace, Menlo, Consolas, monospace'; c.fillText(t, 64, 68); return; }   // the digits ARE the glyph
-  c.strokeStyle='#0b0f18'; c.lineWidth=(kind==="role"||kind==="feclass"?11:13); c.lineCap='round'; c.lineJoin='round'; c.beginPath();
+  c.strokeStyle='#0b0f18'; c.lineWidth=(kind==="role"||kind==="feclass"||kind==="mclass"?11:13); c.lineCap='round'; c.lineJoin='round'; c.beginPath();
   if(kind==="role"){
     if(key==='accessor'){ c.ellipse(64,42,26,10,0,0,6.2832); c.moveTo(38,42); c.lineTo(38,86); c.moveTo(90,42); c.lineTo(90,86); c.moveTo(38,64); c.bezierCurveTo(38,74,90,74,90,64); c.moveTo(38,86); c.bezierCurveTo(38,96,90,96,90,86); }
     else if(key==='caller'){ c.moveTo(40,64); c.lineTo(70,64); c.moveTo(70,44); c.lineTo(70,84); c.moveTo(70,44); c.lineTo(90,44); c.moveTo(70,84); c.lineTo(90,84); }
     else if(key==='gate'){ c.moveTo(64,32); c.lineTo(92,44); c.lineTo(92,66); c.bezierCurveTo(92,86,64,96,64,96); c.bezierCurveTo(64,96,36,86,36,66); c.lineTo(36,44); c.closePath(); }
     else { c.moveTo(64,32); c.lineTo(72,56); c.lineTo(96,64); c.lineTo(72,72); c.lineTo(64,96); c.lineTo(56,72); c.lineTo(32,64); c.lineTo(56,56); c.closePath(); }
+  } else if(kind==="mclass"){
+    if(key==='api'){ c.moveTo(36,64); c.lineTo(74,64); c.moveTo(60,50); c.lineTo(76,64); c.lineTo(60,78); c.moveTo(90,40); c.lineTo(90,88); }   // a call out to the backend's wall (the phone line)
+    else if(key==='render-fn'){ c.moveTo(40,44); c.lineTo(40,88); c.lineTo(88,88); c.moveTo(52,40); c.lineTo(92,40); c.lineTo(92,76); }   // a canvas corner — draws UI from a plain function
+    else if(key==='model'){ c.ellipse(64,44,26,10,0,0,6.2832); c.moveTo(38,44); c.lineTo(38,84); c.moveTo(90,44); c.lineTo(90,84); c.moveTo(38,84); c.bezierCurveTo(38,94,90,94,90,84); }   // a table — the feature's data layer
+    else if(key==='config'){ c.arc(64,64,14,0,6.2832); c.moveTo(64,36); c.lineTo(64,46); c.moveTo(64,82); c.lineTo(64,92); c.moveTo(36,64); c.lineTo(46,64); c.moveTo(82,64); c.lineTo(92,64); }   // a cog — app wiring
+    else if(key==='lib'){ c.moveTo(40,88); c.lineTo(40,40); c.lineTo(56,40); c.lineTo(56,88); c.moveTo(60,88); c.lineTo(60,48); c.lineTo(76,48); c.lineTo(76,88); c.moveTo(80,88); c.lineTo(90,44); }   // books on a shelf — shared plumbing
+    else { c.moveTo(44,40); c.lineTo(64,88); c.moveTo(56,52); c.lineTo(84,52); c.moveTo(48,72); c.lineTo(80,72); }   // ƒx — feature rules and calculations
   } else if(kind==="feclass"){
     if(key==='connector'){ c.moveTo(36,64); c.lineTo(76,64); c.moveTo(60,48); c.lineTo(80,64); c.lineTo(60,80); }   // data-in arrow (the FE's controller)
     else if(key==='container'){ c.moveTo(40,50); c.lineTo(88,50); c.moveTo(40,66); c.lineTo(88,66); c.moveTo(40,82); c.lineTo(88,82); }   // stacked layers (composes children)
@@ -4054,9 +4072,9 @@ window.__uniTier=null;         // the active tier index (null = custom / boot st
 var _FCALL=["view","private","connector","container","leaf"];
 var _KTIER=["endpoint","model","schema","external","function","web","screen","component","hook","store","route","module","type","middleware","flag","provider","prompt"];
 var _TIER_PRESETS=[
-  { name:"Skeleton", koff:["function","schema","hook","module","type","middleware","flag","provider","prompt","external","store"], fcoff:["private","connector","container","leaf"] },
-  { name:"Surface",  koff:["function","hook","module","type","prompt"],                                                            fcoff:["private","leaf"] },
-  { name:"Trace",    koff:["module","type"],                                                                                       fcoff:["leaf"] },
+  { name:"Skeleton", koff:["function","schema","hook","module","unknown","type","middleware","flag","provider","prompt","external","store"], fcoff:["private","connector","container","leaf"] },
+  { name:"Surface",  koff:["function","hook","module","unknown","type","prompt"],                                                            fcoff:["private","leaf"] },
+  { name:"Trace",    koff:["module","unknown","type"],                                                                                       fcoff:["leaf"] },
   { name:"Everything", koff:[],                                                                                                   fcoff:[] } ];   // T3 = truly everything, incl. the 508 fe-types (operator); type is off at T0–T2, ON at T3
 window.__uniSetTier=function(t){ t=Math.max(0,Math.min(3,t|0)); window.__uniTier=t;
   // A tier press during a WALK must PRESERVE the journey + selection and keep positions STATIC (operator):
@@ -4170,7 +4188,7 @@ window.__uniKindToggle=function(k){ if(!k) return;   // BINARY legend (operator)
   var cur=__uniKindState[k]||_kindDefault(k);
   __uniSetKindState(k, cur==="off"?"all":"off"); if(window.__uniTier!=null){ window.__uniTier=null; if(window.__uniTierSyncUI) __uniTierSyncUI(); } };
 var _GRPKINDS={ backend:["endpoint","function","schema","model","external","entity"],
-                frontend:["route","component","hook","type","store","module","screen","web"] };
+                frontend:["route","component","hook","type","store","module","unknown","screen","web"] };
 window.__uniGroupToggle=function(group){ if(!_GRPKINDS[group]) return;
   var cur=__uniGrpState[group]||"all", next=(cur==="off")?"all":"off";   // BINARY: the whole side on ↔ off
   __uniGrpState[group]=next;
@@ -4292,6 +4310,7 @@ window.__uniLegRef=function(){
     if(k==="entity"){ var e=(typeof _ents!=="undefined"&&_ents.length)?_ents[0]:null; return e?{label:(window.__uniEntLabel?__uniEntLabel(e):e)}:null; }
     return _exNode(function(n){ return n.kind===k; }); }
   function _exFc(fc){ return _exNode(function(n){ return n.kind==="component" && n.feClass===fc; }); }
+  function _exMc(mc){ return _exNode(function(n){ return n.kind==="module" && n.mclass===mc; }); }
   function _exMethod(m){ return _exNode(function(n){ return n.kind==="endpoint" && n.m && n.m.method===m; }); }
   function _exRole(r){ var p=_fnPool(); for(var i=0;i<p.length;i++){ if(p[i].role===r) return {label:p[i].label}; } return null; }
   function _esc(x){ return String(x==null?"":x).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
@@ -4307,6 +4326,7 @@ window.__uniLegRef=function(){
     type:"a TypeScript shape — the contract for data the UI passes around",
     store:"shared client state — the frontend's data layer",
     module:"a shared helper / utility imported across the frontend",
+    unknown:"a Pascal .tsx export with no JSX of its own and nothing rendering it — could not be proven a component",
     web:"a fetch call site — where a screen calls the API",
     endpoint:"an HTTP route the API exposes",
     "function":"backend logic — the code behind the endpoints",
@@ -4325,6 +4345,13 @@ window.__uniLegRef=function(){
     store:"frontend state that outlives one screen (a context, a store)",
     module:"the leftover shelf — helpers, API calls and feature logic that aren't UI",
     web:"a place in the frontend that calls the API",
+    unknown:"\"we could not tell\" — said out loud, instead of calling it a module",
+    "mclass:api":"the frontend's phone line to the backend — the fetch calls live here",
+    "mclass:render-fn":"draws UI from a plain function — a view without a component name",
+    "mclass:model":"the feature's data shapes and mappers — turns API replies into what screens show",
+    "mclass:config":"app wiring — clients, config, setup",
+    "mclass:lib":"shared plumbing used everywhere — formatting, i18n, assets, design-system helpers",
+    "mclass:logic":"the feature's rules and calculations — no UI, no API",
     endpoint:"the API door the frontend knocks on — one URL and a verb",
     "function":"one backend step — the work behind an endpoint",
     schema:"the shape of what an endpoint takes in or hands back",
@@ -4402,9 +4429,10 @@ window.__uniLegRef=function(){
       +'<div class="lrtx"><b>'+_esc(name)+'</b><i>'+_esc(desc)+'</i></div><div class="lrdef">'+_esc(_LRDEF[kind+":"+key]||"")+'</div>'+_exChip(ex)+_tierCell(tier,"kind")+'</div>'; }
   var BD=(window.__BADGE_DESC)||{}, hasFe=!!(window.GABE_C4&&GABE_C4.fe);
   function _feSection(){ var h='<div class="lrsec"><div class="lrsh">FRONTEND</div>';
-    ["route","component","hook","type","store","module","web"].forEach(function(k){ if(!K[k]) return;
+    ["route","component","hook","type","store","module","unknown","web"].forEach(function(k){ if(!K[k]) return;
       var _kids=(k==="component" && hasFe); h+=_typeRow(k, _kids);                      // component is a PARENT — no header example
-      if(_kids){ ["connector","container","leaf","private"].forEach(function(fc){ h+=_badgeRow("feclass", fc, fc, (BD.feclass&&BD.feclass[fc])||"", _exFc(fc), _minTierFc(fc)); }); } });
+      if(_kids){ ["connector","container","leaf","private"].forEach(function(fc){ h+=_badgeRow("feclass", fc, fc, (BD.feclass&&BD.feclass[fc])||"", _exFc(fc), _minTierFc(fc)); }); }
+      else if(k==="module" && hasFe){ ["api","render-fn","model","config","lib","logic"].forEach(function(mc){ h+=_badgeRow("mclass", mc, mc, (BD.mclass&&BD.mclass[mc])||"", _exMc(mc), _minTierKind("module")); }); } });
     if(hasFe){ var vico=(typeof svgInline==="function")?svgInline("screen","#d946ef",18):"";   // View = a screen-glyph type (the merged view+screen), toggled as a feClass
       var _von=!(window.__uniFeClassState&&__uniFeClassState.view===false), _vt=_minTierFc("view");
       h+='<div class="lrrow'+_dimCls(_vt)+'"><button class="lrflag'+(_von?" on":"")+'" data-flagfc="view" title="'+(_von?"drawn — click to hide":"hidden — click to show")+'"></button><span class="lrico">'+vico+'</span><div class="lrtx"><b style="color:#d946ef">View</b><i>a screen — the top-level view component</i></div><div class="lrdef">'+_esc(_LRDEF.view)+'</div>'+_exChip(_exFc("view"))+_tierCell(_vt,"kind")+'</div>'; }
@@ -5732,10 +5760,10 @@ var _legSub="Defense";   // active sub-tab within Planet
    SAME __badgeGlyph the 3D chip uses (legend-visual law), beside its one-line meaning. method → the five
    HTTP verbs · role → the four function roles (accessor/caller/gate/pure). ── */
 window.__badgePop=function(anchor, kind, key){ if(window.__badgePopHide) __badgePopHide();
-  var allKeys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE","BOOT"]:(kind==="count")?["N"]:(kind==="feclass")?["connector","container","leaf","private"]:["accessor","caller","gate","pure"];
+  var allKeys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE","BOOT"]:(kind==="count")?["N"]:(kind==="mclass")?"module class":(kind==="feclass")?["connector","container","leaf","private"]:(kind==="mclass")?["api","render-fn","model","config","lib","logic"]:["accessor","caller","gate","pure"];
   var keys=key?[key]:allKeys;   // key given (the node's OWN badge) → single row; else the whole key
   var desc=(window.__BADGE_DESC&&window.__BADGE_DESC[kind])||{};
-  var head=key?((kind==="method")?(key==="BOOT"?"boot event — runs once at startup":"HTTP method"):(kind==="count")?"folded schemas":(kind==="feclass")?"component class":"function role"):((kind==="method")?"HTTP method — the endpoint's verb (what it does to the row)":(kind==="count")?"fold count — nested-only schemas hidden under this one (critical); double-click to reveal":(kind==="feclass")?"component class — how each component is drawn":"function role — what it does with the data store");
+  var head=key?((kind==="method")?(key==="BOOT"?"boot event — runs once at startup":"HTTP method"):(kind==="count")?"folded schemas":(kind==="mclass")?"module class — what the module DOES (api · render-fn · model · config · lib · logic)":(kind==="feclass")?"component class":"function role"):((kind==="method")?"HTTP method — the endpoint's verb (what it does to the row)":(kind==="count")?"fold count — nested-only schemas hidden under this one (critical); double-click to reveal":(kind==="feclass")?"component class — how each component is drawn":"function role — what it does with the data store");
   var pop=document.createElement("div"); pop.id="badgepop"; pop.className="badgepop";
   var html='<div class="bph">'+head+'</div>';
   keys.forEach(function(k){ html+='<div class="bprow"><canvas class="bpcv" width="30" height="30" data-k="'+k+'"></canvas><div class="bpt"><b>'+(kind==="count"?"N":k)+'</b><span>'+(desc[k]||desc["*"]||"")+'</span></div></div>'; });
