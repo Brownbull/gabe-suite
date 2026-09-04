@@ -4,7 +4,7 @@
 # _a3_fe.build_fe turns the compiler extractor's JSON (_a3_fe_extract.mjs) into {pieces,
 # edges, homes, stats}; _a3_graph.fold_fe rides it on GABE_C4 as a SEPARATE `fe` key.
 # This battery proves, HERMETICALLY on the hand-enumerated fixture app (tests/frontend/fixture:
-# route · 2 components · fetching hook · 2 stores · 2 types · 2 modules · story · barrel):
+# route + a LAZY route · 2 components · fetching hook · 2 stores · 2 types · 2 modules · story · barrel):
 #   * CLASSIFICATION: every kind lands exactly once per the enumeration; the story + barrel
 #     are EXCLUDED and COUNTED; helpers fold into ONE module piece per file.
 #   * WIRES: renders · uses-hook · uses-store (both useContext + useXStore) · typed · fecall,
@@ -54,8 +54,8 @@ kind = {p["name"]: p["kind"] for p in fe["pieces"]}
 home = {p["name"]: p["home"] for p in fe["pieces"]}
 
 # ── classification: the enumeration, exactly ──────────────────────────────────────────
-check(fe["stats"]["pieces"] == 18, f"18 pieces from 21 files (got {fe['stats']['pieces']})")
-check(fe["stats"]["by_kind"] == {"component": 4, "fe-type": 4, "hook": 1, "module": 5, "route": 2, "store": 2},
+check(fe["stats"]["pieces"] == 19, f"19 pieces from 22 files (got {fe['stats']['pieces']})")
+check(fe["stats"]["by_kind"] == {"component": 4, "fe-type": 4, "hook": 1, "module": 5, "route": 3, "store": 2},
       f"by_kind matches the enumeration ({fe['stats']['by_kind']})")
 check(kind.get("RecipeCard") == "component" and kind.get("Badge") == "component"
       and kind.get("Chip") == "component" and kind.get("RecipeDetailBody") == "component", "JSX-proven exports are components")
@@ -118,8 +118,10 @@ check(E.get(("useRecipe", "api")) == "fecall", "apiFetch() → fecall onto the a
 check(E.get(("RecipeDetailBody", "Chip")) == "renders" and E.get(("nav", "format")) == "fecall",
       "the nested component renders the deep-bucket atom; a deep helper call wires module→module")
 check(E.get(("scoring", "Recipe")) == "typed", "a module's type import → typed")
-check(fe["stats"]["edges"] == 14 and fe["stats"]["by_rel"] == {"fecall": 3, "renders": 4, "typed": 4, "uses-hook": 1, "uses-store": 2},
-      f"exactly the enumerated 14 wires — recipeFixtures typed→Recipe joined ({fe['stats']['by_rel']})")
+check(fe["stats"]["edges"] == 15 and fe["stats"]["by_rel"] == {"fecall": 3, "renders": 5, "typed": 4, "uses-hook": 1, "uses-store": 2},
+      f"exactly the enumerated 15 wires — recipeFixtures typed→Recipe joined, LazyRoute→RecipeCard lazy-bound ({fe['stats']['by_rel']})")
+check(E.get(("LazyRoute", "RecipeCard")) == "renders" and kind.get("LazyRoute") == "route",
+      "LAZY binding (2026-09-03): `const Card = lazy(() => import(\"@features/recipe/RecipeCard\").then(m => ({default: m.RecipeCard})))` binds the tag → renders")
 check(fe["stats"].get("samefile_renders", 0) == 0,
       "SAME-FILE render (blocker 2) SILENT: a corpus with no co-located render adds no edge (byte-identical)")
 
@@ -228,7 +230,7 @@ check(_ls and _ls.get("screen") and "wsites" not in _ls and "write" not in _ls a
       and _fe8["stats"]["write_pieces"] == 0 and _fe8["stats"]["fed2w_max"] == 0,
       "FE d2w READ: a GET-only fetch carries NO write/fed2w — the method decides, honest-empty of writes")
 
-check(fe["stats"]["cross"] == 6, f"6 wires cross homes (got {fe['stats']['cross']})")
+check(fe["stats"]["cross"] == 7, f"7 wires cross homes (got {fe['stats']['cross']})")
 check(all(isinstance(e, list) and 3 <= len(e) <= 4 and isinstance(e[0], int) for e in fe["edges"]),
       "wires are COMPACT index triples (a call wire may carry a 4th channel element: state/chrome)")
 check(fe["stats"]["unresolved"] == {"ext": 0, "no_piece": 0, "scaffold": 1, "alias": 1},
@@ -268,7 +270,7 @@ off = _a3_graph.fold_fe(copy.deepcopy(base), {"present": False, "reason": "no we
 check("fe" not in off and off["stats"]["fe"] == {"present": False, "reason": "no web source"},
       "present=False → only stats.fe names the absence")
 on = _a3_graph.fold_fe(copy.deepcopy(base), {**fe, "present": True, "reason": "typescript x"})
-check(sorted(on["fe"]) == ["edges", "homes", "pieces"] and on["stats"]["fe"]["present"] and on["stats"]["fe"]["pieces"] == 18,
+check(sorted(on["fe"]) == ["edges", "homes", "pieces"] and on["stats"]["fe"]["present"] and on["stats"]["fe"]["pieces"] == 19,
       "present → the `fe` key (pieces · edges · homes) + stats.fe")
 check("l2" in on and on["l2"] == {}, "the fold never touches l2")
 # ── honest-empty arm states ────────────────────────────────────────────────────────────

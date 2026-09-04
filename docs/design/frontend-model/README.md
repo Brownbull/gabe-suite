@@ -329,3 +329,18 @@ stays empty. Of the 110 modules, 108 were legitimate helper files; the extractor
 api/model/config/lib + `by_mclass`; the old "JSX removed → module" MUTATION now proves promotion, and a second
 mutant with the render removed proves `fe-unknown`) · `tests/gabe-universe` (kind registration + badge + legend +
 definition pins; render gates) · `tests/pulse-angles` (S15 FIRE · silent at residue 0 · silent without the fe arm).
+
+### Regen finding (same day) — LAZY bindings, and the numbers after
+The first twin regen left `RecipeBrowseContainer` as `fe-unknown` (O1 working as designed) because `routes/screens.tsx`
+never imports it: every route there code-splits its screen with `const X = lazy(() => import("spec").then(m => ({default:
+m.NAME})))`. A `lazy()` const is not an import declaration, so the extractor bound nothing and the file's 13 routes had
+ZERO `renders` wires — the real reason only 29/113 journeys could anchor on a view. `_a3_fe_extract.mjs` now binds a
+`lazy()` const like a named import (the dynamic import's resolved file + the mapped export, else `default`; an idiom, no
+name-list) and `build_fe` matches a `default` binding to the file's default export. Fixture: `src/routes/LazyRoute.tsx`
+(refrozen; the enumeration is 19 pieces · 15 wires · 3 routes · 7 cross).
+Gustify @ `3ea8a8af` after the change: promoted 2 · residue 0 · renders 837→850 · **route anchors 29→102 of 113** ·
+"Look for recipes" opens on `route:CookingRoute` → `component:RecipeBrowseContainer` (connector, 2 lit cells) ·
+`by_mclass` model 51 · logic 26 · lib 24 · render-fn 4 · api 2 · config 1.
+**Trap recorded:** `universe-build/regen-example.sh` re-assembles `gabe-universe.html` from `parts/` (last touched
+`fa67dee`) and lands it over the template — the station has since been edited directly (10+ commits). Only the four
+feed files were landed by hand; the parts pipeline needs a re-split-or-retire decision before it is run again.

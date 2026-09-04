@@ -145,6 +145,30 @@ for (const sf of program.getSourceFiles()) {
       else for (const el of ic.namedBindings.elements) bind(el.name, (el.propertyName || el.name).text);
     }
   }
+  // ── LAZY bindings (2026-09-03): `const X = lazy(() => import("spec").then(m => ({ default: m.NAME })))` — React
+  //    code-splitting. A lazy() const is NOT an import declaration, so the checker binds nothing and every `<X/>`
+  //    in the file resolves to no piece — a whole route file's renders edges vanish (gustify routes/screens.tsx:
+  //    13 routes, 0 renders wires). Bind it like a named import: the dynamic import's resolved file (already in
+  //    rec.imports) + the mapped export, else `default`. An idiom (the callee is named lazy), never a name-list. ──
+  for (const st of sf.statements) {
+    if (!ts.isVariableStatement(st)) continue;
+    for (const dcl of st.declarationList.declarations) {
+      if (!dcl.initializer || !ts.isIdentifier(dcl.name) || !ts.isCallExpression(dcl.initializer)) continue;
+      const callee = dcl.initializer.expression;
+      const cname = ts.isIdentifier(callee) ? callee.text : (ts.isPropertyAccessExpression(callee) ? callee.name.text : '');
+      if (cname !== 'lazy') continue;
+      let spec = null, mapped = null;
+      const walkLazy = n => {
+        if (ts.isCallExpression(n) && n.expression.kind === ts.SyntaxKind.ImportKeyword && n.arguments[0] && ts.isStringLiteral(n.arguments[0])) spec = n.arguments[0].text;
+        if (ts.isPropertyAssignment(n) && ts.isIdentifier(n.name) && n.name.text === 'default' && ts.isPropertyAccessExpression(n.initializer)) mapped = n.initializer.name.text;
+        ts.forEachChild(n, walkLazy);
+      };
+      walkLazy(dcl.initializer);
+      if (!spec) continue;
+      const r = rec.imports.find(i => i.spec === spec);
+      rec.bindings[dcl.name.text] = (r && r.to) ? { file: r.to, name: mapped || 'default', kind: 'lazy' } : { ext: true };
+    }
+  }
   // ── exports: the symbols this file OFFERS (+ their body refs) ─────────────────────────
   const msym = checker.getSymbolAtLocation(sf);
   const exps = msym ? checker.getExportsOfModule(msym) : [];

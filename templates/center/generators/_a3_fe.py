@@ -210,7 +210,7 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
             if k is None:
                 _nm = ex.get("name") or ""
                 if _PASCAL_RX.match(_nm) and path.endswith(".tsx") and ex.get("kind") in ("function", "class"):
-                    if (path, _nm) in rendered:                 # O2: rendered as a tag somewhere → the component the JSX proof missed
+                    if (path, _nm) in rendered or (ex.get("isDefault") and (path, "default") in rendered):   # O2: rendered as a tag somewhere (a lazy `default` binding counts) → the component the JSX proof missed
                         k = "component"
                         promoted += 1
                     else:                                       # O1: an honest unknown — never claimed as a module
@@ -228,6 +228,8 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
                 pieces[pid]["fixture"] = True                   # showcase data, not domain mass — tagged, kept
             ids.append(pid)
             export_piece[(path, ex["name"])] = pid
+            if ex.get("isDefault"):
+                export_piece[(path, "default")] = pid   # a lazy() binding without a .then mapping names the default export
         if leftovers:
             stats_x["module_exports"] += len(leftovers)
             value_ids = [i for i in ids if pieces[i]["kind"] != "fe-type"]
