@@ -4,7 +4,9 @@ example page (templates/center/shell/example/codebase-graph-station/gabe-univers
 Run AFTER assemble.py; ./c4-graph.js + ./levels.js stay page-relative (they live in the example dir)."""
 import io, os
 D = os.path.dirname(os.path.abspath(__file__))
-SRC = os.path.join(D, "gabe-universe.html")
+# RETIRED 2026-09-03 (operator ruling): the page is no longer assembled from parts/ — the TEMPLATE is the source
+# of record (edited directly; build_center_a3.py ships it to every project). fill-example only REHOMES it.
+SRC = os.path.abspath(os.path.join(D, "..", "..", "..", "..", "templates", "center", "shell", "gabe-universe.html"))
 DST = os.path.normpath(os.path.join(D, "..", "..", "..", "..", "templates", "center", "shell",
                                     "example", "codebase-graph-station", "gabe-universe.html"))
 t = io.open(SRC, encoding="utf-8").read()

@@ -1,17 +1,22 @@
 # universe-build — the Gabe Universe station, reproducibly
 
-The Gabe Universe 3D station (`templates/center/shell/gabe-universe.html` + its example
-snapshot) is **assembled from source here**, not hand-edited. This dir is the source of
-record; the two committed `gabe-universe.html` files are its OUTPUT.
+**RETIRED as an authoring pipeline — operator ruling 2026-09-03.** The Gabe Universe station
+`templates/center/shell/gabe-universe.html` is the **source of record**: it is edited directly and
+`build_center_a3.py` ships it to every project's center (`SHELL_SRC.glob("*.html")`). The example
+snapshot is that template + rehome tokens (`fill-example.py`). `parts/`, `assemble.py` and
+`spike-base.html` stay for history only — the template drifted 21 commits past what they assemble
+(last parts commit `fa67dee`, 2026-08-31); they are **not a build input** and must not be landed.
+What this dir still owns: the twin-read-only FEED build, the `--check` reproducibility contract, the
+seeded sim, and the headless proofs.
 
 ## Source layout
 
 | File | Role |
 |---|---|
-| `spike-base.html` | the 5C spike the station is transformed FROM (upstream) |
-| `parts/{adapter,layout,card}.js` · `parts/{station.css,chrome.html}` | the station's own source — **edit these** |
-| `assemble.py` | deterministic str-replace pipeline: `spike-base + parts/` → `gabe-universe.html` (this dir, gitignored) |
-| `fill-example.py` | fills the assembled page with the gustify example tokens → the committed **example** page |
+| `spike-base.html` | RETIRED — the 5C spike the station was originally transformed from (history) |
+| `parts/{adapter,layout,card}.js` · `parts/{station.css,chrome.html}` | RETIRED — **do not edit**; edit `templates/center/shell/gabe-universe.html` |
+| `assemble.py` | RETIRED — the former `spike-base + parts/` → page pipeline; not run by regen-example.sh |
+| `fill-example.py` | rehomes the **template** with the gustify example tokens → the committed **example** page |
 | `derive-seeded-sim.py` | derives the example's `sim.data.js` from a real twin commit (regenerable seed, never a frozen blob) |
 | `regen-example.sh` | **ONE command** — rebuilds (or `--check` drift-checks) the ENTIRE committed example estate |
 | `verify-*.mjs` | headless-chrome proofs (SOLO-sequential; see §Proofs) |

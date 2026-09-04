@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# RETIRED 2026-09-03 (operator ruling) — NOT a build input. The station template is edited directly and is 21 commits
+# past what spike-base + parts/ assemble; running this and landing its output would regress the station. Kept for history.
 """Transform the 5C spike into the Gabe Universe station (deterministic, re-runnable)."""
 import io, os
 D=os.path.dirname(os.path.abspath(__file__))

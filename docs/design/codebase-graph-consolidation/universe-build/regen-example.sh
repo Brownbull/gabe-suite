@@ -11,9 +11,10 @@
 #   sim.data.js                                              ← FROZEN-SEEDED (arch-graph-lab fixture;
 #                                                              the build emits the null stub — NEVER ship it:
 #                                                              commit 77fe3cd shipped the stub by mistake)
-#   gabe-universe.html                                       ← assemble.py + fill-example.py (parts/ are source)
+#   gabe-universe.html                                       ← the TEMPLATE + fill-example.py (rehome tokens only;
+#                                                              parts/ + assemble.py RETIRED 2026-09-03 — operator ruling)
 #   codebase-graph.html                                      ← $TMP page with assets rehomed ../../assets/
-#   + templates/center/shell/gabe-universe.html              ← the LANDED station (same assembled page, shell tokens)
+#   (templates/center/shell/gabe-universe.html is the SOURCE of record — edited directly, never landed from here)
 #
 # A fresh machine additionally needs the proof workspace once:
 #   docs/design/graft-adoption/spike/README.md §"Rebuild the bundle" (playwright-core + system chrome).
@@ -35,9 +36,8 @@ GABE_SHELL_SRC="$ROOT/templates/center/shell" \
 GABE_CENTER_OUT="$TMP" \
 python3 "$ROOT/templates/center/generators/build_center_a3.py" >/dev/null
 
-# 2 · the station page: parts/ → assemble → fill (writes the example page itself)
-echo "── assemble + fill"
-python3 assemble.py >/dev/null
+# 2 · the station page: the TEMPLATE → fill (rehome tokens) → the example page. No assembly step: parts/ is retired.
+echo "── fill (template → example)"
 if [ "$CHECK" = 1 ]; then
   python3 fill-example.py >/dev/null      # fill-example writes $EX directly — under --check we
   RESTORE=1                               # compare and RESTORE from git afterwards
@@ -82,8 +82,7 @@ if [ "$CHECK" = 1 ]; then
 else
   python3 derive-seeded-sim.py "$TWIN" "$TMP" "$EX/sim.data.js"
 fi
-# the landed shell station (the assembled page with shell tokens intact)
-land "gabe-universe.html" "$ROOT/templates/center/shell/gabe-universe.html" "shell/gabe-universe.html"
+# (the template is the source, not an output — nothing is landed onto it)
 # the example page itself: fill-example already wrote it; in --check, diff vs git HEAD
 if [ "$CHECK" = 1 ]; then
   if git -C "$ROOT" diff --quiet -- "templates/center/shell/example/codebase-graph-station/gabe-universe.html"; then
