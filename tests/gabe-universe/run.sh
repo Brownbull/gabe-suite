@@ -903,8 +903,10 @@ check('id="jrnEntTog"' in page and 'window.__uniJrnEntOpen=!window.__uniJrnEntOp
 check('class="jglvlinfo"' in page and 'vars:"Classified here:' in page and 'var _JINFO=' in page,
       "each LEVEL header carries a classification INFO icon (operator): hover shows what variables put a journey in that tier (like the connector legend)")
 check('feclass:{connector:"#3b82f6",container:"#a855f7",leaf:"#84cc16",private:"#8794ab"}' in page and 'function feclassBadge(fc, kind)' in page and 'n.feClass==="connector"||n.feClass==="container"||n.feClass==="leaf"||n.feClass==="private"' in page and 'n.feClass==="view"&&billTex["screen"]' in page
-      and '(it.fc==="view")?svgInline("screen",_COMPCOL,15)' in page,
+      and '(it.fc==="view")?svgInline("screen",VIEWCOL,15)' in page,
       "COMPONENT CLASS palette (operator): view=SCREEN glyph; connector=blue arrow · container=VIOLET layers · leaf=LIME leaf · private=gray star — container off gray (2-gray clash), leaf off green (GET/hook collision); all four badged")
+check('function _dispK(n)' in page and 'return _isView(n)?VIEWCOL:n.col;' in page and 'var K=_dispK(n);' in page and 'svgInline("screen",VIEWCOL,18)' in page,
+      "VIEW display kind: one helper (_dispK/_isView/VIEWCOL) feeds node colour, panel head, hover, kind chips, walk card + legend — a view is never printed as an orange COMPONENT")
 check('window.__uniJrnStart=function(cid)' in page and '__uniJrnStart(r.getAttribute("data-jr"))' in page,
       "the factored journey starter is gone (picker rows + search must share ONE start path)")
 check('!_nodeVisibleFn(n)){ try{ __uniReveal(n.id)' in page and 'a step SELECTS its element' in page,
@@ -1492,7 +1494,10 @@ const { chromium } = require(process.argv[3]);
     // DRAFT workflows (curate-workflows, 2026-09-04): the example lands workflows.draft.js → drafts list under the workflows tab, draft:true, level 0, WALKABLE
     const drafts=js.filter(x=>x.draft); let draftWalk=0; if(drafts.length){ window.__uniJrnStart(drafts[0].cid); draftWalk=WALK.steps.length; }
     const draftGrp=(function(){ try{ window.__uniJrnKind='wf'; return /drafts — review/.test(_jrnGroupsHTML()); }catch(e){ return false; } })();
-    return { journey:j.name, storeCols, storeFlagOn, litStore, iconInline, titleHot, cellClean, row0Lit, anchorKind, drafts:drafts.length, draftWalk, draftGrp, draftLevel0:drafts.every(x=>x.level===0) };
+    // VIEW display kind (operator 2026-09-04): a component with feClass "view" prints "View (FE)" in the view colour on the panel head — the legend's View example landed on an orange COMPONENT card before
+    const vn=Object.values(NIDS).find(x=>x&&x.kind==='component'&&x.feClass==='view'); let viewType=null, viewCol=null, viewIcon=null;
+    if(vn){ try{ showPanel(vn); viewType=((document.querySelector('#phead .ptype span')||{}).textContent)||null; viewCol=_dispK(vn).col; viewIcon=(ENC.color==='heat')?'heat':iconCol(vn); }catch(e){ viewType='ERR:'+e; } }
+    return { journey:j.name, storeCols, storeFlagOn, litStore, iconInline, titleHot, cellClean, row0Lit, anchorKind, drafts:drafts.length, draftWalk, draftGrp, draftLevel0:drafts.every(x=>x.level===0), viewType, viewCol, viewIcon };
   }).catch(e=>({err:String(e)}));
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
@@ -1545,7 +1550,7 @@ const { chromium } = require(process.argv[3]);
   const jd=jrnDetail, jrnDetailOk = jd && !jd.err && jd.clickable && jd.steps>0 && jd.stepsMatch && jd.groups===0 && jd.cols===1 && jd.colsSticky && jd.tinted===jd.steps && jd.opcs===jd.ops && jd.flows===jd.steps && jd.fromTo>0 && jd.icons===jd.steps
     && jd.entDots===jd.steps && jd.clus===jd.steps && jd.ops>0 && jd.tgts>0 && jd.fields>0 && jd.rels>0 && jd.flush && jd.aligned && jd.resizeOk
     && jd.matrixOk && jd.frozenOk && jd.walkSyncOk && jd.flagsOk && jd.opcFrozen && jd.indirect>0;
-  const sc=storeCheck, storeOk = sc && !sc.err && sc.storeCols>=1 && sc.storeFlagOn && sc.litStore>=1 && sc.iconInline && sc.titleHot && sc.cellClean && sc.row0Lit>=0 && sc.row0Lit<=5 && sc.anchorKind==='route' && sc.drafts>=1 && sc.draftWalk>0 && sc.draftGrp && sc.draftLevel0;
+  const sc=storeCheck, storeOk = sc && !sc.err && sc.storeCols>=1 && sc.storeFlagOn && sc.litStore>=1 && sc.iconInline && sc.titleHot && sc.cellClean && sc.row0Lit>=0 && sc.row0Lit<=5 && sc.anchorKind==='route' && sc.drafts>=1 && sc.draftWalk>0 && sc.draftGrp && sc.draftLevel0 && sc.viewType==='View (FE)' && sc.viewCol==='#d946ef' && (sc.viewIcon==='heat'||sc.viewIcon==='#d946ef');
   const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk && focusOk && keyOk && legRefOk && jrnDetailOk && storeOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
   else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'fcbOk='+fcbOk+' '+JSON.stringify(fcb), 'focusOk='+focusOk+' click='+JSON.stringify(clickFocus)+' tier='+JSON.stringify(afterTier), 'keyOk='+keyOk+' '+JSON.stringify(keyReg), 'legRefOk='+legRefOk+' '+JSON.stringify(legRef).slice(0,600), 'jrnDetailOk='+jrnDetailOk+' '+JSON.stringify(jrnDetail), 'storeOk='+storeOk+' '+JSON.stringify(storeCheck), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }

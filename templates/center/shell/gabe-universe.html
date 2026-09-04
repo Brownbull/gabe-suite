@@ -1125,6 +1125,16 @@ KINDS.unknown={ col:"#9aa3b2", form:"panel", label:"LocaleSync", type:"Unknown (
   conns:[], tests:0, ident:[["kind","fe-unknown — could not be proven a component"],["fix","render it somewhere, or add a return-null / render-call proof (O3)"]],
   doc:"A Pascal .tsx export the frontend classifier could NOT prove: no JSX in its body and no file renders it as a tag. Honest residue (stats.fe.excluded.pascal_no_jsx) — never claimed as a module." };
 KINDCOL.unknown="#9aa3b2";
+/* VIEW = a component whose feClass is "view" (the merged view + screen, operator 2026-08-30). It is NOT a kind of its
+   own in the data (kind stays "component" — the extractor's proof), but it is a TYPE on every surface: the screen
+   glyph (buildNode), the view colour (iconCol), "View (FE)" as the printed type (hover · panel head · kind chips ·
+   walk card) and the legend's View row. One helper feeds all of them — before 2026-09-04 only the glyph knew, so the
+   legend's View example jumped to an orange "COMPONENT (FE)" card (operator). */
+var VIEWCOL="#d946ef";
+function _isView(n){ return !!(n && n.kind==="component" && n.feClass==="view"); }
+function _dispK(n){ var K=(n&&(n.K||KINDS[n.kind]))||{}; if(!_isView(n)) return K;
+  return Object.assign({}, K, {col:VIEWCOL, type:"View (FE)", label:"App"}); }
+function _dispGlyph(n){ return _isView(n)?"screen":n.kind; }
 if(typeof GLYPH!=="undefined"){ GLYPH.unknown='<circle cx="12" cy="12" r="9" stroke-dasharray="3 2.5"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7"/><circle cx="12" cy="17" r=".6" fill="currentColor" stroke="none"/>'; }
 if(order.indexOf("unknown")<0) order.push("unknown");   // the billboard preload rasterises every kind in `order`
 LINKMETA.fecall={w:3,pv:1}; LINKMETA.imports={w:2,pv:1}; LINKMETA.bundle={w:4,pv:1};
@@ -1688,7 +1698,7 @@ var STARC={ size:0.45, glow:0.1, color:0xffffff, per:5 };   // operator-settled 
 
 function iconCol(n){ if(ENC.color==="heat") return heatCol(heatVal(n));
   if(ENC.method && n.kind==="endpoint" && n.m.method) return METHOD[n.m.method]||n.col;
-  return n.col; }   // identity = KIND colour
+  return _isView(n)?VIEWCOL:n.col; }   // identity = KIND colour (a VIEW component wears the view colour)
 function cap3(x){ return Math.min(x,3); }   // faked values can be cranked high — cap the visual so it never fills the screen
 function num(raw){ return typeof raw==="boolean"?(raw?1:0):(+raw||0); }
 function nodeVal(key,n){ var f=fieldOf(key), raw=(n.m||{})[f]; return {f:f, raw:raw, r:cap3(num(raw)/(MAXES[f]||1))}; }   // the effect's MAPPED field, normalized
@@ -2905,7 +2915,7 @@ function _stepNote(){ var el=document.getElementById("stepnote"); if(!el) return
     if(mi>=0 && mi<j.meta.length && j.meta[mi].id===id) meta=j.meta[mi];
     else { for(var k=0;k<j.meta.length;k++){ if(j.meta[k].id===id){ meta=j.meta[k]; break; } } } }
   var esc=function(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); };
-  var lbl=n?(n.label||id):id.split("#").pop(), kind=n?n.kind:"?", ent=n&&n.ent||"", col=(ENT[ent]||(n&&n.col))||"#888";
+  var lbl=n?(n.label||id):id.split("#").pop(), kind=n?n.kind:"?", ent=n&&n.ent||"", col=(ENT[ent]||(n&&(_isView(n)?VIEWCOL:n.col)))||"#888";   // a VIEW step wears the view colour
   var what="", doc=(n&&n.det&&n.det.doc)?(function(d){ var m=/^[\s\S]*?[.!?](?=\s|$)/.exec(d); return m?m[0]:d; })(String(n.det.doc)):"";
   var accTxt=function(a){ if(!a||!a.ops||!a.ops.length) return ""; var w=[],r=[]; a.ops.forEach(function(o){ (o.rw==="w"?w:r).push(o.model); });
     return (w.length?('<span class="snw">writes</span> '+esc(w.join(", "))):"")+(w.length&&r.length?" · ":"")+(r.length?('<span class="snr">reads</span> '+esc(r.join(", "))):""); };
@@ -2920,7 +2930,7 @@ function _stepNote(){ var el=document.getElementById("stepnote"); if(!el) return
     what="data model"+(n.m&&n.m.cols?(" · "+n.m.cols+(n.m.cols>=10?"+":"")+" column(s)"):"")+". "+(wby.length?('<span class="snw">written by</span> '+esc(wby.join(", "))+". "):"")+(rby.length?('<span class="snr">read by</span> '+esc(rby.join(", "))+". "):"");
     if(!wby.length&&!rby.length) what+="No drawn function touches it directly (endpoint rollups only)."; }
   else if(kind==="schema"){ what="request/response shape — the data contract this journey carries over the wire."; }
-  else if(n&&n.fe){ what=esc(kind)+" (frontend) — "+(kind==="screen"||kind==="web"?"the screen that fetches this journey's endpoint":"a piece on the UI side of the bridge")+"."; }
+  else if(n&&n.fe){ what=(_isView(n)?"view (frontend) — a screen-level component (the merged view + screen)":esc(kind)+" (frontend) — "+(kind==="screen"||kind==="web"?"the screen that fetches this journey's endpoint":"a piece on the UI side of the bridge"))+"."; }
   else { what=esc(kind)+"."; }
   var hop="";
   if(meta){ var frm=meta.from?_fnById(meta.from):null, frmL=frm?(frm.label||meta.from):(meta.from||"");
@@ -2935,8 +2945,8 @@ function _stepNote(){ var el=document.getElementById("stepnote"); if(!el) return
   else if(WALK.mode==="journey"&&j&&(j.bk||j.wf)&&n&&n.fe){ hop="<b>UI leg</b> · a screen that fetches this journey's endpoint over the bridge — the backend chain starts at the first endpoint step"; }
   else if(WALK.mode==="journey"&&j&&!j.bk&&!j.wf){ hop="test-journey step — an element this test touches (coverage set, entity-by-entity; not an execution order)"; }
   el.innerHTML='<div class="snhd"><span class="snpos">'+(WALK.i+1)+'/'+WALK.steps.length+'</span>'
-    +(typeof svgInline==="function"&&kind!=="?"?('<span style="display:inline-flex;flex:none">'+svgInline(kind, col, 14)+'</span>'):"")
-    +'<span class="snlbl" title="'+esc(lbl)+'">'+esc(lbl)+'</span><span class="snkind">'+esc(kind)+'</span>'
+    +(typeof svgInline==="function"&&kind!=="?"?('<span style="display:inline-flex;flex:none">'+svgInline(n?_dispGlyph(n):kind, col, 14)+'</span>'):"")
+    +'<span class="snlbl" title="'+esc(lbl)+'">'+esc(lbl)+'</span><span class="snkind">'+esc(n&&_isView(n)?"view":kind)+'</span>'
     +(ent?('<span class="snent" style="background:'+col+'">'+esc(ent)+'</span>'):"")
     +'<span class="snnav"><button class="snmin" title="minimize to the title / expand">–</button><button title="previous step (Alt+A)" data-sd="-1">‹</button><button title="next step (Alt+D)" data-sd="1">›</button></span></div>'
     +'<div class="snwhat">'+what+'</div>'+(hop?('<div class="snhop">'+hop+'</div>'):"")
@@ -4441,7 +4451,7 @@ window.__uniLegRef=function(){
       var _kids=(k==="component" && hasFe); h+=_typeRow(k, _kids);                      // component is a PARENT — no header example
       if(_kids){ ["connector","container","leaf","private"].forEach(function(fc){ h+=_badgeRow("feclass", fc, fc, (BD.feclass&&BD.feclass[fc])||"", _exFc(fc), _minTierFc(fc)); }); }
       else if(k==="module" && hasFe){ ["api","render-fn","model","config","lib","logic"].forEach(function(mc){ h+=_badgeRow("mclass", mc, mc, (BD.mclass&&BD.mclass[mc])||"", _exMc(mc), _minTierKind("module")); }); } });
-    if(hasFe){ var vico=(typeof svgInline==="function")?svgInline("screen","#d946ef",18):"";   // View = a screen-glyph type (the merged view+screen), toggled as a feClass
+    if(hasFe){ var vico=(typeof svgInline==="function")?svgInline("screen",VIEWCOL,18):"";   // View = a screen-glyph type (the merged view+screen), toggled as a feClass
       var _von=!(window.__uniFeClassState&&__uniFeClassState.view===false), _vt=_minTierFc("view");
       h+='<div class="lrrow'+_dimCls(_vt)+'"><button class="lrflag'+(_von?" on":"")+'" data-flagfc="view" title="'+(_von?"drawn — click to hide":"hidden — click to show")+'"></button><span class="lrico">'+vico+'</span><div class="lrtx"><b style="color:#d946ef">View</b><i>a screen — the top-level view component</i></div><div class="lrdef">'+_esc(_LRDEF.view)+'</div>'+_exChip(_exFc("view"))+_tierCell(_vt,"kind")+'</div>'; }
     return h+'</div>'; }
@@ -4919,7 +4929,7 @@ function build(){
   if(Graph){ try{ Graph._destructor(); }catch(e){} document.getElementById("g").innerHTML=""; }
   Graph=ForceGraph3D({ controlType: st.ctl })(document.getElementById("g"))
     .backgroundColor("#0e1524").graphData({nodes:nodes, links:links})
-    .nodeThreeObject(buildNode).nodeLabel(function(n){ return n.K.type+" — "+(n.label||n.K.label); })
+    .nodeThreeObject(buildNode).nodeLabel(function(n){ var _dk=_dispK(n); return _dk.type+" — "+(n.label||_dk.label); })
     .onNodeClick(function(n){ if(n&&n.kind==="capsule"){ if(window.__uniCapExpand) __uniCapExpand(n.ent); return; } var _lc=window.__uniLastClick||{}, _ct=Date.now(); if(n&&_lc.id===n.id&&(_ct-_lc.t)<350&&window.__uniRevealNeighbors){ window.__uniLastClick={id:null,t:0}; window.__uniRevealNeighbors(n); return; } window.__uniLastClick={id:(n&&n.id)||null,t:_ct}; SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); if(window.__uniHLSelect) __uniHLSelect(n); })
     .onLinkClick(function(l){ SEL={kind:"link",data:l}; showLinkPanel(l); refreshEncSel(); })
     .linkColor(linkColorFn).linkOpacity(0.6).linkWidth(linkWidthFn).linkVisibility(linkVisFn).linkHoverPrecision(8)
@@ -5418,8 +5428,8 @@ var KINDCARD=(function(){
       meta!=null?E("span",{class:"pnm"},String(meta)):null, dirIco(dir));
     r.onclick=go; return r; }
   function elemRow(n, go){ var r=E("div",{class:"pnav"},
-      E("span",{class:"pki",html:svgInline(n.kind,(n.K&&n.K.col)||"#9aa",13)}),
-      E("span",{class:"pnl"},n.label||n.id), E("span",{class:"pnm"},n.kind), dirIco("down"));
+      E("span",{class:"pki",html:svgInline(_dispGlyph(n),_dispK(n).col||"#9aa",13)}),
+      E("span",{class:"pnl"},n.label||n.id), E("span",{class:"pnm"},_isView(n)?"view":n.kind), dirIco("down"));
     r.onclick=go; return r; }
   function kindCounts(list){ var by={}; list.forEach(function(n){ by[n.kind]=(by[n.kind]||0)+1; }); return by; }
   var KINDTIP={ endpoint:"an API route handler — one node per METHOD + path; the entity's outward door",
@@ -5664,14 +5674,14 @@ function showLinkPanel(l){ try{ if(window.__uniCardPrune) __uniCardPrune(); }cat
       ;   // the collapse chevron lives in the panel FOOTER now (the walk bar owns the top)
   var pb=document.getElementById("pbody"); pb.innerHTML=""; KINDCARD.__link(l).forEach(function(nd){ if(nd) pb.append(nd); });
   document.getElementById("prailname").textContent=sl+" → "+tl; openPanel(); }
-function showPanel(n){ var K=n.K; try{ if(window.__uniCardPrune) __uniCardPrune(); }catch(_cp){}
+function showPanel(n){ var K=_dispK(n); try{ if(window.__uniCardPrune) __uniCardPrune(); }catch(_cp){}
   // the node's OWN badge on the kind row: endpoint → HTTP method, function → role (accessor/caller/gate/pure).
   // The badge icon sits after the kind, its meaning drops onto a line below, the entity stays after the dot.
   var _bk = (n.kind==="endpoint" && n.m && n.m.method) ? {kind:"method", key:n.m.method}
           : (n.kind==="function" && n.role) ? {kind:"role", key:n.role} : null;
   var _bdesc = (_bk && window.__BADGE_DESC && window.__BADGE_DESC[_bk.kind]) ? window.__BADGE_DESC[_bk.kind][_bk.key] : null;
   document.getElementById("phead").innerHTML="<div class='ptitle'><div class='pname'>"+(n.label||K.label)+"</div>"
-      +"<div class='ptype' style='color:"+K.col+"'>"+svgInline(n.kind,K.col,15)+"<span>"+K.type+"</span>"
+      +"<div class='ptype' style='color:"+K.col+"'>"+svgInline(_dispGlyph(n),K.col,15)+"<span>"+K.type+"</span>"
       +(_bk?"<span class='pheadbadge' id='pheadbadge'></span>":"")   // meaning on the INSTANT popup below (operator: no native-title delay)
       +(n.ent?"<span style='color:var(--muted);font-weight:600'> · "+n.ent+"</span>":"")+"</div></div>"
       ;   // the collapse chevron lives in the panel FOOTER now (the walk bar owns the top)
@@ -5856,7 +5866,7 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
         h+='<div class="lgrow lgfold'+(_fh?"":" lgoff")+'" data-lgfold="1" style="cursor:pointer" title="fold single-caller helper nodes to declutter — click to '+(_fh?"show them":"fold them")+'"><div class="lgvis"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M7 12h10M10 17h4"/></svg></div><div class="lglbl"><b>fold helpers</b> <i>'+(_fh?"on":"off")+'</i></div></div>'; return; }
       if(it.t==="feclass"){ var _fcoff=(window.__uniFeClassState&&window.__uniFeClassState[it.fc]===false);
         var _COMPCOL="#d946ef", _bcol=(it.fc==="connector")?"#0ca678":(it.fc==="container")?"#8a8f98":(it.fc==="leaf")?"#c026d3":"";   // the 3 BADGED classes carry a badge colour; view/private do not
-        var _fcico=(it.fc==="view")?svgInline("screen",_COMPCOL,15):svgInline("component",_COMPCOL,15);   // legend-visual law: view = the SCREEN glyph, the rest = the component cube (as the node draws)
+        var _fcico=(it.fc==="view")?svgInline("screen",VIEWCOL,15):svgInline("component",_COMPCOL,15);   // legend-visual law: view = the SCREEN glyph, the rest = the component cube (as the node draws)
         var _dot=_bcol?('<span style="position:absolute;right:0;bottom:0;width:6px;height:6px;border-radius:999px;background:'+_bcol+'"></span>'):'';
         var _tag=(it.fc==="view")?" · a screen":(it.fc==="private")?" · plain":"";
         var _flbl=(it.fc==="view")?"View":it.fc, _ftit=(it.fc==="view")?"the View type — a screen-level component (the merged view + screen)":("component class "+it.fc);
