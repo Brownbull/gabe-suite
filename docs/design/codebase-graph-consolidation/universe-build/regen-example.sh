@@ -73,6 +73,8 @@ norm() { sed -E '
 land() { # $1=src $2=dst $3=label
   if [ "$CHECK" = 1 ]; then
     if diff -q <(norm "$1") <(norm "$2") >/dev/null 2>&1; then echo "  OK   $3"; else echo "  DRIFT $3"; fail=1; fi
+  elif [ -f "$2" ] && diff -q <(norm "$1") <(norm "$2") >/dev/null 2>&1; then
+    echo "  same   $3 (stamps only — kept the committed copy)"   # a wallclock/HEAD-stamp-only rewrite is churn, not a re-land
   else cp "$1" "$2"; echo "  landed $3"; fi
 }
 for f in $FEEDS; do land "$TMP/$f" "$EX/$f" "$f"; done
