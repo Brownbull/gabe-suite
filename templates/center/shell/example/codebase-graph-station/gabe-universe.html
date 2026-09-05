@@ -4213,7 +4213,7 @@ window.__uniSetKindState=function(k, st, _defer){
 window.__uniKindToggle=function(k){ if(!k) return;   // BINARY legend (operator): on ↔ off, no 3-state
   var cur=__uniKindState[k]||_kindDefault(k);
   __uniSetKindState(k, cur==="off"?"all":"off"); if(window.__uniTier!=null){ window.__uniTier=null; if(window.__uniTierSyncUI) __uniTierSyncUI(); } };
-var _GRPKINDS={ backend:["endpoint","function","schema","model","external","entity"],
+var _GRPKINDS={ backend:["endpoint","function","schema","model","external","entity","middleware","flag","provider","prompt"],   /* operator 2026-09-05: the four were DRAWN (order/billTex) but never in the legend rosters */
                 frontend:["route","component","hook","type","store","module","unknown","screen","web"] };
 window.__uniGroupToggle=function(group){ if(!_GRPKINDS[group]) return;
   var cur=__uniGrpState[group]||"all", next=(cur==="off")?"all":"off";   // BINARY: the whole side on ↔ off
@@ -4384,6 +4384,10 @@ window.__uniLegRef=function(){
     model:"a database table — where the data actually lives",
     external:"a table this area points at but doesn't own",
     entity:"a business area — a planet of related screens, endpoints and tables",
+    middleware:"a check that runs before the endpoint's work — who you are, your session; a gate can say no",
+    flag:"a switch that turns a lane on or off — the journey stops here when it is off",
+    provider:"an outside service the backend calls — AI, email, payments; where the trace leaves your code",
+    prompt:"the text handed to an AI provider — built by a function, sent by a provider call",
     view:"a whole screen — the top-level component a route mounts",
     "feclass:connector":"the component that fetches and wires data into a screen",
     "feclass:container":"arranges its children — the screen's structure",
@@ -4464,7 +4468,7 @@ window.__uniLegRef=function(){
       h+='<div class="lrrow'+_dimCls(_vt)+'"><button class="lrflag'+(_von?" on":"")+'" data-flagfc="view" title="'+(_von?"drawn — click to hide":"hidden — click to show")+'"></button><span class="lrico">'+vico+'</span><div class="lrtx"><b style="color:#d946ef">View</b><i>a screen — the top-level view component</i></div><div class="lrdef">'+_esc(_LRDEF.view)+'</div>'+_exChip(_exFc("view"))+_tierCell(_vt,"kind")+'</div>'; }
     return h+'</div>'; }
   function _beSection(){ var h='<div class="lrsec"><div class="lrsh">BACKEND</div>';
-    ["endpoint","function","schema","model","external","entity"].forEach(function(k){ if(!K[k]) return;
+    ["endpoint","function","schema","model","external","entity","middleware","flag","provider","prompt"].forEach(function(k){ if(!K[k]) return;
       var _kids=(k==="endpoint"||k==="function"); h+=_typeRow(k, _kids);               // endpoint + function are PARENTS — no header example
       if(k==="endpoint"){ var _et=_minTierKind("endpoint"); ["GET","POST","PUT","PATCH","DELETE","BOOT"].forEach(function(m){ h+=_badgeRow("method", m, m, (BD.method&&BD.method[m])||"", _exMethod(m), _et); }); }
       else if(k==="function"){ var _ft=_minTierKind("function"); ["accessor","caller","gate","pure"].forEach(function(r){ h+=_badgeRow("role", r, r, (BD.role&&BD.role[r])||"", _exRole(r), _ft); }); }
@@ -5748,7 +5752,7 @@ var LEGEND={
     ["route","component","hook","type","store","module","web"].filter(function(k){ return order.indexOf(k)>=0; }).map(function(k){ return {t:"kind",k:k}; }),
     ((window.GABE_C4&&GABE_C4.fe)? [{t:"feclass",fc:"view"}] : []),
     [{t:"hd",l:"backend"}],
-    ["endpoint","function","schema","model","external","entity"].filter(function(k){ return order.indexOf(k)>=0; }).map(function(k){ return {t:"kind",k:k}; }),
+    ["endpoint","function","schema","model","external","entity","middleware","flag","provider","prompt"].filter(function(k){ return order.indexOf(k)>=0; }).map(function(k){ return {t:"kind",k:k}; }),
     [ {t:"note",l:"boundary colour = ENTITY · icon colour = kind · click a row to hide it (on/off) · the ⓘ on component opens the class key · fold helpers hides single-caller helpers"} ]),
   Connectors:[ {t:"grp",l:"entity ↔ entity · <i>relationship kind</i>"},
     {t:"ln",k:"fk",l:"fk <i>a foreign-key data coupling</i>"},
