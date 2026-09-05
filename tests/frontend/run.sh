@@ -138,18 +138,22 @@ check(_E2.get(("Panel", "Header")) == "renders" and _fe2["stats"].get("samefile_
 check(("Panel", "div") not in _E2,
       "SAME-FILE render: an HTML tag (div) is not an export → resolves to nothing, no spurious edge")
 
-# ── feClass — the F4 fold-control class per component (view/private/leaf/connector/container) ──
+# ── feClass — the F4 fold-control class per component (view = route-rendered · detached = no renderer · private/leaf/connector/container; D1 2026-09-05) ──
 _X3 = {"byFile": {"src/features/dash/Dash.tsx": {
     "exports": [{"name": "Dash", "kind": "function", "hasJsx": True, "jsx": ["Row", "Icon"]},
                 {"name": "Row", "kind": "function", "hasJsx": True, "jsx": ["Icon"]},
-                {"name": "Icon", "kind": "function", "hasJsx": True, "jsx": []}],
-    "bindings": {}}}}
+                {"name": "Icon", "kind": "function", "hasJsx": True, "jsx": []},
+                {"name": "Lost", "kind": "function", "hasJsx": True, "jsx": []}],
+    "bindings": {}},
+  "src/routes/DashRoute.tsx": {
+    "exports": [{"name": "DashRoute", "kind": "function", "hasJsx": True, "jsx": ["Dash"]}],
+    "bindings": {"Dash": {"file": "src/features/dash/Dash.tsx", "name": "Dash"}}}}}
 _fe3 = _a3_fe.build_fe(_X3, {"dash": {}}, [])
 _cls = {p["name"]: p.get("feClass") for p in _fe3["pieces"] if p["kind"] == "component"}
-check(_cls.get("Dash") == "view" and _cls.get("Row") == "private" and _cls.get("Icon") == "leaf",
-      "feClass (F4 engine): 0 render-parents=view · 1=private · 2+ shared no-data=leaf")
-check(_fe3["stats"]["by_feclass"] == {"leaf": 1, "private": 1, "view": 1},
-      "feClass: the by_feclass stat tallies the component classes")
+check(_cls.get("Dash") == "view" and _cls.get("Row") == "private" and _cls.get("Icon") == "leaf" and _cls.get("Lost") == "detached",
+      "feClass (D1 2026-09-05): rendered by a ROUTE = view · 0 render-parents = detached (never a view) · 1 = private · 2+ shared no-data = leaf")
+check(_fe3["stats"]["by_feclass"] == {"leaf": 1, "detached": 1, "private": 1, "view": 1},
+      "feClass: the by_feclass stat tallies the component classes incl. detached")
 
 # ── STORE DETECTOR (F2): a call reaching a store/fetch is STATE; cx/util plumbing is CHROME (cx=fecall fix) ──
 _X4 = {"byFile": {

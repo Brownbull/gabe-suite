@@ -1084,7 +1084,7 @@ var KINDS={
 var order=["route","component","hook","type","store","module","screen","web","endpoint","function","schema","model","external","entity","flag","provider","middleware","prompt"];
 /* ONE distinct colour per element kind — none reused by another kind, none overlapping a METHOD colour. */
 var KINDCOL={ endpoint:"#8b5cf6", "function":"#6366f1", model:"#14b8a6", schema:"#06b6d4", entity:"#84cc16",
-  component:"#ff8c00", hook:"#10b981", store:"#ec4899", route:"#38bdf8", type:"#64748b", screen:"#a855f7", external:"#94a3b8" };
+  component:"#2f7de1", hook:"#10b981", store:"#ec4899", route:"#38bdf8", type:"#64748b", screen:"#a855f7", external:"#94a3b8" };   /* component 2026-09-05: orange → cobalt (operator: orange read as the module amber); a different tone from the function indigo */
 Object.keys(KINDCOL).forEach(function(k){ if(KINDS[k]) KINDS[k].col=KINDCOL[k]; });
 /* the GRAPH = two CLUSTERS (entities). Each node: id · kind (→ icon/panel) · ent (→ cluster
    colour + boundary) · its own label. Icon colour = KIND; boundary colour = ENTITY. */
@@ -1718,7 +1718,7 @@ function buildNode(n){ var grp=new T.Group(); var col=iconCol(n), br=massR(n);
   if(n.kind==="endpoint" && n.m && n.m.method){ try{ grp.add(methodBadge(n.m.method, br)); }catch(_mb){} }
   else if(n.kind==="function" && n.role){ try{ grp.add(roleBadge(n.role)); }catch(_rb){} }   // C1: function ROLE badge (accessor/caller/gate/pure) at the icon lower-right
   else if(n.kind==="schema" && n.__foldN>0){ try{ var _cb=countBadge(n.__foldN); _cb.__n=n.__foldN; grp.add(_cb); grp.__cnt=_cb; }catch(_cb0){} }   // schema FOLD COUNT badge (kept in sync by __uniSyncCountBadges)
-  else if(n.kind==="component" && (n.feClass==="connector"||n.feClass==="container"||n.feClass==="leaf"||n.feClass==="private")){ try{ grp.add(feclassBadge(n.feClass)); }catch(_fb){} }   else if(n.kind==="module" && n.mclass){ try{ grp.add(feclassBadge(n.mclass,"mclass")); }catch(_mb2){} }   // module CLASS badge (operator 2026-09-03)   // component CLASS badge (operator) — connector/container/leaf/private all badged; view wears the screen icon
+  else if(n.kind==="component" && (n.feClass==="connector"||n.feClass==="container"||n.feClass==="leaf"||n.feClass==="private"||n.feClass==="detached")){ try{ grp.add(feclassBadge(n.feClass)); }catch(_fb){} }   else if(n.kind==="module" && n.mclass){ try{ grp.add(feclassBadge(n.mclass,"mclass")); }catch(_mb2){} }   // module CLASS badge (operator 2026-09-03)   // component CLASS badge (operator) — connector/container/leaf/private all badged; view wears the screen icon
   grp.add(bubble(br));
   if(ENC.verts){ var vv=Math.min(8,Math.round(num(nodeVal("verts",n).raw))); if(vv>0) radarVerts(grp, br, vv); }   // N sphere vertices lit by a radar sweep = used-by
   if(ENC.glow){ var g=nodeVal("glow",n); if(g.r>0) grp.add(glowSprite(col, 14+g.r*22, 0.5)); }
@@ -3649,7 +3649,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   [].forEach.call(foldGrp.querySelectorAll('.pill[data-grp="fold"] button'), function(btn){ btn.onclick=function(){ if(window.__uniSetFoldHelpers) __uniSetFoldHelpers(btn.getAttribute("data-v")==="on"); [].forEach.call(foldGrp.querySelectorAll("button"),function(x){ x.classList.toggle("on",x===btn); }); }; });
   var fcGrp=mk("grp"); fcGrp.innerHTML='<div class="grplbl">Component classes</div>';   // multi-toggle (each class on/off independently)
   var fcPill=document.createElement("div"); fcPill.className="pill fcpill";
-  ["view","private","connector","container","leaf"].forEach(function(fc){ var bn=document.createElement("button");
+  ["view","private","connector","container","leaf","detached"].forEach(function(fc){ var bn=document.createElement("button");
     bn.setAttribute("data-fc",fc); bn.title="toggle the "+fc+" component class"; bn.textContent=fc;
     bn.className=(window.__uniFeClassState&&window.__uniFeClassState[fc]===false)?"":"on";
     bn.onclick=function(){ if(window.__uniFeClassToggle) __uniFeClassToggle(fc); bn.classList.toggle("on", !(window.__uniFeClassState&&window.__uniFeClassState[fc]===false)); }; fcPill.appendChild(bn); });
@@ -3962,13 +3962,13 @@ window.__uniDrawBundles=function(grp){ if(!UNIWIRE.r3) return;
    DOM <canvas>. Change a glyph HERE and both the 3D badge and its legend swatch move together. ── */
 window.__BADGE_COL={ method:{GET:"#22c55e",POST:"#3b82f6",PUT:"#f97316",PATCH:"#eab308",DELETE:"#ef4444",BOOT:"#8a8f98"},
                      role:{accessor:"#ef4444",caller:"#3b82f6",gate:"#eab308",pure:"#8794ab"},
-                     feclass:{connector:"#3b82f6",container:"#a855f7",leaf:"#84cc16",private:"#8794ab"},   // component CLASS badge (operator palette) — connector=blue data-in · container=violet compose · leaf=lime atom · private=gray internal (pure-like); container off gray (private owns gray), leaf off green (collided with GET/hook/view)
+                     feclass:{connector:"#f97316",container:"#a855f7",leaf:"#84cc16",private:"#8794ab",detached:"#fb7185"},   /* connector blue → ORANGE 2026-09-05 (a blue badge on the new cobalt body vanished); detached = rose, D1 */   // component CLASS badge (operator palette) — connector=blue data-in · container=violet compose · leaf=lime atom · private=gray internal (pure-like); container off gray (private owns gray), leaf off green (collided with GET/hook/view)
                      mclass:{api:"#3b82f6","render-fn":"#d946ef",model:"#14b8a6",config:"#8794ab",lib:"#84cc16",logic:"#22d3ee"},   /* operator 2026-09-05: render-fn + logic were amber/orange ON an amber module — invisible; render-fn now wears the VIEW fuchsia (it draws UI), logic cyan */   // module CLASS badge (operator 2026-09-03): api=blue phone-line · render-fn=component orange · model=table teal · config=grey wiring · lib=lime shared · logic=module amber
                      count:{"*":(typeof KINDS!=="undefined"&&KINDS.schema&&KINDS.schema.col)||"#0e9aa7"} };   // schema fold count — the schema colour
 window.__BADGE_DESC={
   method:{ GET:"reads — returns data, no write", POST:"creates — writes a new row", PUT:"replaces — overwrites a row", PATCH:"updates — mutates fields", DELETE:"removes — deletes a row", BOOT:"boot — runs ONCE at app startup (the lifespan seeder), not a request verb" },
   role:{ accessor:"touches the store — reads/writes a DB table or a durable sink", caller:"orchestrates — calls other functions, no store of its own", gate:"guards — auth / consent / idempotency before the work runs", pure:"pure — computes from its inputs, no store, no callee that writes" },
-  feclass:{ connector:"connector — wires data into a view (the FE's controller)", container:"container — composes children, the screen's structure", leaf:"leaf — a shared, reused atom (Button, Chip…)", private:"private — internal to one view, not shared or reused" },
+  feclass:{ connector:"connector — wires data into a view (the FE's controller)", container:"container — composes children, the screen's structure", leaf:"leaf — a shared, reused atom (Button, Chip…)", private:"private — internal to one view, not shared or reused", detached:"detached — no drawn renderer: the app shell, or a piece whose renderer the map cannot see (D1: never a view)" },
   mclass:{ api:"api — fetches the backend (call sites absorbed from the web arm)", "render-fn":"render-fn — a plain function whose body holds JSX", model:"model — the feature's data layer (a model/types/schema path)", config:"config — app wiring (an app/config/setup path)", lib:"lib — shared plumbing (lib/utils/design-system/i18n/assets)", logic:"logic — feature rules and calculations" },
   count:{ "*":"nested-only schemas folded into this one — composition helpers no endpoint or function names; double-click the parent to reveal them" } };
 /* connection KINDS (REL2KIND buckets) — shown on the link card + the connectors legend */
@@ -3992,7 +3992,8 @@ window.__badgeGlyph=function(c, kind, key){
     else if(key==='lib'){ c.moveTo(40,88); c.lineTo(40,40); c.lineTo(56,40); c.lineTo(56,88); c.moveTo(60,88); c.lineTo(60,48); c.lineTo(76,48); c.lineTo(76,88); c.moveTo(80,88); c.lineTo(90,44); }   // books on a shelf — shared plumbing
     else { c.moveTo(44,40); c.lineTo(64,88); c.moveTo(56,52); c.lineTo(84,52); c.moveTo(48,72); c.lineTo(80,72); }   // ƒx — feature rules and calculations
   } else if(kind==="feclass"){
-    if(key==='connector'){ c.moveTo(36,64); c.lineTo(76,64); c.moveTo(60,48); c.lineTo(80,64); c.lineTo(60,80); }   // data-in arrow (the FE's controller)
+    if(key==='detached'){ c.arc(64,64,24,0.55,5.75); c.moveTo(64,58); c.lineTo(64,70); }   // an OPEN ring — no drawn renderer (D1 2026-09-05)
+    else     if(key==='connector'){ c.moveTo(36,64); c.lineTo(76,64); c.moveTo(60,48); c.lineTo(80,64); c.lineTo(60,80); }   // data-in arrow (the FE's controller)
     else if(key==='container'){ c.moveTo(40,50); c.lineTo(88,50); c.moveTo(40,66); c.lineTo(88,66); c.moveTo(40,82); c.lineTo(88,82); }   // stacked layers (composes children)
     else if(key==='private'){ c.moveTo(64,34); c.lineTo(72,56); c.lineTo(94,64); c.lineTo(72,72); c.lineTo(64,94); c.lineTo(56,72); c.lineTo(34,64); c.lineTo(56,56); c.closePath(); }   // a compact star (internal / self-contained — the FE's "pure", gray)
     else { c.moveTo(64,32); c.bezierCurveTo(93,46,93,84,64,98); c.bezierCurveTo(35,84,35,46,64,32); c.moveTo(64,40); c.lineTo(64,90); }   // leaf = an actual leaf + midrib (a shared, reused atom)
@@ -4095,7 +4096,7 @@ function _kindDefault(k){ return k==="type"?"off":"all"; }   // BINARY legend: e
    is a bundle of toggles, not a lock) → picking a tier again re-applies it. ── */
 window.__uniFeClassState={};   // feClass → true/false (a component CLASS hidden by a tier/fleet toggle); empty = all shown
 window.__uniTier=null;         // the active tier index (null = custom / boot state)
-var _FCALL=["view","private","connector","container","leaf"];
+var _FCALL=["view","private","connector","container","leaf","detached"];
 var _KTIER=["endpoint","model","schema","external","function","web","screen","component","hook","store","route","module","type","middleware","flag","provider","prompt"];
 var _TIER_PRESETS=[
   { name:"Skeleton", koff:["function","schema","hook","module","unknown","type","middleware","flag","provider","prompt","external","store"], fcoff:["private","connector","container","leaf"] },
@@ -4393,6 +4394,7 @@ window.__uniLegRef=function(){
     "feclass:container":"arranges its children — the screen's structure",
     "feclass:leaf":"a small widget reused everywhere (a button, a chip)",
     "feclass:private":"used inside one screen only — never shared",
+    "feclass:detached":"a component with no drawn renderer — detached from the drawn tree: the app shell, or a piece whose renderer the map cannot see; never a view",
     "method:GET":"reads — asks for data, changes nothing",
     "method:POST":"creates — sends something new to be stored",
     "method:PUT":"replaces — overwrites the whole thing",

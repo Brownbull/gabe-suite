@@ -541,7 +541,7 @@ check('if(cfg.thick&&cfg.thick>1.05){' in page and 'new T.TubeGeometry(_tc' in p
 check('if(!b||!b.parent||!b.parent.parent) continue; arr[live++]=b;' in page,
       "the _mbTick badge prune must drop grp-detached badges (!b.parent.parent) — the leak fix is gone")
 check('window.__uniBadges.length=0; if(Graph) Graph.nodeThreeObject' not in page,
-      "rebuildNodes must NOT wholesale-clear __uniBadges (that orphaned live cached-node badges)")
+      "rebuildNodes must NOT wholesale-clear __uniBadges (that detacheded live cached-node badges)")
 check('if(!was && sv[col] && UNIVIS.ent[ent] && !UNIVIS.ent[ent][col]) UNIVIS.ent[ent][col]=1;' in page,
       "a cluster toggle no longer re-enables its entity for THAT column (must match the entity-column behaviour)")
 check('id="mbOpRng"' in page and 'BADGE OPACITY (operator)' in page and 'if(CFG.mbOp==null) CFG.mbOp=0.95;' in page and 'id="badgecfg"' not in page,
@@ -908,7 +908,7 @@ check('id="jrnEntTog"' in page and 'window.__uniJrnEntOpen=!window.__uniJrnEntOp
       "the ENTITY picker is COLLAPSED behind a one-line toggle (operator: all-at-once was too much)")
 check('class="jglvlinfo"' in page and 'vars:"Classified here:' in page and 'var _JINFO=' in page,
       "each LEVEL header carries a classification INFO icon (operator): hover shows what variables put a journey in that tier (like the connector legend)")
-check('feclass:{connector:"#3b82f6",container:"#a855f7",leaf:"#84cc16",private:"#8794ab"}' in page and 'function feclassBadge(fc, kind)' in page and 'n.feClass==="connector"||n.feClass==="container"||n.feClass==="leaf"||n.feClass==="private"' in page and 'n.feClass==="view"&&billTex["screen"]' in page
+check('feclass:{connector:"#f97316",container:"#a855f7",leaf:"#84cc16",private:"#8794ab",detached:"#fb7185"}' in page and 'function feclassBadge(fc, kind)' in page and 'n.feClass==="connector"||n.feClass==="container"||n.feClass==="leaf"||n.feClass==="private"||n.feClass==="detached"' in page and 'var _FCALL=["view","private","connector","container","leaf","detached"]' in page and 'component:"#2f7de1"' in page and 'n.feClass==="view"&&billTex["screen"]' in page
       and '(it.fc==="view")?svgInline("screen",VIEWCOL,15)' in page,
       "COMPONENT CLASS palette (operator): view=SCREEN glyph; connector=blue arrow · container=VIOLET layers · leaf=LIME leaf · private=gray star — container off gray (2-gray clash), leaf off green (GET/hook collision); all four badged")
 check('function _dispK(n)' in page and 'return _isView(n)?VIEWCOL:n.col;' in page and 'var K=_dispK(n);' in page and 'svgInline("screen",VIEWCOL,18)' in page,
@@ -1010,8 +1010,8 @@ check('name:"Everything", koff:[],' in page and 'if(k==="type" && window.toggleT
       "T3 no longer shows everything — the Everything preset re-hid type, or __uniSetTier stopped waking the type layer")
 # Component (FE) glyph: the REAL color source is KINDCOL (line `KINDS[k].col=KINDCOL[k]` overwrites the KINDS
 # literal), and KINDCOL.component was #d946ef — IDENTICAL to view's hardcoded #d946ef. Now #ff8c00 orange.
-check('component:"#ff8c00"' in page and 'KINDS[k].col=KINDCOL[k]' in page and 'component:"#d946ef"' not in page,
-      "KINDCOL.component is not #ff8c00 (it drives the real glyph color; #d946ef made component == view)")
+check('component:"#2f7de1"' in page and 'KINDS[k].col=KINDCOL[k]' in page and 'component:"#d946ef"' not in page,
+      "KINDCOL.component is not #2f7de1 — cobalt since 2026-09-05 (it drives the real glyph color; orange read as the module amber, #d946ef is the view)")
 # connector wires resolve from a CANONICAL stock palette (not live CONN, which the d2w heat recolors) — the
 # built LEGEND.Connectors rows carry it.k not it.c, so the old it.c read rendered every wire gray/solid.
 check('var _CONNSTOCK={ fk:{col:"#5893ad"' in page and 'calls:{col:"#f59e0b"' in page and 'access:{col:"#ef4444"' in page and 'function _connCS(it){' in page,
@@ -1143,12 +1143,12 @@ check('capsule:"a FOLDED area' in page and '" folded"' in page and '__uniPanelAl
       "review 53[12]: KINDTIP.capsule + the folded annotation + the census refresh")
 
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
-#        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──
+#        PER_FILE / unused here → deliberately EXCLUDED so an accidental detached is caught, not waved through) ──
 SHARED = {"LANG","PROJECT_NAME","HEAD_SHA","REGEN_STAMP","GENERATOR_NAME","ENTITY_COUNT","TESTS_COUNT",
           "SIDEBAR_ENTITIES","SIDEBAR_CODE","SIDEBAR_LEAF","STATUS_PILLS"}
 toks = set(re.findall(r'\{\{([A-Z_]+)\}\}', page))
-orphan = toks - SHARED
-check(not orphan, "page carries tokens the glob build cannot fill on every page: "+", ".join(sorted(orphan)))
+detached = toks - SHARED
+check(not detached, "page carries tokens the glob build cannot fill on every page: "+", ".join(sorted(detached)))
 
 # ── 11b. reverse nav symmetry: the station's OWN nav links back to the core sibling stations ──
 for href in ('href="index.html"', 'href="codebase-graph.html"', 'href="codebase-archive-lab.html"', 'href="tests.html"'):
@@ -1387,7 +1387,7 @@ const { chromium } = require(process.argv[3]);
     const fkRow=connSec?[].find.call(connSec.querySelectorAll('.lrrow'), r=>((r.querySelector('.lrtx b')||{}).textContent||'')==='fk'):null;
     const layout={ grids:ov.querySelectorAll('.lrcols').length, tierLast:(tI>exI && exI>=0),
       connFleetSameGrid:!!(connSec&&fleetSec&&connSec.parentElement===fleetSec.parentElement&&connSec.parentElement.classList.contains('lrcols')),
-      wireUniq:wireCols.length, wireNotAllGray:wireCols.some(c=>c&&c.toLowerCase()!=='#8590a8'), compOrange:compStroke==='#ff8c00',
+      wireUniq:wireCols.length, wireNotAllGray:wireCols.some(c=>c&&c.toLowerCase()!=='#8590a8'), compCobalt:compStroke==='#2f7de1',
       thumbs, refCells, hdrRefAfterTitle:(ri===bi+1 && ri>=0 && ri<tabi), iconHug:Math.round(iconHug),
       starIs2d:!!(starRow&&starRow.querySelector('.lrico > div')&&!starRow.querySelector('.lrcv')),
       satIsThumb:!!(satRow&&satRow.querySelector('.lrcv')),
@@ -1552,7 +1552,7 @@ const { chromium } = require(process.argv[3]);
     && lr.open.flags>0 && lr.open.conn && lr.open.planet && lr.open.viewRow
     && lr.ref && lr.ref.compNoEx && lr.ref.endpNoEx && lr.ref.fnNoEx && lr.ref.typeEx && lr.ref.entityEx && lr.ref.privBadge && lr.ref.noEnableF
     && lr.tier && lr.tier.noOverlaySel && lr.tier.cells>0 && lr.tier.routeDots===4 && !lr.tier.routeDim && lr.tier.hookDots===2 && lr.tier.hookDim && lr.tier.leafDots===1 && lr.tier.typeDots===1 && lr.tier.typeHasFlag && lr.tier.t3ShowTypes && lr.tier.anyCells>0 && lr.tier.foldEx
-    && lr.layout && lr.layout.grids===2 && lr.layout.tierLast && lr.layout.connFleetSameGrid && lr.layout.wireUniq>=5 && lr.layout.wireNotAllGray && lr.layout.compOrange
+    && lr.layout && lr.layout.grids===2 && lr.layout.tierLast && lr.layout.connFleetSameGrid && lr.layout.wireUniq>=5 && lr.layout.wireNotAllGray && lr.layout.compCobalt
     && lr.layout.thumbs>0 && lr.layout.refCells>0 && lr.layout.hdrRefAfterTitle && lr.layout.iconHug<20 && lr.layout.starIs2d && lr.layout.satIsThumb && lr.layout.fkDescRevised
     && lr.jump && lr.jump.closed===true && lr.jump.barVal===lr.jump.s && lr.jump.hlOn===true && lr.jump.hlMode==='focus'
     && lr.flag && lr.flag.before==='all' && lr.flag.after==='off' && lr.flag.rebuilt===true;

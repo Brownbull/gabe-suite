@@ -400,8 +400,11 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
     #    FETCH, or a query/CACHE hook, else CHROME (cx/useT/layout plumbing). PRINCIPLED reachability
     #    over the call edges — the sinks are the store kind + fetching pieces (`screen`) + cache-hook
     #    pieces (`cache`, F1: react-query/swr library idioms), never a gustify name-list.
-    #    feClass per COMPONENT then reads it: view = 0 render-parents · private = exactly 1 · connector =
-    #    shared AND reaches state · container = shared, renders children only · leaf = shared, neither. ──
+    #    feClass per COMPONENT then reads it (ruling 2026-09-05, D1): view = rendered by a ROUTE (the
+    #    screen a URL mounts — what the operator calls the view) · detached = 0 render-parents (no drawn renderer:
+    #    the app shell, or a piece whose renderer the extractor cannot see — said out loud, never a view) ·
+    #    private = exactly 1 · connector = shared AND reaches state · container = shared, renders children
+    #    only · leaf = shared, neither. Before D1, 0 parents was called "view" — App plus 21 lost parents. ──
     _STATE_CALL = ("fecall", "uses-hook", "uses-store")
     _rin: dict[str, set] = {}          # component id → its render-parents
     _rchild: dict[str, bool] = {}      # component id → renders at least one child component
@@ -448,7 +451,8 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
         if p["kind"] != "component":
             continue
         fi = len(_rin.get(pid, ()))
-        fc = ("view" if fi == 0 else "private" if fi == 1
+        _by_route = any(pieces[_s]["kind"] == "route" for _s in _rin.get(pid, ()))
+        fc = ("view" if _by_route else "detached" if fi == 0 else "private" if fi == 1
               else "connector" if pid in touches_state else "container" if _rchild.get(pid) else "leaf")
         p["feClass"] = fc
         if pid in touches_state:

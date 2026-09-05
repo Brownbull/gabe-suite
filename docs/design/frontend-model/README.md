@@ -96,7 +96,7 @@ Ranked candidates (all static, no app-run; JSON-emitting preferred):
 
 | Tool | Yields | JSON? | Build-free? | License | Effort | Role |
 |---|---|---|---|---|---|---|
-| **dependency-cruiser** | file import edges + **reverse edges (dependents)**, type-only imports, cycles/orphans | ✅ `-T json` | ✅ (tsconfig for resolution only) | MIT | **low** | **topology arm** — the graft-imports mirror |
+| **dependency-cruiser** | file import edges + **reverse edges (dependents)**, type-only imports, cycles/detacheds | ✅ `-T json` | ✅ (tsconfig for resolution only) | MIT | **low** | **topology arm** — the graft-imports mirror |
 | **ast-grep** | AST-precise match nodes: `useX()` calls, `<Component>`, `create()/atom()/useContext()`, fetch sites | ✅ `--json` | ✅ | MIT | **low** | **pattern arm** — the AST-accurate upgrade of the regex extractor |
 | **ts-morph** | build-your-own graph over the TS AST + type checker; component/hook/store nodes, render/call edges | you emit it | ✅ (degrades w/o node_modules) | MIT | med | **domain arm** engine |
 | **react-docgen** | per-component prop schema (name/type/required/default/JSDoc) | ✅ | ✅ | MIT | low–med | hang a prop schema on component nodes |
@@ -273,7 +273,7 @@ dry-run on a COPY with the numbers in the commit message.
 
 4. **The method-based write DIRECTION** (`b430a5c`) — the KEY ruling. read vs write is the **HTTP METHOD** of the fetch a piece reaches (`_WRITE_METHODS` = POST/PUT/PATCH/DELETE), read from the web arm's per-site method. **Chosen deliberately OVER a react-query `useMutation`/`useQuery` split**, which is single-stack (breaks the moment a twin uses swr, zustand, or raw fetch — gastify has all three). The verb is deterministic and universal, so the FE write spine is the frontend END of the SAME write fabric the backend d2w computes — not a parallel FE-only invention. This is the suite's "no single-stack / gustify-shaped heuristic" principle applied. `fed2w` DEPTH (a level-order BFS, hops-to-a-write-fetch) rides every write-spine piece; a store-object write (`zustand set()`) is NOT method-visible → not claimed (deferred until a twin shows a material store-write population). Measured gustify: 500 state wires split 474 read / 26 write; write_pieces 28; fed2w_max 2.
 
-`feClass` per component (view/private/connector/container/leaf) is the class the disclosure T0–T3 preset keys on; `connector` requires touches-state.
+`feClass` per component (view = route-rendered · detached = no drawn renderer · private/connector/container/leaf — D1 ruling 2026-09-05: "view" was 0 render-parents, App plus 21 lost parents on gustify) is the class the disclosure T0–T3 preset keys on; `connector` requires touches-state.
 
 ### The write-spine HEAT — operator rulings D1–D4 (the Write-Spine Heat artifact → `7bd9f31`)
 

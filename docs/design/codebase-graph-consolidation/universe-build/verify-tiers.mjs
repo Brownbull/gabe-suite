@@ -104,8 +104,8 @@ const fleet = await p.evaluate(() => {
   out.tpLit = tp ? tp.querySelector('button[data-v="1"]').classList.contains('on') : false;
   return out;
 });
-ck(fleet.tier === 4 && fleet.fold === 2 && fleet.fc === 5,
-  'the fleet Entity pane carries the tier (4) + fold (2) + class (5) pills', JSON.stringify(fleet));
+ck(fleet.tier === 4 && fleet.fold === 2 && fleet.fc === 6,
+  'the fleet Entity pane carries the tier (4) + fold (2) + class (6) pills', JSON.stringify(fleet));
 ck(fleet.afterClick === 1 && fleet.tpLit,
   'clicking the fleet tier pill sets the tier + lights (fleet ↔ header sync)', 'tier=' + fleet.afterClick);
 
