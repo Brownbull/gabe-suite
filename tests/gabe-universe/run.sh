@@ -544,7 +544,7 @@ check('window.__uniBadges.length=0; if(Graph) Graph.nodeThreeObject' not in page
       "rebuildNodes must NOT wholesale-clear __uniBadges (that orphaned live cached-node badges)")
 check('if(!was && sv[col] && UNIVIS.ent[ent] && !UNIVIS.ent[ent][col]) UNIVIS.ent[ent][col]=1;' in page,
       "a cluster toggle no longer re-enables its entity for THAT column (must match the entity-column behaviour)")
-check('id="mbOpRng"' in page and 'BADGE OPACITY (operator)' in page and 'if(CFG.mbOp==null) CFG.mbOp=0.6' in page and 'id="badgecfg"' not in page,
+check('id="mbOpRng"' in page and 'BADGE OPACITY (operator)' in page and 'if(CFG.mbOp==null) CFG.mbOp=0.95;' in page and 'id="badgecfg"' not in page,
       "the GLOBAL badge-opacity slider must live in the Planets pane (not #cfg); the #cfg badge panel must be gone")
 check("Temporary Config</span>" in page, "the top-right config panel must be renamed 'Temporary Config'")
 check('window.__uniAddFocusCfg=function(){ window.__uniHLSeed()' in page and 'window.__uniHLDefaults={' in page and 'id="focuscfg"' not in page and 'focrng' not in page and 'srow("speed","focSpeed"' not in page,
@@ -886,6 +886,8 @@ check('function _jrnFeLeg(carriers)' in page and 'l.rel==="bridge"' in page
 check('j.fe=_jrnFeLeg(j.carriers); j.feN=' in page, "journeys no longer precompute their fe leg (row/pill chips would lie)")
 check('WRAPPER CLIMB' in page and 'sn.kind==="module"' in page and 'c.ent!==sn.ent' in page,
       "the FE-leg WRAPPER CLIMB: a bridged shared-lib MODULE with a cross-entity caller (an SSE client like lib/api/sse) is swapped for its feature callers, so the leg reaches the feature screen not the lib — proven on gustify: Create-a-recipe 0→2 → useRecipeStream → GustifyGenerateSheet")
+check('l.rel!=="mounts"&&l.rel!=="fecall"' in page and 'return best||view||comp;' in page and '"render-fn":"#d946ef"' in page and 'logic:"#22d3ee"' in page and '(it.k==="module")?"mclass":null' in page,
+      "JOURNEY STARTS AT A VIEW (2026-09-05): the anchor walk follows fecall and falls to a view/any component; render-fn + logic badges off the module amber; the Module legend row carries the class-key ⓘ")
 check('var _JRNLEVELS={' in page and 'Orientation' in page and 'Core' in page and 'Specialized' in page and 'level:(w.level>=1&&w.level<=3)?w.level:0,   // dev-onboarding level (1/2/3) — a DRAFT carries the level the drafter suggested' in page and 'var L=j.level||99;' in page and 'drafts — review' not in page,
       "journey EXPERTISE LEVELS (operator): workflows carry a curated `level` CLAMPED to 1/2/3 (out-of-range → 0 = one 'other' bucket) + the 3-tier onboarding roster")
 check('if(sel==="wf"){' in page and 'byLvl' in page and 'jglvl' in page and 'function _lvlBars' in page and 'jrnlede' in page,
@@ -1490,14 +1492,16 @@ const { chromium } = require(process.argv[3]);
     const cellClean=!hc || getComputedStyle(hc).backgroundColor==='rgba(0, 0, 0, 0)';
     const r0=ov.querySelector('.jdstep[data-si="0"]'); const row0Lit=r0?r0.querySelectorAll('.jdmx .cell').length:-1;   // DE-FLOOD: a composition root lights only what IT touches (was 83 of 85)
     if(document.getElementById('uni-jrnref')) window.__uniJrnDetail();
-    const j2=js.find(x=>/Initial setup/i.test(x.name||'')); let anchorKind=null; if(j2){ window.__uniJrnStart(j2.cid); const n0=NIDS[WALK.steps[0]]; anchorKind=n0?n0.kind:null; }   // JOURNEY STARTS AT A VIEW: the route leads when one is in reach
+    const j2=js.find(x=>/Initial setup/i.test(x.name||'')); let anchorKind=null; if(j2){ window.__uniJrnStart(j2.cid); const n0=NIDS[WALK.steps[0]]; anchorKind=n0?n0.kind:null; }
+    // a leg whose screen is reached only through a render-fn MODULE (fecall) still opens on the ROUTE above it (operator 2026-09-05: the photos journey opened on renderCookingFlowView)
+    const j3=js.find(x=>/cooking sessions — photos/.test(x.name||'')); let anchorKind3=null; if(j3){ window.__uniJrnStart(j3.cid); const n3=NIDS[WALK.steps[0]]; anchorKind3=n3?n3.kind:null; }   // JOURNEY STARTS AT A VIEW: the route leads when one is in reach
     // DRAFT workflows (curate-workflows, 2026-09-04 · placement 2026-09-05): the example lands workflows.draft.js → each draft sits IN ITS TIER section (level 1–3, named), draft:true, WALKABLE
     const drafts=js.filter(x=>x.draft); let draftWalk=0; if(drafts.length){ window.__uniJrnStart(drafts[0].cid); draftWalk=WALK.steps.length; }
     const draftGrp=(function(){ try{ window.__uniJrnKind='wf'; var h=_jrnGroupsHTML(); return !/drafts — review/.test(h) && /jrndraft/.test(h); }catch(e){ return false; } })();   // drafts render (chip present) inside the tier ladder, never in a bucket of their own
     // VIEW display kind (operator 2026-09-04): a component with feClass "view" prints "View (FE)" in the view colour on the panel head — the legend's View example landed on an orange COMPONENT card before
     const vn=Object.values(NIDS).find(x=>x&&x.kind==='component'&&x.feClass==='view'); let viewType=null, viewCol=null, viewIcon=null;
     if(vn){ try{ showPanel(vn); viewType=((document.querySelector('#phead .ptype span')||{}).textContent)||null; viewCol=_dispK(vn).col; viewIcon=(ENC.color==='heat')?'heat':iconCol(vn); }catch(e){ viewType='ERR:'+e; } }
-    return { journey:j.name, storeCols, storeFlagOn, litStore, iconInline, titleHot, cellClean, row0Lit, anchorKind, drafts:drafts.length, draftWalk, draftGrp, draftLeveled:drafts.every(x=>x.level>=1&&x.level<=3), draftNamed:drafts.every(x=>/^(Look at|Add|Edit|Remove|Manage) /.test(x.name||'')), viewType, viewCol, viewIcon };
+    return { journey:j.name, storeCols, storeFlagOn, litStore, iconInline, titleHot, cellClean, row0Lit, anchorKind, anchorKind3, drafts:drafts.length, draftWalk, draftGrp, draftLeveled:drafts.every(x=>x.level>=1&&x.level<=3), draftNamed:drafts.every(x=>/^(Look at|Add|Edit|Remove|Manage) /.test(x.name||'')), viewType, viewCol, viewIcon };
   }).catch(e=>({err:String(e)}));
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
@@ -1550,7 +1554,7 @@ const { chromium } = require(process.argv[3]);
   const jd=jrnDetail, jrnDetailOk = jd && !jd.err && jd.clickable && jd.steps>0 && jd.stepsMatch && jd.groups===0 && jd.cols===1 && jd.colsSticky && jd.tinted===jd.steps && jd.opcs===jd.ops && jd.flows===jd.steps && jd.fromTo>0 && jd.icons===jd.steps
     && jd.entDots===jd.steps && jd.clus===jd.steps && jd.ops>0 && jd.tgts>0 && jd.fields>0 && jd.rels>0 && jd.flush && jd.aligned && jd.resizeOk
     && jd.matrixOk && jd.frozenOk && jd.walkSyncOk && jd.flagsOk && jd.opcFrozen && jd.indirect>0;
-  const sc=storeCheck, storeOk = sc && !sc.err && sc.storeCols>=1 && sc.storeFlagOn && sc.litStore>=1 && sc.iconInline && sc.titleHot && sc.cellClean && sc.row0Lit>=0 && sc.row0Lit<=5 && sc.anchorKind==='route' && sc.drafts>=1 && sc.draftWalk>0 && sc.draftGrp && sc.draftLeveled && sc.draftNamed && sc.viewType==='View (FE)' && sc.viewCol==='#d946ef' && (sc.viewIcon==='heat'||sc.viewIcon==='#d946ef');
+  const sc=storeCheck, storeOk = sc && !sc.err && sc.storeCols>=1 && sc.storeFlagOn && sc.litStore>=1 && sc.iconInline && sc.titleHot && sc.cellClean && sc.row0Lit>=0 && sc.row0Lit<=5 && sc.anchorKind==='route' && sc.anchorKind3==='route' && sc.drafts>=1 && sc.draftWalk>0 && sc.draftGrp && sc.draftLeveled && sc.draftNamed && sc.viewType==='View (FE)' && sc.viewCol==='#d946ef' && (sc.viewIcon==='heat'||sc.viewIcon==='#d946ef');
   const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk && focusOk && keyOk && legRefOk && jrnDetailOk && storeOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
   else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'fcbOk='+fcbOk+' '+JSON.stringify(fcb), 'focusOk='+focusOk+' click='+JSON.stringify(clickFocus)+' tier='+JSON.stringify(afterTier), 'keyOk='+keyOk+' '+JSON.stringify(keyReg), 'legRefOk='+legRefOk+' '+JSON.stringify(legRef).slice(0,600), 'jrnDetailOk='+jrnDetailOk+' '+JSON.stringify(jrnDetail), 'storeOk='+storeOk+' '+JSON.stringify(storeCheck), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
