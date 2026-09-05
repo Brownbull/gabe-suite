@@ -3,7 +3,7 @@ name: gabe-cc-update
 description: "Command-center feature coverage — translate shipped work into its entity's lens card, diagrams, and evidence narration; keep the center regenerating green. Also owns scripts/write-inflight.py, the deterministic in-flight projection the E8 beat tail refreshes (inflight.json + .js, read by the board at view time)."
 when_to_use: "Cover a shipped feature, center status, backfill entity-by-entity, curate proof after a green run — ONLY where docs/site/center/center.config.json exists; elsewhere STOP → /gabe-cc-init."
 metadata:
-  version: 1.7.5
+  version: 1.7.6
 ---
 
 # Gabe Feature — the command center's per-feature ritual
@@ -78,6 +78,13 @@ After a green e2e run: pick the shots that PROVE the claims (selection is the ju
 Per feature, on completion: a validated `entities.<slug>` block with human-confirmed `test_rx`/globs · a card with zero TODO markers and a `# REVIEWED` stamp · 3 diagrams (or the card states why fewer) · narration + `role:`/`flows:` wherever a proof set exists · gate green with this entity contributing zero WARNs · the phase's PLAN `Center` cell flipped ✅ (PLAN.md + PLAN.json) where that column exists, else the one-line adopt-the-column pointer. The verification changelog needs nothing from you — the builder appends `run-history.jsonl` itself on every regen whose totals moved. Card-only tier: the same minus evidence (ANGLES carry the reasons). Skip: one registry-row reason. E7: report page paths + the gate's closing line.
 
 ### `/gabe-cc-update curate-workflows`
+
+**A draft is finished work, not a cluster waiting for a name (operator 2026-09-05).** The drafter names each entry in the
+user's words — the legend reference's definitions logic: what the person DOES (`Manage cooking sessions — cancel ·
+readiness · photos`, `Look at notifications`, `Edit settings — household · preferences`; `draft_name()` in the script,
+deterministic from the endpoint labels) — and levels it into its tier, so the station places it in Orientation · Core ·
+Specialized beside the curated rows, wearing a DRAFT chip. Review = walk it, then ACCEPT by moving the entry into
+`workflows.js` (rename freely); there is no "review & name" bucket. This is the default from here on.
 
 Journey CREATION for the one journey kind that needs a human (ruling 2026-09-04). Backend, test and
 commit journeys derive themselves; the curated user workflows (`docs/site/center/workflows.js`) did

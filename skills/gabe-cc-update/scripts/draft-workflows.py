@@ -25,6 +25,9 @@ usage: python3 draft-workflows.py <project-root> [--out <path>] [--json] [--min 
   --out   where the draft file goes (default docs/site/center/workflows.draft.js under the root)
   --json  print the full report (drafts · uncovered · unreached · skipped) instead of the one line
   --min   minimum endpoints per cluster to draft (default 1 — a one-step workflow is legitimate)
+NAMING (operator 2026-09-05): a draft is not a cluster key waiting for a name — it arrives NAMED in the
+user's words (`Manage cooking sessions — cancel · readiness · photos`, see draft_name) and LEVELED into
+its tier, exactly as a curated entry would; the station places it in that section with a DRAFT chip.
 """
 from __future__ import annotations
 
@@ -40,6 +43,73 @@ SCREENISH_RX = re.compile(r"(Page|Screen|View)$")
 CFG_RX = re.compile(r"(^|/)(router|routes)\.[jt]sx?$")
 SCREEN_DIR_RX = re.compile(r"/(pages|features)/")
 VERB_ORDER = {"GET": 0, "POST": 1, "PUT": 2, "PATCH": 3, "DELETE": 4}
+LEVEL_NAME = {1: "Orientation", 2: "Core", 3: "Specialized"}
+PARAM_RX = re.compile(r"^\{.*\}$|^\$\{.*\}$|^:")
+
+
+def _words(seg: str) -> str:
+    """`resolve-batch` → `resolve batch`, `frequent_ingredients` → `frequent ingredients`."""
+    return re.sub(r"[-_]+", " ", seg).strip()
+
+
+def draft_name(steps: list[str]) -> tuple[str, str, list[str]]:
+    """The draft's NAME in the user's words — the same logic as the legend reference's definitions
+    column (operator 2026-09-05: "a screen you navigate to", "a piece of UI that draws something"):
+    what the person DOES, not the machine's cluster key. Deterministic from the endpoint labels alone:
+      phrase  ← the verb set: GET only → "Look at" · DELETE only → "Remove" · GET/POST → "Add" ·
+                GET/PUT/PATCH → "Edit" · anything mixed → "Manage"
+      noun    ← the first path segment, plus the second when EVERY path shares it and it reads as a
+                collection (plural: `sessions`, `items`; never `status`/`active`) — `cooking sessions`
+      actions ← every other non-parameter segment, in path order, deduped, capped at 4 — `cancel ·
+                readiness · photos`; appended after an em dash so the name stays a sentence
+    Returns (name, noun, actions). `Manage cooking sessions — cancel · readiness · photos` reads in
+    the tier list beside the curated `Cook a recipe — the cooking session`; the human may still rename."""
+    verbs: set[str] = set()
+    firsts: list[str] = []
+    seconds: list[str] = []
+    actions: list[str] = []
+    for lab in steps:
+        verb, _, path = lab.partition(" ")
+        verbs.add(verb)
+        segs = [s for s in path.strip("/").split("/") if s]
+        if not segs:
+            continue
+        firsts.append(segs[0])
+        rest = [s for s in segs[1:] if not PARAM_RX.match(s)]
+        seconds.append(rest[0] if rest else "")
+        for s in rest:
+            if s not in actions:
+                actions.append(s)
+    first = max(sorted(set(firsts)), key=firsts.count) if firsts else "app"
+    noun = _words(first)
+    sec = seconds[0] if seconds else ""
+    if sec and all(s == sec for s in seconds) and sec.endswith("s") and len(sec) > 3 and sec != "status":
+        noun = f"{noun} {_words(sec)}"
+        actions = [a for a in actions if a != sec]
+    if verbs <= {"GET"}:
+        phrase = "Look at"
+    elif verbs == {"DELETE"}:
+        phrase = "Remove"
+    elif verbs <= {"GET", "POST"}:
+        phrase = "Add"
+    elif verbs <= {"GET", "PUT", "PATCH"}:
+        phrase = "Edit"
+    else:
+        phrase = "Manage"
+    acts = [_words(a) for a in actions[:4]] + (["…"] if len(actions) > 4 else [])
+    name = f"{phrase} {noun}" + (f" — {' · '.join(acts)}" if acts else "")
+    return name, noun, acts
+
+
+def _dedupe_names(drafts: list[dict]) -> None:
+    """Two clusters may read the same — `Look at cooking — active` from two screens. Suffix BOTH
+    with their screen so the tier list never shows twins (deterministic; only on collision)."""
+    seen: dict[str, int] = {}
+    for d in drafts:
+        seen[d["name"]] = seen.get(d["name"], 0) + 1
+    for d in drafts:
+        if seen[d["name"]] > 1:
+            d["name"] = f"{d['name']} (from {d['cluster']['screen']})"
 
 
 def _center(root: Path) -> Path:
@@ -151,21 +221,25 @@ def analyse(c4: dict, covered: set[str], min_size: int) -> dict:
         span = {ent} | {model_slug[m] for r in rs for m in r["writes"] + r["reads"] if m in model_slug}
         level = 1 if not w_models else (3 if len(span) > 1 else 2)
         verbs = {r["verb"] for r in rs}
-        phrase = ("browse" if verbs <= {"GET"} else "remove" if verbs == {"DELETE"}
-                  else "add" if verbs <= {"GET", "POST"} else "edit" if verbs <= {"GET", "PUT", "PATCH"} else "manage")
-        base = re.sub(r"(Route|Page|Screen|View)$", "", scr) or scr
         why = ("no writes" if not w_models else "single-entity writes" if level == 2 else "cross-entity writes")
+        steps = [r["label"] for r in rs]
+        name, noun, acts = draft_name(steps)
+        # the NOTE is the definition column, in the user's words: what happens, from where, touching what
+        touch = ((f"reads {', '.join(r_models[:4])}{'…' if len(r_models) > 4 else ''}" if r_models else "")
+                 + (" and " if r_models and w_models else "")
+                 + (f"writes {', '.join(w_models[:4])}{'…' if len(w_models) > 4 else ''}" if w_models else ""))
         drafts.append({
-            "name": f"{base} · {phrase} ({len(rs)} endpoint{'s' if len(rs) != 1 else ''})",
+            "name": name,
             "level": level,
             "draft": True,
-            "note": (f"draft — {ent} endpoints reached from {scr}; writes {len(w_models)} model(s)"
-                     + (f" ({', '.join(w_models[:4])}{'…' if len(w_models) > 4 else ''})" if w_models else "")
-                     + f"; level {level} suggested from {why}. Rename, reorder, set the level, then move into workflows.js."),
-            "steps": [r["label"] for r in rs],
+            "note": (f"{name.split(' — ')[0].lower()} from the {scr} screen — the app {touch or 'touches no model'}; "
+                     f"{len(rs)} endpoint{'s' if len(rs) != 1 else ''}, {why} → {LEVEL_NAME.get(level, 'other')} (level {level}). "
+                     f"A DRAFT: accept it by moving this entry into workflows.js (rename freely)."),
+            "steps": steps,
             "cluster": {"entity": ent, "screen": scr},
             "why": {"writes": len(w_models), "reads": len(r_models), "span": sorted(span)},
         })
+    _dedupe_names(drafts)
 
     return {"drafts": drafts, "endpoints": len(endpoints), "covered": covered_n,
             "uncovered": len(reached) + len(unreached),
@@ -177,8 +251,10 @@ def render(drafts: list[dict], head: str) -> str:
     body = json.dumps(drafts, ensure_ascii=False, indent=2)
     return ("// DRAFT user workflows — machine-proposed by `/gabe-cc-update curate-workflows` (draft-workflows.py)\n"
             f"// from the committed c4-graph (head {head or '?'}): every endpoint no curated workflow names, clustered by\n"
-            "// entity · the screen that drives it, steps ordered read→write, level SUGGESTED. Nothing here is curated:\n"
-            "// rename, reorder, set the level, then move an accepted entry into workflows.js — the next run drops it.\n"
+            "// entity · the screen that drives it, steps ordered read→write, NAMED in the user's words (what the person\n"
+            "// does — the legend reference's definitions logic) and LEVELED into its tier (Orientation · Core ·\n"
+            "// Specialized), so each draft already sits in its section of the workflows tab wearing the DRAFT chip.\n"
+            "// Accept one by moving its entry into workflows.js (rename freely) — the next run drops it.\n"
             "// Regenerated wholesale; never hand-edit. Absent or empty → the station shows no drafts.\n"
             f"window.GABE_WORKFLOWS_DRAFT = {body};\n")
 

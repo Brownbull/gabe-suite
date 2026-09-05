@@ -59,10 +59,11 @@ import json,sys; r=json.load(open(sys.argv[1])); d=r["drafts"]
 assert len(d)==1, d
 x=d[0]; assert x["draft"] is True and x["cluster"]=={"entity":"pantry","screen":"PantryRoute"}, x
 assert x["steps"]==["GET /pantry/history","POST /pantry/reset"], x["steps"]
-assert x["level"]==2 and x["why"]["writes"]==1 and x["name"].startswith("Pantry · add"), x
+assert x["level"]==2 and x["why"]["writes"]==1 and x["name"]=="Add pantry — history · reset", x   # NAMED in the user's words (2026-09-05)
+assert "from the PantryRoute screen" in x["note"] and "Core (level 2)" in x["note"], x["note"]
 assert r["endpoints"]==5 and r["covered"]==1 and r["uncovered"]==2 and r["skipped_infra"]==["BOOT lifespan","POST /_e2e/seed"], r
 PY
-grep -q 'window.GABE_WORKFLOWS_DRAFT = \[' "$r/docs/site/center/workflows.draft.js" && grep -q '"name": "Pantry · add (2 endpoints)"' "$r/docs/site/center/workflows.draft.js" \
+grep -q 'window.GABE_WORKFLOWS_DRAFT = \[' "$r/docs/site/center/workflows.draft.js" && grep -q '"name": "Add pantry — history · reset"' "$r/docs/site/center/workflows.draft.js" \
   && ok || bad "FIRE: the draft file carries window.GABE_WORKFLOWS_DRAFT with the named draft"
 grep -q '"steps": \[' "$r/docs/site/center/workflows.draft.js" && ! grep -q '20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]' "$r/docs/site/center/workflows.draft.js" \
   && ok || bad "FIRE: no wallclock in the draft file (the c4 head is the only stamp)"
@@ -116,6 +117,24 @@ r=$(mkcenter mn); c4 > "$r/docs/site/center/c4-graph.json"; printf 'window.GABE_
 python3 "$D" "$r" --json --min 2 > "$T/mn.json"
 python3 - "$T/mn.json" <<'PY' && ok || bad "--min 2: the 1-endpoint cooking cluster is dropped, the 2-endpoint pantry cluster stays"
 import json,sys; r=json.load(open(sys.argv[1])); assert [d["cluster"]["entity"] for d in r["drafts"]]==["pantry"], r["drafts"]
+PY
+
+# ── NAMING (operator 2026-09-05): a draft arrives named in the user's words — one rule per verb set, the noun from the
+#    paths (a shared plural second segment joins it), actions after an em dash, twins suffixed with their screen ──
+python3 - "$D" <<'PY' && ok || bad "NAMING: verb-set phrase · path noun · actions · collision suffix"
+import importlib.util, sys
+sp = importlib.util.spec_from_file_location("d", sys.argv[1]); m = importlib.util.module_from_spec(sp); sp.loader.exec_module(m)
+n = lambda steps: m.draft_name(steps)[0]
+assert n(["GET /notifications"]) == "Look at notifications", n(["GET /notifications"])
+assert n(["GET /cooking/sessions/{session_id}/photos/{slot}"]) == "Look at cooking sessions — photos"
+assert n(["GET /cooking/active"]) == "Look at cooking — active"                      # `active` is no collection → an action
+assert n(["POST /shopping/items/{source_id}/add-to-list"]) == "Add shopping items — add to list"
+assert n(["PATCH /settings/household", "PATCH /settings/preferences"]) == "Edit settings — household · preferences"
+assert n(["DELETE /pantry/items/{item_id}"]) == "Remove pantry items"
+assert n(["GET /cooking/active", "POST /cooking/sessions/{id}/cancel", "PATCH /cooking/sessions/{id}/readiness", "DELETE /cooking/sessions/{id}/photos/{slot}"]) \
+       == "Manage cooking — active · sessions · cancel · readiness · …"                # mixed verbs → Manage; actions capped at 4 + …
+ds = [{"name": "Look at cooking — active", "cluster": {"screen": "A"}}, {"name": "Look at cooking — active", "cluster": {"screen": "B"}}, {"name": "Look at pantry — history", "cluster": {"screen": "C"}}]
+m._dedupe_names(ds); assert [d["name"] for d in ds] == ["Look at cooking — active (from A)", "Look at cooking — active (from B)", "Look at pantry — history"], ds
 PY
 
 echo "workflow-drafts battery: $pass passed, $fail failed"
