@@ -1154,9 +1154,9 @@ var FE_REL={ "uses-hook":"uses", "uses-store":"reads" };       // the feed's rel
    to a generic glyph for anything still unknown — never a silent drop). The seven new rels get
    RELCOL + LINKMETA rows (pv:0 — every one is an inferred/extracted floor, so it must NOT default
    to LINKMETA's pv:1 and lie "proven"); REL2KIND lives in assemble.py, relLabel in card.js. */
-KINDS.middleware={ col:"#7048e8", form:"slab", label:"", type:"Middleware (gate)", layer:"api", usage:[0,"runs before the handler"],
+KINDS.middleware={ col:"#7048e8", form:"slab", label:"", type:"Middleware (app-wide)", layer:"api", usage:[0,"runs before the handler"],
   conns:[["gates","endpoint","every request"]], tests:0, ident:[["kind","a Depends/add_middleware gate"]],
-  doc:"A dependency or middleware that runs BEFORE the handler body — the auth/rate-limit/idempotency gate every request crosses." };
+  doc:"An app-wide wrapper (add_middleware) that runs on EVERY request before any endpoint is chosen — CORS · rate limit · idempotency. A per-endpoint guard (Depends) is NOT a node: it rides the endpoint as its Guards list, and the gate ROLE badge is where the legend teaches the check that can say no (D4 2026-09-05)." };
 KINDS.provider={ col:"#e8590c", form:"panel", label:"", type:"Provider (external)", layer:"data", usage:[0,"reached by a service fn"],
   conns:[["reached by","function","the SDK call site"]], tests:0, ident:[["kind","a third-party SDK / API the code reaches"]],
   doc:"An external provider (an LLM, an auth SDK, a payment API) a function reaches — the edge of the system, past the last owned line." };
@@ -4385,7 +4385,7 @@ window.__uniLegRef=function(){
     model:"a database table — where the data actually lives",
     external:"a table this area points at but doesn't own",
     entity:"a business area — a planet of related screens, endpoints and tables",
-    middleware:"a check that runs before the endpoint's work — who you are, your session; a gate can say no",
+    middleware:"a wrapper the app runs on EVERY request before any endpoint is chosen — CORS, rate limit, idempotency; the building's front door, not a journey's gate",
     flag:"a switch that turns a lane on or off — the journey stops here when it is off",
     provider:"an outside service the backend calls — AI, email, payments; where the trace leaves your code",
     prompt:"the text handed to an AI provider — built by a function, sent by a provider call",
@@ -4403,7 +4403,7 @@ window.__uniLegRef=function(){
     "method:BOOT":"runs once when the app starts",
     "role:accessor":"the function that actually touches the database",
     "role:caller":"coordinates other functions — touches no data itself",
-    "role:gate":"checks you're allowed (auth, consent) before the work runs",
+    "role:gate":"the check that can say no — as a guard on the endpoint (its Depends list, on the card) or as a function inside the chain; one act, two doors (D4 2026-09-05)",
     "role:pure":"computes from its inputs — no database, no side effects",
     "count:N":"how many nested shapes are tucked inside this one",
     "x:fk":"one table points at a row in another",
