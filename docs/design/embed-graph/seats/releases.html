@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Releases · Gustify Command Center</title>
+<link rel="stylesheet" href="../../../../../apps/gustify/docs/site/center/assets/a3.css">
+<script src="../../../../../apps/gustify/docs/site/center/assets/slots.js" defer></script>
+<script src="../../../../../apps/gustify/docs/site/center/assets/a3-settings.js" defer></script>
+<script src="../../../../../apps/gustify/docs/site/center/assets/a3-lightbox.js" defer></script>
+<script src="../../../../../apps/gustify/docs/site/center/assets/rowclick.js" defer></script>
+</head>
+<body>
+<!-- STATION: Releases — the stakeholder showcase (gabe-cc-update release MODE renders per-release
+     pages; this is the index + latest). SOURCES: .kdbp/DEPLOYMENTS.md · covered phases since
+     last release (Center cells) · curated proof (video slots as NAMED GAPS, never staged). -->
+<div class="app">
+
+
+<aside class="side">
+  <div class="brand">
+    <span class="logo"><img src="../../../../../apps/gustify/docs/site/center/assets/gabe-icon.png" width="26" height="26" alt="" style="image-rendering:pixelated"></span>
+    <span><b>Gustify</b><small>Gabe Center</small></span>
+  </div>
+  <div class="navlabel g-now">Now</div>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Overview</a>
+  <div class="navlabel g-board">Board</div>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/board.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="3" height="9"/><rect x="14" y="7" width="3" height="5"/></svg> Board</a>
+  <div class="navlabel g-code">Codebase graph</div>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/gabe-universe.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="10" ry="4.5"/><ellipse cx="12" cy="12" rx="4.5" ry="10"/></svg> Gabe Universe</a>
+  <div class="navlabel g-ent">Entities · backend</div>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/entity-index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> Entity index <span class="count">8</span></a>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/feature-recipe.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Recipe</a>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/feature-allergen.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Allergen</a>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/feature-pantry.html" title="high · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg> Pantry</a>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/feature-cooking.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> Cooking</a>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/feature-auth.html" title="high · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Auth</a>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/feature-progression.html" title="high · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> Progression</a>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/feature-legal-consent.html" title="high · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg> Legal/Consent</a>
+  <a class="navitem" style="opacity:.55" href="../../../../../apps/gustify/docs/site/center/entity-index.html" title="medium · pending"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Settings <span class="count">pending</span></a>
+  <div class="navlabel g-ent">Entities · frontend</div>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/gabe-universe.html?ent=fe·recipe" title="frontend of Recipe · 2 pieces — opens its panel in the Gabe Universe"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Recipe <span class="count">2</span></a>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/gabe-universe.html?ent=fe·pantry" title="frontend of Pantry · 190 pieces — opens its panel in the Gabe Universe"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg> Pantry <span class="count">190</span></a>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/gabe-universe.html?ent=fe·cooking" title="frontend of Cooking · 452 pieces — opens its panel in the Gabe Universe"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> Cooking <span class="count">452</span></a>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/gabe-universe.html?ent=fe·auth" title="frontend of Auth · 41 pieces — opens its panel in the Gabe Universe"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Auth <span class="count">41</span></a>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/gabe-universe.html?ent=fe·legal-consent" title="frontend of Legal/Consent · 13 pieces — opens its panel in the Gabe Universe"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg> Legal/Consent <span class="count">13</span></a>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/gabe-universe.html?ent=fe·settings" title="frontend of Settings · 33 pieces — opens its panel in the Gabe Universe"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Settings <span class="count">33</span></a>
+  <a class="navitem" style="opacity:.55" href="../../../../../apps/gustify/docs/site/center/gabe-universe.html?ent=me" title="frontend candidate · 1 pieces · no backend twin — /gabe-cc-init rank weighs it"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg> me <span class="count">candidate</span></a>
+  <a class="navitem" style="opacity:.55" href="../../../../../apps/gustify/docs/site/center/gabe-universe.html?ent=profile" title="frontend candidate · 94 pieces · no backend twin — /gabe-cc-init rank weighs it"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> profile <span class="count">candidate</span></a>
+  <a class="navitem" style="opacity:.55" href="../../../../../apps/gustify/docs/site/center/gabe-universe.html?ent=shopping" title="frontend candidate · 47 pieces · no backend twin — /gabe-cc-init rank weighs it"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.6 2.9 21 11.4a2 2 0 0 1 0 2.8l-6.8 6.8a2 2 0 0 1-2.8 0L2.9 12.6A2 2 0 0 1 2.3 11V4.3a2 2 0 0 1 2-2H11a2 2 0 0 1 1.6.6z"/><circle cx="7.5" cy="7.5" r="1"/></svg> shopping <span class="count">candidate</span></a>
+  <span class="navsub" style="opacity:.6" title="shared frontend, not an entity: app-shell 92 · design-system 113">2 shared bucket(s) — in the universe</span>
+  <div class="navlabel g-docs">Docs</div>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Docs</a>
+  <div class="navlabel g-code">Code</div>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/architecture.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Architecture</a>
+  <a class="navitem navsubitem" href="../../../../../apps/gustify/docs/site/center/arch-endpoints.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Endpoints</a>
+  <a class="navitem navsubitem" href="../../../../../apps/gustify/docs/site/center/arch-code-map.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Code map</a>
+  <a class="navitem navsubitem" href="../../../../../apps/gustify/docs/site/center/arch-data-model.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg> Data model</a>
+  <a class="navitem navsubitem" href="../../../../../apps/gustify/docs/site/center/arch-dm-candidates.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg> Data-model candidates</a>
+  <a class="navitem navsubitem" href="../../../../../apps/gustify/docs/site/center/arch-functions.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3"/><path d="M9 11h6"/></svg> Functions</a>
+  <a class="navitem navsubitem" href="../../../../../apps/gustify/docs/site/center/arch-fn-candidates.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg> Function candidates</a>
+  <div class="navlabel g-test">Testing</div>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/tests.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Tests <span class="count">2,048</span></a>
+  <a class="navitem navsubitem" href="../../../../../apps/gustify/docs/site/center/test-matrix.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="12" y1="3" x2="12" y2="21"/></svg> Cases</a>
+  <a class="navitem navsubitem" href="../../../../../apps/gustify/docs/site/center/test-files.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Files</a>
+  <a class="navitem navsubitem" href="../../../../../apps/gustify/docs/site/center/test-claims.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Claims</a>
+  <a class="navitem navsubitem" href="../../../../../apps/gustify/docs/site/center/test-elements.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Untested</a>
+  <a class="navitem navsubitem" href="../../../../../apps/gustify/docs/site/center/test-corpora.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Corpora &amp; gates</a>
+  <div class="navlabel g-ledger">Ledger</div>
+  <a class="navitem" href="../../../../../apps/gustify/docs/site/center/ledger.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Latest change</a>
+  <div class="navlabel g-rel">Releases</div>
+  <a class="navitem on" href="../../../../../apps/gustify/docs/site/center/releases.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> Releases</a>
+  <div class="navlabel g-leaf">Leaf</div>
+  <span class="navsub" style="opacity:.5">none wired yet</span>
+  <div class="foot">regen 2026-09-10 18:42Z<br>HEAD ec655cd0 · build_center_a3.py</div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="crumb"><a href="../../../../../apps/gustify/docs/site/center/index.html">Overview</a> › <b>Releases</b></div>
+    <div class="spacer"></div>
+    <span class="statuspill ok">repo · 2,048 tests · 0 failed</span> <span class="statuspill ok">phase —</span>
+    <span class="stamp">regen · 2026-09-10 18:42Z</span>
+  </div>
+
+  <div class="subject">
+    <div class="subjecthead">
+      <div class="pagehead">
+        <h1>Releases</h1>
+        <p>Stakeholder showcase — 178 deployment(s) recorded in .kdbp/DEPLOYMENTS.md, newest first.</p>
+      </div>
+      <div class="kpis"><div class="kpis"><div class="kpi"><div class="lab">deploys</div><div class="val">178</div><div class="sub">DEPLOYMENTS.md rows</div></div><div class="kpi"><div class="lab">latest</div><div class="val">2026-09-05</div><div class="sub">main ← origin/staging (8c4</div></div><div class="kpi"><div class="lab">via PR</div><div class="val">96</div><div class="sub">of 178</div></div><div class="kpi"><div class="lab">covered</div><div class="val">7/8</div><div class="sub">center sections</div></div></div></div>  <!-- releases total · latest env/date · features in latest -->
+    </div>
+
+    <div class="tabbody">
+      <section class="tabpane" id="releases" style="display:block">
+<div class="seat" data-seat="commits" data-id="" data-cap="12"><div class="seat-hd"><b>seat 9 · the newest changes</b><span>…</span></div><div class="seat-row"></div></div>
+        <section data-sec="releases.showcase" style="--gc:#7a5a8a">
+        <div class="sechead"><span class="secic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></span><div><h2><span class="gtag">Releases</span> Release showcase</h2></div></div>
+        <div class="panel"><table class="tbl"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td><b>id</b></td><td>P178</td></tr><tr><td><b>date</b></td><td>2026-09-05 14:49</td></tr><tr><td><b>branch → target</b></td><td>main ← origin/staging (8c48009b..b1571f5d, promotion, remote-to-remote fast-forward, 48 commits)</td></tr><tr><td><b>PR</b></td><td>—</td></tr><tr><td><b>CI result</b></td><td>✅ 9/10 (41m37s) CI (rebuild) 33985249885 — the 1 skip is the web Docker image job (web_image filter unmatched, by design); includes gitleaks, block legacy imports, Postgres parity and the post-deploy production smoke (read-only, 11m) · ✅ E2E journeys 33985250010, full suite, 27m14s — corrected from the ⏳ written at push time; background watches carried both to completion</td></tr><tr><td><b>notes</b></td><td>Phase: P8 (Dependency-vuln paydown) · REQs: — (P8 is a KDBP plan phase, not a SCOPE v2 phase) · production gate: /gabe-health three lenses → 2 critical (a corrupt LOCAL git object bf2adfaf, not shipped — repair via git…</td></tr></tbody></table></div><p class="sub">Newest row of .kdbp/DEPLOYMENTS.md.</p>   <!-- newest showcase: covered features, hero proof — .panel + .gal/.shot -->
+        <div class="panel"><table class="tbl"><thead><tr><th>#</th><th>Date</th><th>Branch → Target</th><th>PR</th><th>CI result</th><th>Decisions</th></tr></thead><tbody><tr><td><b>P178</b></td><td>2026-09-05</td><td>main ← origin/staging…</td><td>—</td><td>✅ 9/10 (41m37s) CI (rebuild)…</td><td>—</td></tr><tr><td><b>P177</b></td><td>2026-09-05</td><td>staging ← graft-pilot…</td><td>—</td><td>✅ 5/5 (28m31s) CI (rebuild) 33980730957…</td><td>—</td></tr><tr><td><b>P176</b></td><td>2026-09-03</td><td>staging ← graft-pilot…</td><td>—</td><td>⤫ NOT TRIGGERED, by design — and…</td><td>—</td></tr><tr><td><b>P175</b></td><td>2026-09-03</td><td>staging ← graft-pilot…</td><td>—</td><td>✅ 2/2 GREEN at <code>7f8feb86</code> — CI…</td><td>base_ref==main; both ALSO enforced as…</td></tr><tr><td><b>P174</b></td><td>2026-08-07</td><td>staging ← staging (8c48009b..de55a995…</td><td>—</td><td>⤫ NOT TRIGGERED, by design — and…</td><td>—</td></tr><tr><td><b>P173</b></td><td>2026-08-07</td><td>staging → main (81f02608..8c48009b…</td><td>—</td><td>✅ 2/2 on 8c48009b — CI (rebuild) run…</td><td>—</td></tr><tr><td><b>P172</b></td><td>2026-08-07</td><td>staging → staging</td><td>—</td><td>✅ on the follow-up 8ab672fa — CI…</td><td>—</td></tr><tr><td><b>P171</b></td><td>2026-08-07</td><td>staging → staging</td><td>—</td><td>✅ 2/2 on 335fbda8 — CI (rebuild) run…</td><td>—</td></tr><tr><td><b>P170</b></td><td>2026-08-05</td><td>staging → main (665d0021..81f02608…</td><td>—</td><td>✅ CI (rebuild) 31011094011 GREEN on the…</td><td>—</td></tr><tr><td><b>P169</b></td><td>2026-08-05</td><td>staging ← staging (7a09a454..660808de…</td><td>—</td><td>❌ CI (rebuild) 31011094011 FAILED on…</td><td>—</td></tr><tr><td><b>P168</b></td><td>2026-08-04</td><td>staging ← staging (adbcf35e..7a09a454…</td><td>—</td><td>✅ 2/2 on 7a09a454 — CI (rebuild) run…</td><td>—</td></tr><tr><td><b>P167</b></td><td>2026-08-04</td><td>staging ← staging (20f188d6..884dd5e3…</td><td>—</td><td>⏳ at write time — CI (rebuild) run…</td><td>—</td></tr></tbody></table></div><p class="sub">178 deployment(s) recorded · showing 12 newest. Decisions come from /gabe-push 7.5b note actions.</p>    <!-- prior releases: date · env · features · link — .tbl -->
+        </section>
+      </section>
+    </div>
+  </div>
+</main>
+
+</div>
+<style>.seat {
+  --bg:     #0b0d12;
+  --panel:  #12151d;
+  --frame:  #1e2430;
+  --line:   #2a3140;
+  --ink:    #e6e9ef;
+  --dim:    #8b93a3;
+  --dimmer: #5a6272;
+  --accent: #7c5cfc;
+  --honest: #f0a04b;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+}
+/* ── the pane ────────────────────────────────────────────────────────────────────────────── */
+
+.seat .pn {
+  display: flex; flex-direction: column;
+  background: var(--panel); border: 1px solid var(--frame);
+  border-radius: 9px; overflow: hidden;
+  color: var(--ink);           /* NEVER inherit the host's text colour: on a light centre page the pane
+                                  head painted dark-on-dark and every title vanished (seats look, 2026-09-09) */
+  font: 13px/1.5 var(--sans);
+}
+
+.seat .pn-head {
+  display: flex; align-items: center; gap: 7px;
+  padding: 8px 10px; border-bottom: 1px solid var(--frame);
+  font-size: 12px; min-height: 33px;
+}
+.seat .pn-head .dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+.seat .pn-head .ttl { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seat .pn-head .sub { color: var(--dimmer); font-size: 11px; margin-left: auto;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 48%; }
+.seat .pn-head .go { flex: 0 0 auto; color: var(--dimmer); text-decoration: none;
+  font-size: 13px; line-height: 1; padding: 2px 3px; border-radius: 4px; }
+.seat .pn-head .go:hover { color: var(--ink); background: var(--frame); }
+.seat .pn-head .cp {
+  flex: 0 0 auto; background: none; border: none; color: var(--dimmer);
+  padding: 2px 3px; border-radius: 4px; cursor: pointer; line-height: 0;
+}
+.seat .pn-head .cp svg { width: 12px; height: 12px; display: block; }
+.seat .pn-head .cp:hover { color: var(--ink); background: var(--frame); }
+.seat .pn-head .cp.ok { color: #22c55e; }
+
+.seat .pn-body { position: relative; display: flex; background: #0e1524; }   /* the station ground */
+.seat .pn-view { position: relative; flex: 0 0 auto; cursor: grab; }
+.seat .pn-canvas { position: absolute; inset: 0; transition: opacity .28s ease; }   /* force-graph owns this element and clears it; opacity is the reveal, never a move */
+.seat .pn-view:active { cursor: grabbing; }
+.seat .pn-body canvas { display: block; }
+.seat .pn-body .scene-tooltip { font: 11px var(--mono) !important; }
+
+/* ── the STEP RAIL — a walk you can page through, the way Comet pages a plan ──────────────
+   A sibling of the viewport, never an overlay: the camera has to fit the width it actually
+   owns. The head names WHOSE order this is — authored (workflows.js) or derived from the lane
+   law — because a reading order posing as a chronology is a lie about a commit. */
+.seat .pn-rail {
+  flex: 0 0 auto; display: flex; flex-direction: column;
+  border-left: 1px solid var(--frame); background: #0c1220; min-width: 0;
+}
+.seat .pn-railhead {
+  padding: 5px 8px; border-bottom: 1px solid var(--frame);
+  font: 9.5px var(--mono); color: var(--dimmer);
+  text-transform: uppercase; letter-spacing: .5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: help;
+}
+.seat .pn-steps { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; padding: 3px 0; }
+.seat .pn-steps::-webkit-scrollbar { width: 6px; }
+.seat .pn-steps::-webkit-scrollbar-thumb { background: var(--frame); border-radius: 3px; }
+.seat .pn-steps::-webkit-scrollbar-track { background: transparent; }
+
+.seat .pn-step {
+  display: flex; align-items: center; gap: 5px;
+  padding: 3px 7px; cursor: pointer;
+  font: 10.5px/1.35 var(--mono); color: var(--dim);
+  border-left: 2px solid transparent;
+}
+.seat .pn-step:hover { background: #131a2b; color: var(--ink); }
+.seat .pn-step.on { background: #172033; color: var(--ink); border-left-color: var(--accent); }
+.seat .pn-step .n { flex: 0 0 auto; color: var(--dimmer); min-width: 12px; text-align: right; }
+.seat .pn-step.on .n { color: var(--accent); }
+.seat .pn-step .d { flex: 0 0 auto; width: 6px; height: 6px; border-radius: 50%; }
+.seat .pn-step .l { flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* a step the map drew no endpoint for is SHOWN, dashed and dimmed — never skipped */
+.seat .pn-step.unresolved .l { color: var(--dimmer); text-decoration: line-through;
+  text-decoration-style: dotted; }
+.seat .pn-step.unresolved .d { background: transparent !important;
+  box-shadow: inset 0 0 0 1px var(--dimmer); }
+
+.seat .pn-transport {
+  display: flex; justify-content: center; gap: 4px;
+  padding: 5px 6px; border-top: 1px solid var(--frame);
+}
+.seat .pn-transport button {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--frame); border: 1px solid var(--line); color: var(--dim);
+  border-radius: 5px; min-width: 28px; height: 22px; padding: 0; cursor: pointer;
+}
+.seat .pn-transport button svg { width: 13px; height: 13px; display: block; }
+.seat .pn-transport button:hover:not(:disabled) { color: var(--ink); border-color: var(--dimmer); }
+.seat .pn-transport button:disabled { opacity: .3; cursor: default; }
+.seat .pn-transport .t-home svg { width: 12px; height: 12px; }
+.seat .pn-transport .t-next { color: var(--ink); }
+
+/* the DETAIL LINE — a readout, never a control. Fixed position, always present, so an
+   unselected pane and a selected one differ in content and never in layout. */
+.seat .pn-read {
+  padding: 5px 10px; border-top: 1px solid var(--frame);
+  font: 11px/1.4 var(--mono); color: var(--dimmer);
+  min-height: 26px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.seat .pn-read b { color: var(--ink); font-weight: 600; }
+.seat .pn-read i { font-style: normal; color: var(--dim); }
+.seat .pn-read .kdot { display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  margin-right: 5px; vertical-align: baseline; }
+
+.seat .pn-foot {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 10px; border-top: 1px solid var(--frame); min-height: 30px;
+}
+
+/* THE REACH CONTROL — on the picture it changes, top-left, the station's corner-box grammar.
+   It wears words: "subject" vs "+1 hop". Two dot-glyphs at 9px could not carry the difference,
+   which is exactly what the operator could not read (2026-09-09). */
+.seat .pn-hops {
+  position: absolute; left: 7px; top: 7px; z-index: 3;
+  display: flex; gap: 2px; padding: 2px;
+  background: rgba(12, 18, 32, .72); border: 1px solid var(--frame);
+  border-radius: 6px; backdrop-filter: blur(3px);
+}
+.seat .pn-hops button {
+  display: flex; align-items: center; gap: 4px;
+  background: none; border: none; border-radius: 4px;
+  padding: 2px 6px 2px 4px; cursor: pointer;
+  font: 9.5px/1 var(--mono); color: var(--dimmer);
+  letter-spacing: .3px; white-space: nowrap;
+}
+.seat .pn-hops button:hover { color: var(--dim); background: #182034; }
+.seat .pn-hops button.on { color: var(--ink); background: #1e2740; }
+.seat .pn-hops button.on svg { color: var(--accent); }
+.seat .pn-hops svg { width: 11px; height: 11px; display: block; flex: 0 0 auto; }
+
+.seat .pn-honest {
+  margin-left: auto; text-align: right;
+  font: 10.5px/1.3 var(--mono); color: var(--honest);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.seat .pn-honest.clean { color: var(--dimmer); }
+
+/* _pane-console.css — the CONSOLE skin: the SC2 regions at pane scale. Loaded beside _pane.css; every
+   rule here is under .pnc so the classic frame is untouched. Region tints are the dock's own. */
+
+.pnc {
+  --pnc: #4c9dfb;
+  --pnc-bg: #0b1220; --pnc-panel: #101a2e; --pnc-line: #1f2d47; --pnc-ink: #e6e9ef; --pnc-dim: #8b93a3; --pnc-dimmer: #5a6272;
+  --pnc-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --pnc-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+  display: flex; flex-direction: column; color: var(--pnc-ink); font: 12px/1.45 var(--pnc-sans);
+  background: var(--pnc-panel); border: 1px solid var(--pnc-line); border-radius: 10px; overflow: hidden;
+  box-shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 12px 30px -18px #000;
+}
+
+/* ── PORTRAIT ───────────────────────────────────────────────────────────────────────────── */
+.pnc-head { display: flex; align-items: center; gap: 10px; padding: 8px 10px 8px 9px; min-height: 46px;
+  border-bottom: 1px solid var(--pnc-line);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--pnc) 12%, transparent), transparent 55%); }
+.pnc-pg { width: 30px; height: 30px; border-radius: 8px; flex: 0 0 auto; display: grid; place-items: center;
+  color: color-mix(in srgb, var(--pnc) 80%, #fff); background: color-mix(in srgb, var(--pnc) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--pnc) 55%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pnc) 10%, transparent), 0 0 18px color-mix(in srgb, var(--pnc) 30%, transparent); }
+.pnc-pg svg { width: 17px; height: 17px; }
+.pnc-id { min-width: 0; flex: 1 1 auto; }
+.pnc-name { font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: .01em; }
+.pnc-sub { font: 10.5px/1.3 var(--pnc-mono); color: var(--pnc-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pnc-acts { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+.pnc-badge { font: 700 9px/1 var(--pnc-mono); letter-spacing: .1em; text-transform: uppercase; padding: 4px 7px; border-radius: 4px;
+  color: color-mix(in srgb, var(--pnc) 85%, #fff); background: color-mix(in srgb, var(--pnc) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--pnc) 45%, transparent); margin-right: 4px; }
+
+/* ── COMMAND CELLS — every verb keeps its cell ───────────────────────────────────────────── */
+.pnc-cell { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 26px; height: 26px; padding: 0 6px;
+  background: #142138; color: var(--pnc-dim); border: 1px solid var(--pnc-line); border-radius: 6px; cursor: pointer; line-height: 0;
+  font: 10px/1 var(--pnc-mono); letter-spacing: .02em; text-decoration: none; }
+.pnc-cell svg { width: 13px; height: 13px; }
+.pnc-cell span { line-height: 1; }
+.pnc-cell:hover:not(:disabled) { color: var(--pnc-ink); border-color: color-mix(in srgb, var(--pnc) 60%, var(--pnc-line)); }
+.pnc-cell.on { color: #fff; background: color-mix(in srgb, var(--pnc) 55%, #142138); border-color: color-mix(in srgb, var(--pnc) 80%, transparent); }
+.pnc-cell.ok { color: #22c55e; }
+.pnc-cell:disabled { opacity: .28; cursor: default; }   /* blanked, never removed */
+
+/* ── VIEWPORT overlay: reach cells ────────────────────────────────────────────── */
+.pnc .pn-body { background: var(--pnc-bg); }
+.pnc-reach { position: absolute; left: 7px; top: 7px; z-index: 3; display: flex; gap: 3px; }
+
+/* ── QUEUE (the step rail) ───────────────────────────────────────────────────────────────── */
+.pnc-rail { flex: 0 0 auto; display: flex; flex-direction: column; border-left: 1px solid var(--pnc-line); background: #0c1526; min-width: 0; }
+.pnc-qhead { display: flex; align-items: center; gap: 5px; padding: 6px 8px 4px; font: 700 8.5px/1.2 var(--pnc-mono); letter-spacing: .1em;
+  text-transform: uppercase; color: var(--pnc); cursor: help; }
+.pnc-qhead .qi { width: 11px; height: 11px; }
+.pnc-qhead .ql { flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pnc-qhead .qn { color: var(--pnc-ink); }
+.pnc-qbar { display: flex; gap: 2px; padding: 0 8px 6px; }
+.pnc-qbar i { flex: 1 1 auto; height: 3px; border-radius: 2px; background: #1c2a45; min-width: 2px; }
+.pnc-qbar i.done { background: color-mix(in srgb, var(--pnc) 55%, #1c2a45); }
+.pnc-qbar i.on { background: var(--pnc); box-shadow: 0 0 6px color-mix(in srgb, var(--pnc) 60%, transparent); }
+.pnc-queue { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; padding: 2px 0 4px; }
+.pnc-queue::-webkit-scrollbar { width: 6px; } .pnc-queue::-webkit-scrollbar-thumb { background: #1f2d47; border-radius: 3px; }
+.pnc-step { display: flex; align-items: center; gap: 6px; padding: 3px 7px 3px 6px; cursor: pointer; font: 10.5px/1.3 var(--pnc-mono);
+  color: var(--pnc-dim); border-left: 2px solid transparent; position: relative; }
+.pnc-step:hover { background: #12203a; color: var(--pnc-ink); }
+.pnc-step.done { color: var(--pnc-dimmer); }
+.pnc-step.on { color: var(--pnc-ink); border-left-color: var(--pnc);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--pnc) 22%, transparent), color-mix(in srgb, var(--pnc) 4%, transparent)); }
+.pnc-step .n { flex: 0 0 auto; min-width: 14px; text-align: right; color: var(--pnc-dimmer); font-size: 9.5px; }
+.pnc-step.on .n { color: var(--pnc); }
+.pnc-step .k { flex: 0 0 auto; width: 14px; height: 14px; display: grid; place-items: center; }
+.pnc-step .k svg { width: 12px; height: 12px; }
+.pnc-step .l { flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pnc-step.unresolved .l { text-decoration: line-through; text-decoration-style: dotted; color: var(--pnc-dimmer); }
+.pnc-transport { display: flex; justify-content: center; gap: 4px; padding: 6px; border-top: 1px solid var(--pnc-line); }
+
+/* ── STATUS line ─────────────────────────────────────────────────────────────────────────── */
+.pnc-read { display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-top: 1px solid var(--pnc-line);
+  font: 11px/1.4 var(--pnc-mono); color: var(--pnc-dimmer); min-height: 27px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pnc-read b { color: var(--pnc-ink); font-weight: 600; }
+.pnc-read i { font-style: normal; color: var(--pnc-dim); }
+.pnc-read .rk { display: inline-grid; place-items: center; width: 14px; height: 14px; flex: 0 0 auto; }
+.pnc-read .rk svg { width: 12px; height: 12px; }
+
+/* ── VITALS — four fixed slots, four states ──────────────────────────────────────────────── */
+.pnc-vitals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border-top: 1px solid var(--pnc-line); background: #0c1526; }
+.pnc-vital { display: grid; grid-template-columns: 12px 1fr; grid-template-rows: auto auto; column-gap: 5px; row-gap: 3px; align-items: center;
+  padding: 6px 8px 6px 8px; border-right: 1px solid var(--pnc-line); cursor: help; min-width: 0; }
+.pnc-vital:last-child { border-right: none; }
+.pnc-vital .vi { grid-row: 1 / span 2; width: 12px; height: 12px; color: var(--pnc-dim); }
+.pnc-vital .vl { font: 700 8.5px/1 var(--pnc-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--pnc-dimmer); }
+.pnc-vital .vv { font: 700 11px/1 var(--pnc-mono); color: var(--pnc-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; grid-column: 2; justify-self: end; }
+.pnc-vital .vt { grid-column: 2; height: 3px; border-radius: 2px; background: #1c2a45; overflow: hidden; }
+.pnc-vital .vt i { display: block; height: 100%; background: var(--pnc); border-radius: 2px; transition: width .35s ease; }
+/* the four states */
+.pnc-vital.st-lit .vi { color: var(--pnc); }
+.pnc-vital.st-full .vi { color: #22c55e; } .pnc-vital.st-full .vt i { background: #22c55e; }
+.pnc-vital.st-grey .vv { color: var(--pnc-dimmer); } .pnc-vital.st-grey .vt { opacity: .5; }
+.pnc-vital.st-hatched .vv { color: #c8871b; }
+.pnc-vital.st-hatched .vt { background: repeating-linear-gradient(45deg, color-mix(in srgb, #c8871b 55%, transparent) 0 3px, transparent 3px 6px); }
+.pnc-vital.st-hatched .vt i { display: none; }
+.pnc-vital.st-blank .vv, .pnc-vital.st-blank .vl { color: var(--pnc-dimmer); opacity: .5; } .pnc-vital.st-blank .vt { visibility: hidden; }
+
+/* ── BEHAVIOR chips ──────────────────────────────────────────────────────────────────────── */
+.pnc-foot { display: flex; align-items: center; gap: 4px; padding: 5px 8px; border-top: 1px solid var(--pnc-line); min-height: 30px; flex-wrap: wrap; }
+.pnc-chip { display: inline-flex; align-items: center; gap: 3px; height: 20px; padding: 0 6px 0 4px; border-radius: 5px; cursor: help;
+  background: color-mix(in srgb, currentColor 12%, transparent); border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  font: 700 10px/1 var(--pnc-mono); }
+.pnc-chip svg { width: 12px; height: 12px; }
+.pnc-chip b { font-weight: 700; }
+.pnc-chip.hatched { color: #c8871b;
+  background: repeating-linear-gradient(45deg, color-mix(in srgb, #c8871b 22%, transparent) 0 3px, transparent 3px 6px); }
+.pnc-chip.missing { color: #ef4444; }
+.pnc-chip.clean { color: #22c55e; font-weight: 600; }
+.pnc-chip.clean span { font: 600 10px/1 var(--pnc-mono); }
+
+/* ── the shared instant tooltip ──────────────────────────────────────────────────────────── */
+.pnc-tip { position: fixed; z-index: 9999; pointer-events: none; opacity: 0; transition: opacity .06s;
+  max-width: 300px; padding: 6px 9px; border-radius: 7px; background: #0b1220; color: #e6e9ef;
+  border: 1px solid #2a3a5c; box-shadow: 0 10px 28px -10px #000; font: 11px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+.pnc-tip.on { opacity: 1; }
+.pnc-tip b { display: block; font-weight: 700; }
+.pnc-tip i { display: block; font-style: normal; color: #8b93a3; margin-top: 2px; }
+
+/* the seat itself: a labelled strip inside the centre page */
+.seat{ margin:14px 0 18px; padding:12px 14px 14px; border:1px dashed color-mix(in srgb, var(--accent, #4f46e5) 55%, transparent);
+  border-radius:10px; background:color-mix(in srgb, var(--accent, #4f46e5) 5%, transparent); }
+.seat .seat-hd{ display:flex; align-items:baseline; gap:10px; margin-bottom:10px; font:12px/1.3 ui-monospace, Menlo, monospace; }
+.seat .seat-hd b{ font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--accent, #4f46e5); white-space:nowrap; }
+.seat .seat-hd span{ opacity:.7; }
+.seat .seat-row{ display:flex; gap:14px; flex-wrap:wrap; align-items:flex-start; }
+.seat[data-seat="entity"] .seat-row, .seat[data-mode="pick"] .seat-row{ display:block; }   /* one pane, full width */
+.seat .seat-hd select.seat-pick{ margin-left:auto; max-width:min(60%, 520px); font:12px/1.3 ui-monospace, Menlo, monospace;
+  padding:4px 8px; border-radius:6px; border:1px solid color-mix(in srgb, var(--accent, #4f46e5) 45%, transparent);
+  background:#fff; color:#141a24; cursor:pointer; }
+.seat .seat-hd select.seat-pick:focus{ outline:2px solid var(--accent, #4f46e5); outline-offset:1px; }
+.seat .seat-hd .seat-n{ font-size:11px; opacity:.6; white-space:nowrap; }
+/* a card's COMMIT: the sha the resolved row recorded; live when commits.js carries it, dim when the feed stops before it */
+.bc-sha{ display:inline-flex; align-items:center; gap:4px; font:600 10.5px/1 ui-monospace, Menlo, monospace; padding:3px 7px; border-radius:999px;
+  border:1px solid color-mix(in srgb, var(--accent, #4f46e5) 50%, transparent); color:var(--accent, #4f46e5); background:#fff; cursor:pointer; }
+.bc-sha:hover{ background:var(--accent, #4f46e5); color:#fff; }
+.bc-sha[data-live="0"]{ color:#7a8595; border-style:dashed; border-color:#c9cfd8; }
+.bc-sha[data-live="0"]:hover{ background:#eef0f4; color:#7a8595; }
+.seat.flash{ box-shadow:0 0 0 3px color-mix(in srgb, var(--accent, #4f46e5) 55%, transparent); transition:box-shadow .2s; }
+/* THE SPINE STRIP: Red · Execute · Review · Commit · Push — each column is that beat's ledger, newest first */
+.seat[data-seat="spine"] .seat-row{ display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:10px; }
+.sp-col{ min-width:0; border:1px solid color-mix(in srgb, var(--bc, #4f46e5) 45%, transparent); border-radius:8px; background:#fff; padding:8px 10px 9px; display:flex; flex-direction:column; gap:6px; }
+.sp-col .sp-hd{ display:flex; align-items:baseline; gap:6px; font:700 11px/1.2 ui-monospace, Menlo, monospace; letter-spacing:.08em; text-transform:uppercase; color:var(--bc, #4f46e5); }
+.sp-col .sp-hd .n{ margin-left:auto; font-weight:600; font-size:10px; color:#7a8595; letter-spacing:0; text-transform:none; }
+.sp-col select{ width:100%; font:11px/1.3 ui-monospace, Menlo, monospace; padding:4px 6px; border-radius:6px; border:1px solid #c9cfd8; background:#fff; color:#141a24; cursor:pointer; }
+.sp-col .sp-fact{ font:11px/1.45 ui-sans-serif, system-ui, sans-serif; color:#3d4756; min-height:2.9em; }
+.sp-col .sp-fact b{ font-family:ui-monospace, Menlo, monospace; color:#141a24; }
+.sp-col .sp-fact i{ display:block; font-style:normal; color:#7a8595; font-size:10.5px; margin-top:2px; }
+.sp-col .sp-live{ font:700 9.5px/1 ui-monospace, Menlo, monospace; letter-spacing:.06em; padding:2px 6px; border-radius:999px; align-self:flex-start; }
+.sp-col .sp-live.on{ color:#1a7f4b; border:1px solid rgba(76,190,131,.6); } .sp-col .sp-live.off{ color:#7a8595; border:1px dashed #c9cfd8; }
+.sp-col.empty{ opacity:.55; }
+</style>
+<script src="../../../../../apps/gustify/docs/site/center/c4-graph.js"></script>
+<script src="../../../../../apps/gustify/docs/site/center/commits.js"></script>
+<script src="../../../../../apps/gustify/docs/site/center/workflows.js"></script>
+<script src="../../../../../apps/gustify/docs/site/center/assets/3d-bundle.js"></script>
+<script src="../_grammar.js"></script>
+<script src="../_slice.js"></script>
+<script src="../_uni-grammar.js"></script>
+<script src="../_pane.js"></script>
+<script src="../_pane-console.js"></script>
+<script>
+(function(){
+  if(!window.GABE_C4 || !window.ForceGraph3D || !window.GabePane){ return; }
+  var IX = GabeSlice.index(window.GABE_C4, window.GABE_COMMITS || [], window.GABE_WORKFLOWS || []);
+  var base = "../../../../../apps/gustify/docs/site/center/gabe-universe.html";   /* the twin's station, for the pane's open-in-station link */
+  var SIZE = { panel:"panel", card:"card" };
+  /* THE PICKER (operator 2026-09-10): a section with many graphs shows ONE, full width like the entity
+     seat, and a dropdown at the top — outside the graph — chooses which. Switching TEARS DOWN the
+     previous pane (3d-force-graph's _destructor + the wrapper) so a seat holds one WebGL context
+     however many times it is switched; the browser caps contexts at ~16 and a leak would end the
+     page after a dozen picks. */
+  function pick(host, row, list, label, mountOne) {
+    var hd = host.querySelector(".seat-hd"), span = hd.querySelector("span");
+    host.setAttribute("data-mode", "pick");
+    if (!list.length) { row.textContent = "nothing to pick — " + label; span.textContent = "0 " + label; return; }
+    var sel = document.createElement("select"); sel.className = "seat-pick"; sel.setAttribute("aria-label", "choose which " + label + " to draw");
+    list.forEach(function (it, i) { var o = document.createElement("option"); o.value = String(i); o.textContent = it.label + (it.sub ? "  —  " + it.sub : ""); sel.appendChild(o); });
+    span.textContent = list.length + " " + label + " — pick one";
+    hd.appendChild(sel);
+    var cur = null;
+    function show(i) {
+      if (cur) { try { if (cur.Graph && cur.Graph._destructor) cur.Graph._destructor(); } catch (e) {} try { if (cur.wrap) cur.wrap.remove(); } catch (e) {} cur = null; }
+      row.innerHTML = "";
+      cur = mountOne(list[i]);
+      host.setAttribute("data-picked", list[i].id);
+    }
+    sel.onchange = function () { show(+sel.value); };
+    show(0);
+    host.__pick = { sel: sel, show: show, list: list };
+  }
+  /* CARD → COMMIT (operator 2026-09-10): a Done card carries the sha its resolved row recorded. Live when
+     commits.js carries that commit — press it and the seat's picker selects it and scrolls into view.
+     Dim when the feed stops before it; the press still lands on the seat and the head says so. */
+  var HAVE = {}; (window.GABE_COMMITS || []).forEach(function (c, i) { HAVE[c.short] = i; });
+  document.querySelectorAll(".bc-sha").forEach(function (b) {
+    /* a row can record more than one sha (resolved @ X, verified @ Y): the chip shows the resolving one and
+       goes live on whichever the feed carries — and says so when that is not the one it shows */
+    var shown = b.getAttribute("data-sha"), all = (b.getAttribute("data-shas") || shown).split(" ");
+    var sha = all.filter(function (x) { return HAVE[x] != null; })[0] || null, live = !!sha;
+    b.setAttribute("data-live", live ? "1" : "0");
+    var newest = (window.GABE_COMMITS || [])[0] || {};
+    b.title = live ? ("resolved @ " + shown + (sha !== shown ? " · the feed carries " + sha + ", the earlier commit on this row" : "") + " — press to draw it in the seat above")
+                   : ("resolved @ " + shown + " — commits.js stops at " + newest.short + " (" + (newest.date || "").slice(0, 10) + "); this commit is newer than the landed feed");
+    b.onclick = function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      var host = document.querySelector('[data-seat="commits"]'); if (!host) return;
+      var pk = host.__pick, span = host.querySelector(".seat-hd > span");
+      if (pk && live) { var i = pk.list.map(function (x) { return x.id; }).indexOf(sha); if (i >= 0) { pk.sel.value = String(i); pk.show(i); } }
+      else if (span) span.textContent = "commits.js does not carry " + shown + " — the feed stops at " + (((window.GABE_COMMITS || [])[0] || {}).short || "?") + " · the pane keeps " + (host.getAttribute("data-picked") || "the newest");
+      host.scrollIntoView({ block: "start", behavior: "smooth" });
+      host.classList.remove("flash"); void host.offsetWidth; host.classList.add("flash"); setTimeout(function () { host.classList.remove("flash"); }, 1400);
+    };
+  });
+  /* THE SPINE STRIP (operator 2026-09-10): one column per spine beat — Red · Execute · Review · Commit · Push —
+     each a picker over the commits that beat recorded in the ledger, newest first, the latest preselected.
+     A pick that commits.js carries draws in the commit seat below; one it does not carry still shows the
+     ledger's own facts (date · theme · gates) and says the feed stops early. The strip never invents a commit. */
+  function spine(host, row) {
+    var data = {}; try { data = JSON.parse(host.getAttribute("data-spine") || "{}"); } catch (e) {}
+    var order = ["RED", "EXECUTE", "REVIEW", "COMMIT", "PUSH"], col = { RED:"#b3403a", EXECUTE:"#0d6e78", REVIEW:"#b45309", COMMIT:"#4f46e5", PUSH:"#1a7f4b" };
+    var seat10 = document.querySelector('[data-seat="commits"]');
+    var newest = (window.GABE_COMMITS || [])[0] || {};
+    var total = 0;
+    order.forEach(function (beat) {
+      var rows = data[beat] || [], live = rows.filter(function (r) { return HAVE[r.sha] != null; }).length; total += rows.length;
+      var c = document.createElement("div"); c.className = "sp-col" + (rows.length ? "" : " empty"); c.style.setProperty("--bc", col[beat]); c.setAttribute("data-beat", beat);
+      c.innerHTML = '<div class="sp-hd"><span>' + beat.toLowerCase() + '</span><span class="n">' + rows.length + ' · ' + live + ' drawable</span></div>';
+      if (!rows.length) { c.innerHTML += '<div class="sp-fact">— no ledger row of this beat carries a commit</div>'; row.appendChild(c); return; }
+      var sel = document.createElement("select"); sel.setAttribute("aria-label", beat + " commits, newest first");
+      rows.forEach(function (r, i) { var o = document.createElement("option"); o.value = String(i); o.textContent = (HAVE[r.sha] != null ? "\u25cf " : "\u25cb ") + r.sha + " \u00b7 " + r.date.slice(5) + " \u00b7 " + r.theme.slice(0, 40); sel.appendChild(o); });
+      var fact = document.createElement("div"); fact.className = "sp-fact";
+      var pill = document.createElement("span"); pill.className = "sp-live";
+      function show(i, drive) {
+        var r = rows[i], isLive = HAVE[r.sha] != null;
+        fact.innerHTML = "<b>" + r.sha + "</b> \u00b7 " + r.date + "<i>" + (r.theme || "").slice(0, 90) + "</i>"; fact.title = (r.theme || "") + (r.gates ? "\n\ngates: " + r.gates : "");
+        pill.className = "sp-live " + (isLive ? "on" : "off"); pill.textContent = isLive ? "drawn below" : "feed stops at " + (newest.short || "?");
+        c.setAttribute("data-sha", r.sha); c.setAttribute("data-live", isLive ? "1" : "0");
+        if (!drive || !seat10) return;
+        var pk = seat10.__pick, span = seat10.querySelector(".seat-hd > span");
+        if (pk && isLive) { var k = pk.list.map(function (x) { return x.id; }).indexOf(r.sha); if (k >= 0) { pk.sel.value = String(k); pk.show(k); } }
+        else if (span) span.textContent = "commits.js does not carry " + r.sha + " (" + beat.toLowerCase() + ", " + r.date + ") \u2014 the feed stops at " + (newest.short || "?") + " \u00b7 the pane keeps " + (seat10.getAttribute("data-picked") || "the newest");
+        seat10.scrollIntoView({ block: "start", behavior: "smooth" });
+        seat10.classList.remove("flash"); void seat10.offsetWidth; seat10.classList.add("flash"); setTimeout(function () { seat10.classList.remove("flash"); }, 1400);
+      }
+      sel.onchange = function () { show(+sel.value, true); };
+      c.appendChild(sel); c.appendChild(pill); c.appendChild(fact); row.appendChild(c);
+      show(0, false);
+      c.__show = show;
+    });
+    host.querySelector(".seat-hd span").textContent = total + " ledger rows with a commit across the five beats \u2014 pick one to draw it below";
+  }
+  document.querySelectorAll("[data-seat]").forEach(function (host) {
+    var kind = host.getAttribute("data-seat"), row = host.querySelector(".seat-row");
+    if (kind === "spine") { try { spine(host, row); } catch (e) { row.textContent = "seat failed: " + (e && e.message); } return; }
+    try {
+      if (kind === "entity") {
+        GabePane.embed(row, { ix: IX, scope: "entity", id: host.getAttribute("data-id"), size: "fill", stationBase: base });   /* the entity seat takes the page's width (operator) */
+      } else if (kind === "journeys") {
+        /* the curated workflows that name an endpoint this entity owns */
+        var ent = host.getAttribute("data-id");
+        var own = {}; ((window.GABE_C4.l2[ent] || {}).nodes || []).forEach(function (n) { if (n.kind === "endpoint") own[n.label] = 1; });
+        var hits = (window.GABE_WORKFLOWS || []).filter(function (w) { return w.steps.some(function (s) { return own[s]; }); });
+        if (!hits.length) {   /* an honest empty: the seat stays, says why, and names the beat that fills it */
+          row.textContent = "no curated walk names an endpoint of " + ent + " — curate-workflows drafts one from the graph";
+          host.querySelector(".seat-hd span").textContent = "0 curated workflows reach this entity"; return; }
+        pick(host, row, hits.map(function (w) { return { id: w.name, label: w.name, sub: w.steps.length + " steps" }; }), "curated walks reaching " + ent,
+             function (it) { return GabePane.embed(row, { ix: IX, scope: "journey", id: it.id, hops: 2, size: "fill", stationBase: base }); });
+      } else if (kind === "commit") {
+        var sha = host.getAttribute("data-id");
+        var have = (window.GABE_COMMITS || []).some(function (c) { return c.short === sha; });
+        if (!have) { var c0 = (window.GABE_COMMITS || [])[0]; host.querySelector(".seat-hd span").textContent =
+          "commits.js does not carry " + sha + " — showing the newest it has, " + (c0 ? c0.short : "none"); sha = c0 ? c0.short : null; }
+        if (sha) GabePane.embed(row, { ix: IX, scope: "commit", id: sha, size: "fill", stationBase: base });
+      } else if (kind === "tests") {
+        var top = GabeSlice.subjects(IX).test.slice(0, +(host.getAttribute("data-cap") || 12));
+        pick(host, row, top.map(function (t) { return { id: t.id, label: t.id, sub: t.sub }; }), "cases, most-covering first",
+             function (it) { return GabePane.embed(row, { ix: IX, scope: "test", id: it.id, size: "fill", stationBase: base }); });
+      } else if (kind === "entities") {
+        /* every claimed entity, one card each, largest first — the entity page as a shelf of pictures */
+        var all = GabeSlice.subjects(IX).entity.slice().sort(function (a, b) { return IX.ents[b.id].nodes.length - IX.ents[a.id].nodes.length; });
+        var ents = all.filter(function (e) { return e.id !== "__unclaimed__"; }), res = all.filter(function (e) { return e.id === "__unclaimed__"; })[0];
+        pick(host, row, ents.map(function (e) { return { id: e.id, label: e.id, sub: IX.ents[e.id].nodes.length + " pieces" }; }),
+             "entities, largest first" + (res ? " (" + IX.ents[res.id].nodes.length + " unclaimed pieces held out)" : ""),
+             function (it) { return GabePane.embed(row, { ix: IX, scope: "entity", id: it.id, size: "fill", stationBase: base }); });
+      } else if (kind === "journeys-all") {
+        /* the curated walks, orientation first (level 1 → 3), capped so a page never holds more than twelve panes */
+        var lv = function (w) { return w.level || 9; };
+        var ws = (window.GABE_WORKFLOWS || []).slice().sort(function (a, b) { return lv(a) - lv(b) || (a.name < b.name ? -1 : 1); });
+        /* a picker holds them ALL — the cap only ever existed to keep a page under twelve panes */
+        var LV = { 1: "orientation", 2: "core", 3: "specialized" };
+        pick(host, row, ws.map(function (w) { return { id: w.name, label: w.name, sub: (LV[w.level] || "other") + " · " + w.steps.length + " steps" }; }), "curated walks, orientation first",
+             function (it) { return GabePane.embed(row, { ix: IX, scope: "journey", id: it.id, hops: 2, size: "fill", stationBase: base }); });
+      } else if (kind === "commits") {
+        /* the newest N commits as cards — the ledger's spine, drawn */
+        var capC = +(host.getAttribute("data-cap") || 3), cs = (window.GABE_COMMITS || []).slice(0, capC);
+        if (!cs.length) { row.textContent = "commits.js carries no commits"; return; }
+        if (cs.length === 1) {
+          GabePane.embed(row, { ix: IX, scope: "commit", id: cs[0].short, size: "fill", stationBase: base });
+          host.querySelector(".seat-hd span").textContent = "the newest commit in commits.js — " + cs[0].short; return;
+        }
+        pick(host, row, cs.map(function (c) { return { id: c.short, label: c.short, sub: String(c.subject || "").slice(0, 60) }; }), "newest commits",
+             function (it) { return GabePane.embed(row, { ix: IX, scope: "commit", id: it.id, size: "fill", stationBase: base }); });
+      }
+    } catch (e) { row.textContent = "seat failed: " + (e && e.message); }
+  });
+})();
+</script>
+</body>
+</html>

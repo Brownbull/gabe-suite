@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Embed graph — six layouts, one subject</title>
+<link rel="stylesheet" href="_embed.css">
+<style>
+  .six { display: grid; grid-template-columns: repeat(auto-fill, minmax(348px, 1fr)); gap: 22px; }
+  .cell { display: flex; flex-direction: column; gap: 7px; }
+  .cell .cap { display: flex; align-items: baseline; gap: 8px; }
+  .cell .cap .letter { font: 700 11px/1 var(--mono); color: var(--bg); background: var(--accent);
+    padding: 4px 6px; border-radius: 4px; }
+  .cell .cap a { font-size: 12.5px; font-weight: 600; text-decoration: none; color: var(--ink); }
+  .cell .cap a:hover { color: var(--accent); }
+  .cell .cap span { color: var(--dimmer); font-size: 11px; }
+  .cell .emb { width: 100%; }
+  .metrics { width: 100%; border-collapse: collapse; margin-top: 8px; font: 11.5px var(--mono); }
+  .metrics th { text-align: left; color: var(--dimmer); font-weight: 400; padding: 4px 10px 4px 0;
+    border-bottom: 1px solid var(--line); text-transform: uppercase; letter-spacing: .5px; font-size: 10px; }
+  .metrics td { padding: 4px 10px 4px 0; border-bottom: 1px solid #171b24; color: var(--dim); }
+  .metrics td.k { color: var(--ink); }
+  .metrics td.h { color: var(--honest); }
+</style>
+</head>
+<body>
+<script src="../../../../templates/center/shell/example/codebase-graph-station/c4-graph.js"></script>
+<script src="../../../../templates/center/shell/example/codebase-graph-station/commits.js"></script>
+<script src="../_grammar.js"></script>
+<script src="../_slice.js"></script>
+<script src="l-a.js"></script>
+<script src="l-b.js"></script>
+<script src="l-c.js"></script>
+<script src="l-d.js"></script>
+<script src="l-e.js"></script>
+<script src="l-f.js"></script>
+<script src="_shell.js"></script>
+<script>
+/* index.html — the bake-off itself. ONE subject, six layouts, side by side.
+ *
+ * Every cell gets the same slice object, the same frame and the same two controls; the only thing
+ * that differs is which draw() runs. Switch subject and every cell re-renders together, so a shape
+ * that only works on entities and falls apart on a commit says so in one glance.
+ */
+(function () {
+  document.addEventListener("DOMContentLoaded", function () {
+    var S = window.EmbedShell, GS = window.GabeSlice;
+    if (!window.GABE_C4) { document.body.innerHTML = "<p>the frozen example feed did not load.</p>"; return; }
+
+    var IX = GS.index(window.GABE_C4, window.GABE_COMMITS || []);
+    var SUBJ = GS.subjects(IX);
+    var st = { scope: "entity", id: "pantry", hops: 1, size: "card" };
+
+    var q = new URLSearchParams(location.search);
+    ["scope", "id", "size"].forEach(function (k) { if (q.get(k)) st[k] = q.get(k); });
+    if (!SUBJ[st.scope]) st.scope = "entity";
+    if (!SUBJ[st.scope].some(function (s) { return s.id === st.id; })) st.id = SUBJ[st.scope][0].id;
+
+    function e(tag, cls, txt) {
+      var x = document.createElement(tag);
+      if (cls) x.className = cls;
+      if (txt !== undefined) x.textContent = txt;
+      return x;
+    }
+
+    var hd = e("div", "labhead");
+    hd.appendChild(e("h1", null, "embed graph — six layouts, one subject"));
+    hd.appendChild(e("span", "anc", "gustify · c4_head 8356f531 · frozen example feed"));
+    document.body.appendChild(hd);
+
+    var ld = e("p", "lablede");
+    ld.innerHTML = "Every cell draws the <b>same slice</b> in the <b>same frame</b> with the <b>same two " +
+      "controls</b>. The only variable is <code>draw()</code>. Switch the subject and all six re-render " +
+      "together, so a shape that reads well on an entity and falls apart on a commit says so in one glance.";
+    document.body.appendChild(ld);
+
+    var bar = e("div", "labbar");
+    bar.appendChild(e("label", null, "subject"));
+    ["entity", "commit", "test"].forEach(function (s) {
+      var b = e("button", st.scope === s ? "on" : "", s);
+      b.dataset.scope = s;
+      b.onclick = function () { st.scope = s; st.id = SUBJ[s][0].id; sync(); paint(); };
+      bar.appendChild(b);
+    });
+    var sel = e("select");
+    sel.onchange = function () { st.id = sel.value; paint(); };
+    bar.appendChild(sel);
+
+    bar.appendChild(e("div", "sep"));
+    bar.appendChild(e("label", null, "size"));
+    ["inline", "card", "panel"].forEach(function (s) {
+      var b = e("button", st.size === s ? "on" : "", s);
+      b.dataset.size = s;
+      b.onclick = function () { st.size = s; sync(); paint(); };
+      bar.appendChild(b);
+    });
+
+    bar.appendChild(e("div", "sep"));
+    bar.appendChild(e("label", null, "hops"));
+    [1, 2].forEach(function (n) {
+      var b = e("button", st.hops === n ? "on" : "", String(n));
+      b.dataset.hops = n;
+      b.onclick = function () { st.hops = n; sync(); paint(); };
+      bar.appendChild(b);
+    });
+
+    bar.appendChild(e("div", "sep"));
+    var cy = e("button", "", "cycle"), timer = null;
+    cy.onclick = function () {
+      if (timer) { clearInterval(timer); timer = null; cy.className = ""; return; }
+      cy.className = "on";
+      timer = setInterval(function () {
+        var list = SUBJ[st.scope];
+        var i = list.findIndex(function (s) { return s.id === st.id; });
+        st.id = list[(i + 1) % list.length].id;
+        paint();
+      }, 2000);
+    };
+    bar.appendChild(cy);
+    document.body.appendChild(bar);
+
+    var six = e("div", "six");
+    document.body.appendChild(six);
+    var tblWrap = e("div");
+    document.body.appendChild(tblWrap);
+
+    var note = e("div", "labnote");
+    note.innerHTML = "<h3>how to read this page</h3>" +
+      "<ul>" +
+      "<li>The framed box is <b>the embed</b> — head, picture, two controls, honest line. That is the " +
+      "whole shippable surface.</li>" +
+      "<li>Everything above and below a frame is <b>the harness</b> and ships nowhere. Judge the frame.</li>" +
+      "<li>The honest line is orange whenever the cap held something back. A layout is only as good as " +
+      "its worst subject, so run <b>cycle</b> on each scope before deciding.</li>" +
+      "<li>The <b>test</b> scope always carries one honest line: frontend pieces carry no cases, so a fe " +
+      "piece is unmeasured, never untested — the same defect <code>workflow-panel/FINDINGS.md</code> F2 " +
+      "found in the station's card.</li>" +
+      "</ul>";
+    document.body.appendChild(note);
+
+    function sync() {
+      document.querySelectorAll(".labbar button[data-scope]").forEach(function (b) {
+        b.className = b.dataset.scope === st.scope ? "on" : "";
+      });
+      document.querySelectorAll(".labbar button[data-size]").forEach(function (b) {
+        b.className = b.dataset.size === st.size ? "on" : "";
+      });
+      document.querySelectorAll(".labbar button[data-hops]").forEach(function (b) {
+        b.className = +b.dataset.hops === st.hops ? "on" : "";
+      });
+    }
+
+    var FILE = { A: "a-column-strip", B: "b-radial-ring", C: "c-lane-flow",
+                 D: "d-adjacency-tile", E: "e-sparkgraph", F: "f-focus-context" };
+
+    function paint() {
+      sel.innerHTML = "";
+      SUBJ[st.scope].forEach(function (s) {
+        var o = document.createElement("option");
+        o.value = s.id;
+        o.textContent = s.label + "  —  " + s.sub;
+        if (s.id === st.id) o.selected = true;
+        sel.appendChild(o);
+      });
+
+      var box = S.SIZE[st.size];
+      var budget = st.size === "inline" ? 10 : st.size === "card" ? 24 : 60;
+      var slice = GS.resolve(IX, { scope: st.scope, id: st.id, hops: st.hops, budget: budget });
+
+      six.innerHTML = "";
+      Object.keys(FILE).forEach(function (k) {
+        var L = window.EMBED_LAYOUTS[k];
+        var cell = e("div", "cell");
+        var cap = e("div", "cap");
+        cap.appendChild(e("span", "letter", k));
+        var a = document.createElement("a");
+        a.href = FILE[k] + ".html?scope=" + st.scope + "&id=" + encodeURIComponent(st.id) +
+                 "&size=" + st.size + "&hops=" + st.hops;
+        a.textContent = L.name;
+        cap.appendChild(a);
+        cap.appendChild(e("span", null, L.ancestor || ""));
+        cell.appendChild(cap);
+        cell.appendChild(S.mount(slice, box, L, {
+          size: st.size, hops: st.hops,
+          onHops: function (n) { st.hops = n; sync(); paint(); }
+        }));
+        six.appendChild(cell);
+      });
+
+      tblWrap.innerHTML = "";
+      var t = e("table", "metrics");
+      t.innerHTML = "<tr><th>subject</th><th>seed</th><th>candidates</th><th>drawn</th>" +
+        "<th>wires</th><th>slice</th><th>held back</th></tr>";
+      var tr = document.createElement("tr");
+      [["k", slice.subject.scope + " · " + slice.subject.label],
+       ["", slice.stats.seed], ["", slice.stats.candidates],
+       ["k", slice.stats.drawn + " / " + budget], ["", slice.stats.edges],
+       ["", slice.stats.kb + " kb of 1,188 kb"],
+       [slice.honest.length ? "h" : "", slice.honest.join(" · ") || "nothing"]
+      ].forEach(function (c) {
+        var td = e("td", c[0], String(c[1]));
+        tr.appendChild(td);
+      });
+      t.appendChild(tr);
+      tblWrap.appendChild(t);
+    }
+
+    paint();
+  });
+})();
+</script>
+</body>
+</html>

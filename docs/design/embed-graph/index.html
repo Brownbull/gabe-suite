@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mini universes — journey · entity · commit · test</title>
+<link rel="stylesheet" href="_pane.css">
+<link rel="stylesheet" href="_pane-console.css">
+</head>
+<body>
+<script src="../../../templates/center/shell/example/codebase-graph-station/c4-graph.js"></script>
+<script src="../../../templates/center/shell/example/codebase-graph-station/commits.js"></script>
+<script src="../../../templates/center/shell/example/codebase-graph-station/workflows.js"></script>
+<script src="../../../templates/center/shell/assets/3d-bundle.js"></script>
+<script src="_grammar.js"></script>
+<script src="_slice.js"></script>
+<script src="_uni-grammar.js"></script>
+<script src="_pane.js"></script>
+<script src="_pane-console.js"></script>
+<script>
+/* index.html — three mini universes, one page.
+ *
+ * Each pane is the station's own picture scoped to one subject: same glyphs, same planet bubble,
+ * same badges, same wire colours, same layer banding. Orbit it, zoom it, click a piece.
+ *
+ * The frame around each is the shippable surface. Everything else on this page is the harness.
+ */
+document.addEventListener("DOMContentLoaded", function () {
+  var e = function (t, c, x) { var n = document.createElement(t); if (c) n.className = c;
+    if (x !== undefined) n.textContent = x; return n; };
+
+  if (!window.GABE_C4 || !window.ForceGraph3D) {
+    document.body.appendChild(e("p", null, "the frozen example feed or the 3d bundle did not load."));
+    return;
+  }
+
+  var IX = GabeSlice.index(window.GABE_C4, window.GABE_COMMITS || [], window.GABE_WORKFLOWS || []);
+  var SUBJ = GabeSlice.subjects(IX);
+  var st = { size: "card", cells: [
+    { scope: "journey", id: "Store ingredients — add to the pantry", hops: 2 },
+    { scope: "entity",  id: "pantry" },
+    { scope: "commit",  id: "a99719f3" },
+    { scope: "test",    id: "C250" }
+  ] };
+  st.skin = "console";
+  var q = new URLSearchParams(location.search);
+  if (q.get("size")) st.size = q.get("size");
+  if (q.get("skin")) st.skin = q.get("skin");
+
+  var hd = e("div", "labhead");
+  hd.appendChild(e("h1", null, "mini universes — journey · entity · commit · test"));
+  hd.appendChild(e("span", "anc", "gustify · c4_head 8356f531 · the station's builders, boxed"));
+  document.body.appendChild(hd);
+
+  var ld = e("p", "lablede");
+  ld.innerHTML = "Each pane is the <b>station's own picture</b>, scoped to one subject — the same lucide " +
+    "glyphs, planet bubble, method and class badges, wire colours and layer banding, extracted verbatim " +
+    "into <code>_uni-grammar.js</code>. <b>Orbit</b> with a drag, <b>zoom</b> with the wheel, <b>click</b> " +
+    "a piece to name it in the detail line. A click never re-roots the pane: the page's subject and the " +
+    "pane's subject can never disagree. The <b>step rail</b> on the right walks the subject: a journey " +
+    "carries the operator's <b>authored</b> order out of <code>workflows.js</code>; every other scope has " +
+    "no authored order, so its rail says <code>order · request path</code> and derives one from the lane " +
+    "law. Home, prev and next sit under the steps.";
+  document.body.appendChild(ld);
+
+  var bar = e("div", "labbar");
+  bar.appendChild(e("label", null, "size"));
+  ["card", "panel", "wide"].forEach(function (s) {
+    var b = e("button", st.size === s ? "on" : "", s);
+    b.dataset.size = s;
+    b.onclick = function () {
+      st.size = s;
+      document.querySelectorAll(".labbar button[data-size]").forEach(function (x) {
+        x.className = x.dataset.size === st.size ? "on" : "";
+      });
+      paint();
+    };
+    bar.appendChild(b);
+  });
+  bar.appendChild(e("div", "sep"));
+  bar.appendChild(e("label", null, "skin"));
+  ["console", "classic"].forEach(function (s) {
+    var b = e("button", st.skin === s ? "on" : "", s);
+    b.dataset.skin = s;
+    b.onclick = function () {
+      st.skin = s;
+      document.querySelectorAll(".labbar button[data-skin]").forEach(function (x) { x.className = x.dataset.skin === st.skin ? "on" : ""; });
+      paint();
+    };
+    bar.appendChild(b);
+  });
+  bar.appendChild(e("div", "sep"));
+  bar.appendChild(e("label", null, "swap subject"));
+  ["journey", "entity", "commit", "test"].forEach(function (scope, i) {
+    var sel = document.createElement("select");
+    sel.dataset.slot = i;
+    SUBJ[scope].forEach(function (s) {
+      var o = document.createElement("option");
+      o.value = s.id;
+      o.textContent = s.label + "  —  " + s.sub;
+      if (s.id === st.cells[i].id) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.onchange = function () { st.cells[i].id = sel.value; paint(); };
+    bar.appendChild(sel);
+  });
+  document.body.appendChild(bar);
+
+  var grid = e("div", "labgrid");
+  document.body.appendChild(grid);
+  var tbl = e("div");
+  document.body.appendChild(tbl);
+
+  var note = e("div", "labnote");
+  note.innerHTML = "<h3>how to read this page</h3><ul>" +
+    "<li>The framed box is <b>the pane</b> — head, viewport, detail line, two controls. That is the " +
+    "whole shippable surface; everything else here is harness.</li>" +
+    "<li><b>Drag</b> to orbit, <b>wheel</b> to zoom, <b>click</b> a piece for its detail line, click the " +
+    "background to clear. The hop control widens the neighbourhood; the ↗ leaves for the station.</li>" +
+    "<li>Pieces band vertically by layer, the station's own <code>LZ</code> law: frontend and endpoints " +
+    "up top, api in the middle, models and providers below.</li>" +
+    "<li>The honest line turns orange whenever the per-kind cap held something back, and names what, " +
+    "per kind. A capped pane and a complete pane must never look alike.</li>" +
+    "<li>A pane never loads <code>chip-assets.js</code> — 2.7 MB of ship models for the station's fleet " +
+    "layer, which a pane does not draw.</li>" +
+    "<li>The rail head names <b>whose order</b> you are walking. A journey step whose endpoint the map " +
+    "never drew is still listed, struck through — never skipped, because a walk that silently jumps a " +
+    "step misreports the journey.</li>" +
+    "</ul>";
+  document.body.appendChild(note);
+
+  var panes = [];
+
+  function paint() {
+    grid.innerHTML = "";
+    panes = st.cells.map(function (c) {
+      var cell = e("div", "labcell");
+      var cap = e("div", "cap");
+      cap.appendChild(e("b", null, c.scope));
+      cap.appendChild(e("span", null, c.id));
+      cell.appendChild(cap);
+      grid.appendChild(cell);
+      return GabePane.embed(cell, {
+        ix: IX, scope: c.scope, id: c.id, hops: c.hops || 1, size: st.size, skin: st.skin, onFrame: stats
+      });
+    });
+    window.__probePanes = panes;        /* the probe's handle — the station's __ecotest pattern */
+  }
+
+  function stats() {
+    var rows = panes.filter(function (p) { return p && p.slice; });
+    if (rows.length < st.cells.length) return;
+    tbl.innerHTML = "";
+    var t = e("table", "metrics");
+    t.innerHTML = "<tr><th>subject</th><th>seed</th><th>drawn</th><th>wires</th><th>hops</th>" +
+      "<th>steps</th><th>slice</th><th>held back</th></tr>";
+    rows.forEach(function (p) {
+      var s = p.slice, tr = document.createElement("tr");
+      [["k", s.subject.scope + " · " + s.subject.label],
+       ["", s.stats.seed], ["k", s.stats.drawn], ["", s.edges.length], ["", p.hops],
+       ["", (s.steps.length + (s.steps[0] && s.steps[0].authored ? " authored" : " derived"))],
+       ["", s.stats.kb + " kb of 1,188 kb"],
+       [s.honest.length ? "h" : "", s.honest.join(" · ") || "nothing"]
+      ].forEach(function (c) { tr.appendChild(e("td", c[0], String(c[1]))); });
+      t.appendChild(tr);
+    });
+    tbl.appendChild(t);
+  }
+
+  paint();
+});
+</script>
+</body>
+</html>

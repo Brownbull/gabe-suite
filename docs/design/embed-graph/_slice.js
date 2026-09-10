@@ -1,0 +1,459 @@
+/* _slice.js — THE RESOLVER. One feed, one subject, a small graph.
+ *
+ * This is the load-bearing piece of the whole embed idea, and the only file the six layout
+ * spikes share besides the grammar. It answers: given ONE subject (an entity, a commit, a test
+ * case) and a node budget, which pieces and which wires belong in a 300px picture?
+ *
+ *   GabeSlice.index(c4, commits)                  -> an index, built once
+ *   GabeSlice.subjects(ix)                        -> the pickable subjects, per scope
+ *   GabeSlice.resolve(ix, {scope,id,hops,budget}) -> the slice a layout draws
+ *
+ * MEASURED against the frozen example (gustify, c4_head 8356f531) on 2026-09-08:
+ *   - 9 entities - 313 L2 nodes - 343 cross-edges - 1,078 fe pieces - 3,229 fe edges
+ *   - 30 commits - touched 1 / 7 / 65 (min / median / max) - 0 of 425 touched ids unresolvable
+ *   - 488 distinct C-ids across 196 nodes carrying det.cases
+ *
+ * THE CAP LAW (the honest half of a small picture)
+ *   A budget is not "take the first N". Nodes are allocated a PER-KIND QUOTA proportional to the
+ *   kind's share of the candidate set, floor 1 — so every kind that is present stays visible, and
+ *   the picture never silently becomes "this entity is all schemas". Within a kind, ring then
+ *   degree decides. Everything dropped is COUNTED and named on the slice's honest line; a drop
+ *   that is not reported is a lie, which is the failure mode this whole folder exists to avoid.
+ *
+ * WHAT IS NOT MEASURED (carried, never rendered as a zero)
+ *   - fe pieces have NO det and NO cases, so a frontend piece's test count is unknown, not 0
+ *     (the same defect workflow-panel/FINDINGS.md F2 found in the station's own card)
+ *   - fe pieces have NO x/y, so every layout computes its own positions; the emitter's baked
+ *     coordinates exist for backend L2 nodes only
+ */
+window.GabeSlice = (function () {
+
+  var G = window.GabeGrammar;
+
+  /* -- index ------------------------------------------------------------------------------ */
+
+  function index(c4, commits, workflows) {
+    var ix = { c4: c4, commits: commits || [], journeys: workflows || [],
+               node: {}, adj: {}, ents: {}, cases: {}, colors: c4.colors || {} };
+
+    function add(n) { ix.node[n.id] = n; if (!ix.adj[n.id]) ix.adj[n.id] = []; }
+
+    /* backend L2 nodes: kind - label - slug (its entity) - det - baked x/y */
+    Object.keys(c4.l2 || {}).forEach(function (slug) {
+      var blk = c4.l2[slug];
+      ix.ents[slug] = { slug: slug, nodes: [], color: ix.colors[slug] || "#868e96" };
+      (blk.nodes || []).forEach(function (n) {
+        n.ent = n.slug || slug;
+        add(n);
+        ix.ents[slug].nodes.push(n.id);
+        ((n.det || {}).cases || []).forEach(function (c) {
+          var cid = c.cid || c;
+          ix.cases[cid] = ix.cases[cid] || { cid: cid, corpus: c.corpus, nodes: [], states: {} };
+          ix.cases[cid].nodes.push(n.id);
+          var st = c.state || "?";
+          ix.cases[cid].states[st] = (ix.cases[cid].states[st] || 0) + 1;
+        });
+      });
+    });
+
+    /* frontend pieces: a SEPARATE arm. No det, no x/y; its edges are index pairs into fe.pieces */
+    var fe = c4.fe || {}, pieces = fe.pieces || [];
+    pieces.forEach(function (p) { p.ent = p.home; add(p); });
+
+    /* ABSORPTION — the station's rule at gabe-universe.html:1356-1359, mirrored exactly. A `web`
+       node is a FETCHING FILE (the web arm); the fe arm compiles the same file into its EXPORTS and
+       marks each exporting piece with `screen: web:<file>`. The station folds the file into those
+       pieces and never draws the globe; the pane drew the L2 view verbatim, so pantry showed nine
+       globes the station shows as hooks (operator, 2026-09-10). Rules, in order:
+         1 · every piece whose `screen` names a web node absorbs it (ABS[web] = piece)
+         2 · a bridge lands on the piece its `export` names (D3 2026-09-05), else on the absorber
+         3 · every other wire touching the web node re-targets to the absorber
+         4 · the web node leaves the index and its entity's roster; the fold is COUNTED per entity
+       A web node no piece claims stays a globe — an honest unmatched fetch, as in the station. */
+    var ABS = {}, ABSN = {};
+    pieces.forEach(function (p) { if (p.screen && ix.node[p.screen] && ix.node[p.screen].kind === "web") ABS[p.screen] = p.id; });
+    Object.keys(ABS).forEach(function (w) {
+      var n = ix.node[w], slug = n.ent;
+      var ent = ix.ents[slug];
+      if (ent) { ent.nodes = ent.nodes.filter(function (id) { return id !== w; }); (ent.absorbed = ent.absorbed || []).push({ web: w, into: ABS[w], label: n.label, sites: n.sites || 0, home: (ix.node[ABS[w]] || {}).ent }); }
+      ABSN[w] = n; delete ix.node[w]; delete ix.adj[w];
+    });
+    ix.absorbed = ABS; ix.absorbedNodes = ABSN;
+    var sub = function (id) { return ABS[id] || id; };
+
+    /* intra-entity l2 edges, through the fold */
+    Object.keys(c4.l2 || {}).forEach(function (slug) {
+      ((c4.l2[slug] || {}).edges || []).forEach(function (e) { link(ix, sub(e.source), sub(e.target), e.kind || "touches"); });
+    });
+    /* cross-entity edges: fk (no kind key) - reads_from - writes_to - bridge - nests - calls */
+    (c4.cross_edges || []).forEach(function (e) {
+      var from = (e.export && ix.node[e.export]) ? e.export : sub(e.from);
+      link(ix, from, sub(e.to), e.kind || "fk", true);
+    });
+    (fe.edges || []).forEach(function (e) {
+      var a = pieces[e[0]], b = pieces[e[1]];
+      if (a && b) link(ix, a.id, b.id, e[2] || "imports");
+    });
+
+    ix.commitBySha = {};
+    ix.commits.forEach(function (c) { ix.commitBySha[c.short] = c; });
+    ix.journeyByName = {};
+    ix.journeys.forEach(function (w) { ix.journeyByName[w.name] = w; });
+    return ix;
+  }
+
+  function link(ix, a, b, kind, cross) {
+    if (!ix.adj[a]) ix.adj[a] = [];
+    if (!ix.adj[b]) ix.adj[b] = [];
+    ix.adj[a].push({ to: b, kind: kind, cross: !!cross, dir: 1 });
+    ix.adj[b].push({ to: a, kind: kind, cross: !!cross, dir: -1 });
+  }
+
+  /* -- the pickable subjects --------------------------------------------------------------- */
+
+  function subjects(ix) {
+    var ents = Object.keys(ix.ents).sort().map(function (s) {
+      return { scope: "entity", id: s, label: s, sub: ix.ents[s].nodes.length + " pieces" };
+    });
+    var cms = ix.commits.slice(0, 30).map(function (c) {
+      return { scope: "commit", id: c.short, label: c.short,
+               sub: c.nTouched + " touched - " + String(c.subject).slice(0, 44) };
+    });
+    var cs = Object.keys(ix.cases).sort(function (a, b) {
+      return ix.cases[b].nodes.length - ix.cases[a].nodes.length ||
+             (parseInt(a.slice(1), 10) - parseInt(b.slice(1), 10));
+    }).slice(0, 40).map(function (k) {
+      return { scope: "test", id: k, label: k,
+               sub: ix.cases[k].nodes.length + " pieces - " + (ix.cases[k].corpus || "?") };
+    });
+    var js = ix.journeys.map(function (w) {
+      var tier = w.level === 1 ? "orientation" : w.level === 2 ? "core" : w.level === 3 ? "specialized" : "other";
+      return { scope: "journey", id: w.name, label: w.name,
+               sub: w.steps.length + " steps - " + tier };
+    });
+    return { entity: ents, commit: cms, test: cs, journey: js };
+  }
+
+  /* -- resolve ----------------------------------------------------------------------------- */
+
+  function resolve(ix, opt) {
+    var scope = opt.scope, id = opt.id;
+    var hops = opt.hops || 1, budget = opt.budget || 24;
+    var tier = (opt.tier == null) ? 1 : opt.tier;   /* the station boots at T1 (Surface) — so does a pane */
+    var seed = [], subject = null, honest = [];
+
+    if (scope === "entity") {
+      var e = ix.ents[id];
+      if (!e) return empty(scope, id, "no entity '" + id + "' in this feed");
+      seed = e.nodes.slice();
+      var abs = (ix.ents[id] || {}).absorbed || [];
+      if (abs.length) {
+        var homes = {}; abs.forEach(function (a) { homes[a.home || "?"] = (homes[a.home || "?"] || 0) + 1; });
+        honest.push(abs.length + " fetching file" + (abs.length > 1 ? "s" : "") + " fold into the hooks that fetch (" +
+          Object.keys(homes).map(function (h) { return homes[h] + " in " + h; }).join(", ") + ") — the station draws the hooks, never the file");
+      }
+      subject = { scope: "entity", id: id, label: id, sub: seed.length + " pieces claimed" + (abs.length ? " · " + abs.length + " folded" : ""),
+                  color: e.color,
+                  station: "gabe-universe.html?ent=" + encodeURIComponent(id) };
+
+    } else if (scope === "commit") {
+      var c = ix.commitBySha[id];
+      if (!c) return empty(scope, id, "no commit '" + id + "' in commits.js");
+      var hit = [], missed = [];
+      c.touched.forEach(function (t) { (ix.node[t] ? hit : missed).push(t); });
+      seed = hit;
+      if (missed.length) {
+        honest.push(missed.length + " touched id" + (missed.length > 1 ? "s" : "") +
+                    " the map cannot place");
+      }
+      subject = { scope: "commit", id: id, label: c.short, sub: c.subject,
+                  color: "#f59f00", station: "ledger.html", meta: c };
+
+    } else if (scope === "test") {
+      var t = ix.cases[id];
+      if (!t) return empty(scope, id, "no case '" + id + "' on any node's det.cases");
+      seed = t.nodes.slice();
+      var st = Object.keys(t.states).map(function (k) { return t.states[k] + " " + k; }).join(" - ");
+      subject = { scope: "test", id: id, label: id,
+                  sub: (t.corpus || "?") + " corpus - " + st,
+                  color: t.states.fail ? "#ef4444" : "#22c55e",
+                  station: "tests.html", meta: t };
+      honest.push("frontend pieces carry no cases: a fe piece here is UNMEASURED, never untested");
+
+    } else if (scope === "journey") {
+      var w = ix.journeyByName[id];
+      if (!w) return empty(scope, id, "no curated workflow named '" + id + "'");
+      var got = [], lost = [];
+      w.steps.forEach(function (label) {
+        var nid = "endpoint:" + label;
+        (ix.node[nid] ? got : lost).push(label);
+        if (ix.node[nid]) seed.push(nid);
+      });
+      if (lost.length) {
+        /* the curated file's own law: an endpoint the map has no chain for is COUNTED, never
+           silently dropped. A journey pane that quietly draws 3 of 5 steps is the same lie. */
+        honest.push(lost.length + " of " + w.steps.length + " steps name no drawn endpoint");
+      }
+      /* THE FRONTEND LEG (the station's _jrnFeLeg, gabe-universe.html:2843-2850): a journey's carrier
+         endpoints are fetched over `bridge` wires by the hooks that fetch. Those hooks are PINNED
+         through the tier press exactly as the station pins a walk's steps — otherwise at T1 (hooks
+         off) the journey loses its UI side, which is what happened the day the web FILES folded
+         into their hooks (2026-09-10): the files had been standing in for the screens. */
+      var leg = {};
+      seed.forEach(function (ep) {
+        (ix.adj[ep] || []).forEach(function (a) {
+          if (a.kind !== "bridge" || !ix.node[a.to] || (a.to in leg)) return;
+          var k = ix.node[a.to].kind; if (k === "hook" || k === "component" || k === "web" || k === "route") leg[a.to] = 1;
+        });
+      });
+      var legIds = Object.keys(leg);
+      legIds.forEach(function (n) { if (seed.indexOf(n) < 0) seed.push(n); });
+      w.__leg = legIds.length;
+      opt.__pri = {}; legIds.forEach(function (n) { opt.__pri[n] = 1; });   /* authored steps 0 · the leg 1 · context 2 */
+      subject = { scope: "journey", id: id, label: id,
+                  sub: (w.note || (w.steps.length + " steps")) + (w.__leg ? " · " + w.__leg + " screen" + (w.__leg > 1 ? "s" : "") + " pinned" : ""),
+                  color: "#7c5cfc",
+                  station: "gabe-universe.html?journey=" + encodeURIComponent(id),
+                  meta: w };
+
+    } else {
+      return empty(scope, id, "unknown scope");
+    }
+
+    /* ring 0 = the subject's own pieces; ring 1 = one hop out, only when asked */
+    var ring = {}, order = [];
+    seed.forEach(function (n) { if (ix.node[n] && !(n in ring)) { ring[n] = 0; order.push(n); } });
+    if (hops >= 2) {
+      seed.forEach(function (n) {
+        (ix.adj[n] || []).forEach(function (a) {
+          if (!(a.to in ring) && ix.node[a.to]) { ring[a.to] = 1; order.push(a.to); }
+        });
+      });
+    }
+
+    /* the DISCLOSURE TIER — the station's own preset table (GabeUniTiers, extracted verbatim), so the
+       pane's kind-set IS the station's at the same tier and a pasted view lands on the same picture
+       (operator 2026-09-09: "carry over the tier view"). A journey's authored steps survive the tier
+       the way the station PINS a walk's steps through a tier press. Hidden pieces are counted per
+       kind (stats.tierHid) and said on the honest line — hidden by the tier is not held by the
+       budget, and the two must never be confused on the chips. */
+    var TP = (window.GabeUniTiers || {}).PRESETS, TIERHID = {};
+    if (TP && TP[tier]) {
+      var koff = {}, fcoff = {};
+      TP[tier].koff.forEach(function (k) { koff[k] = 1; });
+      TP[tier].fcoff.forEach(function (c) { fcoff[c] = 1; });
+      var pinned = {};
+      if (scope === "journey") seed.forEach(function (n) { pinned[n] = 1; });
+      order = order.filter(function (n) {
+        var raw = ix.node[n], k = raw.kind || "unknown";
+        var hid = !pinned[n] && (koff[k] || (raw.feClass && fcoff[raw.feClass]));
+        if (hid) { TIERHID[k] = (TIERHID[k] || 0) + 1; delete ring[n]; }
+        return !hid;
+      });
+      var th = Object.keys(TIERHID);
+      if (th.length) honest.push("T" + tier + " hides " + th.map(function (k) { return TIERHID[k] + " " + k; }).join(", "));
+    } else if (!TP) {
+      honest.push("no tier table loaded: every kind drawn");
+    }
+
+    /* degree WITHIN the resolved set: a node's pull in this picture, not in the whole graph */
+    var deg = {};
+    order.forEach(function (n) {
+      deg[n] = (ix.adj[n] || []).filter(function (a) { return a.to in ring; }).length;
+    });
+
+    HELD = {};
+    var kept = cap(order, ring, deg, ix, budget, honest, opt.__pri || {});
+    var inSet = {};
+    kept.forEach(function (n) { inSet[n] = 1; });
+
+    var nodes = kept.map(function (n) {
+      var raw = ix.node[n];
+      return { id: n, kind: raw.kind, label: raw.label || raw.name || n,
+               ent: raw.ent || raw.home || raw.slug || "__unclaimed__",
+               entColor: ix.colors[raw.ent || raw.slug] || "#868e96",
+               color: G.kindCol(raw.kind), ring: ring[n], deg: deg[n],
+               method: G.methodOf(raw.label), file: raw.file || (raw.det || {}).file || null,
+               fe: n.indexOf("fe:") === 0, raw: raw };
+    });
+
+    var seen = {}, edges = [];
+    kept.forEach(function (a) {
+      (ix.adj[a] || []).forEach(function (l) {
+        if (!(l.to in inSet) || l.dir !== 1) return;
+        var k = a + "|" + l.to + "|" + l.kind;
+        if (seen[k]) return;
+        seen[k] = 1;
+        edges.push({ a: a, b: l.to, kind: l.kind, cross: l.cross,
+                     color: G.relCol(l.kind), inferred: G.inferred(l.kind) });
+      });
+    });
+
+    return { subject: subject, nodes: nodes, edges: edges, honest: honest,
+             steps: steps(scope, id, ix, nodes),
+             stats: { drawn: nodes.length, candidates: order.length, seed: seed.length,
+                      edges: edges.length, hops: hops, budget: budget, held: HELD,
+                      tier: tier, tierHid: TIERHID,
+                      kb: Math.round(JSON.stringify(lean(nodes, edges)).length / 102.4) / 10 } };
+  }
+
+  /* ---- steps: the ordered walk a pane can page through ----------------------------------- */
+  /*
+   * TWO SOURCES, and a pane must never confuse them:
+   *   AUTHORED  a journey's steps are the operator's own order, out of workflows.js. A step whose
+   *             endpoint the map never drew is still LISTED, with no node — the curated file's own
+   *             law ("counted, never silently dropped") applied to the walk.
+   *   DERIVED   every other scope has no authored order, so the steps are the drawn pieces in
+   *             REQUEST order: the lane law (frontend -> screens -> api -> shapes -> data), then
+   *             kind, then pull. Marked derived:true so the rail can say so out loud. A reading
+   *             order that poses as a chronology is a lie about a commit.
+   */
+  function steps(scope, id, ix, nodes) {
+    var byId = {};
+    nodes.forEach(function (n) { byId[n.id] = n; });
+
+    if (scope === "journey") {
+      var w = ix.journeyByName[id];
+      if (!w) return [];
+      /* TWO different failures, and a rail that wears one mark for both misleads:
+           missing — the map drew no such endpoint at all (the curated file's own law)
+           held    — the endpoint exists, but this pane's budget did not reach it
+         The seed tier above makes `held` near-impossible for a journey; it is kept because a
+         journey longer than the budget is a real thing and must not silently shrink. */
+      return w.steps.map(function (label, i) {
+        var nid = "endpoint:" + label;
+        var n = byId[nid], known = !!ix.node[nid];
+        return { i: i, label: label, node: n ? n.id : null, kind: n ? n.kind : null,
+                 col: n ? n.color : null, authored: true,
+                 missing: !known, held: known && !n, unresolved: !n };
+      });
+    }
+
+    var lane = function (n) {
+      var l = G.LANE[n.kind];
+      return l === undefined ? 9 : l;
+    };
+    return nodes.slice().sort(function (a, b) {
+      return lane(a) - lane(b) || G.kindRank(a.kind) - G.kindRank(b.kind) ||
+             b.deg - a.deg || (a.id < b.id ? -1 : 1);
+    }).map(function (n, i) {
+      return { i: i, label: n.label, node: n.id, kind: n.kind, col: n.color,
+               authored: false, unresolved: false, derived: true };
+    });
+  }
+
+  /* THE CAP LAW, in two tiers.
+   *
+   *   1 · THE SEED HAS FIRST CLAIM. A subject's own pieces (ring 0) are what the pane is ABOUT,
+   *       so they are kept whole whenever they fit, and only the neighbourhood competes for what
+   *       is left. Without this the per-kind quota starved a journey's own authored endpoints:
+   *       "Look for recipes" (3 endpoints, 33 candidates at hop 2) lost one of its three STEPS to
+   *       the budget, and the rail struck it through as if the map had never drawn it. Two
+   *       different failures wearing one mark — caught by the probe, 2026-09-09.
+   *   2 · WITHIN A TIER, a per-kind proportional quota with a floor of 1, so every present kind
+   *       survives and a picture never silently becomes "this entity is all schemas".
+   *
+   * Everything dropped is counted and named, per kind, on the honest line.
+   */
+  function cap(order, ring, deg, ix, budget, honest, pri) {
+    if (order.length <= budget) return order.slice();
+    pri = pri || {};
+    /* THREE claims, in the station's order for a walk: the AUTHORED steps, then the frontend LEG
+       pinned beside them, then the neighbourhood. The leg is ring 0 (it survives the tier) but
+       claims SECOND — at budget 4 a five-step journey must still draw four STEPS, not two steps
+       and two screens (probe, 2026-09-10). */
+    var seed = order.filter(function (n) { return ring[n] === 0 && !pri[n]; });
+    var legN = order.filter(function (n) { return ring[n] === 0 && pri[n]; });
+    var near = order.filter(function (n) { return ring[n] !== 0; });
+
+    if (legN.length) {
+      if (seed.length >= budget) {
+        honest.push("the frontend leg dropped entirely - " + legN.length + " screen" + (legN.length > 1 ? "s" : "") + ", no room beside the steps");
+        if (near.length) honest.push("one hop out dropped entirely - " + near.length + " neighbours, no room beside the subject");
+        return quota(seed, ring, deg, ix, budget, honest, "of the subject");
+      }
+      var room = budget - seed.length;
+      var keptLeg = legN.length <= room ? legN.slice() : quota(legN, ring, deg, ix, room, honest, "of the frontend leg");
+      room -= keptLeg.length;
+      var keptNear2 = room > 0 && near.length ? (near.length <= room ? near.slice() : quota(near, ring, deg, ix, room, honest, "one hop out")) : [];
+      if (room <= 0 && near.length) honest.push("one hop out dropped entirely - " + near.length + " neighbours, no room beside the subject");
+      var keep2 = {}; seed.concat(keptLeg, keptNear2).forEach(function (n) { keep2[n] = 1; });
+      return order.filter(function (n) { return keep2[n]; });
+    }
+
+    if (seed.length && near.length) {
+      if (seed.length < budget) {
+        /* the seed fits: keep it whole, and the neighbourhood competes for what is left */
+        var keptNear = quota(near, ring, deg, ix, budget - seed.length, honest, "one hop out");
+        var keep = {};
+        seed.concat(keptNear).forEach(function (n) { keep[n] = 1; });
+        return order.filter(function (n) { return keep[n]; });
+      }
+      /* the seed alone overflows: the neighbourhood goes entirely, rather than competing with the
+         subject for room. Letting it compete drew 1 of "Filter recipes"' 5 steps at budget 4 and
+         spent the rest on context — a pane that loses the subject to its own surroundings. */
+      honest.push("one hop out dropped entirely - " + near.length + " neighbours, no room beside the subject");
+      return quota(seed, ring, deg, ix, budget, honest, "of the subject");
+    }
+    return quota(order, ring, deg, ix, budget, honest, null);
+  }
+
+  /* per-kind proportional quota, floor 1: every present kind survives the cap */
+  var HELD = {};                                   /* per-kind held-back counts of the LAST resolve */
+  function quota(order, ring, deg, ix, budget, honest, tierLabel) {
+    if (order.length <= budget) return order.slice();
+
+    var byKind = {};
+    order.forEach(function (n) {
+      var k = ix.node[n].kind || "unknown";
+      (byKind[k] = byKind[k] || []).push(n);
+    });
+    var kinds = Object.keys(byKind).sort(function (a, b) { return G.kindRank(a) - G.kindRank(b); });
+    kinds.forEach(function (k) {
+      byKind[k].sort(function (x, y) {
+        return ring[x] - ring[y] || deg[y] - deg[x] || (x < y ? -1 : 1);
+      });
+    });
+
+    var quota = {}, spent = 0;
+    kinds.forEach(function (k) {
+      var q = Math.max(1, Math.round(budget * byKind[k].length / order.length));
+      quota[k] = Math.min(q, byKind[k].length);
+      spent += quota[k];
+    });
+    /* trim from the largest allocation until the budget holds; never below its floor of 1 */
+    var guard = 0;
+    while (spent > budget && guard++ < 999) {
+      var big = kinds.slice().sort(function (a, b) { return quota[b] - quota[a]; })[0];
+      if (quota[big] <= 1) break;
+      quota[big]--; spent--;
+    }
+
+    var kept = [], dropped = [];
+    kinds.forEach(function (k) {
+      kept = kept.concat(byKind[k].slice(0, quota[k]));
+      var d = byKind[k].length - quota[k];
+      if (d > 0) { dropped.push(d + " " + k); HELD[k] = (HELD[k] || 0) + d; }   /* structured, for a skin that draws chips */
+    });
+    if (dropped.length) {
+      honest.push(kept.length + " of " + order.length + " drawn" +
+                  (tierLabel ? " " + tierLabel : "") + " - " + dropped.join(", ") + " held back");
+    }
+    var pos = {};
+    order.forEach(function (n, i) { pos[n] = i; });
+    return kept.sort(function (a, b) { return pos[a] - pos[b]; });
+  }
+
+  function lean(nodes, edges) {
+    return { n: nodes.map(function (n) { return [n.id, n.kind, n.label, n.ent, n.ring]; }),
+             e: edges.map(function (e) { return [e.a, e.b, e.kind]; }) };
+  }
+
+  function empty(scope, id, why) {
+    return { subject: { scope: scope, id: id, label: id || "-", sub: why, color: "#868e96" },
+             nodes: [], edges: [], honest: [why], steps: [],
+             stats: { drawn: 0, candidates: 0, seed: 0, edges: 0, hops: 0, budget: 0, kb: 0 } };
+  }
+
+  return { index: index, subjects: subjects, resolve: resolve, lean: lean };
+})();

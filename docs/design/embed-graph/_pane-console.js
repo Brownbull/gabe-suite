@@ -1,0 +1,303 @@
+/* _pane-console.js — the CONSOLE skin for a mini pane: the SC2 console's regions, at pane scale.
+ *
+ * The operator asked to take the game-UI component library (docs/design/workflow-panel/CONSOLE-MAP.md,
+ * Blizzard's own region names traced to what the station has) and design better components with it.
+ * This file is that, for the pane. It is the DEFAULT skin since 2026-09-09 (operator: "much more beautiful");
+ * the classic frame in _pane.js survives as `skin: "classic"`, untouched, so the two can still be compared.
+ *
+ * REGION → PANE COMPONENT
+ *   PortraitPanel      the head: the subject's own station glyph on a kind-tinted pill, its name, a
+ *                      region-tinted kind badge. A dot and a word became a portrait.
+ *   InfoPaneQueue      the step rail as a PRODUCTION QUEUE: kind glyph per step, a segmented progress
+ *                      bar in the head, the current step lit with a fill — not a numbered list.
+ *   MinimapPanel       DISCARDED (operator 2026-09-09, on sight): a plan view was built and rejected —
+ *                      at pane scale the picture is already the whole slice, so a second map of it is
+ *                      furniture. Recorded as a negative result, not carried.
+ *   InfoPaneUnit vitals four FIXED meters — DRAWN · WIRES · STEPS · TESTED — each in its permanent
+ *                      slot, each wearing one of the four availability states the console defined:
+ *                      LIT (has a value) · GREY (measured, none) · HATCHED (never measured) · BLANK
+ *                      (the question does not apply). An empty slot is a first-class rendering.
+ *   CommandPanel       the verbs as fixed CELLS: reach (subject · +1 hop) on the picture, transport
+ *                      (prev · home · next) under the queue, copy · open in the head. A cell a verb
+ *                      cannot use keeps its place — SC2 blanks the cell, it never slides the next up.
+ *   BehaviorBar        the honest line as CHIPS: a kind glyph + count per held-back kind, a hatched
+ *                      chip for the unmeasured, so a capped pane is read in a glance; the sentence
+ *                      moves to the tooltip. Operator rule from the HUD: words live in the hover.
+ *   the shared tip     one instant tooltip for every control (no native title= — the delay is why
+ *                      the station built __badgePop and the HUD built tipOn).
+ *
+ * Region tints are the console's own (_hud.js REGTINT) so the pane and the dock read as one family.
+ */
+(function (GP) {
+  if (!GP) return;
+  var SIZE = GP.SIZE;
+  var TINT = { portrait: "#d946ef", status: "#4c9dfb", command: "#e8a33d", evidence: "#22c55e",
+               queue: "#8b5cf6", minimap: "#38bdf8" };
+  var SCOPE_TINT = { entity: "#e8a33d", journey: "#8b5cf6", commit: "#f59f00", test: "#22c55e" };
+
+  function el(tag, cls, txt) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (txt !== undefined) e.textContent = txt;
+    return e;
+  }
+  function lu(d, cls) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" ' +
+      'stroke-linejoin="round"' + (cls ? ' class="' + cls + '"' : "") + ' style="pointer-events:none">' + d + '</svg>';
+  }
+  var ICO = {
+    prev: '<path d="M15 18l-6-6 6-6"/>', next: '<path d="M9 18l6-6-6-6"/>',
+    home: '<path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
+    copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>',
+    ok: '<path d="M20 6L9 17l-5-5"/>',
+    open: '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"/>',
+    hop1: '<circle cx="12" cy="12" r="4.5" fill="currentColor" stroke="none"/>',
+    hop2: '<circle cx="9" cy="12" r="4" fill="currentColor" stroke="none"/><path d="M13.6 12h3.2"/><circle cx="19.5" cy="12" r="2.2"/>',
+    drawn: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"/>',
+    wires: '<circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="m7.4 11 9.2-4M7.4 13l9.2 4"/>',
+    steps: '<circle cx="6" cy="19" r="3"/><circle cx="18" cy="5" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/>',
+    tested: '<path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="m9 11 3 3 10-10"/>',
+    queue: '<path d="M4 6h16M4 12h10M4 18h6"/>',
+    unmeas: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7"/><circle cx="12" cy="17" r=".7" fill="currentColor" stroke="none"/>'
+  };
+
+  /* ---- the shared instant tooltip -------------------------------------------------------- */
+  var TIP = null;
+  function tipOn(node, title, sub) {
+    node.addEventListener("mouseenter", function () {
+      if (!TIP) { TIP = el("div", "pnc-tip"); document.body.appendChild(TIP); }
+      TIP.innerHTML = "";
+      TIP.appendChild(el("b", null, typeof title === "function" ? title() : title));
+      var s = typeof sub === "function" ? sub() : sub;
+      if (s) TIP.appendChild(el("i", null, s));
+      TIP.classList.add("on");
+      var r = node.getBoundingClientRect(), t = TIP.getBoundingClientRect();
+      var x = Math.min(Math.max(8, r.left), window.innerWidth - t.width - 8);
+      var below = r.bottom + 8;
+      var y = (below + t.height + 8 <= window.innerHeight) ? below : Math.max(8, r.top - t.height - 8);
+      TIP.style.left = Math.round(x) + "px"; TIP.style.top = Math.round(y) + "px";
+    });
+    node.addEventListener("mouseleave", function () { if (TIP) TIP.classList.remove("on"); });
+  }
+
+  function kindSvg(G, kind) {
+    var gl = (G && G.GLYPH && (G.GLYPH[kind] || G.GLYPH.__generic)) || '<circle cx="12" cy="12" r="8"/>';
+    return lu(gl);
+  }
+
+  /* ---- a VITAL: a fixed slot that never disappears ---------------------------------------- */
+  function vital(host, key, label, ico, tipText) {
+    var v = el("div", "pnc-vital"); v.dataset.v = key;
+    v.innerHTML = lu(ICO[ico], "vi") + '<span class="vl">' + label + '</span><span class="vv">—</span>' +
+      '<span class="vt"><i></i></span>';
+    host.appendChild(v);
+    var vv = v.querySelector(".vv"), bar = v.querySelector(".vt i"), explain = tipText;
+    tipOn(v, label, function () { return typeof explain === "function" ? explain() : explain; });
+    return {
+      set: function (value, state, frac, why) {
+        v.className = "pnc-vital st-" + (state || "lit");
+        vv.textContent = value;
+        bar.style.width = (frac == null ? 0 : Math.round(Math.max(0, Math.min(1, frac)) * 100)) + "%";
+        if (why) explain = why;
+      }
+    };
+  }
+
+  /* ---- the console embed ------------------------------------------------------------------ */
+  function embedConsole(container, o) {
+    var box = SIZE[o.size || "card"];
+    if (o.size === "fill") {
+      var cw = Math.max(420, container.clientWidth || (container.parentElement && container.parentElement.clientWidth) || 900);
+      box = { w: cw, h: Math.round(Math.min(560, Math.max(340, cw * 0.52))), rail: cw >= 900 ? 190 : 156 };
+    }
+    var budget = o.budget || (o.size === "fill" ? (box.w >= 900 ? 120 : 80) : o.size === "wide" ? 60 : o.size === "panel" ? 40 : 24);
+    var first = window.GabeSlice.resolve(o.ix, { scope: o.scope, id: o.id, hops: o.hops || 1, budget: budget, tier: o.tier });
+    var hasRail = (first.steps || []).length >= 2;
+    var railW = hasRail ? box.rail : 0, viewW = box.w - railW;
+    var tint = SCOPE_TINT[o.scope] || TINT.status;
+
+    var wrap = el("div", "pnc"); wrap.style.width = box.w + "px"; wrap.style.setProperty("--pnc", tint);
+
+    /* PORTRAIT */
+    var head = el("div", "pnc-head");
+    var pg = el("div", "pnc-pg"); head.appendChild(pg);
+    var idb = el("div", "pnc-id"); head.appendChild(idb);
+    var nm = el("div", "pnc-name"); idb.appendChild(nm);
+    var sb = el("div", "pnc-sub"); idb.appendChild(sb);
+    var acts = el("div", "pnc-acts"); head.appendChild(acts);
+    var badge = el("span", "pnc-badge", o.scope); badge.style.setProperty("--pnc", tint); acts.appendChild(badge);
+    /* the TIER badge: which of the station's presets this pane draws at (it travels with a copied view) */
+    var TP = (window.GabeUniTiers || {}).PRESETS || [], tierN = (o.tier == null) ? 1 : o.tier;
+    var tb = el("span", "pnc-badge pnc-tier", "T" + tierN); tb.style.setProperty("--pnc", tint); acts.appendChild(tb);
+    tipOn(tb, "disclosure tier T" + tierN + (TP[tierN] ? " \u00b7 " + TP[tierN].name : ""),
+          "the station's preset this pane draws at \u2014 the same kinds the station shows at T" + tierN + "; a copied view carries it");
+    var cp = el("button", "pnc-cell"); cp.innerHTML = lu(ICO.copy); acts.appendChild(cp);
+    var go = document.createElement("a"); go.className = "pnc-cell"; go.href = "#"; go.innerHTML = lu(ICO.open); acts.appendChild(go);
+    tipOn(cp, "copy this view", "a payload for the station's paste-a-view box");
+    tipOn(go, "open in the station", function () { return go.getAttribute("data-where") || ""; });
+    wrap.appendChild(head);
+
+    /* BODY: viewport + minimap + reach cells | queue + transport cells */
+    var body = el("div", "pn-body"); body.style.width = box.w + "px"; body.style.height = box.h + "px";
+    var view = el("div", "pn-view"); view.style.width = viewW + "px"; view.style.height = box.h + "px";
+    var cvHost = el("div", "pn-canvas"); view.appendChild(cvHost);
+    var reach = el("div", "pnc-reach"); view.appendChild(reach);
+    body.appendChild(view);
+
+    var rail = null, qhead = null, qbar = null, qlist = null, tr = null;
+    if (hasRail) {
+      rail = el("div", "pnc-rail"); rail.style.width = railW + "px";
+      qhead = el("div", "pnc-qhead");
+      qhead.innerHTML = lu(ICO.queue, "qi") + '<span class="ql"></span><span class="qn"></span>';
+      rail.appendChild(qhead);
+      qbar = el("div", "pnc-qbar"); rail.appendChild(qbar);
+      qlist = el("div", "pnc-queue"); rail.appendChild(qlist);
+      tr = el("div", "pnc-transport");
+      [["prev", ICO.prev, "previous step"], ["home", ICO.home, "back to the first step"], ["next", ICO.next, "next step"]]
+        .forEach(function (d) { var b = el("button", "pnc-cell t-" + d[0]); b.innerHTML = lu(d[1]); b.dataset.t = d[0]; tipOn(b, d[2]); tr.appendChild(b); });
+      rail.appendChild(tr);
+      body.appendChild(rail);
+    }
+    wrap.appendChild(body);
+
+    /* STATUS: the readout line */
+    var read = el("div", "pnc-read"); read.innerHTML = "<i>click a piece to name it</i>"; wrap.appendChild(read);
+
+    /* VITALS: four fixed slots */
+    var vit = el("div", "pnc-vitals"); wrap.appendChild(vit);
+    var V = {
+      drawn:  vital(vit, "drawn",  "drawn",  "drawn",  "pieces drawn of the candidates"),
+      wires:  vital(vit, "wires",  "wires",  "wires",  "relations between the drawn pieces"),
+      steps:  vital(vit, "steps",  "steps",  "steps",  "the walk"),
+      tested: vital(vit, "tested", "tested", "tested", "drawn backend pieces that carry at least one case")
+    };
+
+    /* BEHAVIOR: the honest chips */
+    var foot = el("div", "pnc-foot"); wrap.appendChild(foot);
+    container.appendChild(wrap);
+
+    var G = null;
+    var pane = GP.mount(cvHost, {
+      ix: o.ix, scope: o.scope, id: o.id, hops: o.hops || 1, budget: budget, tier: o.tier, w: viewW, h: box.h,
+      onSelect: function (n, p) {
+        G = G || GP.grammar();
+        if (!n) { read.innerHTML = "<i>click a piece to name it</i>"; return; }
+        var lit = p.litCount();
+        read.innerHTML = '<span class="rk" style="color:' + G.kindCol(n.__kind) + '">' + kindSvg(G, n.__kind) + "</span>" +
+          "<b>" + esc(n.__full) + "</b> <i>" + esc(n.__kind) + (n.__ring ? " · 1 hop out" : "") +
+          (lit ? " · " + lit + " connected" : " · nothing connected") + "</i>";
+      },
+      onStep: function (p, i) {
+        if (!qlist) return;
+        var rows = qlist.querySelectorAll(".pnc-step"), st = p.slice.steps || [];
+        for (var k = 0; k < rows.length; k++) {
+          var on = (+rows[k].dataset.i === i);
+          rows[k].classList.toggle("on", on);
+          rows[k].classList.toggle("done", +rows[k].dataset.i < i);
+          if (on) rows[k].scrollIntoView({ block: "nearest" });
+        }
+        qhead.querySelector(".qn").textContent = (i >= 0 ? (i + 1) : "–") + "/" + st.length;
+        var segs = qbar.querySelectorAll("i");
+        for (var q = 0; q < segs.length; q++) segs[q].className = q < i ? "done" : q === i ? "on" : "";
+        tr.querySelector(".t-prev").disabled = i <= 0;
+        tr.querySelector(".t-home").disabled = i <= 0;
+        tr.querySelector(".t-next").disabled = i >= st.length - 1;
+        V.steps.set((i >= 0 ? i + 1 : 0) + "/" + st.length, "lit", st.length ? (i + 1) / st.length : 0,
+          (st[0] && st[0].authored) ? "authored — the operator's own order" : "derived — request order, not a chronology");
+        if (o.onStep) o.onStep(p, i);
+      },
+      onFrame: function (p) {
+        G = G || GP.grammar();
+        var s = p.slice;
+        /* portrait */
+        var pk = o.scope === "entity" ? "entity" : o.scope === "journey" ? "route" : o.scope === "commit" ? "element" : "function";
+        pg.innerHTML = kindSvg(G, pk); pg.style.setProperty("--pnc", tint);
+        nm.textContent = s.subject.label; sb.textContent = s.subject.sub || "";
+        go.setAttribute("data-where", s.subject.station || "");
+        if (o.stationBase && s.subject.station) go.href = o.stationBase.replace(/gabe-universe\.html$/, "") + s.subject.station;
+        else go.onclick = function (e) { e.preventDefault(); };
+        /* reach cells */
+        reach.innerHTML = "";
+        [{ n: 1, ico: ICO.hop1, lbl: "subject", tip: ["subject only", "just the pieces this " + o.scope + " itself claims"] },
+         { n: 2, ico: ICO.hop2, lbl: "+1 hop", tip: ["one relation out", "the subject's pieces plus everything one edge away — a capped SAMPLE, the chips say what was held"] }]
+          .forEach(function (r) {
+            var b = el("button", "pnc-cell" + (p.hops === r.n ? " on" : "")); b.innerHTML = lu(r.ico) + "<span>" + r.lbl + "</span>";
+            tipOn(b, r.tip[0], r.tip[1]); b.onclick = function () { p.hops = r.n; p.render(); }; reach.appendChild(b);
+          });
+        /* queue */
+        if (qlist) {
+          var st = s.steps || [];
+          /* the icon already says "queue"; the word that matters is WHOSE order this is */
+          qhead.querySelector(".ql").textContent = (st[0] && st[0].authored) ? "authored" : "derived";
+          tipOn(qhead, (st[0] && st[0].authored) ? "authored order" : "derived order",
+            (st[0] && st[0].authored) ? "the operator's own steps, from workflows.js" : "no authored order — the drawn pieces in request order: frontend, screens, api, shapes, data");
+          qbar.innerHTML = ""; st.forEach(function () { qbar.appendChild(el("i")); });
+          qlist.innerHTML = "";
+          st.forEach(function (x) {
+            var row = el("div", "pnc-step" + (x.unresolved ? " unresolved" : "")); row.dataset.i = x.i;
+            row.innerHTML = '<span class="n">' + (x.i + 1) + '</span><span class="k" style="color:' + (x.col || "#5a6272") + '">' +
+              (x.kind ? kindSvg(G, x.kind) : lu(ICO.unmeas)) + '</span><span class="l">' + esc(x.label) + "</span>";
+            tipOn(row, x.label, x.unresolved ? (x.missing ? "the map drew no endpoint for this step" : "held back by the budget") : (x.kind || ""));
+            row.onclick = function () { p.stepTo(x.i); };
+            qlist.appendChild(row);
+          });
+          tr.querySelectorAll("button").forEach(function (b) {
+            b.onclick = function () { b.dataset.t === "home" ? p.stepHome() : p.stepBy(b.dataset.t === "next" ? 1 : -1); };
+            b.disabled = b.dataset.t !== "next";
+          });
+        }
+        /* vitals */
+        var held = s.stats.held || {}, heldN = 0; Object.keys(held).forEach(function (k) { heldN += held[k]; });
+        V.drawn.set(s.stats.drawn + "/" + s.stats.candidates, heldN ? "lit" : "full", s.stats.candidates ? s.stats.drawn / s.stats.candidates : 0,
+          heldN ? heldN + " held back by the per-kind cap" : "every candidate piece is drawn");
+        V.wires.set(String(s.edges.length), s.edges.length ? "lit" : "grey", Math.min(1, s.edges.length / Math.max(1, s.stats.drawn * 2)),
+          s.edges.length ? s.edges.length + " relations with both ends drawn" : "no relation joins two drawn pieces");
+        var be = 0, tested = 0, fe = 0;
+        s.nodes.forEach(function (n) { if (n.fe) { fe++; return; } be++; if (((n.raw || {}).det || {}).cases && n.raw.det.cases.length) tested++; });
+        if (!be) V.tested.set("—", "hatched", 0, "every drawn piece is frontend — never measured, not untested");
+        else V.tested.set(tested + "/" + be, tested ? "lit" : "grey", tested / be, tested + " of " + be + " backend pieces carry a case" + (fe ? " · " + fe + " frontend pieces unmeasured" : ""));
+        V.steps.set("0/" + (s.steps || []).length, (s.steps || []).length ? "lit" : "blank", 0, "the walk has not started");
+        /* behavior chips */
+        foot.innerHTML = "";
+        var chips = 0;
+        Object.keys(held).sort(function (a, b) { return held[b] - held[a]; }).forEach(function (k) {
+          var c = el("span", "pnc-chip"); c.style.color = G.kindCol(k);
+          c.innerHTML = kindSvg(G, k) + "<b>" + held[k] + "</b>";
+          tipOn(c, held[k] + " " + k + " held back", "the per-kind cap kept the rest; the seed always has first claim");
+          foot.appendChild(c); chips++;
+        });
+        if (fe && o.scope === "test") { var u = el("span", "pnc-chip hatched"); u.innerHTML = lu(ICO.unmeas) + "<b>" + fe + "</b>";
+          tipOn(u, fe + " frontend pieces unmeasured", "a fe piece carries no cases — unmeasured, never untested"); foot.appendChild(u); chips++; }
+        (s.steps || []).filter(function (x) { return x.missing; }).length && (function (m) {
+          var c = el("span", "pnc-chip missing"); c.innerHTML = lu(ICO.unmeas) + "<b>" + m + "</b>";
+          tipOn(c, m + " authored step(s) the map never drew", "listed in the queue, struck through — never skipped"); foot.appendChild(c); chips++;
+        })((s.steps || []).filter(function (x) { return x.missing; }).length);
+        if (!chips) { var ok = el("span", "pnc-chip clean"); ok.innerHTML = lu(ICO.ok) + "<span>complete</span>"; tipOn(ok, "nothing held back", "every candidate piece is drawn"); foot.appendChild(ok); }
+        var full = s.honest.join(" · "); foot.title = ""; if (full) { var sh = el("span", "pnc-honest"); sh.textContent = full; sh.hidden = true; foot.appendChild(sh); }
+        if (o.onFrame) o.onFrame(p);
+      }
+    });
+    pane.wrap = wrap;
+
+    /* copy */
+    cp.onclick = function () {
+      var text = JSON.stringify(GP.viewPayload(pane));
+      var done = function () { cp.innerHTML = lu(ICO.ok); cp.classList.add("ok"); setTimeout(function () { cp.innerHTML = lu(ICO.copy); cp.classList.remove("ok"); }, 1400); };
+      var ta = document.createElement("textarea"); ta.value = text; ta.style.cssText = "position:fixed;top:-1000px;opacity:0";
+      document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); } catch (e) {} document.body.removeChild(ta);
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, done); else done();
+      if (o.onCopy) o.onCopy(text);
+    };
+
+    return pane;
+  }
+
+  var ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return ESC[c]; }); }
+
+  /* CONSOLE IS THE DEFAULT (operator 2026-09-09: "much more beautiful than the other"); the classic
+     frame survives as the opt-in `skin: "classic"` and keeps its own battery. */
+  var orig = GP.embed;
+  GP.embed = function (container, o) { return (o && o.skin === "classic") ? orig(container, o) : embedConsole(container, o); };
+  GP.embedConsole = embedConsole;
+})(window.GabePane);

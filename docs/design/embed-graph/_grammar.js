@@ -1,0 +1,70 @@
+/* _grammar.js — the shipped colour/kind literals, lifted so a spike paints what the station paints.
+ *
+ * SOURCE OF RECORD (do not re-invent — copy forward when the station changes):
+ *   KINDCOL · METHOD · RELCOL   templates/center/shell/gabe-universe.html  :1107 · :1119 · :1121
+ *   entity colours              window.GABE_C4.colors (per-project, emitted)
+ *
+ * A spike that picks its own colours is measuring its own palette, not the station's grammar.
+ */
+window.GabeGrammar = (function () {
+
+  /* ONE distinct colour per element kind — universe :1107 + the later assignments (:1131-:1196). */
+  var KINDCOL = {
+    endpoint: "#8b5cf6", "function": "#6366f1", model: "#14b8a6", schema: "#06b6d4",
+    entity: "#84cc16", component: "#2f7de1", hook: "#10b981", store: "#ec4899",
+    route: "#38bdf8", type: "#64748b", screen: "#a855f7", external: "#94a3b8",
+    web: "#a855f7", module: "#f59e0b", unknown: "#9aa3b2", capsule: "#94a3b8",
+    middleware: "#7048e8", provider: "#e8590c", flag: "#e03131", prompt: "#ae3ec9",
+    element: "#8a8f98", "fe-type": "#64748b"
+  };
+
+  /* method disc — universe :1119. TASK = a worker entrypoint, never an HTTP verb. */
+  var METHOD = { GET: "#22c55e", POST: "#3b82f6", PUT: "#f97316", PATCH: "#eab308",
+                 DELETE: "#ef4444", BOOT: "#8a8f98", TASK: "#f0abfc" };
+
+  /* rel → wire colour — universe :1121. The c4 l2/cross kinds plus the fe arm's own. */
+  var RELCOL = {
+    touches: "#7c5cfc", fk: "#12b886", bridge: "#e8f443", calls: "#f59e0b",
+    imports: "#a855f7", renders: "#339af0", mounts: "#e8590c", uses: "#0ca678",
+    reads: "#e64980", typed: "#8794ab", fetches: "#e8590c", handler: "#8b5cf6",
+    resp: "#f59f00", pk: "#868e96",
+    /* l2 edge kinds the universe folds into the above */
+    reads_from: "#e64980", writes_to: "#f97316", nests: "#8794ab",
+    serializes: "#06b6d4", walls: "#e03131", consumes: "#0ca678",
+    "uses-hook": "#10b981", "uses-store": "#ec4899", fecall: "#6366f1"
+  };
+
+  /* structural (solid) vs inferred-by-design (dashed) — the trust split, universe LINKMETA :1125.
+     A dashed wire says "a floor, not a census". Never flatten this: it is the honesty of the picture. */
+  var INFERRED = { bridge: 1, calls: 1, imports: 1, uses: 1, reads: 1, fetches: 1, fecall: 1 };
+
+  /* the emitter's own column order for an L2 drill — c4.layout.l2.order, extended with the fe kinds
+     so a commit slice (246 of 425 touched ids are fe:) has lanes to sit in. */
+  var KIND_ORDER = ["route", "component", "hook", "store", "module", "type", "fe-type",
+                    "web", "screen", "endpoint", "middleware", "function", "schema",
+                    "model", "external", "provider", "flag", "prompt", "element", "unknown"];
+
+  /* LANE = the read direction of a request: what the user touches → what serves it → what it keeps. */
+  var LANE = {
+    route: 0, component: 0, hook: 0, store: 0, module: 0, type: 0, "fe-type": 0,
+    web: 1, screen: 1,
+    endpoint: 2, middleware: 2, "function": 2, flag: 2,
+    schema: 3, prompt: 3,
+    model: 4, external: 4, provider: 4, element: 4, unknown: 4
+  };
+  var LANE_LABEL = ["frontend", "screens", "api", "shapes", "data"];
+
+  function kindCol(k) { return KINDCOL[k] || "#868e96"; }
+  function relCol(k) { return RELCOL[k] || "#5a6070"; }
+  function inferred(k) { return !!INFERRED[k]; }
+  function kindRank(k) { var i = KIND_ORDER.indexOf(k); return i < 0 ? KIND_ORDER.length : i; }
+  function methodOf(label) {                       /* null for an unknown method — never "GET" */
+    var m = String(label || "").split(" ")[0];
+    return METHOD[m] ? m : null;
+  }
+
+  return { KINDCOL: KINDCOL, METHOD: METHOD, RELCOL: RELCOL, INFERRED: INFERRED,
+           KIND_ORDER: KIND_ORDER, LANE: LANE, LANE_LABEL: LANE_LABEL,
+           kindCol: kindCol, relCol: relCol, inferred: inferred,
+           kindRank: kindRank, methodOf: methodOf };
+})();

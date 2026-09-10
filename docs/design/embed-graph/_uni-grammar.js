@@ -1,0 +1,433 @@
+/* _uni-grammar.js — the Gabe Universe's IDENTITY BUILDERS, extracted so a mini pane draws exactly
+ * what the station draws.
+ *
+ * WHY THIS FILE EXISTS
+ *   The ask is a small NAVIGABLE 3D view of one entity / commit / test that behaves like the
+ *   station. A pane that invents its own spheres is a different instrument wearing the same data;
+ *   the point is the SAME instrument, boxed. So the glyphs, the planet bubble, the badges and the
+ *   colour rosters come from gabe-universe.html VERBATIM.
+ *
+ * HOW IT STAYS VERBATIM
+ *   The extracted code expects station globals (ENC, CFG, OPMAP, billTex, PULSE, __BADGE_COL ...).
+ *   Rather than rewrite it — which would make a future promotion into assets/ a rewrite instead of
+ *   a move — this factory PROVIDES those names as locals, with the station's own defaults and the
+ *   encoding layer switched off.
+ *
+ *   Source bands, gabe-universe.html @ cb14727 (2026-09-08):
+ *     GLYPH 1049-1062 · KINDS 1066-1103 · order 1105 · KINDCOL/METHOD/RELCOL 1107-1122
+ *     KIND EXTENSIONS 1123-1215 (web · module · unknown · capsule · middleware · provider · flag ·
+ *       prompt · element, their GLYPHs and RELCOLs, VIEWCOL/_isView, _genericKind) — the station
+ *       mints these AFTER the KINDS literal, and a band that stops at 1103 dies on KINDS.web.col
+ *     primitiveMesh/billboardMesh 1392-1415 · bubble/labelSprite 1471-1489
+ *     iconCol/massR/badges 1768-1781 · buildNode 1782-1806
+ *     __BADGE_COL 4092-4099 · __badgeGlyph 4111-4167
+ *     TIER PRESETS 4396-4401 (top-level window.GabeUniTiers — the resolver reads it without THREE)
+ *
+ * WHAT IS DELIBERATELY LEFT BEHIND (station-only — a pane must not pretend otherwise)
+ *   fleets + war zones (they need chip-assets.js, 2.7 MB of ship GLBs — a pane never loads it),
+ *   the encoding channels (glow · satellite rings · radar verts · pulse), heat colouring, hulls,
+ *   journeys, the config panel. ENC/CFG below hold them OFF, so the extracted guards skip them.
+ *
+ *   GabeUniGrammar(THREE, cfg) -> { preload(cb), buildNode(n), KINDS, KINDCOL, METHOD, RELCOL, ... }
+ */
+/* ---- the DISCLOSURE TIERS — EXTRACTED VERBATIM from gabe-universe.html :4396-4401; re-extract to change,
+   never hand-edit. TOP-LEVEL, outside the factory: the RESOLVER filters by tier and runs without THREE.
+   A tier is the station's PRESET over kind visibility + fe component CLASS visibility; the pane draws at
+   one so its kind-set IS the station's, and a copied view carries it (operator 2026-09-09). ---- */
+window.GabeUniTiers = (function () {
+var _KTIER=["endpoint","model","schema","external","function","web","screen","component","hook","store","route","module","type","middleware","flag","provider","prompt","element"];
+var _TIER_PRESETS=[
+  { name:"Skeleton", koff:["function","schema","hook","module","unknown","type","middleware","flag","provider","prompt","external","store","element"], fcoff:["private","connector","container","leaf"] },
+  { name:"Surface",  koff:["function","hook","module","unknown","type","prompt","element"],                                                  fcoff:["private","leaf"] },
+  { name:"Trace",    koff:["module","unknown","type"],                                                                                       fcoff:["leaf"] },
+  { name:"Everything", koff:[],                                                                                                   fcoff:[] } ];   // T3 = truly everything, incl. the 508 fe-types (operator); type is off at T0–T2, ON at T3
+  return { KTIER: _KTIER, PRESETS: _TIER_PRESETS };
+})();
+
+window.GabeUniGrammar = function (T, ucfg) {
+  ucfg = ucfg || {};
+
+  /* ---- the environment the extracted code expects -------------------------------------- */
+
+  /* the station's ENC with every ENCODING CHANNEL off: a pane shows identity, not the station's
+     configurable effect layer. iconSize and mass are the two a pane legitimately tunes. */
+  var ENC = { color: "identity", method: ucfg.method || false,
+              mass: ucfg.mass !== false, iconSize: ucfg.iconSize || 10,
+              glow: false, ring1: false, ring2: false, ring3: false,
+              verts: false, sat: false, pulse: false, speed: 0.1 };
+
+  /* the station's CFG with fleets off and the badge geometry at its shipped defaults */
+  var CFG = { warOn: false, bubble: ucfg.bubble || "film",   /* the station's own default */
+              mbOp: 0.95, mbSize: ucfg.badgeSize || 3.5, mbX: 2, mbY: -2.5 };
+
+  /* OPMAP — EXTRACTED (gabe-universe.html 1452-1457). It is a NAMED map, not an array, and the
+     station's default is CFG.bubble = "film" = 0.006. An earlier hand-written array here used
+     0.10 — SEVENTEEN times too opaque — which washed every planet out (operator, 2026-09-09:
+     "everything looks kind of white"). Never hand-write a station constant. */
+  var OPMAP={
+    bubble:{ film:0.006, ghost:0.012, faint:0.022, subtle:0.035, medium:0.05, strong:0.075 },
+    aura:{   film:0.012, ghost:0.02,  faint:0.035, subtle:0.05,  medium:0.075, strong:0.11 },
+    sphere:{ film:0.008, ghost:0.015, faint:0.028, subtle:0.04,  medium:0.06,  strong:0.09 },
+    polygon:{film:0.012, ghost:0.02,  faint:0.035, subtle:0.05,  medium:0.075, strong:0.11 },
+    wrap:{   film:0.06,  ghost:0.11,  faint:0.17,  subtle:0.12,  medium:0.17,  strong:0.24 } };
+
+  /* the extracted band brings the station's OWN nodeVal/cap3/num, which read fieldOf + MAXES.
+     Supply those two rather than shadow the band: an encoding key maps to itself (a pane has no
+     MAP/DEFMAP setup switcher) and only `mass` carries a maximum. The one intentional deviation. */
+  function fieldOf(key) { return key; }
+  var MAXES = { mass: ucfg.maxMass || 1 };
+  function truthy(v) { return v === true || (typeof v === "number" && v > 0) || (typeof v === "string" && v && v !== "\u2014"); }
+  function heatVal() { return 0; }
+  function heatCol(t) { t = Math.max(0, Math.min(1, t)); var c = new T.Color(); c.setHSL((1 - t) * 0.62, 0.72, 0.55); return c.getStyle(); }
+  function dimCol(hex, t) { var c = new T.Color(hex); c.lerp(new T.Color("#0e1524"), t); return "#" + c.getHexString(); }
+
+  var PULSE = [];                              /* collected, never animated in a pane */
+  var __uniBadges = [];                        /* the pane scales these with the camera */
+  function satelliteRing() {}                  /* ENC.ring* are false — never reached */
+  function glowSprite() { return new T.Group(); }
+  function radarVerts() {}
+  function fleetZones() {}                     /* CFG.warOn is false — never reached */
+
+  function svgDoc(kind, col) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' +
+      col + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + GLYPH[kind] + '</svg>';
+  }
+
+  /* ---- EXTRACTED VERBATIM — re-extract to change, never hand-edit ------------------ */
+
+  var GLYPH={
+    endpoint:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+    "function":'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3"/><path d="M9 11h6"/>',
+    model:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+    schema:'<path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/>',
+    entity:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+    component:'<rect x="3" y="3" width="18" height="18" rx="3"/><rect x="6" y="6" width="12" height="4" rx="1"/>',
+    hook:'<path d="M15 5v8a5 5 0 0 1-10 0"/><circle cx="15" cy="4" r="1.6"/>',
+    store:'<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14a8 3 0 0 0 16 0V5"/>',
+    route:'<path d="M12 2 22 12 12 22 2 12z"/>',
+    type:'<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
+    screen:'<rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>',
+    external:'<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"/>', flag:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>', provider:'<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>', module:'<path d="M10 12.5 8 15l2 2.5"/><path d="m14 12.5 2 2.5-2 2.5"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/>', web:'<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>', middleware:'<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>', prompt:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'
+  };
+
+  var KINDS={
+    route:{ col:"#339af0", form:"cone", label:"/recipes/:id", type:"Route (screen)", layer:"web", usage:[0,"entry — a URL, nothing depends on it"],
+      conns:[["renders","component","RecipeDetail"]], tests:0, ident:[["home","recipe"],["path","/recipes/:id"]],
+      doc:"A URL → the component tree it mounts. A URL domain no entity claims feeds entity-shape thinking (a candidate entity)." },
+    component:{ col:"#ff8c00", form:"panel", label:"RecipeCard", type:"Component (FE)", layer:"web", usage:[4,"4 components render this one"],
+      conns:[["renders hooks","hook","useRecipe · useT"],["reads store","store","recipeStore"]], tests:2, ident:[["home","recipe"],["language","TSX"]],
+      doc:"A React component. graft captures component→hook calls but barely JSX child renders (a blind spot the Tier-1 arm fills)." },
+    hook:{ col:"#0ca678", form:"knot", label:"useRecipeFilters", type:"Hook (FE)", layer:"web", usage:[6,"6 components call this hook"],
+      conns:[["fetches","endpoint","GET /recipes"],["called by","component","RecipeList · SearchBar"]], tests:1, ident:[["home","recipe"],["kind","React hook"]],
+      doc:"The bridge to the API — its fetch is matched to the endpoint by method+path (the web→API bridge)." },
+    store:{ col:"#e64980", form:"cylinder", label:"recipeStore", type:"Store (FE)", layer:"web", usage:[9,"9 read this store"],
+      conns:[["read by comp","component","RecipeCard · EditRecipe"],["read by hook","hook","useRecipe"]], tests:0, ident:[["home","recipe"],["kind","state / context"]],
+      doc:"The FE data cylinder (Zustand / createContext). A context const has no graft symbol → the *Store file is its only signal (a FLOOR)." },
+    type:{ col:"#8794ab", form:"wire", label:"RecipeResponse", type:"Type", layer:"web", usage:[0,"unlinked (graft emits 0 type-usage edges)"],
+      conns:[["used by","component","— none captured"]], tests:0, ident:[["home","recipe"],["kind","TS type"]],
+      doc:"A TS type/interface — erased at runtime, so graft sees it declared but not USED. The scattered {} nodes are these." },
+    endpoint:{ col:"#8b5cf6", form:"ring", label:"GET /recipes", type:"API endpoint", layer:"endpoints", usage:[1,"1 screen fetches this endpoint"],
+      conns:[["touches","model","Recipe"],["returns","schema","RecipeResponse"],["fetched by","hook","useRecipeFilters"]], tests:3, ident:[["entity","recipe"],["layer","api"],["role","endpoint handler"]],
+      doc:"The exposed surface — a URL the frontend fetches. Wired to its handler ƒ, the models it touches, the schema it returns." },
+    "function":{ col:"#7c5cfc", form:"cube", label:"list_recipes()", type:"Function ƒ", layer:"api", usage:[1,"1 caller (fan-in)"],
+      conns:[["called by","endpoint","GET /recipes"],["touches","model","Recipe"]], tests:0, ident:[["entity","recipe"],["layer","api"],["language","Python"]],
+      doc:"A unit of work — the request handler. Size in the graph = its code-behind mass (the call tree behind it)." },
+    schema:{ col:"#f59f00", form:"octa", label:"RecipeResponse", type:"Schema", layer:"data", usage:[1,"1 endpoint uses this body"],
+      conns:[["returned by","endpoint","GET /recipes"]], tests:1, ident:[["entity","recipe"],["kind","response body"]],
+      doc:"A response/request contract — the shape crossing the API boundary. Its fields are the payload." },
+    model:{ col:"#12b886", form:"cylinder", label:"Recipe", type:"Model", layer:"data", usage:[5,"3 endpoints touch · 2 fns reference"],
+      conns:[["touched by","endpoint","GET /recipes"],["FK →","model","auth.User"]], tests:2, ident:[["entity","recipe"],["table","recipes"],["FKs","1"]],
+      doc:"A DB table. Its FK to another entity's model is the cross-entity wire (drawn, but it does NOT pull the layout across entities)." },
+    screen:{ col:"#e8590c", form:"panel", label:"RecipeScreen", type:"Frontend screen", layer:"web", usage:[0,"entry point — no code depends on a screen"],
+      conns:[["mounts","component","RecipeCard"],["fetches","endpoint","GET /recipes"]], tests:1, ident:[["home","recipe"],["kind","screen"]],
+      doc:"A screen = a fetching surface; its fetch is matched to an endpoint (the web→API bridge). Unmatched fetches mark a coverage gap." },
+    external:{ col:"#868e96", form:"octa", label:"users.id", type:"External (fk target)", layer:"data", usage:[8,"8 models reference this fk target"],
+      conns:[["target entity","entity","auth"],["referenced by","model","Recipe.owner_id"]], tests:0, ident:[["lives in","auth"],["kind","fk target"]],
+      doc:"An fk target in ANOTHER entity (e.g. users.id) — the cross-entity reference. Double-click hops to its owner entity." },
+    entity:{ col:"#0d9488", form:"container", label:"recipe", type:"Entity (container)", layer:"data", usage:[12,"12 inbound cross-entity refs"],
+      conns:[["endpoints","endpoint","21"],["models","model","3"],["schemas","schema","24"]], tests:0, ident:[["status","approved"]],
+      doc:"The container the pieces live in — NOT an icon-node: it's the big translucent boundary around a cluster." }
+  };
+
+  var order=["route","component","hook","type","store","module","screen","web","endpoint","function","schema","model","external","entity","flag","provider","middleware","prompt"];
+
+  var KINDCOL={ endpoint:"#8b5cf6", "function":"#6366f1", model:"#14b8a6", schema:"#06b6d4", entity:"#84cc16",
+    component:"#2f7de1", hook:"#10b981", store:"#ec4899", route:"#38bdf8", type:"#64748b", screen:"#a855f7", external:"#94a3b8" };   /* component 2026-09-05: orange → cobalt (operator: orange read as the module amber); a different tone from the function indigo */
+  Object.keys(KINDCOL).forEach(function(k){ if(KINDS[k]) KINDS[k].col=KINDCOL[k]; });
+  /* the GRAPH = two CLUSTERS (entities). Each node: id · kind (→ icon/panel) · ent (→ cluster
+     colour + boundary) · its own label. Icon colour = KIND; boundary colour = ENTITY. */
+  /* ══ GABE UNIVERSE — live adapter: window.GABE_C4 (C4 l1/l2/cross_edges) → spike {nodes,links} ══
+     Replaces the spike's toy NODEDEF/METRICS. SAME field names the encoders read, now fed live.
+     Node m-bag: behind/depth/tests/cols/fanin/god/method (+ large/hot/flags derived, spike-identical).
+     Each node also carries det/behind/resp/ids/table/sites so the live card reads real dossiers. */
+  /* layer ruling (c) 2026-08-20: the old SUBOF collapse (endpoints→api, web→frontend) is retired —
+     the layer core groups by the kind's OWN layer value, so new kinds bring their layer for free. */
+  var LZ={ endpoints:150, api:60, web:150, data:-150 };
+  var METHOD={ GET:"#22c55e", POST:"#3b82f6", PUT:"#f97316", PATCH:"#eab308", DELETE:"#ef4444", BOOT:"#8a8f98", TASK:"#f0abfc" };   /* TASK = a worker entrypoint dispatched by name (review 2026-09-06); fuchsia-light — the disc must clear ~30° of the endpoint body #8b5cf6 (contrast rule, legend pass) */
+  /* rel → edge colour. c4 kinds: touches · fk · bridge (+ empty→fk on model FK cross-edges). */
+  var RELCOL={ touches:"#7c5cfc", fk:"#12b886", bridge:"#e8f443", calls:"#f59e0b", imports:"#a855f7",
+    renders:"#339af0", mounts:"#e8590c", uses:"#0ca678", reads:"#e64980", typed:"#8794ab", fetches:"#e8590c", handler:"#8b5cf6", resp:"#f59f00", pk:"#868e96" };
+
+  /* rel → coupling weight (w) · proven (structural vs inferred) · pl (default payload). fk/touches = structural join;
+     bridge/calls = inferred-by-design floor (cross-file fetch/call). */
+  var LINKMETA={ touches:{w:4,pv:1}, fk:{w:2,pv:1,pl:1}, bridge:{w:3,pv:0,pl:6}, calls:{w:5,pv:0}, imports:{w:3,pv:0},
+    renders:{w:3,pv:1}, mounts:{w:2,pv:1}, uses:{w:4,pv:0}, reads:{w:3,pv:0}, typed:{w:2,pv:1,pl:6}, fetches:{w:5,pv:0,pl:6}, handler:{w:6,pv:1}, resp:{w:3,pv:1}, pk:{w:1,pv:1} };
+
+  /* the frontend "web" kind the spike lacks (c4 emits web nodes). Mirror screen's frontend layer + a distinct glyph. */
+  if(!KINDS.web){ KINDS.web={ col:"#a855f7", form:"panel", label:"", type:"Frontend (web)", layer:"web",
+    usage:[0,""], conns:[], tests:0, ident:[], doc:"A frontend fetching file — its fetch is matched to the endpoint it names (the web→API bridge)." }; }
+  KINDCOL.web="#a855f7"; KINDS.web.col="#a855f7";
+  if(typeof GLYPH!=="undefined" && !GLYPH.web) GLYPH.web=GLYPH.screen;   // panel header icon for web nodes (GLYPH lacked web)
+
+  /* ── FRONTEND arm (batch 48): c4.fe = compiler-proven pieces (component · hook · store · route · fe-type · module)
+     + typed wires (renders · uses-hook · uses-store · typed · fecall · imports) on a SEPARATE key. The spike's KINDS already
+     draw route/component/hook/store/type; `module` (a file's plain value exports — feature logic, lib, api) is new. */
+  KINDS.module={ col:"#f59e0b", form:"slab", label:"recipeScoring", type:"Module (FE)", layer:"web", usage:[0,"called by components / hooks"],
+    conns:[["called by","component","RecipeCard · …"],["imports","fe-type","RecipeScore"]], tests:0, ident:[["home","recipe"],["kind","feature logic / lib / api client"]],
+    doc:"A plain TS module — ONE piece for the file's value exports (feature logic, lib, api client). Components and hooks call into it (fecall) or import its values (imports)." };
+  KINDCOL.module="#f59e0b";
+  if(typeof GLYPH!=="undefined"){ GLYPH.module='<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'; }
+  /* ── fe-unknown → `unknown` (O1, operator 2026-09-03): a Pascal .tsx function/class export with NO JSX of its own and NO
+     rendered-by evidence. The classifier used to fold it into the file's module — a false claim; now it says "we could not
+     tell". A dashed ring with a ? — nothing else in the station is dashed. (A rendered-by hit promotes to component — O2.) */
+  KINDS.unknown={ col:"#9aa3b2", form:"panel", label:"LocaleSync", type:"Unknown (FE)", layer:"web", usage:[0,"unclassified — no JSX of its own, rendered nowhere"],
+    conns:[], tests:0, ident:[["kind","fe-unknown — could not be proven a component"],["fix","render it somewhere, or add a return-null / render-call proof (O3)"]],
+    doc:"A Pascal .tsx export the frontend classifier could NOT prove: no JSX in its body and no file renders it as a tag. Honest residue (stats.fe.excluded.pascal_no_jsx) — never claimed as a module." };
+  KINDCOL.unknown="#9aa3b2";
+  /* VIEW = a component whose feClass is "view" (the merged view + screen, operator 2026-08-30). It is NOT a kind of its
+     own in the data (kind stays "component" — the extractor's proof), but it is a TYPE on every surface: the screen
+     glyph (buildNode), the view colour (iconCol), "View (FE)" as the printed type (hover · panel head · kind chips ·
+     walk card) and the legend's View row. One helper feeds all of them — before 2026-09-04 only the glyph knew, so the
+     legend's View example jumped to an orange "COMPONENT (FE)" card (operator). */
+  var VIEWCOL="#d946ef";
+  function _isView(n){ return !!(n && n.kind==="component" && n.feClass==="view"); }
+  function _dispK(n){ var K=(n&&(n.K||KINDS[n.kind]))||{}; if(!_isView(n)) return K;
+    return Object.assign({}, K, {col:VIEWCOL, type:"View (FE)", label:"App"}); }
+  function _dispGlyph(n){ return _isView(n)?"screen":n.kind; }
+  if(typeof GLYPH!=="undefined"){ GLYPH.unknown='<circle cx="12" cy="12" r="9" stroke-dasharray="3 2.5"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7"/><circle cx="12" cy="17" r=".6" fill="currentColor" stroke="none"/>'; }
+  if(order.indexOf("unknown")<0) order.push("unknown");   // the billboard preload rasterises every kind in `order`
+  LINKMETA.fecall={w:3,pv:1}; LINKMETA.imports={w:2,pv:1}; LINKMETA.bundle={w:4,pv:1};
+  LINKMETA.returns={w:2,pv:1}; LINKMETA.takes={w:2,pv:1}; LINKMETA.uses={w:2,pv:0};   // fn→schema wires (levels schema_edges): returns/takes are signature facts, uses a body-name floor
+  KINDS.capsule={ col:"#94a3b8", form:"pod", label:"model · 160", type:"Capsule (area)", layer:"web", usage:[0,"a folded AREA"],
+    conns:[["bundled wires","capsule","components · 37"]], tests:0, ident:[["kind","a folded area — click to open"]],
+    doc:"A COLLAPSED area of a big entity — one planet standing for its pieces (count in the label). Click it (or its card's Expand, the fleet row, or any search hit inside) to open the entity." };
+  KINDCOL.capsule="#94a3b8";
+  if(typeof GLYPH!=="undefined"){ GLYPH.capsule='<path d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z"/><path d="M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z"/><path d="M14.97 3.62a2 2 0 0 0-1.94 0l-3 1.8A2 2 0 0 0 9 7.13v3.24a2 2 0 0 0 .97 1.71L12 13.5l2.03-1.42A2 2 0 0 0 15 10.37V7.13a2 2 0 0 0-.97-1.71l-3-1.8Z"/>'; }
+  var FE_HOME_COL={ bucket:"#7c3aed", candidate:"#f97316" };   // a shared FE bucket (design-system · app-shell) · a feature the backend never modeled
+  var FE_KIND={ "fe-type":"type", "fe-unknown":"unknown" };                              // the feed's kind name → the spike's KINDS key
+  var FE_REL={ "uses-hook":"uses", "uses-store":"reads" };       // the feed's rel → LINKMETA/REL2KIND vocabulary
+
+  /* ══ PRE-C: wave-C kind + wire extensibility (2026-08-27) — plumbing only, draws NO nodes until
+     wave C emits them. The four L2 floors (middleware · provider · flag · prompt) get real KINDS
+     entries so the adapter DRAWS them instead of dropping (the _dropped++ guard below now falls back
+     to a generic glyph for anything still unknown — never a silent drop). The seven new rels get
+     RELCOL + LINKMETA rows (pv:0 — every one is an inferred/extracted floor, so it must NOT default
+     to LINKMETA's pv:1 and lie "proven"); REL2KIND lives in assemble.py, relLabel in card.js. */
+  KINDS.middleware={ col:"#7048e8", form:"slab", label:"", type:"Middleware (app-wide)", layer:"api", usage:[0,"runs before the handler"],
+    conns:[["gates","endpoint","every request"]], tests:0, ident:[["kind","a Depends/add_middleware gate"]],
+    doc:"An app-wide wrapper (add_middleware) that runs on EVERY request before any endpoint is chosen — CORS · rate limit · idempotency. A per-endpoint guard (Depends) is NOT a node: it rides the endpoint as its Guards list, and the gate ROLE badge is where the legend teaches the check that can say no (D4 2026-09-05)." };
+  KINDS.provider={ col:"#e8590c", form:"panel", label:"", type:"Provider (external)", layer:"data", usage:[0,"reached by a service fn"],
+    conns:[["reached by","function","the SDK call site"]], tests:0, ident:[["kind","a third-party SDK / API the code reaches"]],
+    doc:"An external provider (an LLM, an auth SDK, a payment API) a function reaches — the edge of the system, past the last owned line." };
+  KINDS.flag={ col:"#e03131", form:"slab", label:"", type:"Feature flag", layer:"api", usage:[0,"walls a route or lane"],
+    conns:[["walls","endpoint","OFF → 403"]], tests:0, ident:[["kind","a settings bool that gates a lane"]],
+    doc:"A feature flag — a config bool whose OFF state walls a route or a pipeline lane (a 403 that never runs in prod, or a dormant path)." };
+  KINDS.prompt={ col:"#ae3ec9", form:"panel", label:"", type:"AI prompt", layer:"data", usage:[0,"rendered by a builder fn"],
+    conns:[["rendered by","function","the prompt builder"]], tests:0, ident:[["kind","a template string an LLM lane renders"]],
+    doc:"An LLM prompt template — a module string a builder function renders before the model call (words + placeholders)." };
+  KINDCOL.middleware="#7048e8"; KINDCOL.provider="#e8590c"; KINDCOL.flag="#e03131"; KINDCOL.prompt="#ae3ec9";
+  /* the ELEMENT kind (entity models, 2026-09-06): a backend file no entity's code.* claims — the element census mints it into the unclaimed
+     area so the map's blind spot has a shape (muted grey, T2 beside the functions). One legend row; a card that names the file + its functions. */
+  KINDS.element={ col:"#8a8f98", form:"panel", label:"", type:"Unclaimed file", layer:"api", usage:[0,"no entity claims this file"],
+    conns:[["defines","function","its top-level functions"]], tests:0, ident:[["kind","a backend .py no entity's code.* claims"]],
+    doc:"A backend file no entity claims — drawn muted in the unclaimed area so the blind spot has a shape. Its functions are named on the card; a claim in the entity config moves it home." };
+  KINDCOL.element="#8a8f98";
+  if(typeof GLYPH!=="undefined" && !GLYPH.element) GLYPH.element='<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15" stroke-dasharray="2 2"/>';
+  if(order.indexOf("element")<0) order.push("element");
+  if(typeof GLYPH!=="undefined"){
+    if(!GLYPH.middleware) GLYPH.middleware='<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>';
+    if(!GLYPH.provider)   GLYPH.provider='<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>';
+    if(!GLYPH.flag)       GLYPH.flag='<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>';
+    if(!GLYPH.prompt)     GLYPH.prompt='<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>';
+    if(!GLYPH.__generic)  GLYPH.__generic='<circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5"/>';
+  }
+  /* the seven wave-C wire kinds: colour + weight, pv:0 (inferred/extracted floor — never "proven"). */
+  RELCOL.depends="#6366f1"; RELCOL.gated_by="#7048e8"; RELCOL.dispatches="#f76707";
+  RELCOL.serializes="#0ca678"; RELCOL.reaches="#e8590c"; RELCOL.walls="#e03131"; RELCOL.fnprompts="#ae3ec9";
+  LINKMETA.depends={w:4,pv:0}; LINKMETA.gated_by={w:5,pv:0}; LINKMETA.dispatches={w:4,pv:0};
+  LINKMETA.serializes={w:2,pv:0}; LINKMETA.reaches={w:3,pv:0}; LINKMETA.walls={w:4,pv:0}; LINKMETA.fnprompts={w:2,pv:0};
+  /* a synthetic generic KINDS entry for a kind no registry knows — so a NEWER emitter's kind draws
+     (grey, generic glyph, its raw name) instead of vanishing. Called by the drop guard below. */
+  function _genericKind(kind){ return { col:"#8a8f98", form:"panel", label:"", type:kind, layer:"data",
+    usage:[0,""], conns:[], tests:0, ident:[["kind","(unrecognised — this station predates the emitter)"]],
+    doc:"A node kind this station does not recognise yet — drawn generically so nothing is silently dropped. Update the station to give it a glyph and a home." }; }
+
+  function primitiveMesh(k, col){
+    var m=function(c,wire){ return new T.MeshLambertMaterial({color:c, emissive:c, emissiveIntensity:0.35, transparent:true, opacity:0.96, wireframe:!!wire}); };
+    var r=7, f=KINDS[k].form;
+    if(f==="ring") return new T.Mesh(new T.TorusGeometry(r*0.9,r*0.34,12,26), m(col));
+    if(f==="cube") return new T.Mesh(new T.BoxGeometry(r*1.5,r*1.5,r*1.5), m(col));
+    if(f==="cylinder") return new T.Mesh(new T.CylinderGeometry(r*0.85,r*0.85,r*1.8,22), m(col));
+    if(f==="octa") return new T.Mesh(new T.OctahedronGeometry(r*1.15,0), m(col));
+    if(f==="panel") return new T.Mesh(new T.BoxGeometry(r*2.1,r*1.5,r*0.5), m(col));
+    if(f==="knot") return new T.Mesh(new T.TorusKnotGeometry(r*0.62,r*0.24,64,8), m(col));
+    if(f==="cone") return new T.Mesh(new T.ConeGeometry(r*0.95,r*1.9,20), m(col));
+    if(f==="wire") return new T.Mesh(new T.BoxGeometry(r*1.4,r*1.4,r*1.4), m(col,true));
+    if(f==="slab") return new T.Mesh(new T.BoxGeometry(r*2.0,r*0.55,r*2.0), m(col));
+    if(f==="pod") return new T.Mesh(new T.SphereGeometry(r*2.1, 12, 9), m(col));
+    if(f==="container") return new T.Mesh(new T.IcosahedronGeometry(r*2.2,0), new T.MeshBasicMaterial({color:col, wireframe:true, transparent:true, opacity:0.4}));
+    return new T.Mesh(new T.SphereGeometry(r,16,12), m(col));
+  }
+  /* ── ICON MODE B · billboard (the 2D lucide icon as a camera-facing sprite) ── */
+  var billTex={};
+  function preloadBillboards(done){ var left=order.length; order.forEach(function(k){
+    var img=new Image(); img.onload=function(){ var cv=document.createElement("canvas"); cv.width=160; cv.height=160; var c=cv.getContext("2d");
+      c.drawImage(img,14,14,132,132); billTex[k]=new T.CanvasTexture(cv); if(--left===0) done(); };
+    img.onerror=function(){ if(--left===0) done(); };
+    img.src="data:image/svg+xml;base64,"+btoa(svgDoc(k, "#ffffff")); }); }   // WHITE glyph → tint at runtime (identity/heat/method)
+  function billboardMesh(k, col){ var mat=new T.SpriteMaterial({map:billTex[k], color:new T.Color(col||"#ffffff"), transparent:true, depthWrite:false}); var s=new T.Sprite(mat); s.scale.set(15,15,1); return s; }
+
+  /* the BUBBLE — a small NEUTRAL translucent sphere hugging the icon: a touch of volume + the
+     boundary the links reach. NOT the kind/entity colour (that's free for clustering). */
+  var BUB="#aab4c6";
+  function bubR(){ return ENC.iconSize*0.62; }   // the neutral sphere's base radius tracks the icon size (so the composition stays proportional)
+  var BUBSEG=[18,12];   // the wireframe lattice segments — vertex dots sit on THESE vertices
+  function bubble(r){ r=r||bubR(); var op=OPMAP.bubble[CFG.bubble], g=new T.Group();
+    g.add(new T.Mesh(new T.SphereGeometry(r,24,18), new T.MeshBasicMaterial({color:BUB, transparent:true, opacity:op, side:T.DoubleSide})));
+    g.add(new T.Mesh(new T.SphereGeometry(r,BUBSEG[0],BUBSEG[1]), new T.MeshBasicMaterial({color:BUB, transparent:true, opacity:op*1.7, wireframe:true})));   // faint rim line
+    return g;
+  }
+  var iconMode="billboard", fontIdx=0;   // LOCKED (selectors removed)
+  function curFont(){ return "Menlo,Consolas,'DejaVu Sans Mono',ui-monospace,monospace"; }
+  function labelSprite(txt, size, y, col){ var cv=document.createElement("canvas"); var c0=cv.getContext("2d");
+    var fnt="600 "+(size||26)+"px "+curFont(); c0.font=fnt;
+    var tw=Math.ceil(c0.measureText(txt).width)+16;                         // the canvas FITS the text (16px breathing)
+    cv.width=Math.max(256, tw); cv.height=64; var c=cv.getContext("2d");    // resizing resets state — re-set the font
+    c.font=fnt; c.fillStyle=col||"#cdd6ea"; c.textAlign="center"; c.textBaseline="middle"; c.fillText(txt, cv.width/2, 32);
+    var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, depthWrite:false}));
+    s.scale.set(34*(cv.width/256),8.5,1); if(y!=null) s.position.y=y; return s; }
+
+  var BADGE_COL={ method:{GET:"#22c55e",POST:"#3b82f6",PUT:"#f97316",PATCH:"#eab308",DELETE:"#ef4444",BOOT:"#8a8f98",TASK:"#f0abfc"},
+                       role:{accessor:"#ef4444",caller:"#3b82f6",gate:"#eab308",pure:"#8794ab"},
+                       feclass:{connector:"#f97316",container:"#a855f7",leaf:"#84cc16",private:"#8794ab",detached:"#fb7185"},   /* connector blue → ORANGE 2026-09-05 (a blue badge on the new cobalt body vanished); detached = rose, D1 */   // component CLASS badge (operator palette) — connector=blue data-in · container=violet compose · leaf=lime atom · private=gray internal (pure-like); container off gray (private owns gray), leaf off green (collided with GET/hook/view)
+                       mclass:{api:"#3b82f6","render-fn":"#d946ef",model:"#14b8a6",config:"#8794ab",lib:"#84cc16",logic:"#22d3ee"},
+                       hrole:{fetcher:"#3b82f6",streamer:"#8b5cf6",store:"#ec4899",orchestrator:"#f59e0b",effect:"#ef4444",deriver:"#8794ab"},
+                       pclass:{llm:"#d946ef",embed:"#a3e635",vector:"#14b8a6",agent:"#8b5cf6",infra:"#8794ab",http:"#3b82f6",observability:"#ec4899",payments:"#22c55e"},   /* legend pass 2026-09-06: the PROVIDER CLASS badge — RULE: a disc never sits within ~30° of its host kind's body (provider body #e8590c); glyphs carry the idea (bubble · vector arrow · cylinder · fork · cog · api wall · eye · card) */
+                       delivery:{stream:"#06b6d4"},   /* the DELIVERY badge on an endpoint: cyan, 71° off the endpoint body #8b5cf6 (a violet disc on a violet body was invisible — the L3979/L3981 class of bug); POST #3b82f6 sits a badge-width away with a different glyph */   /* D2 (2026-09-05): the HOOK ROLE badge — fetcher=api blue · streamer=endpoint violet · store=store pink · orchestrator=amber · effect=red side channel · deriver=gray like pure */   /* operator 2026-09-05: render-fn + logic were amber/orange ON an amber module — invisible; render-fn now wears the VIEW fuchsia (it draws UI), logic cyan */   // module CLASS badge (operator 2026-09-03): api=blue phone-line · render-fn=component orange · model=table teal · config=grey wiring · lib=lime shared · logic=module amber
+                       count:{"*":(typeof KINDS!=="undefined"&&KINDS.schema&&KINDS.schema.col)||"#0e9aa7"} };   // schema fold count — the schema colour
+
+  var badgeGlyph=function(c, kind, key){
+    var col=((BADGE_COL[kind]||{})[key])||((BADGE_COL[kind]||{})["*"])||"#8794ab";
+    c.fillStyle=col; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill();
+    if(kind==="count"){ var t=String(key==null?"":key); c.fillStyle='#0b0f18'; c.textAlign='center'; c.textBaseline='middle';
+      c.font='700 '+(t.length>1?60:72)+'px ui-monospace, Menlo, Consolas, monospace'; c.fillText(t, 64, 68); return; }   // the digits ARE the glyph
+    c.strokeStyle='#0b0f18'; c.lineWidth=(kind==="role"||kind==="feclass"||kind==="mclass"||kind==="hrole"||kind==="pclass"||kind==="delivery"?11:13); c.lineCap='round'; c.lineJoin='round'; c.beginPath();
+    if(kind==="role"){
+      if(key==='accessor'){ c.ellipse(64,42,26,10,0,0,6.2832); c.moveTo(38,42); c.lineTo(38,86); c.moveTo(90,42); c.lineTo(90,86); c.moveTo(38,64); c.bezierCurveTo(38,74,90,74,90,64); c.moveTo(38,86); c.bezierCurveTo(38,96,90,96,90,86); }
+      else if(key==='caller'){ c.moveTo(40,64); c.lineTo(70,64); c.moveTo(70,44); c.lineTo(70,84); c.moveTo(70,44); c.lineTo(90,44); c.moveTo(70,84); c.lineTo(90,84); }
+      else if(key==='gate'){ c.moveTo(64,32); c.lineTo(92,44); c.lineTo(92,66); c.bezierCurveTo(92,86,64,96,64,96); c.bezierCurveTo(64,96,36,86,36,66); c.lineTo(36,44); c.closePath(); }
+      else { c.moveTo(64,32); c.lineTo(72,56); c.lineTo(96,64); c.lineTo(72,72); c.lineTo(64,96); c.lineTo(56,72); c.lineTo(32,64); c.lineTo(56,56); c.closePath(); }
+    } else if(kind==="hrole"){
+      if(key==='fetcher'){ c.moveTo(36,64); c.lineTo(74,64); c.moveTo(60,50); c.lineTo(76,64); c.lineTo(60,78); c.moveTo(90,40); c.lineTo(90,88); }   // a call out to the backend's wall (the same line the api module draws)
+      else if(key==='streamer'){ c.moveTo(34,50); c.bezierCurveTo(44,38,54,62,64,50); c.bezierCurveTo(74,38,84,62,94,50); c.moveTo(34,78); c.bezierCurveTo(44,66,54,90,64,78); c.bezierCurveTo(74,66,84,90,94,78); }   // waves — a response that keeps arriving
+      else if(key==='store'){ c.ellipse(64,44,26,10,0,0,6.2832); c.moveTo(38,44); c.lineTo(38,84); c.moveTo(90,44); c.lineTo(90,84); c.moveTo(38,84); c.bezierCurveTo(38,94,90,94,90,84); }   // the cylinder — client state
+      else if(key==='orchestrator'){ c.moveTo(40,64); c.lineTo(64,64); c.moveTo(64,64); c.lineTo(88,44); c.moveTo(64,64); c.lineTo(88,64); c.moveTo(64,64); c.lineTo(88,84); }   // a fork — it calls other hooks
+      else if(key==='effect'){ c.moveTo(70,30); c.lineTo(50,68); c.lineTo(66,68); c.lineTo(58,98); c.lineTo(80,58); c.lineTo(64,58); c.closePath(); }   // a bolt — a side channel (analytics, logging)
+      else { c.moveTo(44,40); c.lineTo(64,88); c.moveTo(56,52); c.lineTo(84,52); c.moveTo(48,72); c.lineTo(80,72); }   // ƒx — computes from its inputs
+    } else if(kind==="mclass"){
+      if(key==='api'){ c.moveTo(36,64); c.lineTo(74,64); c.moveTo(60,50); c.lineTo(76,64); c.lineTo(60,78); c.moveTo(90,40); c.lineTo(90,88); }   // a call out to the backend's wall (the phone line)
+      else if(key==='render-fn'){ c.moveTo(40,44); c.lineTo(40,88); c.lineTo(88,88); c.moveTo(52,40); c.lineTo(92,40); c.lineTo(92,76); }   // a canvas corner — draws UI from a plain function
+      else if(key==='model'){ c.ellipse(64,44,26,10,0,0,6.2832); c.moveTo(38,44); c.lineTo(38,84); c.moveTo(90,44); c.lineTo(90,84); c.moveTo(38,84); c.bezierCurveTo(38,94,90,94,90,84); }   // a table — the feature's data layer
+      else if(key==='config'){ c.arc(64,64,14,0,6.2832); c.moveTo(64,36); c.lineTo(64,46); c.moveTo(64,82); c.lineTo(64,92); c.moveTo(36,64); c.lineTo(46,64); c.moveTo(82,64); c.lineTo(92,64); }   // a cog — app wiring
+      else if(key==='lib'){ c.moveTo(40,88); c.lineTo(40,40); c.lineTo(56,40); c.lineTo(56,88); c.moveTo(60,88); c.lineTo(60,48); c.lineTo(76,48); c.lineTo(76,88); c.moveTo(80,88); c.lineTo(90,44); }   // books on a shelf — shared plumbing
+      else { c.moveTo(44,40); c.lineTo(64,88); c.moveTo(56,52); c.lineTo(84,52); c.moveTo(48,72); c.lineTo(80,72); }   // ƒx — feature rules and calculations
+    } else if(kind==="feclass"){
+      if(key==='detached'){ c.arc(64,64,24,0.55,5.75); c.moveTo(64,58); c.lineTo(64,70); }   // an OPEN ring — no drawn renderer (D1 2026-09-05)
+      else     if(key==='connector'){ c.moveTo(36,64); c.lineTo(76,64); c.moveTo(60,48); c.lineTo(80,64); c.lineTo(60,80); }   // data-in arrow (the FE's controller)
+      else if(key==='container'){ c.moveTo(40,50); c.lineTo(88,50); c.moveTo(40,66); c.lineTo(88,66); c.moveTo(40,82); c.lineTo(88,82); }   // stacked layers (composes children)
+      else if(key==='private'){ c.moveTo(64,34); c.lineTo(72,56); c.lineTo(94,64); c.lineTo(72,72); c.lineTo(64,94); c.lineTo(56,72); c.lineTo(34,64); c.lineTo(56,56); c.closePath(); }   // a compact star (internal / self-contained — the FE's "pure", gray)
+      else { c.moveTo(64,32); c.bezierCurveTo(93,46,93,84,64,98); c.bezierCurveTo(35,84,35,46,64,32); c.moveTo(64,40); c.lineTo(64,90); }   // leaf = an actual leaf + midrib (a shared, reused atom)
+    } else if(kind==="delivery"){   /* legend pass 2026-09-06: the STREAM badge = the streamer waves, verbatim */
+      c.moveTo(34,50); c.bezierCurveTo(44,38,54,62,64,50); c.bezierCurveTo(74,38,84,62,94,50); c.moveTo(34,78); c.bezierCurveTo(44,66,54,90,64,78); c.bezierCurveTo(74,66,84,90,94,78);
+    } else if(kind==="pclass"){   /* legend pass 2026-09-06: the PROVIDER CLASS glyphs — five are existing idea-pairs verbatim (api wall · cylinder · cog · fork), three new (bubble · vector arrow · eye · card) */
+      if(key==='llm'){ c.moveTo(36,42); c.lineTo(92,42); c.lineTo(92,76); c.lineTo(60,76); c.lineTo(46,90); c.lineTo(48,76); c.lineTo(36,76); c.closePath(); c.moveTo(50,59); c.lineTo(78,59); }   // a speech bubble — a model that writes
+      else if(key==='embed'){ c.moveTo(36,88); c.lineTo(88,40); c.moveTo(66,40); c.lineTo(88,40); c.lineTo(88,62); }   // a vector arrow — text → numbers
+      else if(key==='vector'){ c.ellipse(64,44,26,10,0,0,6.2832); c.moveTo(38,44); c.lineTo(38,84); c.moveTo(90,44); c.lineTo(90,84); c.moveTo(38,84); c.bezierCurveTo(38,94,90,94,90,84); }   // the cylinder — a store searched by meaning
+      else if(key==='agent'){ c.moveTo(40,64); c.lineTo(64,64); c.moveTo(64,64); c.lineTo(88,44); c.moveTo(64,64); c.lineTo(88,64); c.moveTo(64,64); c.lineTo(88,84); }   // the fork — an orchestrator
+      else if(key==='infra'){ c.arc(64,64,14,0,6.2832); c.moveTo(64,36); c.lineTo(64,46); c.moveTo(64,82); c.lineTo(64,92); c.moveTo(36,64); c.lineTo(46,64); c.moveTo(82,64); c.lineTo(92,64); }   // the cog — rented plumbing
+      else if(key==='http'){ c.moveTo(36,64); c.lineTo(74,64); c.moveTo(60,50); c.lineTo(76,64); c.lineTo(60,78); c.moveTo(90,40); c.lineTo(90,88); }   // the api wall — a call out
+      else if(key==='observability'){ c.moveTo(32,64); c.bezierCurveTo(48,40,80,40,96,64); c.bezierCurveTo(80,88,48,88,32,64); c.moveTo(76,64); c.arc(64,64,12,0,6.2832); }   // an eye — where errors go to be seen
+      else if(key==='payments'){ c.moveTo(34,44); c.lineTo(94,44); c.lineTo(94,84); c.lineTo(34,84); c.closePath(); c.moveTo(34,58); c.lineTo(94,58); }   // a card — money moves
+      else { c.arc(64,64,15,0,6.2832); }
+    } else {
+      if(key==='GET'){ c.moveTo(64,34); c.lineTo(64,94); c.moveTo(46,78); c.lineTo(64,94); c.lineTo(82,78); }
+      else if(key==='PUT'){ c.moveTo(64,94); c.lineTo(64,34); c.moveTo(46,50); c.lineTo(64,34); c.lineTo(82,50); }
+      else if(key==='POST'){ c.moveTo(34,64); c.lineTo(94,64); c.moveTo(64,34); c.lineTo(64,94); }
+      else if(key==='DELETE'){ c.moveTo(43,43); c.lineTo(85,85); c.moveTo(85,43); c.lineTo(43,85); }
+      else if(key==='PATCH'){ c.moveTo(38,72); c.quadraticCurveTo(54,44,64,64); c.quadraticCurveTo(74,84,90,56); }
+      else if(key==='TASK'){ c.moveTo(38,46); c.lineTo(90,46); c.moveTo(38,64); c.lineTo(90,64); c.moveTo(38,82); c.lineTo(90,82); c.moveTo(78,72); c.lineTo(90,82); c.lineTo(78,92); }   // a QUEUE — stacked jobs, the last one leaving to a worker
+      else if(key==='BOOT'){ c.moveTo(64,30); c.lineTo(64,60);                                   // power/startup symbol — a lifecycle mark, not a CRUD verb
+        c.moveTo(64+28*Math.cos(-Math.PI/2+0.5), 72+28*Math.sin(-Math.PI/2+0.5));
+        c.arc(64,72,28,-Math.PI/2+0.5,-Math.PI/2-0.5+Math.PI*2,false); }
+      else { c.arc(64,64,15,0,6.2832); }
+    }
+    c.stroke();
+  };
+
+  function iconCol(n){ if(ENC.color==="heat") return heatCol(heatVal(n));
+    if(ENC.method && n.kind==="endpoint" && n.m.method) return METHOD[n.m.method]||n.col;
+    return _isView(n)?VIEWCOL:n.col; }   // identity = KIND colour (a VIEW component wears the view colour)
+  function cap3(x){ return Math.min(x,3); }   // faked values can be cranked high — cap the visual so it never fills the screen
+  function num(raw){ return typeof raw==="boolean"?(raw?1:0):(+raw||0); }
+  function nodeVal(key,n){ var f=fieldOf(key), raw=(n.m||{})[f]; return {f:f, raw:raw, r:cap3(num(raw)/(MAXES[f]||1))}; }   // the effect's MAPPED field, normalized
+  function massR(n){ if(!ENC.mass) return bubR(); return bubR()*(0.85+nodeVal("mass",n).r*1.15); }
+  /* SPACE WAR: the primitive half-shell zones (warZones/SHELLZ/shellPt + the warDist/shellH/concave/lift sliders)
+     were SUPERSEDED by the ELEMENTS-LAB real fleets (fleetZones) — removed. The war-zone placement law now lives in
+     the deployment config (DEPC): def +X · atk −X · conflict +Y · sats −Y. */
+  function methodBadge(m, br){ var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); if(badgeGlyph) badgeGlyph(c,'method',m); else { var col=(typeof METHOD!=='undefined'&&METHOD[m])||'#8794ab'; c.fillStyle=col; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); } var _o=(typeof CFG!=='undefined'&&CFG.mbOp!=null)?CFG.mbOp:0.95, _z=(typeof CFG!=='undefined'&&CFG.mbSize!=null)?CFG.mbSize:3.5, _x=(typeof CFG!=='undefined'&&CFG.mbX!=null)?CFG.mbX:2, _y=(typeof CFG!=='undefined'&&CFG.mbY!=null)?CFG.mbY:-2.5; var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, opacity:_o, depthWrite:false, depthTest:false })); s.scale.set(_z,_z,1); s.position.set(_x,_y,4); s.raycast=function(){}; __uniBadges.push(s); return s; }
+  function roleBadge(role){ var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); if(badgeGlyph) badgeGlyph(c,'role',role); else { c.fillStyle='#8794ab'; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); } var _o=(typeof CFG!=='undefined'&&CFG.mbOp!=null)?CFG.mbOp:0.95, _z=(typeof CFG!=='undefined'&&CFG.mbSize!=null)?CFG.mbSize:3.5, _x=(typeof CFG!=='undefined'&&CFG.mbX!=null)?CFG.mbX:2, _y=(typeof CFG!=='undefined'&&CFG.mbY!=null)?CFG.mbY:-2.5; var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, opacity:_o, depthWrite:false, depthTest:false })); s.scale.set(_z,_z,1); s.position.set(_x,_y,4); s.raycast=function(){}; __uniBadges.push(s); return s; }
+  function countBadge(nn){ var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); if(badgeGlyph) badgeGlyph(c,'count',nn); else { c.fillStyle='#0e9aa7'; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); } var _o=(typeof CFG!=='undefined'&&CFG.mbOp!=null)?CFG.mbOp:0.95, _z=(typeof CFG!=='undefined'&&CFG.mbSize!=null)?CFG.mbSize:3.5, _x=(typeof CFG!=='undefined'&&CFG.mbX!=null)?CFG.mbX:2, _y=(typeof CFG!=='undefined'&&CFG.mbY!=null)?CFG.mbY:-2.5; var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, opacity:_o, depthWrite:false, depthTest:false })); s.scale.set(_z,_z,1); s.position.set(_x,_y,4); s.raycast=function(){}; __uniBadges.push(s); return s; }
+  function feclassBadge(fc, kind){ var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); if(badgeGlyph) badgeGlyph(c,kind||'feclass',fc); else { c.fillStyle='#8a8f98'; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); } var _o=(typeof CFG!=='undefined'&&CFG.mbOp!=null)?CFG.mbOp:0.95, _z=(typeof CFG!=='undefined'&&CFG.mbSize!=null)?CFG.mbSize:3.5, _x=(typeof CFG!=='undefined'&&CFG.mbX!=null)?CFG.mbX:2, _y=(typeof CFG!=='undefined'&&CFG.mbY!=null)?CFG.mbY:-2.5; var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, opacity:_o, depthWrite:false, depthTest:false })); s.scale.set(_z,_z,1); s.position.set(_x,_y,4); s.raycast=function(){}; __uniBadges.push(s); return s; }
+
+  function buildNode(n){
+    var grp=new T.Group(); var col=iconCol(n), br=massR(n);
+    var ic, is=ENC.iconSize;
+    var _ik=(n.kind==="component"&&n.feClass==="view"&&billTex["screen"])?"screen":n.kind;   /* VIEW wears the SCREEN glyph (operator) */ if(billTex[_ik]){ ic=billboardMesh(_ik,col); ic.scale.set(is,is,1); }   // ICON = a CONSTANT display size (operator-set), same for every element
+    else { ic=primitiveMesh(n.kind, col); ic.scale.multiplyScalar(is/13); }
+    grp.add(ic);
+    if(n.kind==="endpoint" && n.m && n.m.method){ try{ grp.add(methodBadge(n.m.method, br)); }catch(_mb){} }
+    else if(n.kind==="function" && n.role){ try{ grp.add(roleBadge(n.role)); }catch(_rb){} }   // C1: function ROLE badge (accessor/caller/gate/pure) at the icon lower-right
+    else if(n.kind==="schema" && n.__foldN>0){ try{ var _cb=countBadge(n.__foldN); _cb.__n=n.__foldN; grp.add(_cb); grp.__cnt=_cb; }catch(_cb0){} }   // schema FOLD COUNT badge (kept in sync by __uniSyncCountBadges)
+    else if(n.kind==="component" && (n.feClass==="connector"||n.feClass==="container"||n.feClass==="leaf"||n.feClass==="private"||n.feClass==="detached")){ try{ grp.add(feclassBadge(n.feClass)); }catch(_fb){} }   else if(n.kind==="module" && n.mclass){ try{ grp.add(feclassBadge(n.mclass,"mclass")); }catch(_mb2){} }   else if(n.kind==="hook" && n.hrole){ try{ grp.add(feclassBadge(n.hrole,"hrole")); }catch(_hb){} }   /* D2: the hook ROLE badge */   // module CLASS badge (operator 2026-09-03)   // component CLASS badge (operator) — connector/container/leaf/private all badged; view wears the screen icon
+    if(n.kind==="provider" && n.pclass){ try{ grp.add(feclassBadge(n.pclass,"pclass")); }catch(_pb){} }   // class 9b: the PROVIDER CLASS badge (legend pass 2026-09-06)
+    if(n.kind==="endpoint" && n.stream){ try{ var _sb=feclassBadge("stream","delivery"); _sb.__slot=1; grp.add(_sb); }catch(_sb0){} }   // class 13b: the DELIVERY badge on a SECOND slot — the first is the method's
+    grp.add(bubble(br));
+    if(ENC.verts){ var vv=Math.min(8,Math.round(num(nodeVal("verts",n).raw))); if(vv>0) radarVerts(grp, br, vv); }   // N sphere vertices lit by a radar sweep = used-by
+    if(ENC.glow){ var g=nodeVal("glow",n); if(g.r>0) grp.add(glowSprite(col, 14+g.r*22, 0.5)); }
+    if(ENC.ring1) satelliteRing(grp, br, Math.min(8,Math.round(num(nodeVal("ring1",n).raw))), "#22c55e", 0);   // tests → green moons
+    if(ENC.ring2) satelliteRing(grp, br, Math.min(8,Math.round(num(nodeVal("ring2",n).raw))), "#ef4444", 1);   // flags → red moons
+    if(ENC.ring3) satelliteRing(grp, br, Math.min(8,Math.round(num(nodeVal("ring3",n).raw))), "#fbbf24", 2);   // used-by → amber moons
+    var pSat=ENC.pulse && truthy(nodeVal("pulse",n).raw), sSat=ENC.sat && truthy(nodeVal("sat",n).raw);
+    if(sSat||pSat){ var d=new T.Mesh(new T.SphereGeometry(1.9,10,8), new T.MeshBasicMaterial({color:"#e5484d"})); d.position.set(br*0.82,br*0.82,2); d.__b=1; grp.add(d); if(pSat) PULSE.push(d); }
+    if(CFG.warOn) fleetZones(grp, br, n);   // ELEMENTS-LAB fleets — real ship/sat zones replace the primitive warZones dots
+    grp.add(labelSprite(n.label, 26, -(br+4.5)));
+    return grp;
+  }
+  function rebuildNodes(){ PULSE=[]; ORBIT=[]; WAVE=[]; FLEETTICK=[]; if(Graph) Graph.nodeThreeObject(function(n){ return buildNode(n); }); }
+
+  /* ---- the factory surface -------------------------------------------------------------- */
+
+  return {
+    preload: preloadBillboards,        /* async — the lucide glyphs become canvas textures */
+    buildNode: buildNode,
+    badges: __uniBadges,
+    GLYPH: GLYPH,                     /* the lucide paths, for a skin that draws kind icons in HTML */
+    KINDS: KINDS, KINDCOL: KINDCOL, METHOD: METHOD, RELCOL: RELCOL,
+    VIEWCOL: VIEWCOL, order: order, BADGE_COL: BADGE_COL,
+    kindCol: function (k) { return KINDCOL[k] || "#868e96"; },
+    dimCol: dimCol,                    /* the station's own blend toward its ground */
+    relCol: function (r) { return RELCOL[r] || "#889"; },
+    labelSprite: labelSprite, bubble: bubble, iconCol: iconCol, massR: massR,
+    cfg: { ENC: ENC, CFG: CFG }
+  };
+};

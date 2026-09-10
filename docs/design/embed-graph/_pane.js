@@ -1,0 +1,711 @@
+/* _pane.js — a MINI UNIVERSE: one subject, in a box, navigable.
+ *
+ * The station's picture, scoped to one entity / commit / test and shrunk to something a center page
+ * can hold. Not a diagram of the slice — the same instrument, boxed.
+ *
+ *   GabePane.mount(hostEl, { ix, scope, id, hops, budget, w, h, onSelect }) -> pane
+ *
+ * WHAT YOU CAN DO IN ONE  (operator ruling 2026-09-08 — "look, don't leave the subject")
+ *   orbit · zoom · hover names a piece · CLICK selects it and fills the detail line.
+ *   A click never re-roots the pane. The page's subject and the pane's subject can never disagree,
+ *   so a feature page for `pantry` shows `pantry` and the only way out is the station link.
+ *
+ * THE CHROME FLOOR  (operator ruling, carried from the 2D attempt)
+ *   Exactly two controls: hop depth, and open-in-station. No legend, no kind toggles, no config.
+ *
+ * THE LAYER FORCE
+ *   The station bands nodes on Y by their kind's layer (LZ = endpoints/web 150 · api 60 · data -150)
+ *   so a picture reads top-down as frontend → api → data. A pane applies the same law at pane scale,
+ *   which is what makes it legible at 320px and not a ball of dots.
+ *
+ * COST, measured 2026-09-08 on swiftshader (CPU-emulated GL — a real GPU is faster):
+ *   12 panes on one page = 204 ms total mount · 12 live contexts · 0 lost · 15 MB heap · 0 errors.
+ *   A pane loads 3d-bundle.js (1.6 MB, shared + cached) and its slice (1-8 kb). It never loads
+ *   chip-assets.js (2.7 MB of ship models) because fleets are a station-only layer.
+ */
+window.GabePane = (function () {
+
+  var GRAMMAR = null;                 /* one grammar instance, shared by every pane on the page */
+  var READY = false, WAITING = [];
+
+  /* the station's layer law (gabe-universe.html :1118), at pane scale */
+  var LZ = { endpoints: 150, api: 60, web: 150, data: -150 };
+
+  function grammar(T) {
+    if (GRAMMAR) return GRAMMAR;
+    /* bubble "film" (0.006) is the STATION's transparency and stays untouched — the earlier
+       hand-written 0.10 was the "everything looks white" bug (operator, 2026-09-09).
+       iconSize is the one number a pane legitimately moves: the station itself calls it a GLOBAL
+       DISPLAY control, and a 270px viewport is not a 1400px one. 14 keeps a glyph readable at
+       pane distance; the transparency, colours and forms are the station's exactly. */
+    GRAMMAR = window.GabeUniGrammar(T, { iconSize: 14, bubble: "film", mass: true, maxMass: 8 });
+    GRAMMAR.preload(function () {
+      READY = true;
+      WAITING.splice(0).forEach(function (fn) { fn(); });
+    });
+    return GRAMMAR;
+  }
+
+  function onReady(fn) { READY ? fn() : WAITING.push(fn); }
+
+  /* ---- slice node -> the node shape the station's buildNode expects --------------------- */
+
+  function adapt(n, G) {
+    var raw = n.raw || {};
+    var m = { mass: n.deg || 0 };
+    if (n.method) m.method = n.method;
+    return {
+      id: n.id,
+      label: shortLabel(n),
+      kind: G.KINDS[n.kind] ? n.kind : (n.kind === "fe-type" ? "type" : "module"),
+      col: G.kindCol(n.kind),
+      ent: n.ent,
+      m: m,
+      feClass: raw.feClass || null,
+      mclass: raw.mclass || null,
+      hrole: raw.hrole || null,
+      pclass: raw.pclass || null,
+      role: raw.role || null,
+      stream: raw.stream || false,
+      __ring: n.ring,
+      __full: n.label,
+      __kind: n.kind
+    };
+  }
+
+  function shortLabel(n) {
+    var s = String(n.label || "");
+    if (n.kind === "endpoint") { var p = s.split(" "); s = p.length > 1 ? p[1] : s; }
+    s = s.replace(/\{|\}/g, "");
+    return s.length > 22 ? s.slice(0, 21) + "…" : s;
+  }
+
+  function layerOf(kind, G) {
+    var k = G.KINDS[kind];
+    return LZ[(k && k.layer) || "data"] != null ? LZ[(k && k.layer) || "data"] : 0;
+  }
+
+  /* ---- the selection ring (a pane's only added ornament) -------------------------------- */
+
+  var ringTex = null;
+  function ringSprite(T, col) {
+    if (!ringTex) {
+      var cv = document.createElement("canvas");
+      cv.width = cv.height = 128;
+      var c = cv.getContext("2d");
+      c.strokeStyle = "#fff"; c.lineWidth = 9;
+      c.beginPath(); c.arc(64, 64, 54, 0, Math.PI * 2); c.stroke();
+      ringTex = new T.CanvasTexture(cv);
+    }
+    var s = new T.Sprite(new T.SpriteMaterial({ map: ringTex, color: new T.Color(col),
+      transparent: true, opacity: 0.95, depthWrite: false, depthTest: false }));
+    s.scale.set(22, 22, 1);
+    s.raycast = function () {};
+    return s;
+  }
+
+  /* ---- mount ---------------------------------------------------------------------------- */
+
+  function mount(host, opt) {
+    var T = window.THREE, G = grammar(T);
+    var pane = {
+      host: host, opt: opt, Graph: null, slice: null,
+      hops: opt.hops || 1, sel: null, selObj: null, step: -1,
+      tier: (opt.tier == null) ? 1 : opt.tier   /* the station's disclosure tier; boots at T1 like the station */
+    };
+
+    pane.render = function () {
+      pane.slice = window.GabeSlice.resolve(opt.ix, {
+        scope: opt.scope, id: opt.id, hops: pane.hops, budget: opt.budget || 24, tier: pane.tier
+      });
+      draw();
+      if (opt.onFrame) opt.onFrame(pane);
+    };
+
+    function draw() {
+      var s = pane.slice;
+      var nodes = s.nodes.map(function (n) { return adapt(n, G); });
+      var byId = {};
+      nodes.forEach(function (n) { byId[n.id] = n; });
+      var links = s.edges.filter(function (e) { return byId[e.a] && byId[e.b]; })
+        .map(function (e) { return { source: e.a, target: e.b, rel: e.kind, inferred: e.inferred }; });
+
+      if (!pane.Graph) {
+        pane.Graph = window.ForceGraph3D({ controlType: "orbit" })(host)
+          .width(opt.w).height(opt.h)
+          .backgroundColor("#0e1524")   /* the station's ground (gabe-universe.html :5199), not a near-miss */
+          .showNavInfo(false)
+          .enableNodeDrag(false)
+          .nodeThreeObject(function (n) {
+            var g = G.buildNode(n);
+            /* The station's labelSprite is sized for its far camera. At CARD size the labels came
+               out illegible AND redundant — the ruled interaction already names a piece in the
+               detail line on click — so a card drops them and the bigger sizes shrink them. */
+            scaleLabel(g, opt.h < 300 ? 0 : 0.5);
+            return g;
+          })
+          .nodeLabel(function (n) { return n.__kind + " — " + n.__full; })
+          .linkColor(function (l) { return G.relCol(l.rel); })
+          .linkOpacity(0.6)          /* the station's value */
+          .linkWidth(function (l) { return l.inferred ? 0.35 : 0.7; })
+          .linkDirectionalParticles(function (l) { return l.inferred ? 0 : 1; })
+          .linkDirectionalParticleSpeed(0.006)
+          .linkDirectionalParticleWidth(1.1)
+          .onNodeClick(select)
+          .onBackgroundClick(function () { select(null); })
+          .onEngineTick(function () { pane.__lastTick = Date.now(); })   /* the backstop reads this */
+          .cooldownTicks(160);
+
+        /* The station's layer banding, at pane scale. The pull has to BEAT the charge repulsion or
+           the law is invisible and the pane reads as a smear: at 0.22 scale / 0.055 pull the -95
+           charge flattened every band (seen on pantry, first render). Full LZ separation, a firm
+           pull, and a charge that gives up sooner. */
+        try {
+          pane.Graph.d3Force("layer", function (alpha) {
+            (pane.__nodes || []).forEach(function (n) {
+              var want = layerOf(n.__kind, G) * 0.62;
+              n.vy = (n.vy || 0) + (want - (n.y || 0)) * 0.16 * alpha;
+            });
+          });
+        } catch (e) {}
+        try { pane.Graph.d3Force("charge").strength(-70).distanceMax(150); } catch (e) {}
+
+        /* Fit only once the layout has STOPPED. A fit fired at a fixed delay frames a half-settled
+           graph — which is why pantry sat tiny and C250 overflowed on the first render. */
+        pane.Graph.onEngineStop(function () { pane.__fitted = true; fit(); });   /* the ONE fit — after the layout stops */
+      }
+
+      pane.sel = null; pane.selObj = null; pane.step = -1;
+      HL.on = false; HL.set = null; HL.links = null;
+      /* APPEAR FRAMED (operator 2026-09-09): the picture stays invisible until the one settle fit, then
+         fades in. No camera motion can be seen because nothing was on screen before the fit — and the
+         layout's own settling flight is not shown either; a pane appears at rest. */
+      host.style.opacity = "0";
+      pane.__nodes = nodes;
+      pane.__links = links;                       /* the layer force reads this, so a hop change bands too */
+      pane.Graph.graphData({ nodes: nodes, links: links });
+      /* start the camera near the distance the settled layout will want, so the first frames are not
+         a far view that later "zooms in" — the settle snap then moves very little, and instantly */
+      try {
+        /* the start frame is computed the way the settle fit is, over the layout's EXPECTED extent:
+           the layer bands span about ±95 on y, and a cluster of n pieces spreads ~sqrt(n)·32 on x.
+           A start that already holds everything makes the one settle cut a small trim inward, never
+           a "zoom in" — and never leaves pieces outside the frame while the layout settles. */
+        /* generous on purpose: a start that is slightly FAR trims inward at settle (reads as nothing);
+           one that is slightly near pulls back (reads as a zoom-out) — measured on a 40-piece panel */
+        var eh = 95 + 26, ew = Math.max(150, Math.sqrt(nodes.length) * 44) + 20;
+        var cam0 = pane.Graph.camera(), vf = (cam0 && cam0.fov ? cam0.fov : 50) * Math.PI / 180;
+        var asp = opt.w / opt.h;
+        var dV = eh / Math.tan(vf / 2), dH = ew / Math.tan(2 * Math.atan(Math.tan(vf / 2) * asp) / 2);
+        pane.Graph.cameraPosition({ x: 0, y: 0, z: Math.max(dV, dH) * 1.08 + 20 }, { x: 0, y: 0, z: 0 }, 0);
+      } catch (e) {}
+      fitLater();
+    }
+
+    var fitTimer = null;
+
+    /* FIT the camera from the NODES' OWN bounding box and the camera's real frustum.
+       force-graph's zoomToFit measures custom nodeThreeObject groups — ours carry a label sprite
+       and a bubble — so it framed a box far larger than the pieces and every pane sat at roughly a
+       quarter of its viewport (measured on the first three-pane render, 2026-09-08). Positions and
+       trigonometry are exact; nothing here depends on what a node object happens to contain. */
+    function fit(ms) {
+      var ns = (pane.__nodes || []).filter(function (n) { return typeof n.x === "number"; });
+      if (!ns.length || !pane.Graph) return;
+      var lo = { x: Infinity, y: Infinity, z: Infinity }, hi = { x: -Infinity, y: -Infinity, z: -Infinity };
+      ns.forEach(function (n) {
+        ["x", "y", "z"].forEach(function (k) {
+          var v = n[k] || 0;
+          if (v < lo[k]) lo[k] = v;
+          if (v > hi[k]) hi[k] = v;
+        });
+      });
+      var c = { x: (lo.x + hi.x) / 2, y: (lo.y + hi.y) / 2, z: (lo.z + hi.z) / 2 };
+      var pad = 13;                              /* a planet's own radius, so a rim never clips */
+      var halfW = (hi.x - lo.x) / 2 + pad, halfH = (hi.y - lo.y) / 2 + pad, halfD = (hi.z - lo.z) / 2;
+      var cam = pane.Graph.camera();
+      var vFov = (cam && cam.fov ? cam.fov : 50) * Math.PI / 180;
+      var aspect = opt.w / opt.h;
+      var distV = halfH / Math.tan(vFov / 2);
+      var distH = halfW / Math.tan(2 * Math.atan(Math.tan(vFov / 2) * aspect) / 2);
+      var dist = Math.max(distV, distH) + halfD + 10;
+      try { pane.Graph.cameraPosition({ x: c.x, y: c.y, z: c.z + dist }, c, 0); } catch (e) {}   /* 0 ms: a cut, never a zoom */
+      host.style.opacity = "1";                   /* revealed only once framed */
+    }
+    function fitLater() {                          /* a backstop ONLY for an engine that never reports settling */
+      clearTimeout(fitTimer);
+      pane.__fitted = false;
+      /* Fire only when the engine has gone SILENT without an onEngineStop — never while it still ticks.
+         A fixed delay is host-relative (a GPU settles in 2-3 s, swiftshader in ~13 s) and a backstop
+         that fits a half-settled layout makes a SECOND cut when the real stop arrives (measured
+         2026-09-09). Silence is the same on every host. */
+      var arm = function () {
+        fitTimer = setTimeout(function () {
+          if (pane.__fitted) return;
+          if (Date.now() - (pane.__lastTick || 0) > 1500) { pane.__fitted = true; fit(0); }
+          else arm();
+        }, 3000);
+      };
+      arm();
+    }
+
+    /* ---- HIGHLIGHT — the station's law, the station's numbers ---------------------------
+     *
+     * gabe-universe.html `_hlCompute` (:2534): a BFS from the origin to HL.depth, which the
+     * operator set to 1 — "a click focuses the IMMEDIATE neighbourhood, not a depth-3 flood" —
+     * and HL.links = the wires with BOTH ends in the set. `_hlLinkF` (:2553) emphasises a lit
+     * wire by 2.6. All three are copied, not re-derived.
+     *
+     * The TREATMENT differs on purpose. `__uniHLSelect` puts the station in FOCUS + rest:"hide",
+     * which removes everything outside the set — right for a 1,351-node field, wrong for a pane
+     * of 24, where it would leave three pieces floating and destroy the picture. So a pane uses
+     * the station's other shipped style, GLOW, and dims the rest instead of hiding it. The
+     * station ships GLOW for exactly this reason ("F toggles back to glow for context").
+     */
+    var HL = { on: false, set: null, links: null };
+    /* 0.17 erased the outside entirely against a film-thin bubble; 0.28 keeps it as GEOGRAPHY,
+       which is what the station preserves too (its FOCUS mode keeps hulls when it hides planets). */
+    var DIM_NODE = 0.28, LIT_WIRE = 2.6, DIM_WIRE = 0.55;
+
+    /* force-graph REPLACES a link's source/target string with the node object once it renders —
+       the bug class recorded in universe-render-bug-forcegraph. Never read them raw. */
+    function lid(x) { return (x && x.id) || x; }
+    function lkey(l) { return lid(l.source) + "||" + lid(l.target) + "||" + l.rel; }
+
+    function hlCompute(originId) {
+      if (!originId) { HL.on = false; HL.set = null; HL.links = null; return; }
+      var adj = {};
+      (pane.__links || []).forEach(function (l) {
+        var a = lid(l.source), b = lid(l.target);
+        (adj[a] = adj[a] || []).push(b);
+        (adj[b] = adj[b] || []).push(a);
+      });
+      var depth = {}, q = [originId];
+      depth[originId] = 0;
+      while (q.length) {
+        var u = q.shift();
+        if (depth[u] >= 1) continue;                    /* HL.depth = 1, the station's default */
+        (adj[u] || []).forEach(function (v) {
+          if (depth[v] === undefined) { depth[v] = depth[u] + 1; q.push(v); }
+        });
+      }
+      HL.set = depth;
+      HL.links = {};
+      (pane.__links || []).forEach(function (l) {
+        if (depth[lid(l.source)] !== undefined && depth[lid(l.target)] !== undefined) {
+          HL.links[lkey(l)] = 1;
+        }
+      });
+      HL.on = true;
+    }
+
+    function litNode(id) { return !HL.on || HL.set[id] !== undefined; }
+    function litLink(l) { return !HL.on || !!(HL.links && HL.links[lkey(l)]); }
+
+    /* dim by scaling each material's OWN base opacity, so the station's transparency law survives:
+       a film-thin bubble stays film-thin, it does not jump to a flat dim value. */
+    function shade(obj, f) {
+      if (!obj) return;
+      obj.traverse(function (c) {
+        if (!c.material || c.__hlKeep) return;
+        var mats = Array.isArray(c.material) ? c.material : [c.material];
+        mats.forEach(function (m) {
+          if (m.__baseOp === undefined) m.__baseOp = (m.opacity === undefined ? 1 : m.opacity);
+          m.transparent = true;
+          m.opacity = m.__baseOp * f;
+        });
+      });
+    }
+
+    function hlApply() {
+      (pane.__nodes || []).forEach(function (n) {
+        shade(n.__threeObj, litNode(n.id) ? 1 : DIM_NODE);
+      });
+      /* re-setting an accessor is how the station refreshes its edge styling (applyEnc) */
+      try {
+        pane.Graph
+          .linkColor(function (l) {
+            var c = G.relCol(l.rel);
+            return litLink(l) ? c : (G.dimCol ? G.dimCol(c, 0.72) : c);
+          })
+          .linkWidth(function (l) {
+            var w = l.inferred ? 0.35 : 0.7;
+            return litLink(l) ? w * LIT_WIRE : w * DIM_WIRE;
+          })
+          .linkDirectionalParticles(function (l) {
+            return (!l.inferred && litLink(l)) ? 1 : 0;
+          });
+      } catch (e) {}
+    }
+
+    /* NO CAMERA MOTION (operator 2026-09-09: "that kind of movement is not necessary"). A step used
+       to fly the camera toward the piece; the pane always fits ALL its pieces, so a stepped piece is
+       already in view and the fly only ever added motion. Selection + highlight carry the step. */
+    /* STEP: move the cursor, select that piece, fly to it. A step whose endpoint the map never
+       drew still moves the cursor — the rail shows it as unresolved rather than skipping it,
+       because a walk that silently jumps a step misreports the journey. */
+    pane.stepTo = function (i) {
+      var st = pane.slice.steps || [];
+      if (!st.length) return;
+      i = Math.max(0, Math.min(st.length - 1, i));
+      pane.step = i;
+      var s = st[i];
+      var n = s.node ? (pane.__nodes || []).filter(function (x) { return x.id === s.node; })[0] : null;
+      select(n || null);
+      if (opt.onStep) opt.onStep(pane, i, s);
+    };
+    pane.stepBy = function (d) { pane.stepTo((pane.step < 0 ? -1 : pane.step) + d); };
+    pane.stepHome = function () { pane.stepTo(0); };
+
+    function select(n) {
+      if (pane.selObj) {
+        pane.selObj.parent && pane.selObj.parent.remove(pane.selObj);
+        pane.selObj = null;
+      }
+      pane.sel = n || null;
+      hlCompute(n ? n.id : null);
+      if (n) {
+        var live = findObj(n);          /* the LIVE object in the scene, never a rebuilt one */
+        if (live) {
+          pane.selObj = ringSprite(T, G.kindCol(n.__kind));
+          pane.selObj.__hlKeep = 1;     /* the ring is the selection mark; it never dims */
+          live.add(pane.selObj);
+        }
+      }
+      hlApply();
+      /* a click and a step are the same act, so the rail cursor follows a click too — otherwise
+         the rail claims step 3 while the pane shows something else. */
+      if (n) {
+        var st = (pane.slice.steps || []);
+        for (var i = 0; i < st.length; i++) {
+          if (st[i].node === n.id) { pane.step = i; break; }
+        }
+      } else {
+        pane.step = -1;
+      }
+      if (opt.onSelect) opt.onSelect(n, pane);
+      if (opt.onStep) opt.onStep(pane, pane.step, pane.slice.steps[pane.step] || null);
+    }
+
+    /* the label is the last sprite buildNode adds — shrink it without touching the glyph or badges */
+    function scaleLabel(grp, k) {
+      for (var i = grp.children.length - 1; i >= 0; i--) {
+        var c = grp.children[i];
+        if (c.isSprite && c.scale.x > 20) {
+          if (k === 0) { grp.remove(c); return; }
+          c.scale.multiplyScalar(k);
+          c.position.y *= 0.8;
+          return;
+        }
+      }
+    }
+
+    /* force-graph keeps the built object on the node under __threeObj */
+    function findObj(n) { return n.__threeObj || null; }
+
+    /* how many pieces the highlight lit BESIDE the selection — the honest count for the readout */
+    pane.litCount = function () {
+      if (!HL.on || !HL.set) return 0;
+      return Object.keys(HL.set).length - 1;
+    };
+    pane.hl = HL;
+
+    onReady(pane.render);
+    return pane;
+  }
+
+  /* ---- THE VIEW PAYLOAD — carry this view to the station ---------------------------------
+   *
+   * What identifies "what I am looking at"? Not a step INDEX: the station's walk for a journey is
+   * `fe.concat(j.carriers)` (gabe-universe.html :2883) — a frontend leg plus carriers — while a
+   * pane lists the AUTHORED endpoints. Step 3 here is not step 3 there. So the payload carries the
+   * SUBJECT and the SELECTED NODE ID, which mean the same thing on both surfaces, and lets the
+   * station derive its own position. The step label rides along as a human echo, never as an index
+   * the reader trusts.
+   *
+   * `head` is the map the view was taken against. A station on a different c4_head can still open
+   * it, but it must SAY the view came from another map rather than silently landing somewhere else.
+   */
+  function viewPayload(pane) {
+    var s = pane.slice, st = (s.steps || [])[pane.step] || null;
+    return {
+      gabe: "pane-view",
+      v: 1,
+      head: (window.GABE_C4 && window.GABE_C4.head) || null,
+      scope: s.subject.scope,
+      id: s.subject.id,
+      hops: pane.hops,
+      tier: pane.tier,               /* the station sets this tier before it opens the view — operator 2026-09-09:
+                                        "carry over the tier view"; a T3 station showed pieces the pane never draws */
+      sel: pane.sel ? pane.sel.id : null,
+      step: st ? { i: st.i, label: st.label, authored: !!st.authored } : null,
+      focus: true                    /* the station opens this in FOCUS mode — operator 2026-09-09 */
+    };
+  }
+
+  /* ---- embed: the ONE call a center page makes ------------------------------------------ */
+
+  var SIZE = { card: { w: 392, h: 258, rail: 104 },
+               panel: { w: 600, h: 400, rail: 140 },
+               wide:  { w: 940, h: 520, rail: 168 } };
+
+  function el(tag, cls, txt) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (txt !== undefined) e.textContent = txt;
+    return e;
+  }
+
+  /* lucide, the station's own icon family — stroke paths inside a 24-box */
+  function lu(d) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+      'stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+  }
+  var ICO = {
+    prev: lu('<path d="M15 18l-6-6 6-6"/>'),
+    next: lu('<path d="M9 18l6-6-6-6"/>'),
+    home: lu('<path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>'),
+    /* the HOP glyphs: one disc = the subject alone; a disc with a satellite = one relation out */
+    hop1: lu('<circle cx="12" cy="12" r="4.5" fill="currentColor" stroke="none"/>'),
+    hop2: lu('<circle cx="9" cy="12" r="4" fill="currentColor" stroke="none"/>' +
+             '<path d="M13.6 12h3.2"/><circle cx="19.5" cy="12" r="2.2"/>'),
+    copy: lu('<rect x="9" y="9" width="12" height="12" rx="2"/>' +
+             '<path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>'),
+    ok:   lu('<path d="M20 6L9 17l-5-5"/>')
+  };
+
+  function hopGlyph(n) {
+    if (n === 1) return '<svg viewBox="0 0 22 9"><line x1="4" y1="4.5" x2="18" y2="4.5" stroke="#5a6272" stroke-width="1.2"/>' +
+      '<circle cx="4" cy="4.5" r="3" fill="#e6e9ef"/><circle cx="18" cy="4.5" r="3" fill="#8b93a3"/></svg>';
+    return '<svg viewBox="0 0 34 9"><line x1="4" y1="4.5" x2="30" y2="4.5" stroke="#5a6272" stroke-width="1.2"/>' +
+      '<circle cx="4" cy="4.5" r="3" fill="#e6e9ef"/><circle cx="17" cy="4.5" r="3" fill="#8b93a3"/>' +
+      '<circle cx="30" cy="4.5" r="3" fill="#5a6272"/></svg>';
+  }
+
+  function legacyCopy(text, done) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;top:-1000px;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); } catch (e) {}
+    document.body.removeChild(ta);
+    done();
+  }
+
+  var ESCMAP = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return ESCMAP[c]; }); }
+
+  /* GabePane.embed(container, {ix, scope, id, size, hops}) -> the pane, framed and wired.
+     The frame IS the shippable surface: head + viewport + detail line + the two controls. */
+  function embed(container, o) {
+    /* "fill" takes the CONTAINER's width (operator 2026-09-09: the entity seat should use the room
+       the page has). Height follows width at a landscape ratio, clamped so a narrow column never
+       gets a slot and a wide one never gets a wall. Measured once, at mount. */
+    var box = SIZE[o.size || "card"];
+    if (o.size === "fill") {
+      var cw = Math.max(420, container.clientWidth || (container.parentElement && container.parentElement.clientWidth) || 900);
+      box = { w: cw, h: Math.round(Math.min(560, Math.max(340, cw * 0.52))), rail: cw >= 900 ? 180 : 150 };
+    }
+    var wrap = el("div", "pn");
+    wrap.style.width = box.w + "px";
+
+    var head = el("div", "pn-head");
+    var dot = el("span", "dot"); head.appendChild(dot);
+    var ttl = el("span", "ttl"); head.appendChild(ttl);
+    var sub = el("span", "sub"); head.appendChild(sub);
+    /* COPY and OPEN are the same class of affordance — "take this view somewhere else" — so they
+       sit together at the head's right edge, apart from the two control classes below. */
+    var cp = el("button", "cp");
+    cp.innerHTML = ICO.copy;
+    cp.title = "copy this view as a payload — paste it into the station's journeys panel";
+    cp.onclick = function () {
+      var text = JSON.stringify(viewPayload(pane));
+      var done = function () {
+        cp.innerHTML = ICO.ok;
+        cp.classList.add("ok");
+        setTimeout(function () { cp.innerHTML = ICO.copy; cp.classList.remove("ok"); }, 1400);
+      };
+      /* file:// has no clipboard permission in every browser, so the textarea fallback is the
+         path that actually runs here — it is not a nicety. */
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () { legacyCopy(text, done); });
+      } else { legacyCopy(text, done); }
+      if (o.onCopy) o.onCopy(text);
+    };
+    head.appendChild(cp);
+
+    /* open-in-station: a real link when the host names where the station lives (stationBase), else inert */
+    var go = document.createElement("a");
+    go.className = "go"; go.href = "#"; go.textContent = "\u2197";
+    go.onclick = function (e) { if (!o.stationBase) e.preventDefault(); };
+    head.appendChild(go);
+    wrap.appendChild(head);
+
+    /* The rail is a SIBLING of the viewport, not an overlay. An overlay would leave the camera
+       fitting to the full width and then hide a slice of the picture behind the steps — the
+       geometry has to know the viewport it actually owns. */
+    var steps0 = window.GabeSlice.resolve(o.ix, {
+      scope: o.scope, id: o.id, hops: o.hops || 1, tier: o.tier,
+      budget: o.budget || (o.size === "fill" ? (box.w >= 900 ? 120 : 80) : o.size === "wide" ? 60 : o.size === "panel" ? 40 : 24)
+    }).steps || [];
+    var hasRail = steps0.length >= 2;
+    var railW = hasRail ? box.rail : 0;
+    var viewW = box.w - railW;
+
+    var body = el("div", "pn-body");
+    body.style.width = box.w + "px";
+    body.style.height = box.h + "px";
+    var view = el("div", "pn-view");
+    view.style.width = viewW + "px";
+    view.style.height = box.h + "px";
+    /* force-graph OWNS its host element and clears it on mount, so the canvas gets its own inner
+       host and every overlay is a sibling. Putting the overlay in the mount host made it vanish
+       silently on the first render — no error, just an absent control. */
+    var cvHost = el("div", "pn-canvas");
+    view.appendChild(cvHost);
+    /* THE REACH CONTROL sits on the picture, top-left, in the station's corner-box grammar
+       (operator 2026-09-09: "maybe we can put it somewhere else"). It changes WHAT IS DRAWN, so
+       it belongs beside the drawing; the transport changes WHERE YOU ARE, so it belongs with the
+       steps. Two classes of control, two homes. It wears WORDS now: two 9px dot-glyphs in the
+       foot could not say "subject only" versus "one relation out". */
+    var hops = el("div", "pn-hops");
+    view.appendChild(hops);
+    body.appendChild(view);
+
+    var rail = null, stepsBox = null;
+    if (hasRail) {
+      rail = el("div", "pn-rail");
+      rail.style.width = railW + "px";
+      var rhead = el("div", "pn-railhead");
+      rail.appendChild(rhead);
+      stepsBox = el("div", "pn-steps");
+      rail.appendChild(stepsBox);
+      /* PREV · HOME · NEXT — home in the MIDDLE (operator 2026-09-09), and lucide glyphs rather
+         than the text characters the first pass used: a typographic guillemet is not an icon and
+         reads as punctuation beside the station's own drawn marks. */
+      var tr = el("div", "pn-transport");
+      [["prev", ICO.prev, "previous step"],
+       ["home", ICO.home, "back to the first step"],
+       ["next", ICO.next, "next step"]].forEach(function (d) {
+        var b = el("button", "t-" + d[0]);
+        b.innerHTML = d[1];
+        b.title = d[2];
+        b.dataset.t = d[0];
+        tr.appendChild(b);
+      });
+      rail.appendChild(tr);
+      body.appendChild(rail);
+    }
+    wrap.appendChild(body);
+
+    var read = el("div", "pn-read");
+    read.innerHTML = "<i>click a piece to name it</i>";
+    wrap.appendChild(read);
+
+    var foot = el("div", "pn-foot");
+    var honest = el("div", "pn-honest"); foot.appendChild(honest);
+    wrap.appendChild(foot);
+    container.appendChild(wrap);
+
+    var pane = mount(cvHost, {
+      ix: o.ix, scope: o.scope, id: o.id, hops: o.hops || 1, tier: o.tier,
+      budget: o.budget || (o.size === "fill" ? (box.w >= 900 ? 120 : 80) : o.size === "wide" ? 60 : o.size === "panel" ? 40 : 24),
+      w: viewW, h: box.h,
+      onSelect: function (n, p) {
+        if (!n) { read.innerHTML = "<i>click a piece to name it</i>"; return; }
+        var lit = p.litCount();
+        read.innerHTML = '<span class="kdot" style="background:' + GRAMMAR.kindCol(n.__kind) + '"></span>' +
+          "<b>" + esc(n.__full) + "</b> <i>" + esc(n.__kind) +
+          (n.__ring ? " \u00b7 1 hop out" : "") +
+          (lit ? " \u00b7 " + lit + " connected" : " \u00b7 nothing connected here") + "</i>";
+      },
+      onStep: function (p, i) {
+        if (!stepsBox) return;
+        var rows = stepsBox.querySelectorAll(".pn-step");
+        for (var k = 0; k < rows.length; k++) {
+          var on = (+rows[k].dataset.i === i);
+          rows[k].className = "pn-step" + (on ? " on" : "") +
+            (rows[k].dataset.unresolved === "1" ? " unresolved" : "");
+          if (on) rows[k].scrollIntoView({ block: "nearest" });
+        }
+        var st = p.slice.steps || [];
+        rail.querySelector(".t-prev").disabled = i <= 0;
+        rail.querySelector(".t-next").disabled = i >= st.length - 1;
+        rail.querySelector(".t-home").disabled = i <= 0;
+        if (o.onStep) o.onStep(p, i);
+      },
+      onFrame: function (p) {
+        var s = p.slice;
+        if (stepsBox) {
+          var st = s.steps || [];
+          /* The rail says WHOSE order this is. A derived order is the lane law reading, not a
+             chronology, and a rail that hides the difference lies about a commit. */
+          rhead.textContent = (st[0] && st[0].authored) ? "authored" : "derived order";
+          rhead.title = (st[0] && st[0].authored)
+            ? "the operator's own order, from workflows.js"
+            : "no authored order for this subject — the drawn pieces in request order: " +
+              "frontend, screens, api, shapes, data";
+          stepsBox.innerHTML = "";
+          st.forEach(function (x) {
+            var row = el("div", "pn-step" + (x.unresolved ? " unresolved" : ""));
+            row.dataset.i = x.i;
+            row.dataset.unresolved = x.unresolved ? "1" : "0";
+            var num = el("span", "n", String(x.i + 1));
+            row.appendChild(num);
+            var dot = el("span", "d");
+            dot.style.background = x.col || "#5a6272";
+            row.appendChild(dot);
+            var lab = el("span", "l", x.label);
+            lab.title = x.label + (x.unresolved ? "  —  the map drew no endpoint for this step" : "");
+            row.appendChild(lab);
+            row.onclick = function () { p.stepTo(x.i); };
+            stepsBox.appendChild(row);
+          });
+          rail.querySelectorAll(".pn-transport button").forEach(function (b) {
+            b.onclick = function () {
+              if (b.dataset.t === "home") p.stepHome();
+              else p.stepBy(b.dataset.t === "next" ? 1 : -1);
+            };
+            b.disabled = b.dataset.t !== "next";
+          });
+        }
+        dot.style.background = s.subject.color;
+        ttl.textContent = s.subject.label;
+        sub.textContent = s.subject.sub || "";
+        go.title = "open in the station \u2014 " + (s.subject.station || "");
+        if (o.stationBase && s.subject.station) {
+          go.href = o.stationBase.replace(/gabe-universe\.html$/, "") + s.subject.station;
+        }
+        honest.className = "pn-honest" + (s.honest.length ? "" : " clean");
+        honest.textContent = s.honest.length ? s.honest.join("  \u00b7  ") : "complete \u2014 nothing held back";
+        honest.title = s.honest.join("\n") || "every candidate piece is drawn";
+        hops.innerHTML = "";
+        var REACH = [
+          { n: 1, ico: ICO.hop1, lbl: "subject",
+            tip: "SUBJECT ONLY \u2014 just the pieces this " + s.subject.scope +
+                 " itself claims. Nothing it merely touches." },
+          { n: 2, ico: ICO.hop2, lbl: "+1 hop",
+            tip: "ONE RELATION OUT \u2014 the subject's pieces plus everything one edge away: what " +
+                 "they read, write, call or are called by, including pieces in other entities. " +
+                 "Always more candidates than the budget, so this is a capped SAMPLE of the " +
+                 "neighbourhood and the honest line names what it held back." }
+        ];
+        REACH.forEach(function (r) {
+          var b = el("button", p.hops === r.n ? "on" : "");
+          b.innerHTML = r.ico + "<span>" + r.lbl + "</span>";
+          b.title = r.tip;
+          b.dataset.hop = r.n;
+          b.onclick = function () { p.hops = r.n; p.render(); };
+          hops.appendChild(b);
+        });
+        if (o.onFrame) o.onFrame(p);
+      }
+    });
+    pane.wrap = wrap;
+    return pane;
+  }
+
+  return { mount: mount, embed: embed, viewPayload: viewPayload, LZ: LZ, adapt: adapt, SIZE: SIZE,
+           grammar: function () { return GRAMMAR; } };
+})();
