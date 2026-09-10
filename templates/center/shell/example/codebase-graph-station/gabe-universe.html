@@ -7,16 +7,16 @@
   *{ box-sizing:border-box; } html,body{ margin:0; height:100%; background:var(--bg); color:var(--ink); font:13px/1.5 ui-sans-serif,system-ui,sans-serif; overflow:hidden; }
   #g{ position:fixed; top:0; left:0; bottom:0; right:var(--rail); }   /* graph reserves the right rail — never sits under the panel */
   .bar{ position:fixed; top:12px; left:12px; display:flex; gap:8px; align-items:center; z-index:10; flex-wrap:wrap; max-width:70vw; }
-  .card{ background:rgba(24,33,54,.94); border:1px solid var(--line); border-radius:12px; padding:9px 12px; backdrop-filter:blur(6px); }
+  .card{ background:var(--surf-card); border:1px solid var(--line); border-radius:12px; padding:9px 12px; backdrop-filter:blur(6px); }
   h1{ font-size:13px; margin:0; font-weight:700; } .sub{ color:var(--muted); font-size:11px; }
-  button.b{ font:inherit; font-size:12px; color:var(--ink); background:#0e1524; border:1px solid var(--line); border-radius:8px; padding:6px 11px; cursor:pointer; }
+  button.b{ font:inherit; font-size:12px; color:var(--ink); background:var(--chip-bg); border:1px solid var(--line); border-radius:8px; padding:6px 11px; cursor:pointer; }
   button.b:hover{ border-color:var(--accent); }
-  .seg{ display:inline-flex; gap:4px; } .seg button{ font:inherit; font-size:11px; color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:7px; padding:4px 9px; cursor:pointer; }
+  .seg{ display:inline-flex; gap:4px; } .seg button{ font:inherit; font-size:11px; color:var(--muted); background:var(--chip-bg); border:1px solid var(--line); border-radius:7px; padding:4px 9px; cursor:pointer; }
   .seg button.on{ background:var(--accent); border-color:var(--accent); color:#fff; }
   /* ELEMENTS-LAB dimension legend (lifted as-is): fixed 300×327, minimizable, 6 dimension tabs, real asset thumbnails */
   #elegend{ position:fixed; left:14px; bottom:14px; width:340px; height:470px; display:flex; flex-direction:column; background:var(--panel); border:1px solid var(--line); border-radius:12px; z-index:45; box-shadow:0 8px 30px #0007; --mono:Menlo,Consolas,'DejaVu Sans Mono',ui-monospace,monospace; }
   #elegend.min{ height:auto; }   /* FIXED total height (flex body absorbs the optional sub-tab row → same size on every tab) */
-  #elegend .lgsubtabs{ display:flex; gap:2px; padding:5px 8px 0; background:#0e1524; flex:none; }
+  #elegend .lgsubtabs{ display:flex; gap:2px; padding:5px 8px 0; background:var(--chip-bg); flex:none; }
   #elegend .lgsub{ font:600 9px/1 var(--mono); text-transform:uppercase; letter-spacing:.02em; color:var(--muted); background:transparent; border:none; padding:5px 9px; cursor:pointer; border-radius:5px; }
   #elegend .lgsub.on{ color:var(--ink); background:#16233f; }
   #elegend .lghd{ display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px solid var(--line); }   /* same height as .cfghead — tabs fit inside, no wrap */
@@ -25,7 +25,7 @@
   #elegend .lgtabs{ display:inline-flex; gap:4px; padding:0; margin-left:2px; }   /* IN the header, ONE row — matches the fleet header button row */
   #elegend .lgtab{ display:inline-flex; align-items:center; justify-content:center; width:24px; height:20px; color:var(--muted); background:none; border:1px solid var(--line); border-radius:6px; padding:0; cursor:pointer; } #elegend .lgtab:hover{ color:var(--ink); border-color:var(--accent); } #elegend .lgtab svg{ width:13px; height:13px; }
   #elegend .lgtab.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
-  #elegend .lgbody{ padding:8px 11px 11px; flex:1; min-height:0; overflow-y:auto; background:#0e1524; border-radius:0 0 12px 12px; }
+  #elegend .lgbody{ padding:8px 11px 11px; flex:1; min-height:0; overflow-y:auto; background:var(--chip-bg); border-radius:0 0 12px 12px; }
   #elegend.min .lgbody, #elegend.min .lgtabs{ display:none; }
   #elegend .lggrp{ font:700 8.5px/1 var(--mono); text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin:12px 0 4px; border-bottom:1px solid var(--line); padding-bottom:4px; } #elegend .lggrp:first-child{ margin-top:2px; } #elegend .lggrp i{ font-style:normal; color:#7f8ba3; font-weight:400; }
   #elegend .lgrow{ display:flex; align-items:center; gap:10px; margin:7px 0; }
@@ -47,7 +47,7 @@
   #elegend .lgcv{ width:42px; height:36px; display:block; border-radius:5px; background:radial-gradient(circle at 50% 40%,#14203a,#0b1120); }   /* real 3D asset thumbnail (shared palette renderer) */
   #elegend .lgph{ width:34px; height:34px; border-radius:7px; border:1px dashed var(--muted); display:flex; align-items:center; justify-content:center; color:var(--muted); font:700 13px/1 var(--mono); }   /* placeholder — the spike owns the node */
   /* config panel — draggable + minimizable, starts top-right. Legend font (the body sans), icons + pills. */
-  .cfg{ position:fixed; top:12px; right:calc(var(--rail) + 12px); z-index:12; width:246px; background:rgba(24,33,54,.95); border:1px solid var(--line); border-radius:12px; backdrop-filter:blur(6px); font:13px/1.4 ui-sans-serif,system-ui,sans-serif; user-select:none; }
+  .cfg{ position:fixed; top:12px; right:calc(var(--rail) + 12px); z-index:12; width:246px; background:var(--surf); border:1px solid var(--line); border-radius:12px; backdrop-filter:blur(6px); font:13px/1.4 ui-sans-serif,system-ui,sans-serif; user-select:none; }
   .cfghead{ display:flex; align-items:center; gap:7px; padding:8px 10px; border-bottom:1px solid var(--line); cursor:grab; }
   .cfghead:active{ cursor:grabbing; } .cfg.min .cfghead{ border-bottom:none; }
   .cfgtitle{ flex:1; font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--ink); display:flex; align-items:center; gap:6px; }
@@ -62,7 +62,7 @@
   .cfgrow .rlbl{ display:flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); width:58px; flex:none; } .cfgrow .rlbl svg{ width:12px; height:12px; }
   .cfgrow .rend{ font-size:10px; color:var(--muted); flex:none; }
   /* PILL = a segmented toggle (2–3 options). active = accent. single-option pills toggle on/off. */
-  .pill{ display:inline-flex; background:#0e1524; border:1px solid var(--line); border-radius:8px; padding:2px; gap:2px; }
+  .pill{ display:inline-flex; background:var(--chip-bg); border:1px solid var(--line); border-radius:8px; padding:2px; gap:2px; }
   .pill button{ font:inherit; font-size:10.5px; color:var(--muted); background:none; border:none; border-radius:6px; padding:3px 7px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; }
   #cfg .pill button:disabled{ opacity:.35; cursor:not-allowed; }   /* an entity-model view the feed lacks — the title carries the reason */
   .pchip.verdict{ letter-spacing:.06em; border-color:currentColor; } .pchip.v-feature{ color:var(--ok); } .pchip.v-split{ color:#f59e0b; } .pchip.v-merge{ color:#3b82f6; } .pchip.v-aspect{ color:#e8590c; } .pchip.v-layer{ color:var(--muted); }
@@ -72,11 +72,11 @@
   .pill.off button.on{ background:var(--line); color:var(--muted); }   /* a toggled-OFF single pill */
   /* icon-only toggles — the icon IS the button, one compact row (Show · Planet · Universe) */
   .itogrow{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin:2px 0; }
-  .itog{ display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:8px; border:1px solid var(--line); background:#0e1524; color:var(--muted); cursor:pointer; padding:0; }
+  .itog{ display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:8px; border:1px solid var(--line); background:var(--chip-bg); color:var(--muted); cursor:pointer; padding:0; }
   .itog svg{ width:16px; height:16px; }
   .itog.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
   .itog:hover:not(.on){ color:var(--ink); border-color:var(--accent); }
-  .stp{ display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; flex:none; border-radius:7px; border:1px solid var(--line); background:#0e1524; color:var(--muted); cursor:pointer; font:700 15px/1 ui-monospace,monospace; padding:0; }
+  .stp{ display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; flex:none; border-radius:7px; border:1px solid var(--line); background:var(--chip-bg); color:var(--muted); cursor:pointer; font:700 15px/1 ui-monospace,monospace; padding:0; }
   .stp:hover{ color:var(--ink); border-color:var(--accent); }
   .rng{ -webkit-appearance:none; appearance:none; height:3px; border-radius:2px; background:var(--line); flex:1; min-width:0; outline:none; cursor:pointer; }   /* min-width:0 → shrinks in a crowded row (else the input's intrinsic width overflows) */
   .rng::-webkit-slider-thumb{ -webkit-appearance:none; width:11px; height:11px; border-radius:50%; background:var(--accent); cursor:pointer; }
@@ -88,7 +88,7 @@
   ::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
   ::-webkit-scrollbar-thumb:hover{ background:var(--muted); }
   /* EXPLORER panel — top-left, encoding experiments (NOT saved to config) */
-  .expl{ position:fixed; top:64px; left:12px; z-index:11; width:246px; background:rgba(24,33,54,.95); border:1px solid var(--line); border-radius:12px; backdrop-filter:blur(6px); font:13px/1.4 ui-sans-serif,system-ui,sans-serif; }
+  .expl{ position:fixed; top:64px; left:12px; z-index:11; width:246px; background:var(--surf); border:1px solid var(--line); border-radius:12px; backdrop-filter:blur(6px); font:13px/1.4 ui-sans-serif,system-ui,sans-serif; }
   .cfgrow .rval{ margin-left:auto; width:32px; text-align:right; color:var(--ink); font-variant-numeric:tabular-nums; }   /* right-aligned live slider value */
   .exhead{ display:flex; align-items:center; gap:7px; padding:8px 10px; border-bottom:1px solid var(--line); }
   .exhead .et{ flex:1; font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--ink); display:flex; align-items:center; gap:6px; } .exhead .et svg{ width:13px; height:13px; color:var(--accent); }
@@ -99,7 +99,7 @@
   .exl{ font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; display:flex; align-items:center; gap:6px; }
   .exl .nm{ margin-left:auto; color:var(--accent); font-weight:700; text-transform:none; letter-spacing:0; }
   .chips{ display:flex; flex-wrap:wrap; gap:5px; }
-  .chip{ font:inherit; font-size:11px; color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:7px; padding:4px 9px; cursor:pointer; }
+  .chip{ font:inherit; font-size:11px; color:var(--muted); background:var(--chip-bg); border:1px solid var(--line); border-radius:7px; padding:4px 9px; cursor:pointer; }
   .chip:hover{ color:var(--ink); } .chip.on{ background:var(--accent); border-color:var(--accent); color:#fff; }
   /* the SELECTED readout — active dimensions → the clicked element/link's value */
   .encsel{ margin-top:9px; padding-top:9px; border-top:1px solid var(--line); }
@@ -113,18 +113,18 @@
   .selhdr .k{ color:var(--muted); font-weight:400; } .selhdr.empty{ color:var(--muted); }
   .drow{ display:flex; align-items:center; gap:5px; margin:3px 0; }
   .drow .dtog{ flex:none; min-width:44px; justify-content:center; padding:3px 6px; }
-  .drow .dvar{ flex:none; font:600 10px/1 ui-monospace,Menlo,monospace; color:var(--ink); background:#0e1524; border:1px solid var(--line); border-radius:6px; padding:3px 3px; cursor:pointer; max-width:62px; }
+  .drow .dvar{ flex:none; font:600 10px/1 ui-monospace,Menlo,monospace; color:var(--ink); background:var(--chip-bg); border:1px solid var(--line); border-radius:6px; padding:3px 3px; cursor:pointer; max-width:62px; }
   .drow .dvar:hover{ border-color:var(--accent); }
-  .drow .dvarfix{ flex:none; font:600 10px/1 ui-monospace,Menlo,monospace; color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:6px; padding:3px 5px; }
+  .drow .dvarfix{ flex:none; font:600 10px/1 ui-monospace,Menlo,monospace; color:var(--muted); background:var(--chip-bg); border:1px solid var(--line); border-radius:6px; padding:3px 5px; }
   .drow.noeffect .dvar,.drow.noeffect .dvarfix{ opacity:.5; }
   .drow .dval{ margin-left:auto; font:700 12px/1 ui-monospace,Menlo,monospace; color:var(--ink); min-width:24px; text-align:right; font-variant-numeric:tabular-nums; }
   .drow.noeffect .dtog{ opacity:.4; } .drow.noeffect .dval{ color:var(--muted); opacity:.55; }
   .dpm{ display:inline-flex; gap:2px; } .dpm.off{ opacity:.3; pointer-events:none; }
-  .dpm button{ width:18px; height:18px; line-height:1; padding:0; font:700 13px/1 ui-sans-serif,system-ui; color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:5px; cursor:pointer; }
+  .dpm button{ width:18px; height:18px; line-height:1; padding:0; font:700 13px/1 ui-sans-serif,system-ui; color:var(--muted); background:var(--chip-bg); border:1px solid var(--line); border-radius:5px; cursor:pointer; }
   .dpm button:hover:not(:disabled){ color:var(--ink); border-color:var(--accent); } .dpm button:disabled{ cursor:default; }
   /* the right panel — ported from element-components (minimize to a rail, full sections) */
   /* docked RIGHT RAIL — always present; collapsed = a thin column, opens on element click into reserved space */
-  .panel{ position:fixed; top:0; right:0; bottom:0; width:var(--rail); background:rgba(24,33,54,.97); border-left:1px solid var(--line); z-index:13; display:flex; flex-direction:column; overflow:hidden; }
+  .panel{ position:fixed; top:0; right:0; bottom:0; width:var(--rail); background:var(--surf-panel); border-left:1px solid var(--line); z-index:13; display:flex; flex-direction:column; overflow:hidden; }
   .panel .phead,.panel .pbody{ display:none; }
   .panel .minbar{ display:flex; flex-direction:column; align-items:center; gap:12px; padding:10px 0; height:100%; }
   body.panel-open .panel{ overflow:auto; }
@@ -141,11 +141,11 @@
   .minname{ writing-mode:vertical-rl; transform:rotate(180deg); font:600 12px ui-monospace,monospace; color:var(--muted); white-space:nowrap; letter-spacing:.05em; }
   .pbody{ padding:11px 14px 14px; } .sec{ margin-bottom:13px; } .sechd{ display:flex; align-items:center; gap:6px; font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
   .sechd svg{ width:13px; height:13px; } .sechd .cnt{ margin-left:auto; background:var(--accent); color:#fff; border-radius:9px; padding:1px 7px; font-size:10px; font-weight:700; } .sechd .cnt.ok{ background:var(--ok); }
-  .ubar{ height:5px; background:#0e1524; border-radius:3px; overflow:hidden; margin-bottom:5px; } .ufill{ height:100%; background:var(--accent); }
+  .ubar{ height:5px; background:var(--chip-bg); border-radius:3px; overflow:hidden; margin-bottom:5px; } .ufill{ height:100%; background:var(--accent); }
   .sublbl{ display:flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); margin:5px 0 4px; } .sublbl svg{ width:12px; height:12px; }
   .kv{ display:flex; gap:8px; font-size:12px; margin:2px 0; align-items:center; } .kv svg{ width:13px; height:13px; color:var(--muted); flex:none; } .kv .k{ color:var(--muted); width:74px; flex:none; } .kv b{ font-weight:600; }
-  .pchip{ display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; border:1px solid var(--line); border-radius:6px; padding:1px 7px; margin:0 4px 4px 0; color:var(--muted); background:#0e1524; } .pchip svg{ width:11px; height:11px; }
-  .doc{ font-size:12px; background:#0e1524; border-left:2px solid var(--line); padding:7px 10px; border-radius:0 6px 6px 0; color:var(--ink); }
+  .pchip{ display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; border:1px solid var(--line); border-radius:6px; padding:1px 7px; margin:0 4px 4px 0; color:var(--muted); background:var(--chip-bg); } .pchip svg{ width:11px; height:11px; }
+  .doc{ font-size:12px; background:var(--chip-bg); border-left:2px solid var(--line); padding:7px 10px; border-radius:0 6px 6px 0; color:var(--ink); }
   /* ── rich element-components card sections (ported from element-components.html) ── */
   .pchip.model{ color:var(--c-model); } .pchip.schema{ color:var(--c-schema); } .pchip.web{ color:var(--c-web); } .pchip.route,.pchip.endpoint{ color:var(--c-endpoint); } .pchip.fn,.pchip.function{ color:var(--c-fn); } .pchip.ok{ color:var(--ok); }
   .pchip.component{ color:var(--fk-comp); } .pchip.hook{ color:var(--fk-hook); } .pchip.store{ color:var(--fk-store); } .pchip.froute{ color:var(--fk-route); } .pchip.type{ color:var(--fk-type); } .pchip.entity{ color:var(--c-entity); } .pchip.key{ color:var(--fk-type); } .pchip.external{ color:var(--c-external); }
@@ -154,19 +154,28 @@
   .flag{ display:inline-flex; align-items:center; gap:4px; font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:.04em; padding:3px 7px; border-radius:5px; color:#d9821f; border:1px solid #d9821f; } .flag svg{ width:11px; height:11px; }
   .tabbar{ display:flex; gap:3px; margin-bottom:8px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
   .tab{ display:inline-flex; align-items:center; gap:4px; font-weight:600; font-size:11px; color:var(--muted); background:none; border:none; cursor:pointer; padding:6px 7px; border-bottom:2px solid transparent; } .tab svg{ width:12px; height:12px; } .tab.on{ color:var(--ink); border-bottom-color:var(--accent); }
-  .tab .tabn{ background:#0e1524; border:1px solid var(--line); border-radius:8px; padding:0 5px; font-size:10px; font-weight:700; } .tab.on .tabn{ background:var(--accent); color:#fff; border-color:var(--accent); }
+  .tab .tabn{ background:var(--chip-bg); border:1px solid var(--line); border-radius:8px; padding:0 5px; font-size:10px; font-weight:700; } .tab.on .tabn{ background:var(--accent); color:#fff; border-color:var(--accent); }
   table.cols{ width:100%; border-collapse:collapse; font-size:12px; } table.cols td{ padding:2px 4px; border-bottom:1px solid var(--line); } table.cols td.ty{ color:var(--c-schema); font-family:ui-monospace,Menlo,monospace; font-size:11px; text-align:right; }
   .keycol{ display:inline-flex; align-items:center; gap:4px; } .keycol svg{ width:11px; height:11px; }
   .count{ display:flex; align-items:center; gap:7px; font-size:12.5px; padding:2.5px 0; border-bottom:1px dotted var(--line); } .count .lbl{ flex:1; } .count .n{ font-weight:700; font-variant-numeric:tabular-nums; } .count svg{ width:13px; height:13px; color:var(--muted); }
   .tipico{ cursor:help; position:relative; display:inline-flex; margin-left:2px; } .tipico.info{ color:var(--accent); } .tipico.warn{ color:#d9821f; } .tipico svg{ width:13px; height:13px; }
   .tipico .tip{ display:none; position:absolute; top:19px; left:-4px; z-index:6; width:210px; text-transform:none; letter-spacing:0; background:var(--ink); color:var(--bg); font:500 11px/1.45 ui-sans-serif,system-ui,sans-serif; padding:7px 9px; border-radius:7px; box-shadow:0 4px 14px rgba(0,0,0,.35); } .tipico:hover .tip,.tipico.on .tip{ display:block; }
   .cbeh svg{ width:11px; height:11px; }
-  .hint{ position:fixed; bottom:12px; right:calc(var(--rail) + 12px); background:rgba(24,33,54,.85); border:1px solid var(--line); border-radius:10px; padding:8px 11px; font-size:11px; color:var(--muted); z-index:10; }
+  .hint{ position:fixed; bottom:12px; right:calc(var(--rail) + 12px); background:var(--surf-hint); border:1px solid var(--line); border-radius:10px; padding:8px 11px; font-size:11px; color:var(--muted); z-index:10; }
   /* ══ GABE UNIVERSE station chrome — nav + one-row topbar + reposition + hide the spike's control overlays ══ */
-  :root{ --chip-bg:#0e1524; --hov-bg:#131d31; --nav-bg:#0c1322; }
+  :root{ --chip-bg:#0e1524; --hov-bg:#131d31; --nav-bg:#0c1322; --panel-bg:#0e1524; --scene-bg:#0e1524;
+    --surf:rgba(24,33,54,.95); --surf-card:rgba(24,33,54,.94); --surf-panel:rgba(24,33,54,.97); --surf-hint:rgba(24,33,54,.85); --surf-note:rgba(14,21,36,.94); }
   /* ── LIGHT theme (topbar toggle; batch 41) — the spike vars + the station's surface vars flip ── */
   :root[data-theme="light"]{ --bg:#eef1f6; --panel:#ffffff; --ink:#182031; --muted:#67718a; --line:#d5dbe8;
-    --accent:#4f46e5; --chip-bg:#eef1f6; --hov-bg:#e3e9f4; --nav-bg:#f4f6fb; --edge:#9aa3ad; }
+    --accent:#4f46e5; --chip-bg:#eef1f6; --hov-bg:#e3e9f4; --edge:#9aa3ad; --panel-bg:#ffffff; --scene-bg:#e8ecf3;
+    --surf:rgba(255,255,255,.95); --surf-card:rgba(255,255,255,.94); --surf-panel:rgba(255,255,255,.97); --surf-hint:rgba(255,255,255,.9); --surf-note:rgba(255,255,255,.96); }
+  /* the RAIL stays dark in light (2026-09-10): every other center page keeps the skin's dark sidebar (a3.css --sidebar) under its
+     light theme, and the group colours (.navlabel.g-*) are tuned for it — so the nav keeps the dark-theme vars, scoped */
+  /* kind colours as TEXT on the light ground — the chips (.pchip.*) read these vars; the glyph/wire roster (JS KINDCOL) is untouched */
+  :root[data-theme="light"]{ --c-model:#0f766e; --c-schema:#0e7490; --c-web:#7e22ce; --c-endpoint:#6d28d9; --c-fn:#4338ca; --c-entity:#4d7c0f; --c-external:#475569;
+    --fk-comp:#a21caf; --fk-hook:#047857; --fk-route:#0369a1; --fk-store:#be185d; --fk-type:#475569; --red:#c53030; }
+  :root[data-theme="light"] #fleet .flcnt, :root[data-theme="light"] #fleet .flrow .flcnt, :root[data-theme="light"] #fleet .flrow.flsub .flcnt{ color:color-mix(in srgb, var(--flc, var(--muted)) 62%, black) !important; border-color:color-mix(in srgb, var(--flc, var(--muted)) 62%, black) !important; }
+  :root[data-theme="light"] nav.side{ --nav-bg:#101726; --chip-bg:#0e1524; --hov-bg:#131d31; --ink:#c7cfdd; --muted:#79839a; --line:#2b3650; --panel:#182136; }
   :root[data-theme="light"] #fleet .flrow.spot{ background:rgba(79,70,229,.14); }
   :root[data-theme="light"] #fleet .flrow.spot .flent{ color:var(--ink); }
   :root[data-theme="light"] .pnav.pstat:hover{ background:var(--hov-bg); }
@@ -201,9 +210,13 @@
   .tiersel button.on{ color:#fff; background:var(--accent); }
   .tiersel button svg{ display:block; }   /* the tier button may wear an icon set instead of the T-label (operator) */
   /* floating restore tab, shown only while the nav is collapsed */
-  .navshow{ position:fixed; left:8px; top:calc(var(--topbarh) + 10px); z-index:60; display:none; align-items:center; justify-content:center;
-    width:32px; height:32px; color:var(--ink); background:var(--panel); border:1px solid var(--line); border-radius:8px; cursor:pointer; box-shadow:0 4px 14px #0006; }
-  body.nav-min .navshow{ display:flex; } .navshow:hover{ border-color:var(--accent); } .navshow svg{ width:16px; height:16px; }
+  /* the sidebar show/hide toggle: IN THE HEADER CRUMB, beside the title, always visible, both directions
+     (operator 2026-09-09) - it used to float over the canvas and shove the Fleet panel right to clear it */
+  .navshow{ display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; margin-right:8px; flex:0 0 auto;
+    color:var(--muted); background:transparent; border:1px solid var(--line); border-radius:6px; cursor:pointer; vertical-align:middle; }
+  .navshow:hover{ color:var(--ink); border-color:var(--accent); } .navshow svg{ width:14px; height:14px; }
+  body.nav-min .navshow{ color:var(--ink); }
+  body nav.side{ z-index:56; }   /* above #fleet (50) and #cfg (45): the open sidebar slides OVER the instruments. `body nav.side` on purpose - the shell's own nav.side rule re-sets z-index later in the sheet and beat this at equal specificity (operator screenshot 2026-09-09) */
   /* LEFT NAV (from the center shell, dark-tuned to the universe) */
   nav.side{ position:fixed; left:0; top:0; bottom:0; width:var(--navw); background:var(--nav-bg); border-right:1px solid var(--line);
     padding:14px 11px; overflow-y:auto; display:flex; flex-direction:column; gap:3px; z-index:30; font:13px/1.4 var(--font-ui); }
@@ -223,10 +236,10 @@
   /* ONE-ROW TOP BAR */
   .topbar{ position:fixed; left:var(--navw); right:0; top:0; height:var(--topbarh); z-index:29;
     display:flex; align-items:center; gap:12px; padding:0 18px; background:var(--panel); border-bottom:1px solid var(--line); }
-  .topbar .crumb{ font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:7px; min-width:0; }
+  .topbar .crumb{ font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:7px; min-width:0; flex:0 1 auto; white-space:nowrap; overflow:hidden; }   /* ONE line: a crowded bar shrinks the crumb, and the subtitle ellipsizes rather than the title wrapping (2026-09-09) */
   .topbar .crumb a{ color:var(--muted); text-decoration:none; } .topbar .crumb a:hover{ color:var(--accent); }
   .topbar .crumb b{ color:var(--ink); font-weight:700; }
-  .topbar .crumb .csub{ color:var(--muted); font-weight:400; }
+  .topbar .crumb .csub{ color:var(--muted); font-weight:400; min-width:0; overflow:hidden; text-overflow:ellipsis; }
   .topbar .spacer{ flex:1; }
   .topbar .statuspills{ display:flex; align-items:center; gap:8px; }
   .topbar .pill{ font-size:11px; color:var(--muted); background:transparent; border:1px solid var(--line); border-radius:999px; padding:3px 10px; white-space:nowrap; }
@@ -421,6 +434,32 @@
   #fleet .flglob svg{ width:12px; height:12px; }
   #fleet .flglob.on{ color:#fff; }
   #jrn .jrnhd{ font:700 10px/1.4 var(--font-ui); text-transform:uppercase; letter-spacing:.06em; color:var(--muted); padding:4px 6px 6px; }
+  /* PASTE A VIEW — a mini-pane elsewhere in the centre copies "what I am looking at" as a small
+     JSON payload; this is where it lands. The payload carries the subject, the selected piece and
+     a focus flag, never a step index (a pane lists AUTHORED endpoints, a station walk lists
+     fe+carriers — index 3 is not index 3). Operator 2026-09-09. */
+  /* PASTE A VIEW lives in the HEADER now (operator 2026-09-09): an icon left of the tier dots opens a small
+     popover with the box; a successful open closes the popover AND the journeys picker, and the loaded
+     view is what you see. It left the journeys panel because a view can be an entity too. */
+  .pasteview{ position:relative; display:flex; align-items:center; margin-right:8px; }
+  .pasteview .tbico.on{ color:#fff; background:var(--accent); }
+  #pastedd{ position:fixed; width:360px; z-index:120; display:none;   /* at the document ROOT: inside the header it lived in the bar's stacking context and painted UNDER the Fleet panel */
+    background:var(--panel-bg); border:1px solid var(--line); border-radius:10px; box-shadow:0 10px 30px #0008; }
+  #pastedd.open{ display:block; }
+  .jrnpaste{ padding:9px 10px 7px; }
+  .jrnpaste .pl{ font:700 9.5px/1.4 var(--font-ui); text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:4px; }
+  .jrnpaste .pr{ display:flex; gap:5px; align-items:stretch; }
+  .jrnpaste input{ flex:1 1 auto; min-width:0; font:400 10.5px/1.3 var(--font-mono); color:var(--ink);
+    background:var(--panel-bg); border:1px solid var(--line); border-radius:6px; padding:5px 7px; }
+  .jrnpaste input::placeholder{ color:var(--muted); }
+  .jrnpaste button{ flex:0 0 auto; font:700 10px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.04em;
+    padding:5px 10px; border:1px solid var(--line); border-radius:6px; background:transparent; color:var(--muted); cursor:pointer; }
+  .jrnpaste button:disabled{ opacity:.35; cursor:default; }
+  .jrnpaste button:not(:disabled){ color:var(--ink); border-color:var(--accent); background:color-mix(in srgb,var(--accent) 14%,transparent); }   /* lit = openable */
+  .jrnpaste button:not(:disabled):hover{ background:var(--accent); color:#fff; }
+  .jrnpaste .say{ font:400 10px/1.4 var(--font-ui); color:var(--muted); margin-top:5px; min-height:13px; }
+  .jrnpaste .say.bad{ color:#f0a04b; }
+  .jrnpaste .say.ok{ color:#22c55e; }
   #jrn .jrnrow{ display:flex; align-items:center; gap:7px; padding:4px 7px; border-radius:7px; cursor:pointer; font-size:11.5px; color:var(--ink); }
   #jrn .jrnrow:hover{ background:var(--hov-bg); }
   #jrn .jrnrow.on{ background:var(--accent); color:#fff; }
@@ -434,14 +473,14 @@
      Geometry: tracks --navw like the legend; shifts right under nav-min (the 32px restore tab owns that
      corner); max-height stays clear of the 470px legend below (min floor 240px). z between legend(45)
      and navshow(60). */
-  #fleet{ position:fixed; left:calc(var(--navw) + 12px); right:auto; top:calc(var(--topbarh) + 10px); z-index:50;
+  #fleet{ position:fixed; left:12px; right:auto;   /* HOLDS its position in both nav states (operator 2026-09-09) - it no longer follows --navw; an open sidebar slides OVER it */ top:calc(var(--topbarh) + 10px); z-index:50;
     width:344px; min-width:230px; max-width:520px; max-height:max(240px, calc(100vh - var(--topbarh) - 500px));
     overflow-y:auto; transition:left .18s ease; scrollbar-width:thin; }
   #fleet .flresize{ position:absolute; top:0; right:0; width:8px; height:100%; cursor:ew-resize; z-index:2;
     background:linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 22%, transparent)); opacity:0; transition:opacity .12s; }
   #fleet:hover .flresize, #fleet .flresize.on{ opacity:1; }
   #fleet.resizing{ transition:none; user-select:none; }
-  body.nav-min #fleet{ left:48px; }
+  /* body.nav-min #fleet{ left:48px } RETIRED 2026-09-09: the restore tab left the canvas for the header crumb, so there is nothing to clear */
   #fleet .flhead, #fleet .flrow{ display:flex; align-items:center; gap:3px; padding:1px 0; }
   #fleet .flhead{ margin-bottom:2px; border-bottom:1px solid var(--line); padding-bottom:3px; }
   #fleet .flmaster{ border-bottom:1px dotted var(--line); padding-bottom:3px; margin-bottom:2px; }
@@ -754,7 +793,7 @@
   .flagrow.ok{ color:var(--ok,#22c55e); border-color:color-mix(in srgb, var(--ok,#22c55e) 42%, transparent); background:color-mix(in srgb, var(--ok,#22c55e) 8%, transparent); }
   /* cross-boundary connection-stub hover label (operator): the hidden target's name + where it lives */
   .unistubtip{ position:fixed; z-index:60; pointer-events:none; max-width:280px; padding:5px 8px;
-    background:rgba(14,21,36,0.94); border:1px solid var(--accent); border-left-width:3px; border-radius:5px;
+    background:var(--surf-note); border:1px solid var(--accent); border-left-width:3px; border-radius:5px;
     font:500 11px/1.35 var(--font-mono); color:var(--ink); box-shadow:0 4px 16px rgba(0,0,0,0.45); }
   .unistubtip .ustname{ display:flex; align-items:center; gap:5px; font-weight:700; color:#fff; letter-spacing:-0.01em; }
   .unistubtip .ustname svg{ flex:0 0 auto; }
@@ -991,10 +1030,11 @@
   <button class="navmin" id="navmin" title="collapse the sidebar — more room for the graph" onclick="window.__uniNavToggle&&window.__uniNavToggle()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m16 15-3-3 3-3"/></svg> Minimize</button>
   <div class="foot">regen dev<br>HEAD devsha0 · build_center_a3.py</div>
 </nav>
-<button class="navshow" id="navshow" title="show the sidebar" onclick="window.__uniNavToggle&&window.__uniNavToggle()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m14 9 3 3-3 3"/></svg></button>
+
 <div class="topbar">
-  <div class="crumb"><a href="index.html">Overview</a> › <b>Gabe Universe</b> <span class="csub">· the ecosystem as a 5C universe · click an element for its card</span></div>
+  <div class="crumb"><button class="navshow" id="navshow" title="show / hide the sidebar" onclick="window.__uniNavToggle&&window.__uniNavToggle()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m14 9 3 3-3 3"/></svg></button><a href="index.html">Overview</a> › <b>Gabe Universe</b> <span class="csub">· the ecosystem as a 5C universe · click an element for its card</span></div>
   <div class="spacer"></div>
+  <div class="pasteview" id="pasteview"><button class="tbico" id="pasteBtn" title="paste a view \u2014 a journey, an entity, a commit or a test case copied from a mini pane; OPEN loads it here, focused" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11v6"/><path d="m9 14 3 3 3-3"/></svg></button><div id="pastedd"><div class="jrnpaste"><div class="pl">paste a view</div><div class="pr"><input type="text" placeholder='{"gabe":"pane-view",&hellip;}' spellcheck="false"><button disabled>open</button></div><div class="say"></div></div></div></div>
   <div class="tiersel" id="tiersel" role="group" aria-label="disclosure tier" title="disclosure tier — how much of the graph is shown, coarse to fine. Keys Alt+1…Alt+4 (plain 1–8 select fleet columns).">
     <button type="button" data-tier="0" title="T0 · Skeleton — the doors, tables & screens only (Alt+1)">T0</button>
     <button type="button" data-tier="1" title="T1 · Surface — + schemas, stores, providers & data-connectors (Alt+2)">T1</button>
@@ -1386,7 +1426,17 @@ function fieldOf(key){ return (MAP[ENC.setup]||DEFMAP)[key]||DEFMAP[key]; }
 function truthy(v){ return v===true || (typeof v==="number"&&v>0) || (typeof v==="string"&&v&&v!=="—"); }
 function heatVal(n){ var v=ENC.heatBy==="fanin"?(n.m.fanin||0)/MAXF : ENC.heatBy==="tests"?(n.m.tests||0)/MAXT : (n.m.behind||0)/MAXB; return v; }
 function heatCol(t){ t=Math.max(0,Math.min(1,t)); var c=new T.Color(); c.setHSL((1-t)*0.62, 0.72, 0.55); return c.getStyle(); }
-function dimCol(hex,t){ var c=new T.Color(hex); c.lerp(new T.Color("#0e1524"), t); return "#"+c.getHexString(); }
+function dimCol(hex,t){ var c=new T.Color(hex); c.lerp(new T.Color(window.__uniTheme==="light"?"#e8ecf3":"#0e1524"), t); return "#"+c.getHexString(); }   // fades toward the THEME ground (light: #e8ecf3)
+/* inkCol — a kind/entity colour used as TEXT ink: on the light ground the pastel roster falls under 3:1, so the label darkens (36% toward black) while the
+   glyph keeps the true colour; the raw colour rides beside it as data-c so __uniRetint() can re-ink every label on a theme switch without a rebuild. */
+function inkCol(hex){ if(window.__uniTheme!=="light"||!hex||String(hex)[0]!=="#") return hex;   // ADAPTIVE: scale the colour so its luminance lands at .16 (≥ 5:1 on white); an already-dark colour is untouched
+  try{ var h=String(hex).slice(1); if(h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2]; if(h.length!==6) return hex;
+    var ch=[0,2,4].map(function(i){ return parseInt(h.substr(i,2),16)/255; }), lin=function(v){ return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4); };
+    var L=0.2126*lin(ch[0])+0.7152*lin(ch[1])+0.0722*lin(ch[2]); if(!(L>0.16)) return hex;
+    var k=Math.pow(0.16/L, 1/2.2); return "#"+ch.map(function(v){ var x=Math.max(0,Math.min(255,Math.round(v*k*255))); return ("0"+x.toString(16)).slice(-2); }).join("");
+  }catch(e){ return hex; } }
+function onCol(hex){ try{ var h=String(hex||"").replace("#",""); if(h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2]; if(h.length!==6) return "#fff"; var ch=[0,2,4].map(function(i){ return parseInt(h.substr(i,2),16)/255; }), lin=function(v){ return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4); }; return (0.2126*lin(ch[0])+0.7152*lin(ch[1])+0.0722*lin(ch[2]))<0.35?"#fff":"#0e1524"; }catch(e){ return "#fff"; } }   // text ON a coloured fill: white on a dark fill, ink on a pastel one — theme-independent
+window.__uniRetint=function(){ try{ document.querySelectorAll("[data-c]").forEach(function(el){ el.style.color=inkCol(el.getAttribute("data-c")); }); }catch(e){} };
 
 /* ── ICON MODE A · primitive shapes ── */
 function primitiveMesh(k, col){
@@ -2975,7 +3025,8 @@ function _jrnPaint(p){ if(!window.__uniJrnKind) window.__uniJrnKind=(((window.GA
   p.querySelectorAll(".jglvl").forEach(function(g){                                    // middle-click a LEVEL header = FOCUS just that level (mirror the entity solo — operator gap)
     g.onauxclick=function(ev){ if(ev.button!==1) return; ev.preventDefault(); window.__uniJrnLvlSolo(g.getAttribute("data-ge")); _jrnPaint(p); };
     g.onmousedown=function(ev){ if(ev.button===1) ev.preventDefault(); }; });          // no autoscroll on the wheel button
-  p.querySelectorAll(".jrnrow").forEach(function(r){ r.onclick=function(){ __uniJrnStart(r.getAttribute("data-jr")); }; }); }
+  p.querySelectorAll(".jrnrow").forEach(function(r){ r.onclick=function(){ __uniJrnStart(r.getAttribute("data-jr")); }; });
+  }
 window.__uniJrnLvlSolo=function(key){ var keys={}; _jrnCollect().forEach(function(j){ if(j.wf) keys["lvl"+(j.level||99)]=1; }); keys=Object.keys(keys);
   var others=keys.filter(function(k){ return k!==key; });
   var soloed=others.length && others.every(function(k){ return window.__uniJrnCollapse[k]; }) && !window.__uniJrnCollapse[key];
@@ -2983,6 +3034,127 @@ window.__uniJrnLvlSolo=function(key){ var keys={}; _jrnCollect().forEach(functio
   if(!soloed) others.forEach(function(k){ window.__uniJrnCollapse[k]=1; }); };
 window.__uniJrnSolo=function(e){ var all=Object.keys(_jrnTouch()); var only=all.length&&all.every(function(x){ return x===e||window.__uniJrnExcl[x]; })&&!window.__uniJrnExcl[e];
   window.__uniJrnExcl={}; if(!only) all.forEach(function(x){ if(x!==e) window.__uniJrnExcl[x]=1; }); };   // already solo → middle-click again restores all
+/* -- PASTE A VIEW (operator 2026-09-09, spec'd the same day after first use) ----------------------
+   A mini pane elsewhere in the centre (docs/design/embed-graph) copies "what I am looking at" as a
+   small payload; the journeys panel opens it HERE with everything the station has around it.
+
+   THE FOUR RULES OF OPEN (operator):
+     1  paste never opens. Only the OPEN button (or Enter in the box) does.
+     2  open CLEARS FIRST - whatever journey, trail, selection, pins and highlight are live go before
+        the pasted view lands. A paste is a replacement, never an addition: without this the reader's
+        select path turned a running journey into a 7-step trail, and a journey with no drawn
+        carriers left the PREVIOUS journey standing while the say-line claimed success.
+     3  a journey opens at its FIRST element. The pane's own selection (`sel`) rides along as a note
+        ("the pane's selection is step N") so the walk controls can reach it - never as the position.
+     4  it opens FOCUSED. __uniJrnStart sets glow on purpose for a hand-picked journey; a pasted one
+        is asked to be focused, so the mode flips once here, after the walk exists.
+
+   WHAT THE PAYLOAD CARRIES: scope+id (a journey NAME / entity slug / commit sha / C-id) - sel (a node
+   id, never a step index: a pane lists AUTHORED endpoints, a station walk is fe+carriers, so index 3
+   is not index 3) - focus - head (the map it came from; another map still opens, and is reported).
+   Returns {ok, say}; the panel prints exactly what happened, and a failure re-shows the panel. */
+window.__uniPasteView=function(text){
+  var say=function(ok,msg){ return {ok:ok, say:msg}; };
+  var d=text;
+  if(typeof d==="string"){ d=d.trim(); if(!d) return say(false,"nothing pasted");
+    try{ d=JSON.parse(d); }catch(e){ return say(false,"not a view payload \u2014 expected JSON"); } }
+  if(!d || d.gabe!=="pane-view") return say(false,"not a view payload (missing gabe:\"pane-view\")");
+  var notes=[], tail=function(){ return notes.length?" \u2014 "+notes.join(" \u00b7 "):""; };
+  var here=(window.GABE_C4&&window.GABE_C4.head)||null;
+  if(d.head && here && d.head!==here) notes.push("from map "+d.head+", this station is "+here);
+
+  /* rule 2: clear first */
+  try{ __uniHLClear(); }catch(e){}
+  try{ SEL=null; }catch(e){}
+  /* the pane's TIER travels with the view (operator 2026-09-09: "carry over the tier view") — applied
+     BEFORE the open: a tier press re-applies the preset and clears any non-journey focus, so the
+     picture that follows is drawn at the pane's tier. A payload without a tier leaves the tier alone. */
+  var tiered=null;
+  if(typeof d.tier==="number" && window.__uniSetTier){ try{ __uniSetTier(d.tier); tiered=window.__uniTier; }catch(e){} }
+
+  var opened=null, n=null;
+  if(d.scope==="journey"){
+    var lv=String(d.id||"").toLowerCase();
+    var j=_jrnCollect().filter(function(x){ return x.cid===d.id || String(x.name||"").toLowerCase()===lv; })[0];
+    if(!j) return say(false,"no journey named \u201c"+d.id+"\u201d here"+tail());
+    __uniJrnStart(j.cid);
+    /* __uniJrnStart returns silently when a journey has no drawn carriers - verify the walk EXISTS
+       before reporting it, or the previous state is reported as the new one */
+    if(!(typeof WALK!=="undefined" && WALK.mode==="journey" && HL.jr===j.cid && WALK.steps.length)){
+      try{ __uniHLClear(); }catch(e){}
+      return say(false,"journey \u201c"+(j.name||j.cid)+"\u201d has no drawn steps on this map"+tail());
+    }
+    /* rule 3: the first element */
+    WALK.i=0; try{ _walkGo(0); }catch(e){} try{ window.__uniJdSync&&__uniJdSync(); }catch(e){}
+    opened="journey \u201c"+(j.name||j.cid)+"\u201d \u00b7 "+WALK.steps.length+" steps \u00b7 at step 1";
+    if(d.sel){ var si=WALK.steps.indexOf(d.sel);
+      notes.push(si>=0 ? "the pane\u2019s selection is step "+(si+1) : "the pane\u2019s selection is not on this walk"); }
+  } else if(d.scope==="entity"){
+    /* FRAME + FOCUS the cluster, not just its panel (operator 2026-09-09: "it's selecting the pantry
+       entity, but the camera doesn't go where the pantry entity is"). The fleet's own idiom (:3620):
+       the entity's node ids -> its panel -> _frameSet; and the journey's HL.exact makes that set the
+       focus, so everything outside the cluster hides. */
+    var eids=nodes.filter(function(x){ return x.ent===d.id; }).map(function(x){ return x.id; });
+    if(!eids.length) return say(false,"no entity \u201c"+d.id+"\u201d is drawn here"+tail());
+    try{ if(window.__uniPanelEnt) __uniPanelEnt(d.id); }catch(e){}
+    HL.jr=null; HL.jrObj=null; HL.exact=true; HL.mode="focus"; HL.origin=eids; HL.on=true; _hlCompute(); _hlRestyle();
+    try{ _frameSet(eids); }catch(e){}
+    opened="entity "+d.id+" \u00b7 "+eids.length+" pieces framed";
+    if(d.sel){ n=NIDS[d.sel]; if(!n) notes.push("the selected piece is not drawn here: "+d.sel); }
+  } else if(d.scope==="commit" || d.scope==="test"){
+    /* a COMMIT is a coverage journey this station already mints (commit:<sha>, _commitCollect) and a TEST
+       case is a journey by its C-id — both walk like a journey. Before this branch a pasted commit fell
+       through to the pane's one selected piece: a 55-piece change arrived as a single-node trail
+       (operator 2026-09-10, board seat → station). The pane sends the SHORT sha; match it either way. */
+    var key=String(d.id||"").toLowerCase();
+    var jj=_jrnCollect().filter(function(x){
+      if(d.scope==="test") return x.cid===d.id;
+      return !!x.commit && (x.cid===d.id || x.cid==="commit:"+d.id || String(x.short||"").toLowerCase()===key || String(x.cid).slice(7).toLowerCase().indexOf(key)===0); })[0];
+    if(!jj) return say(false,(d.scope==="commit"?"no commit \u201c"+d.id+"\u201d in this station\u2019s commits.js":"no test case \u201c"+d.id+"\u201d walks here")+tail());
+    __uniJrnStart(jj.cid);
+    if(!(typeof WALK!=="undefined" && WALK.mode==="journey" && HL.jr===jj.cid && WALK.steps.length)){
+      try{ __uniHLClear(); }catch(e){}
+      return say(false,(d.scope==="commit"?"commit "+(jj.short||jj.cid):"case "+jj.cid)+" touched nothing drawn on this map"+tail());
+    }
+    WALK.i=0; try{ _walkGo(0); }catch(e){} try{ window.__uniJdSync&&__uniJdSync(); }catch(e){}
+    opened=(d.scope==="commit"?"commit "+(jj.short||jj.cid)+" \u00b7 "+WALK.steps.length+" touched pieces":"case "+jj.cid+" \u00b7 "+WALK.steps.length+" pieces")+" \u00b7 at step 1";
+    if(d.sel){ var ci=WALK.steps.indexOf(d.sel);
+      notes.push(ci>=0 ? "the pane\u2019s selection is step "+(ci+1) : "the pane\u2019s selection is not on this walk"); }
+  } else if(d.scope){
+    notes.push("scope \u201c"+d.scope+"\u201d has no station walk");
+    if(d.sel){ n=NIDS[d.sel]; if(!n) notes.push("the selected piece is not drawn here: "+d.sel); }
+  }
+  /* a standalone selection (never while a journey walks - __uniHLSelect would turn the walk into a trail) */
+  if(n && WALK.mode!=="journey"){
+    SEL={kind:"node",data:n}; showPanel(n); refreshEncSel();
+    if(window.__uniHLSelect) __uniHLSelect(n);
+    opened=(opened?opened+" \u00b7 ":"")+(n.label||d.sel);
+  }
+  /* rule 4: focused */
+  if(d.focus!==false && typeof HL!=="undefined" && HL.on && HL.mode!=="focus" && window.__uniHLMode) __uniHLMode();
+  if(!opened) return say(false,"nothing in the payload to open"+tail());
+  return say(true,"opened "+opened+(tiered!=null?" \u00b7 T"+tiered:"")+tail());
+};
+/* the header PASTE A VIEW popover — wired once at boot; the reader is __uniPasteView above */
+(function(){ var wrap=document.getElementById("pasteview"); if(!wrap) return;
+  var btn=document.getElementById("pasteBtn"), dd=document.getElementById("pastedd"), pw=dd.querySelector(".jrnpaste");
+  var pi=pw.querySelector("input"), pb=pw.querySelector("button"), ps=pw.querySelector(".say");
+  document.body.appendChild(dd);   /* out of the header's stacking context, or the Fleet panel paints over it */
+  var show=function(on){ if(on){ var r=btn.getBoundingClientRect(); dd.style.left=Math.round(r.left)+"px"; dd.style.top=Math.round(r.bottom+6)+"px"; }
+    dd.classList.toggle("open",!!on); btn.classList.toggle("on",!!on); btn.setAttribute("aria-expanded",on?"true":"false"); if(on) setTimeout(function(){ pi.focus(); },0); };
+  var arm=function(){ pb.disabled=!pi.value.trim(); };   /* OPEN lights only when there is something to open */
+  var go=function(){ if(pb.disabled) return; var r=window.__uniPasteView(pi.value);
+    ps.className="say"+(r.ok?" ok":" bad"); ps.textContent=r.say;
+    if(r.ok){ pi.value=""; arm(); show(false);                                   /* loaded: the popover goes... */
+      var jp=document.getElementById("jrn"); if(jp) jp.style.display="none";       /* ...and so does the journeys picker (operator) */
+      try{ _stepNote(); }catch(e){} } };
+  btn.onclick=function(e){ e.stopPropagation(); show(!dd.classList.contains("open")); };
+  dd.addEventListener("click",function(e){ e.stopPropagation(); });
+  document.addEventListener("click",function(){ if(dd.classList.contains("open")) show(false); });
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape"&&dd.classList.contains("open")){ show(false); btn.focus(); } });
+  pb.onclick=go; pi.oninput=arm; arm();
+  pi.onkeydown=function(e){ if(e.key==="Enter"){ e.preventDefault(); go(); } };   /* Enter = the button; PASTE ALONE NEVER OPENS (operator) */
+})();
 window.__uniJrnToggle=function(){ var p=document.getElementById("jrn"); if(!p) return;
   if(p.style.display!=="none"){ p.style.display="none"; _stepNote(); return; }
   _jrnPaint(p); p.style.display=""; _stepNote(); };
@@ -3030,7 +3202,7 @@ function _stepNote(){ var el=document.getElementById("stepnote"); if(!el) return
   el.innerHTML='<div class="snhd"><span class="snpos">'+(WALK.i+1)+'/'+WALK.steps.length+'</span>'
     +(typeof svgInline==="function"&&kind!=="?"?('<span style="display:inline-flex;flex:none">'+svgInline(n?_dispGlyph(n):kind, col, 14)+'</span>'):"")
     +'<span class="snlbl" title="'+esc(lbl)+'">'+esc(lbl)+'</span><span class="snkind">'+esc(n&&_isView(n)?"view":kind)+'</span>'
-    +(ent?('<span class="snent" style="background:'+col+'">'+esc(ent)+'</span>'):"")
+    +(ent?('<span class="snent" style="background:'+col+';color:'+onCol(col)+'">'+esc(ent)+'</span>'):"")
     +'<span class="snnav"><button class="snmin" title="minimize to the title / expand">–</button><button title="previous step (Alt+A)" data-sd="-1">‹</button><button title="next step (Alt+D)" data-sd="1">›</button></span></div>'
     +'<div class="snwhat">'+what+'</div>'+(hop?('<div class="snhop">'+hop+'</div>'):"")
     +(doc?('<div class="sndoc">'+esc(doc)+'</div>'):"");
@@ -3098,7 +3270,7 @@ function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document
     if(!_wActive){ wb.style.display=""; wb.innerHTML='<div class="widle">nothing walking yet — click an element, or open a journey from the workflows tab</div>';
       try{ _stepNote(); }catch(e){} }   // the panel is PERMANENT now, so an empty trail says what it is instead of vanishing; a cleared walk still takes the step note down
     else { var chips=WALK.steps.map(function(id,i){ var n=NIDS[id]; if(!n) return "";
-        return '<button class="wchip'+(i===WALK.i?" on":"")+'" data-wi="'+i+'" title="'+n.label+' · '+n.ent+'" style="color:'+(n.col||"#9ab")+'">'+(i+1)+'</button>'; }).join("");
+        return '<button class="wchip'+(i===WALK.i?" on":"")+'" data-wi="'+i+'" title="'+n.label+' · '+n.ent+'" style="color:'+inkCol(n.col||"#9ab")+'" data-c="'+(n.col||"#9ab")+'">'+(i+1)+'</button>'; }).join("");
       var _wtitle=(WALK.mode==="journey" && HL.jrObj)?(HL.jrObj.name||HL.jrObj.cid):"trail";   // a journey trail wears the journey's name
       var _WX='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
       wb.style.display=""; wb.innerHTML='<div class="wjhd"><span class="wjname" title="'+(WALK.mode==="journey"?"the selected journey IS the current trail — navigate with the chips or Alt+A/D":"trail")+'">'+_wtitle+'</span><button class="wclear tbico" title="clear the trail (Esc)">'+_WX+'</button></div>'
@@ -3118,6 +3290,8 @@ window.__uniApplyTheme=function(th){ th=(th==="light")?"light":"dark"; window.__
   try{ document.documentElement.setAttribute("data-theme", th); }catch(e){}
   try{ Graph.backgroundColor(th==="light"?"#e8ecf3":"#0e1524"); }catch(e){}
   try{ updateConnectors(); }catch(e){}
+  try{ __uniRetint(); }catch(e){}                                        // legend + card labels: kind colours darkened as ink on the light ground
+  try{ Graph.linkColor(Graph.linkColor()); }catch(e){}                   // re-evaluate every wire: dimCol fades toward the new ground
   try{ window.localStorage.setItem("gabe:universe:theme", th); }catch(e){}
   var b=document.getElementById("themeBtn");
   if(b){ b.classList.toggle("on", th==="light");
@@ -4648,7 +4822,7 @@ window.__uniLegRef=function(){
     var _on=(_st!=="off"); var ico=(typeof svgInline==="function")?svgInline(k, Kd.col, 18):"";
     var _desc=_LRDESC[k]||((Kd.usage&&Kd.usage[1])||"");
     return '<div class="lrrow'+_dimCls(_t)+'"><button class="lrflag'+(_on?" on":"")+'" data-flagk="'+k+'" title="'+(_on?"drawn — click to hide":"hidden — click to show")+'"></button>'
-      +'<span class="lrico">'+ico+'</span><div class="lrtx"><b style="color:'+Kd.col+'">'+_esc(Kd.type||k)+'</b>'
+      +'<span class="lrico">'+ico+'</span><div class="lrtx"><b style="color:'+inkCol(Kd.col)+'" data-c="'+Kd.col+'">'+_esc(Kd.type||k)+'</b>'
       +'<i>'+_esc(_desc)+'</i></div><div class="lrdef">'+_esc(_LRDEF[k]||"")+'</div>'+(noEx?'':_exChip(_exKind(k)))+_tierCell(_t,"kind")+'</div>'; }   // TIER is the LAST column (operator: one right axis)
   // a BADGE row (indented under its type): badge glyph · name · description · example · TIER (last)
   function _badgeRow(kind,key,name,desc,ex,tier){ return '<div class="lrrow lrb'+_dimCls(tier)+'"><span class="lrico">'+_badgeCanvas(kind,key)+'</span>'
@@ -4952,8 +5126,8 @@ window.__uniJrnDetail=function(){
     return fields.length?('<div class="cpf">'+fields.slice(0,26).map(function(f){ return '<div class="cpfr"><span class="cpfn">'+_esc(f.n)+'</span>'+(f.t?('<span class="cpft">'+_esc(f.t)+'</span>'):'')+'</div>'; }).join("")+(fields.length>26?('<div class="cpmore">+'+(fields.length-26)+' more</div>'):'')+'</div>')
          :'<div class="cpempty">no fields recorded'+(kd==="store"?" — a context; see its exports on the card":"")+'</div>'; }
   function _cpHdr(node){ var kd=node.kind, ec=((node.ent&&typeof ENT!=="undefined"&&ENT[node.ent])||KC[kd]||"#9ab");
-    return '<div class="cphd">'+(typeof svgInline==="function"?svgInline(kd,KC[kd]||ec,15):"")+'<b style="color:'+ec+'">'+_esc(node.label)+'</b></div>'
-      +'<div class="cpsub">'+_esc(_cpKindLbl(kd))+(node.ent?(' · <span style="color:'+ec+'">'+_esc(node.ent)+'</span>'):'')+'</div>'; }
+    return '<div class="cphd">'+(typeof svgInline==="function"?svgInline(kd,KC[kd]||ec,15):"")+'<b style="color:'+inkCol(ec)+'" data-c="'+ec+'">'+_esc(node.label)+'</b></div>'
+      +'<div class="cpsub">'+_esc(_cpKindLbl(kd))+(node.ent?(' · <span style="color:'+inkCol(ec)+'" data-c="'+ec+'">'+_esc(node.ent)+'</span>'):'')+'</div>'; }
   function _jdColPop(anchor, node){ if(!node){ _jdColPopHide(); return; }
     _jdPop(anchor, _cpHdr(node)+_cpFields(node)+'<div class="cpclick">click → open it in the graph</div>'); }
   // CONSOLIDATED cell popover — the STEP doing the touch (element · kind · entity · operation · role here)
@@ -4965,10 +5139,10 @@ window.__uniJrnDetail=function(){
     var rl=role==="in"?"reads":role==="out"?"writes":role==="both"?"reads + writes":role==="self"?"defined here":"touches";
     var rc=role==="in"?"#22c55e":role==="out"?"#f97316":role==="both"?"#a855f7":"#12b886";
     var suffix=role==="in"?" (input)":role==="out"?" (output)":"";
-    var h='<div class="cphd">'+(typeof svgInline==="function"?svgInline(sn.kind,KC[sn.kind]||snEc,15):"")+'<b style="color:'+snEc+'">'+_esc(sn.label)+'</b></div>'
-      +'<div class="cpsub">'+_esc(sn.kind)+(sn.ent?(' · <span style="color:'+snEc+'">'+_esc(sn.ent)+'</span>'):'')+'</div>';
-    if(sd&&sd.op) h+='<div class="cprow"><span class="cpk">operation</span><span class="cpv" style="color:'+opC+'">'+_esc(sd.op)+'</span></div>';
-    h+='<div class="cprow"><span class="cpk">here</span><span class="cpv" style="color:'+rc+'">'+rl+' this '+_esc(colNode.kind)+suffix+'</span></div>';
+    var h='<div class="cphd">'+(typeof svgInline==="function"?svgInline(sn.kind,KC[sn.kind]||snEc,15):"")+'<b style="color:'+inkCol(snEc)+'" data-c="'+snEc+'">'+_esc(sn.label)+'</b></div>'
+      +'<div class="cpsub">'+_esc(sn.kind)+(sn.ent?(' · <span style="color:'+inkCol(snEc)+'" data-c="'+snEc+'">'+_esc(sn.ent)+'</span>'):'')+'</div>';
+    if(sd&&sd.op) h+='<div class="cprow"><span class="cpk">operation</span><span class="cpv" style="color:'+inkCol(opC)+'" data-c="'+opC+'">'+_esc(sd.op)+'</span></div>';
+    h+='<div class="cprow"><span class="cpk">here</span><span class="cpv" style="color:'+inkCol(rc)+'" data-c="'+rc+'">'+rl+' this '+_esc(colNode.kind)+suffix+'</span></div>';
     h+='<div class="cpsep"></div>'+_cpHdr(colNode)+_cpFields(colNode)+'<div class="cpclick">click → open '+_esc(colNode.label)+' in the graph</div>';
     _jdPop(anchor, h); }
   // FROM/TO cell popover — the FULL grouped content (every relation + every name, uncut) (operator 2026-09-03)
@@ -5780,7 +5954,7 @@ var KINDCARD=(function(){
   function _phead(title, sub, glyph, col){ var c=col||"var(--accent)";
     var _hx=window.__uniEsc||function(x){ return String(x==null?"":x); };
     document.getElementById("phead").innerHTML="<div class='ptitle'><div class='pname'>"+_hx(title)+"</div>"
-      +"<div class='ptype' style='color:"+c+"'>"+pico(glyph||"entity",null, col?col:undefined)+"<span>"+_hx(sub)+"</span></div></div>"
+      +"<div class='ptype' style='color:"+inkCol(c)+"' data-c='"+c+"'>"+pico(glyph||"entity",null, col?col:undefined)+"<span>"+_hx(sub)+"</span></div></div>"
       ;   // the collapse chevron lives in the panel FOOTER now (the walk bar owns the top)
     document.getElementById("prailname").textContent=title; }
   P.drill='<polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/>';       // trailing DOWN-a-level marker
@@ -6106,7 +6280,7 @@ function showPanel(n){ var K=_dispK(n); try{ if(window.__uniCardPrune) __uniCard
           : (n.kind==="function" && n.role) ? {kind:"role", key:n.role} : (n.kind==="provider" && n.pclass) ? {kind:"pclass", key:n.pclass} : null;
   var _bdesc = (_bk && window.__BADGE_DESC && window.__BADGE_DESC[_bk.kind]) ? window.__BADGE_DESC[_bk.kind][_bk.key] : null;
   document.getElementById("phead").innerHTML="<div class='ptitle'><div class='pname'>"+(n.label||K.label)+"</div>"
-      +"<div class='ptype' style='color:"+K.col+"'>"+svgInline(_dispGlyph(n),K.col,15)+"<span>"+K.type+"</span>"
+      +"<div class='ptype' style='color:"+inkCol(K.col)+"' data-c='"+K.col+"'>"+svgInline(_dispGlyph(n),K.col,15)+"<span>"+K.type+"</span>"
       +(_bk?"<span class='pheadbadge' id='pheadbadge'></span>":"")   // meaning on the INSTANT popup below (operator: no native-title delay)
       +(n.ent?"<span style='color:var(--muted);font-weight:600'> · "+n.ent+"</span>":"")+"</div></div>"
       ;   // the collapse chevron lives in the panel FOOTER now (the walk bar owns the top)
@@ -6302,14 +6476,14 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
         var _dot=_bcol?('<span style="position:absolute;right:0;bottom:0;width:6px;height:6px;border-radius:999px;background:'+_bcol+'"></span>'):'';
         var _tag=(it.fc==="view")?" · a screen":(it.fc==="private")?" · plain":"";
         var _flbl=(it.fc==="view")?"View":it.fc, _ftit=(it.fc==="view")?"the View type — a screen-level component (the merged view + screen)":("component class "+it.fc);
-        h+='<div class="lgrow lgk lgfc'+(_fcoff?" lgoff":"")+'" data-lgfc="'+it.fc+'" title="'+_ftit+' — click to '+(_fcoff?"show":"hide")+'"><div class="lgvis" style="position:relative">'+_fcico+_dot+'</div><div class="lglbl"><b style="color:'+(_bcol||_COMPCOL)+'">'+_flbl+'</b>'+(_tag?('<i style="color:var(--muted)">'+_tag+'</i>'):'')+'</div></div>'; return; }
+        h+='<div class="lgrow lgk lgfc'+(_fcoff?" lgoff":"")+'" data-lgfc="'+it.fc+'" title="'+_ftit+' — click to '+(_fcoff?"show":"hide")+'"><div class="lgvis" style="position:relative">'+_fcico+_dot+'</div><div class="lglbl"><b style="color:'+inkCol(_bcol||_COMPCOL)+'" data-c="'+(_bcol||_COMPCOL)+'">'+_flbl+'</b>'+(_tag?('<i style="color:var(--muted)">'+_tag+'</i>'):'')+'</div></div>'; return; }
       if(it.t==="kind"){ var K=KINDS[it.k];
         var _st=(window.__uniKindState&&__uniKindState[it.k])||(it.k==="type"?"off":"all");
         var _cls=(_st==="off")?"lgoff":"";
         var _t=(_st==="off")?"hidden — click to show":"showing — click to hide";
         var _bik=(it.k==="endpoint")?"method":(it.k==="function")?"role":(it.k==="schema")?"count":(it.k==="component")?"feclass":(it.k==="module")?"mclass":(it.k==="hook")?"hrole":(it.k==="provider")?"pclass":null;   // badged kinds carry a badge-KEY info dot (operator): endpoint methods · function roles · schema fold count · component classes
         var _bi=_bik?('<button class="lgbi" data-badgeinfo="'+_bik+'" title="badge key — '+(_bik==="method"?"the HTTP methods":(_bik==="role")?"the four function roles":(_bik==="feclass")?"the component classes (how each is drawn)":(_bik==="mclass")?"the module classes (what each file is for)":(_bik==="hrole")?"the hook roles (what each hook does)":(_bik==="pclass")?"the provider classes (what kind of outside service)":"the nested-only fold count")+'"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg></button>'):'';
-        h+='<div class="lgrow lgk '+_cls+'" data-lgk="'+it.k+'" title="'+_t+' · '+K.type+'"><div class="lgvis">'+svgInline(it.k,K.col,17)+'</div><div class="lglbl"><b style="color:'+K.col+'">'+K.type+'</b>'+_bi+'</div></div>'; return; }   // the node KIND — a 3-STATE control (all · critical · off) + badge-key dot
+        h+='<div class="lgrow lgk '+_cls+'" data-lgk="'+it.k+'" title="'+_t+' · '+K.type+'"><div class="lgvis">'+svgInline(it.k,K.col,17)+'</div><div class="lglbl"><b style="color:'+inkCol(K.col)+'" data-c="'+K.col+'">'+K.type+'</b>'+_bi+'</div></div>'; return; }   // the node KIND — a 3-STATE control (all · critical · off) + badge-key dot
       if(it.t==="ship"||it.t==="sat"){ var i=thumbs.length; thumbs.push(it);
         h+='<div class="lgrow"><div class="lgvis"><canvas class="lgcv" width="42" height="36" data-i="'+i+'"></canvas></div><div class="lglbl">'+it.l+'</div></div>'; return; }
       if(it.t==="band"){ var _bc=hx((window.BANDPAL&&window.BANDPAL[it.i]!=null)?window.BANDPAL[it.i]:0x888888); h+='<div class="lgrow"><div class="lgvis"><svg class="lgln" style="width:30px;height:8px" viewBox="0 0 30 8"><path d="M1 4 H29" fill="none" stroke="'+_bc+'" stroke-width="3"/></svg></div><div class="lglbl">'+_lglbl(it.l)+'</div></div>'; return; }

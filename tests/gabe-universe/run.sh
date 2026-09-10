@@ -378,7 +378,15 @@ check('if(all||s.nodes||s.routes){ try{ buildTransports' in page,
       "show routing skips buildTransports — MOVERS rebuild nowhere else")
 check('window.__uniBuildFleet) __uniBuildFleet()' in page and 'window.__uniApplyVisPreset=function' in page,
       "fleet panel not built at boot / preset entry point missing")
-check('body.nav-min #fleet{ left:48px' in page, "fleet panel does not clear the nav-restore tab under nav-min")
+# the Fleet panel HOLDS its position in both nav states (operator 2026-09-09): it no longer follows --navw and the
+# restore tab moved into the header crumb, so nothing shoves it. An open sidebar slides OVER it (nav.side above #fleet).
+check('#fleet{ position:fixed; left:12px;' in page and 'body.nav-min #fleet{ left:48px; }' not in page,
+      "fleet FIRE: the panel must hold left:12px in both nav states - a --navw anchor or the 48px shove moves it when the sidebar toggles")
+check('if(typeof d.tier==="number" && window.__uniSetTier){ try{ __uniSetTier(d.tier);' in page
+      and page.index('__uniSetTier(d.tier)') < page.index('if(d.scope==="journey"){', page.index('window.__uniPasteView=function')),
+      "paste reader must apply the payload's TIER before it opens the view (operator 2026-09-09)")
+check('<div class="crumb"><button class="navshow" id="navshow"' in page and 'body nav.side{ z-index:56; }' in page,
+      "fleet FIRE: the sidebar toggle lives in the header crumb and the open sidebar slides OVER the instruments")
 check('.fleethid{' in page and 'fltog.mdim' in page, "card hidden-note CSS / masters-dim CSS missing")
 # batch 11-B2: per-entity fleet-zone gates (global AND entity) + zones/routes columns
 check('(CFG.zDef&&visN(n).zDef)? placeFleet(' in page and '(CFG.zAtk&&visN(n).zAtk)? placeFleet(' in page,
@@ -1408,13 +1416,14 @@ check('capsule:"a FOLDED area' in page and '" folded"' in page and '__uniPanelAl
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental detached is caught, not waved through) ──
 SHARED = {"LANG","PROJECT_NAME","HEAD_SHA","REGEN_STAMP","GENERATOR_NAME","ENTITY_COUNT","TESTS_COUNT",
-          "SIDEBAR_ENTITIES","SIDEBAR_CODE","SIDEBAR_LEAF","STATUS_PILLS"}
+          "SIDEBAR_ENTITIES","SIDEBAR_CODE","SIDEBAR_LEAF","STATUS_PILLS",
+          "SIDEBAR_FE"}   # filled by the LATE pass at the end of build_center_a3.main() (the C4 feed is built after the glob loop), on every page
 toks = set(re.findall(r'\{\{([A-Z_]+)\}\}', page))
 detached = toks - SHARED
 check(not detached, "page carries tokens the glob build cannot fill on every page: "+", ".join(sorted(detached)))
 
 # ── 11b. reverse nav symmetry: the station's OWN nav links back to the core sibling stations ──
-for href in ('href="index.html"', 'href="codebase-graph.html"', 'href="codebase-archive-lab.html"', 'href="tests.html"'):
+for href in ('href="index.html"', 'href="tests.html"', 'href="entity-index.html"'):
     check(href in page, "station nav missing a sibling backlink: "+href)
 
 print(f"  static: {pass_} passed, {fail} failed")
@@ -1424,10 +1433,21 @@ STATIC=$?
 
 # ── 12. nav consistency: every sibling full-nav page carries the Gabe Universe item ──
 MISS=0
-for f in index board architecture entity-index docs codebase-archive tests releases codebase-graph ledger codebase-archive-lab feature; do
+for f in index board architecture entity-index docs tests releases ledger feature; do
   grep -q 'href="gabe-universe.html"' "$SHELL_SRC/$f.html" || { echo "  FAIL: $f.html nav missing the Gabe Universe item"; MISS=1; }
 done
-[ "$MISS" = 0 ] && echo "  nav-consistency: 12/12 sibling pages carry the item"
+[ "$MISS" = 0 ] && echo "  nav-consistency: 9/9 sibling pages carry the item"
+# ── 12b. the retired stations stay retired: not in the shell, linked by no live page or asset ──
+for f in codebase-graph codebase-archive codebase-archive-lab; do
+  [ -e "$SHELL_SRC/$f.html" ] && { echo "  FAIL: $f.html is back in the shell (retired 2026-09-10)"; MISS=1; }
+  grep -l "href=\"$f.html\"" "$SHELL_SRC"/*.html "$SHELL_SRC"/assets/*.js 2>/dev/null | grep -q . && { echo "  FAIL: a live page or asset still links $f.html"; MISS=1; }
+done
+# every full-nav page splits the Entities group into backend + frontend, the frontend half a late-filled slot
+for f in index board architecture entity-index docs tests releases ledger feature gabe-universe; do
+  grep -q 'Entities · backend' "$SHELL_SRC/$f.html" && grep -q 'Entities · frontend' "$SHELL_SRC/$f.html" && grep -q '{{SIDEBAR_FE}}' "$SHELL_SRC/$f.html" \
+    || { echo "  FAIL: $f.html nav lacks the backend/frontend entity split"; MISS=1; }
+done
+[ "$MISS" = 0 ] && echo "  retired-stations: none present, none linked · entity split on 10/10 pages"
 
 # ── 13. OPTIONAL headless render proof against the committed example feed ──
 EXPAGE="$SHELL_SRC/example/codebase-graph-station/gabe-universe.html"
@@ -2005,5 +2025,20 @@ else
   TIERS=0
 fi
 
-[ "$STATIC" = 0 ] && [ "$MISS" = 0 ] && [ "$RENDER" = 0 ] && [ "$TIERS" = 0 ] && { echo "gabe-universe battery: ALL PASS"; exit 0; }
+# ── 13c. OPTIONAL light-theme proof (operator 2026-09-10: "when I change to the light theme, a lot of things do not change
+#    color"). theme-probe.mjs measures every visible element's computed colours in DARK, flips through the station's own switch,
+#    and asserts every grey surface flips and no text falls under 3:1 outside the rail — by measurement, never by eye. ──
+VTHEME="$REPO/tests/gabe-universe/theme-probe.mjs"
+if [ -x "$CHROME" ] && [ -d "$PWDIR" ] && [ -f "$EXPAGE" ] && [ -f "$VTHEME" ]; then
+  if GABE_CHROME_BIN="$CHROME" GABE_PW_DIR="$PWDIR" node "$VTHEME" "$EXPAGE"; then
+    THEME=0
+  else
+    THEME=1; echo "  theme: FAIL — theme-probe.mjs found a surface or a label that does not survive the light theme (see the lines above)"
+  fi
+else
+  echo "  theme: SKIP ⚠ — LIGHT-THEME COVERAGE DID NOT RUN (no chrome/playwright-core/example on this host)."
+  THEME=0
+fi
+
+[ "$STATIC" = 0 ] && [ "$MISS" = 0 ] && [ "$RENDER" = 0 ] && [ "$TIERS" = 0 ] && [ "$THEME" = 0 ] && { echo "gabe-universe battery: ALL PASS"; exit 0; }
 echo "gabe-universe battery: FAILURES ABOVE"; exit 1
