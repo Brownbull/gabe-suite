@@ -264,7 +264,7 @@ def _cross_edges(entities: dict[str, Any],
     where the two models live in DIFFERENT entities.
 
     The L1 edges aggregate these per entity-pair and DROP which model/column carried
-    the FK; this keeps the piece resolution so a renderer (the codebase-archive
+    the FK; this keeps the piece resolution so a renderer (the Gabe Universe; the codebase-archive page retired 2026-09-10
     ecosystem view) can draw connections between the COMPONENTS of different entities,
     not just between entity centres. Intra-entity FKs are L2 detail; a FK to an
     unclaimed/library table (no owning entity) has no target piece and is excluded.

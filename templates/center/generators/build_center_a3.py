@@ -412,6 +412,39 @@ def _sidebar_entity(s: dict) -> str:
 sidebar_entities = "\n  ".join(_sidebar_entity(s) for s in sections) \
     or '<span class="navsub" style="opacity:.5">no shortlist yet</span>'
 
+
+# The FRONTEND half of the Entities group (operator 2026-09-10: "separate the entities from backend and
+# frontend"). adoption.json knows only backend entities; the frontend estate is the C4 feed's `fe.homes`
+# (kind fe = paired to a backend twin · candidate = a feature dir with no twin · bucket = shared frontend,
+# app-shell/design-system — infrastructure, counted never listed). A frontend entity has no page of its own:
+# each item deep-links into the Gabe Universe (`?ent=fe·<slug>` opens that entity's panel), wearing its
+# backend twin's icon so the two halves read as one entity. Filled LATE — the feed is built after the
+# generic page pass — by the {{SIDEBAR_FE}} pass at the end of main(); honest-empty without the arm.
+def _sidebar_fe(homes, present: bool, reason: str = "") -> str:
+    if not present:
+        return f'<span class="navsub" style="opacity:.5">no frontend arm — {E(reason or "not detected")}</span>'
+    order = {s["entity"]: i for i, s in enumerate(sections)}
+    paired = sorted([h for h in homes if h.get("kind") in ("fe", "entity")],
+                    key=lambda h: order.get(h.get("pair") or h["id"], 999))
+    cands = sorted([h for h in homes if h.get("kind") == "candidate"], key=lambda h: h["id"])
+    buckets = [h for h in homes if h.get("kind") == "bucket"]
+    items = []
+    for h in paired:
+        pair = h.get("pair") or h["id"]; label = LABELS.get(pair, pair); n = h.get("pieces", 0)
+        items.append(f'<a class="navitem" href="gabe-universe.html?ent={E(h["id"])}" '
+                     f'title="frontend of {E(label)} · {n} pieces — opens its panel in the Gabe Universe">'
+                     f'{entity_icon(pair, label=label)} {E(label)} <span class="count">{n}</span></a>')
+    for h in cands:
+        n = h.get("pieces", 0)
+        items.append(f'<a class="navitem" style="opacity:.55" href="gabe-universe.html?ent={E(h["id"])}" '
+                     f'title="frontend candidate · {n} pieces · no backend twin — /gabe-cc-init rank weighs it">'
+                     f'{entity_icon(h["id"], label=h["id"])} {E(h["id"])} <span class="count">candidate</span></a>')
+    if buckets:
+        names = " · ".join(f'{h["id"]} {h.get("pieces", 0)}' for h in buckets)
+        items.append(f'<span class="navsub" style="opacity:.6" title="shared frontend, not an entity: {E(names)}">'
+                     f'{len(buckets)} shared bucket(s) — in the universe</span>')
+    return "\n  ".join(items) or '<span class="navsub" style="opacity:.5">no frontend entity yet</span>'
+
 # {{SIDEBAR_CODE}} — the Architecture item lights up only when architecture.html
 # is on disk (this generator writes it every run, so it is always lit here); a
 # project that has not built the station yet gets an honest muted line, never a
@@ -1906,6 +1939,11 @@ def render_testing() -> dict[str, str]:
     }
 
 
+# Retired 2026-09-10 (operator): the Change graph, the Codebase archive and the Levels lab. Their feeds
+# (c4-graph · levels · sim.data) stay — the Gabe Universe reads them; sim-archive is no longer emitted.
+RETIRED_PAGES = frozenset({"codebase-graph.html", "codebase-archive.html", "codebase-archive-lab.html"})
+
+
 def main() -> int:
     if not SHELL_SRC.exists():
         print(f"⛔ shell templates missing: {SHELL_SRC}")
@@ -1941,6 +1979,9 @@ def main() -> int:
         # assembled after this loop. The generic pass would ship them slot-empty.
         if src.name in ("architecture.html", "board.html"):
             continue
+        if src.name in RETIRED_PAGES:   # a stale shell copy (a twin's vendored shell) never re-emits a retired station
+            print(f"    skipped {src.name} — retired 2026-09-10 (the Gabe Universe is the one codebase-graph station); delete it from this shell")
+            continue
         text = strip_slot_doc_comments(src.read_text())
         for tok, val in SHARED.items():
             text = text.replace(tok, val)
@@ -1958,6 +1999,7 @@ def main() -> int:
     )
     for name in build_feature_pages(ctx):
         wrote.append((name, 0))
+    _fe_sidebar = _sidebar_fe([], False, "no C4 graph this build")   # overwritten once the feed is built
 
     # The committed architecture map — machine-derived (ast), regenerated every
     # build, diffable in PRs. Consumers read THIS instead of re-analyzing code.
@@ -2211,6 +2253,9 @@ def main() -> int:
                   (" · path collisions %d" % ((_nm.get("collisions") or {}).get("path") or 0)),
                   (" · ⚠ %s" % _nm["config_error"]) if _nm.get("config_error") else ""))
         _a3_graph.emit(_graph, CENTER_OUT)      # emitted AFTER the evidence + models attach — the stats carry stats.homing / stats.models
+        _fe_sidebar = _sidebar_fe(((_graph.get("fe") or {}).get("homes") or []),
+                                  bool((_graph["stats"].get("fe") or {}).get("present")),
+                                  (_graph["stats"].get("fe") or {}).get("reason") or "")
         wrote.append(("c4-graph.json", 0))
         _st = _graph["stats"]
         _gst = _st.get("graft") or {}
@@ -2318,22 +2363,9 @@ def main() -> int:
                         "// workflows tab, then move an accepted entry into workflows.js. Honest-empty until drafted.\n"
                         "window.GABE_WORKFLOWS_DRAFT = [];\n", encoding="utf-8")
 
-    # The per-phase ARCHIVE (Graph 2 replays past changes) — accumulate the CURRENT
-    # phase's projection, keyed by phase id; completed phases stay frozen. COMMITTED +
-    # diffable (unlike the ephemeral sim.data.js), so the memory of past changes
-    # survives across sessions/clones (operator ruling 2026-08-12: committed accumulator,
-    # per completed phase). Reads the prior archive from the source center, upserts, writes.
-    try:
-        _archf = CENTER / "sim-archive.json"
-        _existing = json.loads(_archf.read_text()) if _archf.is_file() else None
-        _archive = _a3_sim.archive_upsert(_existing, _sim, _inflight)
-        _a3_sim.emit_archive(_archive, CENTER_OUT)
-        wrote.append(("sim-archive.json", 0))
-        if _sim is not None:
-            print(f"    wrote docs/site/center/sim-archive.json — {len(_archive['phases'])} "
-                  f"archived phase(s)")
-    except Exception as _e:  # noqa: BLE001
-        print(f"    ⚠ sim-archive skipped: {_e}")
+    # sim-archive.{json,js} — the per-phase archive — is NO LONGER EMITTED (2026-09-10): its only reader was the
+    # retired codebase-archive.html. `_a3_sim.archive_upsert` stays as a pure function (tests/sim §G) for a
+    # future universe tab; a committed sim-archive.json in a center is a leftover, safe to delete.
 
     # The board — second pass, now that archmap can price every card.
     _btext = strip_slot_doc_comments((SHELL_SRC / "board.html").read_text())
@@ -2341,17 +2373,6 @@ def main() -> int:
         _btext = _btext.replace(_tok, _val)
     (CENTER_OUT / "board.html").write_text(_btext)
     wrote.append(("board.html", _btext.count("{{")))
-
-    # The Codebase-graph station — a principal top-nav section (operator ruling
-    # 2026-08-11) rendering the C4 graph from the c4-graph.js emitted just above.
-    # Pure shared-token fill: the page's interactivity is static JS over the
-    # window globals, so it needs no page-specific data beyond SHARED chrome.
-    if (SHELL_SRC / "codebase-graph.html").exists():
-        _cbtext = strip_slot_doc_comments((SHELL_SRC / "codebase-graph.html").read_text())
-        for _tok, _val in SHARED.items():
-            _cbtext = _cbtext.replace(_tok, _val)
-        (CENTER_OUT / "codebase-graph.html").write_text(_cbtext)
-        wrote.append(("codebase-graph.html", _cbtext.count("{{")))
 
     # inflight.{json,js} are beat-tail artifacts (write-inflight.py, ruling
     # 2026-08-07) and are GITIGNORED (gabe-init seeds it). The builder writes an
@@ -2391,6 +2412,17 @@ def main() -> int:
              else "bootstrap — badges off until this snapshot is committed")
     print(f"    wrote docs/site/center/rows-seen.json — {len(marks)} row(s) "
           f"tracked ({state})")
+
+    # The LATE sidebar pass: every emitted page carries {{SIDEBAR_FE}} until the C4 feed exists (built after the
+    # generic pass), so the frontend half of the Entities group is filled here, once, from the fresh feed.
+    _fe_filled = 0
+    for _pg in sorted(CENTER_OUT.glob("*.html")):
+        _t = _pg.read_text()
+        if "{{SIDEBAR_FE}}" in _t:
+            _pg.write_text(_t.replace("{{SIDEBAR_FE}}", _fe_sidebar)); _fe_filled += 1
+    wrote = [(n, (CENTER_OUT / n).read_text().count("{{") if n.endswith(".html") and (CENTER_OUT / n).exists() else left)
+             for n, left in wrote]
+    print(f"    sidebar: frontend entities filled on {_fe_filled} page(s)")
 
     print(f"  A3 regen @ {STAMP} · HEAD {HEAD_SHA}")
     print(f"  {SHELL_NOTE}")

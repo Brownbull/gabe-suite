@@ -1,6 +1,6 @@
 /* ─────────────────────────────────────────────────────────────────────────
    graph-grammar.js — the LEVEL-LAB GRAMMAR's pure pieces, shared by the two
-   codebase-graph stations (codebase-graph.html · codebase-archive.html).
+   codebase-graph stations (codebase-graph.html · codebase-archive.html — both RETIRED 2026-09-10; the grammar stays for the example labs).
 
    Extracted at the recorded trigger ("a shared renderer when the archive
    station adopts the same grammar"): everything here is a PURE builder —
@@ -30,7 +30,7 @@
      GG.chips.{kindChip,epChip,dtChip,idrow,moreChip,icoSvg,tyFamily,…} — the
        typed id-card language (mirrors sim-panel.js's internal copy)
 
-   Battery: tests/codebase-graph (contract pins read THIS file).
+   Battery: none since 2026-09-10 (tests/codebase-graph retired with the stations).
    ───────────────────────────────────────────────────────────────────────── */
 (function () {
   "use strict";

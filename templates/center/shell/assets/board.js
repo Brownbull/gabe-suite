@@ -292,7 +292,7 @@
            /* this beat's touched → blast is exactly what the codebase-graph station
               overlays (C2 derives it live from the same inflight), so the ▶ NOW banner
               links there. Only rendered when active, so the target is never honest-empty. */
-           + '<a class="bnow-graph" href="codebase-graph.html" title="See this change on the codebase graph">graph &#8599;</a>';
+           + '<a class="bnow-graph" href="gabe-universe.html" title="See this change in the Gabe Universe">universe &#8599;</a>';
     var rSpine = '<span class="bnow-lab">Spine</span>'
            + '<span class="bnow-rail">' + stageChips + '</span>' + cmdline;
     var r2 = '<span class="bnow-lab">Feature</span>'

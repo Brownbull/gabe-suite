@@ -231,7 +231,7 @@ def t_center_overview(args: dict, roots) -> dict:
                          | {"present": True, "unmatched": (len(web["unmatched"]) if isinstance(web.get("unmatched"), list) else (web.get("unmatched") or 0))})
                         if web.get("present") else {"present": False, "reason": web.get("reason")}),
                 "map_health": mq.map_health(a, c),
-                "stations": "codebase-graph.html · gabe-universe.html · architecture.html · board.html (docs/site/center/)"})
+                "stations": "gabe-universe.html · architecture.html · board.html (docs/site/center/)"})
     if cfg_only:
         out["registry"] = T.CONFIG_ONLY                                # no adoption.json: nothing is "unregistered" — the config IS the registry
     else:

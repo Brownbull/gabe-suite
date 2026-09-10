@@ -1,6 +1,6 @@
 """_a3_sim.py — derive the change-simulation projection (``window.GABE_SIM``) LIVE.
 
-The codebase-graph station overlays a change-in-flight on the C4 graph. Until now
+The Gabe Universe (the codebase-graph station until 2026-09-10) overlays a change-in-flight on the C4 graph. Until now
 that projection was hand-authored (the committed example) and a real twin was
 honest-empty. This module DERIVES the base shape twin-neutrally from data the
 center already has, so a real change in flight lights the station up — or, at rest,
