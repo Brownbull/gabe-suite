@@ -38,11 +38,21 @@ const tabs = await p.$$eval('#tabs .tab', els => els.map(e => e.dataset.tab));
 ok(tabs.join(',') === 'data,functions,tests,widening,security', 'five tabs in part order', tabs.join(','));
 // the head strip carries the station card's head
 const head = await p.$eval('#headstrip', e => e.innerText);
-for (const s of [F.identity.path, F.identity.entity, String(F.identity.status), F.identity.file + ':' + F.identity.flines]) ok(head.includes(s), 'head strip shows ' + s);
+for (const s of [F.identity.path, String(F.identity.status), F.identity.file + ':' + F.identity.flines]) ok(head.includes(s), 'head strip shows ' + s);
+// the ENTITY is no longer its own chip (the UP trio carries it, operator 2026-09-11) — it must still be
+// reachable: a chip drawn in the entity's own colour whose hover card names it. No-loss, not no-text.
+{ const entChip = await p.$(`#headstrip .hpile.right .hel:nth-child(2)`);
+  let named = false; if (entChip) { await entChip.hover(); await p.waitForTimeout(120);
+    named = await p.evaluate(e => document.getElementById('hover').innerText.includes(e), F.identity.entity); }
+  ok(named, 'the entity is still reachable on the bar — the UP trio\'s entity chip names it on hover');
+  const cl = await p.$(`#headstrip .hpile.right .hel:nth-child(1)`);
+  let clNamed = false; if (cl) { await cl.hover(); await p.waitForTimeout(120);
+    clNamed = await p.evaluate(c => document.getElementById('hover').innerText.includes(c), F.identity.cluster); }
+  ok(clNamed, 'the cluster is still reachable on the bar — the UP trio\'s cluster chip names it on hover'); }
 ok(await p.$('#headstrip #mbadge canvas') !== null, 'the METHOD badge is painted by the station painter (canvas)');
 ok(head.toLowerCase().includes('large surface'), 'the risk flag is on the head bar');
 ok((await p.$$('#headstrip .habove .hel')).length === 3, 'ABOVE ladder: cluster · entity · everything');
-ok(head.includes(F.identity.cluster), 'the CLUSTER is on the bar (it was missing — operator 2026-09-11)');
+ok(await p.evaluate(() => window.headOrder('right').includes('above')), 'the CLUSTER reaches the bar through the UP trio');
 ok(!/API ENDPOINT/i.test(head), 'the kind is NOT spelled out beside its own glyph by default');
 // every chip in the bar is vertically centred: its icon and its text share a centre line
 const align = await p.$$eval('#headstrip .hel', els => els.map(e => { const svg = e.querySelector('svg,canvas,.pdot'), t = [...e.querySelectorAll('.hval,.pname,.hlbl')][0];
@@ -137,6 +147,31 @@ ok(await p.evaluate(() => { const h = document.getElementById('hover'); return !
 await p.evaluate(() => { const r = document.getElementById('notes').getBoundingClientRect(); window.__railw = r.width; });
 ok(await p.evaluate(() => window.__railw >= 460 && window.__railw <= 500), 'the rail is ~50% wider than it was (474px)', String(await p.evaluate(() => window.__railw)));
 await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(80);
+// ── the bar's two PILES, the operator's defaults, drag-reorder, and the copy buttons ──
+const piles = await p.$$eval('#headstrip .hpile', els => els.map(e => e.className));
+ok(piles.length === 2 && /left/.test(piles[0]) && /right/.test(piles[1]), 'the bar is TWO piles — left and right', piles.join('|'));
+const rightKeys = await p.evaluate(() => window.headOrder('right'));
+ok(rightKeys.join(',') === 'above,source', 'the right pile carries the UP trio and the file', rightKeys.join(','));
+const leftKeys = await p.evaluate(() => window.headOrder('left'));
+ok(!leftKeys.includes('entity') && !leftKeys.includes('cluster'), 'entity and cluster are no longer their own chips on the left — the UP trio carries them', leftKeys.join(','));
+ok((await p.$$('#headstrip .hupmark')).length === 0, 'the UP trio has no trailing arrow — the three icons ARE the ladder');
+ok((await p.$$('#headstrip .hpile.right .hel')).length === 4, 'the right pile draws three up-chips and the file', String((await p.$$('#headstrip .hpile.right .hel')).length));
+// drag is driven through the same mutation the drop handler calls
+const moved = await p.evaluate(() => window.moveHeadEl('status', 'left', 0));
+ok(moved[0] === 'status', 'an element can be reordered inside its pile', moved.join(','));
+const crossed = await p.evaluate(() => { const r = window.moveHeadEl('status', 'right', 0); return { right: r, left: window.headOrder('left') }; });
+ok(crossed.right[0] === 'status' && !crossed.left.includes('status'), 'an element can cross to the other pile', JSON.stringify(crossed));
+await p.evaluate(() => window.moveHeadEl('status', 'left', 3));
+const drags = await p.$$eval('#barcfg .dzone .ib', els => els.every(e => e.getAttribute('draggable') === 'true'));
+ok(drags, 'every element chip in the rail is draggable');
+const zones = await p.$$eval('#barcfg .dzone', els => els.map(e => e.dataset.side));
+ok(zones.join(',') === 'left,right', 'the rail shows one drop zone per pile, divided', zones.join(','));
+// a copy button per control block, each producing a readable line
+const cpb = await p.$$('.barblk .cpb');
+ok(cpb.length === 3, 'every control block has a COPY button', String(cpb.length));
+const lines = await p.evaluate(() => Object.keys(window.COPYTXT).map(k => window.COPYTXT[k]()));
+ok(lines.length === 3 && lines.every(l => l.length > 20), 'each copy line names that section\'s selections', lines.join(' // ').slice(0, 160));
+ok(/head bar · verbosity .* LEFT .* RIGHT .* off /.test(lines[1]), 'the head-bar copy line carries verbosity, both piles and what is off', lines[1]);
 // the checks file
 if (checksFile) {
   const checks = JSON.parse(fs.readFileSync(checksFile, 'utf8'));

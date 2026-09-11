@@ -83,6 +83,7 @@
     check: '<path d="M20 6 9 17l-5-5"/>',
     play: '<path d="M7 4.5 19 12 7 19.5z"/>', pause: '<path d="M8 4v16M16 4v16"/>',
     replay: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>',
+    copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
     air: '<path d="M4 5h16M4 12h16M4 19h16"/>', normal: '<path d="M4 6h16M4 10h16M4 14h16M4 18h16"/>',
     dense: '<path d="M4 5h16M4 8h16M4 11h16M4 14h16M4 17h16M4 20h16"/>' };
   function labIco(n, size, col){ return '<svg viewBox="0 0 24 24" width="' + (size || 14) + '" height="' + (size || 14) + '" fill="none" stroke="' + (col || "currentColor") + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (LABICO[n] || "") + '</svg>'; }
@@ -151,7 +152,21 @@
     if (opt.card) hoverBind(c, opt.card);
     return c; }
 
-  var HEADCFG = window.HEADCFG = { mode: "value", off: { kindword: 1 } };
+  /* The bar is two PILES: what stacks to the left of the gap and what stacks to the right
+     (operator 2026-09-11). Order inside a pile is the operator's — dragged in the rail.
+     Defaults follow the operator's ruling: the entity and the cluster are no longer their own
+     chips on the left; the UP trio on the right carries them (and will transport to those levels
+     in the graph), and the file moves over beside it. */
+  var HEADCFG = window.HEADCFG = { mode: "value",
+    off: { kindword: 1, entity: 1, cluster: 1 },
+    left: ["kind", "method", "name", "status", "risk", "entity", "cluster", "kindword"],
+    right: ["above", "source"] };
+  window.headOrder = function(side){ return HEADCFG[side].filter(function(k){ return !HEADCFG.off[k]; }); };
+  /* the one mutation the drag handler and the probe share */
+  window.moveHeadEl = function(key, side, index){
+    ["left", "right"].forEach(function(s){ var i = HEADCFG[s].indexOf(key); if (i >= 0) HEADCFG[s].splice(i, 1); });
+    var arr = HEADCFG[side]; index = Math.max(0, Math.min(arr.length, index == null ? arr.length : index));
+    arr.splice(index, 0, key); drawHead(); drawBarCfg(); return HEADCFG[side].slice(); };
   var HEADEL = [
     { key: "kind", word: "kind", note: "the endpoint glyph — the icon IS the kind, so the words 'API ENDPOINT' are redundant beside it",
       build: function(){ return chip({ icon: "endpoint", col: S.KINDCOL.endpoint, cls: "kindchip", label: "kind", value: HEADCFG.mode === "label" ? (S.KINDS.endpoint.type || "API endpoint") : null,
@@ -204,7 +219,7 @@
         if (I.risk.untested) w.append(chip({ icon: "alert", cls: "flagchip warn", label: "risk", value: "unguarded",
           card: hcard({ title: "unguarded", icon: "alert", sub: "no case names it", body: "not the case here — " + F.tests.cases.length + " cases name this door." }) }));
         return w.children.length ? w : null; } },
-    { key: "above", word: "above", note: "the ladder out of the door — cluster, entity, everything; icons only, the word on hover",
+    { key: "above", word: "up", note: "the ladder out — cluster · entity · everything, as three icons. It carries the entity and the cluster (their own chips are off by default) and will TRANSPORT to that level in the graph.",
       build: function(){ var w = el("span", { class: "hgrp habove" });
         I.above.forEach(function(a){ var isEnt = a.kind === "entity";
           w.append(chip({ icon: a.kind === "cluster" ? "layers" : a.kind === "entity" ? "entity" : "globe", col: isEnt ? ec : null,
@@ -212,14 +227,17 @@
                left, so it stays ICONS unless the bar is in label mode (the redundancy the operator caught) */
             cls: "upchip", label: a.kind, value: HEADCFG.mode === "label" ? (a.kind === "everything" ? "everything" : a.label) : null,
             card: hcard({ title: a.kind === "everything" ? "everything" : a.label, icon: a.kind === "cluster" ? "layers" : isEnt ? "entity" : "globe", color: isEnt ? ec : null,
-              sub: "one level up", rows: [["from here", "the door"], ["to", a.kind]],
-              body: a.kind === "cluster" ? "the sub-group this door sits in." : isEnt ? "the entity that claims it." : "the whole universe — every entity at once." }) })); });
-        var up = el("span", { class: "hupmark", html: S.icon("up", 12, "var(--muted)") }); w.append(up);
-        hoverBind(up, hcard({ title: "above", icon: "up", sub: "the ladder out", body: "each chip climbs one level — the same three steps the station's ABOVE section walks." }));
-        return w; } }
+              sub: "one level up — click will transport", rows: [["from here", "the door"], ["to", a.kind], ["carries", a.kind === "everything" ? "the universe" : a.label]],
+              body: a.kind === "cluster" ? "the sub-group this door sits in — this chip is also where the CLUSTER is read, now that it has no chip of its own."
+                : isEnt ? "the entity that claims it — this chip is also where the ENTITY is read, and its colour is the entity's own."
+                : "the whole universe — every entity at once." }) })); });
+        return w; } }   /* no trailing arrow: the three icons ARE the ladder (operator 2026-09-11) */
   ];
+  var BYKEY = {}; HEADEL.forEach(function(e){ BYKEY[e.key] = e; });
   function drawHead(){ HS.innerHTML = "";
-    HEADEL.forEach(function(e){ if (HEADCFG.off[e.key]) return; var n = e.build(); if (n) HS.append(n); }); }
+    ["left", "right"].forEach(function(side){ var pile = el("span", { class: "hpile " + side });
+      window.headOrder(side).forEach(function(k){ var e = BYKEY[k]; if (!e) return; var n = e.build(); if (n) pile.append(n); });
+      HS.append(pile); }); }
   window.drawHead = drawHead;
 
   /* the rail's SECOND section — this bar's own controls (operator 2026-09-11) */
@@ -232,15 +250,32 @@
       b.onclick = function(ev){ ev.stopPropagation(); HEADCFG.mode = m[0];
         [].forEach.call(mrow.children, function(x){ x.classList.toggle("on", x === b); }); drawHead(); }; mrow.append(b); });
     box.append(el("div", { class: "cfl" }, "verbosity"), mrow);
-    var erow = el("div", { class: "ibwrap" });
-    var EICO = { kind: "endpoint", kindword: "doc", method: "role", name: "doc", entity: "entity", cluster: "layers", status: "info", source: "file", risk: "burst", above: "up" };
-    HEADEL.forEach(function(e){ var b = el("button", { class: "ib" + (HEADCFG.off[e.key] ? "" : " on") });
-      b.dataset.el = e.key; b.innerHTML = S.icon(EICO[e.key] || "info", 14);
-      hoverBind(b, function(){ return hcard({ title: e.word, icon: EICO[e.key], sub: HEADCFG.off[e.key] ? "hidden — click to show" : "shown — click to hide", body: e.note }); });
-      b.onclick = function(ev){ ev.stopPropagation(); if (HEADCFG.off[e.key]) delete HEADCFG.off[e.key]; else HEADCFG.off[e.key] = 1;
-        b.classList.toggle("on", !HEADCFG.off[e.key]); drawHead(); }; erow.append(b); });
-    box.append(el("div", { class: "cfl" }, "elements"), erow);
-    box.append(el("div", { class: "cfread" }, "a REGISTRY — an element switched off is gone, not truncated. The icons here are the icons the bar draws.")); }
+    var EICO = window.EICO = { kind: "endpoint", kindword: "doc", method: "role", name: "doc", entity: "entity", cluster: "layers", status: "info", source: "file", risk: "burst", above: "up" };
+    /* two DROP ZONES — the bar's two piles. Drag a chip inside a zone to reorder it, or across to
+       move it to the other side of the bar; click it to switch the element off and on. */
+    function zone(side, label){
+      var z = el("div", { class: "dzone", "data-side": side });
+      HEADCFG[side].forEach(function(k){ var e = BYKEY[k]; if (!e) return;
+        var b = el("button", { class: "ib dg" + (HEADCFG.off[k] ? "" : " on"), draggable: "true" });
+        b.dataset.el = k; b.innerHTML = S.icon(EICO[k] || "info", 14);
+        hoverBind(b, function(){ return hcard({ title: e.word, icon: EICO[k], sub: (HEADCFG.off[k] ? "hidden" : "shown") + " · piles " + side + " — click to toggle, drag to reorder or change side", body: e.note }); });
+        b.onclick = function(ev){ ev.stopPropagation(); if (HEADCFG.off[k]) delete HEADCFG.off[k]; else HEADCFG.off[k] = 1;
+          b.classList.toggle("on", !HEADCFG.off[k]); drawHead(); };
+        b.addEventListener("dragstart", function(ev){ ev.dataTransfer.setData("text/plain", k); ev.dataTransfer.effectAllowed = "move"; b.classList.add("dragging"); window.hoverHide(); });
+        b.addEventListener("dragend", function(){ b.classList.remove("dragging"); });
+        z.append(b); });
+      z.addEventListener("dragover", function(ev){ ev.preventDefault(); z.classList.add("over"); });
+      z.addEventListener("dragleave", function(){ z.classList.remove("over"); });
+      z.addEventListener("drop", function(ev){ ev.preventDefault(); z.classList.remove("over");
+        var key = ev.dataTransfer.getData("text/plain"); if (!key) return;
+        var kids = [].slice.call(z.querySelectorAll(".ib")).filter(function(x){ return x.dataset.el !== key; });
+        var idx = kids.length;
+        for (var i = 0; i < kids.length; i++) { var r = kids[i].getBoundingClientRect(); if (ev.clientX < r.left + r.width / 2) { idx = i; break; } }
+        window.moveHeadEl(key, side, idx); });
+      var wrap = el("div", { class: "dzwrap" }, el("div", { class: "dzl" }, label), z);
+      return wrap; }
+    box.append(el("div", { class: "cfl" }, "elements"), el("div", { class: "zones" }, zone("left", "◀ piles left"), zone("right", "piles right ▶")));
+    box.append(el("div", { class: "cfread" }, "drag a chip to reorder it, or across the divider to move it to the other side of the bar · click to switch it off — an element switched off is gone, not truncated")); }
   drawHead(); drawBarCfg();
   COV.mark("HEAD", "head"); COV.mark("SOURCE", "head"); COV.mark("RISK", "head"); COV.mark("ABOVE", "head"); COV.mark("IDENTITY", "head");
 
@@ -270,8 +305,31 @@
     ["controls", "cov"].forEach(function(x){ document.getElementById("rt-" + x).hidden = (x !== k); }); }
   window.railTab = railTab;
   railTab("controls");   /* the toggle must RUN at boot or both sections render (caught in the shot, 2026-09-11) */
+  /* every control block carries a COPY — the operator's selections as one line they can paste back
+     to me, so a change is communicated exactly rather than described (operator 2026-09-11) */
+  function copyText(txt, btn){ var done = function(ok){ btn.classList.add(ok ? "copied" : "copyfail");
+      setTimeout(function(){ btn.classList.remove("copied", "copyfail"); }, 1100); };
+    try { var ta = document.createElement("textarea"); ta.value = txt; ta.setAttribute("readonly", "");
+      ta.style.cssText = "position:fixed;top:-1000px;left:0;opacity:0"; document.body.appendChild(ta);
+      ta.select(); var ok = document.execCommand("copy"); ta.remove();
+      if (!ok && navigator.clipboard) { navigator.clipboard.writeText(txt).then(function(){ done(true); }, function(){ done(false); }); return; }
+      done(ok); } catch (e) { done(false); } }
+  window.COPYTXT = {
+    bench: function(){ var box = document.querySelector("#boxes .ib.on"), d = window.DENS;
+      return "bench · box " + (box ? box.__label : "?") + " · density " + d + " · motion " + (CLOCK.on ? "playing" : "paused"); },
+    head: function(){ return "head bar · verbosity " + HEADCFG.mode
+      + " · LEFT " + (window.headOrder("left").join(" ") || "—")
+      + " · RIGHT " + (window.headOrder("right").join(" ") || "—")
+      + " · off " + (Object.keys(HEADCFG.off).join(" ") || "—"); },
+    parts: function(){ return "part bars · " + order.map(function(k){ return k + "=" + (curVar[k] || window.PANELS[k].variants[0].key); }).join(" · "); } };
+  function copyBtn(kind, what){ var b = el("button", { class: "cpb" }); b.innerHTML = labIco("copy", 13);
+    hoverBind(b, function(){ return '<div class="cphd">' + labIco("copy", 15, "var(--accent)") + '<b>copy</b></div><div class="cpsub">' + what + '</div><div class="cpbody">puts this section\'s selections on the clipboard as one line:<br><code>' + window.COPYTXT[kind]().replace(/</g, "&lt;") + '</code></div>'; });
+    b.onclick = function(ev){ ev.stopPropagation(); copyText(window.COPYTXT[kind](), b); }; return b; }
   document.getElementById("blk-bench").querySelector(".bhi").innerHTML = labIco("bench", 13, "var(--accent)");
+  document.getElementById("blk-bench").querySelector(".bhl").append(copyBtn("bench", "the bench's box, density and clock"));
+  document.getElementById("blk-parts").querySelector(".bhl").append(copyBtn("parts", "the distribution chosen for each part"));
   document.getElementById("blk-head").querySelector(".bhi").innerHTML = labIco("bars", 13, "var(--accent)");
+  document.getElementById("blk-head").querySelector(".bhl").append(copyBtn("head", "the head bar's verbosity, piles and order"));
   document.getElementById("blk-parts").querySelector(".bhi").innerHTML = S.icon("layers", 13, "var(--accent)");
 
   /* ── the variant bar: one panel, several DISTRIBUTIONS — proposals to compare, not settings ── */
@@ -313,7 +371,7 @@
   var boxWrap = document.getElementById("boxes");
   BOXES.forEach(function(b){ var el = ib(boxIco(b.w, b.h, 22),
       '<div class="cphd"><b>' + b.w + " × " + b.h + '</b></div><div class="cpsub">box preset — the glyph is the shape, to scale</div><div class="cpbody">' + b.t + '</div>', b.k === "work");
-    el.dataset.box = b.k;
+    el.dataset.box = b.k; el.__label = b.w + "×" + b.h;
     el.onclick = function(ev){ ev.stopPropagation();
       [].forEach.call(boxWrap.children, function(x){ x.classList.toggle("on", x === el); });
       bench.className = "box-" + b.k; bench.style.setProperty("--bw", b.w + "px"); bench.style.setProperty("--bh", b.h + "px");

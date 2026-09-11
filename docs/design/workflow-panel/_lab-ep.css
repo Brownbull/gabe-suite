@@ -373,3 +373,24 @@ body[data-dens="air"] .fchip, body[data-dens="air"] .rung, body[data-dens="air"]
 body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ grid-template-columns:repeat(auto-fill, minmax(186px, 1fr)); gap:8px; }
 /* the bench may now be wider than the viewport column — let the checklist fall below it */
 #row{ flex-wrap:wrap; } #notes{ flex:0 0 474px; max-width:500px; }
+
+/* ── the bar's two PILES (operator 2026-09-11): what stacks left, what stacks right ── */
+#headstrip{ justify-content:space-between; }
+.hpile{ display:inline-flex; align-items:center; flex-wrap:wrap; gap:6px; min-width:0; }
+.hpile.right{ margin-left:auto; }
+/* ── the rail: drag zones for the two piles ── */
+.zones{ display:flex; gap:8px; align-items:stretch; }
+.dzwrap{ flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:4px; }
+.dzwrap:first-child{ border-right:1px dashed var(--line); padding-right:8px; }
+.dzl{ font:700 12px/1 var(--font-mono); color:var(--line); letter-spacing:.05em; }
+.dzone{ display:flex; flex-wrap:wrap; gap:4px; align-content:flex-start; min-height:32px; padding:3px;
+  border:1px dashed transparent; border-radius:7px; }
+.dzone.over{ border-color:var(--accent); background:color-mix(in srgb, var(--accent) 8%, transparent); }
+.ib.dg{ cursor:grab; } .ib.dg:active{ cursor:grabbing; } .ib.dragging{ opacity:.35; }
+/* ── the copy button on each control block ── */
+.cpb{ margin-left:8px; display:inline-flex; align-items:center; justify-content:center; width:26px; height:22px;
+  color:var(--muted); background:var(--panel); border:1px solid var(--line); border-radius:5px; cursor:pointer; }
+.cpb svg{ display:block; } .cpb:hover{ color:var(--ink); border-color:var(--accent); }
+.cpb.copied{ color:#fff; background:var(--ok); border-color:var(--ok); }
+.cpb.copyfail{ color:#fff; background:var(--red); border-color:var(--red); }
+.barblk .bhl .bhn{ margin-left:auto; }
