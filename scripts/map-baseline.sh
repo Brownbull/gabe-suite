@@ -46,8 +46,13 @@ WANT=("$@")
 
 _want() { [ ${#WANT[@]} -eq 0 ] && return 0; for w in "${WANT[@]}"; do [ "$w" = "$1" ] && return 0; done; return 1; }
 
-# strip ISO run timestamps so two runs of the SAME generators compare equal
-_norm() { sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}[ T][0-9]{2}:[0-9]{2}(:[0-9]{2})?Z?//g' "$1"; }
+# Strip the two renderings that move WITHOUT the tree moving, so two runs of the SAME generators
+# compare equal: the ISO run timestamp, and the relative-age cells (T-34d / "3 d ago") the emitter
+# renders server-side. Both are deliberately narrow — anything else that differs is REAL.
+# (The suite treats relative time as volatile too: _a3_render._VOLATILE_RX hashes it out of the
+# row fingerprint so a tick cannot re-badge a row NEW.)
+_NORM_RX='s/[0-9]{4}-[0-9]{2}-[0-9]{2}[ T][0-9]{2}:[0-9]{2}(:[0-9]{2})?Z?//g; s/T\xe2\x88\x92[0-9]+[dhm]/T-AGE/g; s/\b[0-9]+ ?[dhm] ago\b/AGE ago/g'
+_norm() { sed -E "$_NORM_RX" "$1"; }
 
 # the SEMANTIC census — what a reader of the map would actually lose or gain
 _census() {
@@ -122,7 +127,7 @@ capture)
     echo "── capture $n"
     _run "$n" "$p" "$BASE_DIR/$n" "$ev" || continue
     ( cd "$BASE_DIR/$n" && find . -type f ! -name '.build.log' ! -name '.head' ! -name '.env' | sort | while read -r f; do
-        printf '%s  %s\n' "$(sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}[ T][0-9]{2}:[0-9]{2}(:[0-9]{2})?Z?//g' "$f" | sha256sum | cut -d' ' -f1)" "${f#./}"
+        printf '%s  %s\n' "$(sed -E "$_NORM_RX" "$f" | sha256sum | cut -d' ' -f1)" "${f#./}"
       done ) > "$MANIFEST_DIR/$n.sha256"
     _census "$BASE_DIR/$n" > "$MANIFEST_DIR/$n.census.json"
     echo "  blessed: $(wc -l < "$MANIFEST_DIR/$n.sha256") file(s) · head $(cut -c1-8 < "$BASE_DIR/$n/.head")"
@@ -136,7 +141,7 @@ check)
     NEW="$BASE_DIR/.check/$n"
     _run "$n" "$p" "$NEW" "$ev" || { rc=1; continue; }
     ( cd "$NEW" && find . -type f ! -name '.build.log' ! -name '.head' ! -name '.env' ! -name '.manifest' ! -name '.census.json' | sort | while read -r f; do
-        printf '%s  %s\n' "$(sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}[ T][0-9]{2}:[0-9]{2}(:[0-9]{2})?Z?//g' "$f" | sha256sum | cut -d' ' -f1)" "${f#./}"
+        printf '%s  %s\n' "$(sed -E "$_NORM_RX" "$f" | sha256sum | cut -d' ' -f1)" "${f#./}"
       done ) > "$NEW/.manifest"
     bh=$(cat "$BASE_DIR/$n/.head" 2>/dev/null); nh=$(cat "$NEW/.head" 2>/dev/null)
     [ "$bh" = "$nh" ] || echo "  ⚠ HEAD MOVED ${bh:0:8} → ${nh:0:8} — a content change here is the REPO's, not the refactor's"

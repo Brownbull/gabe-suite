@@ -225,7 +225,11 @@ _TAG_RX = re.compile(r"<[^>]+>")
 # Relative-time vocabulary that moves between builds without the row itself
 # changing — hashed as a placeholder so a T−27h → T−28h tick never re-badges.
 _VOLATILE_RX = re.compile(
-    r"T−\d+\s*[hm]|\b\d+\s*[dhm]\s+ago\b|\btoday\b|\byesterday\b|\bhoy\b|\bayer\b",
+    # `d` was missing from the T− class while the sibling "N ago" alternative had it, so a
+    # T−34d → T−35d tick DID re-badge — the exact failure this scrubber exists to prevent
+    # (caught on gastify by the golden master, 2026-09-11: one flipped day re-fingerprinted
+    # the api corpus row and stamped it NEW on an unchanged tree).
+    r"T−\d+\s*[dhm]|\b\d+\s*[dhm]\s+ago\b|\btoday\b|\byesterday\b|\bhoy\b|\bayer\b",
     re.IGNORECASE)
 _ROWMARKS: dict = {"baseline": None, "seen": {}, "counts": {}}
 

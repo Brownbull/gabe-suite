@@ -1296,7 +1296,17 @@ tab_risk = (
 _shortstat = sh("git", "show", "--shortstat", "--format=", "HEAD").strip()
 _head_subject = sh("git", "log", "-1", "--format=%s")
 _head_when = sh("git", "log", "-1", "--format=%ad", "--date=short")
-_week = sh("git", "log", "--since=7.days", "--format=%h")
+# `--since=7.days` resolves against WALLCLOCK, so ledger.html was a function of the MOMENT of the
+# run: a commit crossing the boundary between two runs flipped "commits / 7d" with no tree change
+# (43 → 42, caught by the golden master 2026-09-11). The emitter's stated law is no wallclock —
+# the commits feed pushes date bucketing client-side for exactly this reason (_a3_commits docstring).
+# Anchor the window to HEAD's OWN committer date so a pinned head always yields the same number.
+_head_iso = sh("git", "log", "-1", "--format=%cI")
+try:
+    _cut = (_dt.datetime.fromisoformat(_head_iso.strip()) - _dt.timedelta(days=7)).isoformat()
+except ValueError:                      # unparseable/absent head date → honest-empty, never wallclock
+    _cut = ""
+_week = sh("git", "log", f"--since={_cut}", "--format=%h") if _cut else ""
 _nums = re.findall(r"(\d+) (files? changed|insertions?|deletions?)", _shortstat)
 _stat = {k.split()[0]: v for v, k in _nums}
 

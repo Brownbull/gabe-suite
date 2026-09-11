@@ -62,3 +62,29 @@ After each migration step: `bash scripts/map-baseline.sh check`. Byte-identical 
 step is inert on existing projects, which is the gate every step must pass. A census delta that is
 INTENDED (a new arm finding real things) gets re-blessed with `capture`, and the committed manifest
 diff is the record of what changed and why.
+
+
+## What the first three runs caught (2026-09-11)
+
+The harness paid for itself before a single line of the extractor split was written. Three
+determinism defects, none of them introduced by this session's changes:
+
+1. **`ledger.html` was a function of the moment of the run.** `build_center_a3.py:1299` ran
+   `git log --since=7.days`, which git resolves against WALLCLOCK — so "commits / 7d" read 43 on
+   one run and 42 twenty minutes later, on a pinned head with no tree change. Fixed: the window is
+   anchored to HEAD's own committer date (`%cI` minus 7 days), so a pinned head always yields the
+   same number. This violated the emitter's own stated law — `_a3_commits.py` pushes date bucketing
+   client-side precisely to avoid wallclock.
+2. **A relative-age tick re-badged an unchanged row NEW.** `_a3_render._VOLATILE_RX` exists to hash
+   relative time out of a row's content fingerprint — its comment says "so a T−27h → T−28h tick
+   never re-badges" — but its character class was `[hm]`, so DAYS were never covered. gastify's api
+   corpus row ticked `T−34d` → `T−35d`, re-fingerprinted, and gained a NEW badge on an unchanged
+   tree. Fixed: `[hm]` → `[dhm]`, matching the sibling "N ago" alternative that always had it.
+3. **The harness's own artefact leak** (see above) — `check` enumerated the `.manifest` it had just
+   written, and the odd line count printed a genuine one-file difference as `0 file(s) differ`.
+
+The A/B that closed the session's own gap: the pre-session generators (reconstructed from `HEAD~1`)
+checked against the blessed baselines reported **census IDENTICAL on all 25 measures, all three
+targets** — ACTION roots are provably inert on every FastAPI repo, not just gustify — with
+`commits.js` the only intended difference (the change block; the feed roughly doubles: gustify
+36K→64K, gastify 28K→60K, tier3 96K→152K, gitignored and read at view time).
