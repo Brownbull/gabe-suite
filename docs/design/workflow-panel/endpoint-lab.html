@@ -249,20 +249,41 @@
           body: I.cluster_note }) }); } },
     { key: "status", word: "status", note: "the success code the route decorator declares (status_code=) — not a measurement, a promise",
       build: function(){ var obs = Object.keys(F.tests.by_status).filter(function(k){ return /^\d/.test(k); });
+        var X = (F.context || {}).status || {}, peers = X.same_method || {}, mine = String(I.status);
+        var peerStr = Object.keys(peers).map(function(c){ return c + " ×" + peers[c]; }).join(" · ");
+        var odd = Object.keys(peers).filter(function(c){ return c !== mine && peers[c] >= peers[mine]; });
         return chip({ key: "status", icon: "info", label: "declares", value: I.status + (I.status_name ? " " + I.status_name : ""), col: S.OPC.read, cls: "statchip",
-        card: hcard({ title: "declares " + I.status, icon: "info", color: S.OPC.read, sub: "status_code on the route decorator",
-          rows: [["what it is", "the code this handler promises on success"], ["read from", "the decorator, by the scanner"], ["the cases assert", obs.join(" · ")], ["untyped cases", String((F.tests.by_status["no code in name"] || []).length) + " name no code"]],
-          body: "a PROMISE, not a measurement: the decorator says 200, and the corpus proves five codes around it — the others are failure paths." }) }); } },
+        card: hcard({ title: "declares " + I.status, icon: "info", color: S.OPC.read, sub: "status_code= on the route decorator",
+          rows: [["what it is", "the code this handler PROMISES when the work succeeds"],
+                 ["read from", "the decorator, by the scanner — not observed at runtime"],
+                 ["written as", I.status_name ? "a constant (" + I.status_name + ")" : "a bare number"],
+                 [I.method + " peers", peerStr],
+                 ["the cases assert", obs.join(" · ")],
+                 ["no code in the name", String((F.tests.by_status["no code in name"] || []).length) + " of " + F.tests.cases.length + " cases"]],
+          body: "<b>What to do with it.</b> Read it against its peers, not alone. "
+            + (odd.length ? "Of the " + Object.keys(peers).reduce(function(a, c){ return a + peers[c]; }, 0) + " " + I.method + "s in this feed, " + odd.map(function(c){ return peers[c] + " declare " + c; }).join(" and ") + " — this one declares " + mine + " while writing " + F.data.writes.length + " tables, so ask whether it is really a create (201) or an update (200)."
+                        : "its code matches what its method peers declare.")
+            + " Feed-wide: " + Object.keys(X.declared || {}).map(function(c){ return c + " ×" + X.declared[c]; }).join(" · ")
+            + ". A door whose corpus never asserts its declared code is a coverage gap — " + X.cases_never_assert_declared + " of " + X.of + " are in that state here, and " + X.no_cases + " have no cases at all."
+            + "<br><b>Where it comes from.</b> <code>_a3_code.parse_endpoints</code> keeps <code>status_code=</code> when it is literal; the emitter turns a constant into the number and keeps the name beside it." }) }); } },
     { key: "source", word: "source", note: "the file and line the handler is defined at",
       build: function(){ return chip({ key: "source", icon: "file", label: "source", value: I.file + ":" + I.flines, cls: "srcchip",
         card: hcard({ title: I.file, icon: "file", sub: "line " + I.flines,
           rows: [["handler", F.functions.handler.name || "—"], ["body", (I.sig ? (I.sig.async ? "async · " : "") + I.sig.lines + " lines" : "—")], ["returns", (I.sig || {}).returns || "—"], ["exported", I.exported ? "yes" : "no"]] }) }); } },
     { key: "risk", word: "risk", note: "the station's attack-fleet flags — only the ones that FIRE are drawn",
       build: function(){ var w = el("span", { class: "hgrp" });
+        var R = (F.context || {}).risk || {};
         if (I.risk.large) w.append(chip({ key: "risk", icon: "burst", cls: "flagchip warn", label: "risk", value: I.risk.conflict || "conflict",
-          card: hcard({ title: "conflict · " + (I.risk.conflict || ""), icon: "burst", color: "var(--red)", sub: "the station's attack-fleet flag",
-            rows: [["rule", "behind ≥ 15 or fan-in ≥ 15"], ["behind", String(I.risk.behind) + " functions"], ["fan-in", String(I.risk.fanin)], ["feed-wide max", String(F.feedwide.behind_max) + " behind"]],
-            body: "the same rule nodeFleet uses in the graph — the raider fleet you see orbiting the planet." }) }));
+          card: hcard({ title: "conflict · " + (I.risk.conflict || ""), icon: "burst", color: "var(--red)", sub: "a SIZE signal, not a fault",
+            rows: [["rule", R.rule_large || "behind ≥ 15 or fan-in ≥ 15"],
+                   ["behind", String(I.risk.behind) + " functions in its call tree"],
+                   ["fan-in", String(I.risk.fanin) + " element(s) depend on it"],
+                   ["among its peers", "rank " + R.rank + " of " + R.of + " · " + R.large_count + " doors are flagged"],
+                   ["the spread", Object.keys(R.behind_bins || {}).map(function(b){ return b + ":" + R.behind_bins[b]; }).join(" · ")],
+                   ["heaviest", (R.heaviest || []).slice(0, 3).map(function(h){ return h.label + " " + h.behind; }).join(" · ")]],
+            body: "<b>What it means.</b> Changing this door drags " + I.risk.behind + " functions behind it, against a median of " + R.behind_median + " — it is in the top " + Math.round(100 * R.rank / R.of) + "% of this codebase. Nothing is wrong; the blast radius is simply large."
+              + "<br><b>What to do with it.</b> Before editing, open FUNCTIONS and walk the chain; before trusting it, open TESTS — this one has " + F.tests.cases.length + " cases, while " + R.no_cases + " of " + R.of + " doors have none. The three flags are independent: <b>conflict</b> is size, <b>god-object</b> is a handler over 50 lines, <b>unguarded</b> is no case naming it."
+              + "<br><b>Where it comes from.</b> The same rule <code>nodeFleet</code> uses in the graph — this is the raider fleet you see orbiting the planet, said in words." }) }));
         if (I.risk.god) w.append(chip({ key: "risk", icon: "alert", cls: "flagchip god", label: "risk", value: "god-object",
           card: hcard({ title: "god-object", icon: "alert", sub: "a size flag", body: "over the 50-line function flag." }) }));
         if (I.risk.untested) w.append(chip({ key: "risk", icon: "alert", cls: "flagchip warn", label: "risk", value: "unguarded",
