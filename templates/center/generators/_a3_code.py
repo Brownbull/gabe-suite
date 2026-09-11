@@ -2977,3 +2977,96 @@ def __getattr__(name: str):
         from _a3_codetab import build_code_tab
         return build_code_tab
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+# ── the ARMS surface (extractor-gateway plan, step 2) ─────────────────────────────────────────
+# What this module CLAIMS to be able to find, and a cheap, honest report of whether the idiom it
+# looks for is present at all. `probe` NEVER selects and NEVER raises: build_center_a3 runs every
+# producer unconditionally, exactly as before, and forcing any probe to zero must leave every feed
+# byte-identical (tests/arms pins it). Its whole job is to let the census (step 3) tell a reader
+# "nothing here" apart from "nobody looks for your idiom here".
+#
+# It is deliberately an IDIOM SCAN, not a second parse: re-running the real producers would double
+# the build's cost to answer a question a substring already answers, and a probe that can fail in a
+# way the producer cannot is a second source of truth.
+CONCEPTS: tuple[str, ...] = (
+    "request_roots", "mounts", "gates", "tables", "access", "queues", "providers",
+    "schemas", "census",
+)
+
+# concept → (idiom markers, why the arm found nothing when they are absent)
+_PROBE_IDIOMS: dict[str, tuple[tuple[str, ...], str]] = {
+    "request_roots": (("APIRouter", "@router.", "@app.get", "@app.post", "FastAPI("),
+                      "no FastAPI router or app decorator in any scanned .py"),
+    "mounts":        (("include_router",), "no include_router call — nothing composes a prefix"),
+    "gates":         (("Depends(", "add_middleware"), "no Depends() or add_middleware in any scanned .py"),
+    "tables":        (("table=True", "declarative_base", "DeclarativeBase", "__tablename__"),
+                      "no SQLModel/SQLAlchemy table declaration in any scanned .py"),
+    "access":        (("session.exec", "session.query", "session.add", "select(", ".commit()"),
+                      "no ORM session verb in any scanned .py"),
+    "queues":        (("shared_task", "@app.task", "@broker.task", "apply_async", ".delay("),
+                      "no Celery/ARQ/Taskiq task or enqueue site in any scanned .py"),
+    "providers":     (("openai", "litellm", "langchain", "redis", "boto3", "anthropic"),
+                      "no known provider SDK imported in any scanned .py"),
+    "schemas":       (("BaseModel", "pydantic"), "no pydantic model in any scanned .py"),
+    "census":        ((".py",), "no .py file under the scanned roots"),
+}
+# The center's OWN machinery is not the project. A repo that adopted the center carries the
+# generators under scripts/ and their output under docs/site/ — and those generators are full of
+# `APIRouter`, `Depends(`, `table=True`, because they are what LOOKS FOR them. Scanning them made
+# keypro-front (a Next.js app with zero Python of its own) probe positive for FastAPI on all nine
+# concepts: the exact lie the census exists to prevent, told by the census's own instrument.
+# Same roster as _ACTION_SKIP, for the same reason.
+_PROBE_SKIP = ("/.venv/", "/venv/", "/node_modules/", "/site-packages/", "/__pycache__/",
+               "/.git/", "/build/", "/dist/", "/scripts/", "/docs/site/", "/templates/",
+               "/graft/", "/.next/")
+
+
+def reset_caches() -> None:
+    """Drop every memo this module holds, so one process can read two different trees. The build
+    never needs it (one repo per run); fixtures and probes do, and a stale memo across fixtures is
+    a false green that looks exactly like a pass."""
+    global _ADOPT_NAMES, _INSIGHT, _CENSUS, _ROUTE_CENSUS, _FILE_CENSUS, _ELEMENT_CENSUS
+    global _FLAGS, _DISPATCH, _FN_INSIGHT, _TASKS, _TASK_ROOTS, _GUARD_LENS, _ACTION_ROOTS
+    _ADOPT_NAMES = _INSIGHT = _CENSUS = _ROUTE_CENSUS = _FILE_CENSUS = None
+    _ELEMENT_CENSUS = _FLAGS = _DISPATCH = _FN_INSIGHT = None
+    _TASKS = _TASK_ROOTS = _GUARD_LENS = _ACTION_ROOTS = None
+    _EMAP_CACHE.clear(); _MOUNTS.clear(); _UNPARSEABLE.clear()
+    _PY_TEXTS.clear(); _FILE_IMPORTS.clear(); _FILE_PROVIDERS.clear(); _DEF_SPANS.clear()
+
+
+def probe(concept: str, repo: Path) -> dict:
+    """`{scanned, matched, evidence[<=5], reason}` for one concept. Never raises: an unreadable
+    tree reports `scanned=0` with the reason, which is itself the honest answer."""
+    out: dict = {"scanned": 0, "matched": 0, "evidence": [], "reason": ""}
+    spec = _PROBE_IDIOMS.get(concept)
+    if spec is None:
+        out["reason"] = f"{concept} is not claimed by this module"
+        return out
+    markers, why = spec
+    try:
+        for p in sorted(Path(repo).rglob("*.py")):
+            rel = "/" + p.relative_to(repo).as_posix()
+            if any(s in rel for s in _PROBE_SKIP):
+                continue
+            out["scanned"] += 1
+            if concept == "census":
+                continue
+            try:
+                text = p.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            if any(m in text for m in markers):
+                out["matched"] += 1
+                if len(out["evidence"]) < 5:
+                    out["evidence"].append(rel.lstrip("/"))
+        if concept == "census":
+            out["matched"] = out["scanned"]
+    except Exception as exc:  # noqa: BLE001 — a probe that raises would take the build with it
+        out["reason"] = f"probe error: {exc}"
+        return out
+    if not out["scanned"]:
+        out["reason"] = "no .py file under the scanned roots"
+    elif not out["matched"]:
+        out["reason"] = why
+    return out

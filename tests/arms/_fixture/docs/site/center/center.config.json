@@ -1,0 +1,69 @@
+{
+  "project": {
+    "name": "arms-fixture",
+    "display_name": "Arms Fixture",
+    "lang": "en"
+  },
+  "paths": {
+    "center": "docs/site/center",
+    "kdbp": ".kdbp",
+    "results": "tests/results",
+    "proof": "tests/proof",
+    "e2e_spec_glob": "",
+    "mermaid_renderer": "scripts/_render_mermaid.mjs"
+  },
+  "corpora": [
+    {
+      "key": "api",
+      "runner": "pytest",
+      "kind": "integration",
+      "kind_detail": "HTTP",
+      "tag_class": "l-api",
+      "kpi_detail": "pytest"
+    }
+  ],
+  "e2e": {
+    "runner": "none",
+    "junit_wired": false,
+    "junit_gap_tag": "not-wired",
+    "not_wired_note": "none",
+    "local_only_note": "none",
+    "coverage_gate": "none"
+  },
+  "leaf_reports": [],
+  "commands": {
+    "junit": [],
+    "coverage": [],
+    "e2e": []
+  },
+  "foundations": [
+    "SCOPE"
+  ],
+  "code_layers": [
+    "api",
+    "models",
+    "web"
+  ],
+  "build_architecture": true,
+  "entities": {
+    "widget": {
+      "test_rx": "widget",
+      "models": [
+        "Widget"
+      ],
+      "code": {
+        "api": [
+          "backend/app/api.py"
+        ],
+        "models": [
+          "backend/app/models.py"
+        ],
+        "schemas": [],
+        "services": [],
+        "web": [
+          "frontend/app/actions.ts"
+        ]
+      }
+    }
+  }
+}
