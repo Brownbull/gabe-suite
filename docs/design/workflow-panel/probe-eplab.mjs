@@ -48,7 +48,7 @@ ok(await p.evaluate(() => { const h = document.getElementById('hover'); return !
 // every tab renders, in both boxes; nothing under 12px inside #bench; shots
 const floor = async () => p.evaluate(() => { let n = 0, worst = 99; document.querySelectorAll('#bench *').forEach(el => { if (!el.offsetParent && el.tagName !== 'BODY') return; const t = el.childNodes && [...el.childNodes].some(c => c.nodeType === 3 && c.textContent.trim()); if (!t) return; const fs = parseFloat(getComputedStyle(el).fontSize); if (fs < 12) { n++; worst = Math.min(worst, fs); } }); return { under: n, worst }; });
 for (const box of ['work', 'dock']) {
-  await p.click(`#boxctl .bb[data-box="${box}"]`);
+  await p.click(`#boxes .bb[data-box="${box}"]`);
   for (const t of tabs) {
     await p.click(`#tabs .tab[data-tab="${t}"]`); await p.waitForTimeout(150);
     const err = await p.$('#panel .perr');
@@ -59,7 +59,7 @@ for (const box of ['work', 'dock']) {
     if (shotsAt) { fs.mkdirSync(shotsAt, { recursive: true }); await p.$eval('#bench', e => e.scrollIntoView()); await (await p.$('#bench')).screenshot({ path: path.join(shotsAt, `eplab-${box}-${t}.png`) }); }
   }
 }
-await p.click('#boxctl .bb[data-box="work"]');
+await p.click('#boxes .bb[data-box="work"]');
 // every DISTRIBUTION of every part renders, fits and holds the floor (work box); then the density dial
 const variants = await p.evaluate(() => { const o = {}; for (const k in window.PANELS) o[k] = window.PANELS[k].variants.map(v => v.key); return o; });
 for (const t of tabs) {
@@ -75,7 +75,7 @@ for (const t of tabs) {
   await p.evaluate(t => window.showVariant(t, window.PANELS[t].variants[0].key), t);
 }
 for (const d of ['air', 'dense']) {
-  await p.click(`#boxctl .bb[data-dens="${d}"]`); await p.waitForTimeout(120);
+  await p.click(`#dens .bb[data-dens="${d}"]`); await p.waitForTimeout(120);
   for (const t of tabs) {
     await p.click(`#tabs .tab[data-tab="${t}"]`); await p.waitForTimeout(120);
     const dims = await p.$eval('#panel', e => ({ w: e.clientWidth, h: e.clientHeight, sw: e.scrollWidth, sh: e.scrollHeight }));
@@ -83,7 +83,7 @@ for (const d of ['air', 'dense']) {
     const fl = await floor(); ok(fl.under === 0, `${t} at density ${d}: no text under 12px`, fl.under + ' nodes, worst ' + fl.worst + 'px');
   }
 }
-await p.click('#boxctl .bb[data-dens="normal"]');
+await p.click('#dens .bb[data-dens="normal"]');
 // the part buttons carry icon + NAME + count (operator 2026-09-11)
 const btn = await p.$eval('#tabs .tab[data-tab="data"]', e => ({ w: e.clientWidth, h: e.clientHeight, txt: e.innerText, svg: !!e.querySelector('.tabi svg'), badge: !!e.querySelector('.tabn') }));
 ok(btn.svg && btn.badge && /Data/i.test(btn.txt), 'a part button carries its icon, its NAME and its count badge', JSON.stringify(btn));

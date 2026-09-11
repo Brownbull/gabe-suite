@@ -10,28 +10,33 @@
   <header id="lede">
     <div class="ltitle"><span id="ledeglyph"></span><b>Endpoint lab</b> · the six parts of an API endpoint, one panel at a time</div>
     <div class="lsub">bench <code id="ledebench">—</code> · facts from the frozen example feed head <code id="ledehead">—</code> · station tokens lifted by regex · nothing typed by hand.
-      Tabs are ICONS (the word on hover); every glyph carries a hover card in the station's own shape. The checklist on the right is the no-loss law made visible.</div>
+      The bench on the right holds ONLY what would be built — the head strip, the part buttons and the panel. Every lab control lives in the rail on the left, above the no-loss checklist, so nothing you are judging is a knob.</div>
   </header>
   <div id="row">
-    <section id="bench" class="box-work" aria-label="the console's middle region, boxed">
+    <!-- the LAB RAIL. Nothing here ships with the console: these are the bench's own controls, kept
+         OUT of the panel so what you judge is only what would be built (operator 2026-09-11). -->
+    <aside id="notes">
+      <section id="cfg">
+        <div class="nhd">bench controls <span class="nht">not part of the panel</span></div>
+        <div class="cfgrp"><div class="cfl">distribution</div><div id="varbar"></div></div>
+        <div class="cfgrp"><div class="cfl">box</div><div id="boxes" class="btnwrap"></div></div>
+        <div class="cfgrp"><div class="cfl">density</div><div id="dens" class="btnwrap"></div></div>
+        <div class="cfgrp"><div class="cfl">motion</div><div class="btnwrap">
+          <button class="bb on" id="mplay" title="one shared clock — pause freezes every moving thing">playing</button>
+          <button class="bb" id="mreplay" title="restart the clock from zero">replay</button></div></div>
+        <div class="cfread" id="boxread">—</div>
+      </section>
+      <section id="covsec">
+        <div class="nhd">no-loss checklist <span id="covn">—</span></div>
+        <div class="nsub">every row the station card shows today; a row lights when the panels render it (hover cards count)</div>
+        <div id="cov"></div>
+      </section>
+    </aside>
+    <section id="bench" class="box-work" aria-label="the console's middle region, boxed — only what would be built">
       <div id="headstrip"></div>
       <nav id="tabs" role="tablist"></nav>
-      <div id="varbar"></div>
       <div id="panel" role="tabpanel"></div>
-      <div id="boxctl">
-        <span class="bl">box</span><span id="boxes"></span>
-        <span class="bl">density</span><span id="dens"></span>
-        <span class="bl">motion</span>
-        <button class="bb on" id="mplay" title="one shared clock — pause freezes every moving thing">playing</button>
-        <button class="bb" id="mreplay" title="restart the clock from zero">replay</button>
-        <span class="bl" id="boxread">—</span>
-      </div>
     </section>
-    <aside id="notes">
-      <div class="nhd">no-loss checklist <span id="covn">—</span></div>
-      <div class="nsub">every row the station card shows today; a row lights when the panels render it (hover cards count)</div>
-      <div id="cov"></div>
-    </aside>
   </div>
 </div>
 <div id="hover" class="jdcolpop" hidden></div>
@@ -128,11 +133,10 @@
 
   /* ── the variant bar: one panel, several DISTRIBUTIONS — proposals to compare, not settings ── */
   function drawVars(k){ var P = window.PANELS[k]; VARBAR.innerHTML = "";
-    VARBAR.append(E("span", { class: "vl" }, "distribution"));
     P.variants.forEach(function(v){ var b = E("button", { class: "vb" + (curVar[k] === v.key ? " on" : "") }, v.label);
-      hoverBind(b, '<div class="cphd"><b>' + v.label + '</b></div><div class="cpsub">a distribution of the same facts</div><div class="cpbody">' + v.hint + '</div>');
+      hoverBind(b, '<div class="cphd">' + S.icon(P.icon, 15, P.col) + '<b>' + v.label + '</b></div><div class="cpsub">a distribution of ' + P.word + '</div><div class="cpbody">' + v.hint + '</div>');
       b.onclick = function(ev){ ev.stopPropagation(); curVar[k] = v.key; show(k); }; VARBAR.append(b); });
-    VARBAR.append(E("span", { class: "vn" }, P.variants.length + " proposal" + (P.variants.length === 1 ? "" : "s"))); }
+    VARBAR.append(E("span", { class: "vn" }, P.variants.length + " proposals for " + P.word)); }
   function E(t, a){ var e = document.createElement(t), k = [].slice.call(arguments, 2);
     for (var p in (a || {})) { if (p === "class") e.className = a[p]; else if (p === "html") e.innerHTML = a[p]; else e.setAttribute(p, a[p]); }
     k.forEach(function(c){ if (c != null) e.append(c); }); return e; }
@@ -173,8 +177,18 @@
   document.body.dataset.dens = "normal"; window.DENS = "normal";
 
   function readBox(){ var r = PANEL.getBoundingClientRect();
-    document.getElementById("boxread").textContent = "panel " + Math.round(r.width) + " × " + Math.round(r.height) + " · " + (cur || "—") + " · " + (curVar[cur] || "—") + " · " + window.DENS; }
+    document.getElementById("boxread").textContent = Math.round(r.width) + " × " + Math.round(r.height) + " · " + (cur || "—") + " · " + (curVar[cur] || "—") + " · " + window.DENS; }
   window.addEventListener("resize", readBox);
+  /* the checklist is the NO-LOSS LAW, so it must read whole the moment the page opens — render every
+     part once off-screen at boot to collect its coverage, then discard. Honest: a row lights because a
+     renderer actually drew it, not because a list says it would. */
+  (function preWalk(){ var ghost = document.createElement("div");
+    ghost.style.cssText = "position:absolute;left:-99999px;top:0;width:1100px;height:420px;overflow:hidden";
+    document.body.appendChild(ghost);
+    order.forEach(function(k){ var P = window.PANELS[k]; P.variants.forEach(function(v){ ghost.innerHTML = "";
+      try { v.render(ghost, F, S); } catch (e) { console.warn("prewalk " + k + "/" + v.key, e); } }); });
+    ghost.remove(); })();
+
   var first = (location.hash || "#data").slice(1); show(order.indexOf(first) >= 0 ? first : "data");
   window.__eplabReady = true;
 })();
