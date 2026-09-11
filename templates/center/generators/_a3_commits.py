@@ -9,7 +9,11 @@ touched set with the existing journey machinery.
 
 Derivation (a function of (tree, head) — no wallclock, deterministic per commit):
   * ``git log -n N --no-merges`` → recent commits (sha · short · subject · date · author).
-  * ``git diff-tree --no-commit-id --name-only -r <sha>`` → the files that commit changed.
+  * ``git log --numstat`` → the files that commit changed AND each file's (added, deleted).
+  * one bounded ``git show --unified=0 <sha> -- <small files>`` per commit → the actual ± lines
+    for files whose change is SMALL (``_SMALL`` lines), so the step panel can show a real
+    side-by-side instead of a count. A big file carries its counts only — never truncated
+    content pretending to be the whole change.
   * each file → the graph node ids homed to it (backend ``det.file`` · fe piece ``file``);
     a file with no represented node contributes nothing (honest — tests/config/docs drop).
 
@@ -49,7 +53,37 @@ def _file_to_nodes(graph: dict[str, Any]) -> dict[str, list[str]]:
     return idx
 
 
-_REC = "\x1e"  # record separator — marks each commit header in the --name-only stream
+_REC = "\x1e"  # record separator — marks each commit header in the --numstat stream
+# The step panel shows a real side-by-side only when a file's change is small enough to READ;
+# past that it shows the counts. Both are honest — the cap is a legibility budget, not a floor
+# on the data (the counts are exact for every file, whatever its size).
+_SMALL = 12        # max (added + deleted) for a file to carry its literal lines
+_MAX_FILES = 6     # max small files per commit to fetch content for (one `git show`, bounded)
+_MAX_LINES = 24    # hard cap on stored lines per file — a guard, never reached under _SMALL
+
+
+def _hunk_lines(root: Path, sha: str, files: list[str]) -> dict[str, list[list[str]]]:
+    """``{file → [["+"|"-", text], …]}`` for the given files of one commit, from a single
+    ``git show --unified=0``. Content only — no hunk headers, no context. ``{}`` on any
+    failure (the panel then shows counts alone)."""
+    if not files:
+        return {}
+    out: dict[str, list[list[str]]] = {}
+    try:
+        txt = _a3_sim._sh(["git", "show", "--format=", "--unified=0", "--no-color",
+                           "--no-renames", sha, "--", *files], root)
+    except Exception:  # noqa: BLE001
+        return {}
+    cur = None
+    for ln in txt.split("\n"):
+        if ln.startswith("+++ b/"):
+            cur = ln[6:].strip()
+            out.setdefault(cur, [])
+        elif ln.startswith("--- ") or ln.startswith("diff --git") or ln.startswith("@@"):
+            continue
+        elif cur and ln[:1] in ("+", "-") and len(out[cur]) < _MAX_LINES:
+            out[cur].append([ln[0], ln[1:]])
+    return {f: v for f, v in out.items() if v}
 
 
 def build_commits(root: Path, graph: dict[str, Any], n: int = 30,
@@ -68,7 +102,8 @@ def build_commits(root: Path, graph: dict[str, Any], n: int = 30,
         scan = scan or max(n * 20, 400)
         fmt = _REC + _SEP.join(["%H", "%h", "%s", "%aI", "%an"])
         stream = _a3_sim._sh(
-            ["git", "log", "-n", str(scan), "--no-merges", "--name-only", f"--format={fmt}"], root)
+            ["git", "log", "-n", str(scan), "--no-merges", "--numstat", "--no-renames",
+             f"--format={fmt}"], root)
         kept: list[dict] = []
         for chunk in stream.split(_REC):
             chunk = chunk.strip("\n")
@@ -79,13 +114,35 @@ def build_commits(root: Path, graph: dict[str, Any], n: int = 30,
             if len(head) < 5:
                 continue
             sha, short, subject, date, author = head[:5]
-            files = sorted({_a3_sim._unrename(f) for f in lines[1:] if f.strip()})
+            # --numstat rows are `added \t deleted \t path`; a binary file reports `-  -`
+            stat: dict[str, list[int]] = {}
+            for row in lines[1:]:
+                if not row.strip():
+                    continue
+                parts = row.split("\t")
+                if len(parts) < 3:
+                    continue
+                f = _a3_sim._unrename(parts[2])
+                a, d = parts[0], parts[1]
+                stat[f] = [-1, -1] if (a == "-" or d == "-") else [int(a or 0), int(d or 0)]
+            files = sorted(stat)
             touched = sorted({nid for f in files for nid in f2n.get(f, [])})
             if not touched:
                 continue                       # changed nothing on the map → no coverage journey
+            # only files the MAP represents can ever be a journey step — never fetch content
+            # for a file no step can show (keeps the `git show` bounded and the feed honest)
+            mapped = [f for f in files if f2n.get(f)]
+            small = [f for f in mapped
+                     if stat[f] != [-1, -1] and sum(stat[f]) <= _SMALL][:_MAX_FILES]
+            content = _hunk_lines(root, sha, small)
+            diffs = {f: ({"a": stat[f][0], "d": stat[f][1]}
+                         | ({"lines": content[f]} if f in content else {}))
+                     for f in mapped}
             kept.append({"sha": sha, "short": short, "subject": subject, "date": date,
-                         "author": author, "touched": touched,
-                         "nFiles": len(files), "nTouched": len(touched)})
+                         "author": author, "touched": touched, "diffs": diffs,
+                         "nFiles": len(files), "nTouched": len(touched),
+                         "add": sum(v[0] for v in stat.values() if v[0] > 0),
+                         "del": sum(v[1] for v in stat.values() if v[1] > 0)})
             if len(kept) >= n:
                 break
         return kept

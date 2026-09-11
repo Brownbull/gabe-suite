@@ -4339,3 +4339,52 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
     # The "About this section" methodology prose used to trail the tables; the
     # declutter ruling folds it into the section's ⊕ (info above) instead.
     return html
+
+
+# ── class 15 · ACTION roots: React Server Actions as endpoint-equivalent trace roots.
+#    The FastAPI arm roots every chain at an @router handler; a Next.js App Router app has none —
+#    its request entries are the exported functions of a `"use server"` module, which the client
+#    reaches by IMPORTING them across the server/client line. Same endpoint-shaped record as
+#    parse_task_roots (class 13), so the generic `_l2` builder mints `endpoint:ACTION <name>` and
+#    the levels walk ROOTS on it: no new node kind, no new seam, and a repo with no server action
+#    emits `[]` so every consumer's `or []` union is a no-op (proven byte-identical on gustify,
+#    2026-09-11 — docs/design/repo-study/action-roots-spike.md).
+#    FLOORS (stated, never hidden): the file-level directive only (an inline per-function
+#    "use server" is not read); the `export const x = async () => {}` action form is not read;
+#    `touches` is empty — no SQL-in-TS arm yet, so a chain draws calls, not model access.
+_ACTION_ROOTS: list | None = None
+_ACTION_SKIP = ("node_modules", ".next", "docs/site", "scripts", "templates", "graft", ".git")
+_ACTION_EXPORT_RX = _re_mod.compile(r"^export\s+(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(", _re_mod.M)
+_ACTION_LEAD_RX = _re_mod.compile(r"^(?:\s*//[^\n]*\n|\s*/\*.*?\*/\s*)*", _re_mod.S)
+
+
+def parse_action_roots(repo: Path) -> list[dict]:
+    """ACTION roots (class 15): every export of a file-level `"use server"` module as an
+    endpoint-shaped record `{method:'ACTION', path:<fn>, fn, file, touches, touches_x, doc,
+    resp, status}`. `[]` honest-empty on a repo with no server actions."""
+    global _ACTION_ROOTS
+    if _ACTION_ROOTS is not None:
+        return _ACTION_ROOTS
+    out: list[dict] = []
+    for p in sorted(repo.rglob("*.ts")) + sorted(repo.rglob("*.tsx")):
+        rel = p.relative_to(repo).as_posix()
+        if any(s in rel for s in _ACTION_SKIP) or ".test." in rel or ".spec." in rel:
+            continue
+        try:
+            src = p.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        # the directive is the FIRST statement — skip only a leading comment block
+        head = _ACTION_LEAD_RX.sub("", src, count=1)[:40].lstrip()
+        if not head.startswith(('"use server"', "'use server'")):
+            continue
+        for m in _ACTION_EXPORT_RX.finditer(src):
+            pre = src[:m.start()].rstrip()
+            doc = ""
+            if pre.endswith("*/") and "/**" in pre:
+                blk = pre[pre.rfind("/**"):]
+                doc = " ".join(l.strip(" *\t") for l in blk.splitlines()[1:-1] if l.strip(" *\t"))[:200]
+            out.append({"method": "ACTION", "path": m.group(1), "fn": m.group(1), "file": rel,
+                        "touches": [], "touches_x": [], "doc": doc, "resp": "\u2014", "status": "\u2014"})
+    _ACTION_ROOTS = out
+    return out

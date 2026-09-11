@@ -1097,7 +1097,7 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
     # existing bucket if the census already made one. Honest-empty: no boot root → nothing.
     # class 13 · TASK roots: mint an `endpoint:TASK <name>` node per worker task, homed to the entity that
     # claims the task file (merged into its l2) — else into __unclaimed__ beside BOOT. Honest-empty.
-    _troots = amap.get("task_roots") or []
+    _troots = (amap.get("task_roots") or []) + (amap.get("action_roots") or [])   # class 13 + 15: TASK and ACTION roots ride one seam — `_l2` labels from method+path, nothing hardcodes TASK
     if _troots:
         _tf2s: dict[str, str] = {}
         for _s, _e in (amap.get("entities") or {}).items():

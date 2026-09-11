@@ -13,7 +13,7 @@
 # FIRE and SILENT both exercised (mutation-proven). Exit 0 = all pass.
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
-GEN="$REPO/templates/center/generators"
+GEN="${GEN_OVERRIDE:-$REPO/templates/center/generators}"   # override for the mutation proof
 
 python3 - "$GEN" <<'PY'
 import sys, json, tempfile, subprocess, pathlib, os
@@ -50,27 +50,48 @@ with tempfile.TemporaryDirectory() as td:
     # commit B: touch ONLY docs (no graph node) → MUST be skipped
     (root / "docs/README.md").write_text("# docs v2\n")
     git("add", "-A"); git("commit", "-qm", "B: docs only")
-    # commit C (newest): touch only the backend file → 2 nodes
+    # commit C: a MAPPED file (small change → literal lines) AND an UNMAPPED one in the SAME
+    # commit — so "an unmapped file never enters diffs" is a live assertion, not a vacuous one
     (root / "api/recipe.py").write_text("x=3\n")
+    (root / "docs/README.md").write_text("# docs v3\n")
     git("add", "-A"); git("commit", "-qm", "C: recipe api")
+    # commit D (newest): rewrite the fe file WIDE — past _SMALL, so counts only, no lines
+    (root / "web/RecipeScreen.tsx").write_text("".join(f"export const v{i}={i}\n" for i in range(40)))
+    git("add", "-A"); git("commit", "-qm", "D: wide screen rewrite")
 
     cs = _a3_commits.build_commits(root, GRAPH, n=30)
-    check(cs is not None and len(cs) == 2,
-          f"only the 2 MAP-TOUCHING commits are kept (B, docs-only, is skipped) — got {None if cs is None else len(cs)}")
+    check(cs is not None and len(cs) == 3,
+          f"only the 3 MAP-TOUCHING commits are kept (B, docs-only, is skipped) — got {None if cs is None else len(cs)}")
     subs = [c["subject"] for c in (cs or [])]
     check("B: docs only" not in subs, "the docs-only commit produces NO journey (map-touching filter)")
-    check(bool(cs) and cs[0]["subject"].startswith("C") and cs[1]["subject"].startswith("A"),
-          "commits are newest-first (C before A)")
+    check(bool(cs) and cs[0]["subject"].startswith("D") and cs[2]["subject"].startswith("A"),
+          "commits are newest-first (D before C before A)")
     # C touched the backend file → both nodes homed to it, sorted; the no-file node never appears
-    check(bool(cs) and cs[0]["touched"] == ["endpoint:GET /recipes", "model:Recipe"],
-          f"a backend file maps to ALL its nodes, sorted; a file-less node never maps — got {cs[0]['touched'] if cs else None}")
+    check(bool(cs) and cs[1]["touched"] == ["endpoint:GET /recipes", "model:Recipe"],
+          f"a backend file maps to ALL its nodes, sorted; a file-less node never maps — got {cs[1]['touched'] if cs else None}")
     # A touched backend + fe → the fe piece id is included (fe file mapping works)
-    check(bool(cs) and "fe:web/RecipeScreen.tsx" in cs[1]["touched"] and cs[1]["nTouched"] == 3,
-          f"a commit touching an fe file maps to its fe piece — got {cs[1]['touched'] if cs else None}")
+    check(bool(cs) and "fe:web/RecipeScreen.tsx" in cs[2]["touched"] and cs[2]["nTouched"] == 3,
+          f"a commit touching an fe file maps to its fe piece — got {cs[2]['touched'] if cs else None}")
     # n limit counts MAP-TOUCHING commits: n=1 → only the newest map-touching (C)
     c1 = _a3_commits.build_commits(root, GRAPH, n=1)
-    check(bool(c1) and len(c1) == 1 and c1[0]["subject"].startswith("C"),
-          "n limits to the newest MAP-TOUCHING commits (n=1 → C only)")
+    check(bool(c1) and len(c1) == 1 and c1[0]["subject"].startswith("D"),
+          "n limits to the newest MAP-TOUCHING commits (n=1 → D only)")
+    # ── the CHANGE BLOCK the commit-journey step panel reads (operator 2026-09-11) ──
+    D, C = cs[0], cs[1]
+    check("diffs" in C and "api/recipe.py" in C["diffs"], "each commit carries per-file diffs for its MAPPED files")
+    check(C["diffs"]["api/recipe.py"]["a"] == 1 and C["diffs"]["api/recipe.py"]["d"] == 1,
+          f"per-file added/deleted are exact — got {C['diffs']['api/recipe.py']}")
+    check(C["add"] == 2 and C["del"] == 2,
+          f"the rollup ± counts the WHOLE commit, mapped or not — got +{C['add']}/-{C['del']}")
+    lines = C["diffs"]["api/recipe.py"].get("lines")
+    check(bool(lines) and ["-", "x=1"] in lines and ["+", "x=3"] in lines,
+          f"a SMALL change carries its literal ± lines (side-by-side) — got {lines}")
+    check(all(len(p) == 2 and p[0] in "+-" for p in lines), "every stored line is a [sign, text] pair")
+    big = D["diffs"]["web/RecipeScreen.tsx"]
+    check(big["a"] == 40 and big["d"] == 1, f"a BIG file still carries exact counts — got {big}")
+    check("lines" not in big, "a BIG change carries NO literal lines — counts only, never truncated content")
+    check("api/recipe.py" in C["diffs"] and "docs/README.md" not in C["diffs"],
+          f"an UNMAPPED file never enters diffs even beside a mapped one — got {sorted(C['diffs'])}")
     # DETERMINISM: a function of tree+head → byte-identical
     check(json.dumps(cs, sort_keys=True) == json.dumps(_a3_commits.build_commits(root, GRAPH, n=30), sort_keys=True),
           "build_commits is byte-deterministic across re-runs")

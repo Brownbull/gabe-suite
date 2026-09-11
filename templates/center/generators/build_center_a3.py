@@ -2088,6 +2088,11 @@ def main() -> int:
     if _tm:
         amap["tasks"] = {"tasks": _tm.get("tasks") or [], "stats": _tm.get("stats") or {}}
         amap["task_roots"] = _a3_code.parse_task_roots(REPO_ROOT)
+    # class 15: server actions as endpoint-equivalent roots (a Next.js app has no @router).
+    # Emitted non-empty-only, like tasks — absent on a repo with no "use server" module.
+    _acts = _a3_code.parse_action_roots(REPO_ROOT)
+    if _acts:
+        amap["action_roots"] = _acts
     _boot = _a3_code.parse_boot_roots(REPO_ROOT)
     if _boot:
         amap["boot_roots"] = _boot
@@ -2141,7 +2146,7 @@ def main() -> int:
                      for _k, _v in _a3_code.function_insight(REPO_ROOT).items()
                      if _v.get("access") or _v.get("sinks") or _v.get("externals")},   # A2+C4+prov: joined onto the call-tree
             dispatches=(_dm.get("dispatches") or []) + (_tm.get("dispatches") or []),   # class 6 + 13: event-bus and task edges, one wire
-            boot_roots=(amap.get("boot_roots") or []) + (amap.get("task_roots") or []),  # class 7 + 13: boot + task roots homed for behind/calls
+            boot_roots=(amap.get("boot_roots") or []) + (amap.get("task_roots") or []) + (amap.get("action_roots") or []),  # class 7 + 13 + 15: boot + task + action roots homed for behind/calls
             module_calls=_mc.get("calls") or [])      # class 14: module-attribute calls resolved suite-side (tier0 review 2026-09-07)
         # the web→API bridge arm (Path A frontend): a SEPARATE module with its own
         # try/except so a fetch-parser bug degrades the bridge to honest-empty and

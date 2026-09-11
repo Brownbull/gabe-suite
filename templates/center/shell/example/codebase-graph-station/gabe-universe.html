@@ -418,6 +418,22 @@
   #stepnote .snhop{ margin-top:4px; color:var(--muted); font-size:13px; }
   #stepnote .snhop b{ color:var(--ink); }
   #stepnote .sndoc{ margin-top:5px; color:var(--muted); font-size:13px; font-style:italic; border-top:1px dotted var(--line); padding-top:5px; }
+  /* the COMMIT step's change block: what this commit did to THIS element's file. A small change
+     shows its literal lines side by side (removed left · added right); a big one shows the counts
+     alone — never truncated content pretending to be the whole change. */
+  #stepnote.min .sndiff{ display:none; }
+  #stepnote .sndiff{ margin-top:6px; border-top:1px dotted var(--line); padding-top:6px; font-size:12px; }
+  #stepnote .sdhd{ display:flex; gap:8px; align-items:baseline; color:var(--muted); }
+  #stepnote .sdf{ font-family:var(--mono,ui-monospace,SFMono-Regular,Menlo,monospace); color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #stepnote .sdadd{ color:#2f9e44; font-weight:600; } #stepnote .sddel{ color:#e03131; font-weight:600; }
+  #stepnote .sdcols{ display:grid; grid-template-columns:1fr 1fr; gap:0 10px; margin-top:5px; }
+  @media (max-width:640px){ #stepnote .sdcols{ grid-template-columns:1fr; } }
+  #stepnote .sdcol{ min-width:0; }
+  #stepnote .sdln{ font-family:var(--mono,ui-monospace,SFMono-Regular,Menlo,monospace); font-size:11.5px; line-height:1.45;
+    white-space:pre-wrap; word-break:break-word; padding:1px 5px; border-radius:3px; margin-bottom:2px; }
+  #stepnote .sdln.d{ background:color-mix(in srgb, #e03131 14%, transparent); color:var(--ink); }
+  #stepnote .sdln.a{ background:color-mix(in srgb, #2f9e44 14%, transparent); color:var(--ink); }
+  #stepnote .sdnone{ color:var(--muted); font-style:italic; }
   #stepnote .snnav{ display:flex; align-items:center; gap:6px; margin-left:auto; flex:none; }
   #stepnote .snnav button{ width:24px; height:22px; font:700 14px/1 var(--font-ui); color:var(--ink); background:none; border:1px solid var(--line); border-radius:5px; cursor:pointer; padding:0; }
   #stepnote .snnav button:hover{ border-color:var(--accent); }
@@ -2780,6 +2796,7 @@ function _commitCollect(){ var C=window.GABE_COMMITS; if(!C||!C.length) return [
       meta:carriers.map(function(id){ return { id:id, why:"touched", from:null }; }),   // step note: "touched by this commit"
       name:(c.short?c.short+" ":"")+(c.subject||c.sha), short:c.short, date:c.date, author:c.author,
       nFiles:c.nFiles||0, nTouched:carriers.length, start:_commitBucket(c.date),
+      diffs:c.diffs||null, add:c.add||0, del:c.del||0,   // per-file (added, deleted) + the literal lines of SMALL files (_a3_commits)
       fe:{screens:[],users:[]}, feN:0 }; })
     .filter(function(j){ return j.carriers.length; }); }   // a commit that touched nothing ON THE MAP has no journey
 /* ── BACKEND journeys (operator, 2026-08-27): a test journey is a COVERAGE SET (every element one
@@ -3212,15 +3229,35 @@ function _stepNote(){ var el=document.getElementById("stepnote"); if(!el) return
         (meta.why==="dispatch")?("<b>Hop "+meta.hop+"</b> · <span class=\"snd\">DISPATCHED</span> — handed off here by name: a queue or the event bus routes to this function after "+esc(frmL)+" enqueues / publishes (its own writes/reads follow, if any)"):
         (meta.why==="write")?("<b>Hop "+meta.hop+"</b> · <span class=\"snw\">WRITTEN</span> by "+esc(frmL)+" — the red access wire"):
         (meta.why==="read")?("<b>Hop "+meta.hop+"</b> · <span class=\"snr\">read</span> by "+esc(frmL)):
+        (meta.why==="touched")?("<b>touched</b> by commit "+esc((j&&j.short)||"")+" — a coverage step (entity-by-entity), not an execution order"):
         ("<b>Hop "+meta.hop+"</b> · reached by a calls wire"+(_heat&&n&&n.d2w===0?" (orange — at the write)":_heat&&n&&n.d2w===1?" (amber — one hop out)":"")); }
   else if(WALK.mode==="journey"&&j&&(j.bk||j.wf)&&n&&n.fe){ hop="<b>UI leg</b> · a screen that fetches this journey's endpoint over the bridge — the backend chain starts at the first endpoint step"; }
   else if(WALK.mode==="journey"&&j&&!j.bk&&!j.wf){ hop="test-journey step — an element this test touches (coverage set, entity-by-entity; not an execution order)"; }
+  /* ── the COMMIT step's CHANGE BLOCK (operator 2026-09-11): walking a commit journey, each step
+     says what that commit did to THIS element's file — literal lines side by side when the change
+     is small enough to read (_a3_commits._SMALL), the counts alone when it is not. Honest-empty:
+     a step whose file the commit did not touch, or a feed with no `diffs`, renders nothing. ── */
+  var dif="";
+  if(j&&j.commit&&j.diffs&&n){
+    var _f=(n.det&&n.det.file)||(String(id).indexOf("fe:")===0?String(id).slice(3).split("#")[0]:"");
+    var d=_f?j.diffs[_f]:null;
+    if(d){ var _a=d.a==null?-1:d.a, _d=d.d==null?-1:d.d, bin=(_a<0||_d<0);
+      dif='<div class="sndiff"><div class="sdhd"><span class="sdf" title="'+esc(_f)+'">'+esc(_f)+'</span>'
+        +(bin?'<span class="sdnone">binary</span>'
+             :('<span class="sdadd">+'+_a+'</span><span class="sddel">\u2212'+_d+'</span>'))+'</div>';
+      var L=d.lines||null;
+      if(L&&L.length){ var rem=[],add=[];
+        L.forEach(function(p){ (p[0]==="-"?rem:add).push('<div class="sdln '+(p[0]==="-"?"d":"a")+'">'+esc(p[1]||" ")+'</div>'); });
+        dif+='<div class="sdcols"><div class="sdcol">'+(rem.length?rem.join(""):'<div class="sdnone">nothing removed</div>')+'</div>'
+           +'<div class="sdcol">'+(add.length?add.join(""):'<div class="sdnone">nothing added</div>')+'</div></div>'; }
+      dif+='</div>'; } }
   el.innerHTML='<div class="snhd"><span class="snpos">'+(WALK.i+1)+'/'+WALK.steps.length+'</span>'
     +(typeof svgInline==="function"&&kind!=="?"?('<span style="display:inline-flex;flex:none">'+svgInline(n?_dispGlyph(n):kind, col, 14)+'</span>'):"")
     +'<span class="snlbl" title="'+esc(lbl)+'">'+esc(lbl)+'</span><span class="snkind">'+esc(n&&_isView(n)?"view":kind)+'</span>'
     +(ent?('<span class="snent" style="background:'+col+';color:'+onCol(col)+'">'+esc(ent)+'</span>'):"")
     +'<span class="snnav"><button class="snmin" title="minimize to the title / expand">–</button><button title="previous step (Alt+A)" data-sd="-1">‹</button><button title="next step (Alt+D)" data-sd="1">›</button></span></div>'
     +'<div class="snwhat">'+what+'</div>'+(hop?('<div class="snhop">'+hop+'</div>'):"")
+    +dif
     +(doc?('<div class="sndoc">'+esc(doc)+'</div>'):"");
   el.querySelectorAll("[data-sd]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-sd")); }; });
   el.classList.toggle("min", !!window.__uniStepMin);                              // collapse to the title row (persisted across steps — operator)

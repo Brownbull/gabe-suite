@@ -248,7 +248,7 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
     # rule 0b · class 13 · TASK roots (Celery/ARQ/Taskiq workers) join the handler set too — homed to the
     # entity that claims the task file, else __unclaimed__ — so a worker's chain draws past the queue.
     _f2s_t = {f: s for s, e in (amap.get("entities") or {}).items() if e for _l, f, _n in (e.get("files") or [])}
-    for _r in amap.get("task_roots") or []:
+    for _r in (amap.get("task_roots") or []) + (amap.get("action_roots") or []):   # class 13 + 15
         _tid = str(_r.get("file")) + "#" + str(_r.get("fn"))
         drawn_fn.setdefault(_tid, _f2s_t.get(str(_r.get("file")), "__unclaimed__"))
         _handlers.add(_tid)
