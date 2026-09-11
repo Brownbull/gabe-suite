@@ -35,7 +35,13 @@ import re
 import subprocess
 from pathlib import Path
 
-import _a3_board as B
+import sys as _sys
+from pathlib import Path as _Path
+# The A3 modules live in templates/center/generators (the one source of record — the forked copies that lived
+# beside this file were deleted 2026-09-10); resolve them here so every importer of this module works, not
+# only build_suite_center.py.
+_sys.path.insert(1, str(_Path(__file__).resolve().parents[3] / "templates" / "center" / "generators"))
+import _a3_board as B  # noqa: E402
 
 # --------------------------------------------------------------- tracks
 

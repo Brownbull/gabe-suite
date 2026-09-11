@@ -88,8 +88,11 @@ def working_tree_dirty() -> list[str]:
     shave the first character off the first filename.
     """
     out = _git("status", "--porcelain")
-    return [ln.strip().split(None, 1)[-1]
-            for ln in out.splitlines() if ln.strip()]
+    rows = [ln.strip().split(None, 1)[-1] for ln in out.splitlines() if ln.strip()]
+    # the build's OWN outputs are not "uncommitted work": pass 1 writes docs/site/center/* before pass 2 reads
+    # the tree, so every regen listed itself as dirty (35 of 40 rows — review 2026-09-10). The centre's output
+    # dir is excluded; anything else dirty is still surfaced.
+    return [r for r in rows if not r.startswith(("docs/site/center/", "docs/site/center"))]
 
 
 def regen_stamp() -> str:

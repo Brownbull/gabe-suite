@@ -1,6 +1,6 @@
 {
  "generator": "build_suite_center.py",
- "head": "bab3aac",
+ "head": "39d8b2e",
  "project": "Gabe Suite",
  "groups": [
   {
@@ -22,7 +22,7 @@
      "label": "Board",
      "href": "board.html",
      "icon": "board",
-     "count": 18
+     "count": 47
     }
    ]
   },
@@ -40,13 +40,13 @@
      "label": "Hooks",
      "href": "hooks.html",
      "icon": "zap",
-     "count": 8
+     "count": 9
     },
     {
      "label": "Testing",
      "href": "testing.html",
      "icon": "check",
-     "count": 22
+     "count": 47
     }
    ]
   },
@@ -58,7 +58,7 @@
      "label": "Agents",
      "href": "agents.html",
      "icon": "users",
-     "count": 28
+     "count": 30
     },
     {
      "label": "Format methods",
@@ -70,7 +70,7 @@
      "label": "Functions",
      "href": "functions.html",
      "icon": "code",
-     "count": 480
+     "count": 940
     },
     {
      "label": "Data structures",

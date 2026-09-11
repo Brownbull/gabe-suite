@@ -31,6 +31,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+# ONE source of record (review 2026-09-10): _a3_render · _a3_board · _a3_guard · _center_data · _results_ingest are
+# imported from templates/center/generators — the docs/center copies were a 62%-dead fork, 9–64 lines behind.
+sys.path.insert(1, str(Path(__file__).resolve().parents[3] / "templates" / "center" / "generators"))
 
 import _a3_render as R          # noqa: E402
 import _suite_data as D         # noqa: E402

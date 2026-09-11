@@ -94,14 +94,14 @@ case "$MODE" in
     echo "== gate: links, anchors, assets, unfilled tokens =="
     python3 "$HERE/check_suite_center.py"
     echo "== gate: every diagram renders over file:// =="
-    node "$REPO/skills/gabe-docsite/tools/diagram-compliance.mjs" docs/site/center
+    node "$REPO/skills/gabe-docsite/tools/diagram-compliance.mjs" "$REPO/docs/site/center"
     prism_gates
     ;;
   check)
     echo "== gate: links, anchors, assets, unfilled tokens =="
     python3 "$HERE/check_suite_center.py"
     echo "== gate: every diagram renders over file:// =="
-    node "$REPO/skills/gabe-docsite/tools/diagram-compliance.mjs" docs/site/center
+    node "$REPO/skills/gabe-docsite/tools/diagram-compliance.mjs" "$REPO/docs/site/center"
     prism_gates
     ;;
   *)
