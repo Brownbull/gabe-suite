@@ -1,0 +1,67 @@
+/* Endpoint lab — the lab's own chrome. The palette and the card chrome come from the station (STATION.CSSVARS +
+   STATION.CARDCSS, injected at boot); these rules only lay the bench out. Sizes are absolute px on purpose: the
+   legibility floor is measured (12px computed), and the box IS the console's middle region. */
+*{ box-sizing:border-box; }
+html,body{ margin:0; min-height:100%; background:var(--bg); color:var(--ink); font:13px/1.45 var(--font-ui); }
+code{ font:600 .95em var(--font-mono); color:var(--ink); }
+#lab{ padding:18px 22px 40px; }
+#lede{ max-width:1400px; margin-bottom:14px; }
+#lede .ltitle{ display:flex; align-items:center; gap:8px; font:800 16px/1.2 var(--font-ui); }
+#lede .ltitle b{ color:var(--accent); }
+#lede .lsub{ margin-top:6px; color:var(--muted); font-size:12px; max-width:1100px; }
+#row{ display:flex; gap:16px; align-items:flex-start; }
+#bench{ flex:none; background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
+#bench.box-work{ width:1100px; } #bench.box-dock{ width:826px; }
+#bench.box-work #panel{ height:420px; } #bench.box-dock #panel{ height:264px; }
+#panel{ position:relative; overflow:hidden; background:var(--chip-bg); }
+#panel .perr{ color:var(--red); padding:12px; font:600 12px var(--font-mono); }
+#panel .pend{ display:flex; align-items:center; gap:8px; padding:14px 16px; color:var(--muted); font-size:12px; } #panel .pend b{ color:var(--ink); font:700 12px var(--font-mono); letter-spacing:.06em; }
+/* ── head strip: the station's phead, folded into one row ── */
+#headstrip{ display:grid; grid-template-columns:auto auto 1fr auto; align-items:center; gap:14px; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--nav-bg); }
+#headstrip .hname{ display:flex; align-items:center; gap:7px; }
+#headstrip .pname{ font:600 15px/1.2 var(--font-mono); }
+#headstrip .htype{ display:flex; align-items:center; gap:6px; font:700 12px/1 var(--font-ui); letter-spacing:.06em; text-transform:uppercase; }
+#headstrip .hent{ color:var(--muted); font-weight:600; display:inline-flex; align-items:center; gap:5px; text-transform:none; letter-spacing:0; font-size:12px; }
+#headstrip .hent .pdot, #headstrip .pdot{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+#headstrip .pheadbadge{ display:inline-flex; align-items:center; cursor:pointer; margin:0 2px; } #headstrip .pheadbadge canvas{ width:16px; height:16px; display:block; }
+#headstrip .hmeta{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+#headstrip .hchip{ display:inline-flex; align-items:center; gap:5px; font:600 12px/1 var(--font-mono); color:var(--muted); background:var(--chip-bg); border:1px solid var(--line); border-radius:7px; padding:4px 8px; cursor:help; }
+#headstrip .flagrow{ margin:0; padding:3px 7px; font-size:12px; cursor:help; } #headstrip .flagrow .flbl{ font-size:12px; }
+#headstrip .habove{ display:flex; gap:2px; }
+#headstrip .habove .pnav{ padding:3px 7px; font-size:12px; gap:6px; } #headstrip .habove .pnl{ max-width:120px; }
+/* ── tabs: icons, a count each, the word on hover ── */
+#tabs{ display:flex; gap:4px; padding:7px 12px 0; border-bottom:1px solid var(--line); background:var(--panel); }
+#tabs .tab{ display:inline-flex; align-items:center; gap:6px; padding:7px 12px 9px; border:none; border-bottom:2px solid transparent; background:none; color:var(--muted); cursor:pointer; font:700 12px/1 var(--font-ui); border-radius:6px 6px 0 0; }
+#tabs .tab svg{ width:15px; height:15px; }
+#tabs .tab:hover{ color:var(--ink); background:var(--hov-bg); }
+#tabs .tab.on{ color:var(--ink); border-bottom-color:var(--accent); }
+#tabs .tab .tabn{ background:var(--chip-bg); border:1px solid var(--line); border-radius:8px; padding:1px 6px; font-size:12px; font-weight:700; }
+#tabs .tab.on .tabn{ background:var(--accent); color:#fff; border-color:var(--accent); }
+/* ── box controls ── */
+#boxctl{ display:flex; align-items:center; gap:6px; padding:7px 12px; border-top:1px solid var(--line); background:var(--nav-bg); font:600 12px/1 var(--font-mono); color:var(--muted); }
+#boxctl .bl{ margin-left:8px; text-transform:uppercase; letter-spacing:.08em; font-size:12px; } #boxctl .bl:first-child{ margin-left:0; }
+#boxctl .bb{ font:700 12px/1 var(--font-mono); color:var(--muted); background:var(--chip-bg); border:1px solid var(--line); border-radius:5px; padding:4px 7px; cursor:pointer; }
+#boxctl .bb.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
+#boxctl #boxread{ margin-left:auto; }
+/* ── the no-loss checklist ── */
+#notes{ width:300px; flex:none; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+#notes .nhd{ font:800 12px/1 var(--font-mono); letter-spacing:.06em; text-transform:uppercase; color:var(--ink); display:flex; justify-content:space-between; }
+#notes .nhd span{ color:var(--accent); }
+#notes .nsub{ color:var(--muted); font-size:12px; margin:6px 0 8px; }
+#notes .cv{ display:grid; grid-template-columns:104px 1fr; gap:2px 8px; padding:4px 6px; border-radius:6px; font-size:12px; color:var(--muted); border-left:2px solid var(--line); margin-bottom:3px; }
+#notes .cv b{ font:700 12px/1.4 var(--font-mono); color:var(--muted); }
+#notes .cv span{ color:var(--muted); } #notes .cv i{ grid-column:2; font-style:normal; font:600 12px/1.4 var(--font-mono); color:var(--line); }
+#notes .cv.on{ border-left-color:var(--ok); } #notes .cv.on b{ color:var(--ink); } #notes .cv.on i{ color:var(--ok); }
+/* ── motion contract: pause freezes every animation; reduced motion shows the finished frame ── */
+body.motion-off *{ animation-play-state:paused !important; }
+@media (prefers-reduced-motion: reduce){ #panel *{ animation-duration:.001s !important; animation-iteration-count:1 !important; animation-fill-mode:forwards !important; } }
+/* the hover card — the station's .jdcolpop, plus a floor so nothing in it computes under 12px */
+#hover{ font-size:12px; } #hover .cpbody{ font-size:12px; }
+
+/* ── the 12px FLOOR over the lifted card chrome (the station sets .sechd 10px · .pchip/.sublbl 11px · .cnt 10px;
+   the operator's legibility law is 12px computed, measured by the probe) ── */
+#bench .sechd{ font-size:12px; } #bench .sechd .cnt{ font-size:12px; } #bench .pchip{ font-size:12px; } #bench .sublbl{ font-size:12px; }
+#bench .kv{ font-size:12px; } #bench .kv .k{ width:82px; } #bench .ttag{ font-size:12px; } #bench .tab .tabn{ font-size:12px; }
+#bench .jmeta{ font-size:12px; } #bench .jdrw{ font-size:12px; line-height:1.3; } #bench .more{ font-size:12px; } #bench .doc{ font-size:12px; }
+#bench .pnav .pnm{ font-size:12px; } #bench .flagrow .flbl{ font-size:12px; } #bench .badgepop .bph{ font-size:12px; }
+#hover .cpsub, #hover .cprow, #hover .cprow .cpk, #hover .cpclick, #hover .cpgrl{ font-size:12px; }

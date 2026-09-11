@@ -1,0 +1,138 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Endpoint lab · POST /setup/complete — the six parts, one panel at a time</title>
+<!-- The station's visual system and the door's facts are GENERATED (gen-station-tokens.py · gen-endpoint-facts.py). -->
+<script src="_station.js"></script>
+<script src="_lab-ep.js"></script>
+<style id="stationvars">/* filled at boot from STATION.CSSVARS + STATION.CARDCSS — the station's palette and card chrome, verbatim */</style>
+<link rel="stylesheet" href="_lab-ep.css">
+<div id="lab">
+  <header id="lede">
+    <div class="ltitle"><span id="ledeglyph"></span><b>Endpoint lab</b> · the six parts of an API endpoint, one panel at a time</div>
+    <div class="lsub">bench <code id="ledebench">—</code> · facts from the frozen example feed head <code id="ledehead">—</code> · station tokens lifted by regex · nothing typed by hand.
+      Tabs are ICONS (the word on hover); every glyph carries a hover card in the station's own shape. The checklist on the right is the no-loss law made visible.</div>
+  </header>
+  <div id="row">
+    <section id="bench" class="box-work" aria-label="the console's middle region, boxed">
+      <div id="headstrip"></div>
+      <nav id="tabs" role="tablist"></nav>
+      <div id="panel" role="tabpanel"></div>
+      <div id="boxctl">
+        <span class="bl">box</span>
+        <button class="bb on" data-box="work">1100 × 420</button><button class="bb" data-box="dock">826 × 264</button>
+        <span class="bl">motion</span>
+        <button class="bb on" id="mplay" title="one shared clock — pause freezes every moving thing">playing</button>
+        <button class="bb" id="mreplay" title="restart the clock from zero">replay</button>
+        <span class="bl" id="boxread">—</span>
+      </div>
+    </section>
+    <aside id="notes">
+      <div class="nhd">no-loss checklist <span id="covn">—</span></div>
+      <div class="nsub">every row the station card shows today; a row lights when the panels render it (hover cards count)</div>
+      <div id="cov"></div>
+    </aside>
+  </div>
+</div>
+<div id="hover" class="jdcolpop" hidden></div>
+<script src="_lab-ep-panels.js"></script>
+<script>
+/* ═══ the shell: station tokens → CSS · head strip · tabs · box · clock · hover · coverage ═══ */
+(function(){
+  var S = window.STATION, F = window.LABEP;
+  document.getElementById("stationvars").textContent = S.CSSVARS + "\n" + S.CARDCSS;
+  document.getElementById("ledebench").textContent = F.identity.label + " · " + F.identity.entity;
+  document.getElementById("ledehead").textContent = F.head || "?";
+  document.getElementById("ledeglyph").innerHTML = S.icon("endpoint", 15, S.KINDCOL.endpoint);
+
+  /* ── the hover card — the station's _jdCellPop shape (header · kind/entity · rows · fields · in the station) ── */
+  var HV = document.getElementById("hover");
+  window.hoverShow = function(anchor, html){
+    HV.innerHTML = html; HV.hidden = false;
+    var r = anchor.getBoundingClientRect(), w = HV.offsetWidth, h = HV.offsetHeight;
+    var x = Math.min(window.innerWidth - w - 8, Math.max(8, r.left)), y = r.bottom + 6;
+    if (y + h > window.innerHeight - 8) y = Math.max(8, r.top - h - 6);
+    HV.style.left = x + "px"; HV.style.top = y + "px"; };
+  window.hoverHide = function(){ HV.hidden = true; };
+  window.hoverBind = function(el, htmlFn){ el.addEventListener("mouseenter", function(){ hoverShow(el, typeof htmlFn === "function" ? htmlFn() : htmlFn); });
+    el.addEventListener("mouseleave", hoverHide); el.addEventListener("click", function(ev){ ev.stopPropagation(); hoverShow(el, typeof htmlFn === "function" ? htmlFn() : htmlFn); }); return el; };
+  document.addEventListener("click", hoverHide);
+
+  /* ── coverage: the station inventory (ep-brief.md) — a renderer marks a row when it draws it ── */
+  var INV = [
+    ["HEAD", "name · kind · method badge · entity"], ["USAGE", "1 api · 0 internal"], ["GUARDS", "3 deps, 1 gate"],
+    ["EVIDENCE", "home auth by file · users auth 100% of 1 · data settings 42% of 24 → STAY"], ["ACCESSES", "24 ops: 13 reads · 11 writes"],
+    ["PAYLOAD", "6 fields → MeResponse"], ["CONNECTIONS", "reads_from 13 · writes_to 11 · touches 2 · fetched by 1 (+trust)"],
+    ["CODE BEHIND", "reach 5 · 29 behind · 12 named"], ["TESTS", "api 26 · web 1 (15 cases) · chips"], ["JOURNEYS", "6 rows + 21 more · faces · comp"],
+    ["IDENTITY", "entity · layer · fan-in"], ["SIGNATURE", "gsig · async · 21 lines · → MeResponse"], ["SOURCE", "file:254 · status 200"],
+    ["RISK", "conflict · large surface"], ["ABOVE", "cluster · entity · everything"], ["DELIVERY", "stream (empty here)"], ["MODEL ROW", "entity-model view (claim here)"], ["DOCSTRING", "(empty here)"] ];
+  var COVN = {}; INV.forEach(function(r){ COVN[r[0]] = {label: r[1], by: {}}; });
+  var covEl = document.getElementById("cov");
+  function drawCov(){ var n = 0; covEl.innerHTML = "";
+    INV.forEach(function(r){ var c = COVN[r[0]], panels = Object.keys(c.by); if (panels.length) n++;
+      var d = document.createElement("div"); d.className = "cv" + (panels.length ? " on" : "");
+      d.innerHTML = "<b>" + r[0] + "</b><span>" + r[1] + "</span><i>" + (panels.length ? panels.join(" · ") : "—") + "</i>"; covEl.appendChild(d); });
+    document.getElementById("covn").textContent = n + " / " + INV.length; }
+  window.COV = { mark: function(row, panel){ if (COVN[row]) COVN[row].by[panel] = 1; drawCov(); }, reset: function(){ INV.forEach(function(r){ COVN[r[0]].by = {}; }); drawCov(); }, rows: INV.map(function(r){ return r[0]; }), state: function(){ var o = {}; INV.forEach(function(r){ o[r[0]] = Object.keys(COVN[r[0]].by); }); return o; } };
+  drawCov();
+
+  /* ── the shared clock (ONE for every moving thing; pause freezes all; reduced motion = the finished frame) ── */
+  var CLOCK = window.CLOCK = { on: !window.matchMedia("(prefers-reduced-motion: reduce)").matches, epoch: 0, subs: [],
+    sub: function(fn){ this.subs.push(fn); fn(this); }, tick: function(){ var c = this; c.subs.forEach(function(fn){ fn(c); }); },
+    play: function(v){ this.on = v; document.body.classList.toggle("motion-off", !v); document.getElementById("mplay").textContent = v ? "playing" : "paused"; document.getElementById("mplay").classList.toggle("on", v); this.tick(); },
+    replay: function(){ this.epoch++; document.body.classList.remove("replaying"); void document.body.offsetWidth; document.body.classList.add("replaying"); this.tick(); } };
+  document.getElementById("mplay").onclick = function(){ CLOCK.play(!CLOCK.on); };
+  document.getElementById("mreplay").onclick = function(){ CLOCK.replay(); };
+  if (!CLOCK.on) CLOCK.play(false);
+
+  /* ── head strip: the station card's head, verbatim in meaning (name · kind + method badge · entity) + status · risk · above ── */
+  var I = F.identity, HS = document.getElementById("headstrip");
+  var ec = I.entity_color || "#888";
+  HS.innerHTML = '<div class="hname">' + S.icon("endpoint", 17, S.KINDCOL.endpoint) + '<span class="pname">' + I.path + '</span></div>'
+    + '<div class="htype" style="color:' + S.KINDCOL.endpoint + '">' + S.icon("endpoint", 13, S.KINDCOL.endpoint) + '<span>' + (S.KINDS.endpoint.type || "API endpoint").toUpperCase() + '</span>'
+    + '<span class="pheadbadge" id="mbadge"></span><span class="hent"><i class="pdot" style="background:' + ec + '"></i>' + I.entity + '</span></div>'
+    + '<div class="hmeta"><span class="hchip" id="hstatus">' + S.icon("info", 11) + I.status + (I.status_name ? " · " + I.status_name : "") + '</span>'
+    + '<span class="hchip" id="hfile">' + S.icon("file", 11) + I.file + ":" + I.flines + '</span>'
+    + (I.risk.large ? '<span class="flagrow warn" id="hrisk">' + S.icon("burst", 12) + '<span class="flbl">conflict · ' + (I.risk.conflict || "") + '</span></span>' : "")
+    + (I.risk.god ? '<span class="flagrow god">' + S.icon("alert", 12) + '<span class="flbl">god-object</span></span>' : "")
+    + (I.risk.untested ? '<span class="flagrow warn">' + S.icon("alert", 12) + '<span class="flbl">unguarded</span></span>' : "") + '</div>'
+    + '<div class="habove" id="habove"></div>';
+  // the METHOD badge, painted by the station's own painter (canvas), dimmed like the graph, meaning on hover
+  var mb = document.getElementById("mbadge"), cv = document.createElement("canvas"); cv.width = cv.height = 32;
+  var c = cv.getContext("2d"); c.scale(32 / 128, 32 / 128); S.badgeGlyph(c, "method", I.method); cv.style.opacity = .85; mb.appendChild(cv);
+  hoverBind(mb, function(){ return '<div class="cphd">' + S.icon("endpoint", 15, S.METHOD[I.method]) + '<b style="color:' + S.METHOD[I.method] + '">' + I.method + '</b></div><div class="cpsub">HTTP method · the station\'s badge</div><div class="cpbody">' + ((S.BADGE_DESC.method || {})[I.method] || "") + '</div>'; });
+  hoverBind(document.getElementById("hstatus"), '<div class="cphd"><b>status ' + I.status + '</b></div><div class="cpsub">declared on the decorator</div><div class="cpbody">' + (I.status_name ? "the decorator names it " + I.status_name : "a plain number on the decorator") + ' · observed by the cases: ' + Object.keys(F.tests.by_status).filter(function(k){ return /^\d/.test(k); }).map(function(k){ return k + " ×" + F.tests.by_status[k].length; }).join(" · ") + '</div>');
+  hoverBind(document.getElementById("hfile"), '<div class="cphd"><b>' + I.file + '</b></div><div class="cpsub">source · line ' + I.flines + '</div><div class="cpbody">the handler <code>' + (F.functions.handler.name || "") + '</code> starts at line ' + I.flines + ' · ' + (I.sig ? (I.sig.async ? "async · " : "") + I.sig.lines + " lines · → " + I.sig.returns : "") + '</div>');
+  if (I.risk.large) hoverBind(document.getElementById("hrisk"), '<div class="cphd"><b>conflict · large surface</b></div><div class="cpsub">the station\'s attack-fleet flag</div><div class="cpbody">behind = ' + I.risk.behind + ' functions (≥ 15) — the same rule nodeFleet uses; fan-in ' + I.risk.fanin + '. tests measured: ' + F.tests.cases.length + ' cases, so no "unguarded" flag.</div>');
+  // ABOVE — the ladder, as the station's pnav rows (cluster · entity · everything)
+  var HA = document.getElementById("habove");
+  I.above.forEach(function(a){ var r = document.createElement("div"); r.className = "pnav";
+    r.innerHTML = (a.kind === "entity" ? '<span class="pdot" style="background:' + ec + '"></span>' : S.icon(a.kind === "cluster" ? "layers" : "entity", 13))
+      + '<span class="pnl">' + a.kind + (a.kind === "everything" ? "" : " · " + a.label) + '</span><span class="pdir up">' + S.icon("up", 12) + '</span>';
+    hoverBind(r, '<div class="cphd"><b>' + a.kind + '</b></div><div class="cpsub">above this door</div><div class="cpbody">' + (a.kind === "cluster" ? I.cluster_note : a.kind === "entity" ? "the entity that claims the door (" + I.entity + ")" : "the whole universe") + '</div>');
+    HA.appendChild(r); });
+  COV.mark("HEAD", "head"); COV.mark("SOURCE", "head"); COV.mark("RISK", "head"); COV.mark("ABOVE", "head");
+
+  /* ── tabs: the five parts, ICONS with the word on hover, a count per tab (A how many) ── */
+  var TABS = document.getElementById("tabs"), PANEL = document.getElementById("panel"), cur = null;
+  var order = ["data", "functions", "tests", "widening", "security"];
+  order.forEach(function(k){ var P = window.PANELS[k]; if (!P) return;
+    var b = document.createElement("button"); b.className = "tab"; b.setAttribute("role", "tab"); b.dataset.tab = k;
+    b.innerHTML = S.icon(P.icon, 15) + '<span class="tabn">' + P.count(F) + '</span>';
+    hoverBind(b, function(){ return '<div class="cphd">' + S.icon(P.icon, 15) + '<b>' + P.word + '</b></div><div class="cpsub">part ' + (order.indexOf(k) + 1) + ' of 5</div><div class="cpbody">' + P.hint + '</div>'; });
+    b.onclick = function(ev){ ev.stopPropagation(); show(k); }; TABS.appendChild(b); });
+  function show(k){ cur = k; [].forEach.call(TABS.children, function(b){ b.classList.toggle("on", b.dataset.tab === k); });
+    PANEL.innerHTML = ""; PANEL.dataset.tab = k; try { window.PANELS[k].render(PANEL, F, S); } catch (e) { PANEL.innerHTML = '<div class="perr">render error: ' + e.message + '</div>'; console.error(e); }
+    readBox(); }
+  window.showTab = show;
+
+  /* ── the box: work 1100×420 · dock 826×264; a panel re-renders into the new size ── */
+  var bench = document.getElementById("bench");
+  function readBox(){ var r = PANEL.getBoundingClientRect(); document.getElementById("boxread").textContent = "panel " + Math.round(r.width) + " × " + Math.round(r.height) + " · tab " + (cur || "—"); }
+  [].forEach.call(document.querySelectorAll("#boxctl .bb[data-box]"), function(b){ b.onclick = function(){
+    [].forEach.call(document.querySelectorAll("#boxctl .bb[data-box]"), function(x){ x.classList.toggle("on", x === b); });
+    bench.className = "box-" + b.dataset.box; if (cur) show(cur); }; });
+  window.addEventListener("resize", readBox);
+  var first = (location.hash || "#data").slice(1); show(order.indexOf(first) >= 0 ? first : "data");
+  window.__eplabReady = true;
+})();
+</script>
