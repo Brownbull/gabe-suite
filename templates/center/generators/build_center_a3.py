@@ -38,6 +38,7 @@ import _a3_board
 import _a3_arms
 import _a3_code
 import _a3_stacks_next
+import _a3_stacks_sql
 import _a3_codetab
 import _a3_graft  # noqa: E402  (the graft-wiring arm — topology provider)
 import _a3_graph  # noqa: E402  (the C4 codebase-graph derivation)
@@ -2121,6 +2122,26 @@ def main() -> int:
         by_model=amap["test_insight"].get("by_model", {}),
         model_insight=amap["model_insight"],
         proofs=D.load_guard_proofs())
+    # THE RAW-SQL ARM (plan step 8) — the data layer's FALLBACK: it answers only where no ORM arm
+    # did. Its own try/except, like the web arm, so a parser bug degrades it to honest-empty and
+    # never touches another arm's output.
+    try:
+        _orm_t = sum(len((e or {}).get("models") or []) for e in (amap.get("entities") or {}).values())
+        _orm_a = sum(1 for v in (amap.get("function_insight") or {}).values()
+                     if ((v or {}).get("access") or {}).get("ops"))
+        _sql = _a3_stacks_sql.parse(REPO_ROOT, orm_tables=_orm_t, orm_access=_orm_a)
+        if _sql.get("present") or _sql.get("reason"):
+            amap["sql_arm"] = {k: _sql[k] for k in ("present", "reason", "role", "stats")}
+            if _sql.get("role") == "fallback" and _sql.get("present"):
+                amap["sql_arm"]["tables"] = _sql["tables"]
+                amap["sql_arm"]["access"] = _sql["access"]
+                print(f"    sql arm (fallback) — {len(_sql['tables'])} table(s) · "
+                      f"{_sql['stats']['statements']} statement(s) in {len(_sql['access'])} file(s)")
+            else:
+                print(f"    sql arm — {_sql.get('role')}: {(_sql.get('reason') or '')[:70]}")
+    except Exception as _se:  # noqa: BLE001
+        print(f"    ⚠ sql arm SKIPPED (the map is unaffected): {_se}")
+
     # THE ARMS CENSUS (extractor-gateway plan, step 3) — one state word per concept, so a zero can
     # say WHICH kind of zero it is: an app that has none, an arm that ran and extracted nothing, or
     # an idiom nobody wrote a detector for. Report-never-gate: it reads what the producers above

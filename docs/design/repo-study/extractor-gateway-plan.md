@@ -302,3 +302,48 @@ Behaviour is untouched: all three still return `{}`, pinned by assertion. Gate: 
 is the new `stats.graft.derived` key (on gustify all three read `present: true`); census identical
 on all 25 measures. `tests/arms` 5/5 (mutant: dropped needs-declaration, killed) ·
 `tests/gabe-map` 199/199 · suite-doctor CLEAN.
+
+## Step 8 — the raw-SQL arm (`this commit`) · the plan's last step, landed PARTIALLY
+
+`_a3_stacks_sql.py` reads tables and access out of SQL **string literals**, for apps that reach a
+database through a driver rather than an ORM. On keypro-front it finds both tables with all nine of
+`users`' columns, its FK, its functional unique indexes, and 8 statements across 5 files.
+
+**It is a FALLBACK, and that was forced by measurement, not taste.** The plan's gate assumed "no raw
+SQL under the three targets' claim roots". False: gustify and gastify carry genuine runtime raw SQL
+beside a working ORM arm, and tier3 reads `SELECT Id FROM User` out of a **Salesforce SOQL** literal
+where `User` is not one of its tables. An arm that speaks only when nothing else did cannot make
+that mistake, so `role` is `unused` wherever another arm already produced tables AND access.
+
+Gate: the only movement on all three repos is the arm's own record saying it stood down —
+`role: unused`, 0 tables, 0 access contributed. Census identical on all 25 measures.
+
+### Six defects review caught before this shipped
+
+| defect | measured |
+|---|---|
+| SQL matched in PROSE — `UPDATE the docs`, `DELETE FROM its cache` | 360 phantom ops / 190 gustify files |
+| a spanning `SELECT…FROM` matched `from __future__` across a file | same run |
+| Salesforce SOQL counted as a table | tier3 `User`, `UserRecordAccess` |
+| an ALTER-created stub beat the real CREATE | keypro `users` had **1** column of 9 |
+| an ALTER-ONLY file was skipped by the cheap gate | keypro's `email` never landed |
+| a functional unique index truncated at the inner paren | `lower(email` |
+
+Fixes in order: scan only inside **string literals** (a comment is not a statement); require the
+SQL **structure** that makes a verb a statement (`UPDATE t SET`, not `UPDATE t`); a floor that an
+access table is `lower_snake`; migrations excluded from access (schema history, not request path);
+CREATE columns merged ahead of ALTER-added ones; paren rebalancing.
+
+`tests/stack-sql` 8/8, **8 mutants killed** — one per floor above, plus the fallback rule.
+
+### What is NOT wired, stated plainly
+
+keypro's STORE column is still empty. The arm's output lands on `archmap.sql_arm` and the census
+now says exactly why:
+
+> `tables: unmatched` — the raw-SQL fallback reads 2 table(s) and 8 statement(s) here — they are
+> recorded on archmap.sql_arm, not yet joined to the function graph (that join is Python-only today)
+
+Joining them needs a fn-level index for TypeScript: `function_insight` is keyed `file::fn` and is
+built by the Python scanner, so a TS file's SQL has no function to attach to. That is a real next
+step with a clear shape, not a hidden failure — and the map now SAYS so instead of drawing a zero.

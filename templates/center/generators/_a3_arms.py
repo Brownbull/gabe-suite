@@ -209,6 +209,17 @@ def census(amap: dict, repo: Path, c4_stats: dict | None = None) -> dict[str, An
             rec["state"] = "unmatched"
             rec["reason"] = (f"the arm's own idiom appears in {pr['matched']} of {pr['scanned']} "
                              "scanned file(s), yet it extracted nothing — an EMPTY arm, not a clean one")
+        elif c in ("tables", "access") and (amap.get("sql_arm") or {}).get("role") == "fallback" \
+                and (amap["sql_arm"].get("tables") or amap["sql_arm"].get("access")):
+            # the raw-SQL fallback CAN see this concept, so the zero is no longer "nobody reads
+            # your idiom" — it is an arm that ran and found the data layer another arm could not
+            _sq = amap["sql_arm"]
+            rec["state"] = "unmatched"
+            rec["by"] = sorted(set(rec["by"]) | {"_a3_stacks_sql"})
+            rec["reason"] = (f"the raw-SQL fallback reads {len(_sq.get('tables') or [])} table(s) "
+                             f"and {(_sq.get('stats') or {}).get('statements', 0)} statement(s) here "
+                             "— they are recorded on archmap.sql_arm, not yet joined to the "
+                             "function graph (that join is Python-only today)")
         elif sent.get("hits"):
             rec["state"] = "unmatched"
             rec["sentinel"] = {"hits": sent["hits"], "files": sent["files"], "idiom": sent["idiom"]}
