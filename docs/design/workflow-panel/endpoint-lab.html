@@ -269,6 +269,7 @@
     [].forEach.call(RT.children, function(b){ b.classList.toggle("on", b.dataset.rt === k); });
     ["controls", "cov"].forEach(function(x){ document.getElementById("rt-" + x).hidden = (x !== k); }); }
   window.railTab = railTab;
+  railTab("controls");   /* the toggle must RUN at boot or both sections render (caught in the shot, 2026-09-11) */
   document.getElementById("blk-bench").querySelector(".bhi").innerHTML = labIco("bench", 13, "var(--accent)");
   document.getElementById("blk-head").querySelector(".bhi").innerHTML = labIco("bars", 13, "var(--accent)");
   document.getElementById("blk-parts").querySelector(".bhi").innerHTML = S.icon("layers", 13, "var(--accent)");
