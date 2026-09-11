@@ -257,6 +257,50 @@ If (1)/(2) cannot be met, cut the analogy per the ANALOGY rule ('No clean physic
 
 ---
 
+## Plain — the one-sentence, reader-side line
+
+**When:** a legend row, an icon's tooltip, a hover card's opening line, a column that has to say what
+a thing IS in the width of a table cell. Anywhere the picture carries the meaning and words appear
+only on demand. `/gabe-lens plain <concept>` · alias `pl` · "in plain-line voice".
+
+**What it is NOT:** not a compressed Gabe Block. No analogy, no map, no constraint box, no handle.
+The suit does not apply — plain has one voice.
+
+**The rule, seven lines:**
+
+1. ONE sentence. If it needs two, the concept needs splitting, not a longer line.
+2. Open with a concrete noun for what the thing IS — not its type name, not its class.
+3. At most ONE em dash, introducing the clause that sharpens it. Never two.
+4. Write from the reader's side of the screen, in the present tense: what it does FOR them, or what
+   it means WHEN THEY SEE IT.
+5. No jargon the sentence has not earned. If a term is unavoidable, the clause after the dash
+   explains it.
+6. When the honest answer is a negative, say it out loud rather than dressing it up.
+7. Never restate the label. "endpoint: an endpoint that…" is a wasted line.
+
+**The canonical set** is `_LRDEF` in `templates/center/shell/gabe-universe.html` — 83 lines written by
+the operator for the universe legend's "what it is, in your words" column. Read it before writing a
+new one; reuse the existing string verbatim when one exists rather than paraphrasing it.
+
+```
+endpoint    the API door the frontend knocks on — one URL and a verb
+model       a database table — where the data actually lives
+function    one backend step — the work behind an endpoint
+hook        reusable logic a component calls — it remembers state for it
+type        a shape of data — describes things, never runs
+entity      a business area — a planet of related screens, endpoints and tables
+flag        a switch that turns a lane on or off — the journey stops here when it is off
+unknown     "we could not tell" — said out loud, instead of calling it a module
+```
+
+**Self-check before emitting.** One sentence? Concrete noun first? At most one dash? Reader's side?
+Would someone who has never seen this system know what they are looking at? If the line only makes
+sense to someone who already knows, it has failed.
+
+**Where it sits in a hover card.** The plain line goes LAST, after the facts and a separator — the
+reader who already knows scans the numbers and stops; the reader who does not reads on and finds it.
+(Operator ruling 2026-09-11, from the endpoint lab's hover-window law.)
+
 ## Analogy Hygiene
 
 Analogies are powerful but they have a failure mode: **analogy rot.** An analogy that fits perfectly today can become misleading as the underlying system evolves.

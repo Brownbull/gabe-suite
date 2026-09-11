@@ -1,9 +1,9 @@
 ---
 name: gabe-lens
-description: "Cognitive translation — analogies, spatial maps, constraint boxes, one-line handles, adapted to your cognitive suit."
-when_to_use: "Explain this concept my way, give me a handle / analogy / map for X, annotate this file, calibrate my suit."
+description: "Cognitive translation — analogies, spatial maps, constraint boxes, one-line handles, adapted to your cognitive suit; plus PLAIN, the one-sentence reader-side line that labels a thing on a legend or a hover card."
+when_to_use: "Explain this concept my way, give me a handle / analogy / map for X, annotate this file, calibrate my suit, or write the PLAIN line for a legend row, hover card or icon (`/gabe-lens plain X`, 'in plain-line voice')."
 metadata:
-  version: 2.4.0
+  version: 2.5.0
 ---
 
 # Gabe Lens — Cognitive Translation Skill
@@ -34,6 +34,7 @@ Available suits: Spatial-Analogical (default), Sequential-Procedural, Abstract-S
 | **Explain — Full** (default) | `/gabe-lens [concept or question]` | One complete Gabe Block (~200-350 tokens) |
 | **Explain — Brief** | `/gabe-lens brief [concept]` (alias `bf`) | Constraint box + one-line handle only (~40-80 tokens) |
 | **Explain — Oneliner** | `/gabe-lens oneliner [concept]` (alias `ol`) | The one-line handle alone (~5-15 tokens) |
+| **Plain** | `/gabe-lens plain [concept]` (alias `pl`) | ONE sentence naming what the thing IS, from the reader's side — the voice of a legend row, an icon's hover card, a tooltip. Not a compression of a Gabe Block: a different shape, no analogy, no map (~10-25 tokens) |
 | **Annotate** | `/gabe-lens annotate [file-path]` (alias `an`) | Companion file `{name}-gabe-lens.md` with full Gabe Blocks for the source's 3-5 most complex concepts |
 | **Calibrate** | `/gabe-lens calibrate` (or `calibrate reset`) | Interactive: renders one concept in all 4 suits, saves the user's pick to the profile file |
 
@@ -41,7 +42,7 @@ Available suits: Spatial-Analogical (default), Sequential-Procedural, Abstract-S
 
 1. Treat any text after the invocation as `$ARGUMENTS`; the leading token selects the mode (default = Explain — Full).
 2. Read `references/lens-spec.md` IN FULL before producing any block — the binding spec for the cognitive profile, the Gabe Block template, per-component rules, analogy hygiene, and when to (not) apply a block. If missing, E6 applies — STOP.
-3. Load the cognitive suit per "Loading the Profile" above; for `calibrate`, read `SUITS.md` directly to render the 4-suit comparison.
+3. Load the cognitive suit per "Loading the Profile" above; for `calibrate`, read `SUITS.md` directly to render the 4-suit comparison. For `plain`, the suit does NOT apply — the plain line has one voice, defined in the spec's "Plain" section.
 4. Identify the target concept(s) from `$ARGUMENTS` (or, for `annotate`, from the target file's 3-5 most complex/critical concepts — not trivial facts).
 5. Produce the block(s) at the mode's fidelity level, running the spec's pre-emit self-check before emitting.
 
@@ -50,5 +51,7 @@ Available suits: Spatial-Analogical (default), Sequential-Procedural, Abstract-S
 A full Gabe Block has: THE PROBLEM (or WHAT IT ENABLES for tool/building-block concepts) → THE ANALOGY (a physical system) → HOW IT MAPS (load-bearing arrow-lines) → THE MAP (ASCII spatial diagram, ≤15 lines) → CONSTRAINT BOX (IS / IS NOT / DECIDES) → EASY TO CONFUSE WITH (optional) → ONE-LINE HANDLE (≤10 words) → ANALOGY LIMITS → SIGNAL (Quick check ✓ / Deeper question ◆). Brief and Oneliner modes are compressions of the same content, not different content.
 
 Apply a Gabe Block for architecture decisions, trade-off resolutions, failure modes, new abstractions, and counter-intuitive findings. Skip it for trivial facts, step-by-step procedures, self-explanatory code, and concepts the user has already demonstrated understanding of.
+
+**Plain** emits one sentence and nothing else: a concrete noun for what the thing IS, then at most one em dash introducing the clause that sharpens it. Written from the reader's side of the screen, present tense, no jargon the sentence has not earned, and the honest negative said out loud when that IS the meaning. It is what a legend column, an icon tooltip or a hover card opens with — never a paragraph, never a Gabe Block.
 
 The full output contract in the spec is binding.

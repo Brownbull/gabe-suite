@@ -25,7 +25,7 @@ Skills and hooks for understanding, reviewing, deciding, and shipping — with a
 
 | Skill | Command | What it does |
 |---|---|---|
-| **Gabe Lens** | `/gabe-lens` | Cognitive translation — analogies, spatial maps, constraint boxes, one-line handles |
+| **Gabe Lens** | `/gabe-lens` | Cognitive translation — analogies, spatial maps, constraint boxes, one-line handles, and **plain** lines (one reader-side sentence for a legend row or hover card) |
 | **Gabe Review** | `/gabe-review` | Code review — risk pricing, confidence scoring, interactive triage, deferred items, tier drift |
 | **Gabe Roast** | `/gabe-roast` | Adversarial gap review — stress-tests from a required perspective |
 | **Gabe Myopic** | `/gabe-myopic` | Short-sighted-user walkthrough — simulates a shallow planning horizon (1/1.5/2 steps) to flag foresight traps, overwhelm, recall demands, no-undo dead-ends |
