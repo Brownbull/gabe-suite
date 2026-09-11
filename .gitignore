@@ -22,3 +22,6 @@ graft/
 # committed, so the spike runs standalone without _build.
 docs/design/graft-adoption/spike/screenshots/
 docs/design/graft-adoption/spike/_build/
+
+# map-baseline target roster — machine-local by design (suite-doctor P6)
+tests/baselines/targets.conf

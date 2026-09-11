@@ -1,0 +1,10 @@
+# map-baseline.sh target roster — copy to targets.conf (gitignored) and edit.
+# One "name|path|env" per line. name is the baseline id; path is an absolute repo
+# root; env is optional space-separated VAR=VALUE pinned into the recipe.
+#
+# Targets should be CLEAN and pinned — a dirty tree makes its own noise in the diff.
+# Pin GABE_TS_DIR for any repo whose node_modules is not installed, or its TypeScript
+# baselines as 0 frontend pieces and the baseline silently covers half the pipeline.
+#
+# myapp|/abs/path/to/myapp|
+# bigrepo|/abs/path/to/bigrepo|GABE_TS_DIR=/abs/path/to/a/tree/with/node_modules

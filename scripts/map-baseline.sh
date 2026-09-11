@@ -30,15 +30,28 @@ BASE_DIR="${GABE_BASELINE_DIR:-$HOME/.cache/gabe-map-baselines}"
 MANIFEST_DIR="$REPO/tests/baselines"
 GENS="$REPO/templates/center/generators"
 
-# name|path|env — real projects, pinned and clean: two FastAPI+React twins and the large study repo.
-# The ENV is part of the RECIPE, not of the machine that ran it. tier3 has no installed node_modules,
-# so without a borrowed compiler its 2,614 TS files yield 0 fe pieces and the baseline would silently
-# cover only half the pipeline — then light up as a huge "refactor" delta the day someone installs it.
-TARGETS=(
-  "gustify|/home/khujta/projects/apps/gustify|"
-  "gastify|/home/khujta/projects/apps/gastify|"
-  "tier3|/home/khujta/projects/repo-study/tier3|GABE_TS_DIR=/home/khujta/projects/repo-study/tier0"
-)
+# The TARGET ROSTER is machine-local and lives OUTSIDE this file — a shipped surface must not couple
+# to one machine (suite-doctor P6). Roster file: $GABE_BASELINE_TARGETS, else tests/baselines/targets.conf
+# (gitignored). One "name|path|env" per line, blank lines and # comments ignored; see targets.conf.example.
+# The ENV is part of the RECIPE, not of the machine that ran it: a repo with no installed node_modules
+# needs GABE_TS_DIR, or its TS files baseline as 0 fe pieces and the baseline covers half the pipeline —
+# then lights up as a huge "refactor" delta the day someone installs it.
+TARGETS_FILE="${GABE_BASELINE_TARGETS:-$REPO/tests/baselines/targets.conf}"
+TARGETS=()
+if [ -f "$TARGETS_FILE" ]; then
+  while IFS= read -r line; do
+    line="${line%%#*}"; line="$(echo "$line" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')"
+    [ -z "$line" ] && continue
+    case "$line" in *"|"*) TARGETS+=("$line");; *) echo "  ⚠ ignoring malformed roster line: $line" >&2;; esac
+  done < "$TARGETS_FILE"
+fi
+if [ ${#TARGETS[@]} -eq 0 ]; then
+  echo "no baseline targets. Write $TARGETS_FILE — one 'name|path|env' per line:"
+  echo "    myapp|/abs/path/to/myapp|"
+  echo "    bigrepo|/abs/path/to/bigrepo|GABE_TS_DIR=/abs/path/to/a/tree/with/node_modules"
+  echo "  (cp tests/baselines/targets.conf.example tests/baselines/targets.conf and edit)"
+  exit 2
+fi
 
 MODE="${1:-}"; shift || true
 while [ $# -gt 0 ]; do case "$1" in --gens) GENS="$(cd "$2" && pwd)"; shift 2;; *) break;; esac; done
