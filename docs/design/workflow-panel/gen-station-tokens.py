@@ -72,6 +72,9 @@ def main() -> int:
     for name, marker in [("GLYPH", "var GLYPH="), ("P", "var P={ link:"), ("ICO", "var ICO={"),
                          ("KINDS", "var KINDS={"), ("KINDCOL", "var KINDCOL={"), ("METHOD", "var METHOD={"),
                          ("BADGE_COL", "window.__BADGE_COL={"), ("BADGE_DESC", "window.__BADGE_DESC={"),
+                         # "what it is, IN YOUR WORDS" — the legend reference's plain-words column (operator
+                         # 2026-09-03). The one canonical voice for explaining a concept; never paraphrased.
+                         ("LRDEF", "var _LRDEF={"),
                          ("OPC", "var _OPC={"), ("CONN", "var CONN={")]:
         lifted[name] = literal_after(src, marker)
     # the method/role badge PAINTER (canvas) — the function body, lifted as text; it reads window.__BADGE_COL,

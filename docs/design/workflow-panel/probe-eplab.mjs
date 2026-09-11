@@ -67,7 +67,7 @@ let hov = 0; for (const h of hels) { await h.hover(); await p.waitForTimeout(60)
 ok(hov === hels.length, 'every bar chip opens a hover card', hov + ' of ' + hels.length);
 // the card must land ON SCREEN and keep the station's width cap (a truncated CSS lift once made it full-bleed)
 const hb = await p.evaluate(() => { const x = document.getElementById('hover'); const r = x.getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, vw: innerWidth }; });
-ok(hb.l >= 0 && hb.l + hb.w <= hb.vw + 1 && hb.w <= 340 && hb.w >= 180, 'the hover card sits on screen at the station width', JSON.stringify(hb));
+ok(hb.l >= 0 && hb.l + hb.w <= hb.vw + 1 && hb.w <= 364 && hb.w >= 180, 'the hover card sits on screen at the station width', JSON.stringify(hb));
 // the rail's head-bar section switches an element off and the verbosity mode
 const before = (await p.$$('#headstrip .hel')).length;
 await p.evaluate(() => { window.HEADCFG.off.status = 1; window.drawHead(); }); await p.waitForTimeout(80);
@@ -147,6 +147,16 @@ ok(scroll.w === 'thin', 'scrollbars are the station\'s narrow themed ones', JSON
   ok(c.quiet.length === 2, 'the two quiet rules are shown and dimmed', c.quiet.join(' | '));
   ok(/≥ 15/.test(c.txt) && /≥ 50 lines/.test(c.txt) && /no case names it/.test(c.txt), 'each rule states its threshold', c.txt.slice(0, 120));
   ok(/rank 11 of 81/.test(c.txt) && /median 4/.test(c.txt), 'the card places the number against the feed', c.txt.slice(0, 200)); }
+// ── THE PLAIN LINE: every bar card opens with one sentence in the legend reference's own voice ──
+{ const hels = await p.$$('#headstrip .hel'); let withPlain = 0, texts = [];
+  for (const h of hels) { await h.hover(); await p.waitForTimeout(70);
+    const t = await p.$eval('#hover', e => { const el = e.querySelector('.cpplain'); return el ? el.textContent : ''; });
+    if (t && t.length > 15) { withPlain++; texts.push(t); } }
+  ok(withPlain === hels.length, 'every chip on the bar opens with a PLAIN line', withPlain + ' of ' + hels.length);
+  ok(texts.some(t => /the API door the frontend knocks on/.test(t)), 'the kind reuses the legend reference\'s own words, verbatim');
+  ok(texts.every(t => t.length <= 180), 'each plain line stays one sentence', String(Math.max(...texts.map(t => t.length)))); }
+{ const n = await p.evaluate(() => Object.keys(window.STATION.LRDEF || {}).length);
+  ok(n >= 80, 'the legend\'s definitions are LIFTED, not retyped', String(n)); }
 // the rail: three tabs, one section at a time, and every control an icon with a hover card
 // AT BOOT — before any click — exactly one rail section is visible, and it is the controls
 // THE OPERATOR'S OWN BAR (pasted back from the copy button 2026-09-11) is the default — pinned here

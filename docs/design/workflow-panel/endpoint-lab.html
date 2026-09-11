@@ -168,7 +168,29 @@
     t.rows.forEach(function(r){ var cls = "ctr" + (r.mark ? " mark-" + r.mark : "");
       (r.cells || []).forEach(function(c, i){ h += '<span class="' + cls + (i === 0 ? " first" : "") + '">' + c + '</span>'; }); });
     return h + "</div>"; }
+  /* ══ THE PLAIN LINE (operator 2026-09-11) ══════════════════════════════════════════════════
+     Every card leads with one sentence in the legend reference's own voice — "what it is, in your
+     words": written from the reader's side of the screen, present tense, one dash for the clause
+     that sharpens it, no jargon. The KIND definitions are LIFTED from the station (STATION.LRDEF,
+     the operator's own column); the field concepts below are written to the same rule.        ══ */
+  var PLAIN = Object.assign({}, S.LRDEF || {}, {
+    status: "the code the door promises when the work goes right — the other codes are the ways it can refuse",
+    risk: "a size warning, not a fault — it says changing this will drag a lot of other code with it",
+    source: "the file and line where this door is written — where you go to change it",
+    cluster: "the group of doors inside the entity that share a URL root",
+    above: "one step out — the cluster, then the entity, then everything",
+    method: "the verb — what kind of thing the caller is asking for",
+    name: "the URL the frontend calls — the door's address",
+    commit: "the moment the writes become permanent — one transaction, all or nothing",
+    guard: "a check that runs before the work — it can refuse the request outright",
+    journey: "a test that walks through more than one business area",
+    payload: "the fields the door hands back — the size of the answer",
+    behind: "every function the door reaches — how much code one change touches",
+    tests: "the cases that name this door — what proves it works",
+    workflow: "a real user's path, named by a human — the order these doors are called in" });
   function hcard(o){ var h = '<div class="cphd">' + (o.icon ? S.icon(o.icon, 15, o.color) : "") + '<b' + (o.color ? ' style="color:' + o.color + '"' : "") + '>' + o.title + '</b></div>';
+    var plain = o.plain || (o.plainKey && PLAIN[o.plainKey]);
+    if (plain) h += '<div class="cpplain">' + plain + '</div>';
     if (o.sub) h += '<div class="cpsub">' + o.sub + '</div>';
     (o.rows || []).forEach(function(r){ h += cprow(r); });
     if (o.table) h += cptable(o.table);
@@ -233,7 +255,7 @@
   var HEADEL = [
     { key: "kind", word: "kind", note: "the endpoint glyph — the icon IS the kind, so the words 'API ENDPOINT' are redundant beside it",
       build: function(){ return chip({ key: "kind", icon: "endpoint", col: S.KINDCOL.endpoint, cls: "kindchip", label: "kind", value: HEADCFG.mode === "label" ? (S.KINDS.endpoint.type || "API endpoint") : null,
-        card: hcard({ title: "API endpoint", icon: "endpoint", color: S.KINDCOL.endpoint, sub: "the kind of element",
+        card: hcard({ title: "API endpoint", icon: "endpoint", color: S.KINDCOL.endpoint, plainKey: "endpoint", sub: "the kind of element",
           rows: [["layer", I.layer], ["in this feed", F.feedwide.endpoints + " endpoints"]], body: S.KINDS.endpoint.doc || "" }) }); } },
     { key: "kindword", word: "kind in words", note: "the kind spelled out — OFF by default: the icon already says it (the operator's icon rule)",
       build: function(){ return chip({ key: "kindword", cls: "kindword", value: (S.KINDS.endpoint.type || "API endpoint").toUpperCase(), col: S.KINDCOL.endpoint,
@@ -244,7 +266,7 @@
         cv.style.width = cv.style.height = mz + "px";
         var w = el("span", { class: "mbadge", id: "mbadge" }); w.append(cv);
         return chip({ key: "method", iconNode: w, cls: "methodchip", label: "method", value: I.method,
-          card: hcard({ title: I.method, icon: "endpoint", color: S.METHOD[I.method], sub: "HTTP method · the station's badge",
+          card: hcard({ title: I.method, icon: "endpoint", color: S.METHOD[I.method], plainKey: "method", sub: "HTTP method · the station's badge",
             rows: [["means", (S.BADGE_DESC.method || {})[I.method] || "—"], ["colour", S.METHOD[I.method]]],
             body: "the glyph is the station's, painted by its own painter — the graph and the bar cannot drift apart." }) }); } },
     { key: "name", word: "name", note: "the door's path — the one thing that is always words",
@@ -252,17 +274,17 @@
         var c = el("span", { class: "hel hname sh-" + st.shape }); c.dataset.el = "name";
         if (wantText("name")) c.append(el("span", { class: "pname" }, I.path));
         else c.insertAdjacentHTML("beforeend", S.icon("doc", st.size, "var(--muted)"));
-        hoverBind(c, hcard({ title: I.label, icon: "endpoint", color: S.KINDCOL.endpoint, sub: "the door",
+        hoverBind(c, hcard({ title: I.label, icon: "endpoint", color: S.KINDCOL.endpoint, plainKey: "name", sub: "the door",
           rows: [["method", I.method], ["path", I.path], ["handler", (F.functions.handler.name || "—")], ["id", I.id]], station: I.id })); return c; } },
     { key: "entity", word: "entity", note: "which entity claims the door — the dot is the entity colour used everywhere in the graph",
       build: function(){ return chip({ key: "entity", dot: ec, label: "entity", value: I.entity, cls: "entchip",
-        card: hcard({ title: I.entity, icon: "entity", color: ec, sub: "the entity that claims this door",
+        card: hcard({ title: I.entity, icon: "entity", color: ec, plainKey: "entity", sub: "the entity that claims this door",
           rows: [["endpoints", String((F.feedwide.entity_counts || {}).endpoints || "—")], ["models", String((F.feedwide.entity_counts || {}).models || "—")],
                  ["schemas", String((F.feedwide.entity_counts || {}).schemas || "—")], ["files", String((F.feedwide.entity_counts || {}).files || "—")], ["lines", String((F.feedwide.entity_counts || {}).lines || "—")]],
           body: "the CLAIM — the join key every tool uses. The evidence row on the DATA panel says whether the witnesses agree." }) }); } },
     { key: "cluster", word: "cluster", note: "the sub-group inside the entity — it was MISSING from the bar (operator 2026-09-11)",
       build: function(){ return chip({ key: "cluster", icon: "layers", label: "cluster", value: I.cluster, cls: "cluchip",
-        card: hcard({ title: I.cluster, icon: "layers", sub: "the cluster inside " + I.entity,
+        card: hcard({ title: I.cluster, icon: "layers", plainKey: "cluster", sub: "the cluster inside " + I.entity,
           rows: [["from", "the URL's first segment"], ["entity", I.entity]],
           body: I.cluster_note }) }); } },
     { key: "status", word: "status", note: "the success code the route decorator declares (status_code=) — a promise the handler makes, not a measurement",
@@ -284,7 +306,7 @@
           return { mark: c === mine ? "ok" : null,
                    cells: [c, (c === mine ? "<b>SUCCESS</b> · " : "") + (HTTPM[c] || "—"), n ? n + " case" + (n === 1 ? "" : "s") : "—"] }; });
         return chip({ key: "status", icon: "info", label: "declares", value: I.status + (I.status_name ? " " + I.status_name : ""), col: S.OPC.read, cls: "statchip",
-          card: hcard({ title: "declares " + I.status, icon: "info", color: S.OPC.read, sub: "the SUCCESS code · status_code= on the route decorator",
+          card: hcard({ title: "declares " + I.status, icon: "info", color: S.OPC.read, plainKey: "status", sub: "the SUCCESS code · status_code= on the route decorator",
             rows: [["read from", "the decorator, by the scanner — never observed at runtime"],
                    ["written as", I.status_name ? "a constant (" + I.status_name + ")" : "a bare number", null, "inline"]],
             table: { grid: "34px 1fr auto", head: ["code", "what it means", "cases"], rows: trows },
@@ -298,7 +320,7 @@
               + ". " + X.cases_never_assert_declared + " of " + X.of + " doors have a corpus that never asserts their declared code, and " + X.no_cases + " have no cases at all." }) }); } },
     { key: "source", word: "source", note: "the file and line the handler is defined at",
       build: function(){ return chip({ key: "source", icon: "file", label: "source", value: I.file + ":" + I.flines, cls: "srcchip",
-        card: hcard({ title: I.file, icon: "file", sub: "line " + I.flines,
+        card: hcard({ title: I.file, icon: "file", plainKey: "source", sub: "line " + I.flines,
           rows: [["handler", F.functions.handler.name || "—"], ["body", (I.sig ? (I.sig.async ? "async · " : "") + I.sig.lines + " lines" : "—")], ["returns", (I.sig || {}).returns || "—"], ["exported", I.exported ? "yes" : "no"]] }) }); } },
     { key: "risk", word: "risk", note: "the station's three size flags — only the ones that FIRE are drawn, and the card shows all three so you can see what did not",
       build: function(){ var w = el("span", { class: "hgrp" });
@@ -314,7 +336,7 @@
             { k: "unguarded", mark: I.risk.untested, rule: "no case names it",
               here: (R.cases || 0) + " case" + ((R.cases || 0) === 1 ? "" : "s"), means: "nothing proves it works" } ];
           return hcard({ title: which === "large" ? "conflict · large surface" : which === "god" ? "god-object" : "unguarded",
-            icon: "burst", color: "var(--red)", sub: "a SIZE signal — not a fault, and not a measurement of quality",
+            icon: "burst", color: "var(--red)", plainKey: "risk", sub: "a SIZE signal — not a fault, and not a measurement of quality",
             table: { grid: "88px 1fr 92px", head: ["flag", "fires when", "here"],
               rows: rules.map(function(r){ return { mark: r.mark ? "fire" : "quiet",
                 cells: [(r.mark ? "▲ " : "· ") + r.k, r.rule, r.here] }; }) },
@@ -336,7 +358,7 @@
                left, so it stays ICONS unless the bar is in label mode (the redundancy the operator caught) */
             cls: "upchip", label: a.kind, value: HEADCFG.mode === "label" ? (a.kind === "everything" ? "everything" : a.label) : null,
             card: hcard({ title: a.kind === "everything" ? "everything" : a.label, icon: a.kind === "cluster" ? "layers" : isEnt ? "entity" : "globe", color: isEnt ? ec : null,
-              sub: "one level up — click will transport", rows: [["from here", "the door"], ["to", a.kind], ["carries", a.kind === "everything" ? "the universe" : a.label]],
+              plainKey: "above", sub: "one level up — click will transport", rows: [["from here", "the door"], ["to", a.kind], ["carries", a.kind === "everything" ? "the universe" : a.label]],
               body: a.kind === "cluster" ? "the sub-group this door sits in — this chip is also where the CLUSTER is read, now that it has no chip of its own."
                 : isEnt ? "the entity that claims it — this chip is also where the ENTITY is read, and its colour is the entity's own."
                 : "the whole universe — every entity at once." }) })); });

@@ -448,3 +448,5 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 #hover .cptbl .ctr.mark-quiet{ color:var(--line); } #hover .cptbl .ctr.mark-quiet.first{ color:var(--muted); }
 #hover{ max-width:360px; }
 #hover .cptbl .ctr.first{ white-space:nowrap; }   /* a flag or a code never wraps its own name */
+/* the PLAIN LINE — the first thing a card says, in the legend reference's own voice */
+#hover .cpplain{ font:500 12.5px/1.5 var(--font-ui); color:var(--ink); margin:5px 0 2px; }
