@@ -16,10 +16,11 @@
     <section id="bench" class="box-work" aria-label="the console's middle region, boxed">
       <div id="headstrip"></div>
       <nav id="tabs" role="tablist"></nav>
+      <div id="varbar"></div>
       <div id="panel" role="tabpanel"></div>
       <div id="boxctl">
-        <span class="bl">box</span>
-        <button class="bb on" data-box="work">1100 × 420</button><button class="bb" data-box="dock">826 × 264</button>
+        <span class="bl">box</span><span id="boxes"></span>
+        <span class="bl">density</span><span id="dens"></span>
         <span class="bl">motion</span>
         <button class="bb on" id="mplay" title="one shared clock — pause freezes every moving thing">playing</button>
         <button class="bb" id="mreplay" title="restart the clock from zero">replay</button>
@@ -112,25 +113,67 @@
     HA.appendChild(r); });
   COV.mark("HEAD", "head"); COV.mark("SOURCE", "head"); COV.mark("RISK", "head"); COV.mark("ABOVE", "head");
 
-  /* ── tabs: the five parts, ICONS with the word on hover, a count per tab (A how many) ── */
-  var TABS = document.getElementById("tabs"), PANEL = document.getElementById("panel"), cur = null;
+  /* ── tabs: SC2 command buttons — a square per part, icon + NAME + the count badge (operator 2026-09-11).
+     The face is a VALLEY: the part's colour is strongest at the rim and falls away toward the middle. ── */
+  var TABS = document.getElementById("tabs"), PANEL = document.getElementById("panel"), VARBAR = document.getElementById("varbar"), cur = null, curVar = {};
   var order = ["data", "functions", "tests", "widening", "security"];
   order.forEach(function(k){ var P = window.PANELS[k]; if (!P) return;
     var b = document.createElement("button"); b.className = "tab"; b.setAttribute("role", "tab"); b.dataset.tab = k;
-    b.innerHTML = S.icon(P.icon, 15) + '<span class="tabn">' + P.count(F) + '</span>';
-    hoverBind(b, function(){ return '<div class="cphd">' + S.icon(P.icon, 15) + '<b>' + P.word + '</b></div><div class="cpsub">part ' + (order.indexOf(k) + 1) + ' of 5</div><div class="cpbody">' + P.hint + '</div>'; });
+    b.style.setProperty("--tc", P.col);
+    b.innerHTML = '<span class="tabn">' + P.count(F) + '</span>'
+      + '<span class="tabi">' + S.icon(P.icon, 22, "currentColor") + '</span>'
+      + '<span class="tabw">' + P.word + '</span>';
+    hoverBind(b, function(){ return '<div class="cphd">' + S.icon(P.icon, 15, P.col) + '<b style="color:' + P.col + '">' + P.word + '</b></div><div class="cpsub">part ' + (order.indexOf(k) + 1) + ' of 5 · ' + P.count(F) + ' inside</div><div class="cpbody">' + P.hint + '</div>'; });
     b.onclick = function(ev){ ev.stopPropagation(); show(k); }; TABS.appendChild(b); });
-  function show(k){ cur = k; [].forEach.call(TABS.children, function(b){ b.classList.toggle("on", b.dataset.tab === k); });
-    PANEL.innerHTML = ""; PANEL.dataset.tab = k; try { window.PANELS[k].render(PANEL, F, S); } catch (e) { PANEL.innerHTML = '<div class="perr">render error: ' + e.message + '</div>'; console.error(e); }
-    readBox(); }
-  window.showTab = show;
 
-  /* ── the box: work 1100×420 · dock 826×264; a panel re-renders into the new size ── */
-  var bench = document.getElementById("bench");
-  function readBox(){ var r = PANEL.getBoundingClientRect(); document.getElementById("boxread").textContent = "panel " + Math.round(r.width) + " × " + Math.round(r.height) + " · tab " + (cur || "—"); }
-  [].forEach.call(document.querySelectorAll("#boxctl .bb[data-box]"), function(b){ b.onclick = function(){
-    [].forEach.call(document.querySelectorAll("#boxctl .bb[data-box]"), function(x){ x.classList.toggle("on", x === b); });
-    bench.className = "box-" + b.dataset.box; if (cur) show(cur); }; });
+  /* ── the variant bar: one panel, several DISTRIBUTIONS — proposals to compare, not settings ── */
+  function drawVars(k){ var P = window.PANELS[k]; VARBAR.innerHTML = "";
+    VARBAR.append(E("span", { class: "vl" }, "distribution"));
+    P.variants.forEach(function(v){ var b = E("button", { class: "vb" + (curVar[k] === v.key ? " on" : "") }, v.label);
+      hoverBind(b, '<div class="cphd"><b>' + v.label + '</b></div><div class="cpsub">a distribution of the same facts</div><div class="cpbody">' + v.hint + '</div>');
+      b.onclick = function(ev){ ev.stopPropagation(); curVar[k] = v.key; show(k); }; VARBAR.append(b); });
+    VARBAR.append(E("span", { class: "vn" }, P.variants.length + " proposal" + (P.variants.length === 1 ? "" : "s"))); }
+  function E(t, a){ var e = document.createElement(t), k = [].slice.call(arguments, 2);
+    for (var p in (a || {})) { if (p === "class") e.className = a[p]; else if (p === "html") e.innerHTML = a[p]; else e.setAttribute(p, a[p]); }
+    k.forEach(function(c){ if (c != null) e.append(c); }); return e; }
+
+  function show(k){ cur = k; [].forEach.call(TABS.children, function(b){ b.classList.toggle("on", b.dataset.tab === k); });
+    var P = window.PANELS[k]; if (!curVar[k]) curVar[k] = P.variants[0].key;
+    drawVars(k);
+    PANEL.innerHTML = ""; PANEL.dataset.tab = k; PANEL.dataset.variant = curVar[k];
+    var v = P.variants.filter(function(x){ return x.key === curVar[k]; })[0] || P.variants[0];
+    try { v.render(PANEL, F, S); } catch (e) { PANEL.innerHTML = '<div class="perr">render error: ' + e.message + '</div>'; console.error(e); }
+    readBox(); }
+  window.showTab = show; window.showVariant = function(k, v){ curVar[k] = v; show(k); };
+
+  /* ── the box: four presets. The two DOCK sizes are the console's real middle region — the wide one is
+     what dropping COMMAND + EVIDENCE buys (portrait only); the two WORK sizes are the bench. ── */
+  var bench = document.getElementById("bench"), BOXES = [
+    { k: "dock", w: 826, h: 264, t: "the middle region today (1440 screen, all four console regions)" },
+    { k: "dockw", w: 1200, h: 264, t: "the middle if COMMAND + EVIDENCE go and only the portrait stays" },
+    { k: "work", w: 1100, h: 420, t: "the bench — room to read while designing" },
+    { k: "wide", w: 1500, h: 460, t: "the bench with the width the drop buys" } ];
+  var boxWrap = document.getElementById("boxes");
+  BOXES.forEach(function(b){ var el = E("button", { class: "bb" + (b.k === "work" ? " on" : ""), "data-box": b.k }, b.w + " × " + b.h);
+    hoverBind(el, '<div class="cphd"><b>' + b.w + " × " + b.h + '</b></div><div class="cpsub">box preset</div><div class="cpbody">' + b.t + '</div>');
+    el.onclick = function(ev){ ev.stopPropagation();
+      [].forEach.call(boxWrap.children, function(x){ x.classList.toggle("on", x === el); });
+      bench.className = "box-" + b.k; bench.style.setProperty("--bw", b.w + "px"); bench.style.setProperty("--bh", b.h + "px");
+      if (cur) show(cur); }; boxWrap.append(el); });
+  bench.style.setProperty("--bw", "1100px"); bench.style.setProperty("--bh", "420px");
+
+  /* ── the density dial: how much the same box carries. CSS only — the 12px floor never moves. ── */
+  var DENS = [{ k: "air", t: "air — fewer things, more room around each" }, { k: "normal", t: "normal — the default weave" }, { k: "dense", t: "dense — everything the feed knows, packed" }];
+  var densWrap = document.getElementById("dens");
+  DENS.forEach(function(d){ var el = E("button", { class: "bb" + (d.k === "normal" ? " on" : ""), "data-dens": d.k }, d.k);
+    hoverBind(el, '<div class="cphd"><b>' + d.k + '</b></div><div class="cpsub">information density</div><div class="cpbody">' + d.t + '</div>');
+    el.onclick = function(ev){ ev.stopPropagation();
+      [].forEach.call(densWrap.children, function(x){ x.classList.toggle("on", x === el); });
+      document.body.dataset.dens = d.k; window.DENS = d.k; if (cur) show(cur); }; densWrap.append(el); });
+  document.body.dataset.dens = "normal"; window.DENS = "normal";
+
+  function readBox(){ var r = PANEL.getBoundingClientRect();
+    document.getElementById("boxread").textContent = "panel " + Math.round(r.width) + " × " + Math.round(r.height) + " · " + (cur || "—") + " · " + (curVar[cur] || "—") + " · " + window.DENS; }
   window.addEventListener("resize", readBox);
   var first = (location.hash || "#data").slice(1); show(order.indexOf(first) >= 0 ? first : "data");
   window.__eplabReady = true;

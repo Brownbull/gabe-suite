@@ -60,6 +60,36 @@ for (const box of ['work', 'dock']) {
   }
 }
 await p.click('#boxctl .bb[data-box="work"]');
+// every DISTRIBUTION of every part renders, fits and holds the floor (work box); then the density dial
+const variants = await p.evaluate(() => { const o = {}; for (const k in window.PANELS) o[k] = window.PANELS[k].variants.map(v => v.key); return o; });
+for (const t of tabs) {
+  for (const v of variants[t]) {
+    await p.evaluate(([t, v]) => window.showVariant(t, v), [t, v]); await p.waitForTimeout(140);
+    const err = await p.$('#panel .perr');
+    ok(err === null, `${t} · ${v} renders`, err ? await err.innerText() : '');
+    const dims = await p.$eval('#panel', e => ({ w: e.clientWidth, h: e.clientHeight, sw: e.scrollWidth, sh: e.scrollHeight }));
+    ok(dims.sw <= dims.w + 1 && dims.sh <= dims.h + 1, `${t} · ${v} fits the box`, JSON.stringify(dims));
+    const fl = await floor(); ok(fl.under === 0, `${t} · ${v}: no text under 12px`, fl.under + ' nodes, worst ' + fl.worst + 'px');
+    if (shotsAt && variants[t].indexOf(v) > 0) { fs.mkdirSync(shotsAt, { recursive: true }); await (await p.$('#bench')).screenshot({ path: path.join(shotsAt, `eplab-var-${t}-${v}.png`) }); }
+  }
+  await p.evaluate(t => window.showVariant(t, window.PANELS[t].variants[0].key), t);
+}
+for (const d of ['air', 'dense']) {
+  await p.click(`#boxctl .bb[data-dens="${d}"]`); await p.waitForTimeout(120);
+  for (const t of tabs) {
+    await p.click(`#tabs .tab[data-tab="${t}"]`); await p.waitForTimeout(120);
+    const dims = await p.$eval('#panel', e => ({ w: e.clientWidth, h: e.clientHeight, sw: e.scrollWidth, sh: e.scrollHeight }));
+    ok(dims.sw <= dims.w + 1 && dims.sh <= dims.h + 1, `${t} fits at density ${d}`, JSON.stringify(dims));
+    const fl = await floor(); ok(fl.under === 0, `${t} at density ${d}: no text under 12px`, fl.under + ' nodes, worst ' + fl.worst + 'px');
+  }
+}
+await p.click('#boxctl .bb[data-dens="normal"]');
+// the part buttons carry icon + NAME + count (operator 2026-09-11)
+const btn = await p.$eval('#tabs .tab[data-tab="data"]', e => ({ w: e.clientWidth, h: e.clientHeight, txt: e.innerText, svg: !!e.querySelector('.tabi svg'), badge: !!e.querySelector('.tabn') }));
+ok(btn.svg && btn.badge && /Data/i.test(btn.txt), 'a part button carries its icon, its NAME and its count badge', JSON.stringify(btn));
+ok(Math.abs(btn.w - btn.h) < 40 && btn.w >= 88, 'the part button is a SQUARE-ish command tile', btn.w + '×' + btn.h);
+const scroll = await p.evaluate(() => { const el = document.querySelector('.ldg') || document.querySelector('#panel [style*="overflow"], #panel'); const cs = getComputedStyle(document.documentElement); return { w: cs.scrollbarWidth, c: cs.scrollbarColor }; });
+ok(scroll.w === 'thin', 'scrollbars are the station\'s narrow themed ones', JSON.stringify(scroll));
 // the checks file
 if (checksFile) {
   const checks = JSON.parse(fs.readFileSync(checksFile, 'utf8'));

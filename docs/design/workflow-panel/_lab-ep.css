@@ -11,8 +11,7 @@ code{ font:600 .95em var(--font-mono); color:var(--ink); }
 #lede .lsub{ margin-top:6px; color:var(--muted); font-size:12px; max-width:1100px; }
 #row{ display:flex; gap:16px; align-items:flex-start; }
 #bench{ flex:none; background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
-#bench.box-work{ width:1100px; } #bench.box-dock{ width:826px; }
-#bench.box-work #panel{ height:420px; } #bench.box-dock #panel{ height:264px; }
+#bench{ width:var(--bw,1100px); } #panel{ height:var(--bh,420px); }
 #panel{ position:relative; overflow:hidden; background:var(--chip-bg); }
 #panel .perr{ color:var(--red); padding:12px; font:600 12px var(--font-mono); }
 #panel .pend{ display:flex; align-items:center; gap:8px; padding:14px 16px; color:var(--muted); font-size:12px; } #panel .pend b{ color:var(--ink); font:700 12px var(--font-mono); letter-spacing:.06em; }
@@ -30,13 +29,40 @@ code{ font:600 .95em var(--font-mono); color:var(--ink); }
 #headstrip .habove{ display:flex; gap:2px; }
 #headstrip .habove .pnav{ padding:3px 7px; font-size:12px; gap:6px; } #headstrip .habove .pnl{ max-width:120px; }
 /* ── tabs: icons, a count each, the word on hover ── */
-#tabs{ display:flex; gap:4px; padding:7px 12px 0; border-bottom:1px solid var(--line); background:var(--panel); }
-#tabs .tab{ display:inline-flex; align-items:center; gap:6px; padding:7px 12px 9px; border:none; border-bottom:2px solid transparent; background:none; color:var(--muted); cursor:pointer; font:700 12px/1 var(--font-ui); border-radius:6px 6px 0 0; }
-#tabs .tab svg{ width:15px; height:15px; }
-#tabs .tab:hover{ color:var(--ink); background:var(--hov-bg); }
-#tabs .tab.on{ color:var(--ink); border-bottom-color:var(--accent); }
-#tabs .tab .tabn{ background:var(--chip-bg); border:1px solid var(--line); border-radius:8px; padding:1px 6px; font-size:12px; font-weight:700; }
-#tabs .tab.on .tabn{ background:var(--accent); color:#fff; border-color:var(--accent); }
+/* ── the part buttons: SC2 command squares. The face is a VALLEY — the part's colour is strongest at
+   the rim and falls away toward the middle, so the icon sits in a hollow (operator 2026-09-11). ── */
+#tabs{ display:flex; gap:6px; padding:8px 12px; border-bottom:1px solid var(--line); background:var(--nav-bg); }
+#tabs .tab{ position:relative; width:104px; height:76px; flex:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
+  cursor:pointer; color:var(--muted); font:700 12px/1 var(--font-ui); border-radius:7px;
+  border:1px solid color-mix(in srgb, var(--tc) 34%, var(--line));
+  background:
+    radial-gradient(125% 125% at 50% 48%, transparent 22%, color-mix(in srgb, var(--tc) 13%, transparent) 58%, color-mix(in srgb, var(--tc) 34%, transparent) 100%),
+    linear-gradient(180deg, rgba(255,255,255,.05), transparent 44%),
+    var(--panel);
+  box-shadow: inset 0 0 13px -3px color-mix(in srgb, var(--tc) 45%, transparent), inset 0 1px 0 rgba(255,255,255,.05);
+  transition:border-color .12s, color .12s; }
+#tabs .tab .tabi{ display:inline-flex; color:color-mix(in srgb, var(--tc) 72%, var(--muted)); }
+#tabs .tab .tabi svg{ width:22px; height:22px; }
+#tabs .tab .tabw{ font:700 12px/1 var(--font-ui); letter-spacing:.03em; }
+#tabs .tab .tabn{ position:absolute; top:5px; right:6px; background:var(--chip-bg); border:1px solid color-mix(in srgb, var(--tc) 40%, var(--line));
+  border-radius:8px; padding:1px 6px; font:700 12px/1.35 var(--font-mono); color:var(--muted); }
+#tabs .tab:hover{ color:var(--ink); border-color:color-mix(in srgb, var(--tc) 62%, var(--line)); }
+#tabs .tab.on{ color:var(--ink);
+  border-color:var(--tc);
+  background:
+    radial-gradient(125% 125% at 50% 48%, transparent 16%, color-mix(in srgb, var(--tc) 24%, transparent) 55%, color-mix(in srgb, var(--tc) 58%, transparent) 100%),
+    linear-gradient(180deg, rgba(255,255,255,.07), transparent 44%),
+    var(--panel);
+  box-shadow: inset 0 0 17px -3px color-mix(in srgb, var(--tc) 72%, transparent), inset 0 1px 0 rgba(255,255,255,.09), 0 0 0 1px color-mix(in srgb, var(--tc) 26%, transparent); }
+#tabs .tab.on .tabi{ color:var(--tc); }
+#tabs .tab.on .tabn{ color:var(--ink); border-color:var(--tc); }
+/* ── the variant bar: the distributions on offer for this part ── */
+#varbar{ display:flex; align-items:center; gap:5px; padding:6px 12px; border-bottom:1px solid var(--line); background:var(--panel); }
+#varbar .vl{ font:700 12px/1 var(--font-mono); text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-right:3px; }
+#varbar .vb{ font:700 12px/1 var(--font-mono); color:var(--muted); background:var(--chip-bg); border:1px solid var(--line); border-radius:6px; padding:5px 10px; cursor:pointer; }
+#varbar .vb:hover{ color:var(--ink); border-color:var(--accent); }
+#varbar .vb.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
+#varbar .vn{ margin-left:auto; font:600 12px/1 var(--font-mono); color:var(--muted); }
 /* ── box controls ── */
 #boxctl{ display:flex; align-items:center; gap:6px; padding:7px 12px; border-top:1px solid var(--line); background:var(--nav-bg); font:600 12px/1 var(--font-mono); color:var(--muted); }
 #boxctl .bl{ margin-left:8px; text-transform:uppercase; letter-spacing:.08em; font-size:12px; } #boxctl .bl:first-child{ margin-left:0; }
@@ -207,21 +233,111 @@ body.motion-off *{ animation-play-state:paused !important; }
 .sfact .sv{ font-size:12px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .sfact.hollow{ background:transparent; border-style:solid; } .sfact.hollow b{ color:var(--muted); }
 /* ── the dock size: the same regions, tighter ─────────────────────────────────────────── */
-#bench.box-dock #panel > .phd .phdnote{ display:none; }
-#bench.box-dock .dbody{ grid-template-columns:144px 1fr 144px; gap:7px; padding:6px 8px; }
+#bench[class*="box-dock"] #panel > .phd .phdnote{ display:none; }
+#bench[class*="box-dock"] .dbody{ grid-template-columns:144px 1fr 144px; gap:7px; padding:6px 8px; }
 /* at dock height a five-column ground clips; the grounds become ROWS of compact tiles — every entity
    stays on screen and E degrades from a stack's height to the column count on the tile (said, not hidden) */
-#bench.box-dock .grounds{ flex-direction:column; overflow-x:hidden; overflow-y:auto; gap:4px; }
-#bench.box-dock .ground{ flex:none !important; min-width:0; }
-#bench.box-dock .ground .ghd{ padding:3px 6px; }
-#bench.box-dock .ground .tiles{ flex-direction:row; flex-wrap:wrap; overflow:visible; padding:4px; gap:3px; }
-#bench.box-dock .tile{ flex:0 0 auto; padding:3px 6px; }
-#bench.box-dock .tile .shape{ display:none; }
-#bench.box-dock .tile .tnm{ margin:0; } #bench.box-dock .tile .tnm b{ max-width:148px; }
-#bench.box-dock .tile .tnm .tc{ margin-left:5px; }
-#bench.box-dock .schm .shape .bar{ height:2px; }
-#bench.box-dock .tbody{ grid-template-columns:1fr 250px; gap:7px; padding:6px 8px; }
-#bench.box-dock .wbody{ grid-template-columns:1fr 270px; gap:8px; padding:6px 8px; }
-#bench.box-dock .fbody, #bench.box-dock .sbody{ padding:6px 8px; gap:5px; }
-#bench.box-dock .fhandler .fsig{ max-height:17px; }
-#bench.box-dock .plgd .lg:nth-child(n+4){ display:none; }
+#bench[class*="box-dock"] .grounds{ flex-direction:column; overflow-x:hidden; overflow-y:auto; gap:4px; }
+#bench[class*="box-dock"] .ground{ flex:none !important; min-width:0; }
+#bench[class*="box-dock"] .ground .ghd{ padding:3px 6px; }
+#bench[class*="box-dock"] .ground .tiles{ flex-direction:row; flex-wrap:wrap; overflow:visible; padding:4px; gap:3px; }
+#bench[class*="box-dock"] .tile{ flex:0 0 auto; padding:3px 6px; }
+#bench[class*="box-dock"] .tile .shape{ display:none; }
+#bench[class*="box-dock"] .tile .tnm{ margin:0; } #bench[class*="box-dock"] .tile .tnm b{ max-width:148px; }
+#bench[class*="box-dock"] .tile .tnm .tc{ margin-left:5px; }
+#bench[class*="box-dock"] .schm .shape .bar{ height:2px; }
+#bench[class*="box-dock"] .tbody{ grid-template-columns:1fr 250px; gap:7px; padding:6px 8px; }
+#bench[class*="box-dock"] .wbody{ grid-template-columns:1fr 270px; gap:8px; padding:6px 8px; }
+#bench[class*="box-dock"] .fbody, #bench[class*="box-dock"] .sbody{ padding:6px 8px; gap:5px; }
+#bench[class*="box-dock"] .fhandler .fsig{ max-height:17px; }
+#bench[class*="box-dock"] .plgd .lg:nth-child(n+4){ display:none; }
+
+
+/* ══════════════════════════════════════════════════════════════════════════════════════════
+   THE SECOND AND THIRD DISTRIBUTIONS (proposals to compare) + the DENSITY dial.
+   Density never moves the 12px floor — it moves gaps, padding and how much is on screen.
+   ══════════════════════════════════════════════════════════════════════════════════════════ */
+/* ── DATA · flow ── */
+.dfbody{ flex:1; min-height:0; display:flex; align-items:stretch; gap:8px; padding:9px 12px; }
+.dfside{ flex:0 0 176px; min-width:0; display:flex; flex-direction:column; gap:5px; overflow-y:auto; }
+.dfarrow{ flex:none; display:flex; align-items:center; }
+.dffield{ flex:1; min-width:0; display:flex; flex-direction:column; min-height:0; }
+.dfhd{ flex:none; display:flex; align-items:baseline; gap:9px; }
+.dfhd .sechd{ margin:0; } .dfhd .dfnote{ font-size:12px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dfgrid{ flex:1; min-height:0; overflow-y:auto; display:grid; grid-template-columns:repeat(auto-fill, minmax(148px, 1fr)); gap:5px; padding:5px 0; align-content:start; }
+.dfgrid .tile{ border-left:3px solid var(--ec); }
+/* ── the LEDGER (shared by data · functions · tests) ── */
+.lbody, .tlbody{ flex:1; min-height:0; display:flex; flex-direction:column; gap:5px; padding:8px 12px; overflow:hidden; }
+.tlbody{ display:grid; grid-template-columns:1fr 292px; gap:10px; }
+.tlbody .lbody{ padding:0; }
+.lschm{ flex:none; display:flex; align-items:center; gap:7px; border:1px solid var(--line); border-left:3px solid var(--c-schema,#06b6d4); border-radius:7px; padding:4px 9px; background:var(--panel); cursor:help; }
+.lschm b{ font:600 12px/1.2 var(--font-mono); color:var(--ink); } .lschm .ls{ font-size:12px; color:var(--muted); }
+.lschm .shape.inline{ margin-left:auto; width:132px; flex:none; }
+.ldg{ flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:1px; }
+.lrow{ display:grid; align-items:center; gap:8px; padding:3px 8px; border-radius:5px; font-size:12px; color:var(--muted); cursor:help; }
+.lrow:hover{ background:var(--chip-bg); }
+.lrow b{ font:600 12px/1.3 var(--font-mono); color:var(--ink); }
+.lrow > span{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lrow.lhd{ position:sticky; top:0; background:var(--panel); color:var(--muted); font:700 12px/1.5 var(--font-mono); text-transform:uppercase; letter-spacing:.05em; cursor:default; z-index:1; }
+.lrow.lhd:hover{ background:var(--panel); }
+.lrow.inf b{ color:var(--muted); } .lrow.inf{ border-left:2px dashed var(--edge); padding-left:6px; }
+.lrow.filecov{ background:repeating-linear-gradient(45deg, rgba(135,148,171,.06) 0 5px, transparent 5px 10px); }
+.lrow .pdot{ width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:5px; }
+.lrow .rdot{ width:8px; height:8px; border-radius:2px; display:inline-block; margin-right:5px; }
+.lrow .cdot{ width:8px; height:8px; border-radius:50%; background:#f97316; display:inline-block; animation:epPulse 1.9s ease-in-out infinite; }
+.lrow .stc{ font:700 12px/1 var(--font-mono); } .lrow .shape.inline .bars{ gap:1px; } .lrow .shape.inline .bar{ height:2px; }
+.lrow .pchip{ margin:0; }
+/* ── FUNCTIONS · chain ── */
+.fcbody{ flex:1; min-height:0; display:flex; flex-direction:column; gap:7px; padding:9px 12px; }
+.spine2{ position:relative; flex:none; display:flex; align-items:center; gap:4px; padding-bottom:11px; overflow-x:auto; }
+.snode{ flex:none; display:flex; align-items:center; gap:6px; border:1px solid var(--line); border-radius:7px; padding:6px 11px;
+  background:var(--chip-bg); color:var(--muted); cursor:pointer; font:700 12px/1 var(--font-mono); }
+.snode b{ color:var(--ink); font-weight:700; } .snode .sn{ background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:1px 6px; }
+.snode.root{ border-left:3px solid var(--c-fn,#6366f1); }
+.snode.on{ border-color:var(--accent); box-shadow:inset 0 0 12px -4px var(--accent); } .snode.on .sn{ background:var(--accent); color:#fff; border-color:var(--accent); }
+.snode .cdot{ width:7px; height:7px; border-radius:50%; background:#f97316; animation:epPulse 1.9s ease-in-out infinite; }
+.sarr{ flex:none; display:inline-flex; }
+.spine2 .bead{ position:absolute; left:0; bottom:1px; width:9px; height:9px; border-radius:50%; background:var(--accent); box-shadow:0 0 9px var(--accent); animation:epBead 6s linear infinite; }
+.fcdetail{ flex:1; min-height:0; display:flex; flex-direction:column; }
+.fcdetail .fchd{ flex:none; } .fclist{ flex:1; min-height:0; overflow-y:auto; display:grid; grid-template-columns:repeat(auto-fill, minmax(196px, 1fr)); gap:3px; align-content:start; }
+/* ── WIDENING · flow ── */
+.wfbody{ flex:1; min-height:0; display:flex; flex-direction:column; gap:8px; padding:9px 12px; overflow-y:auto; }
+.wrail{ flex:none; display:flex; align-items:center; gap:5px; flex-wrap:wrap; padding:5px 8px; border:1px dashed var(--line); border-radius:7px; }
+.wrail .wrl{ display:inline-flex; align-items:center; gap:5px; font:700 12px/1 var(--font-mono); color:var(--accent); margin-right:4px; }
+.wflow{ flex:none; display:flex; align-items:stretch; flex-wrap:wrap; gap:4px 3px; padding-bottom:3px; }
+.wst{ flex:1 1 0; min-width:132px; display:flex; flex-direction:column; gap:3px; border:1px solid var(--line); border-top:3px solid var(--rc);
+  border-radius:7px; padding:6px 8px; background:var(--chip-bg); cursor:help; }
+.wst b{ font:600 12px/1.25 var(--font-mono); color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wst .ws{ font-size:12px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wst.self{ background:color-mix(in srgb, var(--rc) 14%, var(--chip-bg)); border-color:var(--rc); }
+.wtail{ flex:none; display:flex; flex-direction:column; gap:5px; }
+/* ── SECURITY · gauntlet ── */
+.sgbody{ flex:1; min-height:0; display:flex; flex-direction:column; gap:8px; padding:9px 12px; overflow-y:auto; }
+.gaunt{ flex:none; display:flex; align-items:stretch; flex-wrap:wrap; gap:3px 2px; padding-bottom:3px; }
+.gaunt .gst{ flex:1 1 132px; }
+.gst{ flex:1 1 0; min-width:124px; display:flex; flex-direction:column; gap:2px; border:1px solid var(--line); border-radius:7px; padding:6px 8px; background:var(--chip-bg); cursor:help; }
+.gst b{ font:600 12px/1.2 var(--font-mono); color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.gst .gs{ font-size:12px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.gst.app{ background:repeating-linear-gradient(90deg, color-mix(in srgb, #eab308 7%, transparent) 0 12px, transparent 12px 24px); border-color:color-mix(in srgb, #eab308 26%, var(--line)); }
+.gst.gate{ border-color:color-mix(in srgb, #eab308 55%, transparent); background:color-mix(in srgb, #eab308 9%, transparent); }
+.gst.commitst{ border-color:color-mix(in srgb, #f97316 45%, transparent); background:color-mix(in srgb, #f97316 9%, transparent); }
+/* ── the DENSITY dial ── */
+body[data-dens="dense"] #panel .dbody, body[data-dens="dense"] #panel .dfbody, body[data-dens="dense"] #panel .fbody,
+body[data-dens="dense"] #panel .tbody, body[data-dens="dense"] #panel .wbody, body[data-dens="dense"] #panel .sbody,
+body[data-dens="dense"] #panel .lbody, body[data-dens="dense"] #panel .fcbody, body[data-dens="dense"] #panel .wfbody,
+body[data-dens="dense"] #panel .sgbody, body[data-dens="dense"] #panel .tlbody{ padding:5px 8px; gap:4px; }
+body[data-dens="dense"] .tile{ padding:2px 5px; } body[data-dens="dense"] .tile .tnm{ margin-bottom:2px; }
+body[data-dens="dense"] .shape .bars{ gap:1px; } body[data-dens="dense"] .shape .bar{ height:2px; }
+body[data-dens="dense"] .fchip, body[data-dens="dense"] .rung, body[data-dens="dense"] .turn, body[data-dens="dense"] .sfact, body[data-dens="dense"] .gst, body[data-dens="dense"] .wst{ padding:2px 6px; }
+body[data-dens="dense"] .lrow{ padding:1px 8px; } body[data-dens="dense"] .ground .tiles{ gap:3px; padding:3px; }
+body[data-dens="dense"] .dfgrid{ grid-template-columns:repeat(auto-fill, minmax(124px, 1fr)); gap:3px; }
+body[data-dens="dense"] .fclist{ grid-template-columns:repeat(auto-fill, minmax(164px, 1fr)); }
+body[data-dens="air"] #panel .dbody, body[data-dens="air"] #panel .dfbody, body[data-dens="air"] #panel .fbody,
+body[data-dens="air"] #panel .tbody, body[data-dens="air"] #panel .wbody, body[data-dens="air"] #panel .sbody,
+body[data-dens="air"] #panel .lbody, body[data-dens="air"] #panel .fcbody, body[data-dens="air"] #panel .wfbody,
+body[data-dens="air"] #panel .sgbody, body[data-dens="air"] #panel .tlbody{ padding:13px 16px; gap:11px; }
+body[data-dens="air"] .tile{ padding:6px 9px; } body[data-dens="air"] .shape .bars{ gap:3px; }
+body[data-dens="air"] .fchip, body[data-dens="air"] .rung, body[data-dens="air"] .turn, body[data-dens="air"] .sfact, body[data-dens="air"] .gst, body[data-dens="air"] .wst{ padding:6px 10px; }
+body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ grid-template-columns:repeat(auto-fill, minmax(186px, 1fr)); gap:8px; }
+/* the bench may now be wider than the viewport column — let the checklist fall below it */
+#row{ flex-wrap:wrap; } #notes{ flex:1 1 300px; max-width:520px; }

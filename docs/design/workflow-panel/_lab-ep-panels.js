@@ -467,18 +467,318 @@
     COV.mark("GUARDS", "security"); COV.mark("DELIVERY", "security");
   }
 
+  /* ══════════════════════════════════════════════════════════════════════════════════════
+     SECOND AND THIRD DISTRIBUTIONS — the same facts, laid out differently. These are
+     PROPOSALS to compare, not settings: the operator picks one per part (2026-09-11).
+     ══════════════════════════════════════════════════════════════════════════════════════ */
+  function cap(n){ return window.DENS === "dense" ? Math.round(n * 2) : window.DENS === "air" ? Math.max(2, Math.round(n * 0.6)) : n; }
+
+  /* a DENSE LEDGER — one row per thing, every column the feed knows. The densest honest form. */
+  function ledger(box, cols, rows, opt){ opt = opt || {};
+    var t = E("div", { class: "ldg" });
+    var hd = E("div", { class: "lrow lhd", style: "grid-template-columns:" + opt.grid });
+    cols.forEach(function(c){ hd.append(E("span", null, c)); }); t.append(hd);
+    rows.forEach(function(r){ var row = E("div", { class: "lrow" + (r.cls ? " " + r.cls : ""), style: "grid-template-columns:" + opt.grid });
+      r.cells.forEach(function(c){ row.append(typeof c === "string" ? E("span", { html: c }) : c); });
+      if (r.card) bind(row, r.card); t.append(row); });
+    box.append(t); return t; }
+
+  /* ── DATA · B "flow" — the width used: request → the whole table field (wrapped, writes first) → response ── */
+  function renderDataFlow(box, F, S){
+    var D = F.data, I = F.identity, req = D.schemas.request, res = D.schemas.response;
+    head(box, "table", "Data + schemas", D.ops.length + " ops · " + D.tables.length + " tables",
+      "ONE axis, left to right: the shape that enters · every table it lands on (writes first, entity by its dot) · the shape that leaves");
+    var body = E("div", { class: "dfbody" });
+    var mk = function(sc, dir){ var nest = {}; (sc.nested || []).forEach(function(n){ nest[n.name] = 1; });
+      var w = E("div", { class: "dfside" },
+        E("div", { class: "dslbl " + dir }, ico("down", 12, dir === "in" ? S.OPC.read : S.OPC.write), dir === "in" ? "REQUEST" : "RESPONSE", E("span", { class: "n" }, String((sc.cols || []).length))),
+        E("div", { class: "schm" }, E("div", { class: "snm" }, ico("schema", 12, S.KINDCOL.schema), esc(sc.name || "—")), shapeStack(sc.name, sc.cols || [], { color: S.KINDCOL.schema, nestSet: nest })),
+        E("div", { class: "dnlbl" }, "nested ×" + (sc.nested || []).length));
+      var nb = E("div", { class: "nests" });
+      (sc.nested || []).forEach(function(n){ var c = E("span", { class: "pchip schema" }, ico("schema", 11), esc(n.name) + " ·" + n.cols.length);
+        bind(c, card({ title: n.name, icon: "schema", color: S.KINDCOL.schema, sub: "nested in " + sc.name, fields: n.cols.map(function(x){ return x[0] + " · " + x[1]; }) })); nb.append(c); });
+      w.append(nb); return w; };
+    body.append(mk(req, "in"));
+    body.append(E("div", { class: "dfarrow" }, ico("drill", 15, "var(--muted)")));
+    var field = E("div", { class: "dffield" });
+    var fhd = E("div", { class: "dfhd" }, sechd("key", "the door writes, then reads", D.tables.length, false),
+      E("span", { class: "dfnote" }, D.writes.length + " write ops · " + D.reads.length + " read ops · " + D.entities.length + " entities · " + D.both.length + " tables on both channels"));
+    field.append(fhd);
+    var grid = E("div", { class: "dfgrid" });
+    D.tables.slice().sort(function(a, b){ return (a.rw === "r") - (b.rw === "r") || b.cols.length - a.cols.length; }).forEach(function(t){
+      var fkSet = {}; (t.fks || []).forEach(function(f){ fkSet[Array.isArray(f) ? f[0] : f] = true; });
+      var uqSet = {}; (t.uqs || []).forEach(function(u){ (Array.isArray(u) ? u : [u]).forEach(function(c){ uqSet[c] = 1; }); });
+      var tile = E("div", { class: "tile rw-" + t.rw, style: "--ec:" + (t.entity_color || "#888") },
+        E("div", { class: "tnm" }, '<i class="pdot" style="background:' + (t.entity_color || "#888") + '"></i>', rwChip(t.rw), E("b", null, esc(t.table)), E("span", { class: "tc" }, String(t.cols.length))),
+        shapeStack(t.table, t.cols, { color: t.entity_color, fkSet: fkSet, uqSet: uqSet, more: t.cols_more, cls: "tbars" }));
+      bind(tile, card({ title: t.table, icon: "model", color: S.KINDCOL.model, sub: "model " + t.model + " · entity " + t.entity,
+        rows: [["here", t.rw === "rw" ? "reads + writes" : t.rw === "w" ? "writes" : "reads", RWC[t.rw]], ["columns", String(t.cols.length)], ["file", String(t.file || "—")]],
+        fields: t.cols.map(function(c){ return c[0] + " · " + c[1]; }), station: t.id }));
+      grid.append(tile); });
+    field.append(grid);
+    var cm = E("div", { class: "commit" + (D.commits ? " on" : " off") }, ico("key", 13, S.OPC.write), E("b", null, "DB COMMIT"),
+      E("span", { class: "cnote" }, "one transaction · " + D.writes.length + " writes become permanent"), E("i", { class: "pulse" }));
+    bind(cm, card({ title: "the DB transaction commits", icon: "key", color: S.OPC.write, sub: "access.commits — never a git commit",
+      rows: [["writes", String(D.writes.length)], ["idempotency", F.security.idempotent ? "guarded by " + F.security.idempotency_table : "none"]] }));
+    field.append(cm); body.append(field);
+    body.append(E("div", { class: "dfarrow" }, ico("drill", 15, "var(--muted)")));
+    body.append(mk(res, "out"));
+    box.append(body);
+    var foot = E("div", { class: "pfoot" });
+    foot.append(E("div", { class: "kv" }, ico("role", 13), E("span", { class: "k" }, "entities"), E("span", { class: "v" }, D.entities.join(" · ") + " — the dot on each tile says which")));
+    foot.append(legend([{ t: "reads", swatch: "background:" + RWC.r }, { t: "writes", swatch: "background:" + RWC.w }, { t: "both", swatch: "background:" + RWC.rw },
+      { t: "a line = a field", swatch: "background:var(--muted);height:2px;width:16px" }]));
+    box.append(foot);
+    COV.mark("ACCESSES", "data"); COV.mark("PAYLOAD", "data"); COV.mark("CONNECTIONS", "data"); COV.mark("EVIDENCE", "data"); COV.mark("MODEL ROW", "data");
+  }
+
+  /* ── DATA · C "ledger" — the densest honest form: one row per table, every column the feed knows ── */
+  function renderDataLedger(box, F, S){
+    var D = F.data, I = F.identity;
+    head(box, "table", "Data + schemas", D.ops.length + " ops · " + D.tables.length + " tables",
+      "one row per table · the bar strip is still the shape (a line per column) · the two schemas book-end the list");
+    var body = E("div", { class: "lbody" });
+    [["request", D.schemas.request], ["response", D.schemas.response]].forEach(function(pair){
+      var sc = pair[1], r = E("div", { class: "lschm" }, ico("schema", 13, S.KINDCOL.schema), E("b", null, esc(sc.name)),
+        E("span", { class: "ls" }, pair[0] + " · " + (sc.cols || []).length + " fields · " + (sc.nested || []).length + " nested · " + (sc.entity || "—")),
+        shapeStack(sc.name, sc.cols || [], { color: S.KINDCOL.schema, cls: "inline" }));
+      bind(r, card({ title: sc.name, icon: "schema", color: S.KINDCOL.schema, sub: pair[0] + " · entity " + sc.entity,
+        fields: (sc.cols || []).map(function(c){ return c[0] + " · " + c[1]; }), station: "schema:" + sc.name }));
+      body.append(r); });
+    var rows = D.tables.slice().sort(function(a, b){ return (a.entity || "").localeCompare(b.entity || "") || b.cols.length - a.cols.length; }).map(function(t){
+      var fkSet = {}; (t.fks || []).forEach(function(f){ fkSet[Array.isArray(f) ? f[0] : f] = true; });
+      var uqSet = {}; (t.uqs || []).forEach(function(u){ (Array.isArray(u) ? u : [u]).forEach(function(c){ uqSet[c] = 1; }); });
+      return { cells: ['<i class="pdot" style="background:' + (t.entity_color || "#888") + '"></i>' + esc(t.entity || "—"), rwChip(t.rw), "<b>" + esc(t.table) + "</b>",
+          shapeStack(t.table, t.cols, { color: t.entity_color, fkSet: fkSet, uqSet: uqSet, cls: "inline" }),
+          String(t.cols.length), String((t.fks || []).length || "—"), String((t.uqs || []).length || "—"), esc(t.model)],
+        card: card({ title: t.table, icon: "model", color: S.KINDCOL.model, sub: "model " + t.model + " · entity " + t.entity,
+          rows: [["here", t.rw === "rw" ? "reads + writes" : t.rw === "w" ? "writes" : "reads", RWC[t.rw]], ["file", String(t.file || "—")]],
+          fields: t.cols.map(function(c){ return c[0] + " · " + c[1] + (fkSet[c[0]] ? "  (fk)" : "") + (uqSet[c[0]] ? "  (unique)" : ""); }), station: t.id }) }; });
+    ledger(body, ["entity", "rw", "table", "shape", "cols", "fk", "uq", "model"], rows, { grid: "104px 34px 1fr 128px 44px 34px 34px 150px" });
+    box.append(body);
+    var foot = E("div", { class: "pfoot" });
+    foot.append(E("div", { class: "kv" }, ico("key", 13, S.OPC.write), E("span", { class: "k" }, "commit"), E("span", { class: "v" }, D.commits ? "one transaction makes the " + D.writes.length + " writes permanent · " + (F.security.idempotent ? "idempotency guarded by " + F.security.idempotency_table : "no idempotency") : "reads only")));
+    foot.append(legend([{ t: "reads", swatch: "background:" + RWC.r }, { t: "writes", swatch: "background:" + RWC.w }, { t: "both", swatch: "background:" + RWC.rw }]));
+    box.append(foot);
+    COV.mark("ACCESSES", "data"); COV.mark("PAYLOAD", "data"); COV.mark("CONNECTIONS", "data"); COV.mark("EVIDENCE", "data"); COV.mark("MODEL ROW", "data");
+  }
+
+  /* ── FUNCTIONS · B "chain" — the walk as ONE horizontal spine; the level you pick opens below ── */
+  function renderFnChain(box, F, S){
+    var FN = F.functions, h = FN.handler, RC = S.BADGE_COL.role || {};
+    head(box, "function", "Functions", FN.behind.fns + " behind",
+      "the spine reads left to right in time: the handler, then each hop · click a hop to open it below · the bead runs the whole chain");
+    var body = E("div", { class: "fcbody" });
+    var spine = E("div", { class: "spine2" });
+    var nodes = [{ name: h.name || "handler", n: 1, role: h.role, lvl: -1 }].concat(FN.walk.map(function(l, i){
+      return { name: "L" + (i + 1), n: l.length, lvl: i, commits: l.filter(function(f){ return f.commits; }).length, inf: l.filter(function(f){ return f.conf === "inferred"; }).length }; }));
+    var openLvl = 1, detail = E("div", { class: "fcdetail" });
+    function drawDetail(i){ detail.innerHTML = "";
+      var lvl = FN.walk[i] || []; detail.append(E("div", { class: "fchd" }, sechd("layers", "level " + (i + 1), lvl.length, false)));
+      var lst = E("div", { class: "fclist" });
+      lvl.forEach(function(f){ var chip = E("span", { class: "fchip" + (f.conf === "inferred" ? " inf" : "") + (f.god ? " god" : ""), style: "border-left-color:" + (RC[f.role] || "#8794ab") },
+          E("b", null, esc(f.name)), f.lines ? E("span", { class: "ln" }, f.lines + "L") : null, f.commits ? E("i", { class: "cdot" }) : null);
+        bind(chip, card({ title: f.name, icon: "function", color: RC[f.role] || S.KINDCOL["function"], sub: (f.role || "—") + " · " + (f.entity || "—") + " · " + f.conf + " hop",
+          rows: [["file", f.file], ["lines", f.lines != null ? String(f.lines) : "—"], ["reached by", f.via || h.name], ["commits", f.commits ? "yes" : "no"],
+                 f.ops && f.ops.length ? ["tables", f.ops.map(function(o){ return o.rw + ":" + o.table; }).join(" · ")] : null], station: f.id }));
+        lst.append(chip); });
+      detail.append(lst); }
+    nodes.forEach(function(nd, i){
+      var el = E("button", { class: "snode" + (nd.lvl === openLvl ? " on" : "") + (nd.lvl < 0 ? " root" : "") },
+        E("b", null, esc(nd.name)), E("span", { class: "sn" }, String(nd.n)),
+        nd.commits ? E("i", { class: "cdot" }) : null);
+      if (nd.lvl >= 0) { el.onclick = function(ev){ ev.stopPropagation(); openLvl = nd.lvl; [].forEach.call(spine.querySelectorAll(".snode"), function(x){ x.classList.remove("on"); }); el.classList.add("on"); drawDetail(nd.lvl); }; }
+      bind(el, nd.lvl < 0
+        ? card({ title: h.name, icon: "function", color: S.KINDCOL["function"], sub: "the handler · " + (h.role || "—"),
+            rows: [["body", ((F.identity.sig || {}).lines || "?") + " lines"], ["returns", (F.identity.sig || {}).returns || "—"], ["docstring", F.identity.doc ? "present" : "— none"]], body: "<code>" + esc(F.identity.gsig || "") + "</code>" })
+        : card({ title: "hop " + (nd.lvl + 1), icon: "layers", sub: nd.n + " function(s)", rows: [["inferred", String(nd.inf)], ["commit here", String(nd.commits)]], body: "click to open this hop below." }));
+      spine.append(el);
+      if (i < nodes.length - 1) spine.append(E("i", { class: "sarr", html: ico("drill", 13, "var(--muted)") })); });
+    spine.append(E("i", { class: "bead" }));
+    body.append(spine); drawDetail(openLvl); body.append(detail); box.append(body);
+    var foot = E("div", { class: "pfoot" });
+    foot.append(E("div", { class: "kv" }, ico("layers", 13), E("span", { class: "k" }, "code behind"), E("span", { class: "v" }, FN.behind.fns + " behind · reach " + FN.behind.depth + " · the walk sees " + FN.walk_total)));
+    foot.append(legend([{ t: "accessor", swatch: "background:" + (RC.accessor || "#ef4444") }, { t: "caller", swatch: "background:" + (RC.caller || "#3b82f6") },
+      { t: "gate", swatch: "background:" + (RC.gate || "#eab308") }, { t: "commits", swatch: "background:" + S.OPC.write + ";border-radius:50%;width:7px;height:7px" }]));
+    box.append(foot);
+    COV.mark("CODE BEHIND", "functions"); COV.mark("SIGNATURE", "functions"); COV.mark("DOCSTRING", "functions");
+  }
+
+  /* ── FUNCTIONS · C "ledger" — one row per function in the walk, every column the feed knows ── */
+  function renderFnLedger(box, F, S){
+    var FN = F.functions, RC = S.BADGE_COL.role || {}, all = [];
+    FN.walk.forEach(function(l, i){ l.forEach(function(f){ all.push(dictLevel(f, i + 1)); }); });
+    function dictLevel(f, lv){ f = Object.assign({}, f); f.__lv = lv; return f; }
+    head(box, "function", "Functions", FN.behind.fns + " behind",
+      "every function the walk reaches, one per row · hop · role · size · confidence · whether it ends a transaction · what it touches");
+    var body = E("div", { class: "lbody" });
+    var hrow = E("div", { class: "lschm" }, ico("function", 13, S.KINDCOL["function"]), E("b", null, esc(FN.handler.name)),
+      E("span", { class: "ls" }, "the handler · " + (FN.handler.role || "—") + " · " + ((F.identity.sig || {}).lines || "?") + " lines · → " + ((F.identity.sig || {}).returns || "—") + " · " + (F.identity.doc ? "documented" : "no docstring")));
+    bind(hrow, card({ title: FN.handler.name, icon: "function", color: S.KINDCOL["function"], sub: "the handler", body: "<code>" + esc(F.identity.gsig || "") + "</code>" }));
+    body.append(hrow);
+    var rows = all.map(function(f){
+      return { cls: f.conf === "inferred" ? "inf" : "", cells: ["L" + f.__lv, "<b>" + esc(f.name) + "</b>",
+          '<i class="rdot" style="background:' + (RC[f.role] || "#8794ab") + '"></i>' + esc(f.role || "—"),
+          f.lines != null ? f.lines + "L" : "—", f.conf === "inferred" ? '<span class="ttag inferred">inferred</span>' : '<span class="ttag structural">extracted</span>',
+          f.commits ? '<i class="cdot"></i>' : "—", esc((f.ops || []).map(function(o){ return o.rw + ":" + o.table; }).join(" · ") || "—")],
+        card: card({ title: f.name, icon: "function", color: RC[f.role] || S.KINDCOL["function"], sub: (f.role || "—") + " · hop " + f.__lv + " · " + f.conf,
+          rows: [["file", f.file], ["reached by", f.via || FN.handler.name], ["god", f.god ? "yes — over the 50-line flag" : "no"]], station: f.id }) }; });
+    ledger(body, ["hop", "function", "role", "size", "how sure", "commit", "tables"], rows, { grid: "44px 1fr 116px 52px 92px 56px 1.2fr" });
+    box.append(body);
+    var foot = E("div", { class: "pfoot" });
+    foot.append(E("div", { class: "kv" }, ico("layers", 13), E("span", { class: "k" }, "code behind"), E("span", { class: "v" }, FN.behind.fns + " behind · reach " + FN.behind.depth + " · " + FN.walk_total + " on the walk · " + FN.behind.names.length + " named")));
+    box.append(foot);
+    COV.mark("CODE BEHIND", "functions"); COV.mark("SIGNATURE", "functions"); COV.mark("DOCSTRING", "functions");
+  }
+
+  /* ── TESTS · B "ledger" — every case as a row; the journeys ride a compact strip beside ── */
+  function renderTestsLedger(box, F, S){
+    var T = F.tests;
+    head(box, "test", "Tests", T.cases.length + " + " + T.case_files.length + " file",
+      "every case, one per row · the status its NAME asserts · its corpus · its state — sorted by status");
+    var body = E("div", { class: "tlbody" });
+    var left = E("div", { class: "lbody" });
+    var rows = T.cases.slice().sort(function(a, b){ return (a.status || "zzz").localeCompare(b.status || "zzz") || a.cid.localeCompare(b.cid); }).map(function(c){
+      return { cells: ["<b>" + esc(c.cid) + "</b>", c.status ? '<span class="stc" style="color:' + (c.status[0] === "2" ? S.OPC.read : c.status[0] === "4" ? S.OPC.gate : S.OPC.write) + '">' + c.status + "</span>" : "—",
+          esc(c.corpus || "api"), '<span class="pchip st-' + (c.state || "unknown") + '">' + ico(c.state === "pass" ? "test" : "info", 11) + (c.state || "unknown") + "</span>", esc(c.name || "—")],
+        card: card({ title: c.cid, icon: "test", sub: (c.corpus || "api") + " · " + (c.state || "unknown"), rows: [["name", c.name || "—"], ["asserts", c.status ? "HTTP " + c.status : "no status in the name"]] }) }; });
+    T.case_files.forEach(function(f){ rows.push({ cls: "filecov", cells: ["<b>" + esc(f.name) + "</b>", "—", esc(f.corpus || "web"), '<span class="pchip filecov">' + ico("file", 11) + "file coverage</span>", "reaches the door, names no case"],
+      card: card({ title: f.name, icon: "file", sub: "file coverage", body: "measured but not attributed — the web corpus tests the screen, not the door by name." }) }); });
+    ledger(left, ["case", "status", "corpus", "state", "name"], rows, { grid: "78px 58px 62px 106px 1fr" });
+    body.append(left);
+    var jr = E("div", { class: "jrn" });
+    jr.append(E("div", { class: "jhd" }, sechd("journey", "Journeys", T.journeys.length + (T.journeys_more ? "+" + T.journeys_more : ""), false)));
+    var jl = E("div", { class: "jlist" });
+    T.journeys.forEach(function(j){
+      var row = E("div", { class: "jmeta" + (/^C\d/.test(j.cid) ? "" : " jagg") }, E("span", { class: "jcid" }, esc(j.cid)), E("span", { class: "corp" }, esc(j.corpus)), E("span", { class: "ncomp" }, (j.comp || 0) + " comp"));
+      var faces = E("div", { class: "jfaces" });
+      (j.entities || []).forEach(function(ent){ var hh = 0; for (var i = 0; i < ent.length; i++) hh = (hh * 31 + ent.charCodeAt(i)) >>> 0;
+        faces.append(E("span", { class: "face" + (ent === F.identity.entity ? " fhome" : ""), title: ent, style: "color:hsl(" + (hh % 360) + " 55% 62%)" }, ico("entity", 13))); });
+      var cell = E("div", { class: "jcell" }, row, faces);
+      bind(cell, card({ title: j.cid, icon: "journey", sub: j.corpus + " · " + (j.entities || []).length + " entities", rows: [["entities", (j.entities || []).join(" · ")]] }));
+      jl.append(cell); });
+    jr.append(jl); body.append(jr); box.append(body);
+    var foot = E("div", { class: "pfoot" });
+    if (T.workflows.length) T.workflows.forEach(function(w){ var wr = E("div", { class: "kv" }, ico("journey", 13, "var(--accent)"), E("span", { class: "k" }, "workflow"), E("span", { class: "v" }, esc(w.name) + " — step " + (w.step_index[0] + 1) + " of " + w.steps.length));
+      bind(wr, card({ title: w.name, icon: "journey", sub: "curated · level " + w.level, fields: w.steps })); foot.append(wr); });
+    foot.append(legend([{ t: "declared " + T.declared_status, swatch: "background:" + S.OPC.read }, { t: "4xx", swatch: "background:" + S.OPC.gate }, { t: "file coverage", swatch: "background:transparent;border:1px dashed var(--muted);height:6px;width:16px" }]));
+    box.append(foot);
+    COV.mark("TESTS", "tests"); COV.mark("JOURNEYS", "tests");
+  }
+
+  /* ── WIDENING · B "flow" — the reach laid on ONE horizontal axis, the journey rail above ── */
+  function renderWideFlow(box, F, S){
+    var W = F.widening, I = F.identity, KC = S.KINDCOL;
+    head(box, "globe", "Widening", (W.fetched_by.length + W.chain.reduce(function(s, l){ return s + l.length; }, 0)) + " reached",
+      "left to right: the app, down through what renders what, into the door — and what the answer feeds");
+    var body = E("div", { class: "wfbody" });
+    if (W.steps_around.length) { var rail = E("div", { class: "wrail" });
+      W.steps_around.forEach(function(st){ rail.append(E("span", { class: "wrl" }, ico("journey", 12, "var(--accent)"), esc(st.workflow)));
+        [[st.prev, "before"], [I.label, "here"], [st.next, "after"]].forEach(function(pair, i){ if (!pair[0]) return;
+          var el = E("span", { class: "step" + (pair[1] === "here" ? " here" : "") }, ico("endpoint", 11, pair[1] === "here" ? KC.endpoint : "var(--muted)"), esc(pair[0]));
+          bind(el, card({ title: pair[0], icon: "endpoint", sub: "the step " + pair[1], rows: [["workflow", st.workflow]] }));
+          rail.append(el); if (i < 2) rail.append(E("i", { class: "sarr", html: ico("drill", 11, "var(--muted)") })); }); });
+      body.append(rail); }
+    var flow = E("div", { class: "wflow" });
+    var stations = [];
+    W.chain.slice().reverse().forEach(function(level){ level.forEach(function(p){ stations.push({ kind: p.kind, name: p.name, sub: p.rel + " → " + p.to, col: KC[p.kind] || KC.component, id: p.id, home: p.home, feClass: p.feClass }); }); });
+    W.fetched_by.forEach(function(p){ stations.push({ kind: "hook", name: p.name, sub: (p.hrole || "hook") + (p.cache ? " · cached" : ""), col: KC.hook, id: p.id, home: p.home }); });
+    stations.push({ kind: "endpoint", name: I.path, sub: I.method + " · " + I.entity, col: KC.endpoint, self: true });
+    stations.forEach(function(st, i){
+      var el = E("div", { class: "wst" + (st.self ? " self" : ""), style: "--rc:" + st.col },
+        E("span", { class: "wi", html: ico(st.kind === "endpoint" ? "endpoint" : st.kind === "route" ? "nav" : st.kind === "hook" ? "merge" : "web", 16, st.col) }),
+        E("b", null, esc(st.name)), E("span", { class: "ws" }, esc(st.sub)));
+      bind(el, card({ title: st.name, icon: st.kind === "endpoint" ? "endpoint" : "web", color: st.col, sub: st.kind + (st.home ? " · home " + st.home : ""),
+        rows: [["relation", st.sub], st.feClass ? ["class", st.feClass] : null, st.id ? ["file", String(st.id).replace(/^fe:/, "")] : null], station: st.id }));
+      flow.append(el);
+      if (i < stations.length - 1) flow.append(E("i", { class: "sarr", html: ico("drill", 14, "var(--muted)") })); });
+    body.append(flow);
+    var tail = E("div", { class: "wtail" });
+    var ub = E("div", { class: "uwrap" }, sechd("merge", "Usage", ((I.usage || {}).api || 0) + ((I.usage || {}).internal || 0), false),
+      E("div", { class: "ubar" }, E("div", { class: "ufill", style: "width:" + Math.min(100, (((I.usage || {}).api || 0) + ((I.usage || {}).internal || 0)) * 9) + "%" })),
+      E("div", { class: "sublbl" }, ico("link", 12), ((I.usage || {}).api || 0) + " api · " + ((I.usage || {}).internal || 0) + " internal · fan-in " + I.fanin + " · entity " + I.entity + " · layer " + I.layer));
+    bind(ub, card({ title: "usage", icon: "merge", sub: "in-degree", rows: [["api", String((I.usage || {}).api)], ["internal", String((I.usage || {}).internal)], ["fan-in", String(I.fanin)], ["layer", I.layer]] }));
+    tail.append(ub);
+    if (W.response_consumers.length) { var rc = E("div", { class: "kv" }, ico("schema", 13, KC.schema), E("span", { class: "k" }, "shared out"), E("span", { class: "v" }, W.response_consumers.length + " other endpoint(s) return " + F.data.schemas.response.name));
+      bind(rc, card({ title: "the response is shared", icon: "schema", fields: W.response_consumers })); tail.append(rc); }
+    body.append(tail); box.append(body);
+    var foot = E("div", { class: "pfoot" });
+    foot.append(legend([{ t: "the door", icon: "endpoint", col: KC.endpoint }, { t: "hook", icon: "merge", col: KC.hook }, { t: "screen · route", icon: "web", col: KC.component }]));
+    box.append(foot);
+    COV.mark("USAGE", "widening"); COV.mark("IDENTITY", "widening"); COV.mark("CONNECTIONS", "widening");
+  }
+
+  /* ── SECURITY · B "gauntlet" — everything between the request and the answer, on one line ── */
+  function renderSecGauntlet(box, F, S){
+    var SEC = F.security, FW = F.feedwide;
+    head(box, "key", "Security", SEC.guards.length + " deps · " + SEC.asgi.length + " app",
+      "the request runs the gauntlet left to right: the app band, this door's deps, the body, the commit — then the answer");
+    var body = E("div", { class: "sgbody" });
+    var lane = E("div", { class: "gaunt" });
+    function stop(o){ var el = E("div", { class: "gst " + (o.cls || ""), style: o.col ? "--gc:" + o.col : "" },
+        E("span", { class: "gi", html: ico(o.icon, 16, o.col || "var(--muted)") }), E("b", null, esc(o.title)),
+        E("span", { class: "gs" }, esc(o.sub)));
+      if (o.card) bind(el, o.card); lane.append(el); return el; }
+    stop({ icon: "down", title: "request", sub: F.identity.method + " " + F.identity.path, col: S.OPC.read,
+      card: card({ title: "the request arrives", icon: "down", sub: F.identity.method + " " + F.identity.path, rows: [["body", (F.data.schemas.request.name || "—") + " · " + (F.data.schemas.request.cols || []).length + " fields"]] }) });
+    lane.append(E("i", { class: "sarr", html: ico("drill", 13, "var(--muted)") }));
+    SEC.asgi.forEach(function(m){ stop({ icon: "shield", title: m.name.replace(/Middleware$/, ""), sub: "app · order " + m.order + " · " + m.gates + " gated", col: S.OPC.gate, cls: "app",
+      card: card({ title: m.name, icon: "shield", color: S.OPC.gate, sub: "ASGI middleware · scope " + m.scope,
+        rows: [["order", String(m.order)], ["gates", m.gates + " of " + FW.endpoints + " endpoints"], ["file", m.file + ":" + m.line], ["tie to this door", "— measured at APP scope only"]] }) });
+      lane.append(E("i", { class: "sarr", html: ico("drill", 13, "var(--muted)") })); });
+    SEC.guards.forEach(function(g){ stop({ icon: g.gate ? "key" : "link", title: g.name, sub: g.via + (g.gate ? " · GATE" : " · resource") + " · " + Math.round(100 * g.feedwide / FW.endpoints) + "% of doors", col: g.gate ? S.OPC.gate : "var(--muted)", cls: g.gate ? "gate" : "",
+      card: card({ title: g.name, icon: g.gate ? "key" : "link", color: g.gate ? S.OPC.gate : null, sub: g.via,
+        rows: [["decides", g.gate ? "yes — it can refuse" : "no — it supplies"], ["feed-wide", g.feedwide + " of " + FW.endpoints], g.fn_rec ? ["function", g.fn_rec.name + " · " + (g.fn_rec.role || "—")] : null] }) });
+      lane.append(E("i", { class: "sarr", html: ico("drill", 13, "var(--muted)") })); });
+    stop({ icon: "function", title: "the body", sub: (F.identity.sig || {}).lines + " lines · " + F.functions.behind.fns + " behind", col: S.KINDCOL["function"],
+      card: card({ title: "the handler body", icon: "function", color: S.KINDCOL["function"], rows: [["lines", String((F.identity.sig || {}).lines)], ["behind", String(F.functions.behind.fns)]] }) });
+    lane.append(E("i", { class: "sarr", html: ico("drill", 13, "var(--muted)") }));
+    stop({ icon: "key", title: "commit", sub: SEC.commits ? F.data.writes.length + " writes made permanent" : "no commit", col: S.OPC.write, cls: "commitst",
+      card: card({ title: "the DB transaction", icon: "key", color: S.OPC.write, sub: "never a git commit", rows: [["writes", String(F.data.writes.length)], ["idempotency", SEC.idempotent ? SEC.idempotency_table : "none"]] }) });
+    lane.append(E("i", { class: "sarr", html: ico("drill", 13, "var(--muted)") }));
+    stop({ icon: "up", title: "answer " + SEC.status.declared, sub: (F.data.schemas.response.name || "—") + " · " + ((F.identity.payload || {}).n || 0) + " fields", col: S.OPC.read,
+      card: card({ title: "the answer", icon: "up", sub: "declared " + SEC.status.declared, rows: [["schema", F.data.schemas.response.name], ["cases assert", Object.keys(SEC.status.observed).filter(function(k){ return /^\d/.test(k); }).join(" · ")]] }) });
+    body.append(lane);
+    var facts = E("div", { class: "sfacts" });
+    [["flag walls", SEC.walls.length ? SEC.walls.length + " wall(s)" : "none — no feature flag can close this door", !SEC.walls.length, "swords"],
+     ["idempotency", SEC.idempotent ? "guarded — writes " + SEC.idempotency_table : "none", !SEC.idempotent, "target"],
+     ["delivery", SEC.stream ? "streams to the client" : "one response, whole — this door does not stream", !SEC.stream, "wave"],
+     ["status contract", "declares " + SEC.status.declared + " · the cases assert " + Object.keys(SEC.status.observed).filter(function(k){ return /^\d/.test(k); }).join(" · "), false, "info"]
+    ].forEach(function(f){ var r = E("div", { class: "sfact" + (f[2] ? " hollow" : "") }, ico(f[3], 13, f[2] ? "var(--muted)" : S.OPC.gate), E("b", null, f[0]), E("span", { class: "sv" }, f[1]));
+      bind(r, card({ title: f[0], icon: f[3], sub: f[2] ? "measured zero" : "measured", body: f[2] ? "HOLLOW means the emitter looked and found nothing — unmeasured would be hatched and would say so." : "" }));
+      facts.append(r); });
+    body.append(facts); box.append(body);
+    var foot = E("div", { class: "pfoot" });
+    foot.append(E("div", { class: "kv" }, ico("shield", 13, S.OPC.gate), E("span", { class: "k" }, "app band"), E("span", { class: "v" }, "gates " + (SEC.app_middleware || {}).gates_endpoints + " of " + FW.endpoints + " endpoints" + ((SEC.app_middleware || {}).saturated ? " — saturated: it separates nothing" : ""))));
+    foot.append(legend([{ t: "gate", swatch: "background:" + S.OPC.gate }, { t: "resource dep", swatch: "background:var(--muted)" }, { t: "hollow = measured zero", swatch: "background:transparent;border:1px solid var(--line);height:9px;width:14px" }]));
+    box.append(foot);
+    COV.mark("GUARDS", "security"); COV.mark("DELIVERY", "security");
+  }
+
   /* ── the registry — icons are STATION icons (words on hover), counts answer A ─────────── */
   window.PANELS = {
-    data: { icon: "table", word: "Data + schemas", hint: "where the reads and writes land (13 tables on 5 entity grounds, one DB commit) and the shapes that cross the door (request 7 · response 6) — abstractions drawn as lines, the exact columns on hover",
-      count: function(F){ return F.data.tables.length; }, render: renderData },
-    functions: { icon: "function", word: "Functions", hint: "the handler and the call tree behind it — reach 5 · 29 behind; the levels walk 3·16·5·1 with the confidence of each hop; ONE bead walks it",
-      count: function(F){ return F.functions.behind.fns; }, render: renderFunctions },
-    tests: { icon: "test", word: "Tests", hint: "the cases that reach this door stacked by the status they assert (26 api, all passing · 15 web as file coverage) and the 6+21 cross-entity journeys",
-      count: function(F){ return F.tests.cases.length + F.tests.case_files.length; }, render: renderTests },
-    widening: { icon: "globe", word: "Widening", hint: "how far the door reaches: the ladder from the door up to the app, and the workflow steps around it",
-      count: function(F){ return F.widening.fetched_by.length + F.widening.chain.reduce(function(s, l){ return s + l.length; }, 0); }, render: renderWidening },
-    security: { icon: "key", word: "Security", hint: "what stands before the body runs: the app band (3, saturated), this door's 3 deps with 1 gate, flag walls (none), the status contract, idempotency, the commit",
-      count: function(F){ return F.security.guards.length + F.security.asgi.length; }, render: renderSecurity },
+    data: { icon: "table", word: "Data", col: S.KINDCOL.model, hint: "where the reads and writes land (13 tables on 5 entities, one DB commit) and the shapes that cross the door (request 7 · response 6) — abstractions drawn as lines, the exact columns on hover",
+      count: function(F){ return F.data.tables.length; },
+      variants: [ { key: "grounds", label: "Grounds", hint: "tables tiled on entity-coloured grounds; the shape stacks stand vertically. Reads by entity first.", render: renderData },
+                  { key: "flow", label: "Flow", hint: "ONE left-to-right axis — request → the whole table field (writes first, entity by dot) → response. Uses the width.", render: renderDataFlow },
+                  { key: "ledger", label: "Ledger", hint: "one row per table with every column the feed knows (entity · rw · shape · cols · fk · uq · model). The densest honest form.", render: renderDataLedger } ] },
+    functions: { icon: "function", word: "Functions", col: S.KINDCOL["function"], hint: "the handler and the call tree behind it — reach 5 · 29 behind; the levels walk 3·16·5·1 with the confidence of each hop; ONE bead walks it",
+      count: function(F){ return F.functions.behind.fns; },
+      variants: [ { key: "levels", label: "Levels", hint: "one column per hop, every callee visible at once; the bead crosses the strip.", render: renderFunctions },
+                  { key: "chain", label: "Chain", hint: "the walk as one horizontal spine; a hop opens below when you click it. Fits a short box.", render: renderFnChain },
+                  { key: "ledger", label: "Ledger", hint: "one row per function — hop · role · size · confidence · commit · tables touched.", render: renderFnLedger } ] },
+    tests: { icon: "test", word: "Tests", col: "#4cbe83", hint: "the cases that reach this door stacked by the status they assert (26 api, all passing · 15 web as file coverage) and the 6+21 cross-entity journeys",
+      count: function(F){ return F.tests.cases.length + F.tests.case_files.length; },
+      variants: [ { key: "status", label: "Status", hint: "a column per HTTP status the case names assert; the declared one is bordered.", render: renderTests },
+                  { key: "ledger", label: "Ledger", hint: "one row per case — id · status · corpus · state · full name — with the journeys beside.", render: renderTestsLedger } ] },
+    widening: { icon: "globe", word: "Widening", col: S.KINDCOL.screen || "#a855f7", hint: "how far the door reaches: the ladder from the door up to the app, and the workflow steps around it",
+      count: function(F){ return F.widening.fetched_by.length + F.widening.chain.reduce(function(s, l){ return s + l.length; }, 0); },
+      variants: [ { key: "ladder", label: "Ladder", hint: "the rungs stacked, the door at the foot — reads bottom-up like a climb.", render: renderWidening },
+                  { key: "flow", label: "Flow", hint: "the same reach on one horizontal axis with the journey rail above it. Uses the width.", render: renderWideFlow } ] },
+    security: { icon: "key", word: "Security", col: "#eab308", hint: "what stands before the body runs: the app band (3, saturated), this door's 3 deps with 1 gate, flag walls (none), the status contract, idempotency, the commit",
+      count: function(F){ return F.security.guards.length + F.security.asgi.length; },
+      variants: [ { key: "band", label: "Band", hint: "the app band over the door's own deps, then the one-line facts. Reads top-down as layers.", render: renderSecurity },
+                  { key: "gauntlet", label: "Gauntlet", hint: "the request runs left to right through every stop: band → deps → body → commit → answer.", render: renderSecGauntlet } ] },
   };
   window.EPKIT = { E: E, esc: esc, ico: ico, rwChip: rwChip, trust: trust, sechd: sechd, card: card, RWC: RWC };
 })();

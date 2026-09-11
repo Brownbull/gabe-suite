@@ -89,7 +89,9 @@ def main() -> int:
             ".face.fhome", ".tipico{", ".tipico .tip{", ".flagssec{", ".flagrow{", ".flagrow .flbl", ".flagrow.god",
             ".flagrow.warn", ".flagrow.ok", ".pnav{", ".pnav .pdot", ".pnav .pnl", ".pnav .pnm", ".pnav .pki",
             ".pnav .pdir", ".badgepop{", ".badgepop .bph", ".badgepop .bprow", ".badgepop .bpnote",
-            ".jdcolpop{", ".jdcolpop .", "@keyframes lrfade")
+            ".jdcolpop{", ".jdcolpop .", "@keyframes lrfade",
+            # the station's THEMED SCROLLBAR (narrow + dark, follows the theme) — the lab inherits it
+            "*{ scrollbar-width", "::-webkit-scrollbar")
     card_css = []
     for line in src.splitlines():
         s = line.strip()
