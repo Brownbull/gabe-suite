@@ -1538,7 +1538,9 @@ function labelSprite(txt, size, y, col){ var cv=document.createElement("canvas")
   var fnt="600 "+(size||26)+"px "+curFont(); c0.font=fnt;
   var tw=Math.ceil(c0.measureText(txt).width)+16;                         // the canvas FITS the text (16px breathing)
   cv.width=Math.max(256, tw); cv.height=64; var c=cv.getContext("2d");    // resizing resets state — re-set the font
-  c.font=fnt; c.fillStyle=col||"#cdd6ea"; c.textAlign="center"; c.textBaseline="middle"; c.fillText(txt, cv.width/2, 32);
+  var _lt=(window.__uniTheme==="light"); c.font=fnt; c.textAlign="center"; c.textBaseline="middle";
+  if(_lt){ c.lineWidth=5; c.strokeStyle="rgba(255,255,255,.9)"; c.lineJoin="round"; c.strokeText(txt, cv.width/2, 32); }   // LIGHT: a white halo lifts the label off wires + hulls
+  c.fillStyle=_lt?inkCol(col||"#2a3446"):(col||"#cdd6ea"); c.fillText(txt, cv.width/2, 32);
   var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, depthWrite:false}));
   s.scale.set(34*(cv.width/256),8.5,1); if(y!=null) s.position.y=y; return s; }
 /* ── ENCODING channel primitives (billboard sprites → always face camera) ── */
@@ -1819,9 +1821,10 @@ function starSprite(col,size,glow){ var grp=new T.Group();
 function prand(i,s){ var x=Math.sin(i*12.9898+s*78.233)*43758.5453; return x-Math.floor(x); }   // deterministic per (index,seed) — stars cloud around member nodes in updateClusters
 var STARC={ size:0.45, glow:0.1, color:0xffffff, per:5 };   // operator-settled star config (2026-08-19) · per = hidden fns per member (stand-in)
 
-function iconCol(n){ if(ENC.color==="heat") return heatCol(heatVal(n));
+function _iconColRaw(n){ if(ENC.color==="heat") return heatCol(heatVal(n));
   if(ENC.method && n.kind==="endpoint" && n.m.method) return METHOD[n.m.method]||n.col;
   return _isView(n)?VIEWCOL:n.col; }   // identity = KIND colour (a VIEW component wears the view colour)
+function iconCol(n){ return inkCol(_iconColRaw(n)); }   // LIGHT theme: the icon tint darkens like a label — the dark roster is pastel on a light ground (operator 2026-09-11: "at a distance, impossible to read")
 function cap3(x){ return Math.min(x,3); }   // faked values can be cranked high — cap the visual so it never fills the screen
 function num(raw){ return typeof raw==="boolean"?(raw?1:0):(+raw||0); }
 function nodeVal(key,n){ var f=fieldOf(key), raw=(n.m||{})[f]; return {f:f, raw:raw, r:cap3(num(raw)/(MAXES[f]||1))}; }   // the effect's MAPPED field, normalized
@@ -1866,7 +1869,7 @@ function applyEnc(){ if(!Graph) return; rebuildNodes();
 /* edge accessors (named so applyEnc can re-set them) */
 function linkVal(key,l){ var f=fieldOf(key), raw=l[f]; return {f:f, raw:raw, r:cap3(num(raw)/(MAXES[f]||1))}; }
 function linkWidthFn(l){ return ENC.eWidth ? 0.4+linkVal("eWidth",l).r*2.4 : 0.7; }
-function linkColorFn(l){ var c=RELCOL[l.rel]||"#889"; return (ENC.eTrust && !truthy(linkVal("eTrust",l).raw)) ? dimCol(c,0.55) : c; }
+function linkColorFn(l){ var c=inkCol(RELCOL[l.rel]||"#889"); return (ENC.eTrust && !truthy(linkVal("eTrust",l).raw)) ? dimCol(c,0.55) : c; }
 function linkPartFn(l){ return ENC.eParticles ? Math.max(1,Math.round(linkVal("eParticles",l).r*3)) : 0; }
 function linkVisFn(l){ var s=NIDS[lid(l.source)], t=NIDS[lid(l.target)];
   if((s&&(!_nodeVisibleFn(s)||!visN(s).wires))||(t&&(!_nodeVisibleFn(t)||!visN(t).wires))) return false; return !CFG.conns; }   // typed connectors REPLACE every plain edge → hide them all when conns on
@@ -3306,6 +3309,8 @@ window.__uniApplyTheme=function(th){ th=(th==="light")?"light":"dark"; window.__
   try{ updateConnectors(); }catch(e){}
   try{ __uniRetint(); }catch(e){}                                        // legend + card labels: kind colours darkened as ink on the light ground
   try{ Graph.linkColor(Graph.linkColor()); }catch(e){}                   // re-evaluate every wire: dimCol fades toward the new ground
+  try{ if(typeof rebuildNodes==="function" && typeof Graph!=="undefined" && Graph) rebuildNodes(); }catch(e){}   // the SCENE re-tints: icon sprites + label sprites are canvas textures built with the theme's ink
+  try{ if(typeof buildClusters==="function" && typeof Graph!=="undefined" && Graph){ buildClusters(); updateClusters(true); if(window.__uniApplyHullSel) __uniApplyHullSel(); } }catch(e){}   // hulls + cluster labels rebuild at the theme's opacity/ink
   try{ window.localStorage.setItem("gabe:universe:theme", th); }catch(e){}
   var b=document.getElementById("themeBtn");
   if(b){ b.classList.toggle("on", th==="light");
@@ -5308,6 +5313,7 @@ function addObj(o){ o.traverse(function(c){ c.raycast=function(){}; }); Graph.sc
 function clearClusters(){ clusterObjs.forEach(function(o){ Graph.scene().remove(o); if(o.geometry&&o.geometry.dispose)o.geometry.dispose(); }); clusterObjs=[]; CLUSTERS=[]; }
 function memberLinks(memset){ return links.filter(function(l){ return memset[lid(l.source)] && memset[lid(l.target)]; }); }
 function makeCluster(members, color, shape, op, level, label, dash){
+  op=op*(window.__uniTheme==="light"?0.45:1);   // LIGHT theme: a hull at the dark opacity is a tan smear over its members — the ground is bright, so the tint needs less
   var memset={}; members.forEach(function(id){ memset[id]=1; });
   var c={ members:members, memset:memset, shape:shape, level:level, pad:(level==="ent"?26:10), dash:!!dash };   // pad = BASE; radius multiplies live in updateClusters · dash = an ASPECT cluster (entity models): stippled rim, no solid fill
   if(shape==="aura"){ var nS=level==="ent"?50:26, lS=level==="ent"?38:20; c.sprites=[];

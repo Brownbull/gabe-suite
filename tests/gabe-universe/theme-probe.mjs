@@ -46,7 +46,19 @@ async function sweep(label, theme) {
   if (SHOT) await p.screenshot({ path: path.join(SHOT, `theme-${theme}-${label.replace(/\W+/g, '-')}.png`) });
 }
 await sweep('dark · entity panel', 'dark');
-await p.evaluate(() => window.__uniApplyTheme('light')); await p.waitForTimeout(1200);
+/* the SCENE (WebGL — the DOM sweep cannot see it): icon tints, wire colours and hull opacity are read off the materials */
+const SCENE = `(() => { const ns = Graph.graphData().nodes.filter(n => n.__threeObj && n.__threeObj.children[0] && n.__threeObj.children[0].material && n.__threeObj.children[0].material.color);
+  const darker = (m, raw) => { const L = h => { const c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(v => v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4)); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; }; return L(m) < L(raw) - 1e-6; };
+  const dk = ns.filter(n => darker('#' + n.__threeObj.children[0].material.color.getHexString(), String(_iconColRaw(n)).toLowerCase())).length;
+  const c0 = (typeof CLUSTERS !== 'undefined' && CLUSTERS[0]) || null, ho = c0 ? ((c0.hull && c0.hull.material.opacity) || (c0.sph && c0.sph.material.opacity) || (c0.sprites && c0.sprites[0] && c0.sprites[0].s.material.opacity) || null) : null;
+  const l0 = Graph.graphData().links[0]; return { n: ns.length, darker: dk, hull: ho, wire: l0 ? linkColorFn(l0) : null, wireRaw: l0 ? (RELCOL[l0.rel] || '#889') : null }; })()`;
+const sceneDark = await p.evaluate(SCENE);
+await p.evaluate(() => window.__uniApplyTheme('light')); await p.waitForTimeout(3000);
+const sceneLight = await p.evaluate(SCENE);
+console.log(`    scene: ${sceneLight.n} icon sprites · ${sceneLight.darker} darker in light (dark: ${sceneDark.darker}) · hull opacity ${sceneDark.hull} → ${sceneLight.hull} · wire ${sceneDark.wire} → ${sceneLight.wire}`);
+ok(sceneLight.n > 50 && sceneLight.darker >= .9 * sceneLight.n && sceneDark.darker === 0, 'scene: in light ≥ 90% of icon sprites wear a darker tint than the roster colour, in dark none does');
+ok(sceneDark.hull != null && sceneLight.hull != null && sceneLight.hull < sceneDark.hull, `scene: the hull opacity drops in light (${sceneDark.hull} → ${sceneLight.hull})`);
+ok(sceneLight.wire && sceneLight.wire !== sceneDark.wire && sceneDark.wire === sceneDark.wireRaw, 'scene: the wire colour is the roster in dark and darker in light');
 ok(await p.evaluate(() => document.documentElement.getAttribute('data-theme') === 'light' && window.__uniTheme === 'light'), 'the switch stamps data-theme=light and __uniTheme');
 await sweep('light · entity panel', 'light');
 await p.evaluate(() => { try { const all = window._jrnCollect ? _jrnCollect() : []; const j = all.find(x => !x.commit) || all[0]; if (j) __uniJrnStart(j.cid); } catch (e) {} }); await p.waitForTimeout(1500);
