@@ -152,9 +152,27 @@
     for (var p in (a || {})) { if (p === "class") e.className = a[p]; else if (p === "html") e.innerHTML = a[p]; else e.setAttribute(p, a[p]); }
     k.forEach(function f(c){ if (c == null) return; if (Array.isArray(c)) c.forEach(f); else e.append(c); });   // an array of nodes must FLATTEN, or append() stringifies it
     return e; }
+  /* A ROW whose value is long puts its label on one line and its content on the next, where it has the
+     card's whole width (operator 2026-09-11). Short values stay inline. `r[3] === "stack"` forces it. */
+  var STACK_AT = 30;
+  function cprow(r){ if (!r) return "";
+    var k = r[0], v = String(r[1] == null ? "" : r[1]), col = r[2] ? ' style="color:' + r[2] + '"' : "";
+    var stacked = r[3] === "stack" || (r[3] !== "inline" && v.replace(/<[^>]+>/g, "").length > STACK_AT);
+    return stacked
+      ? '<div class="cprow stack"><span class="cpk">' + k + '</span><span class="cpv"' + col + '>' + v + '</span></div>'
+      : '<div class="cprow"><span class="cpk">' + k + '</span><span class="cpv"' + col + '>' + v + '</span></div>'; }
+  /* A MINI TABLE — a fixed grid of rows, each optionally marked (the row that fires, the success case) */
+  function cptable(t){ if (!t || !t.rows || !t.rows.length) return "";
+    var h = '<div class="cptbl" style="grid-template-columns:' + (t.grid || "auto 1fr auto") + '">';
+    if (t.head) h += t.head.map(function(c){ return '<span class="cth">' + c + '</span>'; }).join("");
+    t.rows.forEach(function(r){ var cls = "ctr" + (r.mark ? " mark-" + r.mark : "");
+      (r.cells || []).forEach(function(c, i){ h += '<span class="' + cls + (i === 0 ? " first" : "") + '">' + c + '</span>'; }); });
+    return h + "</div>"; }
   function hcard(o){ var h = '<div class="cphd">' + (o.icon ? S.icon(o.icon, 15, o.color) : "") + '<b' + (o.color ? ' style="color:' + o.color + '"' : "") + '>' + o.title + '</b></div>';
     if (o.sub) h += '<div class="cpsub">' + o.sub + '</div>';
-    (o.rows || []).forEach(function(r){ if (r) h += '<div class="cprow"><span class="cpk">' + r[0] + '</span><span class="cpv"' + (r[2] ? ' style="color:' + r[2] + '"' : "") + '>' + r[1] + '</span></div>'; });
+    (o.rows || []).forEach(function(r){ h += cprow(r); });
+    if (o.table) h += cptable(o.table);
+    if (o.rows2) o.rows2.forEach(function(r){ h += cprow(r); });
     if (o.body) h += '<div class="cpbody">' + o.body + '</div>';
     if (o.station) h += '<div class="cpclick">in the station: ' + o.station + '</div>';
     return h; }
@@ -247,47 +265,68 @@
         card: hcard({ title: I.cluster, icon: "layers", sub: "the cluster inside " + I.entity,
           rows: [["from", "the URL's first segment"], ["entity", I.entity]],
           body: I.cluster_note }) }); } },
-    { key: "status", word: "status", note: "the success code the route decorator declares (status_code=) — not a measurement, a promise",
-      build: function(){ var obs = Object.keys(F.tests.by_status).filter(function(k){ return /^\d/.test(k); });
+    { key: "status", word: "status", note: "the success code the route decorator declares (status_code=) — a promise the handler makes, not a measurement",
+      build: function(){
+        /* HTTP semantics (RFC 9110) — reference, not feed data: the meanings a reader should not have to look up */
+        var HTTPM = { "200": "OK — the work is done, the body is the result", "201": "Created — a new row exists; the body or Location names it",
+          "202": "Accepted — taken, not finished; something continues after the answer", "204": "No Content — done, nothing to send back",
+          "400": "Bad Request — malformed before any rule is checked", "401": "Unauthorized — no identity, or the token failed",
+          "403": "Forbidden — identity known, not allowed", "404": "Not Found — no such row, or not yours to see",
+          "409": "Conflict — the state forbids it right now (already done, or a race)", "422": "Unprocessable — the shape parsed, a field is invalid",
+          "429": "Too Many Requests — the rate limit refused it", "500": "Server Error — the handler broke" };
         var X = (F.context || {}).status || {}, peers = X.same_method || {}, mine = String(I.status);
         var peerStr = Object.keys(peers).map(function(c){ return c + " ×" + peers[c]; }).join(" · ");
-        var odd = Object.keys(peers).filter(function(c){ return c !== mine && peers[c] >= peers[mine]; });
+        var others = Object.keys(peers).filter(function(c){ return c !== mine; });
+        var creates = F.data.writes.length > 0, has201 = !!peers["201"], ask = creates && mine === "200" && has201;
+        var codes = Object.keys(F.tests.by_status).filter(function(c){ return /^\d/.test(c); }).sort();
+        if (codes.indexOf(mine) < 0) codes.unshift(mine);
+        var trows = codes.map(function(c){ var n = (F.tests.by_status[c] || []).length;
+          return { mark: c === mine ? "ok" : null,
+                   cells: [c, (c === mine ? "<b>SUCCESS</b> · " : "") + (HTTPM[c] || "—"), n ? n + " case" + (n === 1 ? "" : "s") : "—"] }; });
         return chip({ key: "status", icon: "info", label: "declares", value: I.status + (I.status_name ? " " + I.status_name : ""), col: S.OPC.read, cls: "statchip",
-        card: hcard({ title: "declares " + I.status, icon: "info", color: S.OPC.read, sub: "status_code= on the route decorator",
-          rows: [["what it is", "the code this handler PROMISES when the work succeeds"],
-                 ["read from", "the decorator, by the scanner — not observed at runtime"],
-                 ["written as", I.status_name ? "a constant (" + I.status_name + ")" : "a bare number"],
-                 [I.method + " peers", peerStr],
-                 ["the cases assert", obs.join(" · ")],
-                 ["no code in the name", String((F.tests.by_status["no code in name"] || []).length) + " of " + F.tests.cases.length + " cases"]],
-          body: "<b>What to do with it.</b> Read it against its peers, not alone. "
-            + (odd.length ? "Of the " + Object.keys(peers).reduce(function(a, c){ return a + peers[c]; }, 0) + " " + I.method + "s in this feed, " + odd.map(function(c){ return peers[c] + " declare " + c; }).join(" and ") + " — this one declares " + mine + " while writing " + F.data.writes.length + " tables, so ask whether it is really a create (201) or an update (200)."
-                        : "its code matches what its method peers declare.")
-            + " Feed-wide: " + Object.keys(X.declared || {}).map(function(c){ return c + " ×" + X.declared[c]; }).join(" · ")
-            + ". A door whose corpus never asserts its declared code is a coverage gap — " + X.cases_never_assert_declared + " of " + X.of + " are in that state here, and " + X.no_cases + " have no cases at all."
-            + "<br><b>Where it comes from.</b> <code>_a3_code.parse_endpoints</code> keeps <code>status_code=</code> when it is literal; the emitter turns a constant into the number and keeps the name beside it." }) }); } },
+          card: hcard({ title: "declares " + I.status, icon: "info", color: S.OPC.read, sub: "the SUCCESS code · status_code= on the route decorator",
+            rows: [["read from", "the decorator, by the scanner — never observed at runtime"],
+                   ["written as", I.status_name ? "a constant (" + I.status_name + ")" : "a bare number", null, "inline"]],
+            table: { grid: "34px 1fr auto", head: ["code", "what it means", "cases"], rows: trows },
+            rows2: [[I.method + " peers", peerStr],
+                    ["no code in the name", (F.tests.by_status["no code in name"] || []).length + " of " + F.tests.cases.length + " cases — journeys and round-trips, not status assertions"]],
+            body: "<b>Read it against its peers.</b> "
+              + (ask ? "Of the " + Object.keys(peers).reduce(function(a, c){ return a + peers[c]; }, 0) + " " + I.method + "s here, " + peers["201"] + " declare 201 — this one declares 200 while writing " + F.data.writes.length + " tables, so ask whether it is really a create (201) or an update (200)."
+                     : others.length ? "Its " + I.method + " peers split " + peerStr + "; this one sits with the " + peers[mine] + " that declare " + mine + "."
+                                     : "every " + I.method + " here declares " + mine + ".")
+              + " Feed-wide: " + Object.keys(X.declared || {}).map(function(c){ return c + " ×" + X.declared[c]; }).join(" · ")
+              + ". " + X.cases_never_assert_declared + " of " + X.of + " doors have a corpus that never asserts their declared code, and " + X.no_cases + " have no cases at all." }) }); } },
     { key: "source", word: "source", note: "the file and line the handler is defined at",
       build: function(){ return chip({ key: "source", icon: "file", label: "source", value: I.file + ":" + I.flines, cls: "srcchip",
         card: hcard({ title: I.file, icon: "file", sub: "line " + I.flines,
           rows: [["handler", F.functions.handler.name || "—"], ["body", (I.sig ? (I.sig.async ? "async · " : "") + I.sig.lines + " lines" : "—")], ["returns", (I.sig || {}).returns || "—"], ["exported", I.exported ? "yes" : "no"]] }) }); } },
-    { key: "risk", word: "risk", note: "the station's attack-fleet flags — only the ones that FIRE are drawn",
+    { key: "risk", word: "risk", note: "the station's three size flags — only the ones that FIRE are drawn, and the card shows all three so you can see what did not",
       build: function(){ var w = el("span", { class: "hgrp" });
         var R = (F.context || {}).risk || {};
-        if (I.risk.large) w.append(chip({ key: "risk", icon: "burst", cls: "flagchip warn", label: "risk", value: I.risk.conflict || "conflict",
-          card: hcard({ title: "conflict · " + (I.risk.conflict || ""), icon: "burst", color: "var(--red)", sub: "a SIZE signal, not a fault",
-            rows: [["rule", R.rule_large || "behind ≥ 15 or fan-in ≥ 15"],
-                   ["behind", String(I.risk.behind) + " functions in its call tree"],
-                   ["fan-in", String(I.risk.fanin) + " element(s) depend on it"],
-                   ["among its peers", "rank " + R.rank + " of " + R.of + " · " + R.large_count + " doors are flagged"],
-                   ["the spread", Object.keys(R.behind_bins || {}).map(function(b){ return b + ":" + R.behind_bins[b]; }).join(" · ")],
-                   ["heaviest", (R.heaviest || []).slice(0, 3).map(function(h){ return h.label + " " + h.behind; }).join(" · ")]],
-            body: "<b>What it means.</b> Changing this door drags " + I.risk.behind + " functions behind it, against a median of " + R.behind_median + " — it is in the top " + Math.round(100 * R.rank / R.of) + "% of this codebase. Nothing is wrong; the blast radius is simply large."
-              + "<br><b>What to do with it.</b> Before editing, open FUNCTIONS and walk the chain; before trusting it, open TESTS — this one has " + F.tests.cases.length + " cases, while " + R.no_cases + " of " + R.of + " doors have none. The three flags are independent: <b>conflict</b> is size, <b>god-object</b> is a handler over 50 lines, <b>unguarded</b> is no case naming it."
-              + "<br><b>Where it comes from.</b> The same rule <code>nodeFleet</code> uses in the graph — this is the raider fleet you see orbiting the planet, said in words." }) }));
-        if (I.risk.god) w.append(chip({ key: "risk", icon: "alert", cls: "flagchip god", label: "risk", value: "god-object",
-          card: hcard({ title: "god-object", icon: "alert", sub: "a size flag", body: "over the 50-line function flag." }) }));
-        if (I.risk.untested) w.append(chip({ key: "risk", icon: "alert", cls: "flagchip warn", label: "risk", value: "unguarded",
-          card: hcard({ title: "unguarded", icon: "alert", sub: "no case names it", body: "not the case here — " + F.tests.cases.length + " cases name this door." }) }));
+        /* ONE card, three rules, the firing one marked — the operator could not deduce the rules from
+           a single line of prose, so they are a table now (2026-09-11). */
+        function riskCard(which){
+          var rules = [
+            { k: "conflict", mark: I.risk.large, rule: "behind ≥ 15 or fan-in ≥ 15",
+              here: "behind " + I.risk.behind + " · fan-in " + I.risk.fanin, means: "changing it drags a large call tree" },
+            { k: "god-object", mark: I.risk.god, rule: "the handler is ≥ " + (R.god_lines || 50) + " lines",
+              here: (R.handler_lines != null ? R.handler_lines + " lines" : "—"), means: "the handler itself is oversized" },
+            { k: "unguarded", mark: I.risk.untested, rule: "no case names it",
+              here: (R.cases || 0) + " case" + ((R.cases || 0) === 1 ? "" : "s"), means: "nothing proves it works" } ];
+          return hcard({ title: which === "large" ? "conflict · large surface" : which === "god" ? "god-object" : "unguarded",
+            icon: "burst", color: "var(--red)", sub: "a SIZE signal — not a fault, and not a measurement of quality",
+            table: { grid: "88px 1fr 92px", head: ["flag", "fires when", "here"],
+              rows: rules.map(function(r){ return { mark: r.mark ? "fire" : "quiet",
+                cells: [(r.mark ? "▲ " : "· ") + r.k, r.rule, r.here] }; }) },
+            rows2: [["where it sits", "rank " + R.rank + " of " + R.of + " · median " + R.behind_median + " behind · this door " + I.risk.behind],
+                    ["the spread", ["0", "1-4", "5-14", "15-39", "40+"].map(function(b){ return b + ":" + ((R.behind_bins || {})[b] || 0); }).join("  ")],
+                    ["how many flag", (R.large_count || 0) + " large · " + (R.god_count || 0) + " god · " + (R.no_cases || 0) + " unguarded, of " + R.of],
+                    ["heaviest doors", (R.heaviest || []).slice(0, 3).map(function(h){ return h.label + " (" + h.behind + ")"; }).join(" · ")]],
+            body: "<b>What the number says.</b> " + I.risk.behind + " functions sit behind this door against a median of " + R.behind_median + " — the top " + Math.round(100 * R.rank / R.of) + "% of this codebase. Nothing is wrong; the blast radius is simply large."
+              + "<br><b>What to do.</b> Walk the chain in FUNCTIONS before editing it, and read TESTS before trusting it. The three flags are independent: size, handler length, and coverage each answer a different question." }); }
+        if (I.risk.large) w.append(chip({ key: "risk", icon: "burst", cls: "flagchip warn", label: "risk", value: I.risk.conflict || "conflict", card: riskCard("large") }));
+        if (I.risk.god) w.append(chip({ key: "risk", icon: "alert", cls: "flagchip god", label: "risk", value: "god-object", card: riskCard("god") }));
+        if (I.risk.untested) w.append(chip({ key: "risk", icon: "alert", cls: "flagchip warn", label: "risk", value: "unguarded", card: riskCard("untested") }));
         return w.children.length ? w : null; } },
     { key: "above", word: "up", note: "the ladder out — cluster · entity · everything, as three icons. It carries the entity and the cluster (their own chips are off by default) and will TRANSPORT to that level in the graph.",
       build: function(){ var w = el("span", { class: "hgrp habove" });

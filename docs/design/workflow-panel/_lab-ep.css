@@ -432,3 +432,19 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 .hel.sh-circle{ border-color:color-mix(in srgb, currentColor 34%, var(--line)); background:var(--chip-bg); }
 .hel.sh-circle:hover{ border-color:currentColor; }
 .elned .ib[data-fit]{ min-width:34px; }
+
+/* ── the hover card's two new primitives ─────────────────────────────────────────────────────
+   a long value drops to its own line and takes the card's full width; a mini table lays a fixed
+   grid with the row that matters marked (operator 2026-09-11). ── */
+#hover .cprow.stack{ display:block; margin-top:6px; }
+#hover .cprow.stack .cpk{ display:block; min-width:0; margin-bottom:2px; }
+#hover .cprow.stack .cpv{ display:block; font-weight:600; line-height:1.45; }
+#hover .cptbl{ display:grid; gap:2px 9px; margin:8px 0 2px; padding-top:7px; border-top:1px solid var(--line); align-items:baseline; }
+#hover .cptbl .cth{ font:700 12px/1.5 var(--font-mono); text-transform:uppercase; letter-spacing:.05em; color:var(--line); }
+#hover .cptbl .ctr{ font:500 12px/1.5 var(--font-ui); color:var(--muted); }
+#hover .cptbl .ctr.first{ font:700 12px/1.5 var(--font-mono); color:var(--ink); }
+#hover .cptbl .ctr.mark-ok{ color:var(--ok); } #hover .cptbl .ctr.mark-ok.first{ color:var(--ok); }
+#hover .cptbl .ctr.mark-fire{ color:var(--red); } #hover .cptbl .ctr.mark-fire.first{ color:var(--red); }
+#hover .cptbl .ctr.mark-quiet{ color:var(--line); } #hover .cptbl .ctr.mark-quiet.first{ color:var(--muted); }
+#hover{ max-width:360px; }
+#hover .cptbl .ctr.first{ white-space:nowrap; }   /* a flag or a code never wraps its own name */

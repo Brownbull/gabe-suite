@@ -126,6 +126,27 @@ ok(btn.svg && btn.badge && /Data/i.test(btn.txt), 'a part button carries its ico
 ok(btn.w > btn.h * 1.9 && btn.h <= 52, 'the part button is a WIDE command tile — horizontal, short (operator 2026-09-11)', btn.w + '×' + btn.h);
 const scroll = await p.evaluate(() => { const el = document.querySelector('.ldg') || document.querySelector('#panel [style*="overflow"], #panel'); const cs = getComputedStyle(document.documentElement); return { w: cs.scrollbarWidth, c: cs.scrollbarColor }; });
 ok(scroll.w === 'thin', 'scrollbars are the station\'s narrow themed ones', JSON.stringify(scroll));
+// ── the two cards the operator asked to be legible: status marks the SUCCESS case and explains every
+//    code; risk shows all THREE rules with the firing one marked; long values stack onto their own line
+{ const sc = await p.$('#headstrip .hel[data-el="status"]'); await sc.hover(); await p.waitForTimeout(160);
+  const c = await p.$eval('#hover', e => ({ txt: e.innerText, rows: e.querySelectorAll('.cptbl .ctr.first').length,
+    ok: [...e.querySelectorAll('.cptbl .ctr.mark-ok.first')].map(x => x.textContent), stacked: e.querySelectorAll('.cprow.stack').length,
+    w: Math.round(e.getBoundingClientRect().width) }));
+  ok(c.ok.length === 1 && c.ok[0].trim() === String(F.identity.status), 'the status card MARKS the declared code as the success case', JSON.stringify(c.ok));
+  ok(/SUCCESS/.test(c.txt), 'and says SUCCESS on that row');
+  ok(c.rows >= 5, 'every code the cases assert has its own row in the mini table', String(c.rows));
+  for (const m of ['Conflict', 'Unprocessable', 'Not Found', 'Bad Request']) ok(c.txt.includes(m), 'the table explains ' + m);
+  ok(c.stacked >= 1, 'a long value stacks onto its own full-width line', String(c.stacked));
+  ok(c.w <= 364, 'the card keeps a readable width', String(c.w)); }
+{ const rc = await p.$('#headstrip .hel[data-el="risk"]'); await rc.hover(); await p.waitForTimeout(160);
+  const c = await p.$eval('#hover', e => ({ txt: e.innerText, rules: [...e.querySelectorAll('.cptbl .ctr.first')].map(x => x.textContent.trim()),
+    fire: [...e.querySelectorAll('.cptbl .ctr.mark-fire.first')].map(x => x.textContent.trim()),
+    quiet: [...e.querySelectorAll('.cptbl .ctr.mark-quiet.first')].map(x => x.textContent.trim()) }));
+  ok(c.rules.length === 3, 'the risk card shows all THREE rules, not just the one that fired', c.rules.join(' | '));
+  ok(c.fire.length === 1 && /conflict/.test(c.fire[0]), 'the firing rule is marked', c.fire.join(','));
+  ok(c.quiet.length === 2, 'the two quiet rules are shown and dimmed', c.quiet.join(' | '));
+  ok(/≥ 15/.test(c.txt) && /≥ 50 lines/.test(c.txt) && /no case names it/.test(c.txt), 'each rule states its threshold', c.txt.slice(0, 120));
+  ok(/rank 11 of 81/.test(c.txt) && /median 4/.test(c.txt), 'the card places the number against the feed', c.txt.slice(0, 200)); }
 // the rail: three tabs, one section at a time, and every control an icon with a hover card
 // AT BOOT — before any click — exactly one rail section is visible, and it is the controls
 // THE OPERATOR'S OWN BAR (pasted back from the copy button 2026-09-11) is the default — pinned here

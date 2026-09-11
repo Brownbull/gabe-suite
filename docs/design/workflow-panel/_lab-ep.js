@@ -5676,6 +5676,10 @@ window.LABEP = {
   "risk": {
    "rule_large": "behind >= 15 or fan-in >= 15",
    "rule_god": "the handler is >= 50 lines",
+   "god_lines": 50,
+   "handler_lines": 21,
+   "cases": 26,
+   "god_count": 9,
    "large_count": 14,
    "of": 81,
    "behind_bins": {

@@ -320,6 +320,8 @@ def main() -> int:
                    "cases_never_assert_declared": _mismatch, "no_cases": _nocase,
                    "peers": sorted(l for _, l in _behind if False)},
         "risk": {"rule_large": "behind >= 15 or fan-in >= 15", "rule_god": "the handler is >= 50 lines",
+                 "god_lines": 50, "handler_lines": (det.get("sig") or {}).get("lines"), "cases": len(cases),
+                 "god_count": sum(1 for _s, _n in nodes.values() if _n["kind"] == "endpoint" and ((_n.get("det") or {}).get("sig") or {}).get("lines", 0) >= 50),
                  "large_count": sum(1 for f, _ in _behind if f >= 15), "of": n_endpoints,
                  "behind_bins": dict(_bins), "behind_max": _behind[0][0] if _behind else 0, "behind_max_of": _behind[0][1] if _behind else None,
                  "behind_median": sorted(f for f, _ in _behind)[len(_behind) // 2] if _behind else 0,
