@@ -84,6 +84,19 @@
     play: '<path d="M7 4.5 19 12 7 19.5z"/>', pause: '<path d="M8 4v16M16 4v16"/>',
     replay: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>',
     copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+    eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+    eyeoff: '<path d="m3 3 18 18"/><path d="M10.6 5.1A9.6 9.6 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.3 4.1M6.6 6.6A16.6 16.6 0 0 0 2 12s3.6 7 10 7a9.6 9.6 0 0 0 4-.8"/>',
+    tauto: '<path d="M5 7V5h14v2"/><path d="M12 5v14"/><path d="M9 19h6"/><circle cx="20" cy="18" r="2.2"/>',
+    ton: '<path d="M5 7V5h14v2"/><path d="M12 5v14"/><path d="M9 19h6"/>',
+    toff: '<path d="M5 7V5h14v2"/><path d="M12 5v14"/><path d="M9 19h6"/><path d="m4 20 16-16"/>',
+    /* the shape icons ARE the container they name */
+    "sh-none": '<rect x="3.5" y="6.5" width="17" height="11" rx="2" stroke-dasharray="3 3" opacity=".7"/>',
+    "sh-square": '<rect x="3.5" y="6.5" width="17" height="11"/>',
+    "sh-rect": '<rect x="3.5" y="6.5" width="17" height="11" rx="2.5"/>',
+    "sh-round": '<rect x="3.5" y="6.5" width="17" height="11" rx="4.5"/>',
+    "sh-pill": '<rect x="3.5" y="6.5" width="17" height="11" rx="5.5"/>',
+    "sh-circle": '<circle cx="12" cy="12" r="6"/>',
+    "sh-cut": '<path d="M3.5 6.5h13l4 4v7h-17z"/>',
     air: '<path d="M4 5h16M4 12h16M4 19h16"/>', normal: '<path d="M4 6h16M4 10h16M4 14h16M4 18h16"/>',
     dense: '<path d="M4 5h16M4 8h16M4 11h16M4 14h16M4 17h16M4 20h16"/>' };
   function labIco(n, size, col){ return '<svg viewBox="0 0 24 24" width="' + (size || 14) + '" height="' + (size || 14) + '" fill="none" stroke="' + (col || "currentColor") + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (LABICO[n] || "") + '</svg>'; }
@@ -135,7 +148,8 @@
   var I = F.identity, HS = document.getElementById("headstrip"), ec = I.entity_color || "#888";
   function el(t, a){ var e = document.createElement(t), k = [].slice.call(arguments, 2);
     for (var p in (a || {})) { if (p === "class") e.className = a[p]; else if (p === "html") e.innerHTML = a[p]; else e.setAttribute(p, a[p]); }
-    k.forEach(function(c){ if (c != null) e.append(c); }); return e; }
+    k.forEach(function f(c){ if (c == null) return; if (Array.isArray(c)) c.forEach(f); else e.append(c); });   // an array of nodes must FLATTEN, or append() stringifies it
+    return e; }
   function hcard(o){ var h = '<div class="cphd">' + (o.icon ? S.icon(o.icon, 15, o.color) : "") + '<b' + (o.color ? ' style="color:' + o.color + '"' : "") + '>' + o.title + '</b></div>';
     if (o.sub) h += '<div class="cpsub">' + o.sub + '</div>';
     (o.rows || []).forEach(function(r){ if (r) h += '<div class="cprow"><span class="cpk">' + r[0] + '</span><span class="cpv"' + (r[2] ? ' style="color:' + r[2] + '"' : "") + '>' + r[1] + '</span></div>'; });
@@ -144,11 +158,13 @@
     return h; }
   /* one chip primitive for the whole bar — inline-flex, centred, the icon a block so it can never
      ride above the text (the misalignment the operator caught was four different chip classes) */
-  function chip(opt){ var c = el("span", { class: "hel" + (opt.cls ? " " + opt.cls : "") });
+  function chip(opt){ var k = opt.key, st = window.elStyle(k), words = wantText(k);
+    var c = el("span", { class: "hel sh-" + st.shape + (opt.cls ? " " + opt.cls : "") + (words ? "" : " mute") });
+    c.dataset.el = k;
     if (opt.iconNode) c.append(opt.iconNode); else if (opt.icon) c.insertAdjacentHTML("beforeend", S.icon(opt.icon, 13, opt.col || "currentColor"));
     if (opt.dot) c.insertAdjacentHTML("beforeend", '<i class="pdot" style="background:' + opt.dot + '"></i>');
-    if (HEADCFG.mode === "label" && opt.label) c.append(el("span", { class: "hlbl" }, opt.label));
-    if (opt.value != null && HEADCFG.mode !== "icon") c.append(el("span", { class: "hval" }, opt.value));
+    if (words && HEADCFG.mode === "label" && opt.label) c.append(el("span", { class: "hlbl" }, opt.label));
+    if (words && opt.value != null) c.append(el("span", { class: "hval" }, opt.value));
     if (opt.card) hoverBind(c, opt.card);
     return c; }
 
@@ -160,7 +176,21 @@
   var HEADCFG = window.HEADCFG = { mode: "value",
     off: { kindword: 1, entity: 1, cluster: 1 },
     left: ["kind", "method", "name", "status", "risk", "entity", "cluster", "kindword"],
-    right: ["above", "source"] };
+    right: ["above", "source"],
+    /* per element (operator 2026-09-11): does it spend words, and what container does it sit in.
+       text  auto = follow the bar's verbosity · on = always · off = never (the glyph alone)
+       shape none = no container at all (transparent) · square · rect · round · pill · circle · cut */
+    style: { kind: { text: "auto", shape: "rect" }, name: { text: "on", shape: "none" },
+             above: { text: "auto", shape: "rect" }, risk: { text: "auto", shape: "pill" } },
+    sel: "kind" };
+  var SHAPES = ["none", "square", "rect", "round", "pill", "circle", "cut"];
+  var SHAPEWHY = { none: "no container at all — the glyph and its value sit straight on the bar",
+    square: "sharp corners — the most machine-like edge", rect: "the station's own 7px corner (the default)",
+    round: "a softer 12px corner", pill: "fully rounded — reads as a badge, like the risk flag",
+    circle: "a disc — only honest when the element is a glyph alone", cut: "one corner clipped — an angled, tactical edge" };
+  window.elStyle = function(k){ return (HEADCFG.style[k] = HEADCFG.style[k] || { text: "auto", shape: "rect" }); };
+  function wantText(k){ var t = window.elStyle(k).text;
+    return t === "on" ? true : t === "off" ? false : HEADCFG.mode !== "icon"; }
   window.headOrder = function(side){ return HEADCFG[side].filter(function(k){ return !HEADCFG.off[k]; }); };
   /* the one mutation the drag handler and the probe share */
   window.moveHeadEl = function(key, side, index){
@@ -169,60 +199,63 @@
     arr.splice(index, 0, key); drawHead(); drawBarCfg(); return HEADCFG[side].slice(); };
   var HEADEL = [
     { key: "kind", word: "kind", note: "the endpoint glyph — the icon IS the kind, so the words 'API ENDPOINT' are redundant beside it",
-      build: function(){ return chip({ icon: "endpoint", col: S.KINDCOL.endpoint, cls: "kindchip", label: "kind", value: HEADCFG.mode === "label" ? (S.KINDS.endpoint.type || "API endpoint") : null,
+      build: function(){ return chip({ key: "kind", icon: "endpoint", col: S.KINDCOL.endpoint, cls: "kindchip", label: "kind", value: HEADCFG.mode === "label" ? (S.KINDS.endpoint.type || "API endpoint") : null,
         card: hcard({ title: "API endpoint", icon: "endpoint", color: S.KINDCOL.endpoint, sub: "the kind of element",
           rows: [["layer", I.layer], ["in this feed", F.feedwide.endpoints + " endpoints"]], body: S.KINDS.endpoint.doc || "" }) }); } },
     { key: "kindword", word: "kind in words", note: "the kind spelled out — OFF by default: the icon already says it (the operator's icon rule)",
-      build: function(){ return chip({ cls: "kindword", value: (S.KINDS.endpoint.type || "API endpoint").toUpperCase(), col: S.KINDCOL.endpoint,
+      build: function(){ return chip({ key: "kindword", cls: "kindword", value: (S.KINDS.endpoint.type || "API endpoint").toUpperCase(), col: S.KINDCOL.endpoint,
         card: hcard({ title: "the kind, spelled out", icon: "endpoint", color: S.KINDCOL.endpoint, body: "kept only as a switch: with the glyph beside it this chip is redundant, which is why it is off." }) }); } },
     { key: "method", word: "method", note: "the HTTP verb, painted by the station's own badge painter",
       build: function(){ var cv = document.createElement("canvas"); cv.width = cv.height = 32;
         var cx = cv.getContext("2d"); cx.scale(32 / 128, 32 / 128); S.badgeGlyph(cx, "method", I.method); cv.style.opacity = .9;
         var w = el("span", { class: "mbadge", id: "mbadge" }); w.append(cv);
-        return chip({ iconNode: w, cls: "methodchip", label: "method", value: HEADCFG.mode === "icon" ? null : I.method,
+        return chip({ key: "method", iconNode: w, cls: "methodchip", label: "method", value: I.method,
           card: hcard({ title: I.method, icon: "endpoint", color: S.METHOD[I.method], sub: "HTTP method · the station's badge",
             rows: [["means", (S.BADGE_DESC.method || {})[I.method] || "—"], ["colour", S.METHOD[I.method]]],
             body: "the glyph is the station's, painted by its own painter — the graph and the bar cannot drift apart." }) }); } },
     { key: "name", word: "name", note: "the door's path — the one thing that is always words",
-      build: function(){ var c = el("span", { class: "hel hname" }, el("span", { class: "pname" }, I.path));
+      build: function(){ var st = window.elStyle("name");
+        var c = el("span", { class: "hel hname sh-" + st.shape }); c.dataset.el = "name";
+        if (wantText("name")) c.append(el("span", { class: "pname" }, I.path));
+        else c.insertAdjacentHTML("beforeend", S.icon("doc", 14, "var(--muted)"));
         hoverBind(c, hcard({ title: I.label, icon: "endpoint", color: S.KINDCOL.endpoint, sub: "the door",
           rows: [["method", I.method], ["path", I.path], ["handler", (F.functions.handler.name || "—")], ["id", I.id]], station: I.id })); return c; } },
     { key: "entity", word: "entity", note: "which entity claims the door — the dot is the entity colour used everywhere in the graph",
-      build: function(){ return chip({ dot: ec, label: "entity", value: I.entity, cls: "entchip",
+      build: function(){ return chip({ key: "entity", dot: ec, label: "entity", value: I.entity, cls: "entchip",
         card: hcard({ title: I.entity, icon: "entity", color: ec, sub: "the entity that claims this door",
           rows: [["endpoints", String((F.feedwide.entity_counts || {}).endpoints || "—")], ["models", String((F.feedwide.entity_counts || {}).models || "—")],
                  ["schemas", String((F.feedwide.entity_counts || {}).schemas || "—")], ["files", String((F.feedwide.entity_counts || {}).files || "—")], ["lines", String((F.feedwide.entity_counts || {}).lines || "—")]],
           body: "the CLAIM — the join key every tool uses. The evidence row on the DATA panel says whether the witnesses agree." }) }); } },
     { key: "cluster", word: "cluster", note: "the sub-group inside the entity — it was MISSING from the bar (operator 2026-09-11)",
-      build: function(){ return chip({ icon: "layers", label: "cluster", value: I.cluster, cls: "cluchip",
+      build: function(){ return chip({ key: "cluster", icon: "layers", label: "cluster", value: I.cluster, cls: "cluchip",
         card: hcard({ title: I.cluster, icon: "layers", sub: "the cluster inside " + I.entity,
           rows: [["from", "the URL's first segment"], ["entity", I.entity]],
           body: I.cluster_note }) }); } },
     { key: "status", word: "status", note: "the success code the route decorator declares (status_code=) — not a measurement, a promise",
       build: function(){ var obs = Object.keys(F.tests.by_status).filter(function(k){ return /^\d/.test(k); });
-        return chip({ icon: "info", label: "declares", value: I.status + (I.status_name ? " " + I.status_name : ""), col: S.OPC.read, cls: "statchip",
+        return chip({ key: "status", icon: "info", label: "declares", value: I.status + (I.status_name ? " " + I.status_name : ""), col: S.OPC.read, cls: "statchip",
         card: hcard({ title: "declares " + I.status, icon: "info", color: S.OPC.read, sub: "status_code on the route decorator",
           rows: [["what it is", "the code this handler promises on success"], ["read from", "the decorator, by the scanner"], ["the cases assert", obs.join(" · ")], ["untyped cases", String((F.tests.by_status["no code in name"] || []).length) + " name no code"]],
           body: "a PROMISE, not a measurement: the decorator says 200, and the corpus proves five codes around it — the others are failure paths." }) }); } },
     { key: "source", word: "source", note: "the file and line the handler is defined at",
-      build: function(){ return chip({ icon: "file", label: "source", value: I.file + ":" + I.flines, cls: "srcchip",
+      build: function(){ return chip({ key: "source", icon: "file", label: "source", value: I.file + ":" + I.flines, cls: "srcchip",
         card: hcard({ title: I.file, icon: "file", sub: "line " + I.flines,
           rows: [["handler", F.functions.handler.name || "—"], ["body", (I.sig ? (I.sig.async ? "async · " : "") + I.sig.lines + " lines" : "—")], ["returns", (I.sig || {}).returns || "—"], ["exported", I.exported ? "yes" : "no"]] }) }); } },
     { key: "risk", word: "risk", note: "the station's attack-fleet flags — only the ones that FIRE are drawn",
       build: function(){ var w = el("span", { class: "hgrp" });
-        if (I.risk.large) w.append(chip({ icon: "burst", cls: "flagchip warn", label: "risk", value: I.risk.conflict || "conflict",
+        if (I.risk.large) w.append(chip({ key: "risk", icon: "burst", cls: "flagchip warn", label: "risk", value: I.risk.conflict || "conflict",
           card: hcard({ title: "conflict · " + (I.risk.conflict || ""), icon: "burst", color: "var(--red)", sub: "the station's attack-fleet flag",
             rows: [["rule", "behind ≥ 15 or fan-in ≥ 15"], ["behind", String(I.risk.behind) + " functions"], ["fan-in", String(I.risk.fanin)], ["feed-wide max", String(F.feedwide.behind_max) + " behind"]],
             body: "the same rule nodeFleet uses in the graph — the raider fleet you see orbiting the planet." }) }));
-        if (I.risk.god) w.append(chip({ icon: "alert", cls: "flagchip god", label: "risk", value: "god-object",
+        if (I.risk.god) w.append(chip({ key: "risk", icon: "alert", cls: "flagchip god", label: "risk", value: "god-object",
           card: hcard({ title: "god-object", icon: "alert", sub: "a size flag", body: "over the 50-line function flag." }) }));
-        if (I.risk.untested) w.append(chip({ icon: "alert", cls: "flagchip warn", label: "risk", value: "unguarded",
+        if (I.risk.untested) w.append(chip({ key: "risk", icon: "alert", cls: "flagchip warn", label: "risk", value: "unguarded",
           card: hcard({ title: "unguarded", icon: "alert", sub: "no case names it", body: "not the case here — " + F.tests.cases.length + " cases name this door." }) }));
         return w.children.length ? w : null; } },
     { key: "above", word: "up", note: "the ladder out — cluster · entity · everything, as three icons. It carries the entity and the cluster (their own chips are off by default) and will TRANSPORT to that level in the graph.",
       build: function(){ var w = el("span", { class: "hgrp habove" });
         I.above.forEach(function(a){ var isEnt = a.kind === "entity";
-          w.append(chip({ icon: a.kind === "cluster" ? "layers" : a.kind === "entity" ? "entity" : "globe", col: isEnt ? ec : null,
+          w.append(chip({ key: "above", icon: a.kind === "cluster" ? "layers" : a.kind === "entity" ? "entity" : "globe", col: isEnt ? ec : null,
             /* the ladder is NAVIGATION, not a value: its cluster and entity are already spelled out to the
                left, so it stays ICONS unless the bar is in label mode (the redundancy the operator caught) */
             cls: "upchip", label: a.kind, value: HEADCFG.mode === "label" ? (a.kind === "everything" ? "everything" : a.label) : null,
@@ -259,8 +292,8 @@
         var b = el("button", { class: "ib dg" + (HEADCFG.off[k] ? "" : " on"), draggable: "true" });
         b.dataset.el = k; b.innerHTML = S.icon(EICO[k] || "info", 14);
         hoverBind(b, function(){ return hcard({ title: e.word, icon: EICO[k], sub: (HEADCFG.off[k] ? "hidden" : "shown") + " · piles " + side + " — click to toggle, drag to reorder or change side", body: e.note }); });
-        b.onclick = function(ev){ ev.stopPropagation(); if (HEADCFG.off[k]) delete HEADCFG.off[k]; else HEADCFG.off[k] = 1;
-          b.classList.toggle("on", !HEADCFG.off[k]); drawHead(); };
+        if (HEADCFG.sel === k) b.classList.add("sel");
+        b.onclick = function(ev){ ev.stopPropagation(); HEADCFG.sel = k; drawBarCfg(); };
         b.addEventListener("dragstart", function(ev){ ev.dataTransfer.setData("text/plain", k); ev.dataTransfer.effectAllowed = "move"; b.classList.add("dragging"); window.hoverHide(); });
         b.addEventListener("dragend", function(){ b.classList.remove("dragging"); });
         z.append(b); });
@@ -275,7 +308,31 @@
       var wrap = el("div", { class: "dzwrap" }, el("div", { class: "dzl" }, label), z);
       return wrap; }
     box.append(el("div", { class: "cfl" }, "elements"), el("div", { class: "zones" }, zone("left", "◀ piles left"), zone("right", "piles right ▶")));
-    box.append(el("div", { class: "cfread" }, "drag a chip to reorder it, or across the divider to move it to the other side of the bar · click to switch it off — an element switched off is gone, not truncated")); }
+    box.append(el("div", { class: "cfread" }, "click a chip to EDIT it below · drag it to reorder, or across the divider to change which side of the bar it piles on"));
+    /* ── the per-element editor (operator 2026-09-11): shown · text · container ── */
+    var k = HEADCFG.sel, E0 = BYKEY[k]; if (!E0) return;
+    var st = window.elStyle(k);
+    var ed = el("div", { class: "elned" });
+    var hd = el("div", { class: "ednhd" }); hd.innerHTML = S.icon(EICO[k] || "info", 14, "var(--accent)") + "<b>" + E0.word + "</b>";
+    hd.append(el("span", { class: "ednn" }, HEADCFG.off[k] ? "hidden" : (HEADCFG.left.indexOf(k) >= 0 ? "piles left" : "piles right")));
+    ed.append(hd);
+    function row(label, buttons){ ed.append(el("div", { class: "cfl" }, label), el("div", { class: "ibwrap" }, buttons)); }
+    var shownBtns = [["on", "eye", "drawn on the bar"], ["off", "eyeoff", "switched off — gone, not truncated"]].map(function(o){
+      var b = el("button", { class: "ib" + ((o[0] === "on") === !HEADCFG.off[k] ? " on" : "") }); b.dataset.shown = o[0]; b.innerHTML = labIco(o[1], 14);
+      hoverBind(b, hcard({ title: o[0] === "on" ? "shown" : "hidden", sub: E0.word, body: o[2] }));
+      b.onclick = function(ev){ ev.stopPropagation(); if (o[0] === "on") delete HEADCFG.off[k]; else HEADCFG.off[k] = 1; drawHead(); drawBarCfg(); }; return b; });
+    row("shown", shownBtns);
+    var textBtns = [["auto", "tauto", "follow the bar's verbosity"], ["on", "ton", "always spend the words"], ["off", "toff", "never — the glyph alone, its value on the hover card"]].map(function(o){
+      var b = el("button", { class: "ib" + (st.text === o[0] ? " on" : "") }); b.dataset.text = o[0]; b.innerHTML = labIco(o[1], 14);
+      hoverBind(b, hcard({ title: "text " + o[0], sub: E0.word, body: o[2] }));
+      b.onclick = function(ev){ ev.stopPropagation(); st.text = o[0]; drawHead(); drawBarCfg(); }; return b; });
+    row("text", textBtns);
+    var shapeBtns = SHAPES.map(function(sh){ var b = el("button", { class: "ib" + (st.shape === sh ? " on" : "") });
+      b.dataset.shape = sh; b.innerHTML = labIco("sh-" + sh, 16);
+      hoverBind(b, hcard({ title: sh === "none" ? "no container" : sh, sub: E0.word + " · container", body: SHAPEWHY[sh] }));
+      b.onclick = function(ev){ ev.stopPropagation(); st.shape = sh; drawHead(); drawBarCfg(); }; return b; });
+    row("container", shapeBtns);
+    box.append(ed); }
   drawHead(); drawBarCfg();
   COV.mark("HEAD", "head"); COV.mark("SOURCE", "head"); COV.mark("RISK", "head"); COV.mark("ABOVE", "head"); COV.mark("IDENTITY", "head");
 
@@ -317,10 +374,13 @@
   window.COPYTXT = {
     bench: function(){ var box = document.querySelector("#boxes .ib.on"), d = window.DENS;
       return "bench · box " + (box ? box.__label : "?") + " · density " + d + " · motion " + (CLOCK.on ? "playing" : "paused"); },
-    head: function(){ return "head bar · verbosity " + HEADCFG.mode
+    head: function(){ var styled = Object.keys(HEADCFG.style).map(function(k){ var st = HEADCFG.style[k];
+        return k + "(" + st.shape + (st.text === "auto" ? "" : ",text " + st.text) + ")"; }).join(" ");
+      return "head bar · verbosity " + HEADCFG.mode
       + " · LEFT " + (window.headOrder("left").join(" ") || "—")
       + " · RIGHT " + (window.headOrder("right").join(" ") || "—")
-      + " · off " + (Object.keys(HEADCFG.off).join(" ") || "—"); },
+      + " · off " + (Object.keys(HEADCFG.off).join(" ") || "—")
+      + " · styles " + (styled || "—"); },
     parts: function(){ return "part bars · " + order.map(function(k){ return k + "=" + (curVar[k] || window.PANELS[k].variants[0].key); }).join(" · "); } };
   function copyBtn(kind, what){ var b = el("button", { class: "cpb" }); b.innerHTML = labIco("copy", 13);
     hoverBind(b, function(){ return '<div class="cphd">' + labIco("copy", 15, "var(--accent)") + '<b>copy</b></div><div class="cpsub">' + what + '</div><div class="cpbody">puts this section\'s selections on the clipboard as one line:<br><code>' + window.COPYTXT[kind]().replace(/</g, "&lt;") + '</code></div>'; });

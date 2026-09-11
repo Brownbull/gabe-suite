@@ -394,3 +394,24 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 .cpb.copied{ color:#fff; background:var(--ok); border-color:var(--ok); }
 .cpb.copyfail{ color:#fff; background:var(--red); border-color:var(--red); }
 .barblk .bhl .bhn{ margin-left:auto; }
+
+/* ── per-element CONTAINERS (operator 2026-09-11): the chip's shape is the element's own ── */
+.hel.sh-square{ border-radius:0; }
+.hel.sh-rect{ border-radius:7px; }
+.hel.sh-round{ border-radius:12px; }
+.hel.sh-pill{ border-radius:999px; padding-left:10px; padding-right:10px; }
+.hel.sh-circle{ border-radius:50%; width:30px; height:30px; padding:0; justify-content:center; }
+.hel.sh-circle .hval, .hel.sh-circle .hlbl{ display:none; }   /* a disc is honest only as a glyph */
+.hel.sh-cut{ border-radius:0; clip-path:polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 0 100%); }
+.hel.sh-none{ background:none; border-color:transparent; padding-left:2px; padding-right:2px; }
+.hel.sh-none:hover{ border-color:transparent; color:var(--ink); }
+.hel.mute{ padding-left:6px; padding-right:6px; }
+.hel.hname.sh-none{ background:none; border:none; }
+/* ── the per-element editor in the rail ── */
+.elned{ grid-column:1 / -1; margin-top:9px; padding-top:8px; border-top:1px solid var(--line);
+  display:grid; grid-template-columns:74px 1fr; gap:6px 8px; align-items:center; }
+.elned .ednhd{ grid-column:1 / -1; display:flex; align-items:center; gap:7px; }
+.elned .ednhd b{ font:800 12px/1 var(--font-mono); text-transform:uppercase; letter-spacing:.06em; color:var(--ink); }
+.elned .ednhd .ednn{ margin-left:auto; font:600 12px/1 var(--font-mono); color:var(--muted); }
+.elned .cfl{ line-height:1.9; }
+#barcfg .ib.sel{ outline:1px solid var(--accent); outline-offset:1px; }

@@ -171,7 +171,38 @@ const cpb = await p.$$('.barblk .cpb');
 ok(cpb.length === 3, 'every control block has a COPY button', String(cpb.length));
 const lines = await p.evaluate(() => Object.keys(window.COPYTXT).map(k => window.COPYTXT[k]()));
 ok(lines.length === 3 && lines.every(l => l.length > 20), 'each copy line names that section\'s selections', lines.join(' // ').slice(0, 160));
-ok(/head bar · verbosity .* LEFT .* RIGHT .* off /.test(lines[1]), 'the head-bar copy line carries verbosity, both piles and what is off', lines[1]);
+ok(/head bar · verbosity .* LEFT .* RIGHT .* off .* styles /.test(lines[1]), 'the head-bar copy line carries verbosity, both piles, what is off, and the per-element styles', lines[1]);
+// ── per-element options: shown · text · container (operator 2026-09-11) ──
+await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(80);
+await p.click('#barcfg .dzone .ib[data-el="status"]'); await p.waitForTimeout(100);
+ok(await p.$eval('.elned .ednhd b', e => e.textContent === 'status'), 'clicking an element chip opens ITS editor');
+const rows = await p.$$eval('.elned .cfl', els => els.map(e => e.textContent));
+ok(rows.join(',') === 'shown,text,container', 'the editor offers shown · text · container', rows.join(','));
+const shapes = await p.$$eval('.elned .ib[data-shape]', els => els.map(e => e.dataset.shape));
+ok(shapes.join(',') === 'none,square,rect,round,pill,circle,cut', 'seven containers, each drawn as the shape it names', shapes.join(','));
+// text off → the chip keeps its glyph and drops its words; the value stays on the hover card
+await p.click('.elned .ib[data-text="off"]'); await p.waitForTimeout(100);
+ok(!(await p.$eval('#headstrip', e => e.innerText)).includes('200'), 'text OFF removes an element\'s words from the bar');
+{ const c = await p.$('#headstrip .hel[data-el="status"]'); await c.hover(); await p.waitForTimeout(120);
+  ok(await p.evaluate(() => document.getElementById('hover').innerText.includes('200')), 'its value is still on the hover card — no loss, fewer words'); }
+await p.click('.elned .ib[data-text="on"]'); await p.waitForTimeout(100);
+ok((await p.$eval('#headstrip', e => e.innerText)).includes('200'), 'text ON puts the words back');
+// each container reaches the chip
+for (const sh of ['none', 'square', 'pill', 'circle', 'cut', 'rect']) {
+  await p.click(`.elned .ib[data-shape="${sh}"]`); await p.waitForTimeout(80);
+  const cls = await p.$eval('#headstrip .hel[data-el="status"]', e => e.className);
+  ok(cls.includes('sh-' + sh), `container ${sh} reaches the chip`, cls); }
+{ const st = await p.$eval('#headstrip .hel[data-el="status"]', e => { const c = getComputedStyle(e); return { r: c.borderRadius, b: c.borderTopStyle }; });
+  ok(st.r === '7px', 'rect is the station\'s own 7px corner', JSON.stringify(st)); }
+await p.click('.elned .ib[data-shape="none"]'); await p.waitForTimeout(80);
+{ const st = await p.$eval('#headstrip .hel[data-el="status"]', e => getComputedStyle(e).borderTopColor);
+  ok(/rgba\(0, 0, 0, 0\)|transparent/.test(st), 'NO CONTAINER leaves the border transparent', st); }
+await p.click('.elned .ib[data-shape="rect"]'); await p.waitForTimeout(80);
+// the editor can hide the element too
+await p.click('.elned .ib[data-shown="off"]'); await p.waitForTimeout(100);
+ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 0, 'the editor hides the element');
+await p.click('.elned .ib[data-shown="on"]'); await p.waitForTimeout(100);
+ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings it back');
 // the checks file
 if (checksFile) {
   const checks = JSON.parse(fs.readFileSync(checksFile, 'utf8'));
