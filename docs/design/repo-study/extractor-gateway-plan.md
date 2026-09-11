@@ -400,3 +400,49 @@ Gate: the only movement on the three targets is the register declaring a second 
 (`by: ['_a3_code'] → ['_a3_code', '_a3_stacks_sql']`); census identical on all 25 measures.
 `tests/stack-sql` 10/10 (**5 mutants**: innermost-span · module-scope-drop · line-tracking ·
 test-home · fallback) · `tests/arch-graph` 331/331 (**model-key mutant killed**) · doctor CLEAN.
+
+## Step 9b — rule 2b: a data toucher is drawn (`this commit`) · operator-approved
+
+`_a3_levels` gains a fourth seeding rule: **any function carrying `access.ops` is drawn**, whether
+or not a call edge reaches it.
+
+Every rule before it descends from ROOTS, which assumes the call graph is continuous. A
+ports-and-adapters app cuts it at the port deliberately — the implementation is chosen at runtime —
+so graft resolves `UserService.changeRole → UserRepository.updateRole` (the INTERFACE) and stops.
+keypro-front's entire postgres adapter, 15 methods over 2 tables, therefore sat outside the map.
+
+**keypro:** `fn_nodes` 22 → **37**, 15 carrying access, 11 carrying write-distance, homed correctly
+(`sessions` methods to auth, `users` methods to users). Both tables draw as model nodes; at tier 3
+the station renders **240 nodes / 270 links**.
+
+**Cost on the three targets, forecast → measured:**
+
+| repo | forecast | measured |
+|---|---|---|
+| gustify | +7 | **+7** fn_nodes |
+| gastify | +8 | **+8** fn_nodes |
+| tier3 | +192 | **+194** fn_nodes, **+29** fn_edges |
+
+The extra two and the edges come from rule 3b descending a little further once the touchers are in
+the drawn set. No other census measure moved on any repo.
+
+### A contract this changed, restated rather than silenced
+
+`tests/levels` failed three assertions, correctly. Rule 3c capped the walk at two hops, and its
+fixture asserted that a toucher at hop 3 stays undrawn. Under 2b it IS drawn, and the edge into it
+survives because both ends are drawn. The cap now bounds only the admission of NON-touchers: a
+pass-through carrying no ops is still never drawn and its chain never extends. Both counts in the
+battery moved 3 → 4 with the reason written down.
+
+That is the honest shape of the change: **the rule is data-touch, not reachability.**
+
+`tests/levels` 78/78 (**3 mutants**: no-2b · draw-everything · wrong-home) and gained a
+`GEN_OVERRIDE` hook, so its header's mutation claim can now be re-run. arch-graph 331 ·
+stack-sql 10 · arms 5 · center 169 · gabe-map 199 · entity-models 70 · inflight 26 · doctor CLEAN.
+
+### What a journey still cannot do
+
+The nodes are on the map and wired to their tables, so clicking one shows its STORE. A **journey
+walk** from `ACTION login` still stops at `AuthService.login`: the walk follows call edges, and no
+call edge crosses the port. Closing that needs a fact the index does not carry — a port contributes
+zero nodes — so it stays open, named, rather than guessed at.

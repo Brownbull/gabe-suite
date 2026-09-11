@@ -9,7 +9,7 @@
 # is non-evidence). Doctor auto-runs it.
 set -u
 DIR="$(cd "$(dirname "$0")" && pwd)"
-GEN="$DIR/../../templates/center/generators"
+GEN="${GEN_OVERRIDE:-$DIR/../../templates/center/generators}"   # override for the mutation proof
 python3 - "$GEN" <<'PY'
 import sys, json, copy
 sys.path.insert(0, sys.argv[1])
@@ -45,12 +45,31 @@ AMAP = {
 }
 graph = _a3_graph.build_c4_graph(AMAP)
 lv = _a3_levels.build_levels(AMAP, graph)
+
+# ── rule 2b · DATA TOUCHERS (operator ruling 2026-09-11) ──────────────────────
+# A function that reads or writes a table is drawn on its OWN evidence, with no call edge needed.
+# The other rules descend from roots, which assumes a continuous call graph; a ports-and-adapters
+# app cuts it at the port by design, so keypro-front's entire postgres adapter — 15 methods over
+# 2 tables — sat outside the map and every journey step showed an empty STORE.
+_2b = {n["id"] for n in lv["fn_nodes"]}
+assert "svc/o.py#writer" in _2b, "a function carrying access.ops must be DRAWN, call edge or not"
+_wn = next(n for n in lv["fn_nodes"] if n["id"] == "svc/o.py#writer")
+assert (_wn.get("access") or {}).get("ops"), "the drawn toucher must carry its ops"
+assert _wn["slug"] == "orders", f"a toucher is homed by its own entity — got {_wn['slug']}"
+# and a function with NO ops is still not drawn just for existing
+_AM2B = copy.deepcopy(AMAP)
+_AM2B["function_insight"]["svc/o.py::idle"] = {"fn": "idle", "entity": "orders", "file": "svc/o.py",
+                                               "layer": "services", "handler": False, "god": False,
+                                               "internal": 0, "api": 0, "web": 0}
+_lv2b = _a3_levels.build_levels(_AM2B, _a3_graph.build_c4_graph(_AM2B))
+assert "svc/o.py#idle" not in {n["id"] for n in _lv2b["fn_nodes"]}, \
+    "a function with no access ops must NOT be drawn — the rule is data-touch, not existence"
 ck(lv.get("head") == AMAP.get("head") and lv.get("version") == 1,
    "levels carries the archmap's head + a version at the top level — its staleness beside c4-graph is readable from the file (review 2026-09-10)")
 
 _names = {n["name"] for n in lv["fn_nodes"]}
-ck(len(lv["fn_nodes"]) == 3 and _names == {"list_orders", "add_line", "list_users"},
-   "fn_nodes = the DRAWN set: handlers + cross-entity model-users (not every fn)")
+ck(len(lv["fn_nodes"]) == 4 and _names == {"list_orders", "add_line", "list_users", "writer"},
+   "fn_nodes = the DRAWN set: handlers + cross-entity model-users + DATA TOUCHERS (rule 2b) — still not every fn")
 ck(all(n.get("layer") and "slug" in n for n in lv["fn_nodes"]), "each fn_node carries layer + slug")
 _lu = [n for n in lv["fn_nodes"] if n["name"] == "list_users"][0]
 ck(_lu["slug"] == "users" and _lu["layer"] == "api",
@@ -117,8 +136,16 @@ _lv3 = _a3_levels.build_levels(_AM3, graph, graft=_GR3)
 _ids3 = {n["id"] for n in _lv3["fn_nodes"]}; _ed3 = {(e["s"], e["t"]) for e in _lv3["fn_edges"]}
 ck("svc/o.py#reader" in _ids3 and "svc/o.py#reader2" in _ids3 and ("api/users.py#helper", "svc/o.py#reader") in _ed3 and ("svc/o.py#reader", "svc/o.py#reader2") in _ed3,
    "3c FIRE: a read-only callee carrying access.ops draws under a drawn fn, and its own ops callee one hop further (the table a handler READS through a helper lights)")
-ck("svc/o.py#reader3" not in _ids3 and "svc/o.py#noops" not in _ids3,
-   "3c SILENT: the third hop stays undrawn (the depth cap is said) and a pass-through helper without ops is never admitted")
+# rule 2b (2026-09-11) CHANGED this contract, deliberately. A data toucher is drawn at ANY depth on
+# its own evidence, so reader3 — past 3c's cap — is now a node, and the edge into it survives
+# because BOTH ends are drawn. What the cap still bounds is the admission of NON-touchers: `noops`
+# passes data through and carries no ops, so it is still never drawn and its chain never extends.
+# The rule is DATA-TOUCH, not reachability — which is the point: a ports-and-adapters app cuts the
+# call graph at the port, and reachability alone left keypro-front's whole adapter off the map.
+ck("svc/o.py#reader3" in _ids3 and ("svc/o.py#reader2", "svc/o.py#reader3") in _ed3,
+   "2b: a toucher past 3c's cap draws, and the edge between two drawn touchers survives")
+ck("svc/o.py#noops" not in _ids3 and not any(e[0] == "svc/o.py#noops" or e[1] == "svc/o.py#noops" for e in _ed3),
+   "3c SILENT: a pass-through carrying no ops is never admitted — the rule is data-touch, not reachability")
 ck(json.dumps(_a3_levels.build_levels(AMAP, graph, graft=GRAFT)["fn_edges"], sort_keys=True) == json.dumps(_lvg["fn_edges"], sort_keys=True) and len(_lvg["fn_edges"]) == 1,
    "3c SILENT: no ops-carrying callee → byte-identical fn_edges")
 ck(any(n["id"] == "api/users.py#helper" for n in _lvg["fn_nodes"]),
@@ -241,13 +268,14 @@ _m1 = copy.deepcopy(AMAP); _m1["function_insight"] = {}
 _lv1 = _a3_levels.build_levels(_m1, _a3_graph.build_c4_graph(_m1))
 ck(len(_lv1["fn_nodes"]) == 0 and len(lv["fn_nodes"]) > 0, "MUTATION: removing function_insight zeroes fn_nodes")
 # MUTATION 2 — strip internal_refs ⇒ use_edges must zero; the HANDLERS still draw (they
-#   ride function_insight.handler, not internal_refs), so fn_nodes falls to just the 3 handlers
+#   ride function_insight.handler, not internal_refs), so fn_nodes falls to the 3 handlers plus
+#   the one data toucher rule 2b draws from function_insight.access — independent of model_insight
 _m2 = copy.deepcopy(AMAP)
 for _k in _m2["model_insight"]:
     _m2["model_insight"][_k]["internal_refs"] = []
 _lv2 = _a3_levels.build_levels(_m2, _a3_graph.build_c4_graph(_m2))
-ck(len(_lv2["use_edges"]) == 0 and len(_lv2["fn_nodes"]) == 3 and len(lv["use_edges"]) > 0,
-   "MUTATION: removing internal_refs zeroes use_edges; handlers still draw")
+ck(len(_lv2["use_edges"]) == 0 and len(_lv2["fn_nodes"]) == 4 and len(lv["use_edges"]) > 0,
+   "MUTATION: removing internal_refs zeroes use_edges; handlers AND data touchers still draw (2b is independent of model_insight)")
 # MUTATION 3 — strip guard_insight ⇒ endpoint guards must fall to 0 (detectable)
 _m3 = copy.deepcopy(AMAP); _m3["guard_insight"] = {"files": {}}
 _lv3 = _a3_levels.build_levels(_m3, _a3_graph.build_c4_graph(_m3))

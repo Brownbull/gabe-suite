@@ -269,6 +269,24 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
                     if rfile:
                         drawn_fn.setdefault(rfile + "#" + fn, using)  # a CROSS-entity model-user is drawn
     lv["use_edges"].sort(key=lambda e: (e["fs"], e["ts"], e["cls"], e["fn"]))
+    # 2b · DATA TOUCHERS (operator ruling 2026-09-11) — any function that reads or writes a table is
+    #      drawn, whether or not a call edge reaches it. The rules above descend from ROOTS, which
+    #      assumes the call graph is continuous; a ports-and-adapters app deliberately cuts it at the
+    #      port, because the implementation is chosen at runtime. graft then resolves
+    #      `UserService.changeRole → UserRepository.updateRole` (the INTERFACE) and stops, so on
+    #      keypro-front the entire postgres adapter — 15 methods over 2 tables — sat outside the map
+    #      and every journey step showed an empty STORE. A function that touches a table is worth
+    #      drawing on its own evidence; it arrives wired to the tables it touches (the access wires),
+    #      even where nothing draws its caller.
+    #      COST, measured before landing: gustify +7 · gastify +8 · tier3 +192 function nodes — all
+    #      of them functions that genuinely touch a table and no root reaches.
+    for _k, _f in FI.items():
+        if not ((_f.get("access") or {}).get("ops")):
+            continue
+        _fl, _sep, _fn = _k.partition("::")
+        if not _sep or not _fl:
+            continue
+        drawn_fn.setdefault(_fl + "#" + _fn, _f.get("entity") or file_ent.get(_fl) or "__unclaimed__")
     # 3 · graft handler-rooted calls → fn_edges + their endpoints join the drawn set.
     #     Only calls WHOSE SOURCE IS A HANDLER are drawn (the fixture's edge rule); the
     #     cross-file call is graft-inferred, so this edge set is a FLOOR, never a census.
