@@ -40,8 +40,31 @@ ok(tabs.join(',') === 'data,functions,tests,widening,security', 'five tabs in pa
 const head = await p.$eval('#headstrip', e => e.innerText);
 for (const s of [F.identity.path, F.identity.entity, String(F.identity.status), F.identity.file + ':' + F.identity.flines]) ok(head.includes(s), 'head strip shows ' + s);
 ok(await p.$('#headstrip #mbadge canvas') !== null, 'the METHOD badge is painted by the station painter (canvas)');
-ok(head.toLowerCase().includes('conflict'), 'the risk flag row (conflict · large surface) is on the head strip');
-ok((await p.$$('#headstrip .habove .pnav')).length === 3, 'ABOVE ladder: cluster · entity · everything');
+ok(head.toLowerCase().includes('large surface'), 'the risk flag is on the head bar');
+ok((await p.$$('#headstrip .habove .hel')).length === 3, 'ABOVE ladder: cluster · entity · everything');
+ok(head.includes(F.identity.cluster), 'the CLUSTER is on the bar (it was missing — operator 2026-09-11)');
+ok(!/API ENDPOINT/i.test(head), 'the kind is NOT spelled out beside its own glyph by default');
+// every chip in the bar is vertically centred: its icon and its text share a centre line
+const align = await p.$$eval('#headstrip .hel', els => els.map(e => { const svg = e.querySelector('svg,canvas,.pdot'), t = [...e.querySelectorAll('.hval,.pname,.hlbl')][0];
+  if (!svg || !t) return 0; const a = svg.getBoundingClientRect(), b = t.getBoundingClientRect(); return Math.abs((a.top + a.height / 2) - (b.top + b.height / 2)); }));
+ok(align.every(d => d <= 1.5), 'every bar chip centres its icon against its text (the misalignment the operator caught)', 'worst ' + Math.max(...align).toFixed(2) + 'px');
+// every element in the bar answers a hover with a card
+const hels = await p.$$('#headstrip .hel');
+let hov = 0; for (const h of hels) { await h.hover(); await p.waitForTimeout(60); if (await p.evaluate(() => { const x = document.getElementById('hover'); return !x.hidden && x.innerText.length > 12; })) hov++; }
+ok(hov === hels.length, 'every bar chip opens a hover card', hov + ' of ' + hels.length);
+// the card must land ON SCREEN and keep the station's width cap (a truncated CSS lift once made it full-bleed)
+const hb = await p.evaluate(() => { const x = document.getElementById('hover'); const r = x.getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, vw: innerWidth }; });
+ok(hb.l >= 0 && hb.l + hb.w <= hb.vw + 1 && hb.w <= 340 && hb.w >= 180, 'the hover card sits on screen at the station width', JSON.stringify(hb));
+// the rail's head-bar section switches an element off and the verbosity mode
+const before = (await p.$$('#headstrip .hel')).length;
+await p.evaluate(() => { window.HEADCFG.off.status = 1; window.drawHead(); }); await p.waitForTimeout(80);
+ok((await p.$$('#headstrip .hel')).length === before - 1, 'switching an element off removes it from the bar');
+await p.evaluate(() => { delete window.HEADCFG.off.status; window.HEADCFG.mode = 'icon'; window.drawHead(); }); await p.waitForTimeout(80);
+const iconOnly = await p.$eval('#headstrip', e => e.innerText);
+ok(!iconOnly.includes(F.identity.file), 'in ICON mode the bar spends no words — the values live on the hover cards');
+await p.evaluate(() => { window.HEADCFG.mode = 'label'; window.drawHead(); }); await p.waitForTimeout(80);
+ok((await p.$eval('#headstrip', e => e.innerText)).toLowerCase().includes('cluster'), 'in LABEL mode the bar names each field for learning');
+await p.evaluate(() => { window.HEADCFG.mode = 'value'; window.drawHead(); }); await p.waitForTimeout(80);
 // hover card opens with content (the badge)
 await p.hover('#headstrip #mbadge'); await p.waitForTimeout(120);
 ok(await p.evaluate(() => { const h = document.getElementById('hover'); return !h.hidden && h.innerText.length > 10; }), 'the hover card opens on the method badge');

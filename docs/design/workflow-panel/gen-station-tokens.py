@@ -81,24 +81,61 @@ def main() -> int:
     rw = dict(re.findall(r"\.jdrw-(r|w|rw)\{ background:(#[0-9a-f]{6}); \}", src))
     roots = re.findall(r"^\s*:root\{.*?\}\s*$", src, re.M | re.S)
     roots = [r for r in roots if "--bg" in r or "--surf" in r or "--font-ui" in r][:3]
-    # the card chrome rules, selected by the classes the lab reuses (copied as written)
-    want = (".pbody{", ".sec{", ".sechd{", ".sechd svg", ".ubar{", ".ufill{", ".sublbl{", ".kv{", ".pchip{", ".doc{",
-            ".pchip.model", ".pchip.component", ".connbox .pchip", ".more{", ".tabbar{", ".tab{", ".tab .tabn",
-            ".keycol{", ".pchip.st-pass", ".pchip.st-unknown", ".pchip.filecov", ".ttag{", ".ttag.structural",
-            ".ttag.inferred", ".connbox .cinf", ".jmeta{", ".jmeta:hover", ".jfaces{", ".face{", ".face svg",
-            ".face.fhome", ".tipico{", ".tipico .tip{", ".flagssec{", ".flagrow{", ".flagrow .flbl", ".flagrow.god",
-            ".flagrow.warn", ".flagrow.ok", ".pnav{", ".pnav .pdot", ".pnav .pnl", ".pnav .pnm", ".pnav .pki",
-            ".pnav .pdir", ".badgepop{", ".badgepop .bph", ".badgepop .bprow", ".badgepop .bpnote",
-            ".jdcolpop{", ".jdcolpop .", "@keyframes lrfade",
-            # the station's THEMED SCROLLBAR (narrow + dark, follows the theme) — the lab inherits it
+    # The card chrome rules the lab reuses, lifted as WHOLE RULES. (A line-based lift truncated every
+    # multi-line rule — `.flagrow{ display:flex; align-items:center;` with no closing brace is invalid
+    # CSS, so the browser dropped it and the lab's icons sat on the text baseline instead of centred,
+    # and the hover card lost its width cap and flew off the left edge. Found 2026-09-11.)
+    want = (".pbody", ".sec", ".sechd", ".ubar", ".ufill", ".sublbl", ".kv", ".pchip", ".doc",
+            ".connbox", ".more", ".tabbar", ".tab", ".keycol", ".ttag", ".jmeta", ".jfaces", ".face",
+            ".tipico", ".flagssec", ".flagrow", ".pnav", ".badgepop", ".jdcolpop", "@keyframes lrfade",
             "*{ scrollbar-width", "::-webkit-scrollbar")
-    card_css = []
-    for line in src.splitlines():
-        s = line.strip()
-        if any(s.startswith(w) for w in want) and "{" in s:
-            card_css.append(s)
-    if not card_css:
-        raise SystemExit("no card css lifted — the station's class names moved")
+
+    def rules(css: str):
+        """(selector, whole rule text) for every top-level rule, brace-balanced across lines."""
+        out, i, n = [], 0, len(css)
+        while i < n:
+            j = css.find("{", i)
+            if j < 0:
+                break
+            sel = css[i:j].strip()
+            if sel.startswith("/*"):                       # a comment before the selector
+                k = css.find("*/", i)
+                if k < 0:
+                    break
+                i = k + 2
+                continue
+            depth, k = 1, j + 1
+            while k < n and depth:
+                if css[k] == "{":
+                    depth += 1
+                elif css[k] == "}":
+                    depth -= 1
+                k += 1
+            body = css[j:k]
+            sel = sel.split("*/")[-1].strip()
+            if sel.startswith("@media") or sel.startswith("@supports"):
+                out += rules(body[1:-1])                   # a wrapper: take the rules inside it
+            elif sel:
+                out.append((sel, sel + body))
+            i = k
+        return out
+
+    styles = re.findall(r"<style[^>]*>(.*?)</style>", src, re.S)
+    card_css, seen_rules = [], set()
+    for block in styles:
+        for sel, rule in rules(block):
+            first = sel.split(",")[0].strip()
+            hit = any(first == w or first.startswith(w + " ") or first.startswith(w + ".")
+                      or first.startswith(w + ":") or first.startswith(w + ">")
+                      for w in want if not w.startswith(("*", "::", "@")))
+            hit = hit or sel.startswith("@keyframes lrfade") or "scrollbar" in rule   # the themed scrollbar, wherever it sits
+            if hit:
+                one = " ".join(rule.split())
+                if one not in seen_rules:
+                    seen_rules.add(one)
+                    card_css.append(one)
+    if len(card_css) < 30:
+        raise SystemExit(f"only {len(card_css)} card rules lifted — the station's class names moved")
     sha = None
     try:
         import subprocess
