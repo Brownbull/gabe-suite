@@ -39,34 +39,76 @@ code{ font:600 .95em var(--font-mono); color:var(--ink); }
 #barcfg{ display:grid; grid-template-columns:74px 1fr; gap:7px 8px; align-items:center; margin-top:7px; }
 #barcfg .cfl{ line-height:1.9; } #barcfg .cfread{ grid-column:1 / -1; margin-top:4px; font-size:12px; line-height:1.45; }
 #barcfg .ib:not(.on){ opacity:.5; } #barcfg .ib.on{ opacity:1; }
-/* ── the part buttons: SC2 command squares. The face is a VALLEY — the part's colour is strongest at
-   the rim and falls away toward the middle, so the icon sits in a hollow (operator 2026-09-11). ── */
+/* ══ THE PART BUTTONS — every face driven by TABCFG (operator 2026-09-11) ═════════════════════
+   colour · intensity · pattern · glyph size and mode · count size and shape · button shape · the
+   row's layout and width. The VALLEY stays the default face: strongest at the rim, falling inward. */
 #tabs{ display:flex; gap:5px; padding:7px 12px; border-bottom:1px solid var(--line); background:var(--nav-bg); }
-#bench[class*="box-dock"] #tabs{ padding:5px 8px; } #bench[class*="box-dock"] #tabs .tab{ height:40px; min-width:112px; padding:0 30px 0 9px; }
-#tabs .tab{ position:relative; flex:1 1 0; min-width:128px; max-width:224px; height:46px; display:flex; flex-direction:row; align-items:center; justify-content:flex-start; gap:8px; padding:0 34px 0 11px;
-  cursor:pointer; color:var(--muted); font:700 12px/1 var(--font-ui); border-radius:7px;
+#tabs.lay-fill .tab{ flex:1 1 0; }
+#tabs.lay-center{ justify-content:center; } #tabs.lay-left{ justify-content:flex-start; }
+#tabs.lay-center .tab, #tabs.lay-left .tab{ flex:0 0 auto; }
+#tabs.w-narrow .tab{ min-width:96px; max-width:150px; padding:0 28px 0 8px; }
+#tabs.w-auto .tab{ min-width:128px; max-width:224px; padding:0 34px 0 11px; }
+#tabs.w-wide .tab{ min-width:170px; max-width:300px; padding:0 40px 0 14px; }
+#tabs .tab{ position:relative; height:46px; display:flex; flex-direction:row; align-items:center; justify-content:flex-start; gap:8px;
+  cursor:pointer; color:var(--muted); font:700 12px/1 var(--font-ui); overflow:hidden;
   border:1px solid color-mix(in srgb, var(--tc) 34%, var(--line));
-  background:
-    radial-gradient(78% 165% at 50% 50%, transparent 18%, color-mix(in srgb, var(--tc) 13%, transparent) 62%, color-mix(in srgb, var(--tc) 34%, transparent) 100%),
-    linear-gradient(180deg, rgba(255,255,255,.05), transparent 52%),
-    var(--panel);
-  box-shadow: inset 0 0 13px -3px color-mix(in srgb, var(--tc) 45%, transparent), inset 0 1px 0 rgba(255,255,255,.05);
   transition:border-color .12s, color .12s; }
-#tabs .tab .tabi{ display:inline-flex; color:color-mix(in srgb, var(--tc) 72%, var(--muted)); }
-#tabs .tab .tabi svg{ width:19px; height:19px; }
+#tabs.ic-bleed .tab{ overflow:visible; }
+/* the button's own shape */
+#tabs.sh-square .tab{ border-radius:0; } #tabs.sh-rect .tab{ border-radius:7px; }
+#tabs.sh-round .tab{ border-radius:12px; } #tabs.sh-pill .tab{ border-radius:999px; padding-left:16px; }
+#tabs.sh-cut .tab{ border-radius:0; clip-path:polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+/* the fill pattern × the intensity */
+#tabs .tab{ --i:.13; --ir:.34; }
+#tabs.int-dim .tab{ --i:.06; --ir:.18; } #tabs.int-bold .tab{ --i:.26; --ir:.62; }
+#tabs.pat-valley .tab{ background:
+  radial-gradient(78% 165% at 50% 50%, transparent 18%, color-mix(in srgb, var(--tc) calc(var(--i) * 100%), transparent) 62%, color-mix(in srgb, var(--tc) calc(var(--ir) * 100%), transparent) 100%),
+  linear-gradient(180deg, rgba(255,255,255,.05), transparent 52%), var(--panel); }
+#tabs.pat-flat .tab{ background:color-mix(in srgb, var(--tc) calc(var(--i) * 100%), var(--panel)); }
+#tabs.pat-glow .tab{ background:linear-gradient(180deg, color-mix(in srgb, var(--tc) calc(var(--ir) * 100%), transparent), transparent 70%), var(--panel); }
+#tabs.pat-hatch .tab{ background:repeating-linear-gradient(45deg, color-mix(in srgb, var(--tc) calc(var(--i) * 100%), transparent) 0 6px, transparent 6px 12px), var(--panel); }
+#tabs.pat-none .tab{ background:var(--panel); }
+#tabs.pat-valley .tab{ box-shadow: inset 0 0 13px -3px color-mix(in srgb, var(--tc) 45%, transparent), inset 0 1px 0 rgba(255,255,255,.05); }
+/* the glyph: inline, a clipped watermark, or one that bleeds past the edges */
+#tabs .tab .tabi{ display:inline-flex; color:color-mix(in srgb, var(--tc) 72%, var(--muted)); flex:none; }
+#tabs.ic-ghost .tab .tabi, #tabs.ic-bleed .tab .tabi{ position:absolute; right:4px; top:50%; transform:translateY(-50%);
+  color:var(--tc); opacity:.17; pointer-events:none; }
+#tabs.ic-bleed .tab .tabi{ right:10px; opacity:.2; }
 #tabs .tab .tabw{ font:700 13px/1 var(--font-ui); letter-spacing:.03em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-#tabs .tab .tabn{ position:absolute; top:50%; right:8px; transform:translateY(-50%); background:var(--chip-bg); border:1px solid color-mix(in srgb, var(--tc) 40%, var(--line));
-  border-radius:8px; padding:1px 6px; font:700 12px/1.35 var(--font-mono); color:var(--muted); }
+/* the count and its container */
+#tabs .tab .tabn{ position:absolute; top:50%; right:8px; transform:translateY(-50%); z-index:1;
+  background:var(--chip-bg); border:1px solid color-mix(in srgb, var(--tc) 40%, var(--line));
+  padding:1px 6px; font:700 var(--nz,12px)/1.35 var(--font-mono); color:var(--muted); }
+#tabs.nsh-none .tab .tabn{ background:none; border-color:transparent; padding:0; }
+#tabs.nsh-rect .tab .tabn{ border-radius:5px; } #tabs.nsh-pill .tab .tabn{ border-radius:999px; }
+#tabs.nsh-square .tab .tabn{ border-radius:0; }
+#tabs.nsh-circle .tab .tabn{ border-radius:50%; min-width:calc(var(--nz,12px) + 12px); height:calc(var(--nz,12px) + 12px); display:inline-flex; align-items:center; justify-content:center; padding:0; }
 #tabs .tab:hover{ color:var(--ink); border-color:color-mix(in srgb, var(--tc) 62%, var(--line)); }
-#tabs .tab.on{ color:var(--ink);
-  border-color:var(--tc);
-  background:
-    radial-gradient(78% 165% at 50% 50%, transparent 12%, color-mix(in srgb, var(--tc) 24%, transparent) 58%, color-mix(in srgb, var(--tc) 58%, transparent) 100%),
-    linear-gradient(180deg, rgba(255,255,255,.07), transparent 52%),
-    var(--panel);
-  box-shadow: inset 0 0 17px -3px color-mix(in srgb, var(--tc) 72%, transparent), inset 0 1px 0 rgba(255,255,255,.09), 0 0 0 1px color-mix(in srgb, var(--tc) 26%, transparent); }
-#tabs .tab.on .tabi{ color:var(--tc); }
+#tabs .tab.on{ color:var(--ink); border-color:var(--tc); }
+#tabs.pat-valley .tab.on{ background:
+  radial-gradient(78% 165% at 50% 50%, transparent 12%, color-mix(in srgb, var(--tc) calc(var(--i) * 190%), transparent) 58%, color-mix(in srgb, var(--tc) calc(var(--ir) * 170%), transparent) 100%),
+  linear-gradient(180deg, rgba(255,255,255,.07), transparent 52%), var(--panel);
+  box-shadow: inset 0 0 17px -3px color-mix(in srgb, var(--tc) 72%, transparent), inset 0 1px 0 rgba(255,255,255,.09); }
+#tabs.pat-flat .tab.on{ background:color-mix(in srgb, var(--tc) calc(var(--i) * 210%), var(--panel)); }
+#tabs .tab.on .tabi{ color:var(--tc); opacity:1; }
+#tabs.ic-ghost .tab.on .tabi, #tabs.ic-bleed .tab.on .tabi{ opacity:.3; }
 #tabs .tab.on .tabn{ color:var(--ink); border-color:var(--tc); }
+#tabs.pal-mono .tab{ --tc:var(--muted); } #tabs.pal-mono .tab.on{ --tc:var(--accent); }
+#bench[class*="box-dock"] #tabs{ padding:5px 8px; } #bench[class*="box-dock"] #tabs .tab{ height:40px; }
+/* the rail's swatches for the colour dial */
+.swz{ width:14px; height:12px; border-radius:3px; display:block; }
+.swz-station{ background:linear-gradient(90deg,#14b8a6 0 20%,#6366f1 20% 40%,#4cbe83 40% 60%,#a855f7 60% 80%,#eab308 80%); }
+.swz-entity{ background:#5a53a8; } .swz-accent{ background:var(--accent); } .swz-mono{ background:var(--muted); }
+.numz{ font:700 12px/1 var(--font-mono); }
+/* ── a control block folds away ── */
+.barblk .bhl{ cursor:pointer; }
+.barblk .mnb{ display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; margin-left:5px;
+  color:var(--muted); background:none; border:1px solid transparent; border-radius:5px; cursor:pointer; }
+.barblk .mnb:hover{ color:var(--ink); border-color:var(--line); }
+.barblk .mnb svg{ display:block; transition:transform .14s; }
+.barblk.min .mnb svg{ transform:rotate(-90deg); }
+.barblk.min .blkbody{ display:none; }
+.barblk.min{ padding-bottom:8px; }
 #varbar{ display:flex; flex-wrap:wrap; align-items:center; gap:4px; }
 #varbar .vb{ font:700 12px/1 var(--font-mono); color:var(--muted); background:var(--chip-bg); border:1px solid var(--line); border-radius:5px; padding:5px 9px; cursor:pointer; }
 #varbar .vb:hover{ color:var(--ink); border-color:var(--accent); }
@@ -483,3 +525,9 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 #hover .fct.ok{ border-left-color:var(--ok); background:color-mix(in srgb, var(--ok) 7%, transparent); border-radius:0 6px 6px 0; }
 #hover .fct.ok .fctn, #hover .fct.ok .fctv{ color:var(--ok); }
 #hover .fct.quiet .fctn .fdot{ border-color:var(--muted); }
+
+/* ── two rules that must come LAST: the station's lifted `.tab svg{width:12px}` and the lab's own
+   12px floor both out-specify the part-button dials, so the glyph never grew and the count never
+   changed size. The floor still holds — it becomes a minimum rather than a fixed value. ── */
+#tabs .tab .tabi svg{ width:auto; height:auto; }
+#tabs .tab .tabn{ font-size:max(12px, var(--nz, 12px)); }

@@ -197,6 +197,50 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
       return hit.length > words.length * 0.6 ? pl.textContent : null; });
     if (d) dup.push(d); }
   ok(dup.length === 0, 'the definition appears once, at the end — never repeated above it', dup.join(' | ').slice(0, 140)); }
+// ── every control block FOLDS AWAY without losing its settings (operator 2026-09-11) ──
+{ const blks = await p.$$eval('.barblk', els => els.map(e => e.id));
+  ok(blks.length === 4, 'four control blocks', blks.join(','));
+  const before = await p.evaluate(() => window.COPYTXT.tabs());
+  await p.click('#blk-tabs .mnb'); await p.waitForTimeout(120);
+  ok(await p.$eval('#blk-tabs', e => e.classList.contains('min')), 'a block folds when its chevron is clicked');
+  ok(await p.$eval('#blk-tabs .blkbody', e => getComputedStyle(e).display === 'none'), 'and its body is gone from the rail');
+  ok(await p.evaluate(() => window.COPYTXT.tabs()) === before, 'folding changes nothing about what it controls');
+  await p.click('#blk-tabs .mnb'); await p.waitForTimeout(120);
+  ok(await p.$eval('#blk-tabs .blkbody', e => getComputedStyle(e).display !== 'none'), 'and it opens again'); }
+// ── the PART BUTTONS block: ten dials, each one reaching the row ──
+{ const rows = await p.$$eval('#tabcfg .cfl', els => els.map(e => e.textContent));
+  ok(rows.join(',') === 'colour,intensity,pattern,glyph,glyph shown,count size,count shape,button shape,row,width',
+     'ten dials for the part-button row', rows.join(','));
+  const t0 = await p.$eval('#tabs', e => e.className);
+  await p.click('#tabcfg .ib[data-palette="mono"]'); await p.waitForTimeout(100);
+  ok(await p.$eval('#tabs', e => e.className.includes('pal-mono')), 'the colour dial reaches the row');
+  await p.click('#tabcfg .ib[data-intensity="bold"]'); await p.waitForTimeout(100);
+  ok(await p.$eval('#tabs', e => e.className.includes('int-bold')), 'so does intensity');
+  await p.click('#tabcfg .ib[data-pattern="hatch"]'); await p.waitForTimeout(100);
+  ok(await p.$eval('#tabs', e => e.className.includes('pat-hatch')), 'so does the pattern');
+  await p.click('#tabcfg .ib[data-iconmode="bleed"]'); await p.waitForTimeout(120);
+  const bleed = await p.$eval('#tabs .tab .tabi', e => { const b = e.getBoundingClientRect(), t = e.closest('.tab').getBoundingClientRect();
+    return { pos: getComputedStyle(e).position, over: Math.round(b.height - t.height), op: +getComputedStyle(e).opacity }; });
+  ok(bleed.pos === 'absolute' && bleed.over > 0 && bleed.op < .5,
+     'the BLEED glyph is a big translucent watermark that overflows the button top and bottom', JSON.stringify(bleed));
+  await p.click('#tabcfg .ib[data-iconsize="30"]'); await p.waitForTimeout(100);
+  ok(await p.$eval('#tabs .tab .tabi svg', e => +e.getAttribute('width') > 60), 'the glyph size dial scales the watermark');
+  await p.click('#tabcfg .ib[data-iconmode="inline"]'); await p.waitForTimeout(100);
+  ok(await p.$eval('#tabs .tab .tabi svg', e => +e.getAttribute('width') === 30), 'and the inline glyph takes the size literally');
+  await p.click('#tabcfg .ib[data-numshape="circle"]'); await p.waitForTimeout(100);
+  ok(await p.$eval('#tabs .tab .tabn', e => getComputedStyle(e).borderRadius.startsWith('50')), 'the count wears its own shape');
+  await p.click('#tabcfg .ib[data-numsize="17"]'); await p.waitForTimeout(100);
+  ok(await p.$eval('#tabs .tab .tabn', e => parseFloat(getComputedStyle(e).fontSize) === 17), 'and its own size');
+  await p.click('#tabcfg .ib[data-shape="pill"]'); await p.waitForTimeout(100);
+  ok(await p.$eval('#tabs .tab', e => getComputedStyle(e).borderRadius.startsWith('999')), 'the button wears its own shape');
+  await p.click('#tabcfg .ib[data-layout="center"]'); await p.waitForTimeout(100);
+  ok(await p.$eval('#tabs', e => getComputedStyle(e).justifyContent === 'center'), 'the row can centre its buttons');
+  await p.click('#tabcfg .ib[data-width="wide"]'); await p.waitForTimeout(100);
+  ok(await p.$eval('#tabs .tab', e => parseFloat(getComputedStyle(e).minWidth) >= 170), 'and run them wide');
+  // back to the defaults so the rest of the probe sees a known row
+  await p.evaluate(() => { Object.assign(window.TABCFG, { intensity: 'mid', palette: 'station', pattern: 'valley',
+    iconSize: 19, iconMode: 'inline', numSize: 12, numShape: 'pill', shape: 'rect', layout: 'fill', width: 'auto' });
+    window.drawTabs(); window.drawTabCfg(); }); await p.waitForTimeout(120); }
 // the rail: three tabs, one section at a time, and every control an icon with a hover card
 // AT BOOT — before any click — exactly one rail section is visible, and it is the controls
 // THE OPERATOR'S OWN BAR (pasted back from the copy button 2026-09-11) is the default — pinned here
@@ -224,7 +268,7 @@ for (const t of rtabs) { await p.click(`#railtabs .rtb[data-rt="${t}"]`); await 
   ok(shown.length === 1 && shown[0] === 'rt-' + t, `rail toggle ${t} shows one section, never both`, shown.join(',')); }
 await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(90);
 const blocks = await p.$$eval('#rt-controls .barblk .bhl b', els => els.map(e => e.textContent));
-ok(blocks.join(',') === 'bench,head bar,part bars', 'the controls tab separates bench · head bar · part bars into blocks', blocks.join(','));
+ok(blocks.join(',') === 'bench,head bar,part buttons,part bars', 'the controls tab separates bench · head bar · part buttons · part bars into blocks', blocks.join(','));
 const prows = await p.$$eval('#partcfg .prow', els => els.length);
 ok(prows === 5, 'the BARS tab separates the controls per part — one row each', String(prows));
 const varBtns = await p.$$eval('#partcfg .ib', els => els.length);
@@ -257,9 +301,9 @@ const zones = await p.$$eval('#barcfg .dzone', els => els.map(e => e.dataset.sid
 ok(zones.join(',') === 'left,right', 'the rail shows one drop zone per pile, divided', zones.join(','));
 // a copy button per control block, each producing a readable line
 const cpb = await p.$$('.barblk .cpb');
-ok(cpb.length === 3, 'every control block has a COPY button', String(cpb.length));
+ok(cpb.length === 4, 'every control block has a COPY button', String(cpb.length));
 const lines = await p.evaluate(() => Object.keys(window.COPYTXT).map(k => window.COPYTXT[k]()));
-ok(lines.length === 3 && lines.every(l => l.length > 20), 'each copy line names that section\'s selections', lines.join(' // ').slice(0, 160));
+ok(lines.length === 4 && lines.every(l => l.length > 20), 'each copy line names that section\'s selections', lines.join(' // ').slice(0, 160));
 ok(/head bar · verbosity .* LEFT .* RIGHT .* off .* styles /.test(lines[1]), 'the head-bar copy line carries verbosity, both piles, what is off, and the per-element styles', lines[1]);
 // ── per-element options: shown · text · container (operator 2026-09-11) ──
 await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(80);

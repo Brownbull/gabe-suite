@@ -21,19 +21,25 @@
       <section class="rtab" id="rt-controls">
         <div class="barblk" id="blk-bench">
           <div class="bhl"><span class="bhi"></span><b>bench</b><span class="bhn">the box this is drawn in</span></div>
-          <div class="cfgrp"><div class="cfl">box</div><div id="boxes" class="ibwrap"></div></div>
-          <div class="cfgrp"><div class="cfl">density</div><div id="dens" class="ibwrap"></div></div>
-          <div class="cfgrp"><div class="cfl">motion</div><div class="ibwrap" id="motionwrap">
-            <button class="ib on" id="mplay"></button><button class="ib" id="mreplay"></button></div></div>
-          <div class="cfread" id="boxread">—</div>
+          <div class="blkbody">
+            <div class="cfgrp"><div class="cfl">box</div><div id="boxes" class="ibwrap"></div></div>
+            <div class="cfgrp"><div class="cfl">density</div><div id="dens" class="ibwrap"></div></div>
+            <div class="cfgrp"><div class="cfl">motion</div><div class="ibwrap" id="motionwrap">
+              <button class="ib on" id="mplay"></button><button class="ib" id="mreplay"></button></div></div>
+            <div class="cfread" id="boxread">—</div>
+          </div>
         </div>
         <div class="barblk" id="blk-head">
-          <div class="bhl"><span class="bhi"></span><b>head bar</b><span class="bhn">9 elements</span></div>
-          <div id="barcfg"></div>
+          <div class="bhl"><span class="bhi"></span><b>head bar</b><span class="bhn">10 elements</span></div>
+          <div class="blkbody"><div id="barcfg"></div></div>
+        </div>
+        <div class="barblk" id="blk-tabs">
+          <div class="bhl"><span class="bhi"></span><b>part buttons</b><span class="bhn">the row of five</span></div>
+          <div class="blkbody"><div id="tabcfg"></div></div>
         </div>
         <div class="barblk" id="blk-parts">
           <div class="bhl"><span class="bhi"></span><b>part bars</b><span class="bhn">one distribution each</span></div>
-          <div id="partcfg"></div>
+          <div class="blkbody"><div id="partcfg"></div></div>
         </div>
         <div id="varbar" hidden></div>
       </section>
@@ -83,6 +89,20 @@
     check: '<path d="M20 6 9 17l-5-5"/>',
     play: '<path d="M7 4.5 19 12 7 19.5z"/>', pause: '<path d="M8 4v16M16 4v16"/>',
     replay: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>',
+    fold: '<path d="m6 9 6 6 6-6"/>',
+    /* the part-button dials — each icon draws the thing it changes */
+    intdim: '<rect x="3" y="6" width="18" height="12" rx="2" opacity=".35"/>', intmid: '<rect x="3" y="6" width="18" height="12" rx="2" opacity=".7"/>', intbold: '<rect x="3" y="6" width="18" height="12" rx="2"/>',
+    patvalley: '<rect x="3" y="6" width="18" height="12" rx="2"/><rect x="7" y="9" width="10" height="6" rx="1.5" opacity=".35"/>',
+    patflat: '<rect x="3" y="6" width="18" height="12" rx="2"/>',
+    patglow: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18" opacity=".5"/>',
+    pathatch: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M5 16 9 8M10 16l4-8M15 16l4-8" opacity=".6"/>',
+    icinline: '<rect x="3" y="6" width="18" height="12" rx="2" opacity=".5"/><circle cx="8" cy="12" r="2.4"/>',
+    icghost: '<rect x="3" y="6" width="18" height="12" rx="2" opacity=".5"/><circle cx="16" cy="12" r="4.2" opacity=".45"/>',
+    icbleed: '<rect x="3" y="6" width="18" height="12" rx="2" opacity=".5"/><circle cx="16" cy="12" r="6.4" opacity=".45"/>',
+    laycfill: '<rect x="2" y="9" width="20" height="6" rx="1.5"/>',
+    laycenter: '<rect x="6" y="9" width="12" height="6" rx="1.5"/>',
+    layleft: '<rect x="2" y="9" width="12" height="6" rx="1.5"/>',
+    wnarrow: '<rect x="8" y="8" width="8" height="8" rx="1.5"/>', wauto: '<rect x="5" y="8" width="14" height="8" rx="1.5"/>', wwide: '<rect x="2" y="8" width="20" height="8" rx="1.5"/>',
     copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
     eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
     eyeoff: '<path d="m3 3 18 18"/><path d="M10.6 5.1A9.6 9.6 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.3 4.1M6.6 6.6A16.6 16.6 0 0 0 2 12s3.6 7 10 7a9.6 9.6 0 0 0 4-.8"/>',
@@ -466,6 +486,43 @@
       b.onclick = function(ev){ ev.stopPropagation(); st.fit = o[0]; drawHead(); drawBarCfg(); }; return b; });
     row("fit", fitBtns);
     box.append(ed); }
+  /* ── the PART BUTTONS block in the rail ── */
+  function drawTabCfg(){ var box = document.getElementById("tabcfg"); box.innerHTML = "";
+    function row(label, opts, key, iconFor, extra){
+      var w = el("div", { class: "ibwrap" });
+      opts.forEach(function(o){ var val = o[0], b = el("button", { class: "ib" + (TABCFG[key] === val ? " on" : "") });
+        b.dataset[key.toLowerCase()] = String(val); b.innerHTML = iconFor(o);
+        hoverBind(b, hcard({ title: o[2] || String(val), value: label, rows: extra ? extra(o) : null, plain: o[1] }));
+        b.onclick = function(ev){ ev.stopPropagation(); TABCFG[key] = val; drawTabs(); drawTabCfg(); }; w.append(b); });
+      box.append(el("div", { class: "cfl" }, label), w); }
+    row("colour", [["station", "each part keeps its own station colour — model teal, function indigo, tests green, widening purple, security yellow", "station"],
+                   ["entity", "every button takes the door's entity colour — the row reads as one place", "entity"],
+                   ["accent", "one accent for all five — the row stops competing with the panel", "accent"],
+                   ["mono", "no colour at all; only the selected button lifts", "mono"]],
+        "palette", function(o){ return '<i class="swz swz-' + o[0] + '"></i>'; });
+    row("intensity", [["dim", "barely tinted — the buttons recede", "dim"], ["mid", "the default weight", "mid"], ["bold", "the colour carries, at the cost of quiet", "bold"]],
+        "intensity", function(o){ return labIco("int" + (o[0] === "mid" ? "mid" : o[0]), 15); });
+    row("pattern", [["valley", "strongest at the rim, falling away toward the middle — the SC2 face", "valley"],
+                    ["flat", "one even wash", "flat"], ["glow", "a light from the top edge", "glow"], ["hatch", "diagonal ruling, like the app band", "hatch"], ["none", "no fill — a bordered box", "none"]],
+        "pattern", function(o){ return labIco("pat" + (o[0] === "none" ? "flat" : o[0]), 15); });
+    row("glyph", [[13, "small", "13px"], [16, "medium", "16px"], [19, "the default", "19px"], [24, "large", "24px"], [30, "very large", "30px"]],
+        "iconSize", function(o){ return S.icon("shape", Math.min(o[0], 18)); });
+    row("glyph shown", [["inline", "beside the name, at its own size", "inline"],
+                        ["ghost", "a big translucent glyph on the right, clipped to the button — a watermark", "watermark"],
+                        ["bleed", "the same watermark, larger, spilling past the button's top and bottom edges", "watermark, bleeding"]],
+        "iconMode", function(o){ return labIco("ic" + o[0], 15); });
+    row("count size", [[11, "small", "11px"], [12, "the default", "12px"], [14, "large", "14px"], [17, "very large", "17px"]],
+        "numSize", function(o){ return el("span", { class: "numz", style: "font-size:" + Math.min(o[0], 14) + "px" }, "9").outerHTML; });
+    row("count shape", [["none", "no container — the number alone", "none"], ["rect", "the station's corner", "rect"], ["pill", "fully rounded", "pill"], ["circle", "a disc", "circle"], ["square", "sharp corners", "square"]],
+        "numShape", function(o){ return labIco("sh-" + o[0], 15); });
+    row("button shape", [["square", "sharp", "square"], ["rect", "the station's 7px", "rect"], ["round", "softer", "round"], ["pill", "fully rounded", "pill"], ["cut", "one corner clipped", "cut"]],
+        "shape", function(o){ return labIco("sh-" + o[0], 15); });
+    row("row", [["fill", "the five share the whole width", "fill"], ["center", "their natural width, centred", "centred"], ["left", "their natural width, packed left", "left"]],
+        "layout", function(o){ return labIco(o[0] === "fill" ? "laycfill" : o[0] === "center" ? "laycenter" : "layleft", 15); });
+    row("width", [["narrow", "tight — icon, name and count only", "narrow"], ["auto", "the default", "auto"], ["wide", "roomy", "wide"]],
+        "width", function(o){ return labIco("w" + o[0], 15); });
+    box.append(el("div", { class: "cfread" }, "the buttons are the panel's navigation — every dial here changes how they read, never what they open")); }
+  window.drawTabCfg = drawTabCfg;
   drawHead(); drawBarCfg();
   COV.mark("HEAD", "head"); COV.mark("SOURCE", "head"); COV.mark("RISK", "head"); COV.mark("ABOVE", "head"); COV.mark("IDENTITY", "head");
 
@@ -473,14 +530,34 @@
      The face is a VALLEY: the part's colour is strongest at the rim and falls away toward the middle. ── */
   var TABS = document.getElementById("tabs"), PANEL = document.getElementById("panel"), VARBAR = document.getElementById("varbar"), cur = null, curVar = {};
   var order = ["data", "functions", "tests", "widening", "security"];
-  order.forEach(function(k){ var P = window.PANELS[k]; if (!P) return;
-    var b = document.createElement("button"); b.className = "tab"; b.setAttribute("role", "tab"); b.dataset.tab = k;
-    b.style.setProperty("--tc", P.col);
-    b.innerHTML = '<span class="tabn">' + P.count(F) + '</span>'
-      + '<span class="tabi">' + S.icon(P.icon, 22, "currentColor") + '</span>'
-      + '<span class="tabw">' + P.word + '</span>';
-    hoverBind(b, function(){ return '<div class="cphd">' + S.icon(P.icon, 15, P.col) + '<b style="color:' + P.col + '">' + P.word + '</b></div><div class="cpsub">part ' + (order.indexOf(k) + 1) + ' of 5 · ' + P.count(F) + ' inside</div><div class="cpbody">' + P.hint + '</div>'; });
-    b.onclick = function(ev){ ev.stopPropagation(); show(k); }; TABS.appendChild(b); });
+  /* ══ THE PART BUTTONS — every dial the operator asked for (2026-09-11) ══════════════════════
+     colour intensity · which colours · the pattern inside · the glyph's size and how it is shown
+     (inline · a watermark · a watermark that bleeds past the button's edges) · the count's size and
+     container · the button's own shape · how the row is laid out · how wide the buttons run.   ══ */
+  var TABCFG = window.TABCFG = { intensity: "mid", palette: "station", pattern: "valley",
+    iconSize: 19, iconMode: "inline", numSize: 12, numShape: "pill", shape: "rect",
+    layout: "fill", width: "auto" };
+  function tabCol(P){ return TABCFG.palette === "station" ? P.col
+    : TABCFG.palette === "entity" ? (I.entity_color || "#888")
+    : TABCFG.palette === "accent" ? "var(--accent)" : "var(--muted)"; }
+  function drawTabs(){ TABS.innerHTML = "";
+    TABS.className = "pal-" + TABCFG.palette + " int-" + TABCFG.intensity + " pat-" + TABCFG.pattern
+      + " ic-" + TABCFG.iconMode + " sh-" + TABCFG.shape + " lay-" + TABCFG.layout + " w-" + TABCFG.width
+      + " nsh-" + TABCFG.numShape;
+    order.forEach(function(k){ var P = window.PANELS[k]; if (!P) return;
+      var b = document.createElement("button"); b.className = "tab" + (cur === k ? " on" : ""); b.setAttribute("role", "tab"); b.dataset.tab = k;
+      b.style.setProperty("--tc", tabCol(P));
+      b.style.setProperty("--nz", TABCFG.numSize + "px");
+      var glyph = S.icon(P.icon, TABCFG.iconMode === "inline" ? TABCFG.iconSize : Math.round(TABCFG.iconSize * 2.6), "currentColor");
+      b.innerHTML = '<span class="tabn">' + P.count(F) + '</span>'
+        + '<span class="tabi">' + glyph + '</span>'
+        + '<span class="tabw">' + P.word + '</span>';
+      hoverBind(b, function(){ return hcard({ title: P.word, value: "part " + (order.indexOf(k) + 1) + " of 5", icon: P.icon, color: P.col,
+        rows: [["inside", P.count(F) + " " + (k === "data" ? "tables" : k === "functions" ? "functions behind" : k === "tests" ? "tests" : k === "widening" ? "pieces reached" : "guards")],
+               ["distributions", P.variants.length + " to choose from"]],
+        plain: P.hint }); });
+      b.onclick = function(ev){ ev.stopPropagation(); show(k); }; TABS.appendChild(b); }); }
+  window.drawTabs = drawTabs;
 
   /* TWO toggles (operator 2026-09-11): the CONTROLS are the default view; the no-loss checklist is
      reachable but completely separate from them. Inside controls, bench and bars are distinct blocks. */
@@ -514,13 +591,27 @@
       + " · RIGHT " + (window.headOrder("right").join(" ") || "—")
       + " · off " + (Object.keys(HEADCFG.off).join(" ") || "—")
       + " · styles " + (styled || "—"); },
-    parts: function(){ return "part bars · " + order.map(function(k){ return k + "=" + (curVar[k] || window.PANELS[k].variants[0].key); }).join(" · "); } };
+    parts: function(){ return "part bars · " + order.map(function(k){ return k + "=" + (curVar[k] || window.PANELS[k].variants[0].key); }).join(" · "); },
+    tabs: function(){ return "part buttons · colour " + TABCFG.palette + " · intensity " + TABCFG.intensity + " · pattern " + TABCFG.pattern
+      + " · glyph " + TABCFG.iconSize + "px " + TABCFG.iconMode + " · count " + TABCFG.numSize + "px " + TABCFG.numShape
+      + " · button " + TABCFG.shape + " · row " + TABCFG.layout + " " + TABCFG.width; } };
   function copyBtn(kind, what){ var b = el("button", { class: "cpb" }); b.innerHTML = labIco("copy", 13);
     hoverBind(b, function(){ return '<div class="cphd">' + labIco("copy", 15, "var(--accent)") + '<b>copy</b></div><div class="cpsub">' + what + '</div><div class="cpbody">puts this section\'s selections on the clipboard as one line:<br><code>' + window.COPYTXT[kind]().replace(/</g, "&lt;") + '</code></div>'; });
     b.onclick = function(ev){ ev.stopPropagation(); copyText(window.COPYTXT[kind](), b); }; return b; }
+  /* every control block folds away — the operator keeps a settled bar's controls out of sight
+     without losing them (2026-09-11) */
+  function foldable(id){ var blk = document.getElementById(id), hl = blk.querySelector(".bhl");
+    var b = el("button", { class: "mnb" }); b.innerHTML = labIco("fold", 12);
+    hoverBind(b, function(){ return '<div class="cphd">' + labIco("fold", 15, "var(--accent)") + '<b>' + (blk.classList.contains("min") ? "open" : "fold") + '</b></div><div class="cpbody">' + (blk.classList.contains("min") ? "show this block's controls again" : "fold this block away — its settings stay exactly as they are") + '</div>'; });
+    b.onclick = function(ev){ ev.stopPropagation(); blk.classList.toggle("min"); };
+    hl.addEventListener("click", function(ev){ if (ev.target.closest(".cpb, .mnb")) return; blk.classList.toggle("min"); });
+    hl.append(b); }
   document.getElementById("blk-bench").querySelector(".bhi").innerHTML = labIco("bench", 13, "var(--accent)");
   document.getElementById("blk-bench").querySelector(".bhl").append(copyBtn("bench", "the bench's box, density and clock"));
   document.getElementById("blk-parts").querySelector(".bhl").append(copyBtn("parts", "the distribution chosen for each part"));
+  document.getElementById("blk-tabs").querySelector(".bhi").innerHTML = S.icon("shape", 13, "var(--accent)");
+  document.getElementById("blk-tabs").querySelector(".bhl").append(copyBtn("tabs", "how the five part buttons are drawn"));
+  ["blk-bench", "blk-head", "blk-tabs", "blk-parts"].forEach(foldable);
   document.getElementById("blk-head").querySelector(".bhi").innerHTML = labIco("bars", 13, "var(--accent)");
   document.getElementById("blk-head").querySelector(".bhl").append(copyBtn("head", "the head bar's verbosity, piles and order"));
   document.getElementById("blk-parts").querySelector(".bhi").innerHTML = S.icon("layers", 13, "var(--accent)");
@@ -546,6 +637,7 @@
     k.forEach(function(c){ if (c != null) e.append(c); }); return e; }
 
   function show(k){ cur = k; [].forEach.call(TABS.children, function(b){ b.classList.toggle("on", b.dataset.tab === k); });
+    [].forEach.call(document.querySelectorAll("#partcfg .prow"), function(r){ });
     var P = window.PANELS[k]; if (!curVar[k]) curVar[k] = P.variants[0].key;
     drawVars();
     PANEL.innerHTML = ""; PANEL.dataset.tab = k; PANEL.dataset.variant = curVar[k];
@@ -595,6 +687,7 @@
       try { v.render(ghost, F, S); } catch (e) { console.warn("prewalk " + k + "/" + v.key, e); } }); });
     ghost.remove(); })();
 
+  drawTabs(); drawTabCfg();
   var first = (location.hash || "#data").slice(1); show(order.indexOf(first) >= 0 ? first : "data");
   window.__eplabReady = true;
 })();
