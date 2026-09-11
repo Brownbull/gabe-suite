@@ -181,8 +181,7 @@
      head bar · verbosity value · LEFT kind method name status risk · RIGHT source above ·
      off entity cluster kindword · styles kind(none) name(none,text on) above(round)
      risk(round,text off) method(none) status(pill) source(none) kindword(rect)
-     — with ONE change the operator asked for after seeing it: the kind glyph wears a DISC that
-     bleeds over the bar rather than growing it (their picture, 2026-09-11).                */
+     — settled after seeing the disc: the kind glyph stands BARE at 24px (kind(none,icon 24)).  */
   var HEADCFG = window.HEADCFG = { mode: "value",
     off: { entity: 1, cluster: 1, kindword: 1 },
     left: ["kind", "method", "name", "status", "risk", "entity", "cluster", "kindword"],
@@ -190,7 +189,7 @@
     /* per element (operator 2026-09-11): does it spend words, and what container does it sit in.
        text  auto = follow the bar's verbosity · on = always · off = never (the glyph alone)
        shape none = no container at all (transparent) · square · rect · round · pill · circle · cut */
-    style: { kind: { text: "auto", shape: "circle", size: 20, fit: "bleed" }, method: { text: "auto", shape: "none" },
+    style: { kind: { text: "auto", shape: "none", size: 24, fit: "bleed" }, method: { text: "auto", shape: "none" },
              name: { text: "on", shape: "none" }, status: { text: "auto", shape: "pill" },
              risk: { text: "off", shape: "round" }, source: { text: "auto", shape: "none" },
              above: { text: "auto", shape: "round" }, kindword: { text: "auto", shape: "rect" } },

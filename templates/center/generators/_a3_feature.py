@@ -19,7 +19,8 @@ import _center_data as _cd
 import _a3_ledger
 import _a3_tests
 import _center_mermaid as M
-from _a3_code import build_code_tab, collect_entity_map
+from _a3_code import collect_entity_map
+from _a3_codetab import build_code_tab   # lifted out of _a3_code (plan step 1) — a pure move
 from _a3_evidence import (
     build_evidence_tab,
     census_scan,

@@ -5629,5 +5629,89 @@ window.LABEP = {
    "models": 6,
    "schemas": 6
   }
+ },
+ "context": {
+  "status": {
+   "declared": {
+    "200": 59,
+    "201": 13,
+    "204": 7,
+    "boot": 1,
+    "202": 1
+   },
+   "by_method": {
+    "BOOT": {
+     "boot": 1
+    },
+    "DELETE": {
+     "204": 7,
+     "200": 1
+    },
+    "GET": {
+     "200": 29
+    },
+    "PATCH": {
+     "200": 10
+    },
+    "POST": {
+     "200": 15,
+     "201": 13,
+     "202": 1
+    },
+    "PUT": {
+     "200": 4
+    }
+   },
+   "as_constant": 21,
+   "of": 81,
+   "cases_never_assert_declared": 26,
+   "no_cases": 22,
+   "peers": [],
+   "same_method": {
+    "200": 15,
+    "201": 13,
+    "202": 1
+   }
+  },
+  "risk": {
+   "rule_large": "behind >= 15 or fan-in >= 15",
+   "rule_god": "the handler is >= 50 lines",
+   "large_count": 14,
+   "of": 81,
+   "behind_bins": {
+    "40+": 6,
+    "15-39": 8,
+    "5-14": 23,
+    "1-4": 41,
+    "0": 3
+   },
+   "behind_max": 135,
+   "behind_max_of": "BOOT lifespan",
+   "behind_median": 4,
+   "rank": 11,
+   "heaviest": [
+    {
+     "label": "BOOT lifespan",
+     "behind": 135
+    },
+    {
+     "label": "GET /recipes",
+     "behind": 48
+    },
+    {
+     "label": "GET /recipe-creation/gustify/stream",
+     "behind": 48
+    },
+    {
+     "label": "POST /recipe-creation/gustify",
+     "behind": 47
+    },
+    {
+     "label": "POST /recipe-creation/{request_id}/relief-accept",
+     "behind": 42
+    }
+   ],
+   "no_cases": 22
+  }
  }
 };

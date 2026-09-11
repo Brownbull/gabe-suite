@@ -256,7 +256,15 @@ def _row_mark(context: str, cells: list) -> str:
     n = _ROWMARKS["counts"].get(base_key, 0)
     _ROWMARKS["counts"][base_key] = n + 1
     key = f"{base_key}#{n}"
-    norm = _VOLATILE_RX.sub("·", " ".join(texts))
+    # The volatile scrub runs on the RAW cell, BEFORE tags are removed. Stripping first glues
+    # adjacent text nodes — "31d ago<br><small>node…</small>" becomes "31d agonode…" — and
+    # "\\bago\\b" cannot match "agonode", so the relative age rode into the digest and every
+    # day-tick re-badged an unchanged row NEW (gustify, 2026-09-11: "31d ago" → "32d ago"
+    # flipped two proof rows in 2.5 hours). Scrubbing raw keeps the boundary ("ago<") intact.
+    # `texts` above is left alone ON PURPOSE: it is the KEY material, and rewriting it would
+    # re-key thousands of stable rows to fix a handful of volatile ones.
+    norm = _VOLATILE_RX.sub("·", " ".join(
+        _TAG_RX.sub("", _VOLATILE_RX.sub("·", str(c))).strip() for c in cells))
     digest = hashlib.sha1(norm.encode("utf-8")).hexdigest()[:12]
     _ROWMARKS["seen"][key] = digest
     baseline = _ROWMARKS["baseline"]

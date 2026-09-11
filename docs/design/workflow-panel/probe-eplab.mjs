@@ -135,15 +135,14 @@ ok(scroll.w === 'thin', 'scrollbars are the station\'s narrow themed ones', JSON
   ok(cfg.left.join(' ') === 'kind method name status risk', 'default LEFT pile', cfg.left.join(' '));
   ok(cfg.right.join(' ') === 'source above', 'default RIGHT pile', cfg.right.join(' '));
   ok(cfg.off.join(' ') === 'cluster entity kindword', 'default off', cfg.off.join(' '));
-  const want = { kind: 'circle', method: 'none', name: 'none', status: 'pill', risk: 'round', source: 'none', above: 'round', kindword: 'rect' };
+  const want = { kind: 'none', method: 'none', name: 'none', status: 'pill', risk: 'round', source: 'none', above: 'round', kindword: 'rect' };
   const bad = Object.keys(want).filter(k => (cfg.style[k] || {}).shape !== want[k]);
   ok(bad.length === 0, 'default containers are the operator\'s', bad.join(','));
   ok(cfg.style.name.text === 'on' && cfg.style.risk.text === 'off', 'default text overrides are the operator\'s', JSON.stringify({ name: cfg.style.name.text, risk: cfg.style.risk.text }));
-  ok(cfg.style.kind.size === 20, 'the KIND glyph is drawn larger than the rest', String(cfg.style.kind.size));
+  ok(cfg.style.kind.size === 24, 'the KIND glyph is drawn larger than the rest', String(cfg.style.kind.size));
   ok(cfg.style.kind.fit === 'bleed', 'the kind DISC bleeds over the bar rather than growing it', String(cfg.style.kind.fit)); }
-{ const bar = await p.$eval('#headstrip', e => Math.round(e.getBoundingClientRect().height));
-  const disc = await p.$eval('#headstrip .hel[data-el="kind"]', e => Math.round(e.getBoundingClientRect().height));
-  ok(disc > bar - 8, 'the disc very nearly fills the bar', disc + ' in ' + bar); }
+{ const kz = await p.$eval('#headstrip .hel[data-el="kind"] svg', e => +e.getAttribute('width'));
+  ok(kz === 24, 'the bare kind glyph draws at 24px', String(kz)); }
 const bootShown = await p.$$eval('.rtab', els => els.filter(e => !e.hidden && e.offsetParent !== null).map(e => e.id));
 ok(bootShown.length === 1 && bootShown[0] === 'rt-controls', 'at BOOT only the controls show — the toggle runs on load', bootShown.join(','));
 const rtabs = await p.$$eval('#railtabs .rtb', els => els.map(e => e.dataset.rt));
@@ -223,8 +222,7 @@ await p.click('.elned .ib[data-shape="rect"]'); await p.waitForTimeout(80);
 for (const z of ['11', '24', '13']) { await p.click(`.elned .ib[data-size="${z}"]`); await p.waitForTimeout(80);
   const w = await p.$eval('#headstrip .hel[data-el="status"] svg', e => e.getAttribute('width'));
   ok(w === z, `icon size ${z} reaches the drawn glyph`, String(w)); }
-{ const kz = await p.$eval('#headstrip .hel[data-el="kind"] svg', e => +e.getAttribute('width'));
-  ok(kz === 20, 'the kind glyph draws at 20px by default', String(kz)); }
+
 // a big CIRCLE must not move the bar's margins: it bleeds over the row instead of growing it
 { const before = await p.$eval('#headstrip', e => e.getBoundingClientRect().height);
   await p.evaluate(() => { const st = window.elStyle('kind'); st.shape = 'circle'; st.size = 24; st.fit = 'bleed'; window.drawHead(); });

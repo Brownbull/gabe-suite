@@ -1635,6 +1635,27 @@ base = snapshot_of(lambda: R.table(["Corpus", "Last run"],
 R.init_rowmarks(base)
 assert "t-new" not in R.table(["Corpus", "Last run"],
                               [["api", "T−28h"], ["proof", "48d ago"]])
+# ...in DAYS too: the T− class was [hm], so a T−34d → T−35d tick re-badged (2026-09-11)
+base = snapshot_of(lambda: R.table(["Corpus", "Last run"], [["api", "T−34d"]]))
+R.init_rowmarks(base)
+assert "t-new" not in R.table(["Corpus", "Last run"], [["api", "T−35d"]])
+# ...and in a REAL cell, where the age is followed by MARKUP. Stripping tags first glued
+# "31d ago<br><small>node…</small>" into "31d agonode…", and \bago\b cannot match that, so
+# the age rode into the digest and every day-tick re-badged an unchanged proof row. The
+# assertions above could never catch it: their cells are bare text with nothing to glue to.
+base = snapshot_of(lambda: R.table(["Set", "Captured"],
+                                   [["f6-spike", "31d ago<br><small>node</small>"]]))
+R.init_rowmarks(base)
+assert "t-new" not in R.table(["Set", "Captured"],
+                              [["f6-spike", "32d ago<br><small>node</small>"]]), \
+    "a relative age followed by markup must not re-badge the row"
+# and the row still badges when the REAL content beside the age changes
+base = snapshot_of(lambda: R.table(["Set", "Captured"],
+                                   [["f6-spike", "31d ago<br><small>node</small>"]]))
+R.init_rowmarks(base)
+assert "t-new" in R.table(["Set", "Captured"],
+                          [["f6-spike", "31d ago<br><small>python</small>"]]), \
+    "scrubbing the age must not blind the digest to a real change"
 # xtable rows badge too — exactly the new one
 base = snapshot_of(lambda: R.xtable(["Set", "Role"], [(["old-set", "principal"], "")]))
 R.init_rowmarks(base)

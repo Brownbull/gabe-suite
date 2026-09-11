@@ -36,6 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _center_data as D  # noqa: E402
 import _a3_board
 import _a3_code
+import _a3_codetab
 import _a3_graft  # noqa: E402  (the graft-wiring arm — topology provider)
 import _a3_graph  # noqa: E402  (the C4 codebase-graph derivation)
 import _a3_levels  # noqa: E402  (the rich LEVELS graph — the lab-native station feed)
@@ -1600,7 +1601,7 @@ def render_architecture(amap: dict) -> dict[str, str]:
     merged = _a3_code.merge_amaps(REPO_ROOT)
     xpage = {"ep": "arch-endpoints.html", "cm": "arch-code-map.html",
              "dm": "arch-data-model.html", "fn": "arch-functions.html"}
-    full = _a3_code.build_code_tab("app", REPO_ROOT, "", amap=merged,
+    full = _a3_codetab.build_code_tab("app", REPO_ROOT, "", amap=merged,
                                    entity_col=True, xpage=xpage)
     # Slice the six sections apart on their sechead roots.
     marks = []
