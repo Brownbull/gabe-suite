@@ -62,6 +62,22 @@ if [ -d "$TSHELL" ]; then
   done < <(find "$SHELL_SRC" -type f -print0)
 else echo "  (twin has no templates/center/shell — vendored differently; skipping)"; fi
 
+# RETIRED: a suite DELETION is invisible to a copy-only sync (review 2026-09-10 — gastify kept three retired
+# station pages live in its nav from 29 pages). The list mirrors build_center_a3.RETIRED_PAGES + the archive feed +
+# the one asset only they loaded. --check reports; a real run removes them from the twin's shell AND its centre.
+RETIRED="codebase-graph.html codebase-archive.html codebase-archive-lab.html sim-archive.js sim-archive.json assets/force-graph.min.js"
+echo "── retired in the suite (must not survive in the twin)"
+TCENTER="$TWIN/docs/site/center"; ret=0
+for r in $RETIRED; do
+  for d in "$TSHELL" "$TCENTER"; do
+    if [ -e "$d/$r" ]; then
+      if [ "$CHECK" = 1 ]; then echo "  RETIRED still present ${d#"$TWIN"/}/$r"; drift=1; else rm -f "$d/$r"; echo "  removed ${d#"$TWIN"/}/$r (retired in the suite)"; fi
+      ret=1
+    fi
+  done
+done
+[ $ret = 0 ] && echo "  none"
+
 if [ "$CHECK" = 1 ]; then
   [ $drift = 0 ] && echo "PROPAGATE CHECK: twin is in sync with the suite" || { echo "PROPAGATE CHECK: DRIFT above — run without --check to sync"; exit 1; }
 else

@@ -838,6 +838,21 @@ import json, sys; from pathlib import Path
 html = (Path(sys.argv[1]) / "docs/site/center/index.html").read_text()
 assert "config-only" in html, "the adoption board must show the config-only status"
 PY
+# ── propagate.sh RETIRED listing (review 2026-09-10): a suite DELETION is invisible to a copy-only sync — gastify kept
+# three retired station pages live in its nav. The listing mirrors RETIRED_PAGES: --check NAMES a survivor (in the
+# twin's shell OR its centre), a real run REMOVES it and says so, and a twin with none prints `none`.
+touch "$BS/templates/center/shell/codebase-graph.html" "$BS/docs/site/center/sim-archive.js"
+bash "$GEN/propagate.sh" "$BS" --check >"$T/prop-ret.out" 2>&1; [ $? -ne 0 ] \
+  && grep -q "RETIRED still present templates/center/shell/codebase-graph.html" "$T/prop-ret.out" \
+  && grep -q "RETIRED still present docs/site/center/sim-archive.js" "$T/prop-ret.out" \
+  && ok || { bad "propagate FIRE (--check): a retired page surviving in the twin's shell or centre is NAMED, exit non-zero"; grep -i retired "$T/prop-ret.out"; }
+bash "$GEN/propagate.sh" "$BS" >"$T/prop-ret2.out" 2>&1; grep -q "removed templates/center/shell/codebase-graph.html (retired in the suite)" "$T/prop-ret2.out" \
+  && grep -q "removed docs/site/center/sim-archive.js (retired in the suite)" "$T/prop-ret2.out" \
+  && [ ! -e "$BS/templates/center/shell/codebase-graph.html" ] && [ ! -e "$BS/docs/site/center/sim-archive.js" ] \
+  && ok || { bad "propagate FIRE: a real run REMOVES the retired files and logs each"; grep -i retired "$T/prop-ret2.out"; }
+bash "$GEN/propagate.sh" "$BS" --check >"$T/prop-ret3.out" 2>&1; ! grep -q "RETIRED still present" "$T/prop-ret3.out" \
+  && grep -A1 "retired in the suite (must not survive" "$T/prop-ret3.out" | grep -q "^  none" \
+  && ok || { bad "propagate SILENT: with no retired file in the twin the listing prints none"; grep -A2 "retired in the suite" "$T/prop-ret3.out"; }
 
 
 # ── SCALE (review 2026-09-06): the fn twin pass — exact under the budget, BLOCKED on rare identifiers above it, mode named ──

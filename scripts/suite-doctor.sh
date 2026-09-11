@@ -95,7 +95,11 @@ check_invariants() {
   # required harness is a report, not a CLEAN (M32). Non-battery CLIs opt out
   # here BY NAME with their reason — the contract for batteries is zero-arg.
   [ -f "$REPO/tests/hooks/run.sh" ] || report "invariant" "hook harness MISSING: tests/hooks/run.sh"
+  # GABE_DOCTOR_NO_BATTERIES=1 skips the sweep (tests/doctor proves the doctor's OWN invariants without a
+  # 2–4 min battery run; a session checking install parity alone can use it too) — said out loud, never CLEAN-silent.
+  [ "${GABE_DOCTOR_NO_BATTERIES:-0}" = 1 ] && echo "  INFO   battery sweep SKIPPED (GABE_DOCTOR_NO_BATTERIES=1) — not a full CLEAN"
   for h in "$REPO"/tests/*/run.sh; do
+    [ "${GABE_DOCTOR_NO_BATTERIES:-0}" = 1 ] && break
     [ -f "$h" ] || continue
     case "$h" in
       */tests/_archive/*) continue ;;
