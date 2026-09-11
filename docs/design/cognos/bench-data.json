@@ -1,0 +1,1416 @@
+{
+ "door": {
+  "label": "POST /setup/complete",
+  "entity": "auth",
+  "op": "writes",
+  "opk": "write",
+  "handler": "setup_complete",
+  "file": "apps/api/api/setup.py"
+ },
+ "tables": [
+  {
+   "table": "consent_records",
+   "model": "ConsentRecord",
+   "rw": "r",
+   "entity": "legal-consent",
+   "cols": [
+    [
+     "id",
+     "uuid.UUID"
+    ],
+    [
+     "user_id",
+     "uuid.UUID"
+    ],
+    [
+     "policy_version",
+     "str"
+    ],
+    [
+     "accepted_at",
+     "datetime"
+    ],
+    [
+     "created_at",
+     "datetime"
+    ]
+   ]
+  },
+  {
+   "table": "households",
+   "model": "Household",
+   "rw": "rw",
+   "entity": "auth",
+   "cols": [
+    [
+     "id",
+     "uuid.UUID"
+    ],
+    [
+     "name",
+     "str"
+    ],
+    [
+     "created_at",
+     "datetime"
+    ]
+   ]
+  },
+  {
+   "table": "household_format_preferences",
+   "model": "HouseholdFormatPreferences",
+   "rw": "rw",
+   "entity": "settings",
+   "cols": [
+    [
+     "id",
+     "uuid.UUID"
+    ],
+    [
+     "household_id",
+     "uuid.UUID"
+    ],
+    [
+     "country",
+     "str"
+    ],
+    [
+     "units",
+     "str"
+    ],
+    [
+     "currency",
+     "str"
+    ],
+    [
+     "default_servings",
+     "int"
+    ],
+    [
+     "auto_discount_servings",
+     "bool"
+    ],
+    [
+     "created_at",
+     "datetime"
+    ],
+    [
+     "updated_at",
+     "datetime"
+    ]
+   ]
+  },
+  {
+   "table": "idempotency_keys",
+   "model": "IdempotencyKey",
+   "rw": "rw",
+   "entity": "auth",
+   "cols": [
+    [
+     "id",
+     "uuid.UUID"
+    ],
+    [
+     "key",
+     "str"
+    ],
+    [
+     "operation",
+     "str"
+    ],
+    [
+     "owner_scope",
+     "str"
+    ],
+    [
+     "status",
+     "str"
+    ],
+    [
+     "result_ref",
+     "str | None"
+    ],
+    [
+     "created_at",
+     "datetime"
+    ],
+    [
+     "completed_at",
+     "datetime | None"
+    ]
+   ]
+  },
+  {
+   "table": "locations",
+   "model": "Location",
+   "rw": "rw",
+   "entity": "pantry",
+   "cols": [
+    [
+     "id",
+     "uuid.UUID"
+    ],
+    [
+     "household_id",
+     "uuid.UUID"
+    ],
+    [
+     "name",
+     "str"
+    ],
+    [
+     "is_principal",
+     "bool"
+    ],
+    [
+     "color",
+     "str | None"
+    ],
+    [
+     "icon",
+     "str | None"
+    ],
+    [
+     "order",
+     "int | None"
+    ],
+    [
+     "active",
+     "bool"
+    ],
+    [
+     "type",
+     "str | None"
+    ],
+    [
+     "created_at",
+     "datetime"
+    ]
+   ]
+  },
+  {
+   "table": "memberships",
+   "model": "Membership",
+   "rw": "r",
+   "entity": "auth",
+   "cols": [
+    [
+     "id",
+     "uuid.UUID"
+    ],
+    [
+     "household_id",
+     "uuid.UUID"
+    ],
+    [
+     "user_id",
+     "uuid.UUID"
+    ],
+    [
+     "role",
+     "str"
+    ],
+    [
+     "created_at",
+     "datetime"
+    ]
+   ]
+  },
+  {
+   "table": "setup_completion_state",
+   "model": "SetupCompletionState",
+   "rw": "rw",
+   "entity": "auth",
+   "cols": [
+    [
+     "id",
+     "uuid.UUID"
+    ],
+    [
+     "user_id",
+     "uuid.UUID"
+    ],
+    [
+     "completed",
+     "bool"
+    ],
+    [
+     "completed_at",
+     "datetime | None"
+    ],
+    [
+     "created_at",
+     "datetime"
+    ],
+    [
+     "updated_at",
+     "datetime"
+    ]
+   ]
+  },
+  {
+   "table": "subscription_entitlement",
+   "model": "SubscriptionEntitlement",
+   "rw": "rw",
+   "entity": "auth",
+   "cols": [
+    [
+     "id",
+     "uuid.UUID"
+    ],
+    [
+     "user_id",
+     "uuid.UUID"
+    ],
+    [
+     "tier",
+     "str"
+    ],
+    [
+     "created_at",
+     "datetime"
+    ],
+    [
+     "updated_at",
+     "datetime"
+    ]
+   ]
+  },
+  {
+   "table": "user_dietary_profile",
+   "model": "UserDietaryProfile",
+   "rw": "rw",
+   "entity": "allergen",
+   "cols": [
+    [
+     "id",
+     "uuid.UUID"
+    ],
+    [
+     "user_id",
+     "uuid.UUID"
+    ],
+    [
+     "allergens",
+     "list[str]"
+    ],
+    [
+     "preferences",
+     "list[str]"
+    ],
+    [
+     "created_at",
+     "datetime"
+    ],
+    [
+     "updated_at",
+     "datetime"
+    ]
+   ]
+  },
+  {
+   "table": "user_exploration_preferences",
+   "model": "UserExplorationPreferences",
+   "rw": "rw",
+   "entity": "settings",
+   "cols": [
+    [
+     "id",
+     "uuid.UUID"
+    ],
+    [
+     "user_id",
+     "uuid.UUID"
+    ],
+    [
+     "explore_regions",
+     "list[str]"
+    ],
+    [
+     "curiosity_techniques",
+     "list[str]"
+    ],
+    [
+     "comfort_techniques",
+     "list[str]"
+    ],
+    [
+     "comfort_time",
+     "list[str]"
+    ],
+    [
+     "skill_complexity_cap",
+     "int | None"
+    ],
+    [
+     "preference_tastes",
+     "list[str]"
+    ],
+    [
+     "preference_textures",
+     "list[str]"
+    ],
+    [
+     "preference_temperature",
+     "str | None"
+    ]
+   ]
+  },
+  {
+   "table": "user_format_preferences",
+   "model": "UserFormatPreferences",
+   "rw": "rw",
+   "entity": "settings",
+   "cols": [
+    [
+     "id",
+     "uuid.UUID"
+    ],
+    [
+     "user_id",
+     "uuid.UUID"
+    ],
+    [
+     "language",
+     "str"
+    ],
+    [
+     "created_at",
+     "datetime"
+    ],
+    [
+     "updated_at",
+     "datetime"
+    ]
+   ]
+  },
+  {
+   "table": "user_notification_preferences",
+   "model": "UserNotificationPreferences",
+   "rw": "rw",
+   "entity": "settings",
+   "cols": [
+    [
+     "id",
+     "uuid.UUID"
+    ],
+    [
+     "user_id",
+     "uuid.UUID"
+    ],
+    [
+     "cooking",
+     "bool"
+    ],
+    [
+     "shopping",
+     "bool"
+    ],
+    [
+     "pantry",
+     "bool"
+    ],
+    [
+     "created_at",
+     "datetime"
+    ],
+    [
+     "updated_at",
+     "datetime"
+    ]
+   ]
+  },
+  {
+   "table": "user_privacy_permissions",
+   "model": "UserPrivacyPermissions",
+   "rw": "rw",
+   "entity": "settings",
+   "cols": [
+    [
+     "id",
+     "uuid.UUID"
+    ],
+    [
+     "user_id",
+     "uuid.UUID"
+    ],
+    [
+     "share_shopping_data",
+     "bool"
+    ],
+    [
+     "share_culinary_preferences",
+     "bool"
+    ],
+    [
+     "allow_reminders",
+     "bool"
+    ],
+    [
+     "created_at",
+     "datetime"
+    ],
+    [
+     "updated_at",
+     "datetime"
+    ]
+   ]
+  }
+ ],
+ "chain": [
+  [
+   {
+    "id": "apps/api/api/setup.py#_me_response_from_result",
+    "name": "_me_response_from_result",
+    "file": "apps/api/api/setup.py",
+    "entity": "auth",
+    "role": "pure",
+    "rw": "",
+    "conf": "extracted",
+    "tables": []
+   },
+   {
+    "id": "apps/api/services/setup.py#complete_setup",
+    "name": "complete_setup",
+    "file": "apps/api/services/setup.py",
+    "entity": "auth",
+    "role": "accessor",
+    "rw": "r",
+    "conf": "inferred",
+    "tables": [
+     [
+      "setup_completion_state",
+      "r"
+     ]
+    ]
+   }
+  ],
+  [
+   {
+    "id": "apps/api/services/idempotency.py#claim",
+    "name": "claim",
+    "file": "apps/api/services/idempotency.py",
+    "entity": "auth",
+    "role": "accessor",
+    "rw": "w",
+    "conf": "inferred",
+    "tables": [
+     [
+      "idempotency_keys",
+      "w"
+     ]
+    ]
+   },
+   {
+    "id": "apps/api/services/idempotency.py#complete",
+    "name": "complete",
+    "file": "apps/api/services/idempotency.py",
+    "entity": "auth",
+    "role": "accessor",
+    "rw": "w",
+    "conf": "inferred",
+    "tables": [
+     [
+      "idempotency_keys",
+      "w"
+     ]
+    ]
+   },
+   {
+    "id": "apps/api/services/ownership.py#ensure_principal_household",
+    "name": "ensure_principal_household",
+    "file": "apps/api/services/ownership.py",
+    "entity": "auth",
+    "role": "gate",
+    "rw": "rw",
+    "conf": "inferred",
+    "tables": [
+     [
+      "households",
+      "rw"
+     ],
+     [
+      "memberships",
+      "r"
+     ],
+     [
+      "locations",
+      "w"
+     ]
+    ]
+   },
+   {
+    "id": "apps/api/services/ownership.py#load_household_context",
+    "name": "load_household_context",
+    "file": "apps/api/services/ownership.py",
+    "entity": "auth",
+    "role": "accessor",
+    "rw": "r",
+    "conf": "inferred",
+    "tables": [
+     [
+      "households",
+      "r"
+     ],
+     [
+      "memberships",
+      "r"
+     ]
+    ]
+   },
+   {
+    "id": "apps/api/services/setup.py#_discard_claim",
+    "name": "_discard_claim",
+    "file": "apps/api/services/setup.py",
+    "entity": "auth",
+    "role": "accessor",
+    "rw": "r",
+    "conf": "extracted",
+    "tables": [
+     [
+      "idempotency_keys",
+      "r"
+     ]
+    ]
+   },
+   {
+    "id": "apps/api/services/setup.py#_load_setup_result",
+    "name": "_load_setup_result",
+    "file": "apps/api/services/setup.py",
+    "entity": "auth",
+    "role": "accessor",
+    "rw": "r",
+    "conf": "extracted",
+    "tables": [
+     [
+      "household_format_preferences",
+      "r"
+     ],
+     [
+      "setup_completion_state",
+      "r"
+     ],
+     [
+      "subscription_entitlement",
+      "r"
+     ],
+     [
+      "user_dietary_profile",
+      "r"
+     ],
+     [
+      "user_exploration_preferences",
+      "r"
+     ],
+     [
+      "user_format_preferences",
+      "r"
+     ],
+     [
+      "user_notification_preferences",
+      "r"
+     ],
+     [
+      "user_privacy_permissions",
+      "r"
+     ]
+    ]
+   },
+   {
+    "id": "apps/api/services/setup.py#_stamp_completion",
+    "name": "_stamp_completion",
+    "file": "apps/api/services/setup.py",
+    "entity": "auth",
+    "role": "accessor",
+    "rw": "rw",
+    "conf": "extracted",
+    "tables": [
+     [
+      "setup_completion_state",
+      "rw"
+     ]
+    ]
+   },
+   {
+    "id": "apps/api/services/setup.py#_upsert_dietary",
+    "name": "_upsert_dietary",
+    "file": "apps/api/services/setup.py",
+    "entity": "auth",
+    "role": "accessor",
+    "rw": "rw",
+    "conf": "extracted",
+    "tables": [
+     [
+      "user_dietary_profile",
+      "rw"
+     ]
+    ]
+   },
+   {
+    "id": "apps/api/services/setup.py#_upsert_exploration",
+    "name": "_upsert_exploration",
+    "file": "apps/api/services/setup.py",
+    "entity": "auth",
+    "role": "caller",
+    "rw": "",
+    "conf": "extracted",
+    "tables": []
+   },
+   {
+    "id": "apps/api/services/setup.py#_upsert_format_prefs",
+    "name": "_upsert_format_prefs",
+    "file": "apps/api/services/setup.py",
+    "entity": "auth",
+    "role": "accessor",
+    "rw": "rw",
+    "conf": "extracted",
+    "tables": [
+     [
+      "household_format_preferences",
+      "rw"
+     ]
+    ]
+   },
+   {
+    "id": "apps/api/services/setup.py#_upsert_notifications",
+    "name": "_upsert_notifications",
+    "file": "apps/api/services/setup.py",
+    "entity": "auth",
+    "role": "accessor",
+    "rw": "rw",
+    "conf": "extracted",
+    "tables": [
+     [
+      "user_notification_preferences",
+      "rw"
+     ]
+    ]
+   },
+   {
+    "id": "apps/api/services/setup.py#_upsert_privacy",
+    "name": "_upsert_privacy",
+    "file": "apps/api/services/setup.py",
+    "entity": "auth",
+    "role": "accessor",
+    "rw": "rw",
+    "conf": "extracted",
+    "tables": [
+     [
+      "user_privacy_permissions",
+      "rw"
+     ]
+    ]
+   },
+   {
+    "id": "apps/api/services/setup.py#_upsert_subscription",
+    "name": "_upsert_subscription",
+    "file": "apps/api/services/setup.py",
+    "entity": "auth",
+    "role": "accessor",
+    "rw": "rw",
+    "conf": "extracted",
+    "tables": [
+     [
+      "subscription_entitlement",
+      "rw"
+     ]
+    ]
+   },
+   {
+    "id": "apps/api/services/setup.py#_upsert_user_format",
+    "name": "_upsert_user_format",
+    "file": "apps/api/services/setup.py",
+    "entity": "auth",
+    "role": "accessor",
+    "rw": "rw",
+    "conf": "extracted",
+    "tables": [
+     [
+      "user_format_preferences",
+      "rw"
+     ]
+    ]
+   },
+   {
+    "id": "apps/api/services/consent.py#latest_consent",
+    "name": "latest_consent",
+    "file": "apps/api/services/consent.py",
+    "entity": "legal-consent",
+    "role": "accessor",
+    "rw": "r",
+    "conf": "inferred",
+    "tables": [
+     [
+      "consent_records",
+      "r"
+     ]
+    ]
+   }
+  ],
+  [
+   {
+    "id": "apps/api/services/idempotency.py#_lookup",
+    "name": "_lookup",
+    "file": "apps/api/services/idempotency.py",
+    "entity": "auth",
+    "role": "accessor",
+    "rw": "r",
+    "conf": "extracted",
+    "tables": [
+     [
+      "idempotency_keys",
+      "r"
+     ]
+    ]
+   },
+   {
+    "id": "apps/api/services/idempotency.py#_outcome_for",
+    "name": "_outcome_for",
+    "file": "apps/api/services/idempotency.py",
+    "entity": "auth",
+    "role": "caller",
+    "rw": "",
+    "conf": "extracted",
+    "tables": []
+   },
+   {
+    "id": "apps/api/services/ownership.py#get_principal_location",
+    "name": "get_principal_location",
+    "file": "apps/api/services/ownership.py",
+    "entity": "auth",
+    "role": "accessor",
+    "rw": "r",
+    "conf": "extracted",
+    "tables": [
+     [
+      "locations",
+      "r"
+     ]
+    ]
+   },
+   {
+    "id": "apps/api/services/exploration.py#upsert_exploration_preferences",
+    "name": "upsert_exploration_preferences",
+    "file": "apps/api/services/exploration.py",
+    "entity": "recipe",
+    "role": "accessor",
+    "rw": "rw",
+    "conf": "inferred",
+    "tables": [
+     [
+      "user_exploration_preferences",
+      "rw"
+     ]
+    ]
+   }
+  ],
+  [
+   {
+    "id": "apps/api/services/idempotency.py#_reclaim",
+    "name": "_reclaim",
+    "file": "apps/api/services/idempotency.py",
+    "entity": "auth",
+    "role": "accessor",
+    "rw": "w",
+    "conf": "extracted",
+    "tables": [
+     [
+      "idempotency_keys",
+      "w"
+     ]
+    ]
+   }
+  ]
+ ],
+ "chain_note": "levels calls-walk from the handler: 2 · 15 · 4 · 1 (c4 behind.fns 29 counts graft-only hops too)",
+ "endpoint": {
+  "id": "endpoint:POST /setup/complete",
+  "label": "POST /setup/complete",
+  "entity": "auth",
+  "status": "200",
+  "handler": "setup_complete",
+  "file": "apps/api/api/setup.py",
+  "flines": 254,
+  "sig": {
+   "async": true,
+   "lines": 21,
+   "returns": "MeResponse"
+  },
+  "gsig": "async def setup_complete(request: Request, body: SetupCompleteRequest, ctx: Annotated[AuthContext, Depends(get_auth_context)], session: Annotated[AsyncSession, ",
+  "doc": "",
+  "resp": "MeResponse",
+  "payload": {
+   "n": 6,
+   "schema": "MeResponse"
+  },
+  "usage": {
+   "api": 1,
+   "internal": 0
+  },
+  "stream": false,
+  "cases": [
+   [
+    "C1048",
+    "test_setup_complete_missing_key_400_C1048",
+    "pass"
+   ],
+   [
+    "C1049",
+    "test_setup_complete_success_then_me_reads_back_C1049",
+    "pass"
+   ],
+   [
+    "C1050",
+    "test_setup_complete_replay_identical_count_one_C1050",
+    "pass"
+   ],
+   [
+    "C1051",
+    "test_setup_complete_blank_name_422_C1051",
+    "pass"
+   ],
+   [
+    "C1052",
+    "test_setup_complete_too_many_allergens_422_C1052",
+    "pass"
+   ],
+   [
+    "C1055",
+    "test_setup_complete_without_consent_409_C1055",
+    "pass"
+   ],
+   [
+    "C1056",
+    "test_setup_complete_with_consent_200_C1056",
+    "pass"
+   ],
+   [
+    "C1057",
+    "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
+    "pass"
+   ],
+   [
+    "C1087",
+    "test_cook_route_unlocks_surface_on_profile_C1087",
+    "pass"
+   ],
+   [
+    "C218",
+    "test_overview_returns_cookability_fields_C218",
+    "pass"
+   ],
+   [
+    "C250",
+    "test_cook_complete_history_pantry_loop_C250",
+    "pass"
+   ],
+   [
+    "C251",
+    "test_complete_rejects_stored_over_total_C251",
+    "pass"
+   ],
+   [
+    "C389",
+    "test_setup_complete_with_exploration_creates_row_C389",
+    "pass"
+   ],
+   [
+    "C390",
+    "test_setup_complete_folds_in_path_a_plus_C390",
+    "pass"
+   ],
+   [
+    "C391",
+    "test_setup_complete_without_exploration_creates_empty_row_C391",
+    "pass"
+   ],
+   [
+    "C392",
+    "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
+    "pass"
+   ],
+   [
+    "C555",
+    "test_advance_and_due_routes_C555",
+    "pass"
+   ],
+   [
+    "C556",
+    "test_manual_create_with_stages_roundtrip_C556",
+    "pass"
+   ],
+   [
+    "C557",
+    "test_manual_create_stage_validation_C557",
+    "pass"
+   ],
+   [
+    "C603",
+    "test_generate_and_current_routes_C603",
+    "pass"
+   ],
+   [
+    "C605",
+    "test_current_404_when_none_C605",
+    "pass"
+   ],
+   [
+    "C664",
+    "test_explore_route_cold_start_and_validation_C664",
+    "pass"
+   ],
+   [
+    "C705",
+    "test_delete_item_cross_household_404_C705",
+    "pass"
+   ],
+   [
+    "C785",
+    "test_recipes_availability_end_to_end_C785",
+    "pass"
+   ],
+   [
+    "C958",
+    "test_list_recipe_time_effort_and_ingredient_counts_C958",
+    "pass"
+   ],
+   [
+    "C959",
+    "test_list_recipe_exposes_predominant_techniques_C959",
+    "pass"
+   ]
+  ],
+  "case_files": [
+   {
+    "corpus": "web",
+    "name": "15 case(s)"
+   }
+  ],
+  "journeys": [
+   [
+    "C250",
+    27,
+    "api",
+    "auth,cooking,pantry,progression,recipe"
+   ],
+   [
+    "15 case(s)",
+    24,
+    "web",
+    "auth,cooking,pantry,progression,recipe"
+   ],
+   [
+    "C785",
+    24,
+    "api",
+    "auth,pantry,progression,recipe"
+   ],
+   [
+    "C1087",
+    19,
+    "api",
+    "auth,cooking,progression,recipe"
+   ],
+   [
+    "C555",
+    17,
+    "api",
+    "auth,cooking,progression,recipe"
+   ],
+   [
+    "C958",
+    17,
+    "api",
+    "auth,pantry,progression,recipe"
+   ]
+  ],
+  "journeys_more": 21,
+  "middleware": [
+   {
+    "name": "get_auth_context",
+    "gate": true,
+    "via": "param-dep",
+    "fn": "apps/api/auth/context.py::get_auth_context"
+   },
+   {
+    "name": "get_session",
+    "gate": false,
+    "via": "param-dep",
+    "fn": null
+   },
+   {
+    "name": "get_settings",
+    "gate": false,
+    "via": "param-dep",
+    "fn": null
+   }
+  ],
+  "flags": [],
+  "behind": {
+   "depth": 5,
+   "fns": 29,
+   "names": [
+    "_discard_claim",
+    "_load_setup_result",
+    "_lookup",
+    "_me_response_from_result",
+    "_outcome_for",
+    "_reclaim",
+    "_stamp_completion",
+    "_subscription_block",
+    "_upsert_dietary",
+    "_upsert_exploration",
+    "_upsert_format_prefs",
+    "_upsert_notifications"
+   ],
+   "names_more": 17
+  },
+  "commits": true,
+  "home_ev": {
+   "by": "file",
+   "data": {
+    "allergen": 2,
+    "auth": 9,
+    "legal-consent": 1,
+    "pantry": 2,
+    "settings": 10
+   },
+   "others": 0,
+   "share": null,
+   "to": null,
+   "to_kind": null,
+   "users": {
+    "auth": 1
+   },
+   "verdict": "stay"
+  }
+ },
+ "schemas": {
+  "request": {
+   "name": "SetupCompleteRequest",
+   "entity": "auth",
+   "cols": [
+    [
+     "household_name",
+     "str"
+    ],
+    [
+     "household_format",
+     "HouseholdFormatInput"
+    ],
+    [
+     "user_format",
+     "UserFormatInput"
+    ],
+    [
+     "dietary",
+     "DietaryProfileInput"
+    ],
+    [
+     "exploration",
+     "ExplorationPreferencesInput"
+    ],
+    [
+     "privacy",
+     "PrivacyPermissionsInput"
+    ],
+    [
+     "notifications",
+     "NotificationPreferencesInput"
+    ]
+   ],
+   "file": "apps/api/schemas/setup.py",
+   "nested": [
+    "DietaryProfileInput",
+    "HouseholdFormatInput",
+    "NotificationPreferencesInput",
+    "PrivacyPermissionsInput",
+    "UserFormatInput",
+    "ExplorationPreferencesInput"
+   ],
+   "doc": "Everything a first-run user submits to finish setup and create their household."
+  },
+  "response": {
+   "name": "MeResponse",
+   "entity": "progression",
+   "cols": [
+    [
+     "setup_required",
+     "bool"
+    ],
+    [
+     "user",
+     "UserSummary"
+    ],
+    [
+     "household",
+     "HouseholdSummary | None"
+    ],
+    [
+     "membership",
+     "MembershipSummary | None"
+    ],
+    [
+     "preferences",
+     "PreferencesSummary | None"
+    ],
+    [
+     "subscription",
+     "SubscriptionSummary"
+    ]
+   ],
+   "file": "apps/api/schemas/responses.py",
+   "nested": [
+    "UserSummary",
+    "HouseholdSummary",
+    "MembershipSummary",
+    "PreferencesSummary",
+    "SubscriptionSummary"
+   ],
+   "doc": ""
+  }
+ },
+ "fe": {
+  "hook": {
+   "id": "fe:apps/web/src/features/auth/useCompleteSetup.ts#useCompleteSetup",
+   "name": "useCompleteSetup",
+   "kind": "hook",
+   "home": "fe·auth",
+   "file": "apps/web/src/features/auth/useCompleteSetup.ts",
+   "cache": true,
+   "feClass": null,
+   "hrole": "fetcher",
+   "fetches": 0
+  },
+  "screen": {
+   "id": "fe:apps/web/src/features/auth/SetupScreen.tsx#SetupScreen",
+   "name": "SetupScreen",
+   "kind": "component",
+   "home": "fe·auth",
+   "file": "apps/web/src/features/auth/SetupScreen.tsx",
+   "cache": false,
+   "feClass": "view",
+   "hrole": null,
+   "fetches": 0
+  },
+  "route": {
+   "id": "fe:apps/web/src/routes/screens.tsx#SetupRoute",
+   "name": "SetupRoute",
+   "kind": "route",
+   "home": "app-shell",
+   "file": "apps/web/src/routes/screens.tsx",
+   "cache": false,
+   "feClass": null,
+   "hrole": null,
+   "fetches": 0
+  }
+ },
+ "workflow": {
+  "name": "Initial setup — first run",
+  "level": 1,
+  "steps": [
+   [
+    "POST /consent",
+    "legal-consent",
+    "200"
+   ],
+   [
+    "POST /setup/complete",
+    "auth",
+    "200"
+   ],
+   [
+    "GET /me",
+    "auth",
+    "200"
+   ],
+   [
+    "GET /settings",
+    "settings",
+    "200"
+   ]
+  ],
+  "note": "consent first, then the one atomic setup transaction, then the app reads the fresh profile"
+ },
+ "next": {
+  "label": "GET /me",
+  "entity": "auth",
+  "status": "200",
+  "resp": "MeResponse",
+  "handler": "get_me",
+  "file": "apps/api/api/setup.py"
+ },
+ "asgi": [
+  {
+   "name": "CORSMiddleware",
+   "det": {
+    "file": "apps/api/main.py",
+    "gates": 80,
+    "line": 132,
+    "order": 2,
+    "scope": "all"
+   }
+  },
+  {
+   "name": "IdempotencyMiddleware",
+   "det": {
+    "file": "apps/api/main.py",
+    "gates": 80,
+    "line": 124,
+    "order": 0,
+    "scope": "all"
+   }
+  },
+  {
+   "name": "RateLimitMiddleware",
+   "det": {
+    "file": "apps/api/main.py",
+    "gates": 80,
+    "line": 127,
+    "order": 1,
+    "scope": "all"
+   }
+  }
+ ],
+ "gatefn": {
+  "name": "get_auth_context",
+  "fn": "apps/api/auth/context.py::get_auth_context",
+  "role": "caller",
+  "usage": 27,
+  "guards": 79
+ },
+ "deps": [
+  {
+   "name": "get_session",
+   "via": "param-dep",
+   "feedwide": 79
+  },
+  {
+   "name": "get_settings",
+   "via": "param-dep",
+   "feedwide": 12
+  }
+ ],
+ "status": {
+  "declared": "200",
+  "by_status": {
+   "200": [
+    [
+     "C1056",
+     "test_setup_complete_with_consent_200_C1056"
+    ],
+    [
+     "C1057",
+     "test_setup_complete_reject_then_accept_retry_same_key_200_C1057"
+    ]
+   ],
+   "400": [
+    [
+     "C1048",
+     "test_setup_complete_missing_key_400_C1048"
+    ]
+   ],
+   "404": [
+    [
+     "C605",
+     "test_current_404_when_none_C605"
+    ],
+    [
+     "C705",
+     "test_delete_item_cross_household_404_C705"
+    ]
+   ],
+   "409": [
+    [
+     "C1055",
+     "test_setup_complete_without_consent_409_C1055"
+    ]
+   ],
+   "422": [
+    [
+     "C1051",
+     "test_setup_complete_blank_name_422_C1051"
+    ],
+    [
+     "C1052",
+     "test_setup_complete_too_many_allergens_422_C1052"
+    ]
+   ]
+  }
+ },
+ "commits": [
+  {
+   "short": "93b32077",
+   "subject": "fix(pantry): #121 — kind:\\\"prepared\\\" survives creation end-to-end (C8133)",
+   "date": "2026-08-07",
+   "nFiles": 7,
+   "touched": 43,
+   "houses": 43,
+   "me": false
+  },
+  {
+   "short": "166e6da6",
+   "subject": "feat(pantry): C6 — location order + \"Activa\" get a server home (D184)",
+   "date": "2026-08-04",
+   "nFiles": 7,
+   "touched": 44,
+   "houses": 44,
+   "me": false
+  },
+  {
+   "short": "b81cdd0d",
+   "subject": "feat(settings): per-person portion discount — the flag persists and is settable (#178 steps 1-3)",
+   "date": "2026-07-31",
+   "nFiles": 18,
+   "touched": 49,
+   "houses": 10,
+   "me": false
+  }
+ ],
+ "idem": {
+  "name": "IdempotencyKey",
+  "table": "idempotency_keys",
+  "entity": "auth",
+  "cols": [
+   [
+    "id",
+    "uuid.UUID"
+   ],
+   [
+    "key",
+    "str"
+   ],
+   [
+    "operation",
+    "str"
+   ],
+   [
+    "owner_scope",
+    "str"
+   ],
+   [
+    "status",
+    "str"
+   ],
+   [
+    "result_ref",
+    "str | None"
+   ],
+   [
+    "created_at",
+    "datetime"
+   ],
+   [
+    "completed_at",
+    "datetime | None"
+   ]
+  ]
+ },
+ "entity": {
+  "auth": {
+   "endpoints": 4,
+   "models": 6,
+   "schemas": 6
+  }
+ }
+}
