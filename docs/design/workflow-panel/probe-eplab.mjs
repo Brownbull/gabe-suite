@@ -135,11 +135,15 @@ ok(scroll.w === 'thin', 'scrollbars are the station\'s narrow themed ones', JSON
   ok(cfg.left.join(' ') === 'kind method name status risk', 'default LEFT pile', cfg.left.join(' '));
   ok(cfg.right.join(' ') === 'source above', 'default RIGHT pile', cfg.right.join(' '));
   ok(cfg.off.join(' ') === 'cluster entity kindword', 'default off', cfg.off.join(' '));
-  const want = { kind: 'none', method: 'none', name: 'none', status: 'pill', risk: 'round', source: 'none', above: 'round', kindword: 'rect' };
+  const want = { kind: 'circle', method: 'none', name: 'none', status: 'pill', risk: 'round', source: 'none', above: 'round', kindword: 'rect' };
   const bad = Object.keys(want).filter(k => (cfg.style[k] || {}).shape !== want[k]);
   ok(bad.length === 0, 'default containers are the operator\'s', bad.join(','));
   ok(cfg.style.name.text === 'on' && cfg.style.risk.text === 'off', 'default text overrides are the operator\'s', JSON.stringify({ name: cfg.style.name.text, risk: cfg.style.risk.text }));
-  ok(cfg.style.kind.size === 20, 'the KIND glyph is drawn larger than the rest', String(cfg.style.kind.size)); }
+  ok(cfg.style.kind.size === 20, 'the KIND glyph is drawn larger than the rest', String(cfg.style.kind.size));
+  ok(cfg.style.kind.fit === 'bleed', 'the kind DISC bleeds over the bar rather than growing it', String(cfg.style.kind.fit)); }
+{ const bar = await p.$eval('#headstrip', e => Math.round(e.getBoundingClientRect().height));
+  const disc = await p.$eval('#headstrip .hel[data-el="kind"]', e => Math.round(e.getBoundingClientRect().height));
+  ok(disc > bar - 8, 'the disc very nearly fills the bar', disc + ' in ' + bar); }
 const bootShown = await p.$$eval('.rtab', els => els.filter(e => !e.hidden && e.offsetParent !== null).map(e => e.id));
 ok(bootShown.length === 1 && bootShown[0] === 'rt-controls', 'at BOOT only the controls show — the toggle runs on load', bootShown.join(','));
 const rtabs = await p.$$eval('#railtabs .rtb', els => els.map(e => e.dataset.rt));
@@ -192,7 +196,7 @@ await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(80);
 await p.click('#barcfg .dzone .ib[data-el="status"]'); await p.waitForTimeout(100);
 ok(await p.$eval('.elned .ednhd b', e => e.textContent === 'status'), 'clicking an element chip opens ITS editor');
 const rows = await p.$$eval('.elned .cfl', els => els.map(e => e.textContent));
-ok(rows.join(',') === 'shown,text,container,icon', 'the editor offers shown · text · container · icon size', rows.join(','));
+ok(rows.join(',') === 'shown,text,container,icon,fit', 'the editor offers shown · text · container · icon size · fit', rows.join(','));
 const sizes = await p.$$eval('.elned .ib[data-size]', els => els.map(e => e.dataset.size));
 ok(sizes.join(',') === '11,13,16,20,24', 'five glyph sizes, each drawn with the element\'s own icon', sizes.join(','));
 const shapes = await p.$$eval('.elned .ib[data-shape]', els => els.map(e => e.dataset.shape));
@@ -221,6 +225,19 @@ for (const z of ['11', '24', '13']) { await p.click(`.elned .ib[data-size="${z}"
   ok(w === z, `icon size ${z} reaches the drawn glyph`, String(w)); }
 { const kz = await p.$eval('#headstrip .hel[data-el="kind"] svg', e => +e.getAttribute('width'));
   ok(kz === 20, 'the kind glyph draws at 20px by default', String(kz)); }
+// a big CIRCLE must not move the bar's margins: it bleeds over the row instead of growing it
+{ const before = await p.$eval('#headstrip', e => e.getBoundingClientRect().height);
+  await p.evaluate(() => { const st = window.elStyle('kind'); st.shape = 'circle'; st.size = 24; st.fit = 'bleed'; window.drawHead(); });
+  await p.waitForTimeout(120);
+  const after = await p.$eval('#headstrip', e => e.getBoundingClientRect().height);
+  const disc = await p.$eval('#headstrip .hel[data-el="kind"]', e => { const r = e.getBoundingClientRect(); const c = getComputedStyle(e); return { h: Math.round(r.height), w: Math.round(r.width), m: c.marginTop, br: c.borderRadius }; });
+  ok(Math.abs(after - before) < 1.5, 'a 38px disc does NOT change the bar height — it bleeds (operator 2026-09-11)', before + ' → ' + after);
+  ok(disc.h === disc.w && disc.h >= 36, 'the disc is round and sized by its own glyph', JSON.stringify(disc));
+  ok(parseFloat(disc.m) < 0, 'the bleed is negative block margin, so the row keeps its natural height', disc.m);
+  await p.evaluate(() => { const st = window.elStyle('kind'); st.fit = 'grow'; window.drawHead(); }); await p.waitForTimeout(120);
+  const grown = await p.$eval('#headstrip', e => e.getBoundingClientRect().height);
+  ok(grown > after + 4, 'fit GROW opts back into pushing the bar taller', after + ' → ' + grown);
+  await p.evaluate(() => { const st = window.elStyle('kind'); st.shape = 'none'; st.size = 20; st.fit = 'bleed'; window.drawHead(); }); await p.waitForTimeout(120); }
 // the editor can hide the element too
 await p.click('.elned .ib[data-shown="off"]'); await p.waitForTimeout(100);
 ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 0, 'the editor hides the element');

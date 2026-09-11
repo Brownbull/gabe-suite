@@ -97,6 +97,8 @@
     "sh-pill": '<rect x="3.5" y="6.5" width="17" height="11" rx="5.5"/>',
     "sh-circle": '<circle cx="12" cy="12" r="6"/>',
     "sh-cut": '<path d="M3.5 6.5h13l4 4v7h-17z"/>',
+    fitbleed: '<path d="M2 8h20M2 16h20" opacity=".55"/><circle cx="12" cy="12" r="7"/>',
+    fitgrow: '<path d="M2 4h20M2 20h20" opacity=".55"/><circle cx="12" cy="12" r="7"/>',
     air: '<path d="M4 5h16M4 12h16M4 19h16"/>', normal: '<path d="M4 6h16M4 10h16M4 14h16M4 18h16"/>',
     dense: '<path d="M4 5h16M4 8h16M4 11h16M4 14h16M4 17h16M4 20h16"/>' };
   function labIco(n, size, col){ return '<svg viewBox="0 0 24 24" width="' + (size || 14) + '" height="' + (size || 14) + '" fill="none" stroke="' + (col || "currentColor") + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (LABICO[n] || "") + '</svg>'; }
@@ -159,8 +161,10 @@
   /* one chip primitive for the whole bar — inline-flex, centred, the icon a block so it can never
      ride above the text (the misalignment the operator caught was four different chip classes) */
   function chip(opt){ var k = opt.key, st = window.elStyle(k), words = wantText(k);
-    var c = el("span", { class: "hel sh-" + st.shape + (opt.cls ? " " + opt.cls : "") + (words ? "" : " mute") });
+    var c = el("span", { class: "hel sh-" + st.shape + " fit-" + st.fit + (opt.cls ? " " + opt.cls : "") + (words ? "" : " mute") });
     c.dataset.el = k;
+    c.style.setProperty("--gz", st.size + "px");          /* the glyph */
+    c.style.setProperty("--d", (st.size + 14) + "px");    /* the disc it sits in */
     if (opt.iconNode) c.append(opt.iconNode); else if (opt.icon) c.insertAdjacentHTML("beforeend", S.icon(opt.icon, st.size, opt.col || "currentColor"));
     if (opt.dot) c.insertAdjacentHTML("beforeend", '<i class="pdot" style="background:' + opt.dot + '"></i>');
     if (words && HEADCFG.mode === "label" && opt.label) c.append(el("span", { class: "hlbl" }, opt.label));
@@ -176,7 +180,9 @@
   /* THE DEFAULT IS THE OPERATOR'S OWN (pasted from the copy button, 2026-09-11):
      head bar · verbosity value · LEFT kind method name status risk · RIGHT source above ·
      off entity cluster kindword · styles kind(none) name(none,text on) above(round)
-     risk(round,text off) method(none) status(pill) source(none) kindword(rect)          */
+     risk(round,text off) method(none) status(pill) source(none) kindword(rect)
+     — with ONE change the operator asked for after seeing it: the kind glyph wears a DISC that
+     bleeds over the bar rather than growing it (their picture, 2026-09-11).                */
   var HEADCFG = window.HEADCFG = { mode: "value",
     off: { entity: 1, cluster: 1, kindword: 1 },
     left: ["kind", "method", "name", "status", "risk", "entity", "cluster", "kindword"],
@@ -184,7 +190,7 @@
     /* per element (operator 2026-09-11): does it spend words, and what container does it sit in.
        text  auto = follow the bar's verbosity · on = always · off = never (the glyph alone)
        shape none = no container at all (transparent) · square · rect · round · pill · circle · cut */
-    style: { kind: { text: "auto", shape: "none", size: 20 }, method: { text: "auto", shape: "none" },
+    style: { kind: { text: "auto", shape: "circle", size: 20, fit: "bleed" }, method: { text: "auto", shape: "none" },
              name: { text: "on", shape: "none" }, status: { text: "auto", shape: "pill" },
              risk: { text: "off", shape: "round" }, source: { text: "auto", shape: "none" },
              above: { text: "auto", shape: "round" }, kindword: { text: "auto", shape: "rect" } },
@@ -196,7 +202,9 @@
     round: "a softer 12px corner", pill: "fully rounded — reads as a badge, like the risk flag",
     circle: "a disc — only honest when the element is a glyph alone", cut: "one corner clipped — an angled, tactical edge" };
   window.elStyle = function(k){ var st = (HEADCFG.style[k] = HEADCFG.style[k] || { text: "auto", shape: "rect" });
-    if (st.size == null) st.size = 13; return st; };
+    if (st.size == null) st.size = 13;
+    if (st.fit == null) st.fit = "bleed";   /* bleed = the container may overflow the row without growing it (operator 2026-09-11) */
+    return st; };
   function wantText(k){ var t = window.elStyle(k).text;
     return t === "on" ? true : t === "off" ? false : HEADCFG.mode !== "icon"; }
   window.headOrder = function(side){ return HEADCFG[side].filter(function(k){ return !HEADCFG.off[k]; }); };
@@ -347,6 +355,12 @@
         body: "the glyph carries the meaning — this is how loud it is said. The element's own icon is drawn here at the size it would take." }));
       b.onclick = function(ev){ ev.stopPropagation(); st.size = z; drawHead(); drawBarCfg(); }; return b; });
     row("icon", sizeBtns);
+    var fitBtns = [["bleed", "fitbleed", "the container may overflow the row — the bar keeps its height and the margins never move"],
+                   ["grow", "fitgrow", "the container pushes the row taller — the bar grows to hold it"]].map(function(o){
+      var b = el("button", { class: "ib" + (st.fit === o[0] ? " on" : "") }); b.dataset.fit = o[0]; b.innerHTML = labIco(o[1], 15);
+      hoverBind(b, hcard({ title: o[0], sub: E0.word + " · when the container is bigger than the row", body: o[2] }));
+      b.onclick = function(ev){ ev.stopPropagation(); st.fit = o[0]; drawHead(); drawBarCfg(); }; return b; });
+    row("fit", fitBtns);
     box.append(ed); }
   drawHead(); drawBarCfg();
   COV.mark("HEAD", "head"); COV.mark("SOURCE", "head"); COV.mark("RISK", "head"); COV.mark("ABOVE", "head"); COV.mark("IDENTITY", "head");
@@ -390,7 +404,7 @@
     bench: function(){ var box = document.querySelector("#boxes .ib.on"), d = window.DENS;
       return "bench · box " + (box ? box.__label : "?") + " · density " + d + " · motion " + (CLOCK.on ? "playing" : "paused"); },
     head: function(){ var styled = Object.keys(HEADCFG.style).map(function(k){ var st = window.elStyle(k);
-        return k + "(" + st.shape + (st.text === "auto" ? "" : ",text " + st.text) + (st.size === 13 ? "" : ",icon " + st.size) + ")"; }).join(" ");
+        return k + "(" + st.shape + (st.text === "auto" ? "" : ",text " + st.text) + (st.size === 13 ? "" : ",icon " + st.size) + (st.fit === "bleed" ? "" : ",fit " + st.fit) + ")"; }).join(" ");
       return "head bar · verbosity " + HEADCFG.mode
       + " · LEFT " + (window.headOrder("left").join(" ") || "—")
       + " · RIGHT " + (window.headOrder("right").join(" ") || "—")

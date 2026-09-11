@@ -400,7 +400,15 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 .hel.sh-rect{ border-radius:7px; }
 .hel.sh-round{ border-radius:12px; }
 .hel.sh-pill{ border-radius:999px; padding-left:10px; padding-right:10px; }
-.hel.sh-circle{ border-radius:50%; width:30px; height:30px; padding:0; justify-content:center; }
+/* the disc is sized by ITS OWN glyph, and by default it BLEEDS: negative block margins keep the row
+   the height it would have had, so a bigger circle overflows the bar instead of moving the margins
+   (operator 2026-09-11). `fit-grow` opts back into pushing the row taller. */
+.hel.sh-circle{ border-radius:50%; width:var(--d,30px); height:var(--d,30px); padding:0; justify-content:center; flex:none; }
+/* the bleed pulls the container down to a 20px layout footprint — under any row content — so it can
+   never be the tallest thing in the bar and the margins stay exactly where they were */
+.hel.fit-bleed{ margin-block:calc((var(--d,20px) - 20px) / -2); }
+.hel.fit-grow{ margin-block:0; }
+.hel.sh-circle.fit-bleed{ margin-inline:2px; }
 .hel.sh-circle .hval, .hel.sh-circle .hlbl{ display:none; }   /* a disc is honest only as a glyph */
 .hel.sh-cut{ border-radius:0; clip-path:polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 0 100%); }
 .hel.sh-none{ background:none; border-color:transparent; padding-left:2px; padding-right:2px; }
@@ -419,3 +427,8 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 .hel.sh-none{ padding-top:3px; padding-bottom:3px; }
 .hel.sh-none:hover svg{ filter:brightness(1.4); }
 .elned .ib[data-size]{ min-width:34px; }
+
+/* a circle drawn around a bare glyph reads as a MEDALLION — give it the station's own ring weight */
+.hel.sh-circle{ border-color:color-mix(in srgb, currentColor 34%, var(--line)); background:var(--chip-bg); }
+.hel.sh-circle:hover{ border-color:currentColor; }
+.elned .ib[data-fit]{ min-width:34px; }
