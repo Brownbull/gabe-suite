@@ -37,6 +37,7 @@ import _center_data as D  # noqa: E402
 import _a3_board
 import _a3_arms
 import _a3_code
+import _a3_stacks_next
 import _a3_codetab
 import _a3_graft  # noqa: E402  (the graft-wiring arm — topology provider)
 import _a3_graph  # noqa: E402  (the C4 codebase-graph derivation)
@@ -2103,7 +2104,7 @@ def main() -> int:
         amap["task_roots"] = _a3_code.parse_task_roots(REPO_ROOT)
     # class 15: server actions as endpoint-equivalent roots (a Next.js app has no @router).
     # Emitted non-empty-only, like tasks — absent on a repo with no "use server" module.
-    _acts = _a3_code.parse_action_roots(REPO_ROOT)
+    _acts = _a3_stacks_next.parse_action_roots(REPO_ROOT)
     if _acts:
         amap["action_roots"] = _acts
     _boot = _a3_code.parse_boot_roots(REPO_ROOT)

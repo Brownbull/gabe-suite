@@ -74,7 +74,7 @@ REGISTER: tuple[Stack, ...] = (
     Stack("py_census", "py", "_a3_code",
           ("census",),
           ("element_census", "file_census", "route_census", "unparseable", "flags")),
-    Stack("ts_next", "ts", "_a3_code",           # → _a3_stacks_next in step 6
+    Stack("ts_next", "ts", "_a3_stacks_next",
           ("request_roots",),
           ("action_roots",)),
     Stack("ts_fetch", "ts", "_a3_web",

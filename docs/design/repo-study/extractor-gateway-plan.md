@@ -256,3 +256,27 @@ assertion vacuous with nothing to catch it. `arch-graph` and `orm-access` gained
 (one line each, both still green); `levels`, `register`, `entity-drift`, `gabe-kdbp`,
 `gabe-universe`, `pulse-scripts`, `sim`, `workflow-drift` still cannot be re-proven. Not blocking —
 recorded with a trigger: fix a battery's hook the next time its subject is edited.
+
+## Step 6 — the Next.js arm leaves the Python scanner (`this commit`)
+
+`parse_action_roots` + its four constants move to `_a3_stacks_next.py` (76 lines). They never
+belonged in `_a3_code`: that module is the PYTHON scanner — 233 `ast.` calls over `.py` — and this
+is a TypeScript regex parser appended to it because that is where `parse_task_roots` happened to
+live. The register row for `ts_next` now names the real module.
+
+`_a3_code.py` is **4,390 → 3,007** across steps 1 and 6, and reads **zero** TypeScript.
+
+`_a3_code.__getattr__` tombstones both moves, so an old caller gets the function rather than an
+AttributeError and the modules never import each other. The battery pins the law that motivated the
+carve: `grep -cE '\.tsx?"|use server|rglob' _a3_code.py` must be **0**.
+
+A defect in my own excision, caught by the battery: the `__getattr__` shim sat physically BETWEEN
+the ACTION block and the arms surface, so slicing from one to the other deleted it — taking
+`build_code_tab`'s re-export with it. Restored with both tombstones and pinned by an identity
+assertion.
+
+Gate: the ONLY movement is `arms.concepts.request_roots.by: ['_a3_code'] → ['_a3_code',
+'_a3_stacks_next']` — the census naming the module that now does the work. Every other byte of
+every other file identical; census identical on all 25 measures, all three repos.
+`tests/action-roots` 18/18, **5 mutants killed** (skip-test · first-statement · no-directive ·
+ts-creeps-back · tombstone-gone) · suite-doctor CLEAN.

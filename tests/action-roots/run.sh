@@ -24,9 +24,9 @@ roots() {  # $1 = tree
   python3 - "$GEN" "$1" <<'PY'
 import sys, pathlib
 sys.path.insert(0, sys.argv[1])
-import _a3_code
-_a3_code._ACTION_ROOTS = None                      # the module caches; each fixture is a fresh read
-for r in _a3_code.parse_action_roots(pathlib.Path(sys.argv[2])):
+import _a3_stacks_next as _next
+_next._ACTION_ROOTS = None                      # the module caches; each fixture is a fresh read
+for r in _next.parse_action_roots(pathlib.Path(sys.argv[2])):
     print(f"{r['method']}|{r['path']}|{r['file']}|{r['doc']}|{r['resp']}|{sorted(r.keys())}")
 PY
 }
@@ -92,6 +92,22 @@ eq "C · directive after an import is NOT a server module" "$(roots "$C" | grep 
 # ── FIXTURE D · an empty tree never throws ───────────────────────────────────
 D="$T/d"; mkdir -p "$D/src"
 eq "D · empty tree → []" "$(roots "$D" | grep -c .)" "0"
+
+# ── the LAW this arm was carved out to hold ──────────────────────────────────
+# _a3_code is the PYTHON scanner (233 ast. calls over .py). A TypeScript parser was appended to it
+# once, because that is where parse_task_roots happened to live; one more foreign stack landing the
+# same way is the mess the register exists to prevent. Fail loudly if TS creeps back in.
+TSHITS=$(grep -cE '\.tsx?"|use server|rglob\("\*\.tsx?"\)' "$GEN/_a3_code.py" 2>/dev/null; true)
+TSHITS=${TSHITS:-0}
+eq "the Python scanner reads no TypeScript" "$TSHITS" "0"
+grep -q "parse_action_roots" "$GEN/_a3_stacks_next.py" && ok || bad "the Next arm lost its parser"
+# an old caller gets a POINTER, not an AttributeError
+if (cd "$GEN" && python3 -c "
+import _a3_code, _a3_stacks_next
+assert _a3_code.parse_action_roots is _a3_stacks_next.parse_action_roots
+import _a3_stacks as S
+assert any(r.module == '_a3_stacks_next' for r in S.REGISTER), 'register still names the old module'
+" ) >/dev/null 2>&1; then ok; else bad "the tombstone re-export or the register row is wrong"; fi
 
 echo "action-roots: $pass passed, $fail failed"
 [ "$fail" = 0 ] || exit 1
