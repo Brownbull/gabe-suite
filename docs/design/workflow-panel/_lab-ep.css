@@ -471,3 +471,11 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 #hover .cpend{ margin-top:10px; padding-top:8px; border-top:1px solid var(--line); }
 #hover .cpend .cpplain{ font:500 12.5px/1.5 var(--font-ui); color:var(--ink); }
 #hover .cpend .cpclarify{ font:400 12px/1.45 var(--font-ui); color:var(--muted); margin-top:5px; }
+/* the DOT language (operator 2026-09-11): a FILLED dot is the factor that fired, hollow is the rest */
+#hover .fct .fctn .fdot{ display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:7px;
+  border:1.5px solid currentColor; background:transparent; vertical-align:middle; }
+#hover .fct.fire .fctn .fdot{ background:var(--red); border-color:var(--red); }
+#hover .fct.ok .fctn .fdot{ background:var(--ok); border-color:var(--ok); }
+#hover .fct.ok{ border-left-color:var(--ok); background:color-mix(in srgb, var(--ok) 7%, transparent); border-radius:0 6px 6px 0; }
+#hover .fct.ok .fctn, #hover .fct.ok .fctv{ color:var(--ok); }
+#hover .fct.quiet .fctn .fdot{ border-color:var(--muted); }

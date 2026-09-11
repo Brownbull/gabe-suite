@@ -175,7 +175,7 @@
     var h = '<div class="fctl"><div class="fctlh">' + (label || "what decides it") + '</div>';
     fs.forEach(function(f){
       h += '<div class="fct ' + (f.state || "info") + '">'
-        + '<div class="fcthd"><span class="fctn">' + (f.state === "fire" ? "▲ " : f.state === "quiet" ? "· " : "") + f.name + '</span>'
+        + '<div class="fcthd"><span class="fctn"><i class="fdot"></i>' + f.name + '</span>'
         + (f.value != null ? '<span class="fctv">' + f.value + '</span>' : "") + '</div>'
         + (f.rule ? '<div class="fctrule">' + f.rule + '</div>' : "")
         + (f.note ? '<div class="fctnote">' + f.note + '</div>' : "") + '</div>'; });
@@ -311,31 +311,28 @@
     { key: "status", word: "status", note: "the success code the route decorator declares (status_code=) — a promise the handler makes, not a measurement",
       build: function(){
         /* HTTP semantics (RFC 9110) — reference, not feed data: the meanings a reader should not have to look up */
-        var HTTPM = { "200": "OK — the work is done, the body is the result", "201": "Created — a new row exists; the body or Location names it",
-          "202": "Accepted — taken, not finished; something continues after the answer", "204": "No Content — done, nothing to send back",
-          "400": "Bad Request — malformed before any rule is checked", "401": "Unauthorized — no identity, or the token failed",
-          "403": "Forbidden — identity known, not allowed", "404": "Not Found — no such row, or not yours to see",
-          "409": "Conflict — the state forbids it right now (already done, or a race)", "422": "Unprocessable — the shape parsed, a field is invalid",
-          "429": "Too Many Requests — the rate limit refused it", "500": "Server Error — the handler broke" };
+        var HTTPM = { "200": "the work is done, the body is the result", "201": "a new row exists; the body or Location names it",
+          "202": "taken, not finished — something continues after the answer", "204": "done, and there is nothing to send back",
+          "400": "malformed before any rule is checked", "401": "no identity, or the token failed",
+          "403": "identity known, not allowed", "404": "no such row, or not yours to see",
+          "409": "the state forbids it right now — already done, or a race", "422": "the shape parsed, a field is invalid",
+          "429": "the rate limit refused it", "500": "the handler broke" };
         var X = (F.context || {}).status || {}, peers = X.same_method || {}, mine = String(I.status);
-        var peerStr = Object.keys(peers).map(function(c){ return c + " ×" + peers[c]; }).join(" · ");
-        var others = Object.keys(peers).filter(function(c){ return c !== mine; });
-        var creates = F.data.writes.length > 0, has201 = !!peers["201"], ask = creates && mine === "200" && has201;
+        var creates = F.data.writes.length > 0, ask = creates && mine === "200" && !!peers["201"];
         var codes = Object.keys(F.tests.by_status).filter(function(c){ return /^\d/.test(c); }).sort();
         if (codes.indexOf(mine) < 0) codes.unshift(mine);
-        var trows = codes.map(function(c){ var n = (F.tests.by_status[c] || []).length;
-          return { mark: c === mine ? "ok" : null,
-                   cells: [c, (c === mine ? "<b>SUCCESS</b> · " : "") + (HTTPM[c] || "—"), n ? n + " case" + (n === 1 ? "" : "s") : "—"] }; });
+        var factors = codes.map(function(c){ var n = (F.tests.by_status[c] || []).length;
+          return { state: c === mine ? "ok" : "quiet", name: c, value: n ? n + " case" + (n === 1 ? "" : "s") : "no case",
+                   rule: (c === mine ? "SUCCESS — " : "") + (HTTPM[c] || "—"),
+                   note: c === mine ? "the code this door DECLARES on its decorator; the others are the ways it refuses." : null }; });
         return chip({ key: "status", icon: "info", label: "declares", value: I.status + (I.status_name ? " " + I.status_name : ""), col: S.OPC.read, cls: "statchip",
-          card: hcard({ title: "declares " + I.status, icon: "info", color: S.OPC.read, plainKey: "status", sub: "the SUCCESS code · status_code= on the route decorator",
-            rows: [["read from", "the decorator, by the scanner — never observed at runtime"],
-                   ["written as", I.status_name ? "a constant (" + I.status_name + ")" : "a bare number", null, "inline"]],
-            table: { grid: "34px 1fr auto", head: ["code", "what it means", "cases"], rows: trows },
-            rows2: [["no code in the name", (F.tests.by_status["no code in name"] || []).length + " of " + F.tests.cases.length + " cases — journeys and round-trips, not status assertions"]],
-            note: (ask ? "Worth asking: this door WRITES " + F.data.writes.length + " tables and declares " + mine + ", while " + peers["201"] + " of its " + I.method + " peers declare 201 — a create, or an update? · "
-                       : "") + "how the whole feed declares its codes lives one level up, on the ↑ chips.",
-            plainKey: "status",
-            clarify: "The code is a PROMISE read from the decorator, never observed. The cases around it prove the refusals." }) }); } },
+          card: hcard({ title: "declares", value: I.status, icon: "info", color: S.OPC.read,
+            condition: "the code the door promises when the work succeeds — read from the decorator, never observed",
+            factors: factors, factorLabel: "every code its cases assert · ● is the one it declares",
+            rows: [["written as", I.status_name ? "a constant (" + I.status_name + ")" : "a bare number"],
+                   ["untyped cases", (F.tests.by_status["no code in name"] || []).length + " of " + F.tests.cases.length + " name no code"]],
+            note: ask ? "Worth asking: this door writes " + F.data.writes.length + " tables and declares " + mine + ", while " + peers["201"] + " of its " + I.method + " peers declare 201 — a create, or an update?" : null,
+            plainKey: "status" }) }); } },
     { key: "source", word: "source", note: "the file and line the handler is defined at",
       build: function(){ return chip({ key: "source", icon: "file", label: "source", value: I.file + ":" + I.flines, cls: "srcchip",
         card: hcard({ title: I.file, icon: "file", plainKey: "source", sub: "line " + I.flines,
@@ -352,7 +349,7 @@
           var factors = [
             { state: I.risk.large ? "fire" : "quiet", name: "call mass", value: "behind " + I.risk.behind + " · fan-in " + I.risk.fanin,
               rule: "fires at behind ≥ 15 or fan-in ≥ 15",
-              note: "behind = every function reachable from the handler (a BFS floor, so the true number can only be higher). fan-in = how many elements depend on this door." },
+              note: "behind = every function reachable from the handler · fan-in = how many elements depend on this door." },
             { state: I.risk.god ? "fire" : "quiet", name: "handler size", value: (R.handler_lines != null ? R.handler_lines + " lines" : "not measured"),
               rule: "fires at ≥ " + (R.god_lines || 50) + " lines",
               note: "the handler's own body only — the code behind it is the factor above." },
@@ -361,9 +358,8 @@
               note: "a case counts when its name carries this door; the web corpus reaches it by file and is counted separately." } ];
           return hcard({ title: title, value: value, icon: "burst", color: "var(--red)",
             condition: "a SIZE signal — not a fault, and not a measure of quality",
-            factors: factors, factorLabel: "the three rules · ▲ is the one that fired",
-            rows: [["what changes", "editing this door touches " + I.risk.behind + " functions"]],
-            note: "the comparison against the other " + R.of + " doors — rank, spread, the heaviest — is not about this one. It lives one level up, on the ↑ cluster · entity · everything chips.",
+            factors: factors, factorLabel: "the three rules · ● is the one that fired",
+            rows: [["impact", "editing this door touches " + I.risk.behind + " functions"]],
             plainKey: "risk",
             clarify: "Walk the chain in FUNCTIONS before editing it; read TESTS before trusting it. The three rules are independent — size, handler length and coverage each answer a different question." }); }
         if (I.risk.large) w.append(chip({ key: "risk", icon: "burst", cls: "flagchip warn", label: "risk", value: I.risk.conflict || "conflict", card: riskCard("large") }));
@@ -377,11 +373,14 @@
             /* the ladder is NAVIGATION, not a value: its cluster and entity are already spelled out to the
                left, so it stays ICONS unless the bar is in label mode (the redundancy the operator caught) */
             cls: "upchip", label: a.kind, value: HEADCFG.mode === "label" ? (a.kind === "everything" ? "everything" : a.label) : null,
-            card: hcard({ title: a.kind === "everything" ? "everything" : a.label, icon: a.kind === "cluster" ? "layers" : isEnt ? "entity" : "globe", color: isEnt ? ec : null,
-              plainKey: "above", sub: "one level up — click will transport", rows: [["from here", "the door"], ["to", a.kind], ["carries", a.kind === "everything" ? "the universe" : a.label]],
-              body: a.kind === "cluster" ? "the sub-group this door sits in — this chip is also where the CLUSTER is read, now that it has no chip of its own."
-                : isEnt ? "the entity that claims it — this chip is also where the ENTITY is read, and its colour is the entity's own."
-                : "the whole universe — every entity at once." }) })); });
+            card: hcard({ title: a.kind === "everything" ? "everything" : a.label, value: "one level up",
+              icon: a.kind === "cluster" ? "layers" : isEnt ? "entity" : "globe", color: isEnt ? ec : null,
+              condition: "click to leave this door and stand at the " + a.kind + " — where the comparisons against the rest of the feed live",
+              rows: [["from", "this door"], ["to", a.kind === "everything" ? "the whole universe" : a.label]],
+              plainKey: "above",
+              clarify: a.kind === "cluster" ? "this chip is also where the CLUSTER is read, now that it has no chip of its own."
+                : isEnt ? "this chip is also where the ENTITY is read, and its colour is the entity's own."
+                : "every entity at once." }) })); });
         return w; } }   /* no trailing arrow: the three icons ARE the ladder (operator 2026-09-11) */
   ];
   var BYKEY = {}; HEADEL.forEach(function(e){ BYKEY[e.key] = e; });

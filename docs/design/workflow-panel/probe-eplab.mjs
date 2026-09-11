@@ -129,14 +129,20 @@ ok(scroll.w === 'thin', 'scrollbars are the station\'s narrow themed ones', JSON
 // ── the two cards the operator asked to be legible: status marks the SUCCESS case and explains every
 //    code; risk shows all THREE rules with the firing one marked; long values stack onto their own line
 { const sc = await p.$('#headstrip .hel[data-el="status"]'); await sc.hover(); await p.waitForTimeout(160);
-  const c = await p.$eval('#hover', e => ({ txt: e.innerText, rows: e.querySelectorAll('.cptbl .ctr.first').length,
-    ok: [...e.querySelectorAll('.cptbl .ctr.mark-ok.first')].map(x => x.textContent), stacked: e.querySelectorAll('.cprow.stack').length,
+  const c = await p.$eval('#hover', e => ({ txt: e.innerText,
+    title: (e.querySelector('.cphd b') || {}).textContent, value: (e.querySelector('.cphv') || {}).textContent,
+    states: [...e.querySelectorAll('.fct')].map(x => x.className.replace('fct ', '')),
+    names: [...e.querySelectorAll('.fct .fctn')].map(x => x.textContent.trim()),
+    rules: [...e.querySelectorAll('.fct .fctrule')].map(x => x.textContent.trim()),
+    dots: e.querySelectorAll('.fct .fdot').length,
     w: Math.round(e.getBoundingClientRect().width) }));
-  ok(c.ok.length === 1 && c.ok[0].trim() === String(F.identity.status), 'the status card MARKS the declared code as the success case', JSON.stringify(c.ok));
-  ok(/SUCCESS/.test(c.txt), 'and says SUCCESS on that row');
-  ok(c.rows >= 5, 'every code the cases assert has its own row in the mini table', String(c.rows));
-  for (const m of ['Conflict', 'Unprocessable', 'Not Found', 'Bad Request']) ok(c.txt.includes(m), 'the table explains ' + m);
-  ok(c.stacked >= 1, 'a long value stacks onto its own full-width line', String(c.stacked));
+  ok(/declares/.test(c.title) && c.value.trim() === String(F.identity.status), 'the status card leads with the condition and the code it declares', c.title + ' · ' + c.value);
+  ok(c.states.filter(s => s === 'ok').length === 1, 'exactly one code is marked as the declared SUCCESS', c.states.join(' | '));
+  ok(c.names[0].trim() === String(F.identity.status), 'and it is the declared one', c.names.join(','));
+  ok(c.states.length >= 5, 'every code the cases assert gets its own block', String(c.states.length));
+  ok(c.dots === c.states.length, 'each block carries a dot — filled for the declared one, hollow for the rest', c.dots + '/' + c.states.length);
+  for (const m of ['the state forbids it', 'a field is invalid', 'no such row', 'malformed']) ok(c.txt.includes(m), 'the card explains "' + m + '"');
+  ok(/SUCCESS/.test(c.txt), 'the declared code says SUCCESS');
   ok(c.w <= 364, 'the card keeps a readable width', String(c.w)); }
 { const rc = await p.$('#headstrip .hel[data-el="risk"]'); await rc.hover(); await p.waitForTimeout(160);
   const c = await p.$eval('#hover', e => ({ txt: e.innerText,
@@ -154,13 +160,17 @@ ok(scroll.w === 'thin', 'scrollbars are the station\'s narrow themed ones', JSON
   ok(c.cond, 'and says in one line what the condition IS');
   // 2 · the factors are a LIST, all three, the firing one lit and the quiet ones still legible
   ok(c.factors.length === 3, 'all THREE rules are listed, not just the one that fired', c.factors.join(' | '));
+  ok(await p.$eval('#hover .fct.fire .fdot', e => { const c = getComputedStyle(e); return c.backgroundColor !== 'rgba(0, 0, 0, 0)' && c.borderRadius.startsWith('50'); }), 'the firing factor is a FILLED round dot, not a triangle');
+  ok(await p.$eval('#hover .fct.quiet .fdot', e => getComputedStyle(e).backgroundColor === 'rgba(0, 0, 0, 0)'), 'a quiet factor is a HOLLOW dot');
   ok(c.factors.filter(f => f === 'fire').length === 1 && c.factors.filter(f => f === 'quiet').length === 2, 'one fires, two stay quiet', c.factors.join(' | '));
   ok(c.rules.length === 3 && /≥ 15/.test(c.rules[0]) && /≥ 50/.test(c.rules[1]) && /no case/.test(c.rules[2]), 'each factor states its own threshold', c.rules.join(' | '));
   ok(c.notes === 3, 'each factor carries a quiet NOTE on how it is calculated', String(c.notes));
   ok(!e0(c.quietInk), 'a rule that did not fire is still legible — not faded into the border colour', c.quietInk.join(' '));
   // 3 · the feed-wide comparison is GONE from this card (it is not about this door)
-  ok(!/rank \d+ of \d+/.test(c.txt) && !/BOOT lifespan/.test(c.txt) && !/median \d/.test(c.txt), 'the feed-wide comparison has left this card — it belongs one level up', c.txt.slice(0, 90));
-  ok(/one level up/.test(c.txt), 'and the card says where it went');
+  ok(!/rank \d+ of \d+/.test(c.txt) && !/BOOT lifespan/.test(c.txt) && !/median \d/.test(c.txt) && !/the other \d+ doors/.test(c.txt),
+     'no feed-wide comparison on this card — it is not about this door', c.txt.slice(0, 90));
+  ok(/impact/i.test(c.txt) && new RegExp('touches ' + F.functions.behind.fns + ' functions').test(c.txt), 'the card states the IMPACT in this door\'s own terms', c.txt.slice(0, 120));
+  ok(!/BFS/.test(c.txt), 'the call-mass note dropped the BFS aside');
   // 4 · the plain line is LAST, after a separator
   ok(c.plainLast, 'the plain line comes LAST, after a separator'); }
 function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m && +m[0] < 90 && +m[1] < 100 && +m[2] < 120; }); }
