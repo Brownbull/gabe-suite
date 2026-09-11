@@ -97,3 +97,78 @@ What stays broken after step 8, stated plainly: the graft bare-name false resolu
 | Stack Gateway (rejected; `unsupported_language` + root scoping grafted) | 6.5 | 4.5 | 5.0 | 16.0 |
 
 The tradeoff being accepted: **the winner scores 3.5 on the third-stack lens.** When Django arrives, its implementer edits the shared 2,955-line `_a3_code.py` — `_mounts_for` still fused to `include_router`, `parse_models:644` still hard-gated on `Mapped[`. That is the bill for step 9, and it is the bill this plan deliberately defers rather than pre-pays on a forecast.
+---
+
+# Build log
+
+## Step 1 — `build_code_tab` leaves `_a3_code` (`0b45682`)
+
+Pure move. `_a3_code.py` 4,390 → 2,979; `_a3_codetab.py` holds the 1,422-line renderer and imports
+the 50 names it needs back. Two callers repointed; `_a3_code` keeps a lazy PEP-562 re-export so
+`_a3_code.build_code_tab` still resolves without a circular import. **Proven inert**: the pre-lift
+tree checked against the blessed baselines — 82/80/75 files byte-identical, census identical.
+
+Found on the way, NOT caused by the lift: `_a3_render._row_mark` stripped tags with `""` before
+scrubbing volatile time, so `31d ago<br><small>node…</small>` collapsed to `31d agonode…` and
+`\bago\b` could not match. The age rode into the row digest and every day-tick re-badged an
+unchanged row NEW. The scrub now runs on the RAW cell. `texts` is left alone deliberately — it is
+the KEY material, and rewriting it re-keys 3,988 stable rows to fix 14 volatile ones. Measured:
+0 keys churned, 14 of 7,422 hashes corrected. `tests/center` +4 assertions, 2 mutants killed.
+The battery already HAD a relative-time case; it passed throughout because its cells were bare
+text with no adjacent markup to glue to.
+
+## Step 2 — the arms register, inert (`ba1c86a`)
+
+`_a3_stacks.py`: 10 rows, 12 concepts, 7 rows on `_a3_code`. `_a3_code` gains `CONCEPTS`, `probe()`,
+`reset_caches()`. Nothing calls probe — 82/80/75 byte-identical. The register states the overfit
+out loud: **tables · access · gates · mounts · queues · providers · schemas resolve to `py` only.**
+
+Three review catches:
+1. The plan said `stacks/` PACKAGE. `bootstrap_center.sh:38` and `propagate.sh:25` copy generators
+   with a flat `*.py *.mjs *.sh` glob — a subdirectory ships nowhere, and every adopting project's
+   build would die on `import stacks` the day the census called it. Flat `_a3_stacks.py` instead.
+2. `probe()` scanned the center's OWN machinery. An adopting repo carries the generators under
+   `scripts/`, and those are full of `APIRouter`/`Depends(`/`table=True` because they are what LOOKS
+   for them — so keypro-front, a Next.js app with zero Python, probed positive for FastAPI on all
+   nine concepts. The census's own instrument telling the census's own lie.
+3. The cannot-select proof passed as a SKIP, then VACUOUSLY, then while a real SELECT mutant
+   survived (a Python-only fixture makes the gated producer empty either way). Fixture is now
+   polyglot; the mutant is caught.
+
+## Step 3 — the census (`this commit`) · FIRST VISIBLE VALUE
+
+`_a3_arms.py` (228 lines) writes `archmap["arms"]`, archmap version 3 → 4. Five state words:
+`present` · `empty` (the honest zero) · `unmatched` · `unsupported_language` · `contested`.
+SENTINELS run only for a concept that produced zero, in ONE bounded pass (merged from two; 11.7s →
+7.1s on gustify). IMPLIES catches an arm whose dependent silently produced nothing.
+
+**Gate, exactly as the plan specified:** `c4-graph.json` · `levels.json` · both `.js` twins
+BYTE-IDENTICAL; archmap equal after stripping `.arms` and restoring version 3; 81 of 82 files
+untouched.
+
+What it now says, where a bare zero used to sit:
+
+| repo | reading |
+|---|---|
+| gustify · gastify | 8/9 present; `queues: empty — no Celery/ARQ/Taskiq task or enqueue site in any scanned .py` |
+| tier3 | `schemas: unmatched — the arm's own idiom appears in 366 of 3,225 scanned file(s), yet it extracted nothing — an EMPTY arm, not a clean one` |
+| keypro-front | `tables: unmatched — 2 file(s) show this concept as raw SQL DDL … no registered arm reads that idiom`; `access: unmatched — 5 file(s) …`; six concepts `unsupported_language — arms cover ['py']; this tree is ['ts']` |
+
+The tier3 line is a real finding the map had been hiding as a zero.
+
+Five counting/scoping defects found by review before this shipped:
+1. `gates` counted only `app_middleware`, reading **0** on gustify while **81** endpoint gates were
+   drawn — a false `empty` on a plainly present concept, told by the file built to kill false zeros.
+2. `file_census.claimed` is an **int** on this pipeline, not a roster.
+3. `call_graph`/`fetch_bridge`/`fe_structure` already emit their own `{present, reason}` into
+   `c4-graph.json` stats. Measuring them here would put one truth in two files and invite drift —
+   the block POINTS at them (`ELSEWHERE`) instead.
+4. `produced == 0` while the arm's OWN idiom is present is a BROKEN arm, not a clean zero. Without
+   this branch tier3's schemas rendered as a tidy `empty`.
+5. `unsupported_language` must never be claimed from a CAPPED walk — a partial language census
+   would be a confident wrong answer.
+
+`tests/arms` 4/4, **6 mutants killed** (no-sentinel · no-broken-arm · no-unsupported · cap-blind ·
+measure-c4-twice · register-selects). The cannot-select test strips the arms block before
+comparing — the block is commentary that is SUPPOSED to reflect the probes; comparing it would
+assert the census does not work.

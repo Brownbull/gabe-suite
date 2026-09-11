@@ -35,6 +35,7 @@ from types import SimpleNamespace
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _center_data as D  # noqa: E402
 import _a3_board
+import _a3_arms
 import _a3_code
 import _a3_codetab
 import _a3_graft  # noqa: E402  (the graft-wiring arm — topology provider)
@@ -2019,7 +2020,8 @@ def main() -> int:
     # version 2 (2026-08-27): the archmap schema now carries the route/file census. The census
     # keys are non-empty-only (P5), so their ABSENCE cannot alone tell "full coverage" from "an
     # archmap a pre-census build wrote" — pulse S13 reads this version to make that call honestly.
-    amap = {"version": 3, "head": HEAD_SHA, "generated": STAMP,   # 3 (2026-09-06): + element_census (entity-models Phase 0)
+    amap = {"version": 4, "head": HEAD_SHA, "generated": STAMP,   # 4 (2026-09-11): + arms (the census's state word per concept)
+            # 3 (2026-09-06): + element_census (entity-models Phase 0)
             "coverage": ctx.flow_coverage,
             "model_insight": _a3_code.insight_serial(REPO_ROOT),
             "test_insight": _a3_tests.test_insight(REPO_ROOT),
@@ -2118,6 +2120,19 @@ def main() -> int:
         by_model=amap["test_insight"].get("by_model", {}),
         model_insight=amap["model_insight"],
         proofs=D.load_guard_proofs())
+    # THE ARMS CENSUS (extractor-gateway plan, step 3) — one state word per concept, so a zero can
+    # say WHICH kind of zero it is: an app that has none, an arm that ran and extracted nothing, or
+    # an idiom nobody wrote a detector for. Report-never-gate: it reads what the producers above
+    # already wrote and changes none of it. A failure here costs the block, never the build.
+    try:
+        amap["arms"] = _a3_arms.census(amap, REPO_ROOT)
+        _ast8 = amap["arms"]["concepts"]
+        _nq = [c for c, r in _ast8.items() if r["state"] != "present"]
+        print(f"    arms census — {len(_ast8) - len(_nq)}/{len(_ast8)} concept(s) present"
+              + (f" · not present: {', '.join(_nq)}" if _nq else ""))
+    except Exception as _ae:  # noqa: BLE001
+        print(f"    ⚠ arms census SKIPPED (the map is unaffected): {_ae}")
+
     (CENTER_OUT / "archmap.json").write_text(
         # sort_keys: without it the archmap re-orders on every regen and a review
         # diff carries ~1,750 lines of pure churn (gustify #150) — the one

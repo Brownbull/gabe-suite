@@ -101,7 +101,87 @@ print("ok")
 PY
 ) >/dev/null 2>&1; then ok; else bad "probe: honest-empty · skip roster · cap · never raises"; fi
 
-# ── 3 · THE LOAD-BEARING ONE: the register cannot select ─────────────────────
+# ── 3 · the census: every state word, on a tree built to earn it ─────────────
+mkdir -p "$T/c/py" "$T/c/ts"
+printf 'from fastapi import APIRouter\nrouter = APIRouter()\n' > "$T/c/py/api.py"
+printf 'const sql = "CREATE TABLE users (id int)";\nexport const x = sql;\n' > "$T/c/ts/schema.ts"
+printf 'export const y = 1;\n' > "$T/c/ts/other.ts"   # a SECOND file, so a cap of 1 can actually truncate
+if (cd "$GEN" && python3 - "$T" <<'CENSUSPY'
+import sys, pathlib
+import _a3_arms as A
+import _a3_code as C
+T = pathlib.Path(sys.argv[1])
+
+def ents(**kw): return {"entities": {"e": {"endpoints": [], "models": [], "schemas": [], **kw}}}
+
+# PRESENT — produced records, whatever the probe thinks
+C.reset_caches()
+o = A.census({"entities": {"e": {"endpoints": [{"method": "GET", "path": "/x"}],
+                                 "models": [], "schemas": []}}}, T / "c" / "py")
+assert o["concepts"]["request_roots"]["state"] == "present", o["concepts"]["request_roots"]
+
+# UNMATCHED via SENTINEL — the concept is plainly in the tree, in an idiom no arm reads.
+# This is the keypro state: CREATE TABLE inside a string literal, 0 tables drawn.
+C.reset_caches()
+o = A.census(ents(), T / "c" / "ts")
+t = o["concepts"]["tables"]
+assert t["state"] == "unmatched", t
+assert t["sentinel"]["hits"] == 1 and t["sentinel"]["files"] == ["schema.ts"], t
+assert "no registered arm reads that idiom" in t["reason"], t
+
+# UNSUPPORTED_LANGUAGE — arms cover py, the tree is ts, so nothing COULD be read
+C.reset_caches()
+o = A.census(ents(), T / "c" / "ts")
+assert o["concepts"]["mounts"]["state"] == "unsupported_language", o["concepts"]["mounts"]
+assert "nothing here could be read" in o["concepts"]["mounts"]["reason"]
+
+# EMPTY — the honest zero: the arm ran over real py, its idiom is absent, no sentinel
+C.reset_caches()
+o = A.census(ents(), T / "c" / "py")
+q = o["concepts"]["queues"]
+assert q["state"] == "empty", q
+assert q["reason"], "even an honest zero states what it looked for"
+
+# UNMATCHED via a BROKEN ARM — the arm's own idiom is right there and it produced nothing.
+# tier3 reads pydantic in 366 files and emits 0 schemas; that must not render as a clean zero.
+C.reset_caches()
+(T / "c" / "py" / "schema.py").write_text("from pydantic import BaseModel\nclass S(BaseModel): pass\n")
+o = A.census(ents(), T / "c" / "py")
+sc = o["concepts"]["schemas"]
+assert sc["state"] == "unmatched", sc
+assert "EMPTY arm, not a clean one" in sc["reason"], sc
+
+# IMPLIES — one arm works, its dependent silently does not
+C.reset_caches()
+o = A.census({"entities": {"e": {"endpoints": [], "schemas": [],
+                                 "models": [{"cls": "W", "table": "w"}]}}}, T / "c" / "py")
+assert any("access produced none" in n for n in o.get("implies", [])), o.get("implies")
+
+# the c4-side arms are POINTED AT, never duplicated — one truth, one place
+assert set(A.ELSEWHERE) == {"call_graph", "fetch_bridge", "fe_structure"}
+assert not (set(o["concepts"]) & set(A.ELSEWHERE)), "a c4 arm was measured twice"
+
+# a capped walk must never yield a confident unsupported_language
+C.reset_caches()
+old = A._SENTINEL_FILE_CAP
+try:
+    A._SENTINEL_FILE_CAP = 1
+    o = A.census(ents(), T / "c" / "ts")
+    assert o["capped"] is True, o
+    assert o["concepts"]["mounts"]["state"] != "unsupported_language", \
+        "a partial language census must not declare a concept unsupported"
+finally:
+    A._SENTINEL_FILE_CAP = old
+
+# a census failure must never raise into the build
+C.reset_caches()
+o = A.census({}, T / "nope")
+assert isinstance(o, dict) and o["concepts"], o
+print("ok")
+CENSUSPY
+) >/dev/null 2>&1; then ok; else bad "census: state words · sentinel · implies · cap safety"; fi
+
+# ── 4 · THE LOAD-BEARING ONE: the register cannot select ─────────────────────
 # Build a real project twice — once normally, once with EVERY probe forced to zero. If a probe
 # could ever gate a producer, the feeds would move. They must not.
 SRC="$REPO/tests/arms/_fixture"
@@ -130,9 +210,20 @@ PY
   if [ "$nA" -lt 10 ] || [ "$nB" -lt 10 ]; then
     bad "cannot-select proof is VACUOUS — builds emitted $nA / $nB files (see $A/.build.log)"
   fi
+  # archmap.json carries the arms block, which REFLECTS the probes by design — strip it, or this
+  # test would demand that the census have no effect, which is the opposite of the point. Every
+  # other byte of every other file must be untouched.
+  strip_arms() { python3 -c 'import json,sys
+d=json.load(open(sys.argv[1])); d.pop("arms", None)
+print(json.dumps(d, sort_keys=True, indent=1))' "$1" 2>/dev/null || cat "$1"; }
   d=0
   for f in $(cd "$A" && find . -type f | sort); do
-    diff -q <(sed -E "$NORM" "$A/$f") <(sed -E "$NORM" "$B/$f") >/dev/null 2>&1 || { d=$((d+1)); echo "    moved: $f"; }
+    if [ "$f" = "./archmap.json" ]; then
+      diff -q <(strip_arms "$A/$f" | sed -E "$NORM") <(strip_arms "$B/$f" | sed -E "$NORM") >/dev/null 2>&1 \
+        || { d=$((d+1)); echo "    moved: $f (outside the arms block)"; }
+    else
+      diff -q <(sed -E "$NORM" "$A/$f") <(sed -E "$NORM" "$B/$f") >/dev/null 2>&1 || { d=$((d+1)); echo "    moved: $f"; }
+    fi
   done
   if [ "$d" = 0 ]; then ok; echo "  cannot-select: $nA file(s) compared, 0 moved with every probe forced to zero"
   else bad "REGISTER SELECTED: $d of $nA file(s) moved when every probe was forced to zero"; fi

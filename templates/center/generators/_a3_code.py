@@ -2990,9 +2990,10 @@ def __getattr__(name: str):
 # the build's cost to answer a question a substring already answers, and a probe that can fail in a
 # way the producer cannot is a second source of truth.
 CONCEPTS: tuple[str, ...] = (
-    "request_roots", "mounts", "gates", "tables", "access", "queues", "providers",
-    "schemas", "census",
-)
+    "request_roots", "mounts", "gates", "tables", "access", "queues", "providers", "schemas",
+)   # `census` is deliberately absent: it has no IDIOM to look for — its marker would be ".py",
+    # which matches every file, so the probe reported "the idiom appears in 3225 of 3225 files"
+    # as a reason for finding nothing. A concept the arm either produced or did not.
 
 # concept → (idiom markers, why the arm found nothing when they are absent)
 _PROBE_IDIOMS: dict[str, tuple[tuple[str, ...], str]] = {
@@ -3009,7 +3010,6 @@ _PROBE_IDIOMS: dict[str, tuple[tuple[str, ...], str]] = {
     "providers":     (("openai", "litellm", "langchain", "redis", "boto3", "anthropic"),
                       "no known provider SDK imported in any scanned .py"),
     "schemas":       (("BaseModel", "pydantic"), "no pydantic model in any scanned .py"),
-    "census":        ((".py",), "no .py file under the scanned roots"),
 }
 # The center's OWN machinery is not the project. A repo that adopted the center carries the
 # generators under scripts/ and their output under docs/site/ — and those generators are full of
@@ -3050,8 +3050,6 @@ def probe(concept: str, repo: Path) -> dict:
             if any(s in rel for s in _PROBE_SKIP):
                 continue
             out["scanned"] += 1
-            if concept == "census":
-                continue
             try:
                 text = p.read_text(encoding="utf-8", errors="replace")
             except OSError:
@@ -3060,8 +3058,6 @@ def probe(concept: str, repo: Path) -> dict:
                 out["matched"] += 1
                 if len(out["evidence"]) < 5:
                     out["evidence"].append(rel.lstrip("/"))
-        if concept == "census":
-            out["matched"] = out["scanned"]
     except Exception as exc:  # noqa: BLE001 — a probe that raises would take the build with it
         out["reason"] = f"probe error: {exc}"
         return out

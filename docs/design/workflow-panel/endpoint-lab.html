@@ -168,6 +168,18 @@
     t.rows.forEach(function(r){ var cls = "ctr" + (r.mark ? " mark-" + r.mark : "");
       (r.cells || []).forEach(function(c, i){ h += '<span class="' + cls + (i === 0 ? " first" : "") + '">' + c + '</span>'; }); });
     return h + "</div>"; }
+  /* the FACTOR list (operator 2026-09-11) — a squeezed table made the rules that did NOT fire
+     unreadable, so every factor gets its own block: name · its value · the threshold · an optional
+     NOTE in the small quiet type when the calculation needs saying. */
+  function cpfactors(fs, label){ if (!fs || !fs.length) return "";
+    var h = '<div class="cpfl"><div class="cpflh">' + (label || "what decides it") + '</div>';
+    fs.forEach(function(f){
+      h += '<div class="cpfr ' + (f.state || "info") + '">'
+        + '<div class="cpfrt"><span class="cpfn">' + (f.state === "fire" ? "▲ " : f.state === "quiet" ? "· " : "") + f.name + '</span>'
+        + (f.value != null ? '<span class="cpfv">' + f.value + '</span>' : "") + '</div>'
+        + (f.rule ? '<div class="cpfrule">' + f.rule + '</div>' : "")
+        + (f.note ? '<div class="cpfnote">' + f.note + '</div>' : "") + '</div>'; });
+    return h + "</div>"; }
   /* ══ THE PLAIN LINE (operator 2026-09-11) ══════════════════════════════════════════════════
      Every card leads with one sentence in the legend reference's own voice — "what it is, in your
      words": written from the reader's side of the screen, present tense, one dash for the clause
@@ -188,14 +200,23 @@
     behind: "every function the door reaches — how much code one change touches",
     tests: "the cases that name this door — what proves it works",
     workflow: "a real user's path, named by a human — the order these doors are called in" });
-  function hcard(o){ var h = '<div class="cphd">' + (o.icon ? S.icon(o.icon, 15, o.color) : "") + '<b' + (o.color ? ' style="color:' + o.color + '"' : "") + '>' + o.title + '</b></div>';
-    var plain = o.plain || (o.plainKey && PLAIN[o.plainKey]);
-    if (plain) h += '<div class="cpplain">' + plain + '</div>';
+  function hcard(o){
+    var h = '<div class="cphd">' + (o.icon ? S.icon(o.icon, 15, o.color) : "")
+      + '<b' + (o.color ? ' style="color:' + o.color + '"' : "") + '>' + o.title + '</b>'
+      + (o.value ? '<span class="cphv"' + (o.color ? ' style="color:' + o.color + '"' : "") + '>' + o.value + '</span>' : "") + '</div>';
+    if (o.condition) h += '<div class="cpcond">' + o.condition + '</div>';
     if (o.sub) h += '<div class="cpsub">' + o.sub + '</div>';
+    h += cpfactors(o.factors, o.factorLabel);
     (o.rows || []).forEach(function(r){ h += cprow(r); });
     if (o.table) h += cptable(o.table);
-    if (o.rows2) o.rows2.forEach(function(r){ h += cprow(r); });
+    (o.rows2 || []).forEach(function(r){ h += cprow(r); });
+    if (o.note) h += '<div class="cpnote">' + o.note + '</div>';
     if (o.body) h += '<div class="cpbody">' + o.body + '</div>';
+    /* LAST: a separator, then the PLAIN LINE and any clarifier (operator 2026-09-11) */
+    var plain = o.plain || (o.plainKey && PLAIN[o.plainKey]);
+    if (plain || o.clarify) { h += '<div class="cpend">'
+      + (plain ? '<div class="cpplain">' + plain + '</div>' : "")
+      + (o.clarify ? '<div class="cpclarify">' + o.clarify + '</div>' : "") + '</div>'; }
     if (o.station) h += '<div class="cpclick">in the station: ' + o.station + '</div>';
     return h; }
   /* one chip primitive for the whole bar — inline-flex, centred, the icon a block so it can never
@@ -310,14 +331,11 @@
             rows: [["read from", "the decorator, by the scanner — never observed at runtime"],
                    ["written as", I.status_name ? "a constant (" + I.status_name + ")" : "a bare number", null, "inline"]],
             table: { grid: "34px 1fr auto", head: ["code", "what it means", "cases"], rows: trows },
-            rows2: [[I.method + " peers", peerStr],
-                    ["no code in the name", (F.tests.by_status["no code in name"] || []).length + " of " + F.tests.cases.length + " cases — journeys and round-trips, not status assertions"]],
-            body: "<b>Read it against its peers.</b> "
-              + (ask ? "Of the " + Object.keys(peers).reduce(function(a, c){ return a + peers[c]; }, 0) + " " + I.method + "s here, " + peers["201"] + " declare 201 — this one declares 200 while writing " + F.data.writes.length + " tables, so ask whether it is really a create (201) or an update (200)."
-                     : others.length ? "Its " + I.method + " peers split " + peerStr + "; this one sits with the " + peers[mine] + " that declare " + mine + "."
-                                     : "every " + I.method + " here declares " + mine + ".")
-              + " Feed-wide: " + Object.keys(X.declared || {}).map(function(c){ return c + " ×" + X.declared[c]; }).join(" · ")
-              + ". " + X.cases_never_assert_declared + " of " + X.of + " doors have a corpus that never asserts their declared code, and " + X.no_cases + " have no cases at all." }) }); } },
+            rows2: [["no code in the name", (F.tests.by_status["no code in name"] || []).length + " of " + F.tests.cases.length + " cases — journeys and round-trips, not status assertions"]],
+            note: (ask ? "Worth asking: this door WRITES " + F.data.writes.length + " tables and declares " + mine + ", while " + peers["201"] + " of its " + I.method + " peers declare 201 — a create, or an update? · "
+                       : "") + "how the whole feed declares its codes lives one level up, on the ↑ chips.",
+            plainKey: "status",
+            clarify: "The code is a PROMISE read from the decorator, never observed. The cases around it prove the refusals." }) }); } },
     { key: "source", word: "source", note: "the file and line the handler is defined at",
       build: function(){ return chip({ key: "source", icon: "file", label: "source", value: I.file + ":" + I.flines, cls: "srcchip",
         card: hcard({ title: I.file, icon: "file", plainKey: "source", sub: "line " + I.flines,
@@ -325,27 +343,29 @@
     { key: "risk", word: "risk", note: "the station's three size flags — only the ones that FIRE are drawn, and the card shows all three so you can see what did not",
       build: function(){ var w = el("span", { class: "hgrp" });
         var R = (F.context || {}).risk || {};
-        /* ONE card, three rules, the firing one marked — the operator could not deduce the rules from
-           a single line of prose, so they are a table now (2026-09-11). */
+        /* ONE card per flag, all three rules listed, the firing one lit. Feed-wide comparison was
+           REMOVED from here (operator 2026-09-11): it is not about this door, so it belongs one
+           level up — on the cluster · entity · everything chips. */
         function riskCard(which){
-          var rules = [
-            { k: "conflict", mark: I.risk.large, rule: "behind ≥ 15 or fan-in ≥ 15",
-              here: "behind " + I.risk.behind + " · fan-in " + I.risk.fanin, means: "changing it drags a large call tree" },
-            { k: "god-object", mark: I.risk.god, rule: "the handler is ≥ " + (R.god_lines || 50) + " lines",
-              here: (R.handler_lines != null ? R.handler_lines + " lines" : "—"), means: "the handler itself is oversized" },
-            { k: "unguarded", mark: I.risk.untested, rule: "no case names it",
-              here: (R.cases || 0) + " case" + ((R.cases || 0) === 1 ? "" : "s"), means: "nothing proves it works" } ];
-          return hcard({ title: which === "large" ? "conflict · large surface" : which === "god" ? "god-object" : "unguarded",
-            icon: "burst", color: "var(--red)", plainKey: "risk", sub: "a SIZE signal — not a fault, and not a measurement of quality",
-            table: { grid: "88px 1fr 92px", head: ["flag", "fires when", "here"],
-              rows: rules.map(function(r){ return { mark: r.mark ? "fire" : "quiet",
-                cells: [(r.mark ? "▲ " : "· ") + r.k, r.rule, r.here] }; }) },
-            rows2: [["where it sits", "rank " + R.rank + " of " + R.of + " · median " + R.behind_median + " behind · this door " + I.risk.behind],
-                    ["the spread", ["0", "1-4", "5-14", "15-39", "40+"].map(function(b){ return b + ":" + ((R.behind_bins || {})[b] || 0); }).join("  ")],
-                    ["how many flag", (R.large_count || 0) + " large · " + (R.god_count || 0) + " god · " + (R.no_cases || 0) + " unguarded, of " + R.of],
-                    ["heaviest doors", (R.heaviest || []).slice(0, 3).map(function(h){ return h.label + " (" + h.behind + ")"; }).join(" · ")]],
-            body: "<b>What the number says.</b> " + I.risk.behind + " functions sit behind this door against a median of " + R.behind_median + " — the top " + Math.round(100 * R.rank / R.of) + "% of this codebase. Nothing is wrong; the blast radius is simply large."
-              + "<br><b>What to do.</b> Walk the chain in FUNCTIONS before editing it, and read TESTS before trusting it. The three flags are independent: size, handler length, and coverage each answer a different question." }); }
+          var title = which === "large" ? "conflict" : which === "god" ? "god-object" : "unguarded";
+          var value = which === "large" ? (I.risk.conflict || "large surface") : which === "god" ? "oversized handler" : "no case names it";
+          var factors = [
+            { state: I.risk.large ? "fire" : "quiet", name: "call mass", value: "behind " + I.risk.behind + " · fan-in " + I.risk.fanin,
+              rule: "fires at behind ≥ 15 or fan-in ≥ 15",
+              note: "behind = every function reachable from the handler (a BFS floor, so the true number can only be higher). fan-in = how many elements depend on this door." },
+            { state: I.risk.god ? "fire" : "quiet", name: "handler size", value: (R.handler_lines != null ? R.handler_lines + " lines" : "not measured"),
+              rule: "fires at ≥ " + (R.god_lines || 50) + " lines",
+              note: "the handler's own body only — the code behind it is the factor above." },
+            { state: I.risk.untested ? "fire" : "quiet", name: "coverage", value: (R.cases || 0) + " case" + ((R.cases || 0) === 1 ? "" : "s"),
+              rule: "fires when no case names it",
+              note: "a case counts when its name carries this door; the web corpus reaches it by file and is counted separately." } ];
+          return hcard({ title: title, value: value, icon: "burst", color: "var(--red)",
+            condition: "a SIZE signal — not a fault, and not a measure of quality",
+            factors: factors, factorLabel: "the three rules · ▲ is the one that fired",
+            rows: [["what changes", "editing this door touches " + I.risk.behind + " functions"]],
+            note: "the comparison against the other " + R.of + " doors — rank, spread, the heaviest — is not about this one. It lives one level up, on the ↑ cluster · entity · everything chips.",
+            plainKey: "risk",
+            clarify: "Walk the chain in FUNCTIONS before editing it; read TESTS before trusting it. The three rules are independent — size, handler length and coverage each answer a different question." }); }
         if (I.risk.large) w.append(chip({ key: "risk", icon: "burst", cls: "flagchip warn", label: "risk", value: I.risk.conflict || "conflict", card: riskCard("large") }));
         if (I.risk.god) w.append(chip({ key: "risk", icon: "alert", cls: "flagchip god", label: "risk", value: "god-object", card: riskCard("god") }));
         if (I.risk.untested) w.append(chip({ key: "risk", icon: "alert", cls: "flagchip warn", label: "risk", value: "unguarded", card: riskCard("untested") }));
