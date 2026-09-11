@@ -1538,8 +1538,7 @@ function labelSprite(txt, size, y, col){ var cv=document.createElement("canvas")
   var fnt="600 "+(size||26)+"px "+curFont(); c0.font=fnt;
   var tw=Math.ceil(c0.measureText(txt).width)+16;                         // the canvas FITS the text (16px breathing)
   cv.width=Math.max(256, tw); cv.height=64; var c=cv.getContext("2d");    // resizing resets state — re-set the font
-  var _lt=(window.__uniTheme==="light"); c.font=fnt; c.textAlign="center"; c.textBaseline="middle";
-  if(_lt){ c.lineWidth=5; c.strokeStyle="rgba(255,255,255,.9)"; c.lineJoin="round"; c.strokeText(txt, cv.width/2, 32); }   // LIGHT: a white halo lifts the label off wires + hulls
+  var _lt=(window.__uniTheme==="light"); c.font=fnt; c.textAlign="center"; c.textBaseline="middle";   // no halo (operator 2026-09-11): the inked characters alone are enough
   c.fillStyle=_lt?inkCol(col||"#2a3446"):(col||"#cdd6ea"); c.fillText(txt, cv.width/2, 32);
   var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, depthWrite:false}));
   s.scale.set(34*(cv.width/256),8.5,1); if(y!=null) s.position.y=y; return s; }
