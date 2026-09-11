@@ -214,13 +214,13 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
     return { mode: window.TABCFG.iconMode, size: window.TABCFG.iconSize, overflow: getComputedStyle(t).overflow,
              glyph: Math.round(ib.height), button: Math.round(tb.height), pos: getComputedStyle(i).position,
              op: +getComputedStyle(i).opacity }; });
-  ok(g.mode === 'ghost' && g.size === 22, 'the button row opens with the clipped watermark', JSON.stringify({ m: g.mode, s: g.size }));
+  ok(g.mode === 'ghost' && g.size === 24, 'the button row opens with the clipped watermark', JSON.stringify({ m: g.mode, s: g.size }));
   ok(g.overflow === 'hidden', 'the button CLIPS it — the glyph never goes beyond the border (operator 2026-09-11)', g.overflow);
   ok(g.glyph > g.button, 'and the glyph is genuinely bigger than the button, so it reads as a watermark', g.glyph + ' in ' + g.button);
   ok(g.pos === 'absolute' && g.op < .5, 'placed to the right, translucent', JSON.stringify({ p: g.pos, o: g.op })); }
 { const rows = await p.$$eval('#tabcfg .cfl', els => els.map(e => e.textContent));
-  ok(rows.join(',') === 'colour,intensity,pattern,glyph,glyph shown,count size,count shape,button shape,row,width',
-     'ten dials for the part-button row', rows.join(','));
+  ok(rows.join(',') === 'colour,intensity,pattern,glyph,glyph shown,glyph side,titles,count size,count shape,button shape,row,width',
+     'twelve dials for the part-button row', rows.join(','));
   const t0 = await p.$eval('#tabs', e => e.className);
   await p.click('#tabcfg .ib[data-palette="mono"]'); await p.waitForTimeout(100);
   ok(await p.$eval('#tabs', e => e.className.includes('pal-mono')), 'the colour dial reaches the row');
@@ -247,6 +247,27 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   ok(await p.$eval('#tabs', e => getComputedStyle(e).justifyContent === 'center'), 'the row can centre its buttons');
   await p.click('#tabcfg .ib[data-width="wide"]'); await p.waitForTimeout(100);
   ok(await p.$eval('#tabs .tab', e => parseFloat(getComputedStyle(e).minWidth) >= 170), 'and run them wide');
+  // the three dials the operator added last
+  await p.click('#tabcfg .ib[data-casemode="caps"]'); await p.waitForTimeout(100);
+  ok(await p.$eval('#tabs .tab .tabw', e => getComputedStyle(e).textTransform === 'uppercase'), 'the titles can go ALL CAPS');
+  await p.click('#tabcfg .ib[data-casemode="word"]'); await p.waitForTimeout(100);
+  ok(await p.$eval('#tabs .tab .tabw', e => getComputedStyle(e).textTransform === 'none'), 'and back to as-written');
+  await p.click('#tabcfg .ib[data-iconmode="ghost"]'); await p.waitForTimeout(100);   // the side dial only means anything on a watermark
+  { const pos = {}; for (const v of ['left', 'center', 'right']) { await p.click(`#tabcfg .ib[data-iconpos="${v}"]`); await p.waitForTimeout(100);
+      pos[v] = await p.$eval('#tabs .tab .tabi', e => Math.round(e.getBoundingClientRect().left - e.closest('.tab').getBoundingClientRect().left)); }
+    ok(pos.left < pos.center && pos.center < pos.right, 'the glyph slides left and right across the button', JSON.stringify(pos)); }
+  await p.click('#tabcfg .ib[data-iconpos="right"]'); await p.waitForTimeout(100);
+  // FOCUS: the open part keeps its colour, every other button goes mono
+  await p.click('#tabcfg .ib[data-palette="focus"]'); await p.waitForTimeout(120);
+  { const cols = await p.$$eval('#tabs .tab', els => els.map(e => ({ on: e.classList.contains('on'), c: e.style.getPropertyValue('--tc') })));
+    const on = cols.filter(c => c.on), off = cols.filter(c => !c.on);
+    ok(on.length === 1 && !/var\(--muted\)/.test(on[0].c), 'in FOCUS the open part keeps its own colour', JSON.stringify(on));
+    ok(off.every(c => /var\(--muted\)/.test(c.c)), 'and every other button goes mono', JSON.stringify(off.map(c => c.c))); }
+  { await p.click('#tabs .tab[data-tab="tests"]'); await p.waitForTimeout(140);
+    const cols = await p.$$eval('#tabs .tab', els => els.map(e => ({ k: e.dataset.tab, on: e.classList.contains('on'), c: e.style.getPropertyValue('--tc') })));
+    const on = cols.find(c => c.on);
+    ok(on && on.k === 'tests' && !/var\(--muted\)/.test(on.c), 'the colour FOLLOWS the part you open', JSON.stringify(on));
+    await p.click('#tabs .tab[data-tab="data"]'); await p.waitForTimeout(120); }
   // back to the defaults so the rest of the probe sees a known row
   await p.evaluate(() => { Object.assign(window.TABCFG, { intensity: 'mid', palette: 'station', pattern: 'valley',
     iconSize: 22, iconMode: 'ghost', numSize: 12, numShape: 'pill', shape: 'rect', layout: 'fill', width: 'auto' });

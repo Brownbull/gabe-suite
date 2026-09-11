@@ -531,3 +531,15 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
    changed size. The floor still holds — it becomes a minimum rather than a fixed value. ── */
 #tabs .tab .tabi svg{ width:auto; height:auto; }
 #tabs .tab .tabn{ font-size:max(12px, var(--nz, 12px)); }
+
+/* ── three dials the operator added (2026-09-11): where the watermark sits, how the titles are cased,
+   and FOCUS colour — only the open part is coloured, the rest read mono. ── */
+#tabs.icp-right .tab .tabi{ right:4px; left:auto; transform:translateY(-50%); }
+#tabs.icp-midright .tab .tabi{ right:22%; left:auto; transform:translateY(-50%); }
+#tabs.icp-center .tab .tabi{ right:auto; left:50%; transform:translate(-50%,-50%); }
+#tabs.icp-midleft .tab .tabi{ right:auto; left:26%; transform:translate(-50%,-50%); }
+#tabs.icp-left .tab .tabi{ right:auto; left:6px; transform:translateY(-50%); }
+#tabs.ic-inline .tab .tabi{ position:static; transform:none; }
+#tabs.case-caps .tab .tabw{ text-transform:uppercase; letter-spacing:.07em; }
+#tabs.pal-focus .tab{ --tc:var(--muted); }
+#tabs.pal-focus .tab.on{ border-width:1px; }
