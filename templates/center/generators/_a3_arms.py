@@ -194,6 +194,13 @@ def census(amap: dict, repo: Path, c4_stats: dict | None = None) -> dict[str, An
         n = prod.get(c, 0)
         rec: dict[str, Any] = {"produced": n, "by": sorted({a.module for a in arms}),
                                "langs": sorted(arm_langs)}
+        # name the arm that actually answered: the raw-SQL fallback contributes tables and access
+        # on a repo with no ORM arm, and crediting `_a3_code` for it would send a reader to the
+        # Python scanner to explain a TypeScript app's data layer
+        if c in ("tables", "access") and (amap.get("sql_arm") or {}).get("role") == "fallback" \
+                and (amap["sql_arm"].get("tables") or amap["sql_arm"].get("access")):
+            rec["by"] = ["_a3_stacks_sql"]
+            rec["via"] = "raw-SQL fallback"
         if pr:
             rec["scanned"] = pr.get("scanned", 0)
             rec["matched"] = pr.get("matched", 0)

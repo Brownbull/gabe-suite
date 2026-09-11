@@ -24,6 +24,7 @@ touches the FK topology or any other arm's output.
 """
 from __future__ import annotations
 
+import json
 import re as _re
 from pathlib import Path
 
@@ -76,10 +77,15 @@ _FILE_CAP = 4000                       # a bound, stated on the result — never
 _MIGRATION_DIRS = ("/alembic/", "/migrations/", "/migrate/", "/db/migrate/", "/versions/")
 
 
+def _is_test(rel: str) -> bool:
+    return ".test." in rel or ".spec." in rel or "/__tests__/" in "/" + rel
+
+
 def _is_migration(rel: str) -> bool:
     return any(d in "/" + rel for d in _MIGRATION_DIRS)
 
 # a column line inside CREATE TABLE ( … ) that is a CONSTRAINT, not a column
+_SPAN_RX = _re.compile(r"L(\d+)-L(\d+)")
 _NOT_A_COL = _re.compile(r"^\s*(PRIMARY|FOREIGN|UNIQUE|CHECK|CONSTRAINT)\b", _re.I)
 
 
@@ -125,6 +131,88 @@ def _files(repo: Path) -> tuple[list[Path], bool]:
     return out, False
 
 
+def _tbl_ok(t: str) -> bool:
+    """A FLOOR, stated: an access table must be lower_snake. SQL is case-insensitive but the
+    convention is overwhelming, and the alternative is counting `SELECT Id FROM User` — SALESFORCE
+    SOQL, measured on tier3 — as one of the app's tables."""
+    return bool(t) and t == t.lower()
+
+
+def _sql_sites(path: Path, text: str) -> list[tuple[str, str, int]]:
+    """`[(table, rw, line)]` for every statement in a string literal, with the SOURCE line it sits
+    on. The line is what lets a statement be joined to the FUNCTION that runs it — concatenating
+    the literals first was simpler and threw exactly that away."""
+    out: list[tuple[str, str, int]] = []
+
+    def _scan(chunk: str, base: int) -> None:
+        for rx in _WRITE_RXS:
+            for m in rx.finditer(chunk):
+                if _tbl_ok(m.group(1)):
+                    out.append((m.group(1), "w", base + chunk.count("\n", 0, m.start())))
+        for m in _READ_RX.finditer(chunk):
+            if _tbl_ok(m.group(1)):
+                out.append((m.group(1), "r", base + chunk.count("\n", 0, m.start())))
+
+    if path.suffix == ".sql":
+        _scan(text, 1)
+        return out
+    for lm in _LITERALS_RX.finditer(text):
+        g = next((x for x in lm.groups() if x is not None), None)
+        if not g:
+            continue
+        _scan(g, text.count("\n", 0, lm.start()) + 1)
+    return out
+
+
+def join_functions(repo: Path, access: dict[str, list]) -> dict[str, dict]:
+    """`{"<file>::<fn>": {"file", "fn", "access": {"ops": [...]}}}` — each statement attached to the
+    FUNCTION whose graft span contains its line.
+
+    This is the join the STORE column was missing: `function_insight` is keyed `file::fn` and built
+    by the PYTHON scanner, so a TypeScript file's SQL had no function to hang on and the data layer
+    stopped at the archmap. graft already indexes ts/tsx functions WITH spans, so the join needs no
+    new parse — only the line this arm now records.
+
+    A statement inside no function's span (module scope) is dropped and COUNTED, never guessed onto
+    a neighbour. No graft index → `{}`, and the census says the join did not run."""
+    out: dict[str, dict] = {}
+    try:
+        idx = Path(repo) / "graft" / ".graph" / "wiring.json"
+        if not idx.is_file():
+            return out
+        nodes = (json.loads(idx.read_text(encoding="utf-8")) or {}).get("nodes") or []
+    except Exception:  # noqa: BLE001
+        return out
+    spans: dict[str, list[tuple[int, int, str]]] = {}
+    for n in nodes:
+        if n.get("kind") not in ("function", "method"):
+            continue
+        m = _SPAN_RX.match(str(n.get("span") or ""))
+        p = n.get("path")
+        if not m or not p or "#" not in str(n.get("id") or ""):
+            continue
+        spans.setdefault(p, []).append((int(m.group(1)), int(m.group(2)), str(n["id"]).split("#", 1)[1]))
+    for rel, sites in access.items():
+        cands = spans.get(rel) or []
+        for site in sites:
+            line = site.get("line")
+            if line is None:
+                continue
+            # the INNERMOST enclosing span wins — a method inside a class both contain the line
+            best = None
+            for lo, hi, fn in cands:
+                if lo <= line <= hi and (best is None or (hi - lo) < (best[1] - best[0])):
+                    best = (lo, hi, fn)
+            if best is None:
+                continue
+            key = f"{rel}::{best[2]}"
+            rec = out.setdefault(key, {"file": rel, "fn": best[2], "access": {"ops": []}})
+            op = {"model": None, "table": site["table"], "rw": site["rw"]}
+            if op not in rec["access"]["ops"]:
+                rec["access"]["ops"].append(op)
+    return out
+
+
 def parse(repo: Path, orm_tables: int = 0, orm_access: int = 0) -> dict:
     """`{present, reason, tables[R2], access{file: [R4]}, stats, role}`. Never raises.
 
@@ -151,6 +239,7 @@ def parse(repo: Path, orm_tables: int = 0, orm_access: int = 0) -> dict:
                 text = p.read_text(encoding="utf-8", errors="replace")
             except OSError:
                 continue
+            raw = text                              # keep the source for line numbers
             text = _literal_text(p, text)          # SQL in a literal, never SQL in a sentence
             # ALTER must be in the cheap gate too: a file whose only SQL is
             # `ALTER TABLE users ADD COLUMN email` has no CREATE and no statement verb, so it was
@@ -164,6 +253,12 @@ def parse(repo: Path, orm_tables: int = 0, orm_access: int = 0) -> dict:
                 tbl, body = m.group(1), m.group(2)
                 rec = by_table.setdefault(tbl, {"cls": None, "table": tbl, "file": rel, "doc": "",
                                                 "cols": [], "fks": {}, "rels": [], "uqs": []})
+                # a table's HOME must not be a test file: files are walked sorted, so
+                # `schema.test.ts` claimed `users` before `schema.ts` did — and the code map
+                # excludes `.test.` from an entity's files, so the table homed nowhere and the
+                # model was dropped. A real declaration always wins the home from a test one.
+                if _is_test(rec["file"]) and not _is_test(rel):
+                    rec["file"] = rel
                 # CREATE wins over an ALTER stub: files are walked in sorted order, so an
                 # `ALTER TABLE users ADD COLUMN email` seen first created a one-column record and
                 # `rec["cols"] or …` then kept it, discarding the real DDL's eight. Merge instead,
@@ -178,6 +273,12 @@ def parse(repo: Path, orm_tables: int = 0, orm_access: int = 0) -> dict:
                 tbl, col, typ = m.group(1), m.group(2), m.group(3).strip()
                 rec = by_table.setdefault(tbl, {"cls": None, "table": tbl, "file": rel, "doc": "",
                                                 "cols": [], "fks": {}, "rels": [], "uqs": []})
+                # a table's HOME must not be a test file: files are walked sorted, so
+                # `schema.test.ts` claimed `users` before `schema.ts` did — and the code map
+                # excludes `.test.` from an entity's files, so the table homed nowhere and the
+                # model was dropped. A real declaration always wins the home from a test one.
+                if _is_test(rec["file"]) and not _is_test(rel):
+                    rec["file"] = rel
                 if col not in [c[0] for c in rec["cols"]]:
                     rec["cols"].append([col, typ, "added by ALTER TABLE"])
             for m in _UQ_RX.finditer(text):
@@ -194,27 +295,25 @@ def parse(repo: Path, orm_tables: int = 0, orm_access: int = 0) -> dict:
                             cols.append(c)
                     if cols and cols not in rec["uqs"]:
                         rec["uqs"].append(cols)
-            # A FLOOR, stated: an access table must be lower_snake. SQL is case-insensitive but the
+            # (the lower_snake floor now lives at module scope as _tbl_ok)
+            # SQL is case-insensitive but the
             # convention is overwhelming, and the alternative is counting `SELECT Id FROM User` —
             # SALESFORCE SOQL, measured on tier3 — as one of the app's tables. A table genuinely
             # declared in PascalCase is missed here and named by the arms census instead of guessed.
-            def _tbl_ok(t: str) -> bool:
-                return bool(t) and t == t.lower()
-
-            ops: list[dict] = []
-            for rx in _WRITE_RXS:
-                for m in rx.finditer(text):
-                    if _tbl_ok(m.group(1)):
-                        ops.append({"model": None, "table": m.group(1), "rw": "w"})
-            for m in _READ_RX.finditer(text):
-                if _tbl_ok(m.group(1)):
-                    ops.append({"model": None, "table": m.group(1), "rw": "r"})
+            # sites carry their SOURCE LINE, which is what join_functions() needs to attach a
+            # statement to the function that runs it
+            sites = _sql_sites(p, raw)
+            # dedup on (table, rw, LINE), not (table, rw): collapsing per FILE threw away every
+            # statement after the first of its kind, so `findByEmail`'s SELECT vanished because
+            # `list`'s had already claimed `users r` — five functions became two. The join dedups
+            # per FUNCTION afterwards, which is the level that actually carries meaning.
             seen = set(); uniq = []
-            for o in ops:
-                k = (o["table"], o["rw"])
+            for tbl, rw, line in sites:
+                k = (tbl, rw, line)
                 if k in seen:
                     continue
-                seen.add(k); uniq.append(o)
+                seen.add(k)
+                uniq.append({"model": None, "table": tbl, "rw": rw, "line": line})
             if uniq and not _is_migration(rel):
                 access[rel] = uniq
                 res["stats"]["statements"] += len(uniq)

@@ -347,3 +347,56 @@ now says exactly why:
 Joining them needs a fn-level index for TypeScript: `function_insight` is keyed `file::fn` and is
 built by the Python scanner, so a TS file's SQL has no function to attach to. That is a real next
 step with a clear shape, not a hidden failure — and the map now SAYS so instead of drawing a zero.
+
+## Step 9 — the STORE gap: the SQL join (`this commit`)
+
+The gap step 8 left open. `_a3_stacks_sql` now records each statement's SOURCE LINE and
+`join_functions()` attaches it to the function whose **graft span** contains that line — no new
+parse, because graft already indexes ts/tsx functions with spans. The join merges into
+`function_insight`, the tables become models on the claiming entity, and the whole thing is handed
+to the graft arm as `faccess`.
+
+**keypro-front, before → after:**
+
+| | before | after |
+|---|---|---|
+| arms census `tables` | `unmatched` — nobody reads your idiom | **`present`** · 2 · by `_a3_stacks_sql` |
+| arms census `access` | `unmatched` | **`present`** · 15 functions |
+| models on the map | 0 | `users` (9 cols) · `sessions` (4 cols, FK to users) |
+| `graft.derived` | all three absent | `distance_to_write` ✅ · `fn_roles` ✅ |
+
+The 15 are the real data layer, each attributed: `PostgresUserRepository.findByEmail`,
+`.countActiveAdmins`, `.updateRole`, `PostgresSessionRepository.removeAllForUser`, `seedAdmin` …
+
+### Five defects review caught
+
+1. **Dedup at the wrong level** — `(table, rw)` per FILE threw away every statement after the first
+   of its kind, so `findByEmail`'s SELECT vanished because `list`'s had claimed `users r`. Five
+   functions became two; dedup moved to per-FUNCTION, after the join. **18 statements, 15 functions.**
+2. **A table homed to a TEST file** — files walk sorted, `schema.test.ts` claimed `users` before
+   `schema.ts`, and the code map excludes `.test.` from an entity's files, so the model was dropped.
+3. **`model:None`** — `_a3_graph:650` keys a model node on `cls`, and a raw-SQL table has none, so
+   BOTH tables collapsed into one unlabelled node. The table-keyed fallback the plan predicted, at
+   three sites (node id, label, `own_classes`).
+4. **`faccess` read the wrong map** — it was built from `_a3_code.function_insight()`, not `amap`'s,
+   so the join's ops never reached graft and the write-heat stayed flat.
+5. **The census credited `_a3_code`** for a TypeScript app's data layer. `sql_raw` is now a register
+   row and the census names the arm that actually answered.
+
+### What still does not draw, and why
+
+The 15 functions carry access but are **not in the levels walk**. `drawn_fn` seeds from roots and
+descends call edges; in a ports-and-adapters app graft resolves `UserService.changeRole →
+UserRepository.updateRole` — the INTERFACE — and stops, because the implementation is chosen at
+runtime. A port has no method nodes at all in the index (measured: `src/ports/user-repository.ts`
+contributes zero nodes), so there is no fact to bridge with; an attempted `implements`-based bridge
+yielded **0 edges** and was removed rather than shipped as dead code.
+
+The honest alternative is to SEED the walk from any function carrying access. Measured cost of that
+change: **gustify +7, gastify +8, tier3 +192 function nodes**. That is a visible change to three
+working maps and is the operator's call, not a refactor's.
+
+Gate: the only movement on the three targets is the register declaring a second claimant
+(`by: ['_a3_code'] → ['_a3_code', '_a3_stacks_sql']`); census identical on all 25 measures.
+`tests/stack-sql` 10/10 (**5 mutants**: innermost-span · module-scope-drop · line-tracking ·
+test-home · fallback) · `tests/arch-graph` 331/331 (**model-key mutant killed**) · doctor CLEAN.

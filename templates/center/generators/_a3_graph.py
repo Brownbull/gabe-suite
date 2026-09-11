@@ -647,9 +647,13 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
         return nid
 
     for model in code.get("models") or []:
-        nid = f"model:{model.get('cls')}"
+        # a model is keyed by its CLASS where one exists, and by its TABLE where it does not: a
+        # raw-SQL table (R2 with cls=None) has no class, and keying on it minted `model:None` —
+        # both of keypro's tables collapsed into one node with no label.
+        _key = model.get("cls") or model.get("table")
+        nid = f"model:{_key}"
         node = {"id": nid, "kind": "model", "slug": slug,
-                "label": model.get("cls"), "table": model.get("table")}
+                "label": _key, "table": model.get("table")}
         ids = model_ids(model, code.get("endpoints"))
         if ids:                                   # honest-empty: no card if nothing to show
             node["ids"] = ids
@@ -659,6 +663,8 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
         add_node(node)
         if model.get("cls"):
             own_classes.setdefault(model["cls"], nid)   # a model wins a name tie
+        elif model.get("table"):
+            own_classes.setdefault(model["table"], nid)  # raw-SQL table: keyed by name, no class
     for schema in code.get("schemas") or []:      # pre-register EVERY schema class so composition
         if schema.get("cls"):                     # forward-references resolve locally (nests, below)
             own_classes.setdefault(schema["cls"], f"schema:{schema['cls']}")
@@ -721,7 +727,9 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
             enode["access"] = _acc              # card/detail field (like `behind`), honest-empty otherwise
             for _op in _acc.get("ops", []):
                 _ak = "writes_to" if _op.get("rw") == "w" else "reads_from"
-                _at = own_classes.get(_op.get("model"))
+                # the same fallback on the consuming side: an op from the raw-SQL arm carries
+                # model=None and names its table instead
+                _at = own_classes.get(_op.get("model") or _op.get("table"))
                 if _at and _at != nid:
                     edges.append({"source": nid, "target": _at, "kind": _ak})
                 elif not _at:

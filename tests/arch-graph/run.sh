@@ -119,6 +119,21 @@ _xt = [e for e in g["cross_edges"] if e.get("kind") == "touches"]
 check(len(_xt) == 1 and _xt[0]["from"] == "endpoint:GET /alpha" and _xt[0]["to"] == "model:B"
       and _xt[0]["from_slug"] == "alpha" and _xt[0]["to_slug"] == "beta",
       "touches_x residue does not become ONE resolved cross-entity touches edge")
+
+# ── a RAW-SQL table has no class (R2 with cls=None) — the node is keyed by its TABLE ──────────
+# Keying on `cls` minted `model:None`, and BOTH of keypro-front's tables collapsed into one
+# unlabelled node. The same fallback is needed where an access op names a table and no model.
+_sqlmap = copy.deepcopy(FIX)
+_sqlmap["entities"]["alpha"]["models"] = [
+    {"cls": None, "table": "users", "file": "db/schema.ts", "cols": [["id", "TEXT", ""]], "fks": {}, "rels": [], "uqs": []},
+    {"cls": None, "table": "sessions", "file": "db/schema.ts", "cols": [["tok", "TEXT", ""]], "fks": {"user_id": "users.id"}, "rels": [], "uqs": []},
+]
+_sqlg = G.build_c4_graph(_sqlmap)
+_mids = sorted(n["id"] for n in _sqlg["l2"]["alpha"]["nodes"] if n["kind"] == "model")
+check(_mids == ["model:sessions", "model:users"],
+      f"a class-less table is keyed by its TABLE name, not model:None — got {_mids}")
+_mlab = {n["id"]: n.get("label") for n in _sqlg["l2"]["alpha"]["nodes"] if n["kind"] == "model"}
+check(all(_mlab.values()), f"a class-less table still carries a label — got {_mlab}")
 check(g["stats"].get("cross_touches") == 1, "stats.cross_touches does not count the aspect wires")
 check(not any("SomeLibClass" in json.dumps(e) for e in g["cross_edges"]),
       "an unresolvable library class leaked into cross_edges")

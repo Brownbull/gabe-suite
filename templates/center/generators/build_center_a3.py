@@ -2135,8 +2135,32 @@ def main() -> int:
             if _sql.get("role") == "fallback" and _sql.get("present"):
                 amap["sql_arm"]["tables"] = _sql["tables"]
                 amap["sql_arm"]["access"] = _sql["access"]
+                # THE JOIN (step 9): each statement attached to the function whose graft span holds
+                # its line, then merged into function_insight — which is what the levels walk, the
+                # STORE column and the write-distance heat all read. Without it the data layer
+                # stopped at the archmap and every journey step showed an empty STORE.
+                _sjoin = _a3_stacks_sql.join_functions(REPO_ROOT, _sql["access"])
+                _f2s = {f: sl for sl, e in (amap.get("entities") or {}).items() if e
+                        for _l, f, *_ in (e.get("files") or [])}
+                for _k, _rec in _sjoin.items():
+                    _rec["entity"] = _f2s.get(_rec["file"])
+                    _rec.setdefault("name", _rec["fn"])
+                    _rec.setdefault("layer", "services")
+                    for _fld, _dv in (("handler", False), ("god", False), ("internal", 0),
+                                      ("api", 0), ("method", "." in _rec["fn"]), ("lines", 0)):
+                        _rec.setdefault(_fld, _dv)
+                    amap["function_insight"][_k] = {**amap["function_insight"].get(_k, {}), **_rec}
+                amap["sql_arm"]["joined"] = len(_sjoin)
+                # the tables become MODELS on the entity that claims their file
+                for _t in _sql["tables"]:
+                    _sl = _f2s.get(_t.get("file"))
+                    if _sl and amap["entities"].get(_sl) is not None:
+                        _ms = amap["entities"][_sl].setdefault("models", [])
+                        if not any(m.get("table") == _t["table"] for m in _ms):
+                            _ms.append(_t)
                 print(f"    sql arm (fallback) — {len(_sql['tables'])} table(s) · "
-                      f"{_sql['stats']['statements']} statement(s) in {len(_sql['access'])} file(s)")
+                      f"{_sql['stats']['statements']} statement(s) in {len(_sql['access'])} file(s) "
+                      f"· joined to {len(_sjoin)} function(s)")
             else:
                 print(f"    sql arm — {_sql.get('role')}: {(_sql.get('reason') or '')[:70]}")
     except Exception as _se:  # noqa: BLE001
@@ -2191,7 +2215,10 @@ def main() -> int:
                           "commits": (_v.get("access") or {}).get("commits"),
                           "sinks": _v.get("sinks"),
                           "externals": _v.get("externals")}   # class 9: providers this fn reaches
-                     for _k, _v in _a3_code.function_insight(REPO_ROOT).items()
+                     # amap's function_insight, not _a3_code's: the raw-SQL join (step 9) merges
+                     # its ops into amap only, and graft's d2w/fn_roles read THIS map — reading the
+                     # scanner's own would leave the write heat flat on a raw-SQL app
+                     for _k, _v in (amap.get("function_insight") or {}).items()
                      if _v.get("access") or _v.get("sinks") or _v.get("externals")},   # A2+C4+prov: joined onto the call-tree
             dispatches=(_dm.get("dispatches") or []) + (_tm.get("dispatches") or []),   # class 6 + 13: event-bus and task edges, one wire
             boot_roots=(amap.get("boot_roots") or []) + (amap.get("task_roots") or []) + (amap.get("action_roots") or []),  # class 7 + 13 + 15: boot + task + action roots homed for behind/calls

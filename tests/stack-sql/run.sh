@@ -133,5 +133,72 @@ import json,sys; o=json.loads(sys.argv[1])
 assert o['role']=='fallback', o['role']
 " "$(run "$T/app" 0 0)" && ok || bad "FALLBACK: the arm must answer when nothing else did"
 
+# ── the FUNCTION JOIN (step 9): a statement attached to the function that runs it ─────
+mkdir -p "$T/join/src" "$T/join/graft/.graph"
+cat > "$T/join/src/repo.ts" <<'TSJ'
+export class Repo {
+  async list() {
+    return pool.query("SELECT id FROM users");
+  }
+  async save(u: U) {
+    await pool.query("INSERT INTO users (id) VALUES ($1)", [u.id]);
+  }
+  async wrap() {
+    const inner = async () => {
+      await pool.query("UPDATE sessions SET x = 1 WHERE id = $1");
+    };
+    return inner();
+  }
+}
+const stray = "DELETE FROM audit_log WHERE id = $1";
+TSJ
+cat > "$T/join/graft/.graph/wiring.json" <<'JSONJ'
+{"meta":{"version":1},"nodes":[
+ {"id":"src/repo.ts#Repo","kind":"class","path":"src/repo.ts","span":"L1-L9"},
+ {"id":"src/repo.ts#Repo.list","kind":"method","path":"src/repo.ts","span":"L2-L4"},
+ {"id":"src/repo.ts#Repo.save","kind":"method","path":"src/repo.ts","span":"L5-L7"},
+ {"id":"src/repo.ts#Repo.wrap","kind":"method","path":"src/repo.ts","span":"L8-L13"},
+ {"id":"src/repo.ts#inner","kind":"function","path":"src/repo.ts","span":"L9-L11"}],
+ "edges":[]}
+JSONJ
+if (cd "$GEN" && python3 - "$T/join" <<'JOINPY'
+import sys, pathlib
+import _a3_stacks_sql as S
+r = pathlib.Path(sys.argv[1])
+o = S.parse(r)
+sites = o["access"]["src/repo.ts"]
+assert all("line" in x for x in sites), sites          # the line is what makes the join possible
+j = S.join_functions(r, o["access"])
+assert set(j) == {"src/repo.ts::Repo.list", "src/repo.ts::Repo.save", "src/repo.ts::inner"}, sorted(j)
+# the INNERMOST callable wins: `inner` sits inside `Repo.wrap`, and the statement is inner's
+assert "src/repo.ts::Repo.wrap" not in j, "an enclosing method stole a nested function's statement"
+assert [(x["table"], x["rw"]) for x in j["src/repo.ts::inner"]["access"]["ops"]] == [("sessions", "w")]
+assert [(x["table"], x["rw"]) for x in j["src/repo.ts::Repo.list"]["access"]["ops"]] == [("users", "r")]
+assert [(x["table"], x["rw"]) for x in j["src/repo.ts::Repo.save"]["access"]["ops"]] == [("users", "w")]
+# a statement at MODULE scope belongs to no function — dropped, never hung on a neighbour
+assert not any("audit_log" in str(v) for v in j.values()), j
+# the INNERMOST span wins: the class encloses both methods and must not swallow them
+assert "src/repo.ts::Repo" not in j, "the enclosing class stole its methods' statements"
+# no graft index → no join, and nothing raises
+assert S.join_functions(pathlib.Path(sys.argv[1] + "-none"), o["access"]) == {}
+print("ok")
+JOINPY
+) >/dev/null 2>&1; then ok; else bad "join: line tracking · innermost span · module scope dropped · no index"; fi
+
+# a TEST file must never win a table's home — the code map excludes .test. from an entity's files,
+# so a table homed there is dropped and its model never draws (keypro's `users`)
+mkdir -p "$T/home/db"
+printf 'export const S = `CREATE TABLE IF NOT EXISTS widgets (id TEXT PRIMARY KEY);`;\n' > "$T/home/db/schema.ts"
+printf 'const S = `CREATE TABLE IF NOT EXISTS widgets (id TEXT PRIMARY KEY);`;\n' > "$T/home/db/schema.test.ts"
+if (cd "$GEN" && python3 - "$T/home" <<'HOMEPY'
+import sys, pathlib
+import _a3_stacks_sql as S
+o = S.parse(pathlib.Path(sys.argv[1]))
+t = {x["table"]: x for x in o["tables"]}
+assert t["widgets"]["file"] == "db/schema.ts", t["widgets"]["file"]
+print("ok")
+HOMEPY
+) >/dev/null 2>&1; then ok; else bad "home: a test file must not win a table's home"; fi
+
 echo "stack-sql: $pass passed, $fail failed"
 [ "$fail" = 0 ] || exit 1

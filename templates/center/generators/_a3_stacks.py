@@ -77,6 +77,9 @@ REGISTER: tuple[Stack, ...] = (
     Stack("ts_next", "ts", "_a3_stacks_next",
           ("request_roots",),
           ("action_roots",)),
+    Stack("sql_raw", "*", "_a3_stacks_sql",     # the data layer's FALLBACK — see _a3_stacks_sql.parse
+          ("tables", "access"),
+          ("sql_arm", "entities", "function_insight")),
     Stack("ts_fetch", "ts", "_a3_web",
           ("fetch_bridge",), ()),
     Stack("ts_structure", "ts", "_a3_fe",
