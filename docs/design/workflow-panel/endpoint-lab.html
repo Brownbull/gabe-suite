@@ -15,22 +15,29 @@
   <div id="row">
     <!-- the LAB RAIL. Nothing here ships with the console: these are the bench's own controls, kept
          OUT of the panel so what you judge is only what would be built (operator 2026-09-11). -->
+    <!-- the LAB RAIL — tabbed, icon-driven, and never part of what ships (operator 2026-09-11) -->
     <aside id="notes">
-      <section id="cfg">
-        <div class="nhd">bench controls <span class="nht">not part of the panel</span></div>
-        <div class="cfgrp"><div class="cfl">distribution</div><div id="varbar"></div></div>
-        <div class="cfgrp"><div class="cfl">box</div><div id="boxes" class="btnwrap"></div></div>
-        <div class="cfgrp"><div class="cfl">density</div><div id="dens" class="btnwrap"></div></div>
-        <div class="cfgrp"><div class="cfl">motion</div><div class="btnwrap">
-          <button class="bb on" id="mplay" title="one shared clock — pause freezes every moving thing">playing</button>
-          <button class="bb" id="mreplay" title="restart the clock from zero">replay</button></div></div>
-        <div class="cfread" id="boxread">—</div>
+      <nav id="railtabs" role="tablist"></nav>
+      <section class="rtab" id="rt-controls">
+        <div class="barblk" id="blk-bench">
+          <div class="bhl"><span class="bhi"></span><b>bench</b><span class="bhn">the box this is drawn in</span></div>
+          <div class="cfgrp"><div class="cfl">box</div><div id="boxes" class="ibwrap"></div></div>
+          <div class="cfgrp"><div class="cfl">density</div><div id="dens" class="ibwrap"></div></div>
+          <div class="cfgrp"><div class="cfl">motion</div><div class="ibwrap" id="motionwrap">
+            <button class="ib on" id="mplay"></button><button class="ib" id="mreplay"></button></div></div>
+          <div class="cfread" id="boxread">—</div>
+        </div>
+        <div class="barblk" id="blk-head">
+          <div class="bhl"><span class="bhi"></span><b>head bar</b><span class="bhn">9 elements</span></div>
+          <div id="barcfg"></div>
+        </div>
+        <div class="barblk" id="blk-parts">
+          <div class="bhl"><span class="bhi"></span><b>part bars</b><span class="bhn">one distribution each</span></div>
+          <div id="partcfg"></div>
+        </div>
+        <div id="varbar" hidden></div>
       </section>
-      <section id="barsec">
-        <div class="nhd">head bar <span class="nht">this bar's own controls</span></div>
-        <div id="barcfg"></div>
-      </section>
-      <section id="covsec">
+      <section class="rtab" id="rt-cov">
         <div class="nhd">no-loss checklist <span id="covn">—</span></div>
         <div class="nsub">every row the station card shows today; a row lights when the panels render it (hover cards count)</div>
         <div id="cov"></div>
@@ -67,6 +74,23 @@
     el.addEventListener("mouseleave", hoverHide); el.addEventListener("click", function(ev){ ev.stopPropagation(); hoverShow(el, typeof htmlFn === "function" ? htmlFn() : htmlFn); }); return el; };
   document.addEventListener("click", hoverHide);
 
+  /* ── the rail: three tabs, every control an ICON (the word lives on the hover card) ──────────
+     Lab chrome only. Where the station has a glyph the rail uses it; play/pause/replay and the box
+     shapes have no station equivalent, so they are drawn here — small, flat, the same stroke. ── */
+  var LABICO = {
+    bench: '<path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="18" r="2"/>',
+    bars: '<rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    play: '<path d="M7 4.5 19 12 7 19.5z"/>', pause: '<path d="M8 4v16M16 4v16"/>',
+    replay: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>',
+    air: '<path d="M4 5h16M4 12h16M4 19h16"/>', normal: '<path d="M4 6h16M4 10h16M4 14h16M4 18h16"/>',
+    dense: '<path d="M4 5h16M4 8h16M4 11h16M4 14h16M4 17h16M4 20h16"/>' };
+  function labIco(n, size, col){ return '<svg viewBox="0 0 24 24" width="' + (size || 14) + '" height="' + (size || 14) + '" fill="none" stroke="' + (col || "currentColor") + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (LABICO[n] || "") + '</svg>'; }
+  function boxIco(w, h, size){ var W = Math.round(20 * w / 1500), H = Math.round(16 * h / 460);
+    return '<svg viewBox="0 0 24 20" width="' + (size || 20) + '" height="' + Math.round((size || 20) * 20 / 24) + '" fill="none" stroke="currentColor" stroke-width="1.6">'
+      + '<rect x="' + ((24 - W) / 2).toFixed(1) + '" y="' + ((20 - H) / 2).toFixed(1) + '" width="' + W + '" height="' + H + '" rx="1.5"/></svg>'; }
+  function ib(html, cardHtml, on){ var b = E("button", { class: "ib" + (on ? " on" : "") }); b.innerHTML = html; hoverBind(b, cardHtml); return b; }
+
   /* ── coverage: the station inventory (ep-brief.md) — a renderer marks a row when it draws it ── */
   var INV = [
     ["HEAD", "name · kind · method badge · entity"], ["USAGE", "1 api · 0 internal"], ["GUARDS", "3 deps, 1 gate"],
@@ -88,10 +112,16 @@
   /* ── the shared clock (ONE for every moving thing; pause freezes all; reduced motion = the finished frame) ── */
   var CLOCK = window.CLOCK = { on: !window.matchMedia("(prefers-reduced-motion: reduce)").matches, epoch: 0, subs: [],
     sub: function(fn){ this.subs.push(fn); fn(this); }, tick: function(){ var c = this; c.subs.forEach(function(fn){ fn(c); }); },
-    play: function(v){ this.on = v; document.body.classList.toggle("motion-off", !v); document.getElementById("mplay").textContent = v ? "playing" : "paused"; document.getElementById("mplay").classList.toggle("on", v); this.tick(); },
+    play: function(v){ this.on = v; document.body.classList.toggle("motion-off", !v);
+      var b = document.getElementById("mplay"); if (b.__ico) b.innerHTML = b.__ico(v); b.classList.toggle("on", v); this.tick(); },
     replay: function(){ this.epoch++; document.body.classList.remove("replaying"); void document.body.offsetWidth; document.body.classList.add("replaying"); this.tick(); } };
-  document.getElementById("mplay").onclick = function(){ CLOCK.play(!CLOCK.on); };
-  document.getElementById("mreplay").onclick = function(){ CLOCK.replay(); };
+  (function motionIcons(){ var pb = document.getElementById("mplay"), rb = document.getElementById("mreplay");
+    pb.__ico = function(on){ return labIco(on ? "pause" : "play", 14); }; pb.innerHTML = pb.__ico(CLOCK.on);
+    rb.innerHTML = labIco("replay", 14);
+    hoverBind(pb, function(){ return '<div class="cphd">' + labIco(CLOCK.on ? "pause" : "play", 15, "var(--accent)") + '<b>' + (CLOCK.on ? "pause" : "play") + '</b></div><div class="cpsub">ONE shared clock</div><div class="cpbody">every moving thing on the page runs on it — pausing freezes the bead, the commit pulse and the cargo dots together. Reduced motion shows the finished frame instead.</div>'; });
+    hoverBind(rb, '<div class="cphd">' + labIco("replay", 15, "var(--accent)") + '<b>replay</b></div><div class="cpsub">restart the clock</div><div class="cpbody">every animation begins again from zero, in step.</div>');
+    pb.onclick = function(ev){ ev.stopPropagation(); CLOCK.play(!CLOCK.on); };
+    rb.onclick = function(ev){ ev.stopPropagation(); CLOCK.replay(); }; })();
   if (!CLOCK.on) CLOCK.play(false);
 
   /* ══ the HEAD BAR — a registry of ELEMENTS, each drawable at three verbosities ═══════════════
@@ -194,23 +224,23 @@
 
   /* the rail's SECOND section — this bar's own controls (operator 2026-09-11) */
   function drawBarCfg(){ var box = document.getElementById("barcfg"); box.innerHTML = "";
-    var modes = [["icon", "the glyph alone — every word on hover"], ["value", "the glyph and its value — no field names"], ["label", "the glyph, what the field IS, and its value"]];
-    var mrow = el("div", { class: "btnwrap" });
-    modes.forEach(function(m){ var b = el("button", { class: "bb" + (HEADCFG.mode === m[0] ? " on" : "") }, m[0]);
-      hoverBind(b, hcard({ title: m[0], sub: "how much the bar spells out", body: m[1] }));
+    var modes = [["icon", "the glyph alone — every word on hover", "shape"], ["value", "the glyph and its value — no field names", "info"], ["label", "the glyph, what the field IS, and its value", "doc"]];
+    var mrow = el("div", { class: "ibwrap" });
+    modes.forEach(function(m){ var b = el("button", { class: "ib" + (HEADCFG.mode === m[0] ? " on" : "") });
+      b.dataset.mode = m[0]; b.innerHTML = S.icon(m[2], 14);
+      hoverBind(b, hcard({ title: m[0], icon: m[2], sub: "how much the bar spells out", body: m[1] }));
       b.onclick = function(ev){ ev.stopPropagation(); HEADCFG.mode = m[0];
         [].forEach.call(mrow.children, function(x){ x.classList.toggle("on", x === b); }); drawHead(); }; mrow.append(b); });
     box.append(el("div", { class: "cfl" }, "verbosity"), mrow);
-    var erow = el("div", { class: "btnwrap" });
-    HEADEL.forEach(function(e){ var b = el("button", { class: "bb el" + (HEADCFG.off[e.key] ? "" : " on") });
-      b.insertAdjacentHTML("beforeend", S.icon(e.key === "kind" ? "endpoint" : e.key === "method" ? "role" : e.key === "name" ? "doc" : e.key === "entity" ? "entity"
-        : e.key === "cluster" ? "layers" : e.key === "status" ? "info" : e.key === "source" ? "file" : e.key === "risk" ? "burst" : e.key === "kindword" ? "doc" : "up", 12));
-      b.append(el("span", null, e.word));
-      hoverBind(b, hcard({ title: e.word, sub: HEADCFG.off[e.key] ? "hidden — click to show" : "shown — click to hide", body: e.note }));
+    var erow = el("div", { class: "ibwrap" });
+    var EICO = { kind: "endpoint", kindword: "doc", method: "role", name: "doc", entity: "entity", cluster: "layers", status: "info", source: "file", risk: "burst", above: "up" };
+    HEADEL.forEach(function(e){ var b = el("button", { class: "ib" + (HEADCFG.off[e.key] ? "" : " on") });
+      b.dataset.el = e.key; b.innerHTML = S.icon(EICO[e.key] || "info", 14);
+      hoverBind(b, function(){ return hcard({ title: e.word, icon: EICO[e.key], sub: HEADCFG.off[e.key] ? "hidden — click to show" : "shown — click to hide", body: e.note }); });
       b.onclick = function(ev){ ev.stopPropagation(); if (HEADCFG.off[e.key]) delete HEADCFG.off[e.key]; else HEADCFG.off[e.key] = 1;
         b.classList.toggle("on", !HEADCFG.off[e.key]); drawHead(); }; erow.append(b); });
     box.append(el("div", { class: "cfl" }, "elements"), erow);
-    box.append(el("div", { class: "cfread" }, "the bar is a REGISTRY — an element you switch off is gone, not hidden behind a truncation")); }
+    box.append(el("div", { class: "cfread" }, "a REGISTRY — an element switched off is gone, not truncated. The icons here are the icons the bar draws.")); }
   drawHead(); drawBarCfg();
   COV.mark("HEAD", "head"); COV.mark("SOURCE", "head"); COV.mark("RISK", "head"); COV.mark("ABOVE", "head"); COV.mark("IDENTITY", "head");
 
@@ -227,19 +257,45 @@
     hoverBind(b, function(){ return '<div class="cphd">' + S.icon(P.icon, 15, P.col) + '<b style="color:' + P.col + '">' + P.word + '</b></div><div class="cpsub">part ' + (order.indexOf(k) + 1) + ' of 5 · ' + P.count(F) + ' inside</div><div class="cpbody">' + P.hint + '</div>'; });
     b.onclick = function(ev){ ev.stopPropagation(); show(k); }; TABS.appendChild(b); });
 
+  /* TWO toggles (operator 2026-09-11): the CONTROLS are the default view; the no-loss checklist is
+     reachable but completely separate from them. Inside controls, bench and bars are distinct blocks. */
+  var RAILT = [{ k: "controls", ico: "bench", word: "controls", note: "everything that steers the bench: the box it is drawn in, the density, the clock, and what each BAR carries. None of it ships with the console." },
+               { k: "cov", ico: "check", word: "no-loss", note: "every row the station card shows today, lit when a renderer actually draws it. Kept apart from the controls so it reads as evidence, not as a setting." }];
+  var RT = document.getElementById("railtabs"), railCur = "controls";
+  RAILT.forEach(function(t){ var b = E("button", { class: "rtb", "data-rt": t.k }); b.innerHTML = labIco(t.ico, 15) + '<span>' + t.word + '</span>';
+    hoverBind(b, '<div class="cphd">' + labIco(t.ico, 15, "var(--accent)") + '<b>' + t.word + '</b></div><div class="cpsub">rail tab</div><div class="cpbody">' + t.note + '</div>');
+    b.onclick = function(ev){ ev.stopPropagation(); railTab(t.k); }; RT.append(b); });
+  function railTab(k){ railCur = k;
+    [].forEach.call(RT.children, function(b){ b.classList.toggle("on", b.dataset.rt === k); });
+    ["controls", "cov"].forEach(function(x){ document.getElementById("rt-" + x).hidden = (x !== k); }); }
+  window.railTab = railTab;
+  document.getElementById("blk-bench").querySelector(".bhi").innerHTML = labIco("bench", 13, "var(--accent)");
+  document.getElementById("blk-head").querySelector(".bhi").innerHTML = labIco("bars", 13, "var(--accent)");
+  document.getElementById("blk-parts").querySelector(".bhi").innerHTML = S.icon("layers", 13, "var(--accent)");
+
   /* ── the variant bar: one panel, several DISTRIBUTIONS — proposals to compare, not settings ── */
-  function drawVars(k){ var P = window.PANELS[k]; VARBAR.innerHTML = "";
-    P.variants.forEach(function(v){ var b = E("button", { class: "vb" + (curVar[k] === v.key ? " on" : "") }, v.label);
-      hoverBind(b, '<div class="cphd">' + S.icon(P.icon, 15, P.col) + '<b>' + v.label + '</b></div><div class="cpsub">a distribution of ' + P.word + '</div><div class="cpbody">' + v.hint + '</div>');
-      b.onclick = function(ev){ ev.stopPropagation(); curVar[k] = v.key; show(k); }; VARBAR.append(b); });
-    VARBAR.append(E("span", { class: "vn" }, P.variants.length + " proposals for " + P.word)); }
+  var VARICO = { grounds: "entity", flow: "drill", ledger: "table", levels: "layers", chain: "merge", status: "info", ladder: "up", band: "shield", gauntlet: "drill" };
+  function drawVars(){ var PC = document.getElementById("partcfg"); PC.innerHTML = "";
+    order.forEach(function(k){ var P = window.PANELS[k];
+      var row = E("div", { class: "prow" + (cur === k ? " on" : "") });
+      var nm = E("button", { class: "pnm2" }); nm.innerHTML = S.icon(P.icon, 14, P.col) + '<span>' + P.word + '</span>';
+      hoverBind(nm, '<div class="cphd">' + S.icon(P.icon, 15, P.col) + '<b style="color:' + P.col + '">' + P.word + '</b></div><div class="cpsub">part ' + (order.indexOf(k) + 1) + ' of 5 · ' + P.count(F) + ' inside</div><div class="cpbody">' + P.hint + '</div>');
+      nm.onclick = function(ev){ ev.stopPropagation(); show(k); };
+      row.append(nm);
+      var g = E("div", { class: "ibwrap" });
+      P.variants.forEach(function(v){ var b = ib(S.icon(VARICO[v.key] || "shape", 14),
+        '<div class="cphd">' + S.icon(VARICO[v.key] || "shape", 15, P.col) + '<b>' + v.label + '</b></div><div class="cpsub">a distribution of ' + P.word + '</div><div class="cpbody">' + v.hint + '</div>',
+        curVar[k] === v.key);
+        b.dataset.variant = v.key; b.dataset.part = k;
+        b.onclick = function(ev){ ev.stopPropagation(); curVar[k] = v.key; show(k); }; g.append(b); });
+      row.append(g); PC.append(row); }); }
   function E(t, a){ var e = document.createElement(t), k = [].slice.call(arguments, 2);
     for (var p in (a || {})) { if (p === "class") e.className = a[p]; else if (p === "html") e.innerHTML = a[p]; else e.setAttribute(p, a[p]); }
     k.forEach(function(c){ if (c != null) e.append(c); }); return e; }
 
   function show(k){ cur = k; [].forEach.call(TABS.children, function(b){ b.classList.toggle("on", b.dataset.tab === k); });
     var P = window.PANELS[k]; if (!curVar[k]) curVar[k] = P.variants[0].key;
-    drawVars(k);
+    drawVars();
     PANEL.innerHTML = ""; PANEL.dataset.tab = k; PANEL.dataset.variant = curVar[k];
     var v = P.variants.filter(function(x){ return x.key === curVar[k]; })[0] || P.variants[0];
     try { v.render(PANEL, F, S); } catch (e) { PANEL.innerHTML = '<div class="perr">render error: ' + e.message + '</div>'; console.error(e); }
@@ -254,8 +310,9 @@
     { k: "work", w: 1100, h: 420, t: "the bench — room to read while designing" },
     { k: "wide", w: 1500, h: 460, t: "the bench with the width the drop buys" } ];
   var boxWrap = document.getElementById("boxes");
-  BOXES.forEach(function(b){ var el = E("button", { class: "bb" + (b.k === "work" ? " on" : ""), "data-box": b.k }, b.w + " × " + b.h);
-    hoverBind(el, '<div class="cphd"><b>' + b.w + " × " + b.h + '</b></div><div class="cpsub">box preset</div><div class="cpbody">' + b.t + '</div>');
+  BOXES.forEach(function(b){ var el = ib(boxIco(b.w, b.h, 22),
+      '<div class="cphd"><b>' + b.w + " × " + b.h + '</b></div><div class="cpsub">box preset — the glyph is the shape, to scale</div><div class="cpbody">' + b.t + '</div>', b.k === "work");
+    el.dataset.box = b.k;
     el.onclick = function(ev){ ev.stopPropagation();
       [].forEach.call(boxWrap.children, function(x){ x.classList.toggle("on", x === el); });
       bench.className = "box-" + b.k; bench.style.setProperty("--bw", b.w + "px"); bench.style.setProperty("--bh", b.h + "px");
@@ -265,8 +322,9 @@
   /* ── the density dial: how much the same box carries. CSS only — the 12px floor never moves. ── */
   var DENS = [{ k: "air", t: "air — fewer things, more room around each" }, { k: "normal", t: "normal — the default weave" }, { k: "dense", t: "dense — everything the feed knows, packed" }];
   var densWrap = document.getElementById("dens");
-  DENS.forEach(function(d){ var el = E("button", { class: "bb" + (d.k === "normal" ? " on" : ""), "data-dens": d.k }, d.k);
-    hoverBind(el, '<div class="cphd"><b>' + d.k + '</b></div><div class="cpsub">information density</div><div class="cpbody">' + d.t + '</div>');
+  DENS.forEach(function(d){ var el = ib(labIco(d.k, 15),
+      '<div class="cphd">' + labIco(d.k, 15, "var(--accent)") + '<b>' + d.k + '</b></div><div class="cpsub">information density</div><div class="cpbody">' + d.t + '</div>', d.k === "normal");
+    el.dataset.dens = d.k;
     el.onclick = function(ev){ ev.stopPropagation();
       [].forEach.call(densWrap.children, function(x){ x.classList.toggle("on", x === el); });
       document.body.dataset.dens = d.k; window.DENS = d.k; if (cur) show(cur); }; densWrap.append(el); });

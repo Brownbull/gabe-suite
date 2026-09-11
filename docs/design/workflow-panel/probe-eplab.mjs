@@ -71,7 +71,7 @@ ok(await p.evaluate(() => { const h = document.getElementById('hover'); return !
 // every tab renders, in both boxes; nothing under 12px inside #bench; shots
 const floor = async () => p.evaluate(() => { let n = 0, worst = 99; document.querySelectorAll('#bench *').forEach(el => { if (!el.offsetParent && el.tagName !== 'BODY') return; const t = el.childNodes && [...el.childNodes].some(c => c.nodeType === 3 && c.textContent.trim()); if (!t) return; const fs = parseFloat(getComputedStyle(el).fontSize); if (fs < 12) { n++; worst = Math.min(worst, fs); } }); return { under: n, worst }; });
 for (const box of ['work', 'dock']) {
-  await p.click(`#boxes .bb[data-box="${box}"]`);
+  await p.evaluate(() => window.railTab('controls')); await p.click(`#boxes .ib[data-box="${box}"]`);
   for (const t of tabs) {
     await p.click(`#tabs .tab[data-tab="${t}"]`); await p.waitForTimeout(150);
     const err = await p.$('#panel .perr');
@@ -82,7 +82,7 @@ for (const box of ['work', 'dock']) {
     if (shotsAt) { fs.mkdirSync(shotsAt, { recursive: true }); await p.$eval('#bench', e => e.scrollIntoView()); await (await p.$('#bench')).screenshot({ path: path.join(shotsAt, `eplab-${box}-${t}.png`) }); }
   }
 }
-await p.click('#boxes .bb[data-box="work"]');
+await p.evaluate(() => window.railTab('controls')); await p.click('#boxes .ib[data-box="work"]');
 // every DISTRIBUTION of every part renders, fits and holds the floor (work box); then the density dial
 const variants = await p.evaluate(() => { const o = {}; for (const k in window.PANELS) o[k] = window.PANELS[k].variants.map(v => v.key); return o; });
 for (const t of tabs) {
@@ -98,7 +98,7 @@ for (const t of tabs) {
   await p.evaluate(t => window.showVariant(t, window.PANELS[t].variants[0].key), t);
 }
 for (const d of ['air', 'dense']) {
-  await p.click(`#dens .bb[data-dens="${d}"]`); await p.waitForTimeout(120);
+  await p.evaluate(() => window.railTab('controls')); await p.click(`#dens .ib[data-dens="${d}"]`); await p.waitForTimeout(120);
   for (const t of tabs) {
     await p.click(`#tabs .tab[data-tab="${t}"]`); await p.waitForTimeout(120);
     const dims = await p.$eval('#panel', e => ({ w: e.clientWidth, h: e.clientHeight, sw: e.scrollWidth, sh: e.scrollHeight }));
@@ -106,13 +106,34 @@ for (const d of ['air', 'dense']) {
     const fl = await floor(); ok(fl.under === 0, `${t} at density ${d}: no text under 12px`, fl.under + ' nodes, worst ' + fl.worst + 'px');
   }
 }
-await p.click('#dens .bb[data-dens="normal"]');
+await p.click('#dens .ib[data-dens="normal"]');
 // the part buttons carry icon + NAME + count (operator 2026-09-11)
 const btn = await p.$eval('#tabs .tab[data-tab="data"]', e => ({ w: e.clientWidth, h: e.clientHeight, txt: e.innerText, svg: !!e.querySelector('.tabi svg'), badge: !!e.querySelector('.tabn') }));
 ok(btn.svg && btn.badge && /Data/i.test(btn.txt), 'a part button carries its icon, its NAME and its count badge', JSON.stringify(btn));
 ok(btn.w > btn.h * 1.9 && btn.h <= 52, 'the part button is a WIDE command tile — horizontal, short (operator 2026-09-11)', btn.w + '×' + btn.h);
 const scroll = await p.evaluate(() => { const el = document.querySelector('.ldg') || document.querySelector('#panel [style*="overflow"], #panel'); const cs = getComputedStyle(document.documentElement); return { w: cs.scrollbarWidth, c: cs.scrollbarColor }; });
 ok(scroll.w === 'thin', 'scrollbars are the station\'s narrow themed ones', JSON.stringify(scroll));
+// the rail: three tabs, one section at a time, and every control an icon with a hover card
+const rtabs = await p.$$eval('#railtabs .rtb', els => els.map(e => e.dataset.rt));
+ok(rtabs.join(',') === 'controls,cov', 'the rail toggles between CONTROLS and the no-loss checklist', rtabs.join(','));
+ok(await p.$eval('#railtabs .rtb', e => e.classList.contains('on') && e.dataset.rt === 'controls'), 'controls are the DEFAULT view');
+for (const t of rtabs) { await p.click(`#railtabs .rtb[data-rt="${t}"]`); await p.waitForTimeout(90);
+  const shown = await p.$$eval('.rtab', els => els.filter(e => !e.hidden).map(e => e.id));
+  ok(shown.length === 1 && shown[0] === 'rt-' + t, `rail toggle ${t} shows one section, never both`, shown.join(',')); }
+await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(90);
+const blocks = await p.$$eval('#rt-controls .barblk .bhl b', els => els.map(e => e.textContent));
+ok(blocks.join(',') === 'bench,head bar,part bars', 'the controls tab separates bench · head bar · part bars into blocks', blocks.join(','));
+const prows = await p.$$eval('#partcfg .prow', els => els.length);
+ok(prows === 5, 'the BARS tab separates the controls per part — one row each', String(prows));
+const varBtns = await p.$$eval('#partcfg .ib', els => els.length);
+ok(varBtns === 12, 'every distribution is an icon button in its part row', String(varBtns));
+const iconOnlyCtl = await p.$$eval('#partcfg .ib, #barcfg .ib, #boxes .ib, #dens .ib, #motionwrap .ib', els => els.every(e => !e.innerText.trim() && !!e.querySelector('svg')));
+ok(iconOnlyCtl, 'every control in the rail is an ICON — its word lives on the hover card');
+const ctl = (await p.$$('#partcfg .ib'))[0]; await ctl.hover(); await p.waitForTimeout(120);
+ok(await p.evaluate(() => { const h = document.getElementById('hover'); return !h.hidden && h.innerText.length > 20; }), 'a rail control answers a hover with a card');
+await p.evaluate(() => { const r = document.getElementById('notes').getBoundingClientRect(); window.__railw = r.width; });
+ok(await p.evaluate(() => window.__railw >= 460 && window.__railw <= 500), 'the rail is ~50% wider than it was (474px)', String(await p.evaluate(() => window.__railw)));
+await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(80);
 // the checks file
 if (checksFile) {
   const checks = JSON.parse(fs.readFileSync(checksFile, 'utf8'));
