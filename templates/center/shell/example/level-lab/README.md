@@ -1,3 +1,7 @@
+> **FROZEN LAB (2026-09-10).** The Levels station this lab designed was retired (f8de670); the lab stays as the
+> design record of the level-navigation model + symbol grammar. Nothing regenerates it; `graph-grammar.js` in
+> `../../assets/` exists for these labs. The live station is `../codebase-graph-station/gabe-universe.html`.
+
 # Level lab — the level-navigation model + symbol grammar
 
 A **display-design lab** (operator-requested 2026-08-12): the four graph LEVELS the

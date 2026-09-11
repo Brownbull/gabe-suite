@@ -230,8 +230,6 @@
   nav.side .navitem:hover{ background:var(--hov-bg); color:var(--ink); }
   nav.side .navitem.on{ background:var(--accent); color:#fff; } nav.side .navitem.on svg{ color:#fff; }
   nav.side .navitem .count{ margin-left:auto; font-size:10px; color:var(--muted); background:var(--chip-bg); border:1px solid var(--line); border-radius:8px; padding:0 6px; }
-  nav.side .navitem .new{ margin-left:auto; font-size:8px; font-weight:800; letter-spacing:.05em; background:var(--accent); color:#fff; border-radius:5px; padding:1px 5px; }
-  nav.side .navitem.on .new{ background:#fff; color:var(--accent); }
   nav.side .foot{ margin-top:auto; padding:10px 6px 2px; font:600 9px/1.5 var(--font-mono); color:var(--muted); }
   /* ONE-ROW TOP BAR */
   .topbar{ position:fixed; left:var(--navw); right:0; top:0; height:var(--topbarh); z-index:29;
@@ -1008,7 +1006,7 @@
   <div class="navlabel g-board">Board</div>
   <a class="navitem" href="board.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="3" height="9"/><rect x="14" y="7" width="3" height="5"/></svg> Board</a>
   <div class="navlabel g-code">Codebase graph</div>
-  <a class="navitem on" href="gabe-universe.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="10" ry="4.5"/><ellipse cx="12" cy="12" rx="4.5" ry="10"/></svg> Gabe Universe <span class="new">NEW</span></a>
+  <a class="navitem on" href="gabe-universe.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="10" ry="4.5"/><ellipse cx="12" cy="12" rx="4.5" ry="10"/></svg> Gabe Universe</a>
   <div class="navlabel g-ent">Entities · backend</div>
   <a class="navitem" href="entity-index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> Entity index <span class="count">{{ENTITY_COUNT}}</span></a>
   {{SIDEBAR_ENTITIES}}
@@ -1020,6 +1018,11 @@
   {{SIDEBAR_CODE}}
   <div class="navlabel g-test">Testing</div>
   <a class="navitem" href="tests.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Tests <span class="count">{{TESTS_COUNT}}</span></a>
+  <a class="navitem navsubitem" href="test-matrix.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="12" y1="3" x2="12" y2="21"/></svg> Cases</a>
+  <a class="navitem navsubitem" href="test-files.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Files</a>
+  <a class="navitem navsubitem" href="test-claims.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Claims</a>
+  <a class="navitem navsubitem" href="test-elements.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Untested</a>
+  <a class="navitem navsubitem" href="test-corpora.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Corpora &amp; gates</a>
   <div class="navlabel g-ledger">Ledger</div>
   <a class="navitem" href="ledger.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Latest change</a>
   <div class="navlabel g-rel">Releases</div>
@@ -1154,7 +1157,7 @@ Object.keys(KINDCOL).forEach(function(k){ if(KINDS[k]) KINDS[k].col=KINDCOL[k]; 
    Each node also carries det/behind/resp/ids/table/sites so the live card reads real dossiers. */
 /* layer ruling (c) 2026-08-20: the old SUBOF collapse (endpoints→api, web→frontend) is retired —
    the layer core groups by the kind's OWN layer value, so new kinds bring their layer for free. */
-var LZ={ endpoints:150, api:60, web:150, data:-150 };
+var LZ={ endpoints:150, api:60, services:0, schemas:-60, web:150, data:-150 };   /* services + schemas: the feed's function layers (review 2026-09-10) */
 var METHOD={ GET:"#22c55e", POST:"#3b82f6", PUT:"#f97316", PATCH:"#eab308", DELETE:"#ef4444", BOOT:"#8a8f98", TASK:"#f0abfc" };   /* TASK = a worker entrypoint dispatched by name (review 2026-09-06); fuchsia-light — the disc must clear ~30° of the endpoint body #8b5cf6 (contrast rule, legend pass) */
 /* rel → edge colour. c4 kinds: touches · fk · bridge (+ empty→fk on model FK cross-edges). */
 var RELCOL={ touches:"#7c5cfc", fk:"#12b886", bridge:"#e8f443", calls:"#f59e0b", imports:"#a855f7",
@@ -1287,6 +1290,7 @@ Object.keys(_C4.l2||{}).forEach(function(ent){
     var n={ id:p.id, kind:kind, ent:ent, entClaim:ent, label:p.label||p.slug||p.id,   /* ent = the MUTABLE current home (an entity-model view may move it) · entClaim = the immutable claim, the join key */
       col:KINDS[kind].col, K:KINDS[kind], layer:KINDS[kind].layer, sub:KINDS[kind].layer||"data",
       m:m, det:det, behind:beh, resp:p.resp, ids:p.ids, table:p.table, sites:p.sites, fn:p.fn,
+      access:p.access||null,                                   /* the endpoint's table reads/writes (access.ops + commits) — never copied before (review 2026-09-10), so accessSec had no input */
       middleware:p.middleware, stream:!!p.stream, pclass:p.pclass||null, homeEv:p.home_ev||null, fnsN:(kind==="element"?_num(p.fns):null) };   // C4: the endpoint's level-2 gate/dep floor · fnsN: an element's function COUNT (its det lists 12) → the card's Guards section · stream = SSE/chunked delivery (review 2026-09-06)
     nodes.push(n); NIDS[n.id]=n; });
 });
@@ -1341,7 +1345,7 @@ if(_FE){
       cols:(p.fields||p.members||[]).map(function(c){ return [c[0], c[1]||"", ""]; }), shape:p.shape||null,   /* D5: a store's fields / a type's members ride det.cols like a table's columns */
       route:p.route||null, exportName:(p.label&&p.label!==p.name)?p.name:null,   /* a route's raw router literal + the export it hides behind (tier0 review 2026-09-07: six routes all named `Route`) */
       via:p.via||null, ops:p.ops||null };   /* a CLIENT store (2026-09-07): the key-space it lives in — localStorage · sessionStorage · query-cache — and whether the app reads it, writes it, or both */
-    var m={ behind:0, depth:0, tests:0, cols:0, fanin:0, god:false, method:null };
+    var m={ behind:0, depth:0, tests:null, cols:0, fanin:0, god:false, method:null };   /* tests:null = the feed never measured a frontend piece's tests (review 2026-09-10: 0 read as "untested" on all 1,078) */
     var n={ id:p.id, kind:kind, ent:p.home, entClaim:p.home, label:p.label||p.name, col:KINDS[kind].col, K:KINDS[kind], layer:KINDS[kind].layer, sub:KINDS[kind].layer||"web",
       m:m, det:det, behind:{}, fe:true, screen:p.screen||null, sites:p.sites||0, candidate:!!p.candidate,
       area:p.area||null, fixture:!!p.fixture, feClass:p.feClass||null, mclass:p.mclass||null, hrole:p.hrole||null, homedBy:p.homed_by||null, homeEv:p.home_ev||null,   // AREA + showcase tag + the fold-control class (phase 1)
@@ -1691,11 +1695,11 @@ function satPose(obj, ph, t, SR, R, ri){ var ring=SAT_RINGS[ri%SAT_RINGS.length]
   obj.userData.waves.forEach(function(wv){ var q=((t*1.3+wv.ph)%1), sc=(0.25+q*1.5)*SATC.sig; wv.m.scale.set(sc,sc,sc); wv.m.material.opacity=0.5*(1-q); }); }
 /* ── per-node fleet: the toy metrics → the five zones. Same field NAMES the real _a3 fields carry at scale-up:
    test count → defence · god / untested → attack · blast/behind → conflict shock · untested → flak · fan-in → satellites. ── */
-function nodeFleet(n){ var m=n.m||{}, tests=Math.min(9,Math.round(num(m.tests)));
+function nodeFleet(n){ var m=n.m||{}, tests=Math.min(9,Math.round(num(m.tests))), unmeasured=(m.tests==null);   /* null = never measured: no "unguarded" raiders for a piece nobody counted */
   var def=[]; for(var i=0;i<tests;i++){ var k=DEF_KINDS[i%3]; def.push({ship:defModel(k), rot:ROT.def[k]&&ROT.def[k][DEF_ACTIVE[k]]}); }
   var atk=[]; if(m.god) atk.push({ship:atkModel('god'), rot:ROT.atk.god[ATK_ACTIVE.god]});
-  var ung=(tests===0 && n.kind!=='entity')? 3 : 0; for(var u=0;u<ung;u++) atk.push({ship:atkModel('ung'), rot:ROT.atk.ung});   // untested surface → unguarded raiders
-  var shock=!!(m.large || num(m.behind)>=15), flak=(tests===0 && n.kind!=='entity');
+  var ung=(tests===0 && !unmeasured && n.kind!=='entity')? 3 : 0; for(var u=0;u<ung;u++) atk.push({ship:atkModel('ung'), rot:ROT.atk.ung});   // untested surface → unguarded raiders
+  var shock=!!(m.large || num(m.behind)>=15), flak=(tests===0 && !unmeasured && n.kind!=='entity');
   var sats=Math.min(SATC.count, Math.round(num(m.fanin)));
   return {def:def, atk:atk, shock:shock, flak:flak, sats:sats}; }
 var FLEETTICK=[];
@@ -2067,7 +2071,7 @@ function _assignSubImpl(mode){
     return; }
   nodes.forEach(function(n){
     if(mode==="kind") n.sub=n.kind;
-    else if(mode==="tests") n.sub=((n.m&&n.m.tests)>0)?"tested":"untested";
+    else if(mode==="tests") n.sub=(n.m&&n.m.tests==null)?"unmeasured":((n.m.tests>0)?"tested":"untested");   /* null = never measured (functions, fe pieces) — never "untested" */
     else n.sub=n.layer||"data"; }); }   // ruling (c): group by the kind's OWN layer — endpoints · api · web · data today, auto-grows with new kinds
 
 /* ── FE SUB-CLUSTERS (batch 50) — before this, every core except Kind put ALL frontend pieces in one
@@ -2120,12 +2124,22 @@ function _feAssignSub(mode){
 /* ── FUNCTIONS layer (from GABE_LEVELS.fn_nodes + fn_edges) — toggled in/out of the graph ── */
 var _FNNODES=null, _FNLINKS=null, _fnsOn=false;
 function _buildFnData(){ var D=window.GABE_LEVELS; if(!D||!D.fn_nodes||!KINDS["function"]){ _FNNODES=[]; _FNLINKS=[]; return; }
-  _FNNODES=D.fn_nodes.map(function(f){ var beh=f.behind||{};
+  /* review 2026-09-10 (the kind lab's four defects): the feed's OWN layer (195 of 292 are services — the kind's
+     "api" was stamped on all), tests:null (the emitter measures none — 0 read as "untested"), fan-in from the
+     call edges' in-degree (hub.usage counts referencing FILES), and the levels detail row joined so the card
+     shows the signature / docstring the feed carries (guarded: the detail's file must be the id's file). */
+  var _indeg={}; (D.fn_edges||[]).forEach(function(e){ if(e.t) _indeg[e.t]=(_indeg[e.t]||0)+1; });
+  var _DET=D.detail||{};
+  _FNNODES=D.fn_nodes.map(function(f){ var beh=f.behind||{}, file=(f.id||"").split("#")[0];
+    var rec=_DET["fn:"+f.slug+"|"+f.name]; var dd=rec&&(rec.det||rec); var det={ file:file, doc:"" };
+    if(dd && (!dd.file || dd.file===file)){ det.doc=dd.doc||""; if(dd.flines!=null) det.flines=dd.flines;
+      if(dd.sig){ det.sig=Object.assign({}, dd.sig); if(det.sig.lines==null && dd.flines!=null) det.sig.lines=dd.flines; }
+      else if(dd.flines!=null) det.sig={ lines:dd.flines }; }
     return { id:f.id, kind:"function", ent:f.slug, entClaim:f.slug, label:f.name, col:KINDS["function"].col, K:KINDS["function"],
-      layer:KINDS["function"].layer, sub:KINDS["function"].layer||"data", __fn:true,
+      layer:f.layer||KINDS["function"].layer, sub:f.layer||KINDS["function"].layer||"data", __fn:true,
       role:f.role, access:f.access, sinks:f.sinks, d2w:f.d2w,   // C1/C2/C4: role badge + ops/sinks; D2W: hops-to-a-write (call-wire heat, 0 is real → keep undefined distinct)
-      m:{ behind:_num(beh.fns), depth:_num(beh.depth), tests:0, cols:0, fanin:_num(f.hub&&f.hub.usage), god:!!f.god, method:null },
-      det:{ file:(f.id||"").split("#")[0], doc:"" }, behind:beh }; });
+      m:{ behind:_num(beh.fns), depth:_num(beh.depth), tests:null, cols:0, fanin:_indeg[f.id]||0, usage:_num(f.hub&&f.hub.usage), god:!!f.god, method:null },
+      det:det, behind:beh }; });
   _FNLINKS=(D.fn_edges||[]).map(function(e){ return {source:e.s, target:e.t, rel:e.rel||"calls"}; });
   /* endpoint → HANDLER wires (batch 46): the endpoint's own handler fn is in the pool — wire it
      so a data-edge-less endpoint (DELETE …/cupo) joins the call net the moment Functions is ON. */
@@ -5783,7 +5797,6 @@ var KINDCARD=(function(){
       kv("file","file", det.file+(det.flines?(":"+det.flines):"")),
       det.status?kv("info","status", det.status):null,
       det.homed?kv("link","home", "homed from "+det.homed.from+" — "+String(det.homed.why||"").replace(/^consumed-by:/,"consumed by ").replace(/^fn-consumed-by:/,"consumed by fn ").replace(/^nested-in:/,"nested in ")):null,   // schema homing provenance
-      (det.exported!=null)?kv("role","exported", det.exported?"yes":"no"):null,
       det.exportName?kv("role","export", det.exportName+(det.route?(" · route <code>"+_esc(det.route)+"</code>"):"")):null,   /* a route labelled by its URL still names the symbol + the literal behind it (tier0 review 2026-09-07) */
       (n.table)?kv("table","table", n.table):null); }
   function usageN(n){ var u=(n.det&&n.det.usage); if(u) return (u.api||0)+(u.internal||0); return (n.m&&n.m.fanin)||0; }   // badge matches its own breakdown (det.usage when present, else graph in-degree)

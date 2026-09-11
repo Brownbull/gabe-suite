@@ -128,6 +128,30 @@ check('fk_communities' in page and 'usecases' in page and 'communities' in page,
 
 # ── 10f. batch-4: functions layer toggle · Guards core (data-backed) · LINES in config ──
 check('function _buildFnData' in page and 'function toggleFns' in page, "functions layer (fn_nodes toggle) missing")
+# review 2026-09-10 — the kind lab's four station defects + the sidebar parity (both copies)
+check('access:p.access||null' in page, "endpoint adapter must carry access — the Accesses section had no input on 79/81 endpoints")
+check('tests:null, cols:0, fanin:_indeg[f.id]||0' in page and 'tests:null, cols:0, fanin:0' in page and 'tests:0, cols:0' not in page,
+      "function + fe nodes carry tests:null (unmeasured) — a fabricated 0 read as 'untested' on every function and fe piece")
+check('layer:f.layer||KINDS["function"].layer' in page and 'services:0, schemas:-60' in page,
+      "functions keep the FEED's layer (195/292 are services) and the layer planes know services + schemas")
+check('_DET["fn:"+f.slug+"|"+f.name]' in page and 'dd.file===file' in page, "the levels detail row (sig · flines · doc) is joined onto the function node, guarded by file")
+check('(n.m&&n.m.tests==null)?"unmeasured"' in page and 'tests===0 && !unmeasured' in page,
+      "the tests core-by is three-state and the fleet draws no raiders for an unmeasured piece")
+check('kv("role","exported"' not in page, "det.exported row dropped — true on every node, it said nothing")
+check(page.count('class="navitem navsubitem"') >= 5 and '<span class="new">NEW</span>' not in page and 'nav.side .navitem .new' not in page,
+      "the universe's sidebar carries the five Testing sub-items and no NEW chip — the 10th literal copy")
+# TEMPLATE ↔ EXAMPLE PARITY (review 2026-09-10): the committed example must be the template filled by fill-example.py —
+# it drifted 50 lines behind (pre-split sidebar, three retired hrefs) with every battery green. FIRES on any drift.
+import subprocess, tempfile, os
+REPO = str(shell.parent.parent.parent)   # templates/center/shell → the repo root
+_fill = os.path.join(REPO, "docs/design/codebase-graph-consolidation/universe-build/fill-example.py")
+_tmp = tempfile.NamedTemporaryFile(suffix=".html", delete=False).name
+_rc = subprocess.run(["python3", _fill, "--out", _tmp], capture_output=True, text=True)
+_fresh = open(_tmp, encoding="utf-8").read() if _rc.returncode == 0 else ""
+check(_rc.returncode == 0, "fill-example.py must fill every token the template carries: " + _rc.stderr.strip()[-160:])
+check(_fresh == open(os.path.join(REPO, "templates/center/shell/example/codebase-graph-station/gabe-universe.html"), encoding="utf-8").read(),
+      "the committed example page must equal the template filled by fill-example.py (two-file law; run fill-example.py and commit)")
+os.unlink(_tmp)
 check('fn_nodes' in page and 'fn_edges' in page, "functions do not read the levels fn_nodes/fn_edges")
 check('grp==="showFns"' in page and 'grp==="lineStyle"' in page, "applyCfg missing the showFns/lineStyle branches")
 check('__uniAssignSplit=function' in page and 'CFG.coreByBE' in page and 'CFG.coreByFE' in page,

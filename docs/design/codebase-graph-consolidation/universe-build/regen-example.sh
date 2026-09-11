@@ -7,7 +7,7 @@
 #   GABE_TWIN=<repo> bash regen-example.sh   # default twin: /home/khujta/projects/apps/gustify
 #
 # WHAT THE ESTATE IS (templates/center/shell/example/codebase-graph-station/):
-#   c4-graph.js · levels.js · levels.json · sim-archive.js · commits.js
+#   c4-graph.js · levels.js · levels.json · commits.js
 #                                                            ← emitted by ONE twin-read-only build (commits.js =
 #                                                              the twin's last 30 commits as journeys; landed since
 #                                                              2026-09-04 — it sat frozen at Aug-7 before)
@@ -16,7 +16,8 @@
 #                                                              commit 77fe3cd shipped the stub by mistake)
 #   gabe-universe.html                                       ← the TEMPLATE + fill-example.py (rehome tokens only;
 #                                                              parts/ + assemble.py RETIRED 2026-09-03 — operator ruling)
-#   codebase-graph.html                                      ← $TMP page with assets rehomed ../../assets/
+#   (codebase-graph.html · sim-archive.js — RETIRED with the Change graph / Codebase archive stations, f8de670 2026-09-10;
+#    the builder no longer writes them and this script no longer lands them)
 #   workflows.draft.js                                       ← draft-workflows.py over the example's OWN c4 + workflows.js
 #                                                              (derived, --check'd; the curated workflows.js itself is suite content, never landed)
 #   (templates/center/shell/gabe-universe.html is the SOURCE of record — edited directly, never landed from here)
@@ -44,8 +45,12 @@ python3 "$ROOT/templates/center/generators/build_center_a3.py" >/dev/null
 # 2 · the station page: the TEMPLATE → fill (rehome tokens) → the example page. No assembly step: parts/ is retired.
 echo "── fill (template → example)"
 if [ "$CHECK" = 1 ]; then
-  python3 fill-example.py >/dev/null      # fill-example writes $EX directly — under --check we
-  RESTORE=1                               # compare and RESTORE from git afterwards
+  # fill-example writes $EX directly — under --check we compare and RESTORE from git afterwards,
+  # but ONLY when the page was clean before: a checkout over uncommitted edits destroyed them
+  # (review 2026-09-10; memory trap since 2026-09-05). Dirty → compare, then leave it alone.
+  if git -C "$ROOT" diff --quiet -- "templates/center/shell/example/codebase-graph-station/gabe-universe.html"; then PRE_CLEAN=1; else PRE_CLEAN=0; fi
+  python3 fill-example.py >/dev/null
+  RESTORE=1
 else
   python3 fill-example.py >/dev/null; RESTORE=0
 fi
@@ -53,7 +58,7 @@ fi
 # 3 · land / compare each artifact. Volatile stamps (twin HEAD sha · regen date ·
 #     graft index_hash) are NORMALIZED under --check — the no-wallclock law: content
 #     must reproduce byte-identically, stamps churn by design.
-FEEDS="c4-graph.js levels.js levels.json sim-archive.js commits.js"
+FEEDS="c4-graph.js levels.js levels.json commits.js"   # sim-archive.js left with the archive station (f8de670)
 fail=0
 # Provenance stamps are volatile w.r.t. CONTENT: `head` = which twin commit the feed was
 # built from (moves on ANY twin commit), `index_hash` = graft's index state, wallclock date.
@@ -88,9 +93,6 @@ PY
 cp "$EX/workflows.js" "$DC/docs/site/center/workflows.js"
 python3 "$ROOT/skills/gabe-cc-update/scripts/draft-workflows.py" "$DC" >/dev/null
 land "$DC/docs/site/center/workflows.draft.js" "$EX/workflows.draft.js" "workflows.draft.js (drafted from the landed graph)"
-# codebase-graph.html: rehome assets/ → ../../assets/ exactly as the README prescribes
-sed 's#src="assets/#src="../../assets/#g; s#href="assets/#href="../../assets/#g' "$TMP/codebase-graph.html" > "$TMP/codebase-graph.rehomed.html"
-land "$TMP/codebase-graph.rehomed.html" "$EX/codebase-graph.html" "codebase-graph.html (assets rehomed)"
 # sim.data.js: DERIVED from a real twin commit (regenerable; NEVER the build's null stub,
 #   which renders the change-graph blank — the 77fe3cd defect). derive-seeded-sim.py is pure.
 if [ "$CHECK" = 1 ]; then
@@ -104,7 +106,11 @@ fi
 if [ "$CHECK" = 1 ]; then
   if git -C "$ROOT" diff --quiet -- "templates/center/shell/example/codebase-graph-station/gabe-universe.html"; then
     echo "  OK   example gabe-universe.html"; else echo "  DRIFT example gabe-universe.html"; fail=1; fi
-  git -C "$ROOT" checkout -q -- "templates/center/shell/example/codebase-graph-station/gabe-universe.html"
+  if [ "${PRE_CLEAN:-1}" = 1 ]; then
+    git -C "$ROOT" checkout -q -- "templates/center/shell/example/codebase-graph-station/gabe-universe.html"
+  else
+    echo "  note example gabe-universe.html had uncommitted edits before --check — left in place (not reverted)"
+  fi
 fi
 
 # 4 · proof (skipped under --check; --check IS the proof of reproducibility)
@@ -114,6 +120,5 @@ if [ "$CHECK" = 1 ]; then
 else
   echo "── batteries"
   ( cd "$ROOT" && bash tests/gabe-universe/run.sh ) | tail -1
-  ( cd "$ROOT" && bash tests/codebase-graph/run.sh ) | tail -2   # the 2D station + grammar share the method roster
   echo "Estate landed. Solo proofs: node verify-{panels,search,walk,clustering,explore,routes,ctrl,d2w,dblclick,jrntabs,jrnstep,selanim,backend-journeys,workflows,tiers}.mjs (SOLO-sequential; fleet detached)."
 fi

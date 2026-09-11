@@ -36,11 +36,13 @@ re-landed shows as DRIFT. Volatile stamps (twin HEAD sha, regen date) are normal
 ## What the one command produces (the estate)
 
 Into `../../../../templates/center/shell/example/codebase-graph-station/`:
-- `c4-graph.js` · `levels.js` · `levels.json` · `sim-archive.js` — one twin-read-only build
-- `codebase-graph.html` — the `$TMP` page with `assets/` rehomed to `../../assets/`
+- `c4-graph.js` · `levels.js` · `levels.json` · `commits.js` — one twin-read-only build
 - `sim.data.js` — DERIVED from a real twin commit (**never** the build's `null` stub, which
-  renders the change-graph blank — the 77fe3cd defect this wrapper exists to prevent)
-- `gabe-universe.html` — `assemble.py` + `fill-example.py`
+  rendered the change-graph blank — the 77fe3cd defect this wrapper exists to prevent). The
+  Change graph itself was RETIRED (f8de670, 2026-09-10); the seed still feeds the universe's in-flight preset.
+- `gabe-universe.html` — the TEMPLATE + `fill-example.py` (rehome tokens only; `assemble.py` retired 2026-09-03).
+  `fill-example.py` asserts it knows EVERY `{{TOKEN}}` the template carries (a new token is named, not asserted away).
+- *(retired with their stations, f8de670: `codebase-graph.html` · `sim-archive.js` — no longer built, no longer landed)*
 - `workflows.js` — CURATED (not built): `window.GABE_WORKFLOWS = [{name, steps:["METHOD /path"…], note}]`,
   the operator's user workflows for the journeys picker's **workflows** tab. One file per project,
   beside the center's data; the build SEEDS an honest-empty placeholder when a center has none
