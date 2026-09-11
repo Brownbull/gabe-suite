@@ -161,7 +161,7 @@
   function chip(opt){ var k = opt.key, st = window.elStyle(k), words = wantText(k);
     var c = el("span", { class: "hel sh-" + st.shape + (opt.cls ? " " + opt.cls : "") + (words ? "" : " mute") });
     c.dataset.el = k;
-    if (opt.iconNode) c.append(opt.iconNode); else if (opt.icon) c.insertAdjacentHTML("beforeend", S.icon(opt.icon, 13, opt.col || "currentColor"));
+    if (opt.iconNode) c.append(opt.iconNode); else if (opt.icon) c.insertAdjacentHTML("beforeend", S.icon(opt.icon, st.size, opt.col || "currentColor"));
     if (opt.dot) c.insertAdjacentHTML("beforeend", '<i class="pdot" style="background:' + opt.dot + '"></i>');
     if (words && HEADCFG.mode === "label" && opt.label) c.append(el("span", { class: "hlbl" }, opt.label));
     if (words && opt.value != null) c.append(el("span", { class: "hval" }, opt.value));
@@ -173,22 +173,30 @@
      Defaults follow the operator's ruling: the entity and the cluster are no longer their own
      chips on the left; the UP trio on the right carries them (and will transport to those levels
      in the graph), and the file moves over beside it. */
+  /* THE DEFAULT IS THE OPERATOR'S OWN (pasted from the copy button, 2026-09-11):
+     head bar · verbosity value · LEFT kind method name status risk · RIGHT source above ·
+     off entity cluster kindword · styles kind(none) name(none,text on) above(round)
+     risk(round,text off) method(none) status(pill) source(none) kindword(rect)          */
   var HEADCFG = window.HEADCFG = { mode: "value",
-    off: { kindword: 1, entity: 1, cluster: 1 },
+    off: { entity: 1, cluster: 1, kindword: 1 },
     left: ["kind", "method", "name", "status", "risk", "entity", "cluster", "kindword"],
-    right: ["above", "source"],
+    right: ["source", "above"],
     /* per element (operator 2026-09-11): does it spend words, and what container does it sit in.
        text  auto = follow the bar's verbosity · on = always · off = never (the glyph alone)
        shape none = no container at all (transparent) · square · rect · round · pill · circle · cut */
-    style: { kind: { text: "auto", shape: "rect" }, name: { text: "on", shape: "none" },
-             above: { text: "auto", shape: "rect" }, risk: { text: "auto", shape: "pill" } },
+    style: { kind: { text: "auto", shape: "none", size: 20 }, method: { text: "auto", shape: "none" },
+             name: { text: "on", shape: "none" }, status: { text: "auto", shape: "pill" },
+             risk: { text: "off", shape: "round" }, source: { text: "auto", shape: "none" },
+             above: { text: "auto", shape: "round" }, kindword: { text: "auto", shape: "rect" } },
     sel: "kind" };
   var SHAPES = ["none", "square", "rect", "round", "pill", "circle", "cut"];
+  var SIZES = [11, 13, 16, 20, 24];   /* the glyph's own size — it carries the meaning, so it earns a dial */
   var SHAPEWHY = { none: "no container at all — the glyph and its value sit straight on the bar",
     square: "sharp corners — the most machine-like edge", rect: "the station's own 7px corner (the default)",
     round: "a softer 12px corner", pill: "fully rounded — reads as a badge, like the risk flag",
     circle: "a disc — only honest when the element is a glyph alone", cut: "one corner clipped — an angled, tactical edge" };
-  window.elStyle = function(k){ return (HEADCFG.style[k] = HEADCFG.style[k] || { text: "auto", shape: "rect" }); };
+  window.elStyle = function(k){ var st = (HEADCFG.style[k] = HEADCFG.style[k] || { text: "auto", shape: "rect" });
+    if (st.size == null) st.size = 13; return st; };
   function wantText(k){ var t = window.elStyle(k).text;
     return t === "on" ? true : t === "off" ? false : HEADCFG.mode !== "icon"; }
   window.headOrder = function(side){ return HEADCFG[side].filter(function(k){ return !HEADCFG.off[k]; }); };
@@ -206,8 +214,9 @@
       build: function(){ return chip({ key: "kindword", cls: "kindword", value: (S.KINDS.endpoint.type || "API endpoint").toUpperCase(), col: S.KINDCOL.endpoint,
         card: hcard({ title: "the kind, spelled out", icon: "endpoint", color: S.KINDCOL.endpoint, body: "kept only as a switch: with the glyph beside it this chip is redundant, which is why it is off." }) }); } },
     { key: "method", word: "method", note: "the HTTP verb, painted by the station's own badge painter",
-      build: function(){ var cv = document.createElement("canvas"); cv.width = cv.height = 32;
-        var cx = cv.getContext("2d"); cx.scale(32 / 128, 32 / 128); S.badgeGlyph(cx, "method", I.method); cv.style.opacity = .9;
+      build: function(){ var mz = window.elStyle("method").size + 3, cv = document.createElement("canvas"); cv.width = cv.height = 64;
+        var cx = cv.getContext("2d"); cx.scale(64 / 128, 64 / 128); S.badgeGlyph(cx, "method", I.method); cv.style.opacity = .9;
+        cv.style.width = cv.style.height = mz + "px";
         var w = el("span", { class: "mbadge", id: "mbadge" }); w.append(cv);
         return chip({ key: "method", iconNode: w, cls: "methodchip", label: "method", value: I.method,
           card: hcard({ title: I.method, icon: "endpoint", color: S.METHOD[I.method], sub: "HTTP method · the station's badge",
@@ -217,7 +226,7 @@
       build: function(){ var st = window.elStyle("name");
         var c = el("span", { class: "hel hname sh-" + st.shape }); c.dataset.el = "name";
         if (wantText("name")) c.append(el("span", { class: "pname" }, I.path));
-        else c.insertAdjacentHTML("beforeend", S.icon("doc", 14, "var(--muted)"));
+        else c.insertAdjacentHTML("beforeend", S.icon("doc", st.size, "var(--muted)"));
         hoverBind(c, hcard({ title: I.label, icon: "endpoint", color: S.KINDCOL.endpoint, sub: "the door",
           rows: [["method", I.method], ["path", I.path], ["handler", (F.functions.handler.name || "—")], ["id", I.id]], station: I.id })); return c; } },
     { key: "entity", word: "entity", note: "which entity claims the door — the dot is the entity colour used everywhere in the graph",
@@ -332,6 +341,12 @@
       hoverBind(b, hcard({ title: sh === "none" ? "no container" : sh, sub: E0.word + " · container", body: SHAPEWHY[sh] }));
       b.onclick = function(ev){ ev.stopPropagation(); st.shape = sh; drawHead(); drawBarCfg(); }; return b; });
     row("container", shapeBtns);
+    var sizeBtns = SIZES.map(function(z){ var b = el("button", { class: "ib" + (st.size === z ? " on" : "") });
+      b.dataset.size = String(z); b.innerHTML = S.icon(EICO[k] || "info", Math.min(z, 18));
+      hoverBind(b, hcard({ title: z + "px", icon: EICO[k], sub: E0.word + " · glyph size",
+        body: "the glyph carries the meaning — this is how loud it is said. The element's own icon is drawn here at the size it would take." }));
+      b.onclick = function(ev){ ev.stopPropagation(); st.size = z; drawHead(); drawBarCfg(); }; return b; });
+    row("icon", sizeBtns);
     box.append(ed); }
   drawHead(); drawBarCfg();
   COV.mark("HEAD", "head"); COV.mark("SOURCE", "head"); COV.mark("RISK", "head"); COV.mark("ABOVE", "head"); COV.mark("IDENTITY", "head");
@@ -374,8 +389,8 @@
   window.COPYTXT = {
     bench: function(){ var box = document.querySelector("#boxes .ib.on"), d = window.DENS;
       return "bench · box " + (box ? box.__label : "?") + " · density " + d + " · motion " + (CLOCK.on ? "playing" : "paused"); },
-    head: function(){ var styled = Object.keys(HEADCFG.style).map(function(k){ var st = HEADCFG.style[k];
-        return k + "(" + st.shape + (st.text === "auto" ? "" : ",text " + st.text) + ")"; }).join(" ");
+    head: function(){ var styled = Object.keys(HEADCFG.style).map(function(k){ var st = window.elStyle(k);
+        return k + "(" + st.shape + (st.text === "auto" ? "" : ",text " + st.text) + (st.size === 13 ? "" : ",icon " + st.size) + ")"; }).join(" ");
       return "head bar · verbosity " + HEADCFG.mode
       + " · LEFT " + (window.headOrder("left").join(" ") || "—")
       + " · RIGHT " + (window.headOrder("right").join(" ") || "—")

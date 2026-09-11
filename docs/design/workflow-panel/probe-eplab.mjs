@@ -50,7 +50,10 @@ for (const s of [F.identity.path, String(F.identity.status), F.identity.file + '
     clNamed = await p.evaluate(c => document.getElementById('hover').innerText.includes(c), F.identity.cluster); }
   ok(clNamed, 'the cluster is still reachable on the bar — the UP trio\'s cluster chip names it on hover'); }
 ok(await p.$('#headstrip #mbadge canvas') !== null, 'the METHOD badge is painted by the station painter (canvas)');
-ok(head.toLowerCase().includes('large surface'), 'the risk flag is on the head bar');
+{ const rc = await p.$('#headstrip .hel[data-el="risk"]');
+  ok(rc !== null, 'the risk flag is on the head bar');
+  if (rc) { await rc.hover(); await p.waitForTimeout(120);
+    ok(await p.evaluate(() => document.getElementById('hover').innerText.toLowerCase().includes('large surface')), 'the risk flag names its reason on hover (its words are off by the operator\'s default)'); } }
 ok((await p.$$('#headstrip .habove .hel')).length === 3, 'ABOVE ladder: cluster · entity · everything');
 ok(await p.evaluate(() => window.headOrder('right').includes('above')), 'the CLUSTER reaches the bar through the UP trio');
 ok(!/API ENDPOINT/i.test(head), 'the kind is NOT spelled out beside its own glyph by default');
@@ -125,6 +128,18 @@ const scroll = await p.evaluate(() => { const el = document.querySelector('.ldg'
 ok(scroll.w === 'thin', 'scrollbars are the station\'s narrow themed ones', JSON.stringify(scroll));
 // the rail: three tabs, one section at a time, and every control an icon with a hover card
 // AT BOOT — before any click — exactly one rail section is visible, and it is the controls
+// THE OPERATOR'S OWN BAR (pasted back from the copy button 2026-09-11) is the default — pinned here
+{ const cfg = await p.evaluate(() => ({ mode: window.HEADCFG.mode, left: window.headOrder('left'), right: window.headOrder('right'),
+    off: Object.keys(window.HEADCFG.off).sort(), style: window.HEADCFG.style }));
+  ok(cfg.mode === 'value', 'default verbosity is value', cfg.mode);
+  ok(cfg.left.join(' ') === 'kind method name status risk', 'default LEFT pile', cfg.left.join(' '));
+  ok(cfg.right.join(' ') === 'source above', 'default RIGHT pile', cfg.right.join(' '));
+  ok(cfg.off.join(' ') === 'cluster entity kindword', 'default off', cfg.off.join(' '));
+  const want = { kind: 'none', method: 'none', name: 'none', status: 'pill', risk: 'round', source: 'none', above: 'round', kindword: 'rect' };
+  const bad = Object.keys(want).filter(k => (cfg.style[k] || {}).shape !== want[k]);
+  ok(bad.length === 0, 'default containers are the operator\'s', bad.join(','));
+  ok(cfg.style.name.text === 'on' && cfg.style.risk.text === 'off', 'default text overrides are the operator\'s', JSON.stringify({ name: cfg.style.name.text, risk: cfg.style.risk.text }));
+  ok(cfg.style.kind.size === 20, 'the KIND glyph is drawn larger than the rest', String(cfg.style.kind.size)); }
 const bootShown = await p.$$eval('.rtab', els => els.filter(e => !e.hidden && e.offsetParent !== null).map(e => e.id));
 ok(bootShown.length === 1 && bootShown[0] === 'rt-controls', 'at BOOT only the controls show — the toggle runs on load', bootShown.join(','));
 const rtabs = await p.$$eval('#railtabs .rtb', els => els.map(e => e.dataset.rt));
@@ -151,7 +166,7 @@ await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(80);
 const piles = await p.$$eval('#headstrip .hpile', els => els.map(e => e.className));
 ok(piles.length === 2 && /left/.test(piles[0]) && /right/.test(piles[1]), 'the bar is TWO piles — left and right', piles.join('|'));
 const rightKeys = await p.evaluate(() => window.headOrder('right'));
-ok(rightKeys.join(',') === 'above,source', 'the right pile carries the UP trio and the file', rightKeys.join(','));
+ok(rightKeys.join(',') === 'source,above', 'the right pile carries the file then the UP trio (the operator\'s order)', rightKeys.join(','));
 const leftKeys = await p.evaluate(() => window.headOrder('left'));
 ok(!leftKeys.includes('entity') && !leftKeys.includes('cluster'), 'entity and cluster are no longer their own chips on the left — the UP trio carries them', leftKeys.join(','));
 ok((await p.$$('#headstrip .hupmark')).length === 0, 'the UP trio has no trailing arrow — the three icons ARE the ladder');
@@ -177,7 +192,9 @@ await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(80);
 await p.click('#barcfg .dzone .ib[data-el="status"]'); await p.waitForTimeout(100);
 ok(await p.$eval('.elned .ednhd b', e => e.textContent === 'status'), 'clicking an element chip opens ITS editor');
 const rows = await p.$$eval('.elned .cfl', els => els.map(e => e.textContent));
-ok(rows.join(',') === 'shown,text,container', 'the editor offers shown · text · container', rows.join(','));
+ok(rows.join(',') === 'shown,text,container,icon', 'the editor offers shown · text · container · icon size', rows.join(','));
+const sizes = await p.$$eval('.elned .ib[data-size]', els => els.map(e => e.dataset.size));
+ok(sizes.join(',') === '11,13,16,20,24', 'five glyph sizes, each drawn with the element\'s own icon', sizes.join(','));
 const shapes = await p.$$eval('.elned .ib[data-shape]', els => els.map(e => e.dataset.shape));
 ok(shapes.join(',') === 'none,square,rect,round,pill,circle,cut', 'seven containers, each drawn as the shape it names', shapes.join(','));
 // text off → the chip keeps its glyph and drops its words; the value stays on the hover card
@@ -198,6 +215,12 @@ await p.click('.elned .ib[data-shape="none"]'); await p.waitForTimeout(80);
 { const st = await p.$eval('#headstrip .hel[data-el="status"]', e => getComputedStyle(e).borderTopColor);
   ok(/rgba\(0, 0, 0, 0\)|transparent/.test(st), 'NO CONTAINER leaves the border transparent', st); }
 await p.click('.elned .ib[data-shape="rect"]'); await p.waitForTimeout(80);
+// the glyph size reaches the drawn icon
+for (const z of ['11', '24', '13']) { await p.click(`.elned .ib[data-size="${z}"]`); await p.waitForTimeout(80);
+  const w = await p.$eval('#headstrip .hel[data-el="status"] svg', e => e.getAttribute('width'));
+  ok(w === z, `icon size ${z} reaches the drawn glyph`, String(w)); }
+{ const kz = await p.$eval('#headstrip .hel[data-el="kind"] svg', e => +e.getAttribute('width'));
+  ok(kz === 20, 'the kind glyph draws at 20px by default', String(kz)); }
 // the editor can hide the element too
 await p.click('.elned .ib[data-shown="off"]'); await p.waitForTimeout(100);
 ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 0, 'the editor hides the element');

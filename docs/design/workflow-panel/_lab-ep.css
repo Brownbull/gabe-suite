@@ -415,3 +415,7 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 .elned .ednhd .ednn{ margin-left:auto; font:600 12px/1 var(--font-mono); color:var(--muted); }
 .elned .cfl{ line-height:1.9; }
 #barcfg .ib.sel{ outline:1px solid var(--accent); outline-offset:1px; }
+/* a bare glyph (no container) still needs a hit area and a hover tell */
+.hel.sh-none{ padding-top:3px; padding-bottom:3px; }
+.hel.sh-none:hover svg{ filter:brightness(1.4); }
+.elned .ib[data-size]{ min-width:34px; }
