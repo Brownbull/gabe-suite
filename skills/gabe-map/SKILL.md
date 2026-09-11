@@ -4,7 +4,7 @@ description: "The suite's MCP server — the project's committed codebase map as
 when_to_use: "Manage the gabe-map MCP server: is it registered at user scope, is it disabled in this project, does the running server match the install, does this project have a map. Human-initiated only; the TOOLS themselves are reached for by every skill through mcp__gabe-map__*."
 disable-model-invocation: true
 metadata:
-  version: 1.3.1
+  version: 1.3.2
 ---
 
 # Gabe Map — the codebase map as tools
@@ -61,5 +61,5 @@ Design record: `../../docs/design/gabe-map/README.md`. Binding contract: `refere
 
 - **status:** `gabe-map · registered: yes|no (user scope) · disabled here: yes|no · install parity: ok|MISMATCH <path> · server_sha <12hex>` + the `map_status` text for the cwd project.
 - **register:** the command, the confirmation, the result line, the restart reminder.
-- **probe:** `tools: 17 (…names…)` + the `map_status` text.
+- **probe:** `tools: 18 (…names…)` + the `map_status` text.
 - Every tool answer the server returns is ONE text block: a header `gabe-map · <tool> · map@<head> · <fresh|stale|unknown>` and the JSON result; lists are capped and the cap is named; absence is a named `reason`, never silence.

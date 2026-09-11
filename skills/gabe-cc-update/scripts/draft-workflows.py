@@ -10,10 +10,10 @@ no workflow, falling into 14 natural entity·screen clusters.
 This script PROPOSES, never curates. From the committed c4-graph.json it takes every endpoint no
 curated workflow names, clusters them by (entity · the SCREEN that drives them — the route above the
 fetching piece), orders each cluster's steps read→write, SUGGESTS a level, and writes them as drafts
-to docs/site/center/workflows.draft.js (window.GABE_WORKFLOWS_DRAFT). The Universe station lists the
-drafts in the workflows tab under "drafts — review & name", walkable like any workflow. The human
-renames, reorders, sets the level and moves an accepted entry into workflows.js; the next run drops
-it, because it is now covered. Regenerated wholesale — never hand-edit the draft file.
+to docs/site/center/workflows.draft.js (window.GABE_WORKFLOWS_DRAFT). Each draft arrives NAMED in the
+user's words (draft_name()) and LEVELED into its tier; the Universe station places it beside the
+curated rows wearing a DRAFT chip, walkable like any workflow. The human renames freely and moves an
+accepted entry into workflows.js; the next run drops it, because it is now covered. Regenerated wholesale — never hand-edit the draft file.
 
 Laws: DETERMINISTIC (everything sorted; no wallclock — the c4 `head` sha is the only provenance
 stamp; an unchanged input re-writes nothing) · HONEST-EMPTY (no center config / no c4-graph → the

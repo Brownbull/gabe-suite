@@ -3,7 +3,7 @@ name: gabe-cc-update
 description: "Command-center feature coverage — translate shipped work into its entity's lens card, diagrams, and evidence narration; keep the center regenerating green. Also owns scripts/write-inflight.py, the deterministic in-flight projection the E8 beat tail refreshes (inflight.json + .js, read by the board at view time)."
 when_to_use: "Cover a shipped feature, center status, backfill entity-by-entity, curate proof after a green run — ONLY where docs/site/center/center.config.json exists; elsewhere STOP → /gabe-cc-init."
 metadata:
-  version: 1.8.1
+  version: 1.8.2
 ---
 
 # Gabe Feature — the command center's per-feature ritual
@@ -93,10 +93,10 @@ not — a new project's tab stayed empty until someone remembered the file. This
 curates: run `scripts/draft-workflows.py .` — every endpoint no curated workflow names, clustered by
 entity · the screen that drives it, steps read→write, level SUGGESTED (no writes → 1 · single-entity
 writes → 2 · cross-entity → 3), written as `draft:true` entries to `workflows.draft.js`. The station
-lists them in the workflows tab under **drafts — review & name**, walkable like any workflow.
+places each in its tier (Orientation · Core · Specialized) beside the curated rows, wearing a DRAFT chip, walkable like any workflow.
 Print the script's line verbatim (drafts · uncovered · covered · infra skipped · unreached), then
-hand the operator the review: walk a draft, rename it in their words, reorder, set the level, move
-it into `workflows.js`; the next run drops it. **Unreached** endpoints (no screen calls them) are
+hand the operator the review: walk a draft (it arrives NAMED in the user's words and LEVELED — no
+"review & name" bucket, per the law above), rename freely, move it into `workflows.js`; the next run drops it. **Unreached** endpoints (no screen calls them) are
 reported, never drafted — a bridge gap or a dead endpoint is the human's call. Pulse S16 nags the
 standing coverage; `/gabe-cc-update status` shows the draft count. Deterministic (no wallclock; the
 c4 head sha stamps the file); honest-empty without a center or a c4-graph; report-never-gate.

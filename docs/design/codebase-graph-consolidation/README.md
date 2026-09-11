@@ -1,5 +1,13 @@
 # Codebase-graph consolidation — the levels lab becomes canonical
 
+> **Outcome (2026-09-10, f8de670):** neither track survived as a page. The Change graph (`codebase-graph.html`),
+> the Codebase archive (`codebase-archive.html` + `sim-archive.js`) and the Levels lab page were all RETIRED;
+> **`gabe-universe.html` is the sole codebase-graph station**, reading the feeds both tracks emit
+> (`c4-graph.js` from `_a3_graph.py`, `levels.js` from `_a3_levels.py`). The labs stay as frozen design records
+> under `templates/center/shell/example/{level-lab,arch-graph-lab}/`; the example estate is landed by
+> `universe-build/regen-example.sh` + `fill-example.py`. Everything below is the record of how the decision was
+> reached — read it as history; the "Status" line and the shipped-page table describe the estate before f8de670.
+
 **Status:** DECIDED (operator ruling 2026-08-15) · **not yet executed** · code waits behind Phase 0.
 **Owner decision:** the levels lab (`GABE_LEVELS` cluster grammar + rich panel) becomes the
 canonical codebase-graph page; the column C4 station is demoted/retired, not enriched further.

@@ -158,7 +158,7 @@ For complex plans, `/gabe-plan` may also create a self-contained HTML review art
 ```bash
 git clone https://github.com/khujta/gabe-suite.git
 cd gabe-suite
-./install.sh              # Install skills, commands, templates, and docs
+./install.sh              # Install skills, templates, hooks, docs, prompts, schemas
 ./install.sh --dry-run    # Show what would be done
 ./install.sh --uninstall  # Remove everything
 ```

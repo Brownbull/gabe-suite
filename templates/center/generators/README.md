@@ -43,10 +43,47 @@ tool exists to kill, applied to its own config.
 | `_a3_code.py` | the Code tab — endpoints / models / schemas parsed from source with `ast` |
 | `_a3_evidence.py` | the Evidence tab — proof sets walked off disk, narrated from each `manifest.json` |
 | `_a3_graph.py` | the C4 codebase graph — a LIBRARY-NEUTRAL `{nodes,edges}` view derived from the in-memory archmap (zero new source read; FK-only L1 edges, honesty laws), emitted as committed `c4-graph.json` + the `window.GABE_C4`/`GABE_C4_COLORS` sibling `c4-graph.js` with a baked ring x/y + deps-gradient fx/fy layout. Feeds the `gabe-universe.html` station (the `codebase-graph.html` page retired 2026-09-10). Battery: `tests/arch-graph` (emitter) + `tests/gabe-universe` (station) |
-| `_a3_levels.py` | the rich LEVELS graph — `window.GABE_LEVELS` for the Gabe Universe (the Levels lab page retired 2026-09-10): functions · use-cases · communities · use-edges · per-piece hub/god/tests/guards, ALL derived from the archmap insight blocks (`function_insight` · `model_insight.internal_refs` · `guard_insight` · `test_insight`) + the C4 topology (cross-file call edges ride graft, honest-empty otherwise). Emitted as `levels.json` + the `window.GABE_LEVELS` sibling `levels.js`. Feeds `codebase-archive-lab.html` (the lab renderer wrapped in the shell chrome). Battery: `tests/levels` |
+| `_a3_levels.py` | the rich LEVELS graph — `window.GABE_LEVELS` for the Gabe Universe (its only reader since the Levels lab retired 2026-09-10): functions · use-cases · communities · use-edges · per-piece hub/god/guards, the fn→schema/use edges, homing, models; stamps the archmap's `head` + `version` |
 | `_center_mermaid.py` | build-time mermaid pre-render, cached by content hash |
 | `check_center_links.py` | the crawl gate — every internal href resolves, or the build fails |
 | `refresh_center.sh` | ONE entry point — `regen` (default, cheap) or a capture mode from `commands` |
+| `_a3_tests.py` | archmap `test_insight` — T1 exercises · T2 via route · T3 named, by function / endpoint / model, from the junit corpus |
+| `_a3_guard.py` | archmap `guard_insight` — unguarded · named · proven, proofs from `.kdbp/guard-proofs.jsonl` |
+| `_a3_ledger.py` | `ledger.html` — one row per C-id, parametrize variants grouped |
+| `_a3_board.py` | `board.html` — a PROJECTION over PLAN/PENDING/adoption/walks/guard_insight; KPI attrs for `board.js` |
+| `_a3_graft.py` | the graft arm — cross-entity `calls`/`imports` into the L1 multi-kind edges, the endpoint `behind` floor, module-call fold, `dispatches`; honest-empty `present:false` + reason without an index |
+| `_a3_web.py` | the web→API bridge arm — fetch call sites per screen file (apiFetch · axios · fetch · a generated SDK table) matched to endpoint pieces → `web` kind + `bridge` cross-edges; `present:false` with a reason |
+| `_a3_fe.py` + `_a3_fe_extract.mjs` | the frontend STRUCTURE arm — the TypeScript extractor (needs a `typescript` package: the project's, a sibling's, or the spike's — `GABE_TS_DIR`) → `GABE_C4.fe` pieces/edges/homes + feClass · hrole · fed2w · store shapes |
+| `_a3_homing.py` | membership EVIDENCE — file · users · data witnesses per piece → agree · stay · move-candidate · shared; `c4.stats.homing` + `levels.homing` |
+| `_a3_models.py` | the four ENTITY MODELS — claim (the registry) · seeded · derived · proposed as per-piece home DELTAS on `c4.models` + `levels.models` |
+| `_a3_naming.py` | every name a cluster could wear (`c4.models.naming`) — strategies × conventions; the universe labels from the feed's own defaults |
+| `_a3_sim.py` | `sim.data.js` — the change-simulation projection from inflight + archmap + git + junit (`window.GABE_SIM = null` at rest); `archive_upsert` stays pure, `emit_archive` retired with the archive station (2026-09-10) |
+| `_a3_commits.py` | `commits.js` — the twin's last 30 commits as journeys (`touched` ids) |
+| `_render_mermaid.mjs` | the mermaid pre-renderer `_center_mermaid.py` drives |
+| `check_workflow_drift.py` | the evidence-navigator census drift (report-never-gate; `/gabe-review` + pulse S8 route it) |
+| `curate_proof.py` · `next_feature.py` · `center_status.py` · `risk_sweep.py` · `scaffold_census.py` · `disposition.py` | the cc-update / cc-init bindings that land in a twin's `scripts/` — proof curation · the next-entity chooser · the actionable list · the P0–P3 risk ladder · the scaffold census · the PENDING disposition primitive (moved here from the suite's `scripts/` 2026-09-10 so bootstrap + propagate carry it) |
+| `verify_center_chrome.mjs` | the shell-JS harness (rowclick · lightbox · expander cascade) in a REAL browser — the third gate of `refresh_center.sh`; ONE home since 2026-09-10 (`tests/chrome` points here) |
+| `bootstrap_center.sh` · `propagate.sh` | adoption init (archive-never-delete: generators → `scripts/`, shell, config skeleton, the nine `.gitignore` seeds) · the suite→twin update (copy-only, update-only — it cannot see a suite deletion; see the RETIRED listing) |
+
+## Environment + config keys the generators read (the contract)
+
+`GABE_REPO_ROOT` (the tree to scan) · `GABE_CONFIG` (center.config.json) · `GABE_CENTER_OUT` (write root; twin-read-only
+builds point it at a temp dir) · `GABE_SHELL_SRC` (the shell skeletons) · `GABE_GRAFT_BUILD` (`0` = read the index as found;
+never build) · `GABE_GRAFT_INDEX` (an index built out of tree) · `GABE_TS_DIR` (a `typescript` package for the fe extractor)
+· `ECC_ROOT` (the install root the refresh rail reads the drafter from, default `~/.claude`). Config keys beyond `entities`:
+`naming` (words · entities for the naming strategies) · `url_domain_map` (the URL-domain second lens) · `homing`
+(`usage-first`, opt-in, off) · `code.*` globs (recursive `**` accepted).
+
+## Emit order (what `build_center_a3.py main` writes, in sequence)
+
+assets/ → every shell `*.html` (architecture · board and `RETIRED_PAGES` skipped) → `feature-<slug>.html` → `archmap.json`
+(entities · insights · censuses · flags · middleware · dispatch · tasks · boot roots) → the arms: graft → web → the three
+PRESENCE-FLIP tripwires (against the COMMITTED `c4-graph.json`) → fe → `build_c4_graph` → `build_levels` → homing →
+models → `levels.json` + `levels.js` → `c4-graph.json` + `c4-graph.js` → `sim.data.js` → `commits.js` → `workflows.js` /
+`workflows.draft.js` (ensure-exists) → `board.html` → `inflight.{json,js}` (stub) → the `test-*` / `arch-*` estate pages →
+`rows-seen.json` → the late `{{SIDEBAR_FE}}` pass → the `a3.css` guard. Every arm after the archmap is try/except:
+it prints ⚠ and degrades, never blanks the centre. `refresh_center.sh` then runs the link gate, the chrome harness and
+(2026-09-10) the entity-model drafter.
 
 ## Running it
 

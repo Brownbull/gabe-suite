@@ -5,7 +5,7 @@
 #   ./install.sh              # Install skills + templates + docs + prompts + schemas
 #   ./install.sh --dry-run    # Show what would be done
 #   ./install.sh --uninstall  # Remove gabe-* skills, templates, prompts, schemas, and installed docs
-#   ./install.sh --register-mcp  # ...and register the gabe-map MCP server at user scope (ask-first; restart needed)
+#   ./install.sh --register-mcp  # ...and register the gabe-map + gabe-kdbp MCP servers at user scope (ask-first; restart needed)
 
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

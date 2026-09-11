@@ -20,7 +20,8 @@ The live residue each once carried now has a real owner:
   G3 invariant runs every zero-arg `tests/*/run.sh`; this `_archive/` dir is
   excluded by name.
 - The AP-catalog shape itself is deliberately UNWATCHED: AP1–AP13 are advisory
-  context for /gabe-align, /gabe-debt and /gabe-review, low-churn by design —
+  context for /gabe-assess, /gabe-health debt and /gabe-review (the skills that absorbed
+  /gabe-align and /gabe-debt), low-churn by design —
   recorded here so the absence of a checker reads as a ruling, not an
   oversight.
 

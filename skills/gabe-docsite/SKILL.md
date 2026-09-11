@@ -3,7 +3,7 @@ name: gabe-docsite
 description: "Publish docs onto the project's HTML site — pick the section, wire the nav, render with working diagrams. Renders INTO a command center's shell when one exists (one site, one skin, one sidebar) and extracts the references a page makes so both link directions are derived. Markdown stays the source of truth; it places and renders, never fact-checks."
 when_to_use: "Publish or update a page on the project's HTML docs site."
 metadata:
-  version: 1.1.0
+  version: 1.1.1
   status: suite skill (generic, project-agnostic)
   scope: any project with a docs/ site
 ---
@@ -22,7 +22,7 @@ This skill runs under the suite execution contract — E1 EVIDENCE · E2 RUN-BEF
 
 A **self-contained, dependency-free static HTML site**, viewable over `file://`, generated from markdown — never hand-written. It builds in one of two modes, and **the build states which one it took**.
 
-### CENTER MODE (default where a command center exists)
+### CENTER MODE (the suite repo only, today — a twin has no `nav.json` until `build_center_a3.py` emits one; twins take STANDALONE)
 
 ```
 build_docsite.py --config docs/docsite.config.py \
@@ -100,8 +100,8 @@ Add a doc entry to the chosen section in `docs/docsite.config.py`: `slug`, `sour
 
 ### 4 · GENERATE + VERIFY (the gate)
 ```
-# where a center exists, the whole chain in one command:
-bash docs/center/generators/refresh_suite_center.sh regen
+# in the SUITE repo (the only centre with a nav.json today), the whole chain in one command:
+bash docs/center/generators/refresh_suite_center.sh regen     # centre → prisms (--prisms) → docs → link + diagram gates
 # or standalone:
 python3 skills/gabe-docsite/generator/build_docsite.py --config docs/docsite.config.py
 node   skills/gabe-docsite/tools/diagram-compliance.mjs docs/site   # file:// diagram gate

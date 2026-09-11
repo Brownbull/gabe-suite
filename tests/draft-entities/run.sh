@@ -118,7 +118,7 @@ sed 's/"why": r.get("why"), "evidence": r.get("evidence") or {},/"why": r.get("w
 grep -q 'if r.get("slug") == "recipe"' "$T/mut1.py" || bad "MUTATION 1 precondition: the mutant did not apply"
 cp "$D" "$T/_real.py"; cp "$REPO/skills/gabe-cc-update/scripts/draft-workflows.py" "$T/draft-workflows.py"
 r=$(mkcenter mut1); c4 > "$r/docs/site/center/c4-graph.json"; python3 "$T/mut1.py" "$r" --json > "$T/mut1.json" 2>/dev/null
-python3 - "$T/mut1.json" "$r/docs/site/center/c4-graph.json" <<'PY' && bad "MUTATION 1: a locally derived verdict passed the projection check" || ok
+python3 - "$T/mut1.json" "$r/docs/site/center/c4-graph.json" 2>/dev/null <<'PY' && bad "MUTATION 1: a locally derived verdict passed the projection check" || ok
 import json,sys; r=json.load(open(sys.argv[1])); m=json.load(open(sys.argv[2]))["models"]; src={x["slug"]:x for x in m["rosters"]["proposed"]}
 assert all(d["verdict"]==src[d["slug"]]["verdict"] for d in r["declared"])
 PY

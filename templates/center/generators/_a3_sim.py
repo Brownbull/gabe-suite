@@ -345,14 +345,8 @@ def archive_upsert(existing: dict | None, sim: dict | None, inflight: dict | Non
     return {"v": 1, "phases": [by_phase[k] for k in sorted(by_phase)]}
 
 
-def emit_archive(archive: dict, center_out: Path) -> None:
-    """Write the COMMITTED, diffable per-phase archive JSON + a window.GABE_SIM_ARCHIVE
-    sibling (the file:// recipe — a strict-CSP page reads a script global, never fetch)."""
-    (center_out / "sim-archive.json").write_text(
-        json.dumps(archive, sort_keys=True, ensure_ascii=False, indent=1) + "\n")
-    (center_out / "sim-archive.js").write_text(
-        "window.GABE_SIM_ARCHIVE = "
-        + json.dumps(archive, sort_keys=True, ensure_ascii=False) + ";\n")
+# emit_archive() was retired 2026-09-10 with the Codebase archive station — nothing read window.GABE_SIM_ARCHIVE.
+# archive_upsert() stays a pure function (tests/sim §G) until a universe tab consumes the archive.
 
 
 def emit(sim: dict | None, center_out: Path) -> None:

@@ -2,7 +2,7 @@
 # Battery for the Gabe Suite's own command center — the board's card rules and
 # the center's link gate.
 #
-#   bash docs/center/tests/run.sh          exit 0 all green · 1 any failure
+#   bash tests/suite-center/run.sh          exit 0 all green · 1 any failure
 #
 # It lives under tests/ so scripts/suite-doctor.sh's G3 sweep picks it up: the
 # doctor globs `tests/*/run.sh` and fails the whole run if any battery is red.

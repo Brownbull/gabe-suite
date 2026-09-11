@@ -200,7 +200,6 @@ The project's `.gitignore` gets these entries appended so machine-written, tree-
 - `.kdbp/PULSE.jsonl` — the pulse ANGLE journal (`{ts,id,hash,text}` per offer, the decay measurement). The E8 beat
   tail appends it AFTER the beat's commit, so a tracked journal leaves every beat with a dirty tree (gustify P8,
   2026-09-04); per-project working state, never commit-worthy.
-- `.kdbp/map-deltas.jsonl` and `.kdbp/map-deltas-rollup.jsonl` — the map↔grep delta accumulator (emitted at /gabe-red, /gabe-execute, /gabe-review and by `mcp__gabe-map__who_calls`) and the tally ledger /gabe-commit sweeps it into. Per-project bookkeeping that would re-dirty the tree every beat — and gabe-map's emit gate (d) REQUIRES `git check-ignore -q .kdbp/map-deltas.jsonl` to succeed, so an un-seeded project silently drops every delta (the emit is skipped and NAMED: `.kdbp/map-deltas.jsonl is not gitignored — run /gabe-init update to seed it`) until `/gabe-init update` tops it up.
 
 (`.kdbp/archive/` — PLAN/SCOPE archives — stays tracked as before.)
 
