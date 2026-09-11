@@ -444,6 +444,18 @@ def _is_gate_name(sym: str) -> bool:
     return s.startswith(_GATE_PREFIXES) or "authoriz" in s or "permission" in s
 
 
+# What each derivation needs before it can say anything. Three of them return {} when the ORM
+# access map is empty — which is correct, and was indistinguishable from "nothing here writes".
+# On a Next.js app with raw SQL the access arm matches nothing, so fn_roles and distance_to_write
+# come back empty and the station paints a FLAT write-heat gradient that reads as a finding. The
+# arm now records WHY each one is empty, so the surfaces can say "no input" instead of "no writes".
+DERIVED_NEEDS: dict[str, tuple[str, ...]] = {
+    "endpoint_access": ("access",),
+    "fn_roles": ("access",),
+    "distance_to_write": ("access",),
+}
+
+
 def derive_fn_roles(wiring: dict[str, Any], faccess: dict[str, Any] | None) -> dict[str, str]:
     """{<file>#<fn> → 'accessor'|'caller'|'gate'|'pure'} for every graft-indexed function (C1).
 
@@ -917,8 +929,21 @@ def graft_arm(root: Path, entities: dict[str, Any],
         node_facts = derive_node_facts(wiring)     # P1: {id → {kind, signature?, exported?}} — raw facts to consume
         frontend = derive_frontend(wiring, frozenset(entities))  # P2a classify + P2b home/scaffold, data-only
         depends = derive_depends(wiring, entities)  # class 8: endpoint→gate-dep signature edges (the K1 chain)
+        # which derivations could not run, and what they were missing — an empty result that
+        # explains itself instead of one that looks like a finding
+        _derived = {}
+        for _name, _val in (("endpoint_access", endpoint_access), ("fn_roles", fn_roles),
+                            ("distance_to_write", distance_to_write)):
+            _ok = bool(_val)
+            _rec = {"present": _ok, "needs": list(DERIVED_NEEDS.get(_name, ()))}
+            if not _ok:
+                _rec["reason"] = ("no ORM access map — this derivation reads the access concept, "
+                                  "so an empty result here means nothing was READ, not that "
+                                  "nothing writes") if not faccess else "produced nothing"
+            _derived[_name] = _rec
         return {
             "present": True, "reason": reason, "index_hash": fp,
+            "derived": _derived,
             "index_nodes": meta.get("nodeCount"), "index_edges": meta.get("edgeCount"),
             "pairs": out["pairs"], "stats": out["stats"],
             "functions": fout,   # {fn_slug, calls} — the fn-level slice the LEVELS graph draws

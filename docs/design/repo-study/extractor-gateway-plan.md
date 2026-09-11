@@ -280,3 +280,25 @@ Gate: the ONLY movement is `arms.concepts.request_roots.by: ['_a3_code'] → ['_
 every other file identical; census identical on all 25 measures, all three repos.
 `tests/action-roots` 18/18, **5 mutants killed** (skip-test · first-statement · no-directive ·
 ts-creeps-back · tombstone-gone) · suite-doctor CLEAN.
+
+## Step 7 — derivations declare what they need (`this commit`)
+
+`_a3_graft.DERIVED_NEEDS` declares that `endpoint_access`, `fn_roles` and `distance_to_write` all
+read the **access** concept. Each now records whether it ran and what it lacked; `graft_arm` returns
+that as `derived`, `_a3_graph` carries it into `c4.stats.graft.derived`, and `map_health.arms` shows
+it as `blocked_derivations`.
+
+**Why it matters.** Those three return `{}` when the ORM access map is empty — correct, and
+indistinguishable from *nothing here writes*. On keypro-front the access arm matches nothing (raw
+SQL in string literals), so the station painted a FLAT write-distance heat that reads as a finding.
+It now reads:
+
+```
+distance_to_write  needs=['access'] · no ORM access map — this derivation reads the access
+                   concept, so an empty result here means nothing was READ, not that nothing writes
+```
+
+Behaviour is untouched: all three still return `{}`, pinned by assertion. Gate: the only movement
+is the new `stats.graft.derived` key (on gustify all three read `present: true`); census identical
+on all 25 measures. `tests/arms` 5/5 (mutant: dropped needs-declaration, killed) ·
+`tests/gabe-map` 199/199 · suite-doctor CLEAN.

@@ -1548,7 +1548,10 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                        "cross_calls": (graft.get("stats") or {}).get("cross_calls", 0),
                        "cross_imports": (graft.get("stats") or {}).get("cross_imports", 0),
                        "confidence": (graft.get("stats") or {}).get("confidence"),
-                       "dropped": (graft.get("stats") or {}).get("dropped")}
+                       "dropped": (graft.get("stats") or {}).get("dropped"),
+                       # which derivations could not run and what they lacked — so a flat write
+                       # heat reads as "no input" rather than as "nothing here writes"
+                       "derived": graft.get("derived") or {}}
                       if graft_present else
                       {"present": False,
                        "reason": (graft or {}).get("reason", "not attempted")}),

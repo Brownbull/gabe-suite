@@ -332,6 +332,15 @@ def map_health(a: dict, c: dict) -> dict:
             "capped": bool(arms.get("capped")),
             "elsewhere": dict(arms.get("elsewhere") or {}),
         }
+    # derivations that could not run because an upstream concept produced nothing. Without this a
+    # flat write-distance heat renders as a confident "nothing here writes"; it is read from the
+    # c4 graft stats, which is the only place that knows (the census runs before the graph is built).
+    _der = ((st.get("graft") or {}).get("derived") or {})
+    _blocked = {k: v for k, v in _der.items() if isinstance(v, dict) and not v.get("present")}
+    if _blocked:
+        out["arms"]["blocked_derivations"] = {
+            k: {"needs": v.get("needs") or [], "reason": v.get("reason") or ""}
+            for k, v in _blocked.items()}
     else:
         out["arms"] = {"state": "not_emitted",
                        "reason": "this map predates the arms census (archmap v4) — regen to learn "

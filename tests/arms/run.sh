@@ -249,5 +249,21 @@ else
   ok
 fi
 
+# ── 5 · derivations declare what they NEED (step 7) ──────────────────────────
+# Three graft derivations return {} when the ORM access map is empty. That is correct and was
+# indistinguishable from "nothing here writes" — on a raw-SQL app the station painted a FLAT
+# write-heat gradient that read as a finding. Each now records what it lacked.
+if (cd "$GEN" && python3 - <<'NEEDSPY'
+import _a3_graft as G
+assert set(G.DERIVED_NEEDS) == {"endpoint_access", "fn_roles", "distance_to_write"}
+for name, needs in G.DERIVED_NEEDS.items():
+    assert needs == ("access",), f"{name} declares {needs}"
+# the three still return {} with no access map — the BEHAVIOUR is unchanged, only the record is new
+assert G.derive_fn_roles({}, None) == {}
+assert G.derive_distance_to_write({}, None) == {}
+print("ok")
+NEEDSPY
+) >/dev/null 2>&1; then ok; else bad "derivations: DERIVED_NEEDS contract"; fi
+
 echo "arms: $pass passed, $fail failed"
 [ "$fail" = 0 ] || exit 1
