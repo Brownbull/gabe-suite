@@ -1,0 +1,122 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>F · Standing Console — bottom workflow dock</title>
+<link rel="stylesheet" href="../_common.css">
+<link rel="stylesheet" href="../_console.css">
+<style>
+  /* ── PROPOSAL F: a SHORTER dock, plus the regions that must never blank ───
+     The census found the station's clearest structural inversion: every global
+     readout — tier, node budget, kinds-on, unmatched fetches, homing candidates
+     — lives inside panelAll's Sources rows (gabe-universe.html:5926-5936), so
+     all of it VANISHES the moment an element is selected. In SC those facts live
+     in physically separate compiled dialog files (statres.bin, minimap.bin)
+     precisely so the engine cannot reflow them with the selection.
+     F's claim: the dock feels crowded because it is holding global facts that
+     should never have been inside it. */
+  :root{ --dock:200px; }
+  #dock{ height:var(--dock); }
+  #row{ flex:1; min-height:0; display:grid;
+        grid-template-columns: 176px 200px minmax(0,1fr) minmax(0,1.12fr) minmax(0,1fr) 208px 180px;
+        grid-template-rows: minmax(0,1fr); }
+  #row > *{ min-width:0; min-height:0; }
+  /* the standing regions sit OVER the viewport, outside the dock's DOM entirely */
+  #res{ top:16px; }
+  /* SHORT-DOCK compaction. A 200px dock cannot afford D's 88px portrait glyph or
+     the vitals notes — but all FOUR meters must still be drawn, because "four
+     meters in four permanent slots" is the invariant this proposal argues for.
+     Compaction is allowed; dropping a slot is not. */
+  .pglyph{ height:44px; } .pglyph svg{ width:34px; height:34px; }
+  .pname{ font-size:11px; max-height:28px; }
+  .pkind{ margin-top:3px; font-size:8.5px; }
+  .vit{ padding:3px 0 4px; }
+  .vit .vnote{ display:none; }
+  .vithd .vl{ font-size:8.5px; } .vithd .vv{ font-size:9.5px; }
+  .vtrack{ margin-top:3px; height:4px; }
+  .ev{ padding:4px 0; } .ev .evv{ font-size:10px; margin-top:2px; }
+  .cap{ padding:2px 9px 4px; } .cap .cpd{ font-size:9.5px; margin-top:3px; }
+  .cap .cpf{ display:none; }
+  #pinrail{ top:296px; }
+  #mini{ bottom:96px; }
+  .standlbl{ position:absolute; z-index:7; font:700 9px/1 var(--mono); letter-spacing:.07em;
+    color:var(--accent); background:rgba(12,19,34,.9); border:1px solid var(--accent);
+    border-radius:4px; padding:3px 5px; pointer-events:none; }
+</style>
+
+<div id="wrap">
+  <div id="stage">
+    <svg id="field"></svg>
+    <div id="lede">
+      <span class="tag">Proposal F · standing regions</span>
+      <h1>Standing Console — <b>a shorter dock, because the dock was holding the wrong things</b></h1>
+      <p>Every global readout in the station today — tier, node budget, kinds-on, the
+      <b>6 unmatched fetches</b>, the <b>20 homing move candidates</b> — renders inside
+      <b>panelAll's Sources rows</b>. Select any element and all of it disappears. That is the
+      inverse of every RTS: SC keeps resources and the minimap in <b>separate compiled dialog
+      files</b> so the engine cannot reflow them with the selection.</p>
+      <p>Move those out and the dock only needs <b>200px</b>. Look at the three floating
+      regions: the <b>global strip</b> top-right that never blanks, the <b>pin rail</b> on the
+      left edge (WC3's hero bar), and a <b>minimap</b> bottom-left — which the station
+      <b>does not have at all</b>. Every game surveyed ships a persistent overview; this one
+      has <code>__uniCamFit</code> and nothing else.</p>
+    </div>
+    <div id="geo" style="top:120px">
+      <div class="gk"><span>dock height</span><span>200px — shortest</span></div>
+      <div class="gk"><span>graph kept</span><span>1,120,000 px²</span></div>
+      <div class="gk"><span>vs the right rail</span><span>1,134,000 px² — only 1.2% less</span></div>
+      <div class="gk"><span>STORE width</span><span>~300px — widest of all</span></div>
+      <div style="margin-top:7px;padding-top:7px;border-top:1px solid var(--line)">
+        <b>The only proposal that barely costs graph area.</b> A/B/C give up 10% and D 14%;
+        F gives up 1.2%. Honest footnote: the three standing regions overlay ~46,000 px² of
+        graph, so the true usable figure is <b>~1,074,000 px²</b> — still ahead of A/B/C's
+        1,017,600.
+      </div>
+    </div>
+    <div id="pick"></div>
+    <div id="demo"></div>
+    <div class="standlbl" style="right:326px;top:26px">never blanks →</div>
+    <div class="standlbl" style="left:74px;top:302px">pins ↑</div>
+    <div class="standlbl" style="left:174px;bottom:150px">← the station has no minimap</div>
+  </div>
+
+  <div id="dock">
+    <div id="rimhost"></div>
+    <div id="row"></div>
+  </div>
+</div>
+
+<script src="../_data.js"></script>
+<script src="../_shell.js"></script>
+<script src="../_console.js"></script>
+<script>
+buildStage();
+buildDemoted("F drops CARGO from the dock entirely — a model's columns live behind the "
+  + "command card's TABLES submenu, which is the SC treatment of depth: REPLACE the card, "
+  + "never grow the panel. Against proposal C, which gave STRUCTURE its own box, that is a "
+  + "deliberate reversal, and it is what buys the 200px dock.");
+
+/* the three standing regions — built ONCE, never re-rendered on selection.
+   That is the entire claim: they cannot blank because nothing selection-driven
+   touches them. */
+var stage = document.getElementById("stage");
+stage.appendChild(standingRes());
+stage.appendChild(standingPins([ ELEMENTS.filter(function(x){ return x.id === "model-recipe"; })[0], null, null ]));
+stage.appendChild(standingMini());
+
+function renderDock(e){
+  var rimhost = document.getElementById("rimhost");
+  rimhost.innerHTML = "";
+  rimhost.appendChild(rimEl(e, [ { t:"T2" }, { t:"focus", on:true } ]));
+  var row = document.getElementById("row");
+  row.innerHTML = "";
+  row.appendChild(portraitEl(e));
+  row.appendChild(vitalsEl(e.id));
+  [["in","IN"],["store","STORE"],["out","OUT"]].forEach(function(p){
+    row.appendChild(slotEl({ key:p[0], label:p[1], hint:"" }, e.slots[p[0]]));
+  });
+  row.appendChild(evidenceEl(e));
+  row.appendChild(commandEl(e.id, null,
+    { idle:"CARGO has no dock region here — structure lives behind TABLES. Replace the card, never grow the panel." }));
+}
+buildPicker(renderDock);
+pick("model-recipe", renderDock);
+</script>

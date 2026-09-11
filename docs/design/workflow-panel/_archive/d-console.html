@@ -1,0 +1,137 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>D · Console — bottom workflow dock</title>
+<link rel="stylesheet" href="../_common.css">
+<link rel="stylesheet" href="../_console.css">
+<style>
+  /* ── PROPOSAL D: the RTS bottom console, transliterated ───────────────────
+     Six UNEQUAL regions, because a command panel is not seven equal columns —
+     it is a portrait, a stat block, a status display, an inventory, a record
+     and a command card, each a different shape because each holds a different
+     KIND of thing. WC3's ConsoleUI geometry with SC's region set and SC2's 5x3
+     card. The dock finally has an ACT half, not only a READ half. */
+  :root{ --dock:288px; }
+  #dock{ height:var(--dock); }
+  #row{ flex:1; min-height:0; display:grid;
+        grid-template-columns: 176px 232px minmax(0,1fr) 212px 164px 180px;
+        grid-template-rows: minmax(0,1fr); }
+  #row > *{ min-height:0; min-width:0; }
+  .status{ border-right:1px solid var(--line); }
+</style>
+
+<div id="wrap">
+  <div id="stage">
+    <svg id="field"></svg>
+    <div id="lede">
+      <span class="tag">Proposal D · RTS console</span>
+      <h1>Console — <b>a portrait, a stat block, and a real command card</b></h1>
+      <p>A, B and C are pure <b>readouts</b> — every row is text and no cell can be pressed.
+      In StarCraft, Warcraft III and SC2 alike, the console's bottom-right corner holds the
+      <b>command card</b>: two screen edges, the largest target, the highest click frequency
+      in the game. A gives that corner to PLACE, B to a ledger column, C to a slot that clips.</p>
+      <p>D takes the RTS grammar literally: six <b>unequal</b> regions sized by what they hold.
+      Hover any command cell — the four availability states are the answer to your requirement.
+      A verb this element cannot use <b>keeps its cell</b>.</p>
+    </div>
+    <div id="geo">
+      <div class="gk"><span>dock height</span><span>288px (rim 32 + 256)</span></div>
+      <div class="gk"><span>graph kept</span><span>979,200 px²</span></div>
+      <div class="gk"><span>STORE width</span><span>~285px — widest of A/C/D</span></div>
+      <div class="gk"><span>CARGO clips</span><span>never — cells are the cap</span></div>
+      <div style="margin-top:7px;padding-top:7px;border-top:1px solid var(--line)">
+        <b>The four states:</b> <b style="color:var(--ink)">LIT</b> has something ·
+        <b style="color:#5d6a86">BLANK</b> wrong question ·
+        <b style="color:var(--muted)">GREY</b> no answer ·
+        <b style="color:var(--warn)">HATCHED</b> never measured. The fourth is the one no RTS
+        needs and this station cannot do without.
+      </div>
+    </div>
+    <div id="pick"></div>
+    <div id="demo"></div>
+  </div>
+
+  <div id="dock">
+    <div id="rimhost"></div>
+    <div id="row"></div>
+  </div>
+</div>
+
+<script src="../_data.js"></script>
+<script src="../_shell.js"></script>
+<script src="../_console.js"></script>
+<script>
+buildStage();
+buildDemoted("D dissolves A's PLACE slot rather than dropping it: connections become the "
+  + "count badges on the command card's row-1 cells (the list lives behind the submenu), "
+  + "reach becomes VITALS meter 1, homing becomes EVIDENCE row 3, and 'above' becomes the "
+  + "card's row-2 ladder cells. CARGO cannot clip — six cells plus '+N more' IS the cap.");
+
+var WALKING = false;
+
+function renderDock(e){
+  var rimhost = document.getElementById("rimhost");
+  rimhost.innerHTML = "";
+  rimhost.appendChild(rimEl(e, [
+    { t:"T2" }, { t:"focus", on:true }, { t: WALKING ? "walking · cook a recipe" : "no journey" }
+  ]));
+
+  var row = document.getElementById("row");
+  row.innerHTML = "";
+  row.appendChild(portraitEl(e));
+  row.appendChild(vitalsEl(e.id));
+
+  /* STATUS DISPLAY — the rectangle is inviolable, the MODE inside it is not.
+     SC swaps this same rectangle between a stat block, a 12-wireframe strip and
+     a build queue; it never resizes it and never lets a neighbour take its space. */
+  var status = el("div", { class:"reg status" });
+  status.appendChild(el("div", { class:"reghd" }, [
+    el("span", { class:"rl", text:"STATUS DISPLAY" }),
+    el("span", { class:"rn", text: WALKING ? "MODE · ROSTER" : "MODE · SINGLE" })
+  ]));
+  if (WALKING){
+    var rost = el("div", { class:"roster" });
+    var wmax = 7;
+    JOURNEY.steps.forEach(function(s, i){
+      var n = [2,1,1,2,7][i];
+      var t = el("div", { class:"rtile" + (i === 0 ? " on" : "") }, [
+        el("span", { class:"rn2", text:"STEP " + s.n }),
+        el("span", { class:"rl2", text:s.short }),
+        el("span", { class:"rw2", text:n + " table" + (n===1?"":"s") + " written" }),
+        el("div", { class:"bar2" }, [ el("i", { style:"width:" + Math.round(100*n/wmax) + "%" }) ])
+      ]);
+      t.onclick = function(){
+        Array.prototype.forEach.call(document.querySelectorAll(".rtile"), function(x){ x.classList.remove("on"); });
+        t.classList.add("on");
+      };
+      rost.appendChild(t);
+    });
+    /* 12 tiles always — BW's Status Display holds 12 wireframes and pads the rest */
+    for (var i = JOURNEY.steps.length; i < 12; i++) rost.appendChild(el("div", { class:"rtile empty" }));
+    status.appendChild(rost);
+  } else {
+    status.appendChild(spineEl(e));
+  }
+  row.appendChild(status);
+
+  row.appendChild(cargoEl(e));
+  row.appendChild(evidenceEl(e));
+  row.appendChild(commandEl(e.id));
+}
+
+buildPicker(renderDock);
+
+/* the roster-mode toggle sits on the picker bar — it is a SELECTION state change
+   (a journey is walking), never a data-availability change. That distinction is the
+   only sanctioned reason the Status Display may swap schema. */
+(function(){
+  var b = el("button", { class:"tbtn", text:"walk a journey (roster mode)" });
+  b.onclick = function(){
+    WALKING = !WALKING;
+    b.classList.toggle("on", WALKING);
+    pick(CUR, renderDock);
+  };
+  document.getElementById("pick").appendChild(b);
+})();
+
+pick("ep-relief", renderDock);
+</script>

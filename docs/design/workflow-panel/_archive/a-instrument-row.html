@@ -1,0 +1,106 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A · Instrument Row — bottom workflow dock</title>
+<link rel="stylesheet" href="../_common.css">
+<style>
+  /* ── PROPOSAL A: one element, seven fixed cells, edge to edge ─────────────
+     The dock is a gauge cluster. Every element in the graph renders into the
+     same seven boxes, in the same order, at the same x-positions. Nothing is
+     ever removed — a slot with nothing to say dims and says why. */
+  #row{ flex:1; min-height:0; display:grid;
+        grid-template-columns: var(--c-ident) var(--c-op) 1fr 1.15fr 1fr 214px 236px;
+        grid-template-rows: minmax(0, 1fr); }
+  /* min-height:0 is load-bearing: without it Recipe's 6-row STORE grows the grid
+     row and every slot runs past the bottom edge of the dock. */
+  #row .slot{ min-height:0; }
+  /* IDENTITY leads and never wraps its name */
+  .slot[data-slot="ident"] .rw .rv{ font-family:var(--mono); font-size:10.5px; }
+  .slot[data-slot="ident"]{ background:linear-gradient(to right, rgba(139,131,245,.07), transparent); }
+  /* the IN·STORE·OUT spine gets the elastic middle and a faint tint */
+  .slot[data-slot="in"], .slot[data-slot="store"], .slot[data-slot="out"]{
+    background:linear-gradient(to bottom, rgba(139,131,245,.05), transparent 46px); }
+  .slot[data-slot="store"] .slothd .sl{ color:var(--accent); }
+  /* one source of truth for the column widths — the axis bar used to restate
+     272px/508px as CSS literals beside grid-template-columns, so any width change
+     silently desynchronised the accent bar from the columns it marks. */
+  :root{ --c-ident:272px; --c-op:236px; }
+  #axis{ position:absolute; left:0; right:0; bottom:0; height:2px;
+         background:linear-gradient(to right,
+           var(--accent) 0 var(--c-ident),
+           var(--line) var(--c-ident) calc(var(--c-ident) + var(--c-op)),
+           var(--accent) calc(var(--c-ident) + var(--c-op)) 100%); opacity:.25; }
+</style>
+
+<div id="wrap">
+  <div id="stage">
+    <svg id="field"></svg>
+    <div id="lede">
+      <span class="tag">Proposal A</span>
+      <h1>Instrument row — <b>one element, seven fixed cells</b></h1>
+      <p>The dock is a cockpit gauge cluster: <b>IDENTITY · OPERATION · IN · STORE · OUT ·
+      EVIDENCE · PLACE</b>, left to right, at fixed x-positions. Click any element below —
+      an endpoint, a 38-column model, a skeletal route, an external stub. The boxes never
+      move. Only what is inside them changes.</p>
+      <p>Turn on <b>skeleton</b> to see the frame; turn on <b>cycle</b> and watch it hold.
+      The two dashed-red chips are the <b>middleware</b> and <b>flag</b> kinds, which render
+      an <b>entirely empty card today</b> — a fixed grid makes that visible instead of blank.</p>
+    </div>
+    <div id="geo">
+      <div class="gk"><span>dock height</span><span>264px</span></div>
+      <div class="gk"><span>graph area lost</span><span>~29% of height</span></div>
+      <div class="gk"><span>graph area kept</span><span>1,017,600 px²</span></div>
+      <div class="gk"><span>right panel was</span><span>340px · 1,134,000 px²</span></div>
+      <div style="margin-top:7px;padding-top:7px;border-top:1px solid var(--line)">
+        Not a space win — a <b>shape</b> win. Seven fixed columns do not fit in 340px.
+        At 1600px each gets ~228px and every element uses the same seven.
+        <b>Measured on <code>Recipe</code> (38 columns): only 1 of 7 slots clips.</b>
+        A clipped slot is marked <b>scroll</b> — a fixed grid that cuts silently is worse
+        than a rail you can scroll.
+      </div>
+    </div>
+    <div id="pick"></div>
+    <div id="demo"></div>
+  </div>
+
+  <div id="dock">
+    <div class="dhead">
+      <span class="dt">Element <em>·</em> <span id="dname">—</span></span>
+      <span class="dsub" id="dnote"></span>
+      <span class="spacer"></span>
+      <span class="now">slots <b>7 / 7</b> · always drawn</span>
+    </div>
+    <div id="row"></div>
+    <div id="axis"></div>
+  </div>
+</div>
+
+<script src="../_data.js"></script>
+<script src="../_shell.js"></script>
+<script>
+buildStage();
+buildDemoted("A holds 7 slots at ~228px each on a 1600px screen. STRUCTURE folds into "
+  + "STORE here — proposal C splits it out, because a 4x2 grid has an eighth box and a "
+  + "single row does not. That is the trade being compared, not a styling accident.");
+
+function renderDock(e){
+  document.getElementById("dname").textContent = e.label;
+  var note = document.getElementById("dnote");
+  note.textContent = e.note;
+  note.style.color = e.gap ? "var(--bad)" : "var(--muted)";
+  var row = document.getElementById("row");
+  row.innerHTML = "";
+  /* the invariant: iterate SLOTS, never the element's own keys. An element cannot
+     add, drop or reorder a box — that is what keeps the positions fixed. */
+  SLOTS.forEach(function(spec){
+    /* the denominator is the FACT count where the feed knows it — Recipe's STORE
+       read 6/6 while 38 columns exist, which is census F3's capped m.cols bug
+       reappearing in the proposals' own chrome. */
+    var facts = null, v = VITALS[e.id];
+    if (spec.key === "store" && v && v.surface.state === "ok") facts = v.surface.v;
+    if (spec.key === "place" && v && v.fanin.state === "ok")   facts = null;
+    row.appendChild(slotEl(spec, e.slots[spec.key], facts != null ? { facts:facts } : null));
+  });
+}
+buildPicker(renderDock);
+pick("ep-relief", renderDock);
+</script>

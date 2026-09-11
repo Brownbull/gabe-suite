@@ -1,0 +1,670 @@
+/* RTS console regions — shared by proposals D, E and F.
+   Every region here is a FIXED RECTANGLE. Content changes; geometry does not. */
+
+/* ── CONSOLE RIM — the selection ladder (SC console top rim · WC3 ConsoleTopBar) ── */
+.rim{ flex:none; height:32px; display:flex; align-items:center; gap:8px; padding:0 12px;
+  background:var(--nav-bg); border-bottom:1px solid var(--line); overflow:hidden; }
+.rim .crumb{ display:flex; align-items:center; gap:6px; font:700 10px/1 var(--mono);
+  letter-spacing:.07em; text-transform:uppercase; white-space:nowrap; }
+.rim .crumb b{ color:var(--ink); font-weight:800; }
+.rim .crumb i{ color:#4d5975; font-style:normal; }
+.rim .sep{ color:#3c4763; }
+.rim .spacer{ flex:1; }
+.rim .mode{ font:700 9.5px/1 var(--mono); letter-spacing:.07em; text-transform:uppercase;
+  color:var(--muted); border:1px solid var(--line); background:var(--chip-bg);
+  border-radius:4px; padding:4px 7px; white-space:nowrap; }
+.rim .mode.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
+
+/* ── the region shell: every console region is one of these ── */
+.reg{ min-width:0; min-height:0; border-right:1px solid var(--line);
+  display:flex; flex-direction:column; background:var(--panel); position:relative; }
+.reg:last-child{ border-right:none; }
+.reghd{ flex:none; display:flex; align-items:baseline; gap:6px; padding:6px 9px 4px; }
+.reghd .rl{ font:800 9.5px/1 var(--mono); letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted); }
+.reghd .rn{ margin-left:auto; font:700 9.5px/1 var(--mono); color:var(--accent); }
+.regbody{ flex:1; min-height:0; overflow:hidden; padding:0 9px 8px;
+  display:flex; flex-direction:column; gap:3px; }
+.regbody.scroll{ overflow-y:auto; }
+body.skel .reg{ outline:1px dashed rgba(139,131,245,.5); outline-offset:-2px; }
+
+/* ── PORTRAIT — statport.bin. Exactly one, always, never subdivides ── */
+.portrait{ background:linear-gradient(150deg, rgba(139,131,245,.10), transparent 62%); }
+.pglyph{ flex:none; height:88px; display:flex; align-items:center; justify-content:center; }
+.pglyph svg{ width:60px; height:60px; }
+.pname{ font:700 12.5px/1.28 var(--mono); color:var(--ink); word-break:break-all;
+  max-height:50px; overflow:hidden; }
+.pkind{ font:800 9.5px/1 var(--mono); letter-spacing:.09em; text-transform:uppercase;
+  margin-top:5px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+.pbadge{ font:800 8.5px/1 var(--mono); letter-spacing:.05em; padding:3px 5px;
+  border-radius:3px; color:#fff; }
+.pent{ margin-top:auto; font:600 10.5px/1 var(--mono); color:var(--muted);
+  display:flex; align-items:center; gap:5px; padding-top:6px; }
+.pent .swatch{ width:8px; height:8px; border-radius:2px; flex:none; }
+.portrait.none .pglyph svg{ opacity:.28; }
+.portrait.none .pname{ color:var(--muted); font-style:italic; }
+
+/* ── VITALS — four meters, four permanent y-slots, never reordered ── */
+.vit{ flex:none; padding:5px 0 6px; border-bottom:1px solid rgba(43,54,80,.45); }
+.vit:last-child{ border-bottom:none; }
+.vithd{ display:flex; align-items:baseline; gap:6px; }
+.vithd .vl{ font:800 9px/1 var(--mono); letter-spacing:.1em; color:var(--muted); }
+.vithd .vv{ margin-left:auto; font:700 10.5px/1 var(--mono); color:var(--ink); }
+.vtrack{ height:5px; border-radius:3px; background:#0b1120; margin-top:5px;
+  border:1px solid var(--line); overflow:hidden; }
+.vtrack i{ display:block; height:100%; background:var(--accent); border-radius:3px; }
+.vnote{ font:400 9.5px/1.35 ui-sans-serif,system-ui,sans-serif; color:#5d6a86; margin-top:3px; }
+/* the three empties, and the distinction IS the point */
+.vit.zero .vithd .vv{ color:var(--muted); }
+.vit.zero .vtrack i{ background:var(--line); }
+.vit.na .vithd .vv{ color:#5d6a86; font-style:italic; }
+.vit.na .vtrack{ background:transparent; border-style:dashed; }
+.vit.na .vtrack i{ display:none; }
+.vit.unmeas .vithd .vl,.vit.unmeas .vithd .vv{ color:var(--warn); }
+.vit.unmeas .vtrack{ border-color:var(--warn);
+  background:repeating-linear-gradient(45deg, rgba(232,163,61,.22) 0 4px, transparent 4px 8px); }
+.vit.unmeas .vtrack i{ display:none; }
+.vit.unmeas .vnote{ color:var(--warn); opacity:.85; }
+
+/* ── STATUS DISPLAY — the rectangle never moves; only its content MODE swaps ── */
+.status{ display:flex; flex-direction:column; min-width:0; }
+.spine{ flex:1; min-height:0; display:grid; grid-template-columns:repeat(3, minmax(0,1fr));
+  grid-template-rows:minmax(0,1fr); }
+.spine > .reg{ background:linear-gradient(to bottom, rgba(139,131,245,.05), transparent 40px); }
+.roster{ flex:1; min-height:0; display:grid; grid-template-columns:repeat(6, minmax(0,1fr));
+  grid-template-rows:1fr 1fr; gap:5px; padding:5px 8px 8px; }
+.rtile{ min-width:0; border:1px solid var(--line); border-radius:6px; background:var(--chip-bg);
+  padding:5px 6px; cursor:pointer; display:flex; flex-direction:column; gap:3px; overflow:hidden; }
+.rtile:hover{ border-color:var(--accent); }
+.rtile.on{ border-color:var(--accent); background:rgba(139,131,245,.16); }
+.rtile .rn2{ font:800 9px/1 var(--mono); color:var(--accent); }
+.rtile .rl2{ font:600 10px/1.25 var(--mono); color:var(--ink); word-break:break-all;
+  max-height:38px; overflow:hidden; }
+.rtile .rw2{ font:400 9px/1 ui-sans-serif,system-ui,sans-serif; color:var(--muted); margin-top:auto; }
+.rtile .bar2{ height:3px; border-radius:2px; background:var(--line); margin-top:3px; }
+.rtile .bar2 i{ display:block; height:100%; background:var(--warn); border-radius:2px; }
+.rtile.empty{ border-style:dashed; opacity:.4; cursor:default; }
+
+/* ── CARGO — WC3's 2x3 inventory. The cell count IS the cap, so it cannot clip ── */
+.cargo{ flex:1; min-height:0; display:grid; grid-template-columns:1fr 1fr;
+  grid-template-rows:repeat(3, minmax(0,1fr)); gap:4px; padding:0 9px 8px; }
+.cell{ min-width:0; border:1px solid var(--line); border-radius:5px; background:var(--chip-bg);
+  padding:4px 6px; display:flex; flex-direction:column; justify-content:center; overflow:hidden; }
+.cell .cn{ font:700 10px/1.2 var(--mono); color:var(--ink);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cell .ct{ font:400 9px/1.2 var(--mono); color:var(--muted);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cell.well{ border-style:dashed; opacity:.35; }
+.cell.more{ border-color:var(--accent); justify-content:center; align-items:center; }
+.cell.more .cn{ color:var(--accent); font-size:9.5px; letter-spacing:.05em; }
+.cargonote{ flex:none; padding:0 9px 7px; font:400 9.5px/1.35 ui-sans-serif,system-ui,sans-serif;
+  color:#5d6a86; }
+
+/* ── EVIDENCE — three fixed verdict rows, dashed never absent ── */
+.ev{ flex:none; padding:6px 0; border-bottom:1px solid rgba(43,54,80,.45); }
+.ev:last-child{ border-bottom:none; }
+.ev .el{ font:800 9px/1 var(--mono); letter-spacing:.1em; color:var(--muted); }
+.ev .evv{ font:500 10.5px/1.4 ui-sans-serif,system-ui,sans-serif; color:var(--ink); margin-top:4px; }
+.ev.ok .evv{ color:var(--ok); }
+.ev.none .evv{ color:#5d6a86; font-style:italic; }
+.ev.warn .evv{ color:var(--warn); }
+.ev.unmeas{ background:repeating-linear-gradient(45deg,
+    rgba(232,163,61,.10) 0 5px, transparent 5px 10px); border-radius:4px; padding-left:5px; }
+.ev.unmeas .el,.ev.unmeas .evv{ color:var(--warn); }
+
+/* ── COMMAND CARD — 5x3, fifteen cells, always. The whole mechanism ── */
+.cmdwrap{ display:flex; flex-direction:column; min-height:0;
+  background:linear-gradient(to top, rgba(139,131,245,.09), transparent 60%); }
+.cap{ flex:1; min-height:0; padding:2px 9px 6px; overflow:hidden; }
+.cap .cph{ font:800 10px/1.2 var(--mono); letter-spacing:.05em; color:var(--ink);
+  display:flex; align-items:center; gap:6px; }
+.cap .cpk{ font:800 9px/1 var(--mono); color:var(--accent); border:1px solid var(--accent);
+  border-radius:3px; padding:2px 4px; }
+.cap .cpn{ font:700 9.5px/1 var(--mono); color:var(--accent); margin-left:auto; }
+.cap .cpd{ font:400 10px/1.4 ui-sans-serif,system-ui,sans-serif; color:var(--muted); margin-top:5px; }
+.cap .cpf{ font:400 9px/1.3 var(--mono); color:#4d5975; margin-top:5px; }
+.cap.idle .cph{ color:var(--muted); }
+.grid5{ flex:none; display:grid; grid-template-columns:repeat(5, 30px);
+  grid-auto-rows:30px; gap:3px; padding:0 9px 8px 9px; justify-content:start; }
+.cc{ width:30px; height:30px; border:1px solid var(--line); border-radius:5px;
+  background:var(--chip-bg); display:flex; flex-direction:column; align-items:center;
+  justify-content:center; cursor:pointer; position:relative; padding:0; overflow:visible; }
+.cc .ci{ font:800 7px/1 var(--mono); letter-spacing:.02em; color:var(--ink); text-align:center; }
+.cc .ck{ position:absolute; left:2px; bottom:1px; font:800 7px/1 var(--mono); color:var(--accent); }
+.cc .cb{ position:absolute; right:-3px; top:-4px; min-width:14px; height:13px; padding:0 3px;
+  border-radius:7px; background:var(--accent); color:#fff;
+  font:800 8px/13px var(--mono); text-align:center; }
+.cc:hover{ border-color:var(--accent); }
+/* the four availability states */
+.cc.lit{ }
+.cc.blank{ background:#0a1020; border-color:#1c2540; cursor:default; }
+.cc.blank .ci,.cc.blank .ck{ display:none; }
+.cc.grey{ opacity:.35; cursor:default; }
+.cc.grey .cb{ background:var(--line); color:var(--muted); }
+.cc.unmeas{ border-color:var(--warn); cursor:default;
+  background:repeating-linear-gradient(45deg, rgba(232,163,61,.20) 0 4px, transparent 4px 8px); }
+.cc.unmeas .ci{ color:var(--warn); }
+.cc.unmeas .ck{ display:none; }
+.cc.on{ border-color:var(--accent); background:var(--accent); }
+.cc.on .ci{ color:#fff; } .cc.on .ck{ color:#fff; }
+
+/* ── the STANDING regions — outside the dock, selection-independent ── */
+.stand{ position:absolute; z-index:6; border:1px solid var(--line);
+  background:rgba(12,19,34,.94); border-radius:8px; }
+#res{ right:16px; top:16px; width:300px; padding:7px 10px; }
+#res .rrow{ display:flex; align-items:baseline; gap:8px; font:600 10px/1.6 var(--mono); }
+#res .rrow .rk2{ color:var(--muted); letter-spacing:.07em; }
+#res .rrow .rv2{ margin-left:auto; color:var(--ink); }
+#res .rrow.warn .rv2{ color:var(--warn); }
+#res .rhd{ font:800 9px/1 var(--mono); letter-spacing:.1em; color:var(--accent);
+  margin-bottom:5px; }
+#pinrail{ left:8px; width:60px; padding:5px; display:flex; flex-direction:column; gap:5px; }
+#pinrail .phd{ font:800 8px/1 var(--mono); letter-spacing:.08em; color:var(--muted);
+  text-align:center; margin-bottom:2px; }
+.pinslot{ height:64px; border:1px solid var(--line); border-radius:6px; background:var(--chip-bg);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  cursor:pointer; padding:3px; }
+.pinslot.empty{ border-style:dashed; opacity:.42; }
+.pinslot.empty .pl{ font:700 15px/1 var(--mono); color:var(--muted); }
+.pinslot svg{ width:20px; height:20px; }
+.pinslot .pn{ font:700 7px/1.1 var(--mono); color:var(--muted); text-align:center;
+  max-height:16px; overflow:hidden; word-break:break-all; }
+.pinslot .pk2{ font:800 7px/1 var(--mono); color:var(--accent); }
+#mini{ left:16px; width:150px; padding:7px; }
+#mini .mhd{ font:800 8.5px/1 var(--mono); letter-spacing:.09em; color:var(--accent);
+  margin-bottom:5px; display:flex; }
+#mini .mhd i{ margin-left:auto; font-style:normal; color:var(--muted); font-weight:600; }
+#mini .mmap{ position:relative; height:112px; border:1px solid var(--line); border-radius:4px;
+  background:#080d18; overflow:hidden; cursor:crosshair; }
+#mini .mdot{ position:absolute; border-radius:50%; transform:translate(-50%,-50%); }
+#mini .mfr{ position:absolute; border:1px solid rgba(231,235,243,.55); border-radius:3px; }
+
+/* ── PORTRAIT as a PLANETARY VIEW — the SC2 animated unit portrait ──────────
+   The station already draws exactly this in the 3D field: nodeFleet() puts ships,
+   belts and satellites around every planet, driven by n.m. Today that render is
+   spent on legend cells and two hover thumbnails and never on identity. This
+   region points it at the selection. */
+.planet{ background:radial-gradient(ellipse at 50% 42%, rgba(139,131,245,.13), transparent 62%); }
+.planetbody{ flex:1; min-height:96px; position:relative; }
+.planetbody canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+.planetcap{ flex:none; padding:0 8px 5px; }
+.planetcap .pcname{ font:700 10.5px/1.25 var(--mono); color:var(--ink);
+  word-break:break-all; max-height:26px; overflow:hidden; }
+.planetcap .pcrow{ display:flex; align-items:center; gap:5px; margin-top:4px; }
+.planetcap .pcb{ font:800 8px/1 var(--mono); letter-spacing:.05em; padding:3px 5px;
+  border-radius:3px; color:#fff; }
+.planetcap .pce{ font:600 9.5px/1 var(--mono); color:var(--muted);
+  display:flex; align-items:center; gap:4px; }
+.planetcap .pce i{ width:7px; height:7px; border-radius:2px; display:inline-block; }
+.planetlegend{ flex:none; padding:0 8px 6px; font:400 8.5px/1.3 ui-sans-serif,system-ui,sans-serif;
+  color:#5d6a86; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.planetlegend b{ color:var(--muted); font-weight:700; }
+
+/* ── THE VARIANT MENU — an overlay, never a control on a region ──────────── */
+#vmenu{ position:absolute; right:16px; top:16px; z-index:20; width:340px; display:none;
+  max-height:76vh; overflow-y:auto;
+  border:1px solid var(--line); background:rgba(12,19,34,.985); border-radius:10px;
+  box-shadow:0 22px 60px rgba(0,0,0,.6); padding:0 0 10px; }
+body.vmenu-on #vmenu{ display:block; }
+body.vmenu-on #geo{ display:none; }
+.vmhd{ position:sticky; top:0; z-index:2; display:flex; align-items:center;
+  padding:10px 12px 8px; background:rgba(12,19,34,.99); border-bottom:1px solid var(--line);
+  font:800 10px/1 var(--mono); letter-spacing:.11em; color:var(--accent); }
+.vmx{ margin-left:auto; background:none; border:none; color:var(--muted);
+  font-size:17px; line-height:1; cursor:pointer; padding:0 2px; }
+.vmx:hover{ color:var(--ink); }
+.vmsec{ padding:8px 12px 2px; }
+.vmlbl{ font:800 8.5px/1 var(--mono); letter-spacing:.12em; color:#4d5975; margin-bottom:6px; }
+.vmrow{ display:grid; grid-template-columns:74px 1fr; gap:6px 8px; align-items:center;
+  margin-bottom:8px; }
+.vmk{ font:700 9.5px/1.2 var(--mono); letter-spacing:.04em; color:var(--muted);
+  text-transform:uppercase; }
+.vmsel{ font:600 11px/1 var(--mono); color:var(--ink); background:var(--chip-bg);
+  border:1px solid var(--line); border-radius:6px; padding:5px 6px; cursor:pointer;
+  width:100%; }
+.vmsel:hover{ border-color:var(--accent); }
+.vmnote{ grid-column:2; font:400 9.5px/1.35 ui-sans-serif,system-ui,sans-serif;
+  color:#5d6a86; margin-top:-3px; }
+.vmfoot{ padding:8px 12px 0; margin-top:6px; border-top:1px solid var(--line);
+  font:400 9.5px/1.45 ui-sans-serif,system-ui,sans-serif; color:#5d6a86; }
+.vmbtn{ font:700 10.5px/1 var(--mono); letter-spacing:.05em; color:var(--muted);
+  background:var(--chip-bg); border:1px solid var(--line); border-radius:6px;
+  padding:6px 10px; cursor:pointer; }
+.vmbtn:hover{ color:var(--ink); border-color:var(--accent); }
+body.vmenu-on .vmbtn{ color:#fff; background:var(--accent); border-color:var(--accent); }
+
+/* ── VARIANT presentations ─────────────────────────────────────────────────
+   Each of these changes what is drawn INSIDE a region. None of them changes the
+   region's rectangle — that is the invariant the whole page argues for. */
+
+/* VITALS · bars (GLANCE) and table (AUDIT) */
+.vit.v-bars{ padding:4px 0 5px; }
+.vit.v-bars .vnote{ display:none; }
+.vit.v-table .vtrack{ display:none; }
+.vraw{ font:600 9.5px/1.3 var(--mono); color:var(--muted); margin-top:3px; }
+.vit.v-table .vraw{ color:var(--ink); }
+
+/* CARGO · chips (GLANCE) and list (AUDIT) */
+.cargo-chips{ flex:1; min-height:0; overflow-y:auto; padding:0 9px 8px;
+  display:flex; flex-wrap:wrap; gap:4px; align-content:flex-start; }
+.cgchip{ font:600 9.5px/1 var(--mono); color:var(--ink); background:var(--chip-bg);
+  border:1px solid var(--line); border-radius:4px; padding:4px 6px; white-space:nowrap; }
+.cargo-list{ flex:1; min-height:0; overflow-y:auto; padding:0 9px 8px;
+  display:flex; flex-direction:column; gap:2px; }
+.cgrow{ display:flex; gap:8px; font:400 10px/1.35 var(--mono); }
+.cgrow b{ color:var(--ink); font-weight:700; flex:none; max-width:52%;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cgrow span{ color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cgmore{ font:700 9.5px/1 var(--mono); color:var(--accent); margin-top:3px; }
+
+/* EVIDENCE · chips (GLANCE) and stacked (AUDIT) */
+.ev-chips .ev{ padding:4px 0; border-bottom:none; display:flex; align-items:baseline; gap:6px; }
+.ev-chips .ev .evv{ margin-top:0; font-size:10px; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis; }
+.ev-stack .ev .evv{ font-size:10.5px; line-height:1.45; }
+
+/* COMMAND · 3x5 tall, and the verb list (AUDIT) */
+.grid5.grid35{ grid-template-columns:repeat(3, 30px); }
+.cmdlist{ flex:1; min-height:0; overflow-y:auto; padding:0 9px 8px;
+  display:flex; flex-direction:column; gap:1px; }
+.cl{ display:grid; grid-template-columns:22px 1fr auto; gap:6px; align-items:baseline;
+  padding:3px 4px; border-radius:4px; font:600 10px/1.3 var(--mono); }
+.cl .clk{ color:var(--accent); font-size:8.5px; font-weight:800; }
+.cl .cln{ color:var(--ink); }
+.cl .clc{ color:var(--accent); font-weight:800; font-size:9px; }
+.cl .clr{ grid-column:2 / 4; font:400 9px/1.35 ui-sans-serif,system-ui,sans-serif;
+  color:#5d6a86; margin-top:1px; }
+.cl.blank{ opacity:.42; } .cl.blank .clk{ visibility:hidden; }
+.cl.grey{ opacity:.5; }
+.cl.unmeas{ background:repeating-linear-gradient(45deg,
+  rgba(232,163,61,.12) 0 5px, transparent 5px 10px); }
+.cl.unmeas .cln{ color:var(--warn); }
+
+/* STATUS · the AUDIT ledger */
+.stab{ flex:1; min-height:0; overflow-y:auto; padding:4px 9px 8px;
+  display:flex; flex-direction:column; gap:1px; }
+.str{ display:grid; grid-template-columns:44px 46px 1fr; gap:7px; align-items:baseline;
+  font:400 10.5px/1.4 ui-sans-serif,system-ui,sans-serif; }
+.str .stc{ font:800 8.5px/1.5 var(--mono); letter-spacing:.09em; color:var(--accent); }
+.str .stk{ font:700 8.5px/1.5 var(--mono); letter-spacing:.04em; color:var(--muted);
+  text-transform:uppercase; text-align:right; }
+.str .stv{ color:var(--ink); word-break:break-word; }
+.str.dim .stv{ color:var(--muted); }
+.str.none .stv{ color:#5d6a86; font-style:italic; }
+.str.warn .stv{ color:var(--warn); }
+.str.ok .stv{ color:var(--ok); }
+.str.unmeas{ background:repeating-linear-gradient(45deg,
+  rgba(232,163,61,.09) 0 5px, transparent 5px 10px); border-radius:3px; }
+.str.unmeas .stv{ color:var(--warn); }
+
+/* PORTRAIT · the GLANCE glyph and the AUDIT stat block */
+.pglyphbig{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+.planetbody.pm-stat canvas{ width:58%; left:0; right:auto; }
+.planetbody.pm-stat::after{ content:""; }
+
+/* ── THE CONTROL HUD — bottom-right of the graph, icons only ─────────────── */
+#hud{ position:absolute; right:14px; bottom:14px; z-index:12; width:auto; max-width:322px;
+  border:1px solid var(--line); background:rgba(12,19,34,.95); border-radius:10px;
+  box-shadow:0 16px 44px rgba(0,0,0,.55); backdrop-filter:blur(3px); overflow:hidden; }
+.hhd{ display:flex; align-items:center; gap:6px; padding:6px 8px;
+  border-bottom:1px solid var(--line); background:rgba(12,19,34,.7); }
+.hcog{ display:inline-flex; color:var(--accent); }
+.hsp{ flex:1; }
+.hmin{ display:inline-flex; align-items:center; justify-content:center;
+  width:20px; height:20px; padding:0; color:var(--muted);
+  background:none; border:1px solid transparent; border-radius:5px; cursor:pointer; }
+.hmin:hover{ color:var(--ink); border-color:var(--line); }
+.hbody{ padding:7px 8px 8px; display:flex; flex-direction:column; gap:5px; }
+body.hud-min .hbody{ display:none; }
+body.hud-min #hud{ max-width:none; width:auto; }
+body.hud-min .hmin{ transform:rotate(45deg); }
+
+.hrow{ display:flex; align-items:flex-start; gap:7px; }
+.hlab{ flex:none; width:18px; height:22px; display:inline-flex; align-items:center;
+  justify-content:center; color:#55627f; cursor:help; }
+.hbtns{ flex:1; display:flex; flex-wrap:wrap; gap:3px; }
+.hb{ width:22px; height:22px; padding:0; display:inline-flex; align-items:center;
+  justify-content:center; color:var(--muted); background:var(--chip-bg);
+  border:1px solid var(--line); border-radius:5px; cursor:pointer; }
+.hb:hover{ border-color:var(--accent); }
+.hb.on{ border-color:var(--accent); background:rgba(139,131,245,.22); color:var(--ink); }
+.hb .hnum{ font:800 8.5px/1 var(--mono); letter-spacing:.02em; }
+.hb .hsw{ width:12px; height:12px; border-radius:3px; display:block; }
+
+/* the one shared tooltip — instant, no native title anywhere */
+.hudtip{ position:fixed; z-index:60; display:none; max-width:250px;
+  border:1px solid var(--line); background:rgba(10,16,28,.985); border-radius:7px;
+  padding:7px 9px; box-shadow:0 10px 30px rgba(0,0,0,.6); pointer-events:none; }
+.hudtip.on{ display:block; }
+.hudtip b{ display:block; font:800 10px/1.2 var(--mono); letter-spacing:.06em;
+  text-transform:uppercase; color:var(--accent); }
+.hudtip i{ display:block; font:400 10.5px/1.45 ui-sans-serif,system-ui,sans-serif;
+  font-style:normal; color:var(--muted); margin-top:4px; }
+
+/* G hides the old strips — the HUD replaces all three. A-F keep theirs. */
+body.hud-only #kindbar,
+body.hud-only #pick{ display:none; }
+body.hud-only #demo{ bottom:14px; right:352px; }
+/* the glyph must never be the hover target — the BUTTON is, or the tooltip fires
+   from the wrong node and pointer-actionability checks fail against the svg */
+.hb svg, .hlab svg, .hb .hsw, .hb .hnum, .hmin svg{ pointer-events:none; }
+
+/* ── ICON MODE + TEXT SCALE ────────────────────────────────────────────────
+   --ts scales TYPE ONLY. The region rectangles are fixed, so larger text wraps
+   sooner and the slot scrolls (and says so with its scroll tag) rather than the
+   region growing. That is the same trade the panel makes everywhere else. */
+:root{ --ts:1; }
+
+#dock .rw{ font-size:calc(11.5px * var(--ts)); line-height:1.42; }
+#dock .rw .rk{ font-size:calc(9.5px * var(--ts)); }
+#dock .rw.mono .rv{ font-size:calc(10.5px * var(--ts)); }
+#dock .vithd .vl{ font-size:calc(9px * var(--ts)); }
+#dock .vithd .vv{ font-size:calc(10.5px * var(--ts)); }
+#dock .vnote{ font-size:calc(9.5px * var(--ts)); }
+#dock .vraw{ font-size:calc(9.5px * var(--ts)); }
+#dock .ev .el{ font-size:calc(9px * var(--ts)); }
+#dock .ev .evv{ font-size:calc(10.5px * var(--ts)); }
+#dock .cell .cn{ font-size:calc(10px * var(--ts)); }
+#dock .cell .ct{ font-size:calc(9px * var(--ts)); }
+#dock .cargonote{ font-size:calc(9.5px * var(--ts)); }
+#dock .reghd .rl{ font-size:calc(9.5px * var(--ts)); }
+#dock .reghd .rn{ font-size:calc(9.5px * var(--ts)); }
+#dock .pcname{ font-size:calc(10.5px * var(--ts)); }
+#dock .planetlegend{ font-size:calc(8.5px * var(--ts)); }
+#dock .cap .cph{ font-size:calc(10px * var(--ts)); }
+#dock .cap .cpd{ font-size:calc(10px * var(--ts)); }
+#dock .cap .cpf{ font-size:calc(9px * var(--ts)); }
+#dock .str{ font-size:calc(10.5px * var(--ts)); }
+#dock .str .stc,#dock .str .stk{ font-size:calc(8.5px * var(--ts)); }
+#dock .rim .crumb{ font-size:calc(10px * var(--ts)); }
+#dock .cl{ font-size:calc(10px * var(--ts)); }
+
+/* the icon gutters — a glyph where a word was */
+.rk.ico{ display:inline-flex; align-items:center; justify-content:flex-end;
+  color:#66739180; cursor:help; padding-top:1px; }
+.rw:hover .rk.ico{ color:var(--accent); }
+.rw.warn .rk.ico{ color:var(--warn); }
+.rw.ok .rk.ico{ color:var(--ok); }
+.rw.unmeas .rk.ico{ color:var(--warn); }
+.vl.ico,.el.ico,.rl.ico{ display:inline-flex; align-items:center; color:var(--muted); cursor:help; }
+.rl.ico{ color:var(--accent); }
+.ev.unmeas .el.ico,.vit.unmeas .vl.ico{ color:var(--warn); }
+.cc .ci.ico{ display:inline-flex; align-items:center; justify-content:center; }
+
+/* ── THE U ────────────────────────────────────────────────────────────────
+   SC2's console is not a bar: the left and right wings stand taller than the
+   centre, and the eye reads the dip as a cradle around the content. Here the
+   wings are +54px and the middle is inset, so the dock's silhouette is a U.
+
+   The wings are also where the two constant things live — the world on the
+   left, the element and its verbs on the right — so the extra height goes to
+   the regions that never blank. */
+/* --dock is the TOTAL console height, wings included. Adding the wing lift on top
+   of it made the dial lie: "30%" measured 35% because the U's 54px was extra.
+   The lift is now taken from INSIDE the height, so the number on the button is
+   the number on the screen. */
+body.ushape #dock{ height:var(--dock);
+  background:transparent; border-top:none; overflow:visible; }
+body.ushape #dock .rim{ margin:0 var(--wingw, 336px); border-radius:9px 9px 0 0;
+  border:1px solid var(--line); border-bottom:none; }
+body.ushape #row{
+  display:grid;
+  grid-template-columns: var(--wingw, 336px) minmax(0,1fr) var(--wingr, 512px);
+  grid-template-rows: minmax(0,1fr);
+  align-items:stretch; gap:0; }
+
+/* the three zones */
+.zone{ min-width:0; min-height:0; display:flex; }
+.zone.wing{ align-self:stretch; }
+.zone.mid{ align-self:end; height:calc(100% - var(--wing, 54px)); }
+
+/* a wing is a raised, rounded container with its own edge */
+.wingbox{ flex:1; min-width:0; display:flex;
+  background:var(--panel); border:1px solid var(--line);
+  box-shadow:0 -6px 22px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.045); }
+.zone.wing.left  .wingbox{ border-radius:12px 12px 0 0; border-right-width:1px; }
+.zone.wing.right .wingbox{ border-radius:12px 12px 0 0; }
+.zone.mid .midbox{ flex:1; min-width:0; display:flex; flex-direction:column;
+  background:var(--panel); border:1px solid var(--line); border-bottom:none;
+  border-radius:10px 10px 0 0;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03); }
+
+/* the middle's title bar — the selected element's NAME, the one 100%-live field */
+.midtitle{ flex:none; display:flex; align-items:center; gap:9px;
+  padding:7px 12px 6px; border-bottom:1px solid var(--line); }
+.midtitle .mtg{ display:inline-flex; flex:none; }
+.midtitle .mtn{ font:700 calc(13px * var(--ts)) / 1.25 var(--mono); color:var(--ink);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.midtitle .mtb{ flex:none; font:800 calc(8.5px * var(--ts))/1 var(--mono);
+  letter-spacing:.05em; padding:3px 5px; border-radius:3px; color:#fff; }
+.midtitle .mte{ flex:none; display:inline-flex; align-items:center; gap:5px;
+  font:600 calc(10px * var(--ts))/1 var(--mono); color:var(--muted); margin-left:auto; }
+.midtitle .mte i{ width:8px; height:8px; border-radius:2px; }
+.midcols{ flex:1; min-height:0; display:grid;
+  grid-template-columns:236px repeat(3, minmax(0,1fr)) 210px;
+  grid-template-rows:minmax(0,1fr); }
+
+/* the minimap's controls move to the OUTER edge of the left wing */
+.mmside{ flex:none; width:26px; display:flex; flex-direction:column; gap:4px;
+  padding:8px 3px; border-right:1px solid var(--line); align-items:center; }
+.mmside .hb{ width:20px; height:20px; }
+body.ushape .mmfoot{ display:none; }
+body.ushape .mmhd{ padding-left:6px; }
+
+/* the right wing: portrait above, verbs below, one container */
+.rwing{ flex:1; min-width:0; display:grid;
+  grid-template-columns: minmax(0,1fr) 150px 212px; grid-template-rows:minmax(0,1fr); }
+/* a region dropped into a wing must claim the leftover width — .reg carries
+   min-width:0 but no flex-grow, so the minimap canvas measured 0px wide. */
+.wingbox > .reg{ flex:1 1 auto; min-width:0; }
+.rwing > .reg{ min-width:0; }
+
+/* ── THE INTEGRATED TOP BAR ────────────────────────────────────────────────
+   Everything that was floating over the graph — the config menu, the controls,
+   the selection breadcrumb — moves INTO the console as its top strip. Operator:
+   "If they are part of this, they should be integrated into it, not as a
+   separate part on top of our navigation panel."
+
+   It spans the full console width at the wings' top line; the U's dip happens
+   BELOW it, so the bar reads as the console's own lid rather than a floating
+   toolbar that happens to sit there. */
+body.ushape #dock{ display:flex; flex-direction:column; }
+#topbar{ flex:none; display:flex; align-items:center; gap:0;
+  height:var(--topbar, 38px); padding:0 10px;
+  background:var(--nav-bg); border:1px solid var(--line); border-bottom:none;
+  border-radius:12px 12px 0 0;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05); overflow:hidden; }
+body.ushape #row{ flex:1; min-height:0; }
+/* the wings now start under the bar, so their own top radius goes flat */
+body.ushape .zone.wing.left .wingbox,
+body.ushape .zone.wing.right .wingbox{ border-radius:0; border-top:none; }
+body.ushape .zone.mid .midbox{ border-radius:0; border-top:none; }
+body.ushape #dock .rim{ display:none; }
+
+/* left: the selection breadcrumb */
+#tbcrumb{ display:flex; align-items:center; gap:6px; min-width:0; flex:0 1 auto;
+  padding-right:10px; }
+#tbcrumb .cr{ font:700 calc(9.5px * var(--ts))/1 var(--mono); letter-spacing:.06em;
+  text-transform:uppercase; white-space:nowrap; }
+#tbcrumb .cr b{ color:var(--ink); font-weight:800; }
+#tbcrumb .cr i{ color:#4d5975; font-style:normal; }
+#tbcrumb .sep{ color:#3c4763; font-size:10px; }
+#tbcrumb .cur{ min-width:0; overflow:hidden; text-overflow:ellipsis; }
+
+/* right: the control groups, icon-only, divided */
+#tbctl{ display:flex; align-items:center; gap:0; margin-left:auto; min-width:0; }
+.tbg{ display:flex; align-items:center; gap:3px; padding:0 8px;
+  border-left:1px solid var(--line); height:24px; }
+.tbg:first-child{ border-left:none; }
+.tbg.wrapg{ flex-wrap:wrap; height:auto; }
+.tbg .hb{ width:21px; height:21px; }
+.tbglab{ display:inline-flex; color:#55627f; margin-right:2px; cursor:help; }
+/* the kind group is the widest; let it shrink first and scroll */
+#tbkinds{ display:flex; gap:3px; overflow-x:auto; max-width:42vw; padding-bottom:1px; }
+#tbkinds::-webkit-scrollbar{ height:0; }
+
+/* ── THE CONTROL PANEL — top-left of the page, not on the console ─────────── */
+#ctlpanel{ position:absolute; left:16px; top:16px; z-index:14; width:452px;
+  display:grid; grid-template-columns:1fr 1fr; gap:7px;
+  border:1px solid var(--line); background:rgba(12,19,34,.93); border-radius:11px;
+  padding:11px; backdrop-filter:blur(3px);
+  box-shadow:0 14px 40px rgba(0,0,0,.45); }
+.cg{ min-width:0; border:1px solid var(--line); border-radius:8px;
+  background:var(--chip-bg); padding:6px 7px 7px; }
+.cg.wide{ grid-column:1 / -1; }
+.cgh{ display:flex; align-items:center; gap:5px; margin-bottom:5px; }
+.cgi{ display:inline-flex; color:var(--accent); }
+.cgt{ font:800 8.5px/1 var(--mono); letter-spacing:.13em; color:var(--muted); }
+.cgb{ display:flex; flex-wrap:wrap; gap:3px; }
+.cg .hb{ width:21px; height:21px; }
+
+/* the console no longer carries a control strip of its own */
+#topbar{ display:none; }
+body.ushape #dock > #row{ flex:1; min-height:0; }
+body.ushape .zone.wing.left .wingbox{ border-radius:12px 0 0 0; border-top:1px solid var(--line); }
+body.ushape .zone.wing.right .wingbox{ border-radius:0 12px 0 0; border-top:1px solid var(--line); }
+body.ushape .zone.mid .midbox{ border-radius:10px 10px 0 0; border-top:1px solid var(--line); }
+
+/* the breadcrumb becomes the middle section's own first row */
+.midcrumb{ flex:none; display:flex; align-items:center; gap:6px;
+  padding:5px 12px; border-bottom:1px solid rgba(43,54,80,.55);
+  background:rgba(12,19,34,.4); overflow:hidden; }
+.midcrumb .cr{ font:700 calc(9px * var(--ts))/1 var(--mono); letter-spacing:.07em;
+  text-transform:uppercase; white-space:nowrap; }
+.midcrumb .cr b{ color:var(--ink); font-weight:800; }
+.midcrumb .cr i{ color:#4d5975; font-style:normal; }
+.midcrumb .sep{ color:#3c4763; font-size:9px; }
+.midcrumb .cur{ min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.midcrumb .mode{ margin-left:auto; flex:none;
+  font:700 calc(9px * var(--ts))/1 var(--mono); color:var(--muted); white-space:nowrap; }
+
+/* ── ICON + TITLE, the control panel's nomenclature, carried into the console ──
+   Section NAMES are readable at a glance; row-level keys stay wordless. */
+.reghd .rt, .vl.ico .vt, .el.ico .vt, .sl.ico .vt{
+  font:800 calc(8.5px * var(--ts))/1 var(--mono); letter-spacing:.12em;
+  color:var(--muted); margin-left:5px; }
+.reghd{ align-items:center; }
+.vl.ico, .el.ico, .sl.ico{ display:inline-flex; align-items:center; }
+.vit.unmeas .vl.ico .vt, .ev.unmeas .el.ico .vt{ color:var(--warn); }
+.reghd .rl.ico{ display:inline-flex; align-items:center; }
+
+/* ══ FRAME TREATMENTS ═══════════════════════════════════════════════════════
+   Six container styles, taken from the 9-slice UI-kit taxonomy that ships in
+   game asset packs: LINE · SOFT · BEVEL · NOTCH (sci-fi) · FRAME · ORNATE
+   (fantasy). All six are IMAGE-FREE — clip-path polygons, inset shadows and
+   absolutely-positioned corner marks, no sprites and no border-image.
+
+   THE LAW THEY OBEY: a frame may not move a region by a pixel. So border WIDTH
+   never changes (always 1px) and every treatment rides on border-radius,
+   clip-path, box-shadow insets or ::before/::after marks — none of which touch
+   the layout box. The geometry probe checks this.
+   Sources: rasterloom 9-slice kit taxonomy · css-tricks corner-cutting ·
+   daverupert corner-shape. */
+
+/* the frameable surfaces */
+.wingbox, .midbox, #ctlpanel, .cg{ position:relative; }
+
+/* 1 · LINE — the baseline: hairline border, small radius */
+body[data-frame="line"] .wingbox,
+body[data-frame="line"] .midbox{ border-radius:3px; }
+
+/* 2 · SOFT — generous radius, no hard corner anywhere */
+body[data-frame="soft"] .zone.wing.left .wingbox{ border-radius:18px 6px 0 0; }
+body[data-frame="soft"] .zone.wing.right .wingbox{ border-radius:6px 18px 0 0; }
+body[data-frame="soft"] .midbox{ border-radius:14px 14px 0 0; }
+body[data-frame="soft"] .cg{ border-radius:12px; }
+body[data-frame="soft"] #ctlpanel{ border-radius:16px; }
+
+/* 3 · BEVEL — a raised plate: light top edge, dark bottom, the Terran read */
+body[data-frame="bevel"] .wingbox,
+body[data-frame="bevel"] .midbox,
+body[data-frame="bevel"] .cg{
+  border-radius:2px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.13),
+             inset 1px 0 0 rgba(255,255,255,.06),
+             inset -1px 0 0 rgba(0,0,0,.5),
+             inset 0 -1px 0 rgba(0,0,0,.6),
+             0 -2px 10px rgba(0,0,0,.4); }
+
+/* 4 · NOTCH — angular corner cuts, the sci-fi rectangle. clip-path does not
+   affect layout, so the region's box is untouched. */
+@supports (clip-path: polygon(0 0)){
+  body[data-frame="notch"] .zone.wing.left .wingbox{
+    clip-path:polygon(14px 0, 100% 0, 100% 100%, 0 100%, 0 14px); }
+  body[data-frame="notch"] .zone.wing.right .wingbox{
+    clip-path:polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
+  body[data-frame="notch"] .midbox{
+    clip-path:polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%, 0 10px); }
+  body[data-frame="notch"] .cg{
+    clip-path:polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px); }
+  body[data-frame="notch"] #ctlpanel{
+    clip-path:polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px); }
+}
+body[data-frame="notch"] .wingbox,
+body[data-frame="notch"] .midbox,
+body[data-frame="notch"] .cg{ border-radius:0; }
+
+/* 5 · FRAME — a double rule: the border plus an inset line, with corner marks */
+body[data-frame="frame"] .wingbox::after,
+body[data-frame="frame"] .midbox::after,
+body[data-frame="frame"] .cg::after{
+  content:""; position:absolute; inset:3px; pointer-events:none;
+  border:1px solid color-mix(in srgb, var(--accent) 26%, transparent); border-radius:2px; }
+body[data-frame="frame"] .wingbox,
+body[data-frame="frame"] .midbox,
+body[data-frame="frame"] .cg{ border-radius:3px; }
+
+/* 6 · ORNATE — heavier corner brackets in the accent, the fantasy read */
+body[data-frame="ornate"] .wingbox::before,
+body[data-frame="ornate"] .midbox::before,
+body[data-frame="ornate"] .cg::before,
+body[data-frame="ornate"] .wingbox::after,
+body[data-frame="ornate"] .midbox::after,
+body[data-frame="ornate"] .cg::after{
+  content:""; position:absolute; width:13px; height:13px; pointer-events:none;
+  border-color:var(--accent); border-style:solid; opacity:.75; }
+body[data-frame="ornate"] .wingbox::before,
+body[data-frame="ornate"] .midbox::before,
+body[data-frame="ornate"] .cg::before{
+  left:2px; top:2px; border-width:2px 0 0 2px; }
+body[data-frame="ornate"] .wingbox::after,
+body[data-frame="ornate"] .midbox::after,
+body[data-frame="ornate"] .cg::after{
+  right:2px; top:2px; border-width:2px 2px 0 0; }
+body[data-frame="ornate"] .wingbox,
+body[data-frame="ornate"] .midbox,
+body[data-frame="ornate"] .cg{ border-radius:1px;
+  box-shadow:inset 0 0 22px rgba(0,0,0,.45); }
+
+/* ── THE CONFIGURATION READOUT ─────────────────────────────────────────────
+   Always SHOWN, not just copied: clipboard access is unreliable on file://, so
+   the text sits in a selectable textarea and the copy is attempted on top. */
+#cfgout{ position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
+  z-index:80; width:520px; display:none;
+  border:1px solid var(--accent); background:rgba(10,16,28,.99); border-radius:11px;
+  box-shadow:0 24px 70px rgba(0,0,0,.7); overflow:hidden; }
+#cfgout.on{ display:block; }
+#cfgout .cfgh{ display:flex; align-items:center; gap:7px; padding:9px 11px;
+  border-bottom:1px solid var(--line);
+  font:800 10px/1 var(--mono); letter-spacing:.12em; color:var(--accent); }
+#cfgout .cfgh span{ flex:1; }
+#cfgout .cfgb{ font:700 9.5px/1 var(--mono); letter-spacing:.06em; color:var(--muted);
+  background:var(--chip-bg); border:1px solid var(--line); border-radius:5px;
+  padding:5px 9px; cursor:pointer; }
+#cfgout .cfgb:hover{ color:var(--ink); border-color:var(--accent); }
+#cfgout .cfgt{ display:block; width:100%; height:330px; resize:vertical;
+  border:none; outline:none; padding:11px 13px;
+  font:400 11.5px/1.55 var(--mono); color:var(--ink); background:transparent; }
+
+/* ── CONTAINER SUBSECTIONS — one block, four labelled and tinted regions ──── */
+.cg.sub .cgsubs{ display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+.cs{ min-width:0; border:1px solid rgba(43,54,80,.7); border-radius:6px;
+  background:rgba(14,21,36,.55); padding:4px 5px 5px; }
+.csh{ display:flex; align-items:center; gap:4px; margin-bottom:4px; }
+.csi{ display:inline-flex; }
+.cst{ font:800 7.5px/1 var(--mono); letter-spacing:.13em; }
+.csb{ display:flex; flex-wrap:wrap; gap:3px; }
+.cs .hb{ width:20px; height:20px; }
+/* the LEDGER replaces all three spine columns, so it spans their tracks */
+.midcols > .midspan{ grid-column:span 3; min-width:0; min-height:0;
+  border-right:1px solid var(--line); }

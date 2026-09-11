@@ -1,0 +1,188 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>B · Step Ledger — bottom workflow dock</title>
+<link rel="stylesheet" href="../_common.css">
+<style>
+  /* ── PROPOSAL B: the seven slots become COLUMNS; rows are journey steps ───
+     Same fixed positions as A, rotated. One element = a one-row ledger.
+     A journey = five rows under the same headers, so a column reads DOWN as a
+     comparison: every gate, every write, every untested step, in one glance. */
+  #ledger{ flex:1; min-height:0; overflow:auto; }
+  #grid{ display:grid; grid-template-columns:44px 250px 190px 1fr 1.1fr 1fr 176px 200px;
+         min-width:1280px; }
+  .ch{ position:sticky; top:0; z-index:2; background:var(--nav-bg);
+       border-bottom:1px solid var(--line); border-right:1px solid var(--line);
+       padding:6px 9px 5px; }
+  .ch .sl{ font:800 9.5px/1 var(--mono); letter-spacing:.1em; text-transform:uppercase;
+           color:var(--muted); display:block; }
+  .ch:last-child{ border-right:none; }
+  .cell{ border-bottom:1px solid rgba(43,54,80,.55); border-right:1px solid var(--line);
+         padding:6px 9px 8px; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .cell:last-child{ border-right:none; }
+  .cell.empty{ opacity:.5; }
+  /* COMPACT is the default: a 264px dock fits ~4 rows only if each cell clamps.
+     The uncompressed row is 152px and shows 1.4 steps — which defeats the
+     whole point of a ledger. The toggle makes that trade visible. */
+  body.compact .cell .rw{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  body.compact .cell .rw .rv{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .more{ font:700 9.5px/1.5 var(--mono); color:var(--accent); opacity:.8; padding-left:59px; }
+  .stepn{ display:flex; align-items:flex-start; justify-content:center; padding-top:8px;
+          border-bottom:1px solid rgba(43,54,80,.55); border-right:1px solid var(--line); }
+  .stepn b{ font:800 12px/1 var(--mono); color:var(--accent); }
+  .rowband:hover .cell{ background:rgba(139,131,245,.055); }
+  /* the ledger's own read: a column scanned DOWN */
+  #grid.hi-store .cell[data-c="store"]{ background:rgba(139,131,245,.1); }
+  #grid.hi-ev .cell[data-c="ev"]{ background:rgba(139,131,245,.1); }
+  .jsel{ display:flex; gap:6px; align-items:center; }
+</style>
+
+<body class="compact">
+<div id="wrap">
+  <div id="stage">
+    <svg id="field"></svg>
+    <div id="lede">
+      <span class="tag">Proposal B</span>
+      <h1>Step ledger — <b>the same seven slots, rotated into columns</b></h1>
+      <p>A the seven fixed cells stand side by side for <b>one</b> element. B turns them
+      into <b>column headers</b> and puts one row per journey step underneath. The positions
+      are just as fixed — but now a column reads <b>down</b>.</p>
+      <p>Scan STORE down the cooking journey and the write set grows 2 → 1 → 1 → 2 → <b>7
+      tables</b>. Scan EVIDENCE down and step 3 is the one nobody tested. That comparison is
+      impossible in a right-hand panel, which shows one element at a time.</p>
+    </div>
+    <div id="geo">
+      <div class="gk"><span>dock height</span><span>264px</span></div>
+      <div class="gk"><span>row height</span><span>66px compact · 152px full</span></div>
+      <div class="gk"><span>journey shown</span><span>5 steps · scrolls</span></div>
+      <div class="gk"><span>single element</span><span>a one-row ledger</span></div>
+      <div style="margin-top:7px;padding-top:7px;border-top:1px solid var(--line)">
+        <b>Measured at 1600&times;900:</b> a full row is <b>152px</b> — <b>1.5</b> of 5 steps
+        fit. Compact clamps each cell to 2 rows + a &ldquo;+N more&rdquo; line: <b>66px</b>,
+        so <b>3.5</b> steps fit. All five compact steps need a <b>~385px</b> dock; all five at
+        full depth need <b>~815px</b>. Toggle it — this is B's real cost.
+      </div>
+    </div>
+    <div id="pick"></div>
+    <div id="demo"></div>
+  </div>
+
+  <div id="dock">
+    <div class="dhead">
+      <span class="dt">Workflow <em>·</em> <span id="dname">—</span></span>
+      <span class="dsub" id="dnote"></span>
+      <span class="spacer"></span>
+      <span class="jsel">
+        <button class="tbtn on" id="bJ">journey · cook a recipe (5 steps)</button>
+        <button class="tbtn" id="bE">single element</button>
+        <button class="tbtn" id="bHS">read STORE down</button>
+        <button class="tbtn" id="bHE">read EVIDENCE down</button>
+        <button class="tbtn on" id="bC">compact · 3.5 of 5 steps</button>
+      </span>
+    </div>
+    <div id="ledger"><div id="grid"></div></div>
+  </div>
+</div>
+
+<script src="../_data.js"></script>
+<script src="../_shell.js"></script>
+<script>
+buildStage();
+buildDemoted("B shows ~2 fewer lines per cell than A at the same dock height. It buys the "
+  + "one thing a right-hand panel can never do: compare the SAME field across every step "
+  + "of a workflow without losing the others off-screen.");
+
+var MODE = "journey", SINGLE = null;
+
+function head(){
+  var g = document.getElementById("grid");
+  var h = el("div", { class:"ch" }, [ el("span", { class:"sl", text:"#" }) ]);
+  g.appendChild(h);
+  SLOTS.forEach(function(s){
+    /* the hint lives in the tooltip, not the header — B's height budget is the
+       tight one and every reclaimed pixel is a line of a step's data */
+    g.appendChild(el("div", { class:"ch", title:s.label + " — " + s.hint }, [
+      el("span", { class:"sl", text:s.label })
+    ]));
+  });
+}
+
+function band(n, slots, tone){
+  var g = document.getElementById("grid");
+  var cells = [];
+  var num = el("div", { class:"stepn" }, [ el("b", { text: n }) ]);
+  g.appendChild(num); cells.push(num);
+  SLOTS.forEach(function(spec){
+    var rows = slots[spec.key] || [];
+    var live = rows.filter(function(x){ return x.tone !== "none"; }).length;
+    var c = el("div", { class:"cell" + (live ? "" : " empty"), "data-c":spec.key });
+    var cap = document.body.classList.contains("compact") ? 2 : rows.length;
+    /* LIVE ROWS FIRST inside the cap. Taking rows in authoring order spent both
+       visible lines on dashes whenever a cell's first two rows were honest-empty
+       (fe-legal's STORE and OUT both do), hiding the real facts behind "+2 more".
+       The RTS analogue is exact: a command card leaves the GAPS empty, it never
+       spends a visible slot on a gap while an ability waits off-card. */
+    var ordered = rows.filter(function(x){ return x.tone !== "none"; })
+      .concat(rows.filter(function(x){ return x.tone === "none"; }));
+    ordered.slice(0, cap).forEach(function(r){ c.appendChild(rowEl(r)); });
+    if (ordered.length > cap)
+      c.appendChild(el("div", { class:"more", text:"+" + (ordered.length - cap) + " more" }));
+    g.appendChild(c); cells.push(c);
+  });
+  /* hover-band: the row lights as one unit so a step reads across */
+  cells.forEach(function(c){
+    c.onmouseenter = function(){ cells.forEach(function(x){ x.style.background = "rgba(139,131,245,.055)"; }); };
+    c.onmouseleave = function(){ cells.forEach(function(x){ x.style.background = ""; }); };
+  });
+}
+
+function draw(){
+  var g = document.getElementById("grid");
+  g.innerHTML = "";
+  head();
+  if (MODE === "journey"){
+    document.getElementById("dname").textContent = JOURNEY.name;
+    document.getElementById("dnote").textContent = "level " + JOURNEY.level + " · " + JOURNEY.note;
+    document.getElementById("dnote").style.color = "var(--muted)";
+    JOURNEY.steps.forEach(function(s){ band(s.n, s.slots); });
+  } else {
+    var e = SINGLE || ELEMENTS[0];
+    document.getElementById("dname").textContent = e.label;
+    document.getElementById("dnote").textContent = e.note;
+    document.getElementById("dnote").style.color = e.gap ? "var(--bad)" : "var(--muted)";
+    band("·", e.slots);
+  }
+}
+
+document.getElementById("bJ").onclick = function(){
+  MODE = "journey";
+  this.classList.add("on"); document.getElementById("bE").classList.remove("on"); draw();
+};
+document.getElementById("bE").onclick = function(){
+  MODE = "element";
+  this.classList.add("on"); document.getElementById("bJ").classList.remove("on"); draw();
+};
+document.getElementById("bHS").onclick = function(){
+  document.getElementById("grid").classList.toggle("hi-store");
+  this.classList.toggle("on", document.getElementById("grid").classList.contains("hi-store"));
+};
+document.getElementById("bHE").onclick = function(){
+  document.getElementById("grid").classList.toggle("hi-ev");
+  this.classList.toggle("on", document.getElementById("grid").classList.contains("hi-ev"));
+};
+
+document.getElementById("bC").onclick = function(){
+  document.body.classList.toggle("compact");
+  var on = document.body.classList.contains("compact");
+  this.classList.toggle("on", on);
+  this.textContent = on ? "compact \u00b7 3.5 of 5 steps" : "full rows \u00b7 1.5 of 5 steps";
+  draw();
+};
+
+buildPicker(function(e){
+  SINGLE = e; MODE = "element";
+  document.getElementById("bE").classList.add("on");
+  document.getElementById("bJ").classList.remove("on");
+  draw();
+});
+draw();
+</script>

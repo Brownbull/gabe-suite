@@ -1,0 +1,153 @@
+/* Gabe Universe — bottom workflow dock proposals · shared shell
+   Palette lifted verbatim from templates/center/shell/gabe-universe.html:3-6 */
+:root{
+  --bg:#0e1524; --panel:#182136; --ink:#e7ebf3; --muted:#8794ab; --line:#2b3650;
+  --accent:#8b83f5; --ok:#4cbe83; --warn:#e8a33d; --bad:#e2565f;
+  --chip-bg:#0e1524; --nav-bg:#0c1322;
+  --k-endpoint:#4c9dfb; --k-model:#4cbe83; --k-schema:#c084fc; --k-web:#e8590c;
+  --k-component:#d946ef; --k-hook:#10b981; --k-route:#38bdf8; --k-external:#8794ab;
+  --k-middleware:#e8a33d; --k-flag:#e2565f;
+  --mono:Menlo,Consolas,ui-monospace,monospace;
+  --dock:264px;
+}
+*{ box-sizing:border-box; }
+html,body{ margin:0; height:100%; background:var(--bg); color:var(--ink);
+  font:13px/1.5 ui-sans-serif,system-ui,sans-serif; overflow:hidden; }
+button{ font:inherit; }
+
+/* ── the page frame: stage on top, dock pinned to the bottom edge ───────── */
+#wrap{ position:fixed; inset:0; display:flex; flex-direction:column; }
+#stage{ flex:1; min-height:0; position:relative; overflow:hidden; }
+#dock{ flex:none; height:var(--dock); border-top:1px solid var(--line);
+  background:var(--panel); display:flex; flex-direction:column; }
+
+/* ── stage chrome ───────────────────────────────────────────────────────── */
+/* DIRECT CHILD ONLY. As a descendant selector this also caught every glyph inside
+   the HUD — which lives in #stage — and stretched each one to fill its container:
+   37 icons all computed 320x284 despite carrying width="13". */
+#stage > svg{ position:absolute; inset:0; width:100%; height:100%; }
+#lede{ position:absolute; left:20px; top:16px; max-width:560px; z-index:3; }
+#lede h1{ margin:0 0 6px; font:800 15px/1.25 ui-sans-serif,system-ui,sans-serif;
+  letter-spacing:.02em; }
+#lede h1 b{ color:var(--accent); }
+#lede p{ margin:0 0 8px; font-size:12px; color:var(--muted); line-height:1.55; }
+#lede .tag{ display:inline-block; font:800 10px/1 var(--mono); letter-spacing:.08em;
+  text-transform:uppercase; color:var(--accent); border:1px solid var(--line);
+  background:var(--chip-bg); border-radius:5px; padding:4px 7px; margin-bottom:8px; }
+#geo{ position:absolute; right:20px; top:16px; z-index:3; width:280px;
+  border:1px solid var(--line); background:rgba(14,21,36,.86); border-radius:10px;
+  padding:10px 12px; font-size:11px; color:var(--muted); line-height:1.6; }
+#geo b{ color:var(--ink); font-weight:700; }
+#geo .gk{ display:flex; justify-content:space-between; gap:10px; }
+#geo .gk span:last-child{ font-family:var(--mono); color:var(--ink); }
+
+/* ── the element picker: the proof surface ──────────────────────────────── */
+#pick{ position:absolute; left:0; right:0; bottom:0; z-index:4; padding:10px 16px 12px;
+  background:linear-gradient(to top, rgba(14,21,36,.97) 62%, rgba(14,21,36,0));
+  display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+#pick .plbl{ font:800 10px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase;
+  color:var(--muted); margin-right:4px; }
+.ec{ display:inline-flex; align-items:center; gap:6px; font-size:11.5px; color:var(--muted);
+  background:var(--chip-bg); border:1px solid var(--line); border-radius:7px;
+  padding:5px 9px; cursor:pointer; white-space:nowrap; }
+.ec:hover{ color:var(--ink); border-color:var(--accent); }
+.ec.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
+.ec .dot{ width:7px; height:7px; border-radius:50%; background:currentColor; flex:none; }
+.ec.gap{ border-style:dashed; border-color:var(--bad); }
+.ec.gap .dot{ background:var(--bad); }
+.ec.on.gap .dot{ background:#fff; }
+#pick .spacer{ flex:1; }
+.tbtn{ font-size:11px; color:var(--muted); background:var(--chip-bg); white-space:nowrap;
+  border:1px solid var(--line); border-radius:7px; padding:5px 10px; cursor:pointer; }
+.tbtn:hover{ color:var(--ink); border-color:var(--accent); }
+.tbtn.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
+
+/* ── dock header ────────────────────────────────────────────────────────── */
+.dhead{ flex:none; height:32px; display:flex; align-items:center; gap:10px;
+  padding:0 14px; border-bottom:1px solid var(--line); background:var(--nav-bg); }
+.dhead{ overflow:hidden; }
+.dhead .dt{ font:800 10.5px/1 var(--mono); letter-spacing:.09em; text-transform:uppercase;
+  color:var(--ink); display:flex; align-items:center; gap:7px; white-space:nowrap;
+  max-width:46vw; overflow:hidden; text-overflow:ellipsis; }
+.dhead .dt em{ font-style:normal; color:var(--accent); }
+.dhead .dsub{ font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden;
+  text-overflow:ellipsis; min-width:0; }
+.dhead .spacer{ flex:1; }
+.dhead .now{ font:600 11px/1 var(--mono); color:var(--muted); }
+.dhead .now b{ color:var(--ink); }
+
+/* ── the SLOT: the whole point — same box, same order, always present ───── */
+/* min-height:0 is load-bearing on EVERY slot, not just A's: without it a tall body
+   grows its grid/flex track and the whole dock overflows its own bottom edge. */
+.slot{ min-width:0; min-height:0; border-right:1px solid var(--line); display:flex;
+  flex-direction:column; background:var(--panel); }
+.slot:last-child{ border-right:none; }
+.slothd{ flex:none; display:flex; align-items:baseline; gap:6px; padding:7px 10px 5px;
+  border-bottom:1px solid rgba(43,54,80,.6); }
+.slothd .sl{ font:800 9.5px/1 var(--mono); letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted); }
+.slothd .sn{ font:700 9.5px/1 var(--mono); color:var(--accent); margin-left:auto; }
+.slotbody{ flex:1; min-height:0; overflow-y:auto; padding:6px 10px 9px;
+  display:flex; flex-direction:column; gap:3px; }
+/* a clipped slot has to SAY it is clipped — a fixed grid that silently cuts data
+   is worse than a scrolling rail, because you cannot see that there is more. */
+.slot{ position:relative; }
+.slot.clipped::after{ content:"scroll"; position:absolute; right:6px; bottom:3px;
+  font:700 8px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase;
+  color:var(--accent); opacity:.75; pointer-events:none;
+  background:var(--panel); padding:2px 4px 2px 6px; border-radius:3px; }
+.slot.clipped .slotbody{
+  -webkit-mask-image:linear-gradient(to bottom, #000 calc(100% - 15px), transparent);
+          mask-image:linear-gradient(to bottom, #000 calc(100% - 15px), transparent); }
+.slotbody::-webkit-scrollbar{ width:6px; }
+.slotbody::-webkit-scrollbar-thumb{ background:var(--line); border-radius:3px; }
+
+/* a row inside a slot */
+.rw{ display:flex; gap:7px; align-items:baseline; font-size:11.5px; line-height:1.42; }
+.rw .rk{ flex:none; width:52px; font:700 9.5px/1.5 var(--mono); letter-spacing:.04em;
+  text-transform:uppercase; color:var(--muted); text-align:right; padding-top:1px; }
+.rw .rv{ flex:1; min-width:0; color:var(--ink); word-break:break-word; }
+.rw.dim .rv{ color:var(--muted); }
+.rw.none .rv{ color:#5d6a86; font-style:italic; }
+.rw.warn .rv{ color:var(--warn); }
+.rw.ok .rv{ color:var(--ok); }
+/* UNMEASURED — the fourth tone, and the one the census forced.
+   `none` means "measured, and there is nothing". `unmeas` means "the station never
+   measured this" — a different claim, and today the station renders the second as
+   the first (fe tests:0 hardcoded at gabe-universe.html:1305 becomes the warning
+   "unguarded · no test covers this" on all 1,078 frontend pieces). A check that
+   always fires is not evidence. */
+.rw.unmeas .rv{ color:var(--warn); }
+.rw.unmeas .rk{ color:var(--warn); opacity:.7; }
+.rw.unmeas{ background:repeating-linear-gradient(45deg,
+    rgba(232,163,61,.10) 0 5px, transparent 5px 10px);
+  border-radius:3px; padding-right:3px; }
+.rw.mono .rv{ font-family:var(--mono); font-size:10.5px; }
+
+/* the honest-empty slot: dimmed, never removed */
+.slot.empty .slothd .sl{ color:#4d5975; }
+.slot.empty .slotbody{ opacity:.62; }
+.slot.empty::after{ content:""; }
+
+/* skeleton mode — show that the boxes never move */
+body.skel .slot{ outline:1px dashed rgba(139,131,245,.55); outline-offset:-2px; }
+body.skel .slotbody{ background:rgba(139,131,245,.045); }
+
+/* pills */
+.pill{ display:inline-block; font:700 9.5px/1 var(--mono); letter-spacing:.05em;
+  text-transform:uppercase; padding:3px 6px; border-radius:4px;
+  border:1px solid var(--line); background:var(--chip-bg); color:var(--muted); }
+.pill.k{ color:#fff; border-color:transparent; }
+
+/* the demoted ledger, shown under each proposal's dock via the ⓘ toggle */
+#demo{ position:absolute; right:20px; bottom:64px; z-index:5; width:420px; display:none;
+  border:1px solid var(--line); background:rgba(24,33,54,.97); border-radius:10px;
+  padding:12px 14px; box-shadow:0 18px 48px rgba(0,0,0,.5); }
+body.showdemo #demo{ display:block; }
+#demo h3{ margin:0 0 8px; font:800 10px/1 var(--mono); letter-spacing:.09em;
+  text-transform:uppercase; color:var(--warn); }
+#demo .dr{ display:flex; gap:8px; font-size:11px; line-height:1.5; margin-bottom:6px; }
+#demo .dr b{ flex:none; width:118px; color:var(--ink); font-weight:700; }
+#demo .dr span{ color:var(--muted); }
+#demo .foot{ margin-top:8px; padding-top:8px; border-top:1px solid var(--line);
+  font-size:11px; color:var(--muted); line-height:1.55; }

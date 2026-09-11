@@ -1,0 +1,207 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>E · Target &amp; Focus — bottom workflow dock</title>
+<link rel="stylesheet" href="../_common.css">
+<link rel="stylesheet" href="../_console.css">
+<style>
+  /* ── PROPOSAL E: WoW's player frame + target frame + focus frame ──────────
+     Every other surface in the station shows ONE element. Most real questions
+     are pairwise: does this hook write the table that endpoint reads? E mirrors
+     two frames so the focus's OUT column and the target's IN column sit
+     adjacent at the same y — the comparison is two columns touching, not two
+     panels remembered. */
+  :root{ --dock:288px; }
+  #dock{ height:var(--dock); }
+  #row{ flex:1; min-height:0; display:grid;
+        grid-template-columns: minmax(0,1fr) minmax(0,1fr) 180px;
+        grid-template-rows: minmax(0,1fr); }
+  .side{ display:flex; flex-direction:column; min-width:0; min-height:0;
+         border-right:1px solid var(--line); }
+  .sidehd{ flex:none; height:20px; display:flex; align-items:center; gap:6px; padding:0 9px;
+    font:800 9px/1 var(--mono); letter-spacing:.1em; text-transform:uppercase;
+    background:var(--nav-bg); border-bottom:1px solid var(--line); }
+  .sidehd .sk{ margin-left:auto; font-weight:700; color:var(--accent); }
+  .side.focus .sidehd{ color:var(--accent); }
+  .side.target .sidehd{ color:var(--ink); }
+  .frame{ flex:1; min-height:0; display:grid; grid-template-rows:minmax(0,1fr); }
+  /* THE MIRROR: focus reads portrait→vitals→spine, target reads spine→vitals→portrait.
+     Both portraits face the screen edges; both spines face the centre gutter. */
+  .frame.f{ grid-template-columns:148px 168px minmax(0,1fr); }
+  .frame.t{ grid-template-columns:minmax(0,1fr) 168px 148px; }
+  .frame > *{ min-width:0; min-height:0; }
+  /* the narrow spine's own type scale — 131px cannot carry _common.css's 11.5px
+     rows without wrapping to one word per line, which is what makes E's cost look
+     like a bug instead of a trade. */
+  .spine .rw{ font-size:10.5px; line-height:1.35; }
+  .spine .rw .rk{ width:40px; font-size:8.5px; }
+  .gutter{ position:absolute; left:calc((100% - 180px) / 2); top:0; bottom:48px; width:1px;
+    background:linear-gradient(to bottom, transparent, var(--accent), transparent);
+    opacity:.45; pointer-events:none; z-index:2; }
+  /* RELATION BAR — the only place in the design where a wire's TRUST is the subject */
+  .relbar{ flex:none; height:48px; grid-column:1 / 3; display:flex; align-items:center;
+    gap:12px; padding:0 14px; background:var(--nav-bg); border-top:1px solid var(--line); }
+  .relbar .rlab{ font:800 9px/1 var(--mono); letter-spacing:.1em; color:var(--muted); }
+  .relwire{ display:flex; align-items:center; gap:8px; }
+  .relwire .rname{ font:800 10px/1 var(--mono); letter-spacing:.04em; }
+  .relwire .rtrust{ font:600 9.5px/1 var(--mono); color:var(--muted);
+    border:1px solid var(--line); border-radius:3px; padding:3px 5px; }
+  .relnone{ font:400 11px/1.4 ui-sans-serif,system-ui,sans-serif; color:#5d6a86; font-style:italic; }
+  #dockgrid{ flex:1; min-height:0; display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) 180px;
+    grid-template-rows:minmax(0,1fr) 48px; position:relative; }
+  /* EXPLICIT placement — auto-placement put the absolutely-positioned .gutter into
+     column 1 and shifted every real region one column right. Never rely on source
+     order for a layout whose whole claim is that positions are fixed. */
+  #sfocus { grid-column:1; grid-row:1; }
+  #starget{ grid-column:2; grid-row:1; }
+  #cmdhost{ grid-column:3; grid-row:1 / 3; }
+  .relbar { grid-column:1 / 3; grid-row:2; }
+</style>
+
+<div id="wrap">
+  <div id="stage">
+    <svg id="field"></svg>
+    <div id="lede">
+      <span class="tag">Proposal E · WoW frames</span>
+      <h1>Target &amp; Focus — <b>two elements, one saccade</b></h1>
+      <p>Every surface the station has — the right rail, and proposals A, B and C — shows
+      <b>one</b> element. Most real questions are <b>pairwise</b>: does this hook write the
+      table that endpoint reads? Today that costs two clicks and a memory.</p>
+      <p>E mirrors two frames. Both portraits face the screen edges, both field stacks face the
+      centre gutter, so the <b>focus's OUT column and the target's IN column touch</b> at the
+      same y. Underneath, a relation bar names the actual edges — and their <b>trust class</b>,
+      which no card in the station draws today.</p>
+      <p>Pick any element to set the TARGET. Press <b>PIN</b> on the command card to move it
+      into the FOCUS slot.</p>
+    </div>
+    <div id="geo">
+      <div class="gk"><span>dock height</span><span>288px</span></div>
+      <div class="gk"><span>graph kept</span><span>979,200 px²</span></div>
+      <div class="gk"><span>spine column</span><span>~131px — narrowest of any</span></div>
+      <div class="gk"><span>CARGO · EVIDENCE</span><span>demoted to the card</span></div>
+      <div style="margin-top:7px;padding-top:7px;border-top:1px solid var(--line)">
+        <b>The honest cost:</b> when nothing is pinned, 44% of the dock is an idle frame. WoW
+        simply does not render an unset focus frame — the station cannot copy that without
+        breaking the fixed-position rule, so the empty frame is drawn and says so.
+      </div>
+    </div>
+    <div id="pick"></div>
+    <div id="demo"></div>
+  </div>
+
+  <div id="dock">
+    <div id="rimhost"></div>
+    <div id="dockgrid">
+      <div class="gutter"></div>
+      <div class="side focus" id="sfocus"></div>
+      <div class="side target" id="starget"></div>
+      <div id="cmdhost"></div>
+      <div class="relbar" id="relbar"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../_data.js"></script>
+<script src="../_shell.js"></script>
+<script src="../_console.js"></script>
+<script>
+buildStage();
+buildDemoted("E is the only proposal that answers a TWO-element question, and the only one "
+  + "where a wire's TRUST class is the subject rather than a footnote. It pays for that with "
+  + "the narrowest spine of any proposal (~131px) and by demoting CARGO and EVIDENCE to the "
+  + "command card entirely — a model's structure needs a press. That is a real regression "
+  + "against A and C, and it is the trade.");
+
+/* the real relations between the demo pairs, read from the feed */
+var REL = {
+  "fe-redo|ep-relief":   null,
+  "fe-browse|model-recipe": [{ rel:"uses-hook → fetches → reads_from", col:"--k-hook",
+    trust:"inferred · 3-hop", note:"RecipeBrowseContainer → useRecipeSearch → GET /recipes → recipes" }],
+  "ep-relief|model-recipe": [{ rel:"reads_from", col:"--k-model", trust:"structural · archmap touch",
+    note:"the endpoint reads the recipes table" }],
+  "schema-shop|model-recipe": null,
+  "fe-redo|fe-browse": null,
+};
+function relKey(a,b){ return a && b ? (a.id + "|" + b.id) : null; }
+
+var FOCUS = null, TARGET = null;
+
+function frameEl(e, side){
+  var f = el("div", { class:"frame " + (side === "focus" ? "f" : "t") });
+  var parts = [ portraitEl(e, 148), vitalsEl(e ? e.id : "", 168), spineEl(e, 2) ];
+  if (side === "target") parts.reverse();
+  parts.forEach(function(x){ f.appendChild(x); });
+  return f;
+}
+
+function renderRel(){
+  var bar = document.getElementById("relbar");
+  bar.innerHTML = "";
+  bar.appendChild(el("span", { class:"rlab", text:"RELATION" }));
+  if (!FOCUS || !TARGET){
+    bar.appendChild(el("span", { class:"relnone",
+      text: FOCUS ? "— pick a target to compare" : "— nothing pinned. Press PIN on the command card to fill the focus slot." }));
+    return;
+  }
+  var r = REL[relKey(FOCUS, TARGET)] || REL[relKey(TARGET, FOCUS)];
+  if (!r){
+    bar.appendChild(el("span", { class:"relnone",
+      text:"— no drawn edge between these two. The station has no shortest-path verb, so it cannot say how far apart they are." }));
+    return;
+  }
+  r.forEach(function(x){
+    var c = "var(" + x.col + ")";
+    bar.appendChild(el("span", { class:"relwire" }, [
+      el("span", { html:'<svg viewBox="0 0 44 8" width="44" height="8"><path d="M2 4H36" stroke="'
+        + c + '" stroke-width="2.5" stroke-dasharray="6 3" fill="none" stroke-linecap="round"/>'
+        + '<path d="M36 1l6 3-6 3z" fill="' + c + '"/></svg>' }),
+      el("span", { class:"rname", text:x.rel, style:"color:" + c }),
+      el("span", { class:"rtrust", text:x.trust })
+    ]));
+    bar.appendChild(el("span", { style:"font-size:11px;color:var(--muted)", text:x.note }));
+  });
+}
+
+function render(){
+  var rimhost = document.getElementById("rimhost");
+  rimhost.innerHTML = "";
+  rimhost.appendChild(rimEl(TARGET, [
+    { t: FOCUS ? "focus · " + FOCUS.short : "no focus", on: !!FOCUS },
+    { t:"T2" }
+  ]));
+
+  var sf = document.getElementById("sfocus"), st = document.getElementById("starget");
+  sf.innerHTML = ""; st.innerHTML = "";
+  sf.appendChild(el("div", { class:"sidehd" }, [
+    el("span", { text: FOCUS ? "FOCUS · PINNED" : "FOCUS · EMPTY" }),
+    el("span", { class:"sk", text:"⇧1" })
+  ]));
+  sf.appendChild(frameEl(FOCUS, "focus"));
+  st.appendChild(el("div", { class:"sidehd" }, [
+    el("span", { class:"sk", style:"margin-left:0", text:"LIVE" }),
+    el("span", { text:"TARGET · SELECTION", style:"margin-left:auto" })
+  ]));
+  st.appendChild(frameEl(TARGET, "target"));
+
+  var ch = document.getElementById("cmdhost");
+  ch.innerHTML = "";
+  var card = commandEl(TARGET ? TARGET.id : "", 180,
+    { idle:"EXPAND is replaced by PIN here — it moves the target into the focus slot, the one slot that ignores the selection." });
+  /* (1,4) EXPAND becomes PIN — the verb the station has (__uniPin :2652) and cannot reach */
+  var pinCell = card.querySelector('.cc[data-k="expand"]');
+  if (pinCell){
+    pinCell.className = "cc lit";
+    pinCell.innerHTML = "";
+    pinCell.appendChild(el("span", { class:"ci", text:"PIN" }));
+    pinCell.appendChild(el("span", { class:"ck", text:"P" }));
+    pinCell.onclick = function(){ FOCUS = TARGET; render(); };
+    pinCell.onmouseenter = null;
+  }
+  ch.appendChild(card);
+  renderRel();
+}
+
+buildPicker(function(e){ TARGET = e; render(); });
+FOCUS = ELEMENTS.filter(function(x){ return x.id === "fe-browse"; })[0];
+pick("model-recipe", function(e){ TARGET = e; render(); });
+</script>

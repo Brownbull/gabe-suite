@@ -1,0 +1,471 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>G · Console 25 — bottom workflow dock</title>
+<link rel="stylesheet" href="_common.css">
+<link rel="stylesheet" href="_console.css">
+<style>
+  /* ── PROPOSAL G: D at 25% of the page, with the MINIMAP folded in as the
+     LEFT region — the operator's literal ask, and the operator's own law:
+       far-left  = WORLD state   (selection-INDEPENDENT — the minimap)
+       centre    = INFORMATION   (everything about what is selected)
+       far-right = ACTIONS       (the command card, two screen edges)
+     The rule between EVIDENCE and COMMAND is drawn, not implied. It is the
+     one line in the dock that is a LAW rather than a divider. */
+  /* SIZING LAW — measured, not chosen.
+     25vh is the operator's ask and holds on any display tall enough for it.
+     282px is the floor: below it the fixed-height regions SILENTLY CUT (they are
+     overflow:hidden, unlike the STATUS slots which scroll and say so). Measured
+     across all 9 elements — VITALS on ext-auth is the binding case: 51px cut at
+     225, 12px at 264, 6px at 270, 0px at 282.
+     There is NO upper clamp: a ceiling would cap the operator's 25% on exactly the
+     tall display that motivated the ask (at 1600p a 320px cap reads as 20%).
+       900p -> 282px (31.3%, floor binds)   1128p -> 282px (25.0%, crossover)
+      1080p -> 282px (26.1%, floor binds)   1440p -> 360px (25.0%)
+                                            1600p -> 400px (25.0%) */
+  /* --dockpct is the operator's dial: 25 / 30 / 33. The 282px floor stays — it is
+     the measured height below which the fixed regions silently cut. */
+  :root{ --dockpct:33; --dock: max(282px, calc(var(--dockpct) * 1vh));
+         --wingw:448px; --wingr:644px; --ts:1.15; }
+  /* 264px is not a taste. It is the MEASURED zero-overflow floor for these seven
+     regions on the worst element (fe-legal, three unmeasured vitals notes):
+       dock 200 -> VITALS overflows 60px · EVIDENCE 62px · 3 spine slots clip
+       dock 225 -> 35 · 37 · 3 clipped        (25% of a 900px viewport)
+       dock 240 -> 20 · 22 · 0 clipped
+       dock 260 -> 0  ·  2 · 0 clipped
+       dock 264 -> 0  ·  0 · 0 clipped   <- VITALS / spine / command floor
+       dock 270 -> 0  ·  0 · 0 clipped        (25% of a 1080px viewport)
+     EVIDENCE is the last region to come clean: on a two-verdict element its third
+     row still scrolls 14px at 264, 8 at 270, 2 at 276 and 0 at 282. So the TRUE
+     zero-overflow floor for all seven regions is 282px — six pixels under D's 288.
+     D's height was right; 25% only reaches it on a viewport 1128px tall or more.
+     The FLOOR button on the picker bar switches between the two.
+     So 25vh delivers the dock G needs from 1056px of viewport height upward. Below
+     that the clamp holds 264 and the dock is MORE than a quarter — which is the
+     ruling: honour the fraction, or honour the floor. */
+  #dock{ height:var(--dock); }
+  /* the KIND switcher sits above the element chips — the operator's "buttons at the
+     top so I can see the different kinds of entities this panel represents". */
+  #kindbar{ position:absolute; left:0; right:0; bottom:var(--pickh, 84px); z-index:5;
+    padding:8px 16px 6px;
+    display:flex; flex-wrap:wrap; gap:5px; align-items:center;
+    background:linear-gradient(to top, rgba(14,21,36,.97) 70%, rgba(14,21,36,0)); }
+  .kb{ display:inline-flex; align-items:center; gap:5px; font:600 10.5px/1 var(--mono);
+    letter-spacing:.03em; color:var(--muted); background:var(--chip-bg);
+    border:1px solid var(--line); border-radius:6px; padding:5px 8px; cursor:pointer; }
+  .kb:hover{ color:var(--ink); border-color:var(--accent); }
+  .kb.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
+  .kb .kdot{ width:7px; height:7px; border-radius:2px; flex:none; }
+  .kb .kn{ font-size:8px; opacity:.7; }
+  /* the three zone labels live in their own 24px band immediately above the dock —
+     the picker must not grow into it, or the page's own argument gets overwritten. */
+  #pick{ padding-bottom:28px; }
+  #row{ flex:1; min-height:0; display:grid;
+        /* MINIMAP absorbs the old PORTRAIT slot (176+152=328) and PORTRAIT moves to
+           middle-right — SC2's own order: MinimapPanel left, InfoPanel centre,
+           PortraitPanel immediately left of CommandPanel.
+           CARGO cannot survive that at 1600: keeping it drops the spine to 120px/col,
+           under the 140 floor. Dropping it gives 185 — better than the 170 we had. */
+        grid-template-columns: 328px 216px minmax(0,1fr) 168px 152px 180px;
+        grid-template-rows: minmax(0,1fr); }
+  #row > *{ min-height:0; min-width:0; }
+  /* Below 1500 wide the STATUS sub-columns fall under 140px and the spine stops
+     being a spine (measured: 1366 -> 92px each · 1440 -> 117 · 1512 -> 141 ·
+     1600 -> 170 · 1728 -> 213, which is D-at-1600's 212). One region has to go, and
+     it is CARGO — F's own treatment: structure moves behind the card's TABLES
+     submenu. Dropping it returns STATUS to 474px at 1366 (158px per sub-column). */
+  @media (max-width:1499px){
+    #row{ grid-template-columns: 232px 200px minmax(0,1fr) 160px 128px 172px; }
+    #row .reg:nth-child(5){ display:none; }
+  }
+  @media (min-width:1800px){
+    #row{ grid-template-columns: 328px 232px minmax(0,1fr) 220px 188px 168px 212px; }
+    body{ --cargo-on:1; }
+    .grid5{ grid-template-columns:repeat(5, 34px); grid-auto-rows:34px; }
+    .cc{ width:34px; height:34px; }
+  }
+  .status{ border-right:1px solid var(--line); }
+  /* the WORLD bookend and the ACTION bookend both wear the law's rule */
+  .reg.world{ border-right:2px solid var(--accent); background:var(--panel); }
+  .cmdwrap{ border-left:2px solid var(--accent); }
+  /* MINIMAP region internals — the chrome FLOATS over the disc (SC2 puts no header
+     above its minimap; the map IS the region, and its four buttons sit on the rim).
+     That buys the disc the region's whole height: 160px at 900p, 192px at 1080p. */
+  .reg.world{ padding:0; position:relative; }
+  .mmbody{ position:absolute; inset:0; }
+  /* NO border-radius here — the canvas is 168 x 223, so a 50% radius is an ELLIPSE
+     mask that shears the round disc. The disc is clipped in the 2D context instead. */
+  .mmbody canvas{ position:absolute; inset:4px; width:calc(100% - 8px);
+    height:calc(100% - 8px); cursor:crosshair; }
+  .mmhd{ position:absolute; left:7px; top:4px; z-index:2; pointer-events:none;
+    font:800 9px/1 var(--mono); letter-spacing:.1em; color:var(--muted); }
+  .mmhd b{ color:var(--accent); font-weight:800; margin-left:5px; }
+  .mmfoot{ position:absolute; right:3px; top:16px; z-index:2; display:flex;
+    flex-direction:column; gap:3px; align-items:flex-end; }
+  .mmfoot .mb{ font:800 7.5px/1 var(--mono); letter-spacing:.05em; color:var(--muted);
+    border:1px solid var(--line); background:rgba(12,19,34,.86); border-radius:4px;
+    padding:3px 4px; cursor:pointer; }
+  .mmfoot .mb.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
+  .mmfoot .mr{ font:700 8px/1 var(--mono); color:var(--muted);
+    background:rgba(12,19,34,.86); border-radius:3px; padding:3px 4px; }
+  /* the vitals NOTE is what the extra height buys back — F hid it outright */
+  .vnote{ display:block; }
+  /* a taller dock earns EVIDENCE a second line per row without scrolling */
+  .ev .evv{ font-size:10.5px; }
+  #geo{ width:308px; }
+  .lawlbl{ position:absolute; z-index:7; font:800 8.5px/1 var(--mono); letter-spacing:.08em;
+    color:var(--accent); background:rgba(12,19,34,.92); border:1px solid var(--accent);
+    border-radius:4px; padding:3px 6px; pointer-events:none; }
+</style>
+
+<div id="wrap">
+  <div id="stage">
+    <svg id="field"></svg>
+    <div id="ctlpanel"></div>
+    <div id="geo">
+      <div class="gk"><span>dock</span><span id="gv-dock">—</span></div>
+      <div class="gk"><span>vs F · 200px</span><span id="gv-f">—</span></div>
+      <div class="gk"><span>vs D · 288px</span><span id="gv-d">—</span></div>
+      <div class="gk"><span>row height</span><span id="gv-row">—</span></div>
+      <div class="gk"><span>minimap square</span><span id="gv-map">—</span></div>
+      <div class="gk"><span>STATUS sub-col</span><span id="gv-st">—</span></div>
+      <div class="gk"><span>overflow now</span><span id="gv-of">—</span></div>
+      <div style="margin-top:7px;padding-top:7px;border-top:1px solid var(--line)">
+        <b>25% is a gain over F and a loss against D below 1152px tall</b> (288 / 0.25).
+        The operator read the dock as “a sixth” — 200px is exactly ⅙ of a 1200px viewport,
+        and F is the only proposal that sketched a minimap. What made it feel small was not
+        the percentage: F’s own stylesheet hides the vitals notes, hides the command
+        caption’s function line, shrinks the portrait glyph 88→44 and <b>deletes CARGO</b>.
+        Five compactions on one page.
+      </div>
+    </div>
+    <div id="kindbar"></div>
+    <div id="pick"></div>
+    <div id="demo"></div>
+    <div id="vmenu"></div>
+  </div>
+
+  <div id="dock">
+    <div id="row"></div>
+  </div>
+</div>
+
+<script src="_data.js"></script>
+<script src="_shell.js"></script>
+<script src="_console.js"></script>
+<script src="_kinds.js"></script>
+<script src="_variants.js"></script>
+<script src="_variants-defs.js"></script>
+<script src="_glyphs.js"></script>
+<script src="_hud.js"></script>
+<script src="_minimap.js"></script>
+<script>
+buildStage();
+buildDemoted("G keeps every one of D's six regions and adds a seventh, paying for it out of "
+  + "the STATUS DISPLAY (636 -> 512px at 1600 wide, 692px at 1920). The three IN/STORE/OUT "
+  + "sub-columns go from 212px to 171px at 1600 and to 231px at 1920 — wider than D at 1080p, "
+  + "narrower below it. That is the whole cost of the minimap, stated once.");
+
+/* ═══ the MINIMAP region — the only region that never reads the selection ═══ */
+var MMGEO = null, MMCV = null;
+function minimapEl(){
+  var box = el("div", { class:"reg world" });
+  var body = el("div", { class:"mmbody" });
+  MMCV = el("canvas");
+  body.appendChild(MMCV);
+  box.appendChild(body);
+  box.appendChild(el("div", { class:"mmhd" }, [
+    el("span", { text:"MINIMAP" }), el("b", { id:"mmtier", text:"T" + MM.tier })
+  ]));
+  var foot = el("div", { class:"mmfoot" });
+  var bUp = el("button", { class:"mb on", text:"CAM-UP" });
+  bUp.onclick = function(){
+    MM.up = (MM.up === "cam") ? "north" : "cam";
+    bUp.textContent = (MM.up === "cam") ? "CAM-UP" : "NORTH";
+    bUp.classList.toggle("on", MM.up === "cam"); mmTick();
+  };
+  var bDot = el("button", { class:"mb on", text:"DOTS" });
+  bDot.onclick = function(){ MM.dots = !MM.dots; bDot.classList.toggle("on", MM.dots); mmTick(); };
+  var bFit = el("button", { class:"mb", text:"FIT" });
+  bFit.onclick = function(){ MM.tgt = {x:0,y:0,z:0}; MM.R = MM.maxR * 1.35 + 180; mmTick(); };
+  foot.appendChild(bUp); foot.appendChild(bDot); foot.appendChild(bFit);
+  foot.appendChild(el("span", { class:"mr", id:"mmread", text:"—" }));
+  box.appendChild(foot);
+
+  /* CLICK = RTS PAN. Preserve azimuth, pitch and zoom; translate the pivot only.
+     An entity dot within its own radius takes priority — that click is the search
+     bar's entity branch verbatim: __uniPanelEnt(e) + _frameSet(member ids). */
+  function hit(ev){
+    var r = MMCV.getBoundingClientRect();
+    var px = ev.clientX - r.left, py = ev.clientY - r.top;
+    if (!MMGEO) return null;
+    if (Math.hypot(px - MMGEO.cx0, py - MMGEO.cy0) > MMGEO.mapR) return null;
+    return { px:px, py:py };
+  }
+  MMCV.onclick = function(ev){
+    var h = hit(ev); if (!h) return;
+    for (var i = 0; i < MM_ENTS.length; i++){
+      var e = MM_ENTS[i];
+      if (Math.hypot(h.px - e.__px, h.py - e.__py) <= e.__r + 3){
+        MM.tgt = { x:e.EX, y:0, z:e.EZ };
+        document.getElementById("mmread").textContent = e.slug + " · " + e.n;
+        mmTick(); return;
+      }
+    }
+    MM.tgt = mmUnproject(h.px, h.py, MMGEO); mmTick();
+  };
+  MMCV.ondblclick = function(){ MM.tgt = {x:0,y:0,z:0}; MM.R = MM.maxR*1.35+180; mmTick(); };
+  var dragging = false;
+  MMCV.onpointerdown = function(ev){ dragging = true; MMCV.setPointerCapture(ev.pointerId); };
+  MMCV.onpointermove = function(ev){ if(!dragging) return; var h = hit(ev); if(!h) return;
+    MM.tgt = mmUnproject(h.px, h.py, MMGEO); mmTick(); };
+  MMCV.onpointerup = function(){ dragging = false; };
+  return box;
+}
+
+function mmTick(){
+  if (!MMCV) return;
+  MMGEO = mmDraw(MMCV);
+  var t = document.getElementById("mmtier");
+  if (t) t.textContent = "T" + MM.tier + " · " + MM_TIERS[MM.tier].vis;
+  var rd = document.getElementById("mmread");
+  var off = Math.hypot(MM.tgt.x, MM.tgt.z);
+  if (rd && !dragLive) rd.textContent = (off < 1 ? "centred" : "pan " + Math.round(off))
+    + " · " + Math.round(MM.th * 180 / Math.PI) + "°";
+  var g1 = document.getElementById("gv-map");
+  if (g1 && MMGEO) g1.textContent = Math.round(MMGEO.mapR*2) + "px";
+}
+
+/* ═══ orbit the field by dragging the stage — the map must follow ═══ */
+var dragLive = false;
+(function(){
+  var st = document.getElementById("stage"), last = null;
+  st.addEventListener("pointerdown", function(ev){
+    if (ev.target.closest("#pick") || ev.target.closest("#geo") || ev.target.closest("#lede")) return;
+    last = { x:ev.clientX, y:ev.clientY }; dragLive = true;
+  });
+  window.addEventListener("pointermove", function(ev){
+    if (!last) return;
+    MM.th -= (ev.clientX - last.x) * 0.006;
+    MM.phi = Math.max(0.22, Math.min(1.5, MM.phi - (ev.clientY - last.y) * 0.004));
+    last = { x:ev.clientX, y:ev.clientY };
+    document.getElementById("mmread").textContent =
+      "orbit " + Math.round(MM.th*180/Math.PI) + "° / " + Math.round(MM.phi*180/Math.PI) + "°";
+    mmTick();
+  });
+  window.addEventListener("pointerup", function(){ last = null; dragLive = false; mmTick(); });
+  window.addEventListener("wheel", function(ev){
+    if (ev.target.closest("#dock") && !ev.target.closest(".mmbody")) return;
+    MM.R = Math.max(240, Math.min(2600, MM.R * (1 + Math.sign(ev.deltaY)*0.09))); mmTick();
+  }, { passive:true });
+})();
+
+/* ═══ the dock ═══ */
+function renderDock(e){
+  var row = document.getElementById("row");
+  row.innerHTML = "";
+
+  /* ── LEFT WING · WORLD ────────────────────────────────────────────────────
+     Taller than the middle, and the minimap's own controls move to the OUTER
+     edge as icons — the operator's rule, and it keeps the map's disc whole. */
+  var lw = el("div", { class:"zone wing left" });
+  var lbox = el("div", { class:"wingbox" });
+  var side = el("div", { class:"mmside" });
+  [ ["camup","Camera-up","the map rotates with the view"],
+    ["north","North-up","the map holds still; only the wedge turns"],
+    ["layout","Fit","frame the whole field"] ].forEach(function(c, i){
+    var btn = hudBtn({ icon:c[0], tip:c[1], sub:c[2], on:(i === 0),
+      onclick:function(){
+        if (i < 2){ MM.up = i ? "north" : "cam"; }
+        else { MM.tgt = {x:0,y:0,z:0}; MM.R = MM.maxR*1.35 + 180; }
+        mmTick(); pick(CUR, renderDock);
+      } });
+    side.appendChild(btn);
+  });
+  lbox.appendChild(side);
+  lbox.appendChild(minimapEl());
+  lw.appendChild(lbox);
+  row.appendChild(lw);
+
+  /* ── MIDDLE · THE FACTS ───────────────────────────────────────────────────
+     Recessed by the wing height, so the console reads as a U. Carries the TITLE
+     (name is the one field that is 100% live on all 16 kinds and unique per
+     element) and then the near-universal fields, in three fixed columns. */
+  var mz = el("div", { class:"zone mid" });
+  var mbox = el("div", { class:"midbox" });
+  var col = e ? kcol(e.kind) : "var(--muted)";
+  var bdg = e && BADGE[e.id];
+  var title = el("div", { class:"midtitle" }, [
+    el("span", { class:"mtg", html:svgK(e ? e.kind : "__generic", col, 16) }),
+    el("span", { class:"mtn", title: e ? e.label : "", text: e ? e.label : "no element selected" }),
+  ]);
+  if (bdg) title.appendChild(el("span", { class:"mtb", text:bdg, style:"background:" + col }));
+  title.appendChild(el("span", { class:"mte" }, [
+    el("i", { style:"background:" + col }), el("span", { text: e ? e.entity : "—" })
+  ]));
+  /* THE LADDER — now the middle section's own first row. It describes the
+     selection, so it belongs with the facts rather than on a strip above the
+     console. Operator: the breadcrumbs "can be another row in the middle". */
+  var crumb = el("div", { class:"midcrumb" });
+  [ ["everything", true], [e ? e.entity : "entity", !!e],
+    [e ? (e.kind + " cluster") : "cluster", !!e], [e ? e.short : "element", !!e] ]
+  .forEach(function(r, i){
+    if (i) crumb.appendChild(el("span", { class:"sep", text:"\u203a" }));
+    crumb.appendChild(el("span", { class:"cr" + (i === 3 ? " cur" : "") }, [
+      r[1] ? el("b", { text:r[0] }) : el("i", { text:r[0] })
+    ]));
+  });
+  crumb.appendChild(el("span", { class:"mode",
+    text:"T" + MM.tier + " \u00b7 " + MM_TIERS[MM.tier].vis + "/" + MM_TIERS[MM.tier].tot }));
+  mbox.appendChild(crumb);
+  mbox.appendChild(title);
+  /* FIVE fixed columns, chosen by FIELD-TABLE.md rather than by taste:
+       VITALS   reach/surface/tested/fanin — the four scalars every kind has
+       IN       gate 38% · caller 75% · payload 67%
+       STORE    col 88% (the most live values of any field) · read 53% · write 41%
+       OUT      resp · touch · write — the thin side, and the table says so
+       CARGO    col again, as structure rather than as rows
+     `dispatch` is CUT: 16 kinds, 16 rows, ZERO live values in the whole demo. */
+  var cols = el("div", { class:"midcols" });
+  cols.appendChild(vitalsEl(e.id));
+  /* the STATUS variant. The U restructure built these three columns directly and
+     orphaned spineEl, where VV("status") lives — so the control did nothing.
+     SPINE keeps three columns; LEDGER replaces all three with one dense
+     side-labelled table spanning their tracks. */
+  if (VV("status", "spine") === "table"){
+    var led = spineEl(e);
+    led.classList.add("midspan");
+    cols.appendChild(led);
+  } else {
+    [["in","IN"],["store","STORE"],["out","OUT"]].forEach(function(pp){
+      cols.appendChild(slotEl({ key:pp[0], label:pp[1], hint:"" }, e.slots[pp[0]]));
+    });
+  }
+  cols.appendChild(cargoEl(e));
+  mbox.appendChild(cols);
+  mz.appendChild(mbox);
+  row.appendChild(mz);
+
+  /* ── RIGHT WING · THE ELEMENT AND ITS VERBS ───────────────────────────────
+     Portrait left, command card right, one raised container. SC2 puts these two
+     adjacent for the same reason: what you are commanding, and what you can do. */
+  var rw = el("div", { class:"zone wing right" });
+  var rbox = el("div", { class:"wingbox" });
+  var rin = el("div", { class:"rwing" });
+  rin.appendChild(planetEl(e));
+  rin.appendChild(evidenceEl(e));      /* test · journey · flag — 16 kinds, 8-10 unmeasured */
+  rin.appendChild(commandEl(e.id, null, { idle:
+    "Fifteen cells, always. Left of the middle nothing changes what is drawn; here everything does." }));
+  rbox.appendChild(rin);
+  rw.appendChild(rbox);
+  row.appendChild(rw);
+
+  requestAnimationFrame(function(){ mmTick(); readGeo(); });
+}
+
+function readGeo(){
+  var d = document.getElementById("dock").getBoundingClientRect().height;
+  var rowH = document.getElementById("row").getBoundingClientRect().height;
+  var sub  = document.querySelector(".status .spine .slot");
+  document.getElementById("gv-dock").textContent =
+    Math.round(d) + "px · " + (100*d/window.innerHeight).toFixed(1) + "% of " + window.innerHeight;
+  document.getElementById("gv-f").textContent = (d >= 200 ? "+" : "") + Math.round(d-200) + "px";
+  document.getElementById("gv-d").textContent = (d >= 288 ? "+" : "") + Math.round(d-288) + "px";
+  document.getElementById("gv-row").textContent = Math.round(rowH) + "px";
+  if (sub) document.getElementById("gv-st").textContent =
+    Math.round(sub.getBoundingClientRect().width) + "px × 3";
+  var vb = document.querySelectorAll(".reg")[2].querySelector(".regbody");
+  var eb = document.querySelector(".reg.world ~ .reg .ev") ? null : null;
+  var regs = document.querySelectorAll("#row .reg");
+  var evb = regs[regs.length-2] ? regs[regs.length-2].querySelector(".regbody") : null;
+  var vo = vb ? vb.scrollHeight - vb.clientHeight : 0;
+  var eo = evb ? evb.scrollHeight - evb.clientHeight : 0;
+  var of = document.getElementById("gv-of");
+  if (of){ of.textContent = (vo<=0 && eo<=0) ? "none" : ("VITALS +" + Math.max(0,vo) + " · EV +" + Math.max(0,eo));
+    of.style.color = (vo<=0 && eo<=0) ? "var(--ok)" : "var(--warn)"; }
+}
+
+buildPicker(renderDock);
+/* park the kind bar directly above the element picker, measured not guessed */
+requestAnimationFrame(function(){
+  var pk = document.getElementById("pick");
+  if (pk) document.documentElement.style.setProperty("--pickh", Math.round(pk.getBoundingClientRect().height) + "px");
+});
+
+/* the TIER control lives on the picker bar in this demo — in the station it is
+   the header segmented control #tiersel (:4318) and keys 1-4 (:4330). The minimap
+   READS the tier; it must never SET it. */
+(function(){
+  var wrap = document.getElementById("pick");
+  wrap.appendChild(el("span", { class:"plbl", text:"tier" }));
+  MM_TIERS.forEach(function(t, i){
+    var b = el("button", { class:"tbtn" + (i === MM.tier ? " on" : ""),
+      text:"T" + i + " " + t.name, title:t.vis + " visible of " + t.tot });
+    b.onclick = function(){
+      MM.tier = i;
+      Array.prototype.forEach.call(wrap.querySelectorAll(".tbtn"), function(x){
+        if (/^T\d/.test(x.textContent)) x.classList.remove("on"); });
+      b.classList.add("on"); mmTick();
+      var rim = document.querySelector(".rim"); if (rim) pick(CUR, renderDock);
+    };
+    wrap.appendChild(b);
+  });
+})();
+
+/* the ruling, made pressable: 264 (VITALS clean, EVIDENCE's 3rd row scrolls 14px
+   below 282) vs 282 (nothing scrolls, and the dock is 31% at 900p). */
+(function(){
+  var wrap = document.getElementById("pick");
+  wrap.appendChild(el("span", { class:"plbl", text:"floor" }));
+  [["264 · marked", 264, 320], ["282 · nothing scrolls", 282, 340]].forEach(function(f, i){
+    var b = el("button", { class:"tbtn" + (i === 0 ? " on" : ""), text:f[0] });
+    b.onclick = function(){
+      document.documentElement.style.setProperty("--dock",
+        "clamp(" + f[1] + "px, 25vh, " + f[2] + "px)");
+      Array.prototype.forEach.call(wrap.querySelectorAll(".tbtn"), function(x){
+        if (/^\d{3} ·/.test(x.textContent)) x.classList.remove("on"); });
+      b.classList.add("on");
+      requestAnimationFrame(function(){ mmTick(); readGeo(); });
+    };
+    wrap.appendChild(b);
+  });
+})();
+
+window.addEventListener("resize", function(){
+  requestAnimationFrame(function(){ mmTick(); readGeo(); });
+});
+/* ── THE HUD IS THE ONLY CONTROL SURFACE ────────────────────────────────────
+   Three strips became one box in the graph's bottom-right corner. Every control
+   is a glyph; the words live in the shared hover tooltip. The old #kindbar and
+   #pick are hidden by body.hud-only rather than deleted, so the shared
+   buildPicker in _shell.js keeps working for proposals A-F. */
+document.body.classList.add("hud-only");
+document.body.classList.add("ushape");
+/* ICON MODE — the panel's row keys, meter labels, region headers and command
+   verbs all become glyphs; every word moves to the shared hover tooltip.
+   Proposals A-F leave this unset and keep their word gutters. */
+window.__ICONMODE = true;
+/* the operator's copied configuration, applied at boot */
+applySkin(VSTATE.skin);
+applyFrame();
+document.documentElement.style.setProperty("--dockpct", String(VSTATE.pct));
+document.documentElement.style.setProperty("--wingw", VSTATE.wl + "px");
+document.documentElement.style.setProperty("--wingr", VSTATE.wr + "px");
+document.documentElement.style.setProperty("--ts", String(VSTATE.ts));
+if (typeof MM !== "undefined") MM.tier = 1;
+
+var HUDCTX = {
+  cur: null,
+  pick: function(id){ pick(id, renderDock); },
+  rerender: function(){ pick(CUR, renderDock); },
+};
+var _renderDock0 = renderDock;
+renderDock = function(e){
+  _renderDock0(e);
+  HUDCTX.cur = e;
+  buildHud(HUDCTX);        /* the HUD reflects the state it just changed */
+};
+
+/* exposed so a headless probe can drive selection without clicking hidden chrome */
+window.pick = pick; window.renderDock = renderDock;
+pick("ep-relief", renderDock);   /* the operator's default element */
+</script>

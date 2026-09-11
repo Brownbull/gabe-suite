@@ -1,0 +1,198 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>C · Filmstrip &amp; Slots — bottom workflow dock</title>
+<link rel="stylesheet" href="../_common.css">
+<style>
+  /* ── PROPOSAL C: workflow on the left, a fixed 4x2 slot grid on the right ─
+     The filmstrip answers "where am I in the workflow"; the grid answers "what
+     is this element". The grid has EIGHT boxes, so STRUCTURE gets its own slot
+     instead of folding into STORE — the one place the extra room buys a field. */
+  #split{ flex:1; min-height:0; display:grid; grid-template-columns:266px 1fr; }
+  #strip{ border-right:1px solid var(--line); background:var(--nav-bg);
+          display:flex; flex-direction:column; min-height:0; }
+  #striphd{ flex:none; padding:7px 11px 5px; border-bottom:1px solid var(--line); }
+  #striphd .sl{ font:800 9.5px/1 var(--mono); letter-spacing:.1em; text-transform:uppercase;
+                color:var(--muted); }
+  #striphd .jn{ font-size:11px; color:var(--ink); margin-top:3px; line-height:1.35; }
+  #stripbody{ flex:1; min-height:0; overflow-y:auto; padding:5px 7px 8px; }
+  .st{ display:flex; gap:8px; align-items:flex-start; padding:5px 7px; border-radius:7px;
+       cursor:pointer; border:1px solid transparent; margin-bottom:2px; }
+  .st:hover{ background:rgba(139,131,245,.08); }
+  .st.on{ background:rgba(139,131,245,.16); border-color:var(--accent); }
+  .st .sn{ flex:none; width:17px; height:17px; border-radius:50%; font:800 9px/17px var(--mono);
+           text-align:center; color:var(--muted); border:1px solid var(--line);
+           background:var(--chip-bg); }
+  .st.on .sn{ color:#fff; background:var(--accent); border-color:var(--accent); }
+  .st .sb{ min-width:0; flex:1; }
+  .st .sl2{ font:600 11px/1.3 var(--mono); color:var(--ink); word-break:break-all; }
+  .st.on .sl2{ color:#fff; }
+  .st .sm{ font-size:10px; color:var(--muted); margin-top:2px; }
+  .st .bar{ height:2px; border-radius:2px; margin-top:4px; background:var(--line); }
+  .st .bar i{ display:block; height:100%; border-radius:2px; background:var(--warn); }
+
+  /* the fixed slot grid: 4 columns x 2 rows, positions never change */
+  #grid8{ display:grid; grid-template-columns:repeat(4, 1fr); grid-template-rows:1fr 1fr;
+          min-height:0; }
+  /* min-height:0 is load-bearing: without it a tall slot (POST /…/complete's 6-row
+     STORE) grows its 1fr row and squeezes the second row off the dock entirely. */
+  #grid8 .slot{ border-bottom:1px solid var(--line); min-height:0; }
+  #grid8 .slot:nth-child(n+5){ border-bottom:none; }
+  #grid8 .slot:nth-child(4n){ border-right:none; }
+  .slot[data-slot="ident"]{ background:linear-gradient(135deg, rgba(139,131,245,.08), transparent 60%); }
+</style>
+
+<div id="wrap">
+  <div id="stage">
+    <svg id="field"></svg>
+    <div id="lede">
+      <span class="tag">Proposal C</span>
+      <h1>Filmstrip &amp; slots — <b>where am I, and what is this</b></h1>
+      <p>The left 266px is the <b>workflow</b>: the journey's steps as a vertical strip,
+      current one lit, each carrying its write-count bar. The right side is a fixed
+      <b>4 &times; 2 slot grid</b> — eight boxes that never move.</p>
+      <p>The extra box is the point: C has room for <b>STRUCTURE</b> as its own slot, so a
+      model's columns and a store's fields stop competing with the tables an endpoint reads.
+      A and B fold STRUCTURE into STORE because a single row has no eighth cell.</p>
+      <p>An endpoint has structure too — the <b>shape it carries</b>. Its payload and response
+      move into that slot, so the eighth box is never dead for the one kind a workflow is
+      made of.</p>
+    </div>
+    <div id="geo">
+      <div class="gk"><span>dock height</span><span>264px</span></div>
+      <div class="gk"><span>filmstrip</span><span>266px · always present</span></div>
+      <div class="gk"><span>slot grid</span><span>4 &times; 2 · ~334 &times; 116px each</span></div>
+      <div class="gk"><span>lines per slot</span><span>~5 · A gets ~14</span></div>
+      <div style="margin-top:7px;padding-top:7px;border-top:1px solid var(--line)">
+        The cost is <b>height</b>: two rows halve what each box can show. <b>Measured on
+        <code>Recipe</code>: 5 of 8 slots clip</b> (marked <b>scroll</b>), against <b>1 of 7</b>
+        in proposal A. C is the densest layout and the shallowest per box.
+      </div>
+    </div>
+    <div id="pick"></div>
+    <div id="demo"></div>
+  </div>
+
+  <div id="dock">
+    <div class="dhead">
+      <span class="dt">Workflow <em>&rsaquo;</em> <span id="dstep">—</span></span>
+      <span class="dsub" id="dnote"></span>
+      <span class="spacer"></span>
+      <span class="now">slots <b>8 / 8</b> · fixed 4&times;2</span>
+    </div>
+    <div id="split">
+      <div id="strip">
+        <div id="striphd">
+          <span class="sl">Workflow</span>
+          <div class="jn" id="jname"></div>
+        </div>
+        <div id="stripbody"></div>
+      </div>
+      <div id="grid8"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../_data.js"></script>
+<script src="../_shell.js"></script>
+<script>
+buildStage();
+buildDemoted("C's eighth slot is STRUCTURE. It costs height: each box gets ~116px, roughly "
+  + "5 lines, against A's ~14. Recipe's 38 columns overflow all three layouts — the "
+  + "difference is only how many you see before the expander.");
+
+/* C's slot set = the canonical seven, with STRUCTURE split back out of STORE. */
+var SLOTS8 = [
+  SLOTS[0], SLOTS[1], SLOTS[2],
+  { key:"store", label:"STORE",     hint:"tables read / written · commits" },
+  { key:"out",   label:"OUT",       hint:"response · writes · dispatches" },
+  { key:"struct",label:"STRUCTURE", hint:"columns · fields · shapes — C's eighth box" },
+  SLOTS[5], SLOTS[6]
+];
+
+/* STRUCTURE is carved out of the STORE rows: col/shape/state rows move to the new
+   slot, the table traffic stays in STORE. Same source data, two boxes. */
+function split(slots){
+  var out = {}, s = slots.store || [];
+  for (var k in slots) out[k] = slots[k];
+  out.store  = s.filter(function(x){ return ["read","write","commits","store"].indexOf(x.k) >= 0; });
+  out.struct = s.filter(function(x){ return ["col","shape","state"].indexOf(x.k) >= 0; });
+  /* ROUTE BY KEY, NEVER BY EMPTINESS. An earlier version sent `resp` to STRUCTURE
+     only when STRUCTURE was otherwise empty — so the response lived in STRUCTURE on
+     an endpoint and in OUT on a model, and a reader who learned "the response is in
+     STRUCTURE" was wrong on the next click. That breaks the exact invariant this page
+     argues for. payload and resp ALWAYS live in STRUCTURE; IN and OUT keep a dim
+     pointer row so the slot they left is not silently short. */
+  var pay = (slots["in"] || []).filter(function(x){ return x.k === "payload" && x.tone !== "none"; });
+  var res = (slots.out   || []).filter(function(x){ return x.k === "resp"    && x.tone !== "none"; });
+  out.struct = out.struct.concat(pay, res);
+  if (pay.length) out["in"] = (slots["in"] || []).filter(function(x){ return x.k !== "payload"; })
+    .concat([ r("payload", "\u2014 the shape is in STRUCTURE", "dim") ]);
+  if (res.length) out.out = (slots.out || []).filter(function(x){ return x.k !== "resp"; })
+    .concat([ r("resp", "\u2014 the shape is in STRUCTURE", "dim") ]);
+  if (!out.store.length)  out.store  = [ r("read", "\u2014 this element touches no table", "none") ];
+  if (!out.struct.length) out.struct = [ r("col",  "\u2014 no structure captured for this kind", "none") ];
+  return out;
+}
+
+function renderSlots(slots, title, note, gap){
+  document.getElementById("dstep").textContent = title;
+  var n = document.getElementById("dnote");
+  n.textContent = note; n.style.color = gap ? "var(--bad)" : "var(--muted)";
+  var g = document.getElementById("grid8");
+  g.innerHTML = "";
+  var sp = split(slots);
+  SLOTS8.forEach(function(spec){ g.appendChild(slotEl(spec, sp[spec.key])); });
+}
+
+function buildStrip(){
+  document.getElementById("jname").textContent = JOURNEY.name;
+  var b = document.getElementById("stripbody");
+  b.innerHTML = "";
+  /* the bar is DERIVED, never hand-set: count the distinct table names in the
+     step's write rows, so editing the data moves the bar */
+  function writeCount(step){
+    var seen = {};
+    (step.slots.store || []).filter(function(x){ return x.k === "write"; })
+      .forEach(function(x){
+        String(x.v).split("\u00b7").forEach(function(t){
+          t = t.trim().replace(/\s*\u2014.*$/, "");
+          if (t && !/^\u2014/.test(t)) seen[t] = 1;
+        });
+      });
+    return Object.keys(seen).length;
+  }
+  var WMAX = Math.max.apply(null, JOURNEY.steps.map(writeCount));
+  JOURNEY.steps.forEach(function(s){
+    var n = writeCount(s);
+    var node = el("div", { class:"st", "data-n":s.n, onclick:function(){ selStep(s.n); } }, [
+      el("span", { class:"sn", text:s.n }),
+      el("div", { class:"sb" }, [
+        el("div", { class:"sl2", text:s.short }),
+        el("div", { class:"sm", text: n + " table" + (n === 1 ? "" : "s") + " written" }),
+        el("div", { class:"bar" }, [ el("i", { style:"width:" + Math.round(100*n/WMAX) + "%" }) ])
+      ])
+    ]);
+    b.appendChild(node);
+  });
+  /* a single element picked from the graph appends as a strip entry of its own —
+     the workflow lane stays visible even when you are not in a workflow */
+}
+
+function selStep(n){
+  Array.prototype.forEach.call(document.querySelectorAll("#stripbody .st"), function(c){
+    c.classList.toggle("on", +c.getAttribute("data-n") === n);
+  });
+  var s = JOURNEY.steps.filter(function(x){ return x.n === n; })[0];
+  renderSlots(s.slots, "step " + n + " of 5 · " + s.short,
+    JOURNEY.name + " — level " + JOURNEY.level, false);
+}
+
+buildStrip();
+buildPicker(function(e){
+  Array.prototype.forEach.call(document.querySelectorAll("#stripbody .st"), function(c){
+    c.classList.remove("on");
+  });
+  renderSlots(e.slots, e.label, e.note, e.gap);
+});
+selStep(1);
+</script>
