@@ -51,6 +51,10 @@ THRESHOLDS = {
     # S16 — screen-reachable endpoints in no curated workflow; below this a curate run
     # proposes noise, at it the workflows tab is lying by omission. cluster_min mirrors the
     # drafter's --min default so the "proposable" count equals what a run writes.
+    # S19 — concepts whose zero is NOT the app's doing. One is often real (a repo with no queues);
+    # several at once means the map is describing a stack it cannot read, and every empty column on
+    # the station is a sentence the reader will take as fact.
+    "arms_not_present": 2,
     "workflow_uncovered": 3,
     "workflow_cluster_min": 1,
     # S18 — candidate entities in entities.draft.json worth a ruling; one candidate is a curiosity,
@@ -747,6 +751,45 @@ def s18_entity_proposals(root: Path, plan: dict | None, cfg: dict | None):
             "/gabe-cc-init rank  (the entity-model third lens reads entities.draft.json)")
 
 
+def s19_arms_census(root: Path, plan: dict | None, cfg: dict | None):
+    """Arms census — the committed archmap's `arms` block (v4+) carries one state word per map
+    CONCEPT. This angle nags the zeros that are NOT the app's doing: `unmatched` (the idiom is in
+    the tree but no arm reads it, or the arm ran and extracted nothing) and `unsupported_language`
+    (no arm covers a language this tree contains). `empty` — the arm ran, the app genuinely has
+    none — is COUNTED and never nagged; nagging an honest zero is how a signal earns its way into
+    being ignored. No arms block → the map predates the census, say so once and name the regen. No
+    center → Unavailable. Read-only, report-never-gate."""
+    if cfg is None:
+        return Unavailable("no center config — the arms census lives on docs/site/center/archmap.json")
+    center = fetch_bridge._center(root)
+    ap = center / "archmap.json"
+    if not ap.is_file():
+        return None
+    try:
+        a = json.loads(ap.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        return None                                                   # a broken archmap is the next regen's problem, not a pulse crash
+    arms = a.get("arms") if isinstance(a.get("arms"), dict) else None
+    if not arms or not isinstance(arms.get("concepts"), dict):
+        return None                                                   # a v3 map: silent, not a false alarm
+    cons = arms["concepts"]
+    blind = {c: r for c, r in cons.items()
+             if isinstance(r, dict) and r.get("state") in ("unmatched", "unsupported_language")}
+    n_empty = sum(1 for r in cons.values() if isinstance(r, dict) and r.get("state") == "empty")
+    if len(blind) < THRESHOLDS["arms_not_present"]:
+        return None
+    sent = [c for c, r in blind.items() if (r.get("sentinel") or {}).get("idiom")]
+    named = " · ".join(f"{c} {r['state']}" for c, r in list(blind.items())[:3])
+    if len(blind) > 3:
+        named += f" +{len(blind) - 3}"
+    tail = (f" · {len(sent)} of them SEEN in the tree in an idiom no arm reads ({', '.join(sent[:2])})"
+            if sent else "")
+    honest = f" · {n_empty} honest zero(s) not counted here" if n_empty else ""
+    return (f"arms census — {len(blind)} concept(s) read as zero for a reason that is NOT this app: "
+            f"{named}{tail}{honest}; every empty column they feed reads as a fact on the station",
+            "mcp__gabe-map__map_census kind=arms  (then decide: write the detector, or say the floor on the page)")
+
+
 SIGNALS = [
     ("S1", "adversarial", s1_roast),
     ("S8", "evidence debt", s8_evidence),
@@ -758,6 +801,7 @@ SIGNALS = [
     ("S5", "scope", s5_scope),
     ("S9", "entity shape", s9_entity_shape),
     ("S10", "web bridge", s10_web_bridge),
+    ("S19", "arms census", s19_arms_census),
     ("S11", "model census", s11_model_census),
     ("S12", "schema homing", s12_schema_homing),
     ("S13", "route/file census", s13_route_file_census),

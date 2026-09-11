@@ -313,6 +313,29 @@ def map_health(a: dict, c: dict) -> dict:
                    if web.get("present") else {"present": False, "reason": web.get("reason") or "no web arm on this map"}),
            "schemas_zero": ("the schema arm extracted nothing across %d endpoint(s) — an EMPTY arm, not a clean one" % n_ep) if (n_ep and not n_sch) else False,
            "states": HEALTH_STATES}
+    # THE ARMS CENSUS (archmap v4+): one state word per concept, so a zero says which kind of zero
+    # it is. `schemas_zero` above is KEPT rather than deleted as the plan proposed: it is the only
+    # such signal a v3 map carries, three callers read it (tools_wave2.py, two gabe-map checks), and
+    # removing it would regress every project that has not regenerated. Where `arms` exists it is
+    # the authoritative, wider answer; `schemas_zero` stays the v3 fallback.
+    arms = a.get("arms") or {}
+    if arms.get("concepts"):
+        cons = arms["concepts"]
+        out["arms"] = {
+            "state": "present",
+            "not_present": {c: {"state": r.get("state"), "reason": r.get("reason") or "",
+                                "sentinel": (r.get("sentinel") or {}).get("idiom")}
+                            for c, r in cons.items() if r.get("state") != "present"},
+            "present": sorted(c for c, r in cons.items() if r.get("state") == "present"),
+            "implies": list(arms.get("implies") or []),
+            "langs": list(arms.get("langs") or []),
+            "capped": bool(arms.get("capped")),
+            "elsewhere": dict(arms.get("elsewhere") or {}),
+        }
+    else:
+        out["arms"] = {"state": "not_emitted",
+                       "reason": "this map predates the arms census (archmap v4) — regen to learn "
+                                 "which concepts had no detector for this stack"}
     return out
 
 

@@ -374,6 +374,25 @@ def t_map_census(args: dict, roots) -> dict:
                          "unmatched_named": ["%s %s" % (u.get("m") or u.get("method"), u.get("p") or u.get("path")) for u in unm if isinstance(u, dict)][:12],
                          "unmatched_note": ("first 12 of %d named" % len(unm)) if len(unm) > 12 else None}
                         if web.get("present") else {"present": False, "reason": web.get("reason") or "no web arm on this map"})}
+    # THE ARMS SECTION (archmap v4+): which concepts had a detector, which had none, and WHY each
+    # zero is a zero. This is the section that answers "why is this column empty" without the
+    # reader having to know which arm was supposed to fill it.
+    _arms = h.get("arms") or {}
+    if _arms.get("state") == "present":
+        sections["arms"] = {"state": "present", "present": _arms.get("present") or [],
+                            "not_present": _arms.get("not_present") or {},
+                            "implies": _arms.get("implies") or [],
+                            "langs": _arms.get("langs") or [], "capped": _arms.get("capped"),
+                            "elsewhere": _arms.get("elsewhere") or {},
+                            "text": "a concept's state word says WHICH kind of zero it is: empty = the arm "
+                                    "ran and this app has none · unmatched = the idiom is in the tree but no "
+                                    "arm reads it, or the arm ran and extracted nothing · unsupported_language "
+                                    "= no arm covers a language this tree contains"}
+    else:
+        sections["arms"] = {"state": "not_emitted",
+                            "text": _arms.get("reason") or "no arms block — regen to learn which "
+                                                           "concepts had no detector for this stack"}
+
     if want in ("", "homing"):                                       # Part C: the membership evidence — levels.json read lazily, only here and on touches
         hom = (center.levels or {}).get("homing") if center.levels else None
         if isinstance(hom, dict) and hom.get("present"):
@@ -388,7 +407,7 @@ def t_map_census(args: dict, roots) -> dict:
             sections["homing"] = {"state": "not_emitted", "text": "no homing block on levels.json — regen with the current generators (Part C 2026-09-06)"}
     if want:
         if want not in sections:
-            raise mq.MapStop("kind must be one of file | model | route | schema | unparseable | mounts | twins | web | homing")
+            raise mq.MapStop("kind must be one of file | model | route | schema | unparseable | mounts | twins | web | homing | arms")
         out["census"] = {want: sections[want]}
     else:
         out["census"] = sections
@@ -692,8 +711,8 @@ TOOLS = [
      "description": "What a change touches: worktree diff (or given files) → entities, functions, models, endpoints reached, tasks dispatched (levels.json, conf per edge), tests, FE pieces, a reading (a FLOOR).",
      "inputSchema": T._schema({"files": {"type": "array", "items": {"type": "string"}, "description": "Changed files; default = worktree vs HEAD + untracked."}, **T.ROOT_PROP})},
     {"name": "map_census", "fn": t_map_census, "annotations": RO,
-     "description": "Where the map is blind: unclaimed files/models/routes, unwired schemas, unparseable files, unresolved route mounts, the blocked twin pass, unscanned frontend roots; homing evidence (move/shared).",
-     "inputSchema": T._schema({"kind": {"type": "string", "enum": ["file", "model", "route", "schema", "unparseable", "mounts", "twins", "web", "homing"], "description": "One section only."}, **T.ROOT_PROP})},
+     "description": "Where the map is blind: unclaimed files/models/routes, unwired schemas, unparseable files, unresolved mounts, blocked twins, unscanned frontends; homing evidence; arms — why a zero is a zero.",
+     "inputSchema": T._schema({"kind": {"type": "string", "enum": ["file", "model", "route", "schema", "unparseable", "mounts", "twins", "web", "homing", "arms"], "description": "One section only."}, **T.ROOT_PROP})},
     {"name": "map_diff", "fn": t_map_diff, "annotations": RO,
      "description": "How the committed map changed between two refs: per entity, endpoints/models/schemas/files added or removed; task roots; census, health and function deltas; says so when not regenerated.",
      "inputSchema": T._schema({"base": {"type": "string", "description": "A sha/branch/tag."}, "head": {"type": "string", "description": "Default: the worktree's archmap."}, **T.ROOT_PROP}, ["base"])},

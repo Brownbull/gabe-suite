@@ -172,3 +172,39 @@ Five counting/scoping defects found by review before this shipped:
 measure-c4-twice · register-selects). The cannot-select test strips the arms block before
 comparing — the block is commentary that is SUPPOSED to reflect the probes; comparing it would
 assert the census does not work.
+
+## Step 4 — the readers (`this commit`)
+
+The census reaches the three surfaces that already fire, so nothing depends on being remembered:
+
+* **`map_health`** gains an `arms` block — `present` list, `not_present` with each state word,
+  reason and sentinel idiom, plus `implies`, `langs`, `capped`, `elsewhere`. A pre-v4 map returns
+  `state: not_emitted` and names the regen.
+* **`map_census kind=arms`** — the section that answers "why is this column empty" without the
+  reader having to know which arm was supposed to fill it.
+* **pulse S19** — nags ONLY the zeros that are not the app's doing (`unmatched`,
+  `unsupported_language`), counts `empty` beside them without nagging it. Bar:
+  `THRESHOLDS["arms_not_present"] = 2`, because one blind concept is often real.
+
+**Deviation from the plan, deliberate:** the plan said delete `mapquery.py`'s hand-written
+`schemas_zero` as subsumed. It is KEPT. It is the only such signal a v3 map carries, three callers
+read it (`tools_wave2.py:356`, two `tests/gabe-map` checks), and deleting it would regress every
+project that has not regenerated. Where `arms` exists it is the wider, authoritative answer;
+`schemas_zero` stays the v3 fallback.
+
+What S19 says on keypro-front, unprompted:
+
+> arms census — 8 concept(s) read as zero for a reason that is NOT this app: access unmatched ·
+> census unsupported_language · gates unsupported_language +5 · 2 of them SEEN in the tree in an
+> idiom no arm reads (access, tables); every empty column they feed reads as a fact on the station
+
+That is the operator's own question — "why are there no data structures on this journey" — now
+raised by the suite before anyone has to ask it.
+
+Gate: 82/80/75 BYTE-IDENTICAL, census identical (step 4 touches readers only).
+`tests/gabe-map` 199/199 · `tests/pulse-angles` 91/91 (8 new S19 cases, **4 mutants killed**) ·
+`tests/arms` 4/4 · suite-doctor CLEAN.
+
+A second battery was found claiming coverage it could not verify: `tests/pulse-angles` hardcoded
+its `ANGLES` path with no override, so every mutation run silently tested the real file. That is
+the same defect `tests/commits` had. Both now carry an override hook — worth checking the rest.

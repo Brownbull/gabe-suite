@@ -15,7 +15,7 @@
 # Hermetic: builds throwaway git repos in a temp dir. Exit 0 = all pass.
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
-ANGLES="$REPO/skills/gabe-pulse/scripts/angles.py"
+ANGLES="${ANGLES_OVERRIDE:-$REPO/skills/gabe-pulse/scripts/angles.py}"   # override for the mutation proof
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
@@ -442,3 +442,26 @@ run "$r" >/dev/null 2>&1 && ok "angles.py exits clean with a broken draft on dis
 
 echo "pulse-angles: $pass passed, $fail failed"
 [ "$fail" -eq 0 ] || exit 1
+
+
+# ── S19 · arms census — the zeros that are NOT the app's doing (archmap v4 `arms` block) ──
+# An `empty` concept is the arm running over real code and finding none: honest, never nagged.
+# `unmatched` and `unsupported_language` are the map describing a stack it cannot read, and every
+# empty column they feed renders on the station as a fact.
+r=$(repo s19a); mkarchmap "$r" '{"version":4,"arms":{"langs":["ts"],"capped":false,"concepts":{"request_roots":{"state":"present","produced":11},"tables":{"state":"unmatched","produced":0,"reason":"2 file(s) show this concept as raw SQL DDL — no registered arm reads that idiom","sentinel":{"idiom":"raw SQL DDL","hits":2}},"gates":{"state":"unsupported_language","produced":0,"reason":"arms cover [py]; this tree is [ts]"},"queues":{"state":"empty","produced":0,"reason":"no Celery task"}}}}'
+run "$r" | grep -q "arms census — 2 concept(s) read as zero for a reason that is NOT this app" && ok "S19 fires on unmatched + unsupported_language" || bad "S19 did not fire: $(run "$r")"
+run "$r" | grep -q "SEEN in the tree in an idiom no arm reads (tables)" && ok "S19 names the sentinel-backed concept — the idiom is there, nobody reads it" || bad "S19 lost the sentinel clause: $(run "$r")"
+run "$r" | grep -q "1 honest zero(s) not counted here" && ok "S19 counts the honest zero without nagging it" || bad "S19 mishandled the empty state: $(run "$r")"
+run "$r" | grep -q "map_census kind=arms" && ok "S19 moves to map_census kind=arms" || bad "S19 lost its move"
+# an `empty`-only map is an app that genuinely has none — silence, or the signal teaches itself to be ignored
+r=$(repo s19b); mkarchmap "$r" '{"version":4,"arms":{"langs":["py"],"concepts":{"request_roots":{"state":"present","produced":9},"queues":{"state":"empty","produced":0,"reason":"no Celery task"},"providers":{"state":"empty","produced":0,"reason":"no SDK"}}}}'
+run "$r" | grep -q "arms census" && bad "S19 nagged honest zeros: $(run "$r")" || ok "S19 SILENT when every zero is an honest one"
+# one blind concept is often real; the bar is two
+r=$(repo s19c); mkarchmap "$r" '{"version":4,"arms":{"langs":["py"],"concepts":{"request_roots":{"state":"present","produced":9},"queues":{"state":"unmatched","produced":0,"reason":"x"}}}}'
+run "$r" | grep -q "arms census" && bad "S19 fired on a single blind concept (below the bar)" || ok "S19 silent on one blind concept (< arms_not_present)"
+# a v3 map predates the census — silence, not a false alarm
+r=$(repo s19d); mkarchmap "$r" '{"version":3,"entities":{}}'
+run "$r" | grep -q "arms census" && bad "S19 fired on a v3 map with no arms block" || ok "S19 silent on a pre-census map"
+r=$(repo s19e); mkarchmap "$r" '{not json'
+run "$r" | grep -q "arms census" && bad "S19 fired on an unparseable archmap" || ok "S19 silent (never a crash) on an unparseable archmap"
+run "$r" >/dev/null 2>&1 && ok "angles.py exits clean with a broken archmap on disk" || bad "angles.py crashed on a broken archmap"
