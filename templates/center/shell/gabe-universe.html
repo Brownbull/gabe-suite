@@ -230,6 +230,7 @@
   nav.side .navitem:hover{ background:var(--hov-bg); color:var(--ink); }
   nav.side .navitem.on{ background:var(--accent); color:#fff; } nav.side .navitem.on svg{ color:#fff; }
   nav.side .navitem .count{ margin-left:auto; font-size:10px; color:var(--muted); background:var(--chip-bg); border:1px solid var(--line); border-radius:8px; padding:0 6px; }
+  nav.side .navitem.navsubitem{ margin-left:16px; font-size:.78rem; opacity:.92; } nav.side .navitem.navsubitem svg{ width:14px; height:14px; }   /* = assets/a3.css .navitem.navsubitem — this page carries its own nav CSS */
   nav.side .foot{ margin-top:auto; padding:10px 6px 2px; font:600 9px/1.5 var(--font-mono); color:var(--muted); }
   /* ONE-ROW TOP BAR */
   .topbar{ position:fixed; left:var(--navw); right:0; top:0; height:var(--topbarh); z-index:29;
@@ -1157,7 +1158,7 @@ Object.keys(KINDCOL).forEach(function(k){ if(KINDS[k]) KINDS[k].col=KINDCOL[k]; 
    Each node also carries det/behind/resp/ids/table/sites so the live card reads real dossiers. */
 /* layer ruling (c) 2026-08-20: the old SUBOF collapse (endpoints→api, web→frontend) is retired —
    the layer core groups by the kind's OWN layer value, so new kinds bring their layer for free. */
-var LZ={ endpoints:150, api:60, services:0, schemas:-60, web:150, data:-150 };   /* services + schemas: the feed's function layers (review 2026-09-10) */
+var LZ={ endpoints:150, api:60, services:0, schemas:-60, models:-100, mobile:120, web:150, data:-150 };   /* services + schemas: the feed's function layers (review 2026-09-10) */
 var METHOD={ GET:"#22c55e", POST:"#3b82f6", PUT:"#f97316", PATCH:"#eab308", DELETE:"#ef4444", BOOT:"#8a8f98", TASK:"#f0abfc" };   /* TASK = a worker entrypoint dispatched by name (review 2026-09-06); fuchsia-light — the disc must clear ~30° of the endpoint body #8b5cf6 (contrast rule, legend pass) */
 /* rel → edge colour. c4 kinds: touches · fk · bridge (+ empty→fk on model FK cross-edges). */
 var RELCOL={ touches:"#7c5cfc", fk:"#12b886", bridge:"#e8f443", calls:"#f59e0b", imports:"#a855f7",
@@ -2132,7 +2133,7 @@ function _buildFnData(){ var D=window.GABE_LEVELS; if(!D||!D.fn_nodes||!KINDS["f
   var _DET=D.detail||{};
   _FNNODES=D.fn_nodes.map(function(f){ var beh=f.behind||{}, file=(f.id||"").split("#")[0];
     var rec=_DET["fn:"+f.slug+"|"+f.name]; var dd=rec&&(rec.det||rec); var det={ file:file, doc:"" };
-    if(dd && (!dd.file || dd.file===file)){ det.doc=dd.doc||""; if(dd.flines!=null) det.flines=dd.flines;
+    if(dd && (!dd.file || dd.file===file)){ det.doc=dd.doc||"";   /* dd.flines is the fn's line COUNT (review 2026-09-11) — it rides sig.lines, never det.flines (the Source row would anchor on it) */
       if(dd.sig){ det.sig=Object.assign({}, dd.sig); if(det.sig.lines==null && dd.flines!=null) det.sig.lines=dd.flines; }
       else if(dd.flines!=null) det.sig={ lines:dd.flines }; }
     return { id:f.id, kind:"function", ent:f.slug, entClaim:f.slug, label:f.name, col:KINDS["function"].col, K:KINDS["function"],
@@ -5761,7 +5762,7 @@ var KINDCARD=(function(){
       return E("div",{class:"sublbl"}, icoEl(w?"key":"table"),
         (w?"writes → ":"reads → ")+o.model+" ", E("span",{style:"color:var(--muted);font-size:10px"}, "· "+o.table)); });
     return E("div",{class:"sec"}, sechd("table","Accesses", a.ops.length, false,
-      {icon:"info",cls:"info",text:"The DB tables this function reads/writes — an AST pass over its body (select(Model) · session.add/get · Core insert/update/delete). A FLOOR: an object bound OUTSIDE the fn is an under-count, never a wrong table."+(a.commits?" This fn also commits/flushes (a durable write boundary).":"")}),
+      {icon:"info",cls:"info",text:"The DB tables this function or handler reads/writes — an AST pass over its body (select(Model) · session.add/get · Core insert/update/delete). A FLOOR: an object bound OUTSIDE the fn is an under-count, never a wrong table."+(a.commits?" This fn also commits/flushes (a durable write boundary).":"")}),
       E("div",null, rows)); }
   function liveConns(n){ var outs=[], ins=[];
     links.forEach(function(l){ var s=lid(l.source), t=lid(l.target); if(s===n.id) outs.push(l); if(t===n.id) ins.push(l); });
@@ -5805,7 +5806,7 @@ var KINDCARD=(function(){
     if(n.kind==="web") return (n.sites||0)+" fetch site(s)";
     return ((n.m&&n.m.fanin)||0)+" element(s) depend on this"; }
   function identSec(n){ var fi=(n.m&&n.m.fanin)||0; return E("div",{class:"sec"}, sechd("info","Identity"),
-    kv("entity","entity", n.ent), kv("layers","layer", n.K.layer),
+    kv("entity","entity", n.ent), kv("layers","layer", n.layer||n.K.layer),   /* the node's own layer (a function carries the feed's), the kind's only as the floor */
     kv("merge","fan-in", fi+" caller"+(fi===1?"":"s")+" (graph in-degree)")); }
 
   var C={
@@ -5814,6 +5815,7 @@ var KINDCARD=(function(){
       guardsSec(n),
       streamSec(n),
       homeEvRow(n), modelRow(n),
+      accessSec(n),
       payloadSec(det),
       liveConns(n),
       behindTree(n),
@@ -6149,8 +6151,8 @@ var KINDCARD=(function(){
   /* RISK FLAGS (operator screenshot 2): the ATTACK-fleet signals — god-object · untested · conflict — as
      flag rows carrying their ACTUAL graph asset (a red raider ship). Read from the same n.m nodeFleet renders. */
   function flagsSec(n){ if(!n) return null; var m=n.m||{},
-      tests=Math.round(+(m.tests)||0), behind=Math.round(+(m.behind)||0),
-      untested=(tests===0 && n.kind!=="entity"), god=!!m.god, shock=!!(m.large||behind>=15);
+      unmeasured=(m.tests==null), tests=Math.round(+(m.tests)||0), behind=Math.round(+(m.behind)||0),
+      untested=(tests===0 && !unmeasured && n.kind!=="entity"), god=!!m.god, shock=!!(m.large||behind>=15);   /* null = the emitter measured nothing (review 2026-09-11): no flag, same law as nodeFleet */
     var rows=[];
     if(god){ var f=E("div",{class:"flagrow god"}, icoEl("alert"), E("span",{class:"flbl"},"god-object · oversized fn / class")); _hdAsset(f, function(){ return window.__uniAssets.god(); }, "god raider — the graph asset"); rows.push(f); }
     if(untested){ var f2=E("div",{class:"flagrow warn"}, icoEl("alert"), E("span",{class:"flbl"},"unguarded · no test covers this")); _hdAsset(f2, function(){ return window.__uniAssets.ung(); }, "unguarded raider — the graph asset"); rows.push(f2); }

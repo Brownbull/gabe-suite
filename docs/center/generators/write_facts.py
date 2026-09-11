@@ -10,7 +10,7 @@ September inventory. This script is the writer: it runs the batteries the way
 suite-doctor's G3 sweep does (every tests/*/run.sh, serially, the doctor's own
 exclusions honoured) and records what each printed.
 
-    python3 docs/center/generators/write_facts.py               # every battery (~3–4 min, serial)
+    python3 docs/center/generators/write_facts.py               # every battery (≈ 5½ min, serial)
     python3 docs/center/generators/write_facts.py --only hooks,register
     python3 docs/center/generators/write_facts.py --dry-run     # run + print, write nothing
 
@@ -23,8 +23,9 @@ What is DERIVED per battery (never hand-typed again):
                           skips it by name — never run here either)
   protects                the header comment's first paragraph (the battery's own
                           statement of its contract)
-  proves_fire / _silent   the battery's own claim, read from its whole text (header
-                          + case labels): fires/detects/mutation-proven is a fire
+  proves_fire / _silent   the battery's own claim, read from its whole text — run.sh
+                          plus the sibling *.py/*.mjs/*.sh a thin wrapper delegates to
+                          (header + case labels): fires/detects/mutation-proven is a fire
                           claim, silent/never false-fires/honest-empty a silence claim
                           (the suite rule is that every battery states both; one
                           that does not is shown as "not recorded" — honest)
@@ -45,7 +46,9 @@ What is CARRIED from the existing file (authored, not derivable):
 
 --only re-runs the named batteries and carries every other battery record
 over from the existing file, so a single-battery refresh costs seconds, not
-minutes. The stamp (`generated`, `head`, `dirty`) is the run's.
+minutes. Every executed record carries its OWN `run_at` + `run_head`; the file
+stamp (`generated`, `head`, `dirty`) is the latest run's, and `method` says
+"partial refresh" naming what was re-run when --only was used.
 """
 from __future__ import annotations
 
@@ -143,11 +146,22 @@ def beat_for(src: str, prev: dict | None, beats: dict[str, str]) -> str:
     return "cross-cutting"
 
 
+def battery_text(run: Path) -> str:
+    """run.sh plus the sibling *.py / *.mjs / *.sh it delegates to (tests/gabe-map/run.sh runs
+    checks.py; tests/evidence-nav/run.sh runs cases.mjs) — the case labels live there. Fixture
+    subdirectories are not scanned."""
+    parts = [run.read_text(errors="replace")]
+    for sib in sorted(run.parent.iterdir()):
+        if sib != run and sib.is_file() and sib.suffix in (".py", ".mjs", ".sh"):
+            parts.append(sib.read_text(errors="replace"))
+    return "\n".join(parts)
+
+
 def record_for(b: dict, prev: dict | None, beats: dict[str, str],
                run_it: bool) -> dict:
     run = REPO / b["path"]
     header = header_paragraph(run)
-    src = run.read_text(errors="replace")
+    src = battery_text(run)
     rec = {
         "name": b["name"],
         "beat": beat_for(src, prev, beats),
@@ -164,7 +178,7 @@ def record_for(b: dict, prev: dict | None, beats: dict[str, str],
     if not run_it:
         # --only: carry the previous record's run fields, refresh the derived ones.
         if prev:
-            for k in ("assertions", "failures", "status", "note", "rc", "seconds", "run_at"):
+            for k in ("assertions", "failures", "status", "note", "rc", "seconds", "run_at", "run_head"):
                 if k in prev:
                     rec[k] = prev[k]
             return rec
@@ -176,9 +190,11 @@ def record_for(b: dict, prev: dict | None, beats: dict[str, str],
     n, failures = parse_counts(out)
     rec["assertions"] = n if n is not None else 0
     rec["failures"] = failures
-    rec["status"] = "GREEN" if rc == 0 else "RED"
+    rec["status"] = "GREEN" if (rc == 0 and not failures) else "RED"   # failures reported at exit 0 are RED too (review 2026-09-11)
     rec["rc"] = rc
     rec["seconds"] = round(secs, 1)
+    rec["run_at"] = _dt.date.today().isoformat()
+    rec["run_head"] = D.head_sha()[:7]
     skip = _SKIP_RX.search(out)
     if rc == 0 and skip:
         line = next((ln.strip() for ln in out.splitlines() if _SKIP_RX.search(ln)), "")
@@ -186,6 +202,8 @@ def record_for(b: dict, prev: dict | None, beats: dict[str, str],
     elif rc != 0:
         tail = [ln for ln in out.splitlines() if ln.strip()][-6:]
         rec["note"] = "FAILING — last lines: " + " | ".join(ln.strip() for ln in tail)
+    elif failures:
+        rec["note"] = f"exit 0 but {failures} failure(s) reported — the battery is swallowing its own exit code"
     if n is None:
         rec["note"] = (rec.get("note", "") + " · no countable summary line (assertions unknown)").strip(" ·")
     flag = "" if rc == 0 else f"  rc={rc}"
@@ -236,7 +254,11 @@ def main() -> int:
     records = [record_for(b, prev.get(b["name"]), beats, run_it=(not only or b["name"] in only))
                for b in sorted(batteries, key=lambda x: x["name"])]
 
-    ran = [r for r in records if "rc" in r]
+    ran = [r for r in records if "rc" in r and (not only or r["name"] in only)]   # invoked THIS run
+    carried = [r["name"] for r in records if "rc" in r and r["name"] not in {x["name"] for x in ran}]
+    scope = ("every tests/*/run.sh executed serially" if not only else
+             f"PARTIAL refresh — {len(ran)} of {len(records)} re-run ({', '.join(sorted(r['name'] for r in ran))}); "
+             f"the other {len(carried)} carried from their own run_at/run_head stamps")
     total = sum(r["assertions"] for r in records)
     red = [r["name"] for r in records if r["status"] == "RED"]
     unknown_count = [r["name"] for r in records if "rc" in r and "assertions unknown" in r.get("note", "")]
@@ -246,9 +268,10 @@ def main() -> int:
         "head": D.head_sha()[:7],
         "dirty": bool(dirty),
         "method": (
-            "batteries: every tests/*/run.sh executed serially by docs/center/generators/write_facts.py "
+            f"batteries: {scope} by docs/center/generators/write_facts.py "
             "with the doctor's G3 exclusions honoured; assertions + failures parsed from each battery's own "
-            "summary line, `protects` from its header comment, FIRE/SILENT from the header's own claim. "
+            "summary line (failures > 0 is RED even at exit 0), `protects` from its header comment, FIRE/SILENT "
+            "from the battery's own text (run.sh + the siblings it delegates to). "
             "hooks: probed by hand 2026-07-26 (each hook executed in a hermetic temp repo against realistic "
             "stdin payloads) — a different instrument, carried as recorded."
         ),

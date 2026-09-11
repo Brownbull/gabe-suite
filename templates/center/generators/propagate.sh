@@ -65,7 +65,11 @@ else echo "  (twin has no templates/center/shell — vendored differently; skipp
 # RETIRED: a suite DELETION is invisible to a copy-only sync (review 2026-09-10 — gastify kept three retired
 # station pages live in its nav from 29 pages). The list mirrors build_center_a3.RETIRED_PAGES + the archive feed +
 # the one asset only they loaded. --check reports; a real run removes them from the twin's shell AND its centre.
-RETIRED="codebase-graph.html codebase-archive.html codebase-archive-lab.html sim-archive.js sim-archive.json assets/force-graph.min.js"
+# the PAGE half is READ from build_center_a3.RETIRED_PAGES at run time (review 2026-09-11: a hand-mirrored list
+# drifts silently); only the non-page extras (the archive feed + the one asset only those pages loaded) are listed here
+RETIRED_HTML=$(python3 -c 'import re, sys; s = open(sys.argv[1], encoding="utf-8").read(); m = re.search(r"^RETIRED_PAGES\s*=\s*frozenset\(\{(.*?)\}\)", s, re.S | re.M); print(" ".join(sorted(re.findall(r"\"([^\"]+\.html)\"", m.group(1)))) if m else "")' "$GEN/build_center_a3.py")
+[ -n "$RETIRED_HTML" ] || { echo "propagate: could not read RETIRED_PAGES from $GEN/build_center_a3.py — refusing to guess the retired list" >&2; exit 2; }
+RETIRED="$RETIRED_HTML sim-archive.js sim-archive.json assets/force-graph.min.js"
 echo "── retired in the suite (must not survive in the twin)"
 TCENTER="$TWIN/docs/site/center"; ret=0
 for r in $RETIRED; do

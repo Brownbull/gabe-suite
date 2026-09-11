@@ -45,14 +45,13 @@ python3 "$ROOT/templates/center/generators/build_center_a3.py" >/dev/null
 # 2 · the station page: the TEMPLATE → fill (rehome tokens) → the example page. No assembly step: parts/ is retired.
 echo "── fill (template → example)"
 if [ "$CHECK" = 1 ]; then
-  # fill-example writes $EX directly — under --check we compare and RESTORE from git afterwards,
-  # but ONLY when the page was clean before: a checkout over uncommitted edits destroyed them
-  # (review 2026-09-10; memory trap since 2026-09-05). Dirty → compare, then leave it alone.
-  if git -C "$ROOT" diff --quiet -- "templates/center/shell/example/codebase-graph-station/gabe-universe.html"; then PRE_CLEAN=1; else PRE_CLEAN=0; fi
-  python3 fill-example.py >/dev/null
-  RESTORE=1
+  # --check NEVER writes the tracked example page (review 2026-09-11: the FILL was the write that destroyed
+  # uncommitted edits — the earlier guard only decided whether to checkout AFTER the overwrite). Fill to
+  # scratch here; the comparison against the page on disk happens below, and nothing is restored because
+  # nothing was touched.
+  python3 fill-example.py --out "$TMP/gabe-universe.html" >/dev/null
 else
-  python3 fill-example.py >/dev/null; RESTORE=0
+  python3 fill-example.py >/dev/null
 fi
 
 # 3 · land / compare each artifact. Volatile stamps (twin HEAD sha · regen date ·
@@ -102,15 +101,11 @@ else
   python3 derive-seeded-sim.py "$TWIN" "$TMP" "$EX/sim.data.js"
 fi
 # (the template is the source, not an output — nothing is landed onto it)
-# the example page itself: fill-example already wrote it; in --check, diff vs git HEAD
+# the example page itself: under --check the fill went to scratch — compare it with the page ON DISK
+# (a dirty example page reads as DRIFT, which is true: the template + fill no longer reproduce it); nothing written.
 if [ "$CHECK" = 1 ]; then
-  if git -C "$ROOT" diff --quiet -- "templates/center/shell/example/codebase-graph-station/gabe-universe.html"; then
-    echo "  OK   example gabe-universe.html"; else echo "  DRIFT example gabe-universe.html"; fail=1; fi
-  if [ "${PRE_CLEAN:-1}" = 1 ]; then
-    git -C "$ROOT" checkout -q -- "templates/center/shell/example/codebase-graph-station/gabe-universe.html"
-  else
-    echo "  note example gabe-universe.html had uncommitted edits before --check — left in place (not reverted)"
-  fi
+  if diff -q "$TMP/gabe-universe.html" "$EX/gabe-universe.html" >/dev/null 2>&1; then
+    echo "  OK   example gabe-universe.html"; else echo "  DRIFT example gabe-universe.html (template + fill vs the page on disk)"; fail=1; fi
 fi
 
 # 4 · proof (skipped under --check; --check IS the proof of reproducibility)

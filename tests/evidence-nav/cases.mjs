@@ -2,7 +2,7 @@
  * Mutation-proven 2026-08-04: each case was made to fail once (renaming the
  * mount hook, dropping a workflow, breaking the parent-link, removing a ghost)
  * before being trusted. */
-import { chromium } from '/home/khujta/projects/apps/gastify/node_modules/playwright/index.mjs';
+const { chromium } = await import('../../skills/gabe-docsite/tools/_playwright.mjs');   // the suite's portable resolver — never a machine path (review 2026-09-11)
 const page_path = process.argv[2];
 const url = 'file://' + process.cwd() + '/' + page_path;
 let pass = 0, fail = 0;

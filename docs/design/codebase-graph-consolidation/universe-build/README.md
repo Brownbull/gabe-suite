@@ -24,14 +24,15 @@ seeded sim, and the headless proofs.
 ## Regenerate everything (the one command)
 
 ```bash
-bash regen-example.sh            # rebuild all 8 estate files, land them, run the static battery
+bash regen-example.sh            # rebuild the 7 estate files (listed below), land them, run the static battery
 bash regen-example.sh --check    # byte-compare a fresh regen vs the committed estate (writes nothing)
 GABE_TWIN=<repo> bash regen-example.sh   # default twin: /home/khujta/projects/apps/gustify
 ```
 
 `--check` CLEAN is the reproducibility contract: a generator or source change that is not
-re-landed shows as DRIFT. Volatile stamps (twin HEAD sha, regen date) are normalized;
-`graft index_hash` is NOT (it is twin-state and its drift is real — see §graft below).
+re-landed shows as DRIFT. Volatile stamps are normalized — twin HEAD sha, regen date, AND the graft
+index state (`index_hash`, `reason`, the four `dropped` counts): they track twin/graft STATE, not the graph
+(the graft arm is an inferred FLOOR). Content — nodes · edges · fe · cross_edges — must reproduce byte-identically.
 
 ## What the one command produces (the estate)
 
@@ -49,16 +50,16 @@ Into `../../../../templates/center/shell/example/codebase-graph-station/`:
   (never overwrites a curated one), so the page's script target always exists. The **backend**
   tab needs no file (chains are derived from the fn feed at view time).
 
-And `../../../../templates/center/shell/gabe-universe.html` — the landed shell station (the
-assembled page, shell tokens intact). The `cp` to the shell is done BY the wrapper; it is no
-longer a manual step to forget.
+`../../../../templates/center/shell/gabe-universe.html` is the SOURCE — the shell station, edited by hand,
+never written by this wrapper. The example page is the only page the wrapper writes (the fill of that template).
 
 ## Editing the station
 
 ```bash
-# edit parts/* — never the assembled gabe-universe.html (it is regenerated)
-python3 assemble.py            # parts/ → gabe-universe.html (gitignored)
-bash regen-example.sh          # lands both the shell + example pages AND runs the battery
+# edit templates/center/shell/gabe-universe.html (the source of record; parts/ + assemble.py are RETIRED)
+python3 fill-example.py        # template → the example page (tokens filled, assets rehomed) — seconds, no twin build
+bash tests/gabe-universe/run.sh   # the station battery incl. the template↔example parity rail
+bash regen-example.sh          # only when the FEEDS must move too (a twin build, minutes); --check writes nothing
 ```
 
 ## graft (why c4-graph.js needs a real graft index)

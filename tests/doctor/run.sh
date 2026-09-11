@@ -3,14 +3,15 @@
 #
 # The doctor enforces CLAUDE.md's fixture rule on every other checker ("a checker that cannot be shown to fail is
 # not evidence") and was, until 2026-09-10, the largest violation of it: nothing proved any of its invariants could
-# FIRE. This battery proves five of them FIRE and that a clean tree stays SILENT — hermetically: the WORKING TREE's
-# tracked files are copied to a temp repo (so the doctor under test is the one you just edited), `install.sh` lands
+# FIRE. This battery proves seven of them FIRE and that a clean tree stays SILENT — hermetically: the WORKING TREE's
+# tracked files are copied to a temp repo (so the doctor under test is the one you just edited — TRACKED files only, so the untracked-but-installed direction is PLANTED below), `install.sh` lands
 # that copy under a FAKE $HOME, and the doctor compares the two. GABE_DOCTOR_NO_BATTERIES=1 skips the G3 sweep (the
 # sweep is every other battery's job, and would recurse into this one); the skip must be LOUD — a case pins that.
-#   FIRE    — install byte parity (missing from install · differs) · SKILL.md ⇄ CLAUDE.md version drift ·
-#             an UNPARSEABLE version stanza · the (N skills) count claim
+#   FIRE    — install byte parity (missing from install · differs · a repo file the tar never carried · an install
+#             file with no repo counterpart) · SKILL.md ⇄ CLAUDE.md version drift · an UNPARSEABLE version stanza ·
+#             the (N skills) count claim
 #   SILENT  — a freshly installed copy of the tree reads CLEAN, exit 0, with the sweep-skipped INFO line printed
-# Cost ≈ 20 s (one install + six doctor runs at ~2 s each). Exit 0 = all pass.
+# Cost ≈ 25 s (one install + eight doctor runs at ~2 s each). Exit 0 = all pass.
 set -u
 cd "$(dirname "$0")/../.."
 pass=0; fail=0
@@ -32,6 +33,8 @@ doctor() { HOME="$T/home" GABE_DOCTOR_NO_BATTERIES=1 bash "$T/repo/scripts/suite
   && ok || { bad "SILENT: a freshly installed copy must read CLEAN (exit 0)"; grep -v "^  INFO" "$T/clean.out" | head -8; }
 grep -q "battery sweep SKIPPED (GABE_DOCTOR_NO_BATTERIES=1) — not a full CLEAN" "$T/clean.out" \
   && ok || bad "SILENT is LOUD: the skipped sweep must print its INFO line (a CLEAN without batteries is not a full CLEAN)"
+grep -q "suite-doctor: CLEAN (INSTALL PARITY + INVARIANTS ONLY — battery sweep skipped, NOT a full CLEAN)" "$T/clean.out" \
+  && ok || bad "SILENT is LOUD: the VERDICT line itself is qualified when the sweep was skipped (the last line is what gets copied)"
 
 # ── FIRE: version drift — SKILL.md says one thing, the CLAUDE.md row another ──
 SK="$T/repo/skills/gabe-map/SKILL.md"; cp "$SK" "$T/skill.bak"
@@ -61,6 +64,17 @@ cp "$T/inst.bak" "$IN"; echo "# patched in place" >>"$IN"
 [ "$(doctor differs)" = 1 ] && grep -q "differs: .*skills/gabe-red/SKILL.md" "$T/differs.out" \
   && ok || { bad "FIRE: an install patched in place reads as 'differs' (never patch ~/.claude in place)"; grep DRIFT "$T/differs.out" | head -3; }
 cp "$T/inst.bak" "$IN"
+
+# ── FIRE: the untracked direction (planted — the fixture tar is tracked-only): a repo template file no install carries,
+#    then an install file with no repo counterpart ──
+echo "# probe" >"$T/repo/templates/untracked-probe.md"
+[ "$(doctor untracked)" = 1 ] && grep -q "missing from install: .*untracked-probe.md" "$T/untracked.out" \
+  && ok || { bad "FIRE: a template file the repo carries and the install lacks is named (the forward walk)"; grep DRIFT "$T/untracked.out" | head -3; }
+rm -f "$T/repo/templates/untracked-probe.md"
+echo "# stray" >"$T/home/.claude/templates/gabe/stray-probe.md"
+[ "$(doctor stray)" = 1 ] && grep -q "exists only in install (never committed): .*stray-probe.md" "$T/stray.out" \
+  && ok || { bad "FIRE: an install file with no repo counterpart is named (the reverse walk)"; grep DRIFT "$T/stray.out" | head -3; }
+rm -f "$T/home/.claude/templates/gabe/stray-probe.md"
 
 # ── SILENT again: every mutation restored → CLEAN (the restores above are real, not assumed) ──
 [ "$(doctor clean2)" = 0 ] && ok || { bad "SILENT: after restoring every mutation the copy must read CLEAN again"; grep DRIFT "$T/clean2.out" | head -5; }

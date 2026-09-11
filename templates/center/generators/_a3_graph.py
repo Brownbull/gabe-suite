@@ -370,15 +370,25 @@ def _normalize_sig(sig: str, cap: int = 220) -> str:
     s = " ".join(str(sig).split())
     # a trailing SOURCE COMMENT (`… # Redact the SSE ?token= …`) is not signature — cut at the first
     # ` #` outside brackets (review 2026-09-10: 2 of 261 gsig values carried one, rendered raw)
-    _d = 0
-    for _i, _c in enumerate(s):
-        if _c in "([{":
+    _d, _q, _i = 0, None, 0     # string-aware (review 2026-09-11): a `)` or `#` inside a default STRING is not structure
+    while _i < len(s):
+        _c = s[_i]
+        if _q:
+            if _c == "\\":
+                _i += 2
+                continue
+            if _c == _q:
+                _q = None
+        elif _c in "'\"":
+            _q = _c
+        elif _c in "([{":
             _d += 1
         elif _c in ")]}":
             _d -= 1
         elif _c == "#" and _d == 0 and (_i == 0 or s[_i - 1] == " "):
             s = s[:_i].rstrip()
             break
+        _i += 1
     o = s.find("(")
     if o < 0:
         return s if len(s) <= cap else s[:cap - 1] + "…"
@@ -498,7 +508,15 @@ def element_detail(kind: str, obj: dict[str, Any],
             if _sm:
                 det["status"], det["status_name"] = _sm.group(1), _st
             else:
-                det["status"] = _st
+                # `status_code=HTTPStatus.NO_CONTENT` reaches here as the bare member name (the scanner keeps
+                # the attribute's last segment) — resolve it through the stdlib enum (review 2026-09-11)
+                from http import HTTPStatus as _HS
+                _bare = re.match(r"^(?:\w+\.)?([A-Z][A-Z_]+)$", _st)
+                _mem = _HS.__members__.get(_bare.group(1)) if _bare else None
+                if _mem is not None:
+                    det["status"], det["status_name"] = str(_mem.value), _st
+                else:
+                    det["status"] = _st
         fn = obj.get("fn")
         rec = fi.get(f"{file}::{fn}") if (file and fn) else None
         if rec:
@@ -1305,14 +1323,16 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
         # ONE effective flag, ONE node: `not (RECIPE_CREATION_ENABLED or settings.recipe_creation_enabled)`
         # names one switch twice (a constant + its settings field); the census keeps both names, the
         # picture draws one (review 2026-09-10: two flag nodes, six wall wires, one switch)
+        # EVIDENCE, not a name match (review 2026-09-11): a pair folds only where _fold_flag_aliases saw the two
+        # names wall the SAME site (the endpoint's flag entry carries `aliases`); two unrelated flags whose
+        # names differ only in case — different files, different defaults — stay two nodes.
         _alias_of: dict[str, str] = {}
-        _byfold: dict[str, list] = {}
-        for _nm in sorted(_flag_census):
-            _byfold.setdefault(_nm.lower(), []).append(_nm)
-        for _fold, _names in _byfold.items():
-            _canon = next((n for n in _names if n.isupper()), _names[0])
-            for n in _names:
-                _alias_of[n] = _canon
+        for _fslug, _fgraph in l2.items():
+            for _fn in _fgraph.get("nodes", []):
+                if _fn.get("kind") == "endpoint":
+                    for _w in (_fn.get("flags") or []):
+                        for _al in (_w.get("aliases") or []):
+                            _alias_of[_al] = _w["name"]
         for _fslug, _fgraph in l2.items():
             for _fn in _fgraph.get("nodes", []):
                 if _fn.get("kind") == "endpoint":
@@ -1322,7 +1342,7 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
         for _flagname in sorted(_fw):
             _walls = _fw[_flagname]
             _wseen: set = set()
-            _walls = [_t for _t in _walls if not (_t[0] in _wseen or _wseen.add(_t[0]))]   # one wall per endpoint after the alias fold
+            _walls = [_t for _t in _walls if not ((_t[0], _t[2].get("on")) in _wseen or _wseen.add((_t[0], _t[2].get("on"))))]   # one wall per (endpoint, polarity) after the alias fold — an opposite-polarity wall survives (review 2026-09-11)
             if len(_walls) > _FLAG_SAT:                     # app-level saturation → a middleware concern, not a per-endpoint star
                 continue
             _readers = {_s for (_e, _s, _w) in _walls}
@@ -1334,7 +1354,7 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                      "det": {"src": _meta.get("src"), "line": _meta.get("line"),
                              "default": _meta.get("default"),
                              **({"aliases": _aliases,
-                                 "sources": [{"name": n, "src": (_flag_census.get(n) or {}).get("src"), "line": (_flag_census.get(n) or {}).get("line")}
+                                 "sources": [{"name": n, "src": (_flag_census.get(n) or {}).get("src"), "line": (_flag_census.get(n) or {}).get("line"), "default": (_flag_census.get(n) or {}).get("default")}
                                              for n in [_flagname] + _aliases]} if _aliases else {}),
                              "walls": [{"endpoint": _e, "on": _w.get("on"), "on_fail": _w.get("on_fail")}
                                        for (_e, _s, _w) in _walls]}}

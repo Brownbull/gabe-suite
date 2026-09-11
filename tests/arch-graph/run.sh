@@ -539,6 +539,23 @@ check("#" not in G._normalize_sig("def lifespan(app: FastAPI) -> AsyncIterator[N
       and G._normalize_sig("def f(a: int) -> X  # note").endswith("X"),
       "_normalize_sig cuts a trailing `# comment` outside brackets (review 2026-09-10: 2 gsig values rendered one)")
 check(G._normalize_sig("def g(a: dict[str, int] = {'#': 1}) -> Y") .endswith("Y"), "_normalize_sig keeps a # inside brackets")
+# review 2026-09-11 (the plan's review pass): string-aware cut · HTTPStatus members · SITE evidence for the alias fold · one wall per polarity
+check(G._normalize_sig('def h(x: str = "a)b") -> int  # note').endswith("int"),
+      "_normalize_sig: a `)` inside a string default does not open the comment cut early (the return annotation survives)")
+_fixst["entities"]["alpha"]["endpoints"][0]["status"] = "NO_CONTENT"
+_gst3 = next(n for n in G.build_c4_graph(_fixst, labels=LABELS, status=STATUS)["l2"]["alpha"]["nodes"] if n["id"] == "endpoint:GET /alpha")
+check(_gst3["det"].get("status") == "204" and _gst3["det"].get("status_name") == "NO_CONTENT",
+      "det.status resolves a bare http.HTTPStatus member (HTTPStatus.NO_CONTENT reaches the emitter as NO_CONTENT)")
+_fixfc = json.loads(json.dumps(_fixfa)); _fixfc["entities"]["alpha"]["endpoints"][0]["flags"][1]["line"] = 9   # same names, DIFFERENT sites
+_gfc = G.build_c4_graph(_fixfc, labels=LABELS, status=STATUS)
+check(len([n for g in _gfc["l2"].values() for n in g["nodes"] if n["kind"] == "flag"]) == 2 and _gfc["stats"].get("flags") == {"declared": 2, "drawn": 2},
+      "class 12 FOLD needs SITE evidence: FEAT_X and feat_x walling DIFFERENT lines stay two nodes (a case-only name match never folds)")
+_fixfd = json.loads(json.dumps(_fixfa)); _fixfd["entities"]["alpha"]["endpoints"][0]["flags"] = [{"name": "FEAT_X", "on": "off", "on_fail": "403", "line": 5},
+                                                                                                    {"name": "FEAT_X", "on": "on", "on_fail": "404", "line": 9}]
+_gfd = G.build_c4_graph(_fixfd, labels=LABELS, status=STATUS)
+_fdn = next(n for g in _gfd["l2"].values() for n in g["nodes"] if n["kind"] == "flag")
+check(len(_fdn["det"].get("walls") or []) == 2 and len([e for g in _gfd["l2"].values() for e in g.get("edges", []) if e.get("kind") == "walls"]) == 2,
+      "one wall per (endpoint, polarity): the same flag walling the same endpoint on AND off keeps both walls")
 # an unknown file length is ABSENT, never 0
 _fixfl0 = json.loads(json.dumps(FIX)); _fixfl0["entities"]["alpha"]["files"] = [["api", "apps/api/alpha.py", 0]]
 _fixfl0["entities"]["alpha"]["endpoints"][0]["file"] = "apps/api/alpha.py"

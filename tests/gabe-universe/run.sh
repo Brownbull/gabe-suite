@@ -137,6 +137,15 @@ check('layer:f.layer||KINDS["function"].layer' in page and 'services:0, schemas:
 check('_DET["fn:"+f.slug+"|"+f.name]' in page and 'dd.file===file' in page, "the levels detail row (sig · flines · doc) is joined onto the function node, guarded by file")
 check('(n.m&&n.m.tests==null)?"unmeasured"' in page and 'tests===0 && !unmeasured' in page,
       "the tests core-by is three-state and the fleet draws no raiders for an unmeasured piece")
+# review 2026-09-11 (the plan's review pass): the CARD had kept the lies the graph dropped
+check('unmeasured=(m.tests==null), tests=Math.round(+(m.tests)||0)' in page and page.count('tests===0 && !unmeasured')>=3,
+      "flagsSec reads tests:null as unmeasured too — no 'unguarded · no test covers this' flag on a piece the emitter never measured")
+check('kv("layers","layer", n.layer||n.K.layer)' in page and 'kv("layers","layer", n.K.layer)' not in page,
+      "the Identity layer row reads the NODE's layer (a services function no longer says 'api')")
+check(page.count('accessSec(n),')>=2, "the endpoint card calls accessSec — the copied access field reaches the Accesses section")
+check('nav.side .navitem.navsubitem{' in page, "the Testing sub-items carry their indent rule inline (this page never loads a3.css)")
+check('models:-100' in page and 'mobile:120' in page, "LZ has a plane for every _CODE_LAYERS name (models · mobile no longer fall on the services plane)")
+check('det.flines=dd.flines' not in page, "a function's line COUNT never rides det.flines (the Source row would render it as file:line)")
 check('kv("role","exported"' not in page, "det.exported row dropped — true on every node, it said nothing")
 check(page.count('class="navitem navsubitem"') >= 5 and '<span class="new">NEW</span>' not in page and 'nav.side .navitem .new' not in page,
       "the universe's sidebar carries the five Testing sub-items and no NEW chip — the 10th literal copy")
@@ -545,7 +554,7 @@ check('sechd("link","Connection")' in page and 'REL2KIND[l.rel]' in page and 'wi
       and 'rollup <i>endpoint' in page and 'access <i>function' in page,
       "the link-card Connection type (kind + wire sample + meaning) + rollup/access legend rows are gone")
 # function ACCESSES — an accessor's evidence (which model it reads/writes, from n.access) in the fn card
-check('function accessSec(' in page and 'accessSec(n)' in page and 'The DB tables this function reads/writes' in page,
+check('function accessSec(' in page and 'accessSec(n)' in page and 'The DB tables this function or handler reads/writes' in page,
       "the function ACCESSES section (accessor badge → which model it reads/writes) is gone")
 # Option A · the DATA-ACCESS connectors — rollup (endpoint→model) + access (fn→model) as distinct kinds,
 # and _buildFnData draws the fn→model access wire from n.access.ops (the TRUE accessor connection)

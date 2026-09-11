@@ -2,8 +2,8 @@
 
 A **frozen snapshot** of the Gabe Universe station (`gabe-universe.html`, the suite's SOLE codebase-graph
 station since f8de670 retired the Change graph, the Codebase archive and the Levels stations) rendered over
-**real gustify data**, so it is viewable without running a twin build. Feed head **8356f531** (the `head` key of
-`c4-graph.js`, `levels.js` and `levels.json` — the same head all three stamp).
+**real gustify data**, so it is viewable without running a twin build. Feed head: the `head` key the three feeds stamp (`c4-graph.js`, `levels.js`, `levels.json` — the same
+twin commit in all three; read it there, a sha in prose goes stale).
 
 | file | what | landed by |
 |---|---|---|
@@ -14,7 +14,7 @@ station since f8de670 retired the Change graph, the Codebase archive and the Lev
 | `workflows.js` | CURATED user workflows (suite content — never built, never landed) | by hand |
 | `workflows.draft.js` | the curate-workflows DRAFTER over this example's own graph | `regen-example.sh` |
 | `sim.data.js` | a change in flight, DERIVED from a real twin commit (never the build's null stub) | `derive-seeded-sim.py` via `regen-example.sh` |
-| `assets/` | the station's own assets, rehomed | — |
+| *(assets)* | none here — every asset reference is rehomed to the shared `templates/center/shell/assets/` (`../../assets/`) | `fill-example.py` |
 
 Regenerate: `bash docs/design/codebase-graph-consolidation/universe-build/regen-example.sh` (against the gustify
 twin; `--check` proves the committed estate reproduces byte-identically and never reverts uncommitted edits).

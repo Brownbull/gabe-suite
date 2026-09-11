@@ -63,18 +63,6 @@ CODE_ROOTS = (
     ("templates", "templates/center/generators"),
 )
 
-# docs/center/generators/ is a VENDORED FORK of templates/center/generators/.
-# Counting both would double every function in the standard center and make the
-# fork look like new suite surface. templates/ is the canonical copy, so the
-# vendored files are skipped and only the suite center's own modules are counted.
-VENDORED = {
-    "_a3_board.py", "_a3_code.py", "_a3_evidence.py", "_a3_feature.py",
-    "_a3_guard.py", "_a3_ledger.py", "_a3_render.py", "_a3_tests.py",
-    "_center_data.py", "_center_mermaid.py", "_render_mermaid.mjs",
-    "_results_ingest.py", "build_center_a3.py", "check_center_links.py",
-    "curate_proof.py", "next_feature.py", "refresh_center.sh",
-    "verify_center_chrome.mjs",
-}
 
 
 def _py_functions(path: Path, rel: str, area: str) -> list[dict]:
@@ -129,8 +117,6 @@ def functions(repo: Path) -> list[dict]:
             continue
         for path in sorted(root.rglob("*")):
             if not path.is_file() or "_archive" in path.parts:
-                continue
-            if area == "suite-center" and path.name in VENDORED:
                 continue
             rel = str(path.relative_to(repo))
             if (rel, path.suffix) in seen:

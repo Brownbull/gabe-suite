@@ -10,7 +10,7 @@ state, and coherent with the feeds by construction.
 
 Usage: derive-seeded-sim.py <twin-root> <tmp-center-out-with-archmap.json> <out-file>
 Seed pick: the most recent commit touching >=3 archmap-mapped files across >=2
-entities (walked from HEAD, depth 40) — deterministic given the twin history."""
+entities (walked from HEAD, depth WALK) — deterministic given the twin history."""
 import sys, json, subprocess
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "templates" / "center" / "generators"))
@@ -34,13 +34,14 @@ mapped = set(ent_of)
 def git(*a): return subprocess.run(["git", "-C", str(twin), *a], capture_output=True, text=True).stdout
 # walk deep — recent twin history is polluted by center-regen commits (no source files)
 pick = None
-for sha in git("log", "--format=%H", "-200").split():
+WALK = 200   # recent twin history is polluted by center-regen commits (no source files) — walk deep
+for sha in git("log", "--format=%H", f"-{WALK}").split():
     touched = [f for f in git("show", "--name-only", "--format=", sha).split("\n") if f]
     hit = [f for f in touched if f in mapped]
     if len(hit) >= 3 and len({ent_of[f] for f in hit}) >= 2:
         pick = (sha, touched, hit); break
 if not pick:
-    sys.exit("FAIL: no commit in the last 40 touches >=3 mapped files across >=2 entities")
+    sys.exit(f"FAIL: no commit in the last {WALK} touches >=3 mapped files across >=2 entities")
 sha, touched, hit = pick
 subject = git("log", "-1", "--format=%s", sha).strip()
 inflight = {"active": True, "head": sha[:8], "last_commit": subject, "touched": sorted(set(touched)),

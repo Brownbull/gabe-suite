@@ -200,7 +200,12 @@ PY
 check_invariants
 
 if [ "$drift" -eq 0 ]; then
-  [ "$QUIET" = "--quiet" ] || echo "suite-doctor: CLEAN — repo and ~/.claude are in sync."
+  if [ "${GABE_DOCTOR_NO_BATTERIES:-0}" = 1 ]; then
+    # the last line is the one a session copies and records — it must not claim a sweep that never ran
+    [ "$QUIET" = "--quiet" ] || echo "suite-doctor: CLEAN (INSTALL PARITY + INVARIANTS ONLY — battery sweep skipped, NOT a full CLEAN)"
+  else
+    [ "$QUIET" = "--quiet" ] || echo "suite-doctor: CLEAN — repo and ~/.claude are in sync."
+  fi
   exit 0
 else
   echo "suite-doctor: DRIFT FOUND — reconcile via the repo (commit repo-ward captures, then ./install.sh). Never patch installs in place."

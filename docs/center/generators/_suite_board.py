@@ -304,18 +304,6 @@ _BUDGET_SKIP = ("/references/", "/_archive/", "/__pycache__/", "/shell/example/"
                 "/.ruff_cache/", "docs/handoff/", "docs/investigations/",
                 "docs/site/")
 
-# docs/center/generators/ holds BOTH a vendored fork of templates/center/ and
-# this center's own modules. Only the vendored copies are skipped — skipping the
-# whole directory would hide the suite center's own over-budget files, and a
-# budget lens that cannot see its own author is not a budget lens.
-_VENDORED = {
-    "_a3_board.py", "_a3_code.py", "_a3_evidence.py", "_a3_feature.py",
-    "_a3_guard.py", "_a3_ledger.py", "_a3_render.py", "_a3_tests.py",
-    "_center_data.py", "_center_mermaid.py", "_render_mermaid.mjs",
-    "_results_ingest.py", "build_center_a3.py", "check_center_links.py",
-    "curate_proof.py", "next_feature.py", "refresh_center.sh",
-    "verify_center_chrome.mjs",
-}
 
 
 def _budget(repo: Path, cap: int = 800) -> list[dict]:
@@ -325,8 +313,6 @@ def _budget(repo: Path, cap: int = 800) -> list[dict]:
             continue
         rel = str(path.relative_to(repo))
         if ".git/" in rel or any(s.strip("/") in rel for s in _BUDGET_SKIP):
-            continue
-        if rel.startswith("docs/center/generators/") and path.name in _VENDORED:
             continue
         if path.name.endswith(".min.js"):
             continue

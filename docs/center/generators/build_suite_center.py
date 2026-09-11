@@ -779,6 +779,15 @@ def _hook_detail(h: dict, p: dict) -> str:
 # ------------------------------------------------------------------ testing
 
 
+def _facts_stamp(facts: dict) -> str:
+    """The recorded run's OWN stamp (review 2026-09-11): a stale recorded run must read as stale
+    beside a sidebar that stamps the BUILD's head."""
+    if not facts.get("generated"):
+        return "no recorded run"
+    return (f'recorded {facts.get("generated")} at HEAD {facts.get("head", "?")}'
+            + (" over a dirty tree" if facts.get("dirty") else ""))
+
+
 def render_testing(cfg: dict, batteries: list[dict], facts: dict,
                    prov: str) -> tuple[str, str]:
     if not batteries:
@@ -787,15 +796,16 @@ def render_testing(cfg: dict, batteries: list[dict], facts: dict,
 
     recorded = {b["name"]: b for b in facts.get("batteries", [])}
     uncovered = facts.get("uncovered", [])
-    total_asserts = sum(r.get("assertions", 0) for r in recorded.values())
+    total_asserts = sum(recorded.get(b["name"], {}).get("assertions", 0) for b in batteries)   # on-disk batteries only (review 2026-09-11)
     red = [n for n, r in recorded.items() if r.get("status") == "RED"]
     in_g3 = [b for b in batteries if b["in_g3"]]
+    orphans = sorted(n for n in recorded if n not in {b["name"] for b in batteries})   # a record with no battery behind it
 
     kpis = '<div class="kpis">' + "".join([
         R.kpi("Batteries", str(len(batteries)),
               f"{len(in_g3)} in the doctor's G3 sweep"),
         R.kpi("Assertions", str(total_asserts) if total_asserts else "—",
-              "last recorded run"),
+              _facts_stamp(facts)),
         R.kpi("Red", str(len(red)) if recorded else "—",
               ", ".join(red) if red else "all green", alert=bool(red)),
         R.kpi("Gates with no battery", str(len(uncovered)) if uncovered else "—",
@@ -810,9 +820,9 @@ def render_testing(cfg: dict, batteries: list[dict], facts: dict,
         schip = {"GREEN": "ok", "RED": "bad",
                  "EXCLUDED": "mut", "UNRUNNABLE": "warn"}.get(status, "mut")
         fire, silent = r.get("proves_fire"), r.get("proves_silent")
-        both = (f'<span class="chip {"ok" if fire and silent else "warn"}">'
-                f'{"fire+silent" if fire and silent else "partial"}</span>'
-                if r else "")
+        _fs = (("ok", "fire+silent") if (fire and silent)
+               else (("warn", "partial") if (fire or silent) else ("mut", "not recorded")))   # three-state (review 2026-09-11)
+        both = f'<span class="chip {_fs[0]}">{_fs[1]}</span>' if r else ""
         cells = [
             f'<b>{E(b["name"])}</b> {both}',
             str(r.get("assertions", "—")),
@@ -861,12 +871,16 @@ def render_testing(cfg: dict, batteries: list[dict], facts: dict,
         body.append(named_gap("the uncovered-gate sweep",
                               "data/facts.json (`uncovered` not recorded)"))
 
+    if orphans:
+        body.append(named_gap("facts.json records with no battery on disk",
+                              ", ".join(orphans) + " — re-run write_facts.py"))
     body.append(f'<p class="sub" style="margin-top:16px">Battery paths and G3 '
                 f"inclusion are <b>derived</b> on every build (the exclusion list is "
                 f"read out of <code>scripts/suite-doctor.sh</code>, never restated). "
                 f"Assertion counts and pass/fail are a <b>recorded run</b> from "
-                f"<code>{E(prov)}</code> — running eight batteries per page build "
-                f"would make the center slow and non-deterministic.</p>")
+                f"<code>{E(prov)}</code> ({E(_facts_stamp(facts))}) — running every battery per page build "
+                f"would make the center slow and non-deterministic; "
+                f"<code>docs/center/generators/write_facts.py</code> re-records it.</p>")
     body.append(FILTER_SCRIPT)
     return kpis, "".join(body)
 
@@ -1248,9 +1262,9 @@ def render_functions(cfg: dict, fns: list[dict]) -> tuple[str, str]:
     body.append(R.sechead(
         str(len(fns)), "Every function, by area", "#1f3a6b", IC["code"],
         sub="Derived by `ast` for python and by line pattern for shell and mjs. "
-            "The vendored fork under docs/center/generators/ is skipped where it "
-            "duplicates templates/center/generators/ — counting both would double "
-            "the standard center and read as new surface.",
+            "The A3 modules are counted once, under templates/center/generators/ — "
+            "docs/center/generators/ holds only the suite centre's own modules "
+            "(the vendored fork that lived there was deleted 2026-09-10).",
         id_="sec-all", sec_id="functions-all"))
     for area, n in by_area.most_common():
         rows = [[f'<code>{E(f["name"])}</code>',
@@ -1334,7 +1348,7 @@ def render_index(cfg: dict, rules: list[dict], hooks: list[dict],
     bc = D.bucket_counts(rules, cfg)
     payable = sum(bc.get(b["key"], 0) for b in cfg["buckets"] if b["payable"])
     recorded = {b["name"]: b for b in facts.get("batteries", [])}
-    total_asserts = sum(r.get("assertions", 0) for r in recorded.values())
+    total_asserts = sum(recorded.get(b["name"], {}).get("assertions", 0) for b in batteries)   # on-disk batteries only (review 2026-09-11)
     probed = {h["name"]: h for h in facts.get("hooks", [])}
 
     kpis = '<div class="kpis">' + "".join([
@@ -1345,7 +1359,8 @@ def render_index(cfg: dict, rules: list[dict], hooks: list[dict],
         R.kpi("Payable", str(payable) if rules else "—",
               "hardenable + broken claims", alert=bool(rules) and payable > 0),
         R.kpi("Assertions", str(total_asserts) if total_asserts else "—",
-              f"across {len(batteries)} batteries"),
+              f"across {sum(1 for b in batteries if recorded.get(b['name'], {}).get('status') in ('GREEN', 'RED'))} "
+              f"batteries run · {_facts_stamp(facts)}"),
     ]) + "</div>"
 
     body = []
@@ -1366,8 +1381,10 @@ def render_index(cfg: dict, rules: list[dict], hooks: list[dict],
     undoc = [f for f in fns if f["lang"] == "python" and not f["private"] and not f["doc"]]
     owed = [c for c in cards if not c["done"] and c["state"] == "owed_to_you"]
     budget = [c for c in cards if c["track"] == "budget"]
-    cant_block = [h for h in hooks
-                  if probed.get(h["name"], {}).get("verdict") != "BLOCKS"]
+    cant_block = [h for h in hooks                       # only a PROBED hook can be found unable to block (review 2026-09-11)
+                  if h["name"] in probed and probed[h["name"]].get("verdict") != "BLOCKS"]
+    unprobed_n = sum(1 for h in hooks if h["name"] not in probed)
+    blocks_n = sum(1 for h in hooks if probed.get(h["name"], {}).get("verdict") == "BLOCKS")
     red = [n for n, r in recorded.items() if r.get("status") == "RED"]
 
     # (count, what it is, why it matters, href, severity-class)
@@ -1398,8 +1415,9 @@ def render_index(cfg: dict, rules: list[dict], hooks: list[dict],
          "Report-never-gate — the number is stated, nothing is blocked.",
          "board.html", "warn"),
         (len(cant_block), "Hooks that cannot block",
-         "Of six shipped hooks, only one returns a non-zero exit the harness "
-         "acts on — and it fires after the write has landed.",
+         f"Of {len(hooks)} shipped hooks, {len(probed)} were probed and {blocks_n} "
+         f"return{'s' if blocks_n == 1 else ''} a non-zero exit the harness acts on"
+         + (f"; {unprobed_n} unprobed are not counted here." if unprobed_n else "."),
          "hooks.html", "warn"),
         (len(drifted), "Drifted string contracts",
          "Declared byte-identical and measured otherwise. The skip code has "

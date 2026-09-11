@@ -220,7 +220,7 @@ Owned by `/gabe-cc-init` (ruling R7 — its own skill, its own spec). The
 machinery is SUITE TEMPLATES: `templates/center/generators/` (builder + data
 and ingest layers + gate + refresh + `curate_proof.py` + `next_feature.py`),
 `templates/center/shell/` (the vendored A3-Tabbed skeletons) and
-`templates/center/verify_center_chrome.mjs`. Adoption copies them into the
+`templates/center/generators/verify_center_chrome.mjs`. Adoption copies them into the
 project (`scripts/` + `docs/site/center/`), copies
 `center.config.template.json` to `docs/site/center/center.config.json` and
 fills it (`center.config.example.json` is the worked example); `rank`/
