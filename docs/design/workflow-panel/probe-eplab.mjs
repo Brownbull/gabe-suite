@@ -139,14 +139,31 @@ ok(scroll.w === 'thin', 'scrollbars are the station\'s narrow themed ones', JSON
   ok(c.stacked >= 1, 'a long value stacks onto its own full-width line', String(c.stacked));
   ok(c.w <= 364, 'the card keeps a readable width', String(c.w)); }
 { const rc = await p.$('#headstrip .hel[data-el="risk"]'); await rc.hover(); await p.waitForTimeout(160);
-  const c = await p.$eval('#hover', e => ({ txt: e.innerText, rules: [...e.querySelectorAll('.cptbl .ctr.first')].map(x => x.textContent.trim()),
-    fire: [...e.querySelectorAll('.cptbl .ctr.mark-fire.first')].map(x => x.textContent.trim()),
-    quiet: [...e.querySelectorAll('.cptbl .ctr.mark-quiet.first')].map(x => x.textContent.trim()) }));
-  ok(c.rules.length === 3, 'the risk card shows all THREE rules, not just the one that fired', c.rules.join(' | '));
-  ok(c.fire.length === 1 && /conflict/.test(c.fire[0]), 'the firing rule is marked', c.fire.join(','));
-  ok(c.quiet.length === 2, 'the two quiet rules are shown and dimmed', c.quiet.join(' | '));
-  ok(/≥ 15/.test(c.txt) && /≥ 50 lines/.test(c.txt) && /no case names it/.test(c.txt), 'each rule states its threshold', c.txt.slice(0, 120));
-  ok(/rank 11 of 81/.test(c.txt) && /median 4/.test(c.txt), 'the card places the number against the feed', c.txt.slice(0, 200)); }
+  const c = await p.$eval('#hover', e => ({ txt: e.innerText,
+    title: (e.querySelector('.cphd b') || {}).textContent, value: (e.querySelector('.cphv') || {}).textContent,
+    cond: !!e.querySelector('.cpcond'),
+    factors: [...e.querySelectorAll('.fct')].map(x => x.className.replace('fct ', '')),
+    names: [...e.querySelectorAll('.fct .fctn')].map(x => x.textContent.trim()),
+    rules: [...e.querySelectorAll('.fct .fctrule')].map(x => x.textContent.trim()),
+    notes: e.querySelectorAll('.fct .fctnote').length,
+    quietInk: [...e.querySelectorAll('.fct.quiet .fctn')].map(x => getComputedStyle(x).color),
+    plainLast: (() => { const end = e.querySelector('.cpend'); if (!end) return false;
+      const kids = [...e.children]; return kids.indexOf(end) >= kids.length - 2 && !!end.querySelector('.cpplain'); })() }));
+  // 1 · the condition is the title, its diagnosis the value
+  ok(/conflict/.test(c.title) && /large surface/i.test(c.value || ''), 'the card leads with the CONDITION and its diagnosis', c.title + ' · ' + c.value);
+  ok(c.cond, 'and says in one line what the condition IS');
+  // 2 · the factors are a LIST, all three, the firing one lit and the quiet ones still legible
+  ok(c.factors.length === 3, 'all THREE rules are listed, not just the one that fired', c.factors.join(' | '));
+  ok(c.factors.filter(f => f === 'fire').length === 1 && c.factors.filter(f => f === 'quiet').length === 2, 'one fires, two stay quiet', c.factors.join(' | '));
+  ok(c.rules.length === 3 && /≥ 15/.test(c.rules[0]) && /≥ 50/.test(c.rules[1]) && /no case/.test(c.rules[2]), 'each factor states its own threshold', c.rules.join(' | '));
+  ok(c.notes === 3, 'each factor carries a quiet NOTE on how it is calculated', String(c.notes));
+  ok(!e0(c.quietInk), 'a rule that did not fire is still legible — not faded into the border colour', c.quietInk.join(' '));
+  // 3 · the feed-wide comparison is GONE from this card (it is not about this door)
+  ok(!/rank \d+ of \d+/.test(c.txt) && !/BOOT lifespan/.test(c.txt) && !/median \d/.test(c.txt), 'the feed-wide comparison has left this card — it belongs one level up', c.txt.slice(0, 90));
+  ok(/one level up/.test(c.txt), 'and the card says where it went');
+  // 4 · the plain line is LAST, after a separator
+  ok(c.plainLast, 'the plain line comes LAST, after a separator'); }
+function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m && +m[0] < 90 && +m[1] < 100 && +m[2] < 120; }); }
 // ── THE PLAIN LINE: every bar card opens with one sentence in the legend reference's own voice ──
 { const hels = await p.$$('#headstrip .hel'); let withPlain = 0, texts = [];
   for (const h of hels) { await h.hover(); await p.waitForTimeout(70);

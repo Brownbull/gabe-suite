@@ -455,18 +455,18 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
    a quiet note → a separator → the plain line, last. ══ */
 #hover .cphd .cphv{ margin-left:auto; font:700 12px/1 var(--font-mono); text-transform:uppercase; letter-spacing:.04em; opacity:.9; }
 #hover .cpcond{ font:500 12px/1.45 var(--font-ui); color:var(--muted); margin:4px 0 2px; }
-#hover .cpfl{ margin:9px 0 4px; border-top:1px solid var(--line); padding-top:8px; }
-#hover .cpflh{ font:700 12px/1.4 var(--font-mono); text-transform:uppercase; letter-spacing:.05em; color:var(--line); margin-bottom:5px; }
-#hover .cpfr{ padding:4px 0 5px; border-left:2px solid transparent; padding-left:8px; margin-bottom:3px; }
-#hover .cpfr .cpfrt{ display:flex; align-items:baseline; gap:9px; }
-#hover .cpfr .cpfn{ font:700 12.5px/1.35 var(--font-mono); }
-#hover .cpfr .cpfv{ margin-left:auto; font:600 12px/1.35 var(--font-mono); text-align:right; }
-#hover .cpfr .cpfrule{ font:500 12px/1.4 var(--font-ui); color:var(--muted); margin-top:2px; }
-#hover .cpfr .cpfnote{ font:400 12px/1.45 var(--font-ui); color:var(--edge); margin-top:3px; }
-#hover .cpfr.fire{ border-left-color:var(--red); background:color-mix(in srgb, var(--red) 7%, transparent); border-radius:0 6px 6px 0; }
-#hover .cpfr.fire .cpfn, #hover .cpfr.fire .cpfv{ color:var(--red); }
-#hover .cpfr.quiet .cpfn{ color:var(--ink); }           /* a rule that did NOT fire stays readable */
-#hover .cpfr.quiet .cpfv{ color:var(--muted); }
+#hover .fctl{ margin:9px 0 4px; border-top:1px solid var(--line); padding-top:8px; }
+#hover .fctlh{ font:700 12px/1.4 var(--font-mono); text-transform:uppercase; letter-spacing:.05em; color:var(--line); margin-bottom:5px; }
+#hover .fct{ padding:4px 0 5px; border-left:2px solid transparent; padding-left:8px; margin-bottom:3px; }
+#hover .fct .fcthd{ display:flex; align-items:baseline; gap:9px; }
+#hover .fct .fctn{ font:700 12.5px/1.35 var(--font-mono); }
+#hover .fct .fctv{ margin-left:auto; font:600 12px/1.35 var(--font-mono); text-align:right; }
+#hover .fct .fctrule{ font:500 12px/1.4 var(--font-ui); color:var(--muted); margin-top:2px; }
+#hover .fct .fctnote{ font:400 12px/1.45 var(--font-ui); color:var(--edge); margin-top:3px; }
+#hover .fct.fire{ border-left-color:var(--red); background:color-mix(in srgb, var(--red) 7%, transparent); border-radius:0 6px 6px 0; }
+#hover .fct.fire .fctn, #hover .fct.fire .fctv{ color:var(--red); }
+#hover .fct.quiet .fctn{ color:var(--ink); }           /* a rule that did NOT fire stays readable */
+#hover .fct.quiet .fctv{ color:var(--muted); }
 #hover .cpnote{ font:400 12px/1.45 var(--font-ui); color:var(--edge); margin-top:8px; }
 #hover .cpend{ margin-top:10px; padding-top:8px; border-top:1px solid var(--line); }
 #hover .cpend .cpplain{ font:500 12.5px/1.5 var(--font-ui); color:var(--ink); }

@@ -172,13 +172,13 @@
      unreadable, so every factor gets its own block: name · its value · the threshold · an optional
      NOTE in the small quiet type when the calculation needs saying. */
   function cpfactors(fs, label){ if (!fs || !fs.length) return "";
-    var h = '<div class="cpfl"><div class="cpflh">' + (label || "what decides it") + '</div>';
+    var h = '<div class="fctl"><div class="fctlh">' + (label || "what decides it") + '</div>';
     fs.forEach(function(f){
-      h += '<div class="cpfr ' + (f.state || "info") + '">'
-        + '<div class="cpfrt"><span class="cpfn">' + (f.state === "fire" ? "▲ " : f.state === "quiet" ? "· " : "") + f.name + '</span>'
-        + (f.value != null ? '<span class="cpfv">' + f.value + '</span>' : "") + '</div>'
-        + (f.rule ? '<div class="cpfrule">' + f.rule + '</div>' : "")
-        + (f.note ? '<div class="cpfnote">' + f.note + '</div>' : "") + '</div>'; });
+      h += '<div class="fct ' + (f.state || "info") + '">'
+        + '<div class="fcthd"><span class="fctn">' + (f.state === "fire" ? "▲ " : f.state === "quiet" ? "· " : "") + f.name + '</span>'
+        + (f.value != null ? '<span class="fctv">' + f.value + '</span>' : "") + '</div>'
+        + (f.rule ? '<div class="fctrule">' + f.rule + '</div>' : "")
+        + (f.note ? '<div class="fctnote">' + f.note + '</div>' : "") + '</div>'; });
     return h + "</div>"; }
   /* ══ THE PLAIN LINE (operator 2026-09-11) ══════════════════════════════════════════════════
      Every card leads with one sentence in the legend reference's own voice — "what it is, in your
