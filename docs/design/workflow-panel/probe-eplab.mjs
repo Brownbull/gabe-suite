@@ -157,13 +157,13 @@ ok(scroll.w === 'thin', 'scrollbars are the station\'s narrow themed ones', JSON
       const kids = [...e.children]; return kids.indexOf(end) >= kids.length - 2 && !!end.querySelector('.cpplain'); })() }));
   // 1 · the condition is the title, its diagnosis the value
   ok(/conflict/.test(c.title) && /large surface/i.test(c.value || ''), 'the card leads with the CONDITION and its diagnosis', c.title + ' · ' + c.value);
-  ok(c.cond, 'and says in one line what the condition IS');
+  ok(!c.cond, 'no definition under the title — it is said ONCE, at the end (operator 2026-09-11)');
   // 2 · the factors are a LIST, all three, the firing one lit and the quiet ones still legible
   ok(c.factors.length === 3, 'all THREE rules are listed, not just the one that fired', c.factors.join(' | '));
   ok(await p.$eval('#hover .fct.fire .fdot', e => { const c = getComputedStyle(e); return c.backgroundColor !== 'rgba(0, 0, 0, 0)' && c.borderRadius.startsWith('50'); }), 'the firing factor is a FILLED round dot, not a triangle');
   ok(await p.$eval('#hover .fct.quiet .fdot', e => getComputedStyle(e).backgroundColor === 'rgba(0, 0, 0, 0)'), 'a quiet factor is a HOLLOW dot');
   ok(c.factors.filter(f => f === 'fire').length === 1 && c.factors.filter(f => f === 'quiet').length === 2, 'one fires, two stay quiet', c.factors.join(' | '));
-  ok(c.rules.length === 3 && /≥ 15/.test(c.rules[0]) && /≥ 50/.test(c.rules[1]) && /no case/.test(c.rules[2]), 'each factor states its own threshold', c.rules.join(' | '));
+  ok(c.rules.length === 3 && /≥ 15/.test(c.rules[0]) && /≥ 50/.test(c.rules[1]) && /no test/.test(c.rules[2]), 'each factor states its own threshold', c.rules.join(' | '));
   ok(c.notes === 3, 'each factor carries a quiet NOTE on how it is calculated', String(c.notes));
   ok(!e0(c.quietInk), 'a rule that did not fire is still legible — not faded into the border colour', c.quietInk.join(' '));
   // 3 · the feed-wide comparison is GONE from this card (it is not about this door)
@@ -184,6 +184,19 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   ok(texts.every(t => t.length <= 180), 'each plain line stays one sentence', String(Math.max(...texts.map(t => t.length)))); }
 { const n = await p.evaluate(() => Object.keys(window.STATION.LRDEF || {}).length);
   ok(n >= 80, 'the legend\'s definitions are LIFTED, not retyped', String(n)); }
+// a card states CERTAINTIES — no open design question anywhere on the bar (operator 2026-09-11)
+{ let q = []; for (const h of await p.$$('#headstrip .hel')) { await h.hover(); await p.waitForTimeout(60);
+    const t = await p.$eval('#hover', e => e.innerText); if (/\?/.test(t)) q.push(t.split('\n').find(l => /\?/.test(l))); }
+  ok(q.length === 0, 'no card asks the reader a question', q.join(' | ').slice(0, 140)); }
+// the definition is said ONCE per card — the plain line must not repeat a line already on the card
+{ const dup = []; for (const h of await p.$$('#headstrip .hel')) { await h.hover(); await p.waitForTimeout(60);
+    const d = await p.$eval('#hover', e => { const pl = e.querySelector('.cpplain'); if (!pl) return null;
+      const rest = [...e.children].filter(x => !x.classList.contains('cpend')).map(x => x.innerText).join(' ');
+      const words = pl.textContent.toLowerCase().split(/[^a-z]+/).filter(w => w.length > 5);
+      const hit = words.filter(w => rest.toLowerCase().includes(w));
+      return hit.length > words.length * 0.6 ? pl.textContent : null; });
+    if (d) dup.push(d); }
+  ok(dup.length === 0, 'the definition appears once, at the end — never repeated above it', dup.join(' | ').slice(0, 140)); }
 // the rail: three tabs, one section at a time, and every control an icon with a hover card
 // AT BOOT — before any click — exactly one rail section is visible, and it is the controls
 // THE OPERATOR'S OWN BAR (pasted back from the copy button 2026-09-11) is the default — pinned here
@@ -284,10 +297,10 @@ for (const z of ['11', '24', '13']) { await p.click(`.elned .ib[data-size="${z}"
 // a big CIRCLE must not move the bar's margins: it bleeds over the row instead of growing it
 { const before = await p.$eval('#headstrip', e => e.getBoundingClientRect().height);
   await p.evaluate(() => { const st = window.elStyle('kind'); st.shape = 'circle'; st.size = 24; st.fit = 'bleed'; window.drawHead(); });
-  await p.waitForTimeout(120);
+  await p.waitForTimeout(160);
   const after = await p.$eval('#headstrip', e => e.getBoundingClientRect().height);
   const disc = await p.$eval('#headstrip .hel[data-el="kind"]', e => { const r = e.getBoundingClientRect(); const c = getComputedStyle(e); return { h: Math.round(r.height), w: Math.round(r.width), m: c.marginTop, br: c.borderRadius }; });
-  ok(Math.abs(after - before) < 1.5, 'a 38px disc does NOT change the bar height — it bleeds (operator 2026-09-11)', before + ' → ' + after);
+  ok(Math.abs(after - before) < 1.5, 'turning a 38px disc ON does not move the bar by a pixel — it bleeds (operator 2026-09-11)', before + ' → ' + after);
   ok(disc.h === disc.w && disc.h >= 36, 'the disc is round and sized by its own glyph', JSON.stringify(disc));
   ok(parseFloat(disc.m) < 0, 'the bleed is negative block margin, so the row keeps its natural height', disc.m);
   await p.evaluate(() => { const st = window.elStyle('kind'); st.fit = 'grow'; window.drawHead(); }); await p.waitForTimeout(120);

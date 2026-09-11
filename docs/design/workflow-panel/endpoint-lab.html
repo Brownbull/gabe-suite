@@ -190,7 +190,7 @@
     risk: "a size warning, not a fault — it says changing this will drag a lot of other code with it",
     source: "the file and line where this door is written — where you go to change it",
     cluster: "the group of doors inside the entity that share a URL root",
-    above: "one step out — the cluster, then the entity, then everything",
+    above: "one step out of this door — click to stand at the level above it",
     method: "the verb — what kind of thing the caller is asking for",
     name: "the URL the frontend calls — the door's address",
     commit: "the moment the writes become permanent — one transaction, all or nothing",
@@ -275,39 +275,52 @@
     arr.splice(index, 0, key); drawHead(); drawBarCfg(); return HEADCFG[side].slice(); };
   var HEADEL = [
     { key: "kind", word: "kind", note: "the endpoint glyph — the icon IS the kind, so the words 'API ENDPOINT' are redundant beside it",
-      build: function(){ return chip({ key: "kind", icon: "endpoint", col: S.KINDCOL.endpoint, cls: "kindchip", label: "kind", value: HEADCFG.mode === "label" ? (S.KINDS.endpoint.type || "API endpoint") : null,
-        card: hcard({ title: "API endpoint", icon: "endpoint", color: S.KINDCOL.endpoint, plainKey: "endpoint", sub: "the kind of element",
-          rows: [["layer", I.layer], ["in this feed", F.feedwide.endpoints + " endpoints"]], body: S.KINDS.endpoint.doc || "" }) }); } },
+      build: function(){ return chip({ key: "kind", icon: "endpoint", col: S.KINDCOL.endpoint, cls: "kindchip", label: "kind",
+        value: HEADCFG.mode === "label" ? (S.KINDS.endpoint.type || "API endpoint") : null,
+        card: hcard({ title: "API endpoint", value: I.method, icon: "endpoint", color: S.KINDCOL.endpoint,
+          rows: [["layer", I.layer], ["drawn as", (S.KINDS.endpoint.form || "a node") + " in " + S.KINDCOL.endpoint], ["in this feed", F.feedwide.endpoints + " endpoints"]],
+          plainKey: "endpoint" }) }); } },
     { key: "kindword", word: "kind in words", note: "the kind spelled out — OFF by default: the icon already says it (the operator's icon rule)",
       build: function(){ return chip({ key: "kindword", cls: "kindword", value: (S.KINDS.endpoint.type || "API endpoint").toUpperCase(), col: S.KINDCOL.endpoint,
-        card: hcard({ title: "the kind, spelled out", icon: "endpoint", color: S.KINDCOL.endpoint, body: "kept only as a switch: with the glyph beside it this chip is redundant, which is why it is off." }) }); } },
+        card: hcard({ title: "the kind, in words", value: "off by default", icon: "endpoint", color: S.KINDCOL.endpoint,
+          rows: [["why off", "the glyph beside it already says this"]],
+          plainKey: "endpoint" }) }); } },
     { key: "method", word: "method", note: "the HTTP verb, painted by the station's own badge painter",
       build: function(){ var mz = window.elStyle("method").size + 3, cv = document.createElement("canvas"); cv.width = cv.height = 64;
         var cx = cv.getContext("2d"); cx.scale(64 / 128, 64 / 128); S.badgeGlyph(cx, "method", I.method); cv.style.opacity = .9;
         cv.style.width = cv.style.height = mz + "px";
         var w = el("span", { class: "mbadge", id: "mbadge" }); w.append(cv);
         return chip({ key: "method", iconNode: w, cls: "methodchip", label: "method", value: I.method,
-          card: hcard({ title: I.method, icon: "endpoint", color: S.METHOD[I.method], plainKey: "method", sub: "HTTP method · the station's badge",
-            rows: [["means", (S.BADGE_DESC.method || {})[I.method] || "—"], ["colour", S.METHOD[I.method]]],
-            body: "the glyph is the station's, painted by its own painter — the graph and the bar cannot drift apart." }) }); } },
+          card: hcard({ title: I.method, value: "HTTP verb", icon: "endpoint", color: S.METHOD[I.method],
+            rows: [["means", (S.BADGE_DESC.method || {})[I.method] || "—"],
+                   ["its colour", S.METHOD[I.method] + " — the same in the graph"],
+                   ["painted by", "the station's own badge painter"]],
+            plainKey: "method" }) }); } },
     { key: "name", word: "name", note: "the door's path — the one thing that is always words",
       build: function(){ var st = window.elStyle("name");
-        var c = el("span", { class: "hel hname sh-" + st.shape }); c.dataset.el = "name";
+        var c = el("span", { class: "hel hname sh-" + st.shape + " fit-" + st.fit }); c.dataset.el = "name";
+        c.style.setProperty("--d", (st.size + 14) + "px");
         if (wantText("name")) c.append(el("span", { class: "pname" }, I.path));
         else c.insertAdjacentHTML("beforeend", S.icon("doc", st.size, "var(--muted)"));
-        hoverBind(c, hcard({ title: I.label, icon: "endpoint", color: S.KINDCOL.endpoint, plainKey: "name", sub: "the door",
-          rows: [["method", I.method], ["path", I.path], ["handler", (F.functions.handler.name || "—")], ["id", I.id]], station: I.id })); return c; } },
+        hoverBind(c, hcard({ title: I.path, value: I.method, icon: "endpoint", color: S.KINDCOL.endpoint,
+          rows: [["handler", F.functions.handler.name || "—"],
+                 ["fetched by", F.widening.fetched_by.length + " frontend piece(s)"],
+                 ["id", I.id]],
+          plainKey: "name", station: I.id })); return c; } },
     { key: "entity", word: "entity", note: "which entity claims the door — the dot is the entity colour used everywhere in the graph",
       build: function(){ return chip({ key: "entity", dot: ec, label: "entity", value: I.entity, cls: "entchip",
-        card: hcard({ title: I.entity, icon: "entity", color: ec, plainKey: "entity", sub: "the entity that claims this door",
-          rows: [["endpoints", String((F.feedwide.entity_counts || {}).endpoints || "—")], ["models", String((F.feedwide.entity_counts || {}).models || "—")],
-                 ["schemas", String((F.feedwide.entity_counts || {}).schemas || "—")], ["files", String((F.feedwide.entity_counts || {}).files || "—")], ["lines", String((F.feedwide.entity_counts || {}).lines || "—")]],
-          body: "the CLAIM — the join key every tool uses. The evidence row on the DATA panel says whether the witnesses agree." }) }); } },
+        card: hcard({ title: I.entity, value: "entity", icon: "entity", color: ec,
+          rows: [["endpoints", String((F.feedwide.entity_counts || {}).endpoints || "—")],
+                 ["models", String((F.feedwide.entity_counts || {}).models || "—")],
+                 ["schemas", String((F.feedwide.entity_counts || {}).schemas || "—")],
+                 ["files", String((F.feedwide.entity_counts || {}).files || "—")],
+                 ["lines", String((F.feedwide.entity_counts || {}).lines || "—")]],
+          plainKey: "entity" }) }); } },
     { key: "cluster", word: "cluster", note: "the sub-group inside the entity — it was MISSING from the bar (operator 2026-09-11)",
       build: function(){ return chip({ key: "cluster", icon: "layers", label: "cluster", value: I.cluster, cls: "cluchip",
-        card: hcard({ title: I.cluster, icon: "layers", plainKey: "cluster", sub: "the cluster inside " + I.entity,
-          rows: [["from", "the URL's first segment"], ["entity", I.entity]],
-          body: I.cluster_note }) }); } },
+        card: hcard({ title: I.cluster, value: "cluster", icon: "layers",
+          rows: [["read from", "the URL's first segment"], ["inside", I.entity]],
+          plainKey: "cluster" }) }); } },
     { key: "status", word: "status", note: "the success code the route decorator declares (status_code=) — a promise the handler makes, not a measurement",
       build: function(){
         /* HTTP semantics (RFC 9110) — reference, not feed data: the meanings a reader should not have to look up */
@@ -317,35 +330,33 @@
           "403": "identity known, not allowed", "404": "no such row, or not yours to see",
           "409": "the state forbids it right now — already done, or a race", "422": "the shape parsed, a field is invalid",
           "429": "the rate limit refused it", "500": "the handler broke" };
-        var X = (F.context || {}).status || {}, peers = X.same_method || {}, mine = String(I.status);
-        var creates = F.data.writes.length > 0, ask = creates && mine === "200" && !!peers["201"];
+        var mine = String(I.status);
         var codes = Object.keys(F.tests.by_status).filter(function(c){ return /^\d/.test(c); }).sort();
         if (codes.indexOf(mine) < 0) codes.unshift(mine);
         var factors = codes.map(function(c){ var n = (F.tests.by_status[c] || []).length;
-          return { state: c === mine ? "ok" : "quiet", name: c, value: n ? n + " case" + (n === 1 ? "" : "s") : "no case",
+          return { state: c === mine ? "ok" : "quiet", name: c, value: n ? n + " test" + (n === 1 ? "" : "s") : "no test",
                    rule: (c === mine ? "SUCCESS — " : "") + (HTTPM[c] || "—"),
                    note: c === mine ? "the code this door DECLARES on its decorator; the others are the ways it refuses." : null }; });
         return chip({ key: "status", icon: "info", label: "declares", value: I.status + (I.status_name ? " " + I.status_name : ""), col: S.OPC.read, cls: "statchip",
           card: hcard({ title: "declares", value: I.status, icon: "info", color: S.OPC.read,
-            condition: "the code the door promises when the work succeeds — read from the decorator, never observed",
-            factors: factors, factorLabel: "every code its cases assert · ● is the one it declares",
-            rows: [["written as", I.status_name ? "a constant (" + I.status_name + ")" : "a bare number"],
-                   ["untyped cases", (F.tests.by_status["no code in name"] || []).length + " of " + F.tests.cases.length + " name no code"]],
-            note: ask ? "Worth asking: this door writes " + F.data.writes.length + " tables and declares " + mine + ", while " + peers["201"] + " of its " + I.method + " peers declare 201 — a create, or an update?" : null,
+            factors: factors, factorLabel: "every code its TEST CASES assert · ● is the one it declares",
+            rows: [["a test is", "one case in the project's suite whose name carries this door — " + F.tests.cases.length + " do, all passing"],
+                   ["written as", I.status_name ? "a constant (" + I.status_name + ")" : "a bare number"],
+                   ["untyped tests", (F.tests.by_status["no code in name"] || []).length + " of " + F.tests.cases.length + " name no code"]],
             plainKey: "status" }) }); } },
     { key: "source", word: "source", note: "the file and line the handler is defined at",
       build: function(){ return chip({ key: "source", icon: "file", label: "source", value: I.file + ":" + I.flines, cls: "srcchip",
-        card: hcard({ title: I.file, icon: "file", plainKey: "source", sub: "line " + I.flines,
-          rows: [["handler", F.functions.handler.name || "—"], ["body", (I.sig ? (I.sig.async ? "async · " : "") + I.sig.lines + " lines" : "—")], ["returns", (I.sig || {}).returns || "—"], ["exported", I.exported ? "yes" : "no"]] }) }); } },
+        card: hcard({ title: I.file, value: "line " + I.flines, icon: "file",
+          rows: [["handler", F.functions.handler.name || "—"],
+                 ["body", (I.sig ? (I.sig.async ? "async · " : "") + I.sig.lines + " lines" : "—")],
+                 ["returns", (I.sig || {}).returns || "—"]],
+          plainKey: "source" }) }); } },
     { key: "risk", word: "risk", note: "the station's three size flags — only the ones that FIRE are drawn, and the card shows all three so you can see what did not",
       build: function(){ var w = el("span", { class: "hgrp" });
         var R = (F.context || {}).risk || {};
-        /* ONE card per flag, all three rules listed, the firing one lit. Feed-wide comparison was
-           REMOVED from here (operator 2026-09-11): it is not about this door, so it belongs one
-           level up — on the cluster · entity · everything chips. */
         function riskCard(which){
           var title = which === "large" ? "conflict" : which === "god" ? "god-object" : "unguarded";
-          var value = which === "large" ? (I.risk.conflict || "large surface") : which === "god" ? "oversized handler" : "no case names it";
+          var value = which === "large" ? (I.risk.conflict || "large surface") : which === "god" ? "oversized handler" : "no test names it";
           var factors = [
             { state: I.risk.large ? "fire" : "quiet", name: "call mass", value: "behind " + I.risk.behind + " · fan-in " + I.risk.fanin,
               rule: "fires at behind ≥ 15 or fan-in ≥ 15",
@@ -353,15 +364,13 @@
             { state: I.risk.god ? "fire" : "quiet", name: "handler size", value: (R.handler_lines != null ? R.handler_lines + " lines" : "not measured"),
               rule: "fires at ≥ " + (R.god_lines || 50) + " lines",
               note: "the handler's own body only — the code behind it is the factor above." },
-            { state: I.risk.untested ? "fire" : "quiet", name: "coverage", value: (R.cases || 0) + " case" + ((R.cases || 0) === 1 ? "" : "s"),
-              rule: "fires when no case names it",
-              note: "a case counts when its name carries this door; the web corpus reaches it by file and is counted separately." } ];
+            { state: I.risk.untested ? "fire" : "quiet", name: "coverage", value: (R.cases || 0) + " test" + ((R.cases || 0) === 1 ? "" : "s"),
+              rule: "fires when no test names it",
+              note: "a test counts when its name carries this door; the web corpus reaches it by file and is counted separately." } ];
           return hcard({ title: title, value: value, icon: "burst", color: "var(--red)",
-            condition: "a SIZE signal — not a fault, and not a measure of quality",
             factors: factors, factorLabel: "the three rules · ● is the one that fired",
             rows: [["impact", "editing this door touches " + I.risk.behind + " functions"]],
-            plainKey: "risk",
-            clarify: "Walk the chain in FUNCTIONS before editing it; read TESTS before trusting it. The three rules are independent — size, handler length and coverage each answer a different question." }); }
+            plainKey: "risk" }); }
         if (I.risk.large) w.append(chip({ key: "risk", icon: "burst", cls: "flagchip warn", label: "risk", value: I.risk.conflict || "conflict", card: riskCard("large") }));
         if (I.risk.god) w.append(chip({ key: "risk", icon: "alert", cls: "flagchip god", label: "risk", value: "god-object", card: riskCard("god") }));
         if (I.risk.untested) w.append(chip({ key: "risk", icon: "alert", cls: "flagchip warn", label: "risk", value: "unguarded", card: riskCard("untested") }));
@@ -370,17 +379,12 @@
       build: function(){ var w = el("span", { class: "hgrp habove" });
         I.above.forEach(function(a){ var isEnt = a.kind === "entity";
           w.append(chip({ key: "above", icon: a.kind === "cluster" ? "layers" : a.kind === "entity" ? "entity" : "globe", col: isEnt ? ec : null,
-            /* the ladder is NAVIGATION, not a value: its cluster and entity are already spelled out to the
-               left, so it stays ICONS unless the bar is in label mode (the redundancy the operator caught) */
             cls: "upchip", label: a.kind, value: HEADCFG.mode === "label" ? (a.kind === "everything" ? "everything" : a.label) : null,
             card: hcard({ title: a.kind === "everything" ? "everything" : a.label, value: "one level up",
               icon: a.kind === "cluster" ? "layers" : isEnt ? "entity" : "globe", color: isEnt ? ec : null,
-              condition: "click to leave this door and stand at the " + a.kind + " — where the comparisons against the rest of the feed live",
-              rows: [["from", "this door"], ["to", a.kind === "everything" ? "the whole universe" : a.label]],
-              plainKey: "above",
-              clarify: a.kind === "cluster" ? "this chip is also where the CLUSTER is read, now that it has no chip of its own."
-                : isEnt ? "this chip is also where the ENTITY is read, and its colour is the entity's own."
-                : "every entity at once." }) })); });
+              rows: [["from", "this door"], ["to", a.kind === "everything" ? "the whole universe" : a.label],
+                     ["carries", a.kind === "cluster" ? "the cluster, which has no chip of its own" : isEnt ? "the entity, in its own colour" : "every entity at once"]],
+              plainKey: "above" }) })); });
         return w; } }   /* no trailing arrow: the three icons ARE the ladder (operator 2026-09-11) */
   ];
   var BYKEY = {}; HEADEL.forEach(function(e){ BYKEY[e.key] = e; });

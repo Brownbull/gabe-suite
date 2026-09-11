@@ -406,9 +406,13 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 .hel.sh-circle{ border-radius:50%; width:var(--d,30px); height:var(--d,30px); padding:0; justify-content:center; flex:none; }
 /* the bleed pulls the container down to a 20px layout footprint — under any row content — so it can
    never be the tallest thing in the bar and the margins stay exactly where they were */
-.hel.fit-bleed{ margin-block:calc((var(--d,20px) - 20px) / -2); }
+/* the bleed applies only where the container has a FIXED size of its own (a disc); every other chip
+   keeps its natural height, or the negative margin quietly shrinks the whole bar (caught 2026-09-11) */
+/* the disc keeps EXACTLY the footprint the bare glyph would have had (glyph + the chip's 3px padding),
+   so switching a container on or off never moves the bar by a pixel */
+.hel.sh-circle.fit-bleed{ margin-block:calc((var(--d,26px) - var(--gz,13px) - 8px) / -2);   /* 8 = the chip's 3px padding + 1px border, top and bottom */ }
 .hel.fit-grow{ margin-block:0; }
-.hel.sh-circle.fit-bleed{ margin-inline:2px; }
+.hel.sh-circle{ margin-inline:2px; }
 .hel.sh-circle .hval, .hel.sh-circle .hlbl{ display:none; }   /* a disc is honest only as a glyph */
 .hel.sh-cut{ border-radius:0; clip-path:polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 0 100%); }
 .hel.sh-none{ background:none; border-color:transparent; padding-left:2px; padding-right:2px; }
@@ -456,7 +460,7 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 #hover .cphd .cphv{ margin-left:auto; font:700 12px/1 var(--font-mono); text-transform:uppercase; letter-spacing:.04em; opacity:.9; }
 #hover .cpcond{ font:500 12px/1.45 var(--font-ui); color:var(--muted); margin:4px 0 2px; }
 #hover .fctl{ margin:9px 0 4px; border-top:1px solid var(--line); padding-top:8px; }
-#hover .fctlh{ font:700 12px/1.4 var(--font-mono); text-transform:uppercase; letter-spacing:.05em; color:var(--line); margin-bottom:5px; }
+#hover .fctlh{ font:700 12px/1.4 var(--font-mono); text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:5px; }
 #hover .fct{ padding:4px 0 5px; border-left:2px solid transparent; padding-left:8px; margin-bottom:3px; }
 #hover .fct .fcthd{ display:flex; align-items:baseline; gap:9px; }
 #hover .fct .fctn{ font:700 12.5px/1.35 var(--font-mono); }
