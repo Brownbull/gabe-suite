@@ -208,6 +208,16 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   await p.click('#blk-tabs .mnb'); await p.waitForTimeout(120);
   ok(await p.$eval('#blk-tabs .blkbody', e => getComputedStyle(e).display !== 'none'), 'and it opens again'); }
 // ── the PART BUTTONS block: ten dials, each one reaching the row ──
+// the DEFAULT the operator picked: the watermark glyph CLIPPED to the button, never spilling out
+{ const g = await p.evaluate(() => { const t = document.querySelector('#tabs .tab'), i = t.querySelector('.tabi');
+    const tb = t.getBoundingClientRect(), ib = i.getBoundingClientRect();
+    return { mode: window.TABCFG.iconMode, size: window.TABCFG.iconSize, overflow: getComputedStyle(t).overflow,
+             glyph: Math.round(ib.height), button: Math.round(tb.height), pos: getComputedStyle(i).position,
+             op: +getComputedStyle(i).opacity }; });
+  ok(g.mode === 'ghost' && g.size === 22, 'the button row opens with the clipped watermark', JSON.stringify({ m: g.mode, s: g.size }));
+  ok(g.overflow === 'hidden', 'the button CLIPS it — the glyph never goes beyond the border (operator 2026-09-11)', g.overflow);
+  ok(g.glyph > g.button, 'and the glyph is genuinely bigger than the button, so it reads as a watermark', g.glyph + ' in ' + g.button);
+  ok(g.pos === 'absolute' && g.op < .5, 'placed to the right, translucent', JSON.stringify({ p: g.pos, o: g.op })); }
 { const rows = await p.$$eval('#tabcfg .cfl', els => els.map(e => e.textContent));
   ok(rows.join(',') === 'colour,intensity,pattern,glyph,glyph shown,count size,count shape,button shape,row,width',
      'ten dials for the part-button row', rows.join(','));
@@ -239,7 +249,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   ok(await p.$eval('#tabs .tab', e => parseFloat(getComputedStyle(e).minWidth) >= 170), 'and run them wide');
   // back to the defaults so the rest of the probe sees a known row
   await p.evaluate(() => { Object.assign(window.TABCFG, { intensity: 'mid', palette: 'station', pattern: 'valley',
-    iconSize: 19, iconMode: 'inline', numSize: 12, numShape: 'pill', shape: 'rect', layout: 'fill', width: 'auto' });
+    iconSize: 22, iconMode: 'ghost', numSize: 12, numShape: 'pill', shape: 'rect', layout: 'fill', width: 'auto' });
     window.drawTabs(); window.drawTabCfg(); }); await p.waitForTimeout(120); }
 // the rail: three tabs, one section at a time, and every control an icon with a hover card
 // AT BOOT — before any click — exactly one rail section is visible, and it is the controls

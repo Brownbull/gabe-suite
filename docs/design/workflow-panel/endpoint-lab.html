@@ -535,7 +535,9 @@
      (inline · a watermark · a watermark that bleeds past the button's edges) · the count's size and
      container · the button's own shape · how the row is laid out · how wide the buttons run.   ══ */
   var TABCFG = window.TABCFG = { intensity: "mid", palette: "station", pattern: "valley",
-    iconSize: 19, iconMode: "inline", numSize: 12, numShape: "pill", shape: "rect",
+    /* the operator's pick (2026-09-11): the big glyph as a watermark, CLIPPED to the button —
+       "I don't want the image to go beyond the borders, but show what we can inside" */
+    iconSize: 22, iconMode: "ghost", numSize: 12, numShape: "pill", shape: "rect",
     layout: "fill", width: "auto" };
   function tabCol(P){ return TABCFG.palette === "station" ? P.col
     : TABCFG.palette === "entity" ? (I.entity_color || "#888")
