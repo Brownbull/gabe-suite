@@ -12,7 +12,7 @@
 # after itself. Exit 0 = all pass.
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
-HARNESS="$REPO/templates/center/verify_center_chrome.mjs"
+HARNESS="$REPO/templates/center/generators/verify_center_chrome.mjs"   # the copy twins receive (the top-level duplicate was retired 2026-09-10)
 SHELL_SRC="$REPO/templates/center/shell"
 LEDGER="feature-transaction-action-ledger.html"
 

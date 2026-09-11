@@ -45,6 +45,8 @@ AMAP = {
 }
 graph = _a3_graph.build_c4_graph(AMAP)
 lv = _a3_levels.build_levels(AMAP, graph)
+ck(lv.get("head") == AMAP.get("head") and lv.get("version") == 1,
+   "levels carries the archmap's head + a version at the top level — its staleness beside c4-graph is readable from the file (review 2026-09-10)")
 
 _names = {n["name"] for n in lv["fn_nodes"]}
 ck(len(lv["fn_nodes"]) == 3 and _names == {"list_orders", "add_line", "list_users"},

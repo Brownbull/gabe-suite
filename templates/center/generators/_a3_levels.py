@@ -189,6 +189,8 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
             file_ent[f["file"]] = f["entity"]
 
     lv: dict[str, Any] = {
+        "head": amap.get("head"),        # the same head the archmap and c4-graph stamp — staleness is readable from the file (review 2026-09-10)
+        "version": 1,
         "note": "live from the archmap — functions · use-cases · communities · use-edges "
                 "derived from function_insight + model_insight (cross-file call edges ride the graft arm)",
         "census_note": "workflow census not curated for this project yet",

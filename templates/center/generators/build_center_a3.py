@@ -2155,7 +2155,10 @@ def main() -> int:
         # if this regen flips graft presence vs the committed file, say so LOUDLY, or
         # a graft-less host silently strips every calls/imports edge from the map.
         with contextlib.suppress(Exception):
-            _prev = json.loads((CENTER_OUT / "c4-graph.json").read_text(encoding="utf-8"))
+            _pp = CENTER / "c4-graph.json"                  # the COMMITTED feed; under a twin-read-only build CENTER_OUT is empty
+            if not _pp.exists():
+                _pp = CENTER_OUT / "c4-graph.json"
+            _prev = json.loads(_pp.read_text(encoding="utf-8"))
             _was = bool((_prev.get("stats", {}).get("graft") or {}).get("present"))
             if _was != bool(_garm.get("present")):
                 print(f"    ⚠ GRAFT PRESENCE FLIP: committed c4-graph has graft "

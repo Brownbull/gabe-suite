@@ -275,7 +275,7 @@ feature-spec (card contract). This section states what adoption must OBEY.
   (e.g. `uv run pytest ../tests/center --junitxml=../tests/results/center-junit.xml` +
   results_out entry) — the trial shipped 49 tests reachable by neither the local gate nor
   push-to-main CI. The shell JS layer ships only with its committed harness — the suite's
-  `templates/center/verify_center_chrome.mjs` (FIRE/silent-proven by `tests/chrome/run.sh`),
+  `templates/center/generators/verify_center_chrome.mjs` (FIRE/silent-proven by `tests/chrome/run.sh`),
   which propagates with the generator promotion and runs against the built pages.
 
 ## Non-goals

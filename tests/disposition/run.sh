@@ -9,7 +9,7 @@
 # without touching PENDING. Hermetic: a temp KDBP project with a git HEAD + archmap.
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
-SP="$REPO/scripts/disposition.py"
+SP="$REPO/templates/center/generators/disposition.py"
 
 pass=0; fail=0
 ok()  { pass=$((pass+1)); }

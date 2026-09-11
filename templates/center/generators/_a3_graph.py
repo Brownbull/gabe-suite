@@ -340,6 +340,27 @@ _DET_COLS_CAP = 10    # STRUCTURE rows shown; the rest becomes "+N more"
 _DET_CASES_CAP = 60   # cases LOADED into the card (the card display-caps at 6 with a "+N more" ⇄ "see less" expander); overflow beyond this stays in the evidence matrix
 
 
+def _fold_flag_aliases(entries: list) -> list:
+    """An endpoint's flag walls, ONE entry per effective flag: `FEAT` and `feat` at the same site are
+    the constant and its settings field — the constant's entry survives, carrying `aliases`."""
+    out: list = []
+    seen: dict[str, dict] = {}
+    for _w in entries or []:
+        _k = (str(_w.get("name", "")).lower(), _w.get("line"))
+        if _k in seen:
+            _keep = seen[_k]
+            if str(_w.get("name", "")).isupper() and not str(_keep.get("name", "")).isupper():
+                _keep["aliases"] = sorted(set(_keep.get("aliases") or []) | {_keep["name"]})
+                _keep["name"] = _w["name"]
+            else:
+                _keep["aliases"] = sorted(set(_keep.get("aliases") or []) | {_w["name"]})
+            continue
+        _e = dict(_w)
+        seen[_k] = _e
+        out.append(_e)
+    return out
+
+
 def _normalize_sig(sig: str, cap: int = 220) -> str:
     """Collapse graft's RAW signature to a readable line: whitespace squeezed, each param's
     DEFAULT value dropped (`x: T = Query(None, description=("…"))` → `x: T`), then capped. graft
@@ -347,6 +368,17 @@ def _normalize_sig(sig: str, cap: int = 220) -> str:
     KBs (gustify GET /recipes = 11,844 chars) — the useful part is name · params · return.
     Balanced-bracket aware (a comma/`=` inside [] or () is not a separator)."""
     s = " ".join(str(sig).split())
+    # a trailing SOURCE COMMENT (`… # Redact the SSE ?token= …`) is not signature — cut at the first
+    # ` #` outside brackets (review 2026-09-10: 2 of 261 gsig values carried one, rendered raw)
+    _d = 0
+    for _i, _c in enumerate(s):
+        if _c in "([{":
+            _d += 1
+        elif _c in ")]}":
+            _d -= 1
+        elif _c == "#" and _d == 0 and (_i == 0 or s[_i - 1] == " "):
+            s = s[:_i].rstrip()
+            break
     o = s.find("(")
     if o < 0:
         return s if len(s) <= cap else s[:cap - 1] + "…"
@@ -443,7 +475,7 @@ def element_detail(kind: str, obj: dict[str, Any],
     file = obj.get("file")
     if file:
         det["file"] = file
-        if file in file_lines:
+        if file in file_lines and file_lines[file]:      # 0 = unknown, never "a 0-line file"
             det["flines"] = file_lines[file]
 
     # P1b (graft adoption): graft's RAW signature + exported flag, keyed by file#symbol (the
@@ -459,7 +491,14 @@ def element_detail(kind: str, obj: dict[str, Any],
 
     if kind == "endpoint":
         if obj.get("status"):
-            det["status"] = str(obj["status"])
+            # `status.HTTP_204_NO_CONTENT` is the decorator's identifier, not a status — keep the
+            # number in det.status and the name in det.status_name (review 2026-09-10: 21 of 81 raw)
+            _st = str(obj["status"])
+            _sm = re.match(r"^(?:\w+\.)?HTTP_(\d{3})_\w+$", _st)
+            if _sm:
+                det["status"], det["status_name"] = _sm.group(1), _st
+            else:
+                det["status"] = _st
         fn = obj.get("fn")
         rec = fi.get(f"{file}::{fn}") if (file and fn) else None
         if rec:
@@ -641,7 +680,7 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
         if ep.get("middleware"):                    # C4: the level-2 gates run before the handler body (auth/consent/idempotency)
             enode["middleware"] = ep["middleware"]
         if ep.get("flags"):                         # class 12: the feature-flag walls on this endpoint
-            enode["flags"] = ep["flags"]
+            enode["flags"] = _fold_flag_aliases(ep["flags"])
         if ep.get("stream"):                        # class 13b: streams to the client (SSE / chunked)
             enode["stream"] = True
         edet = with_journeys(det_of("endpoint", ep),
@@ -1046,12 +1085,14 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
         for _s, _e in (amap.get("entities") or {}).items():
             for _l, _f, _n in ((_e or {}).get("files") or []):
                 _tf2s.setdefault(_f, _s)
+        _known_lines = {_f[1]: _f[2] for _e in (amap.get("entities") or {}).values()
+                        for _f in (_e.get("files") or []) if len(_f) > 2 and _f[2]}   # the entities' own census
         _byhome: dict[str, list] = {}
         for _r in _troots:
             _byhome.setdefault(_tf2s.get(_r["file"], _UNCLAIMED), []).append(_r)
         for _home, _rs in sorted(_byhome.items()):
             _tcode = {"endpoints": _rs, "models": [], "schemas": [],
-                      "files": [["task", _r["file"], 0] for _r in _rs]}
+                      "files": [["task", _r["file"], _known_lines.get(_r["file"], 0)] for _r in _rs]}
             _tg = _l2(_home, _tcode, tbl2slug, labels, insight, None, behind,
                       journeys, schema_fields, endpoint_access=endpoint_access)
             if _home in l2:
@@ -1068,8 +1109,10 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                                  "slug": _UNCLAIMED, "status": None, "counts": None})
     _broots = amap.get("boot_roots") or []
     if _broots:
+        _known_lines_b = {_f[1]: _f[2] for _e in (amap.get("entities") or {}).values()
+                          for _f in (_e.get("files") or []) if len(_f) > 2 and _f[2]}
         _bcode = {"endpoints": _broots, "models": [], "schemas": [],
-                  "files": [["boot", _r["file"], 0] for _r in _broots]}
+                  "files": [["boot", _r["file"], _known_lines_b.get(_r["file"], 0)] for _r in _broots]}
         _bg = _l2(_UNCLAIMED, _bcode, tbl2slug, labels, insight, None, behind,
                   journeys, schema_fields, endpoint_access=endpoint_access)
         if _UNCLAIMED in l2:
@@ -1122,6 +1165,7 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
     #    the same global class index resolves it (the 44 floating *Input schemas' fix). ──
     _xc_seen: set[tuple[str, str]] = set()
     cross_consumes = 0
+    cross_nests = 0
     for _slug, graph in l2.items():
         for xc in graph.pop("xcons", []):
             hit = cls_index.get(xc["cls"])
@@ -1138,7 +1182,10 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                 continue
             cross_edges.append({"from": xc["from"], "to": tgt_nid, "kind": xc.get("k", "consumes"),
                                 "from_slug": _slug, "to_slug": tgt_slug})
-            cross_consumes += 1
+            if xc.get("k", "consumes") == "nests":
+                cross_nests += 1
+            else:
+                cross_consumes += 1
     # ── class 5b · SERIALIZES: a pydantic schema MAPPING a DB model — the schema→model edge the
     #    map lacked (schema→model was 0 edges). SITE arm: `X.model_validate(v)` sites, resolved
     #    through the B1 symtab (function_insight access.serializes, conf 'extracted'). NAMING arm:
@@ -1255,23 +1302,40 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
     _flag_census = amap.get("flags") or {}
     if _flag_census:
         _fw: dict[str, list] = {}
+        # ONE effective flag, ONE node: `not (RECIPE_CREATION_ENABLED or settings.recipe_creation_enabled)`
+        # names one switch twice (a constant + its settings field); the census keeps both names, the
+        # picture draws one (review 2026-09-10: two flag nodes, six wall wires, one switch)
+        _alias_of: dict[str, str] = {}
+        _byfold: dict[str, list] = {}
+        for _nm in sorted(_flag_census):
+            _byfold.setdefault(_nm.lower(), []).append(_nm)
+        for _fold, _names in _byfold.items():
+            _canon = next((n for n in _names if n.isupper()), _names[0])
+            for n in _names:
+                _alias_of[n] = _canon
         for _fslug, _fgraph in l2.items():
             for _fn in _fgraph.get("nodes", []):
                 if _fn.get("kind") == "endpoint":
                     for _w in (_fn.get("flags") or []):
-                        _fw.setdefault(_w["name"], []).append((_fn["id"], _fslug, _w))
+                        _fw.setdefault(_alias_of.get(_w["name"], _w["name"]), []).append((_fn["id"], _fslug, _w))
         _by_home: dict[str, list] = {}
         for _flagname in sorted(_fw):
             _walls = _fw[_flagname]
+            _wseen: set = set()
+            _walls = [_t for _t in _walls if not (_t[0] in _wseen or _wseen.add(_t[0]))]   # one wall per endpoint after the alias fold
             if len(_walls) > _FLAG_SAT:                     # app-level saturation → a middleware concern, not a per-endpoint star
                 continue
             _readers = {_s for (_e, _s, _w) in _walls}
             _home = next(iter(_readers)) if len(_readers) == 1 else _UNCLAIMED
             _meta = _flag_census.get(_flagname) or {}
+            _aliases = sorted(n for n, c in _alias_of.items() if c == _flagname and n != _flagname)
             _fnid = f"flag:{_flagname}"
             _node = {"id": _fnid, "kind": "flag", "slug": _home, "label": _flagname,
                      "det": {"src": _meta.get("src"), "line": _meta.get("line"),
                              "default": _meta.get("default"),
+                             **({"aliases": _aliases,
+                                 "sources": [{"name": n, "src": (_flag_census.get(n) or {}).get("src"), "line": (_flag_census.get(n) or {}).get("line")}
+                                             for n in [_flagname] + _aliases]} if _aliases else {}),
                              "walls": [{"endpoint": _e, "on": _w.get("on"), "on_fail": _w.get("on_fail")}
                                        for (_e, _s, _w) in _walls]}}
             if _home == _UNCLAIMED:
@@ -1418,7 +1482,8 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
             "minted_models": len(_minted),   # C3: absent access-target models minted into the unclaimed bucket so their edge can land
             "middleware_endpoints": sum(1 for _s in l2.values() for _n in _s.get("nodes", []) if _n.get("kind") == "endpoint" and _n.get("middleware")),   # C4: endpoints carrying a level-2 gate/dep floor
             "gate_endpoints": sum(1 for _s in l2.values() for _n in _s.get("nodes", []) if _n.get("kind") == "endpoint" and any(_m.get("gate") for _m in (_n.get("middleware") or []))),   # C4: of those, ones with a gate-named dep (auth/consent/idempotency)
-            "consumes": cross_consumes + sum(1 for _s in l2.values() for _e in _s.get("edges", []) if _e.get("kind") in ("consumes", "nests")),   # request-shape + composition wires (signatures + field types; local + cross)
+            "consumes": cross_consumes + sum(1 for _s in l2.values() for _e in _s.get("edges", []) if _e.get("kind") == "consumes"),   # request-shape wires ONLY (review 2026-09-10: the old sum folded nests in — 70 for 1 edge)
+            "nests": cross_nests + sum(1 for _s in l2.values() for _e in _s.get("edges", []) if _e.get("kind") == "nests"),   # composition wires (schema → sub-schema)
             "l1_flow_cols": flow_cols,
             "unclaimed": any(n["kind"] == "unclaimed" for n in l1_nodes),
             # schema homing (archmap pass) — counts only; absent upstream → key absent (byte-identical)
@@ -1435,7 +1500,10 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
             **({"serializes": {"pairs": _serializes_n, "site": _ser_site, "naming": _ser_naming}}
                if _serializes_n else {}),
             # class 8: app-level middleware nodes + gated_by wires (count-only when saturated); P5.
-            **({"app_middleware": {"count": _app_mw_n, "gated_by": _gated_by}} if _app_mw_n else {}),
+            **({"app_middleware": {"count": _app_mw_n, "gated_by_wires": _gated_by,   # DRAWN wires only — a scope-'all' middleware never draws one
+                                   "gates_endpoints": max((int((_n.get("det") or {}).get("gates") or 0) for _n in _mw_nodes), default=0),
+                                   "saturated": any(int((_n.get("det") or {}).get("gates") or 0) > _FLAG_SAT for _n in _mw_nodes)}}
+               if _app_mw_n else {}),
             # class 9: external providers reached (SDK/LLM edges); absent when none (P5).
             **({"providers": {"count": _prov_n, "by_provider": dict(sorted(_prov_by.items())),
                               "by_pclass": dict(sorted(Counter(_PROVIDER_CLASS[p] for p in _prov_by if p in _PROVIDER_CLASS).items()))}} if _prov_n else {}),   # unknown names excluded — honest-empty

@@ -65,3 +65,13 @@ if command -v node >/dev/null 2>&1 && [ -f scripts/verify_center_chrome.mjs ]; t
 else
   echo "── chrome harness: node or scripts/verify_center_chrome.mjs absent — skipped"
 fi
+
+# The entity-model DRAFTER is a projection of the committed c4 `models` block (pulse S18 and
+# /gabe-cc-init rank read entities.draft.json) — it sat on no rail and went stale on every twin
+# (review 2026-09-10). Runs from the install; says so when the skill is absent.
+_DRAFTER="${ECC_ROOT:-$HOME/.claude}/skills/gabe-cc-update/scripts/draft-entities.py"
+if [ -f "$_DRAFTER" ]; then
+  python3 "$_DRAFTER" . || echo "── entity drafter: exited $? (report-never-gate)"
+else
+  echo "── entity drafter: $_DRAFTER absent — skipped"
+fi

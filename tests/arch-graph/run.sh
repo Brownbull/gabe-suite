@@ -506,6 +506,44 @@ check(len(_intra_w) == 1 and not _cross_w
       and "from" not in _intra_w[0] and _intra_w[0]["on_fail"] == "403",
       "class 12 FIRE: an INTRA walls edge flag→endpoint uses source/target (renders) + carries on_fail")
 check(_gfl["stats"].get("flags") == {"declared": 1, "drawn": 1}, "class 12: stats.flags {declared, drawn}")
+# ONE effective flag, ONE node (review 2026-09-10): `not (FEAT_X or settings.feat_x)` walls on both names at the
+# same line — the census declares 2, the picture draws 1 node with aliases + sources, the endpoint carries 1 wall
+_fixfa = json.loads(json.dumps(FIX))
+_fixfa["entities"]["alpha"]["endpoints"][0]["flags"] = [{"name": "FEAT_X", "on": "off", "on_fail": "403", "line": 5},
+                                                          {"name": "feat_x", "on": "off", "on_fail": "403", "line": 5}]
+_fixfa["flags"] = {"FEAT_X": {"src": "constants.py", "line": 68, "default": False}, "feat_x": {"src": "config.py", "line": 112, "default": False}}
+_gfa = G.build_c4_graph(_fixfa, labels=LABELS, status=STATUS)
+_fan = [n for g in _gfa["l2"].values() for n in g["nodes"] if n["kind"] == "flag"]
+_faw = [e for g in _gfa["l2"].values() for e in g.get("edges", []) if e.get("kind") == "walls"]
+_fae = next(n for n in _gfa["l2"]["alpha"]["nodes"] if n["id"] == "endpoint:GET /alpha")
+check(len(_fan) == 1 and _fan[0]["id"] == "flag:FEAT_X" and _fan[0]["det"].get("aliases") == ["feat_x"]
+      and len(_fan[0]["det"].get("sources") or []) == 2 and len(_faw) == 1
+      and _gfa["stats"].get("flags") == {"declared": 2, "drawn": 1}
+      and len(_fae.get("flags") or []) == 1 and _fae["flags"][0]["name"] == "FEAT_X" and _fae["flags"][0].get("aliases") == ["feat_x"],
+      "class 12 FOLD: a constant + its settings field walling the same site mint ONE flag node (aliases + sources), one wall, drawn 1 of declared 2")
+_fixfb = json.loads(json.dumps(_fixfa)); _fixfb["entities"]["alpha"]["endpoints"][0]["flags"][1]["name"] = "OTHER"
+_fixfb["flags"]["OTHER"] = _fixfb["flags"].pop("feat_x")
+_gfb = G.build_c4_graph(_fixfb, labels=LABELS, status=STATUS)
+check(len([n for g in _gfb["l2"].values() for n in g["nodes"] if n["kind"] == "flag"]) == 2 and _gfb["stats"].get("flags") == {"declared": 2, "drawn": 2},
+      "class 12 FOLD stays silent on two DIFFERENT flags (no case-folded pair → two nodes)")
+# det.status is the NUMBER, the decorator's constant rides beside it (review 2026-09-10: 21 of 81 raw)
+_fixst = json.loads(json.dumps(FIX)); _fixst["entities"]["alpha"]["endpoints"][0]["status"] = "HTTP_204_NO_CONTENT"
+_gst = next(n for n in G.build_c4_graph(_fixst, labels=LABELS, status=STATUS)["l2"]["alpha"]["nodes"] if n["id"] == "endpoint:GET /alpha")
+check(_gst["det"].get("status") == "204" and _gst["det"].get("status_name") == "HTTP_204_NO_CONTENT",
+      "det.status maps HTTP_<n>_<NAME> to the number and keeps the name in det.status_name")
+_fixst["entities"]["alpha"]["endpoints"][0]["status"] = "200"
+_gst2 = next(n for n in G.build_c4_graph(_fixst, labels=LABELS, status=STATUS)["l2"]["alpha"]["nodes"] if n["id"] == "endpoint:GET /alpha")
+check(_gst2["det"].get("status") == "200" and "status_name" not in _gst2["det"], "det.status leaves a plain number alone (no status_name)")
+# a trailing source comment is not signature
+check("#" not in G._normalize_sig("def lifespan(app: FastAPI) -> AsyncIterator[None]:  # Redact the SSE ?token= from logs")
+      and G._normalize_sig("def f(a: int) -> X  # note").endswith("X"),
+      "_normalize_sig cuts a trailing `# comment` outside brackets (review 2026-09-10: 2 gsig values rendered one)")
+check(G._normalize_sig("def g(a: dict[str, int] = {'#': 1}) -> Y") .endswith("Y"), "_normalize_sig keeps a # inside brackets")
+# an unknown file length is ABSENT, never 0
+_fixfl0 = json.loads(json.dumps(FIX)); _fixfl0["entities"]["alpha"]["files"] = [["api", "apps/api/alpha.py", 0]]
+_fixfl0["entities"]["alpha"]["endpoints"][0]["file"] = "apps/api/alpha.py"
+_gfl0 = next(n for n in G.build_c4_graph(_fixfl0, labels=LABELS, status=STATUS)["l2"]["alpha"]["nodes"] if n["id"] == "endpoint:GET /alpha")
+check("flines" not in (_gfl0.get("det") or {}), "det.flines is omitted when the census knows no length (0 = unknown, never a 0-line file)")
 # CROSS walls: a flag read by TWO entities homes to __unclaimed__ → a cross_edge with from/to
 _fixfx = {"head": "h", "entities": {
     "one": {"endpoints": [{"method": "GET", "path": "/one", "fn": "get_one",
@@ -578,12 +616,16 @@ check(len(_mwn) == 1 and _mwn[0]["id"] == "middleware:CORSMiddleware" and _mwn[0
       and _mwn[0]["det"]["gates"] == _neps,
       "class 8: an add_middleware site mints a middleware:<Cls> node in __unclaimed__ with a gates count")
 check(_gmw2["stats"]["app_middleware"]["count"] == 1, "class 8: stats.app_middleware count")
+check(_gmw2["stats"]["app_middleware"]["gated_by_wires"] == _neps and _gmw2["stats"]["app_middleware"]["gates_endpoints"] == _neps
+      and _gmw2["stats"]["app_middleware"]["saturated"] is False,
+      "class 8: stats.app_middleware says what it counts — gated_by_wires (drawn) · gates_endpoints (measured) · saturated (review 2026-09-10)")
 # SATURATION: force the threshold to 0 → a scope-'all' middleware becomes count-only (0 gated_by, no hub)
 _sat = G._FLAG_SAT; G._FLAG_SAT = 0
 _gmw3 = G.build_c4_graph(_fixmw2, labels=LABELS, status=STATUS)
 G._FLAG_SAT = _sat
-check(_gmw3["stats"]["app_middleware"]["gated_by"] == 0,
-      "class 8 SATURATION: a middleware over the threshold draws count-only (0 gated_by edges, no per-endpoint hub)")
+check(_gmw3["stats"]["app_middleware"]["gated_by_wires"] == 0 and _gmw3["stats"]["app_middleware"]["gates_endpoints"] == _neps
+      and _gmw3["stats"]["app_middleware"]["saturated"] is True,
+      "class 8 SATURATION: over the threshold → count-only (0 gated_by_wires) while gates_endpoints keeps the measured count and saturated says why")
 check("app_middleware" not in G.build_c4_graph(FIX, labels=LABELS, status=STATUS)["stats"],
       "class 8 honest-empty: no app_middleware → no middleware node + no stats key (byte-identical)")
 # review fix [5]: two add_middleware sites sharing a class leaf-name mint ONE node (node ids unique)
@@ -1388,14 +1430,15 @@ check(len(_ne) == 1 and _ne[0]["source"] == "schema:NaIn" and _ne[0]["target"] =
 _nx = [e for e in gn["cross_edges"] if e.get("kind") == "nests"]
 check(len(_nx) == 1 and _nx[0]["from"] == "schema:NaIn" and _nx[0]["to"] == "schema:NbOut",
       "a field typed with ANOTHER entity's schema does not become a cross nests edge")
-check(gn["stats"].get("consumes") == 2, "stats.consumes must count nests+consumes wires (local + cross)")
+check(gn["stats"].get("consumes") == 0 and gn["stats"].get("nests") == 2,
+      "stats.consumes counts request-shape wires ONLY; stats.nests counts composition wires (local + cross) — never one sum (review 2026-09-10: 70 for 1 edge)")
 check(not any("str" in str(e.get("to", "")) + str(e.get("target", "")) for e in _ne + _nx),
       "plain field types leak into composition wires")
 # mutation-proof: no fields -> no wires
 FIX_NEST2 = {"head": "h", "generated": "g", "entities": {"na": {"models": [], "endpoints": [],
   "schemas": [{"cls": "NaIn", "file": "a.py"}]}}}
 gn2 = G.build_c4_graph(FIX_NEST2)
-check(gn2["stats"].get("consumes") == 0 and not any(e.get("kind") in ("nests", "consumes")
+check(gn2["stats"].get("consumes") == 0 and gn2["stats"].get("nests") == 0 and not any(e.get("kind") in ("nests", "consumes")
       for s in gn2["l2"].values() for e in s.get("edges", [])),
       "field-less schemas must emit ZERO composition wires (the checker can stay silent)")
 
