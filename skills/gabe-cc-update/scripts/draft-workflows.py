@@ -37,6 +37,9 @@ import re
 import sys
 from pathlib import Path
 
+# mirror of _a3_stacks.PSEUDO_ROOTS (templates/center/generators) — see the use site below
+PSEUDO_ROOTS = frozenset({"BOOT", "TASK", "ACTION"})
+
 LABEL_RX = re.compile(r'"((?:GET|POST|PUT|PATCH|DELETE|BOOT|TASK) [^"]+)"')
 NAME_RX = re.compile(r'name\s*:\s*"([^"]*)"')
 SCREENISH_RX = re.compile(r"(Page|Screen|View)$")
@@ -203,7 +206,11 @@ def analyse(c4: dict, covered: set[str], min_size: int) -> dict:
         label = n.get("label") or ""
         verb, _, path = label.partition(" ")
         first = path.strip("/").split("/")[0] if path else ""
-        if verb in ("BOOT", "TASK") or first.startswith("_"):   # a worker task (dispatched by name) is not a user workflow — skipped like BOOT (legend pass 2026-09-06)
+        # PSEUDO-ROOTS are not user workflows: a worker task is dispatched by name, a server action
+        # is called across the client/server line, BOOT runs once at startup. Kept in step with
+        # _a3_stacks.PSEUDO_ROOTS (the source of record) — a skill cannot import a generator across
+        # the install boundary, so tests/arms asserts the two rosters agree.
+        if verb in PSEUDO_ROOTS or first.startswith("_"):
             skipped.append(label)
             continue
         if label in covered:

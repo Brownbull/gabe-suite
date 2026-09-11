@@ -59,6 +59,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+import _a3_stacks as _stacks   # PSEUDO_ROOTS + the path_is_url permission slip (one roster, not five)
+
 _UNCLAIMED = "__unclaimed__"   # the coverage-loss bucket; namespaced vs real slugs
 
 # --- layout constants (a deterministic build-time pass; renderers may ignore) ---
@@ -1395,7 +1397,7 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
         # not a request CORS/rate-limit middleware wraps — counting it inflates `gates` + draws a false wire.
         _all_eps = [(_n["id"], _sl) for _sl, _g in l2.items()
                     for _n in _g.get("nodes", [])
-                    if _n.get("kind") == "endpoint" and not _n["id"].startswith(("endpoint:BOOT ", "endpoint:TASK "))]   # BOOT + TASK are pseudo-endpoints (roots), not HTTP requests
+                    if _n.get("kind") == "endpoint" and not _stacks.node_is_pseudo(_n["id"])]   # pseudo-endpoints (BOOT · TASK · ACTION) are roots, not HTTP requests
         _mw_seen: set = set()                              # review fix [5]: node ids are unique — dedup the mint
         for _m in _app_mw:
             _scope = _m.get("scope", "all")

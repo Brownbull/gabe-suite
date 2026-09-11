@@ -22,11 +22,14 @@
 # Hermetic: synthetic in-memory archmaps. Exit 0 = all pass.
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
-GEN="$REPO/templates/center/generators"
+GEN="${GEN_OVERRIDE:-$REPO/templates/center/generators}"   # override so the header's mutation claim can be RE-RUN, not just asserted
 
 python3 - "$GEN" <<'PY'
 import sys, json, copy, importlib.util, tempfile, pathlib
 gen = sys.argv[1]
+sys.path.insert(0, gen)                     # _a3_graph imports its siblings (_a3_stacks); a
+                                            # file-spec load does NOT put the dir on the path,
+                                            # and the later blocks here already do this
 spec = importlib.util.spec_from_file_location("_a3_graph", gen + "/_a3_graph.py")
 G = importlib.util.module_from_spec(spec); spec.loader.exec_module(G)
 

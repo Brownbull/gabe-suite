@@ -13,7 +13,7 @@
 # FIRE and SILENT both exercised (mutation-proven). Exit 0 = all pass.
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
-GEN="$REPO/templates/center/generators"
+GEN="${GEN_OVERRIDE:-$REPO/templates/center/generators}"   # override so the header's mutation claim can be RE-RUN, not just asserted
 
 python3 - "$GEN" <<'PY'
 import sys, ast

@@ -102,3 +102,23 @@ def langs_for(concept: str) -> tuple[str, ...]:
     """The languages covered for `concept`, so the census can separate "no detector for YOUR
     language" from "a detector ran and found nothing"."""
     return tuple(sorted({s.lang for s in resolve(concept)}))
+
+
+def is_pseudo(method: str | None) -> bool:
+    """True for a root that is NOT an HTTP request — BOOT, TASK, ACTION. Consumers that split a
+    path into URL segments must ask this first: a pseudo-root's `path` is a NAME (a task's, a
+    server action's), and `_segs("requestReply")` yields "requestReply" as a URL domain, which is
+    how `createTodo` ends up looking like a route. Every literal ("BOOT", "TASK") roster this
+    replaces was written before ACTION existed and silently excluded it."""
+    return str(method or "").upper() in PSEUDO_ROOTS
+
+
+def path_is_url(method: str | None) -> bool:
+    """The permission slip: may this record's `path` be read as a URL? False for every pseudo-root."""
+    return not is_pseudo(method)
+
+
+def node_is_pseudo(node_id: str | None) -> bool:
+    """The same question for an `endpoint:<METHOD> <path>` node id."""
+    nid = str(node_id or "")
+    return any(nid.startswith(f"endpoint:{r} ") for r in PSEUDO_ROOTS)

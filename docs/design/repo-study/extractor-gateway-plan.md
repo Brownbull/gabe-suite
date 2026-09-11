@@ -208,3 +208,51 @@ Gate: 82/80/75 BYTE-IDENTICAL, census identical (step 4 touches readers only).
 A second battery was found claiming coverage it could not verify: `tests/pulse-angles` hardcoded
 its `ANGLES` path with no override, so every mutation run silently tested the real file. That is
 the same defect `tests/commits` had. Both now carry an override hook — worth checking the rest.
+
+## Step 5 — one pseudo-root roster, and the ACTION bug it was hiding (`this commit`)
+
+`_a3_stacks` gains `is_pseudo()` · `path_is_url()` · `node_is_pseudo()`, and the literal
+`("BOOT", "TASK")` rosters are replaced by them.
+
+**The live bug, measured before the fix.** `_a3_models` decided `via` and `path` with
+`method == "TASK"`, and every such roster was written before ACTION existed. On keypro-front all
+eleven server actions were recorded as:
+
+```
+auth   ACTION  path='login'          via=http
+chat   ACTION  path='requestReply'   via=http
+```
+
+— a function name in the `path` field, flagged as an HTTP request. `_segs("requestReply")` yields
+`requestReply` as a URL domain, which is how a server action would have become a route. After:
+`path=''  via=action`.
+
+**An over-reach the gate caught.** The first patch made `:243` skip every pseudo-root. But BOOT is
+excluded because it is startup, while TASK is deliberately KEPT as an atom with a cleared path —
+so the change dropped tier3's 46 task atoms. `map-baseline.sh check` showed 4 feeds moving on
+tier3 alone; `:243` now skips BOOT only, and `path_is_url` handles the rest at `:256`.
+
+**A second one it caught.** `_a3_graph.py` was stdlib-only at module level, so two batteries load
+it with `spec_from_file_location` and no `sys.path` entry. Adding the first sibling import broke
+`tests/arch-graph` (329 assertions) instantly. Fixed in the battery — which already inserts the
+path at :1173 for the same reason — rather than by duplicating the roster.
+
+**The install boundary.** `draft-workflows.py` is a SKILL and cannot import a generator, so it
+MIRRORS the roster with a pointer to the source of record. Drift between the two is exactly how
+ACTION was excluded in the first place, so `tests/arms` reads both and asserts they agree — proven
+to bite by shrinking the mirror to `{BOOT, TASK}`. The assertion derives its path from the module's
+own location; writing it out would have re-failed suite-doctor P6, which is how this session
+learned that rule the first time.
+
+Gate: 82/80/75 BYTE-IDENTICAL, census identical — the fix is inert wherever no ACTION root exists,
+which is every FastAPI repo. `tests/arms` 4/4 · `arch-graph` 329 · `center` 169 · `entity-models`
+70 · `levels` 77 · `entity-drift` 20 · `draft-entities` 23 · suite-doctor CLEAN.
+
+### Battery audit (prompted by step 4)
+
+Ten batteries claim "mutation-proven" in their headers while carrying no override hook — the claim
+was hand-run once at authoring time and cannot be repeated, so a later change could make an
+assertion vacuous with nothing to catch it. `arch-graph` and `orm-access` gained a `GEN_OVERRIDE`
+(one line each, both still green); `levels`, `register`, `entity-drift`, `gabe-kdbp`,
+`gabe-universe`, `pulse-scripts`, `sim`, `workflow-drift` still cannot be re-proven. Not blocking —
+recorded with a trigger: fix a battery's hook the next time its subject is edited.

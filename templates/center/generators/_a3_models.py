@@ -37,6 +37,7 @@ import re
 from collections import Counter
 from typing import Any
 
+import _a3_stacks as _stacks
 import _a3_naming   # every name a cluster could wear, computed once (naming-plan.md 2026-09-06)
 import _a3_render
 
@@ -240,6 +241,10 @@ def _atoms(amap: dict, graph: dict) -> list[dict]:
             if str(e.get("target") or "").startswith("schema:"):
                 ep_schemas.setdefault(e.get("source"), []).append(e["target"])
         for n in (l2 or {}).get("nodes") or []:
+            # BOOT alone is EXCLUDED (it is startup, not a request). TASK and ACTION are kept as
+            # atoms — they ARE request entries — but their label carries a NAME, so the path is
+            # cleared and `via` names the transport below. Excluding them here dropped tier3's 46
+            # task atoms, which the golden master caught.
             if n.get("kind") != "endpoint" or not n.get("id") or str(n["id"]).startswith("endpoint:BOOT "):
                 continue
             label = str(n.get("label") or n["id"].split(":", 1)[-1])
@@ -253,8 +258,13 @@ def _atoms(amap: dict, graph: dict) -> list[dict]:
                     key = op.get("table") or op.get("model")
                     (w if op.get("rw") == "w" else r)[key] += 1
             anchor, _share = _majority(w) if w else _majority(r)
-            atoms.append({"ep": n["id"], "method": method, "path": path if method != "TASK" else "", "slug": slug,
-                          "via": "task" if method == "TASK" else "http", "schemas": sorted(set(ep_schemas.get(n["id"], []))),
+            atoms.append({"ep": n["id"], "method": method,
+                          # a pseudo-root's label carries a NAME, never a URL — clear it, and say
+                          # how the request actually arrives instead of calling everything http
+                          "path": path if _stacks.path_is_url(method) else "",
+                          "slug": slug,
+                          "via": "http" if _stacks.path_is_url(method) else method.lower(),
+                          "schemas": sorted(set(ep_schemas.get(n["id"], []))),
                           "fetchers": sorted({f for f in bridge_by_ep.get(n["id"], []) if f}),
                           "anchor": anchor, "anchor_cls": table2cls.get(anchor or "", anchor), "anchor_by": "write" if w else ("read" if r else None),
                           "fn": ("%s#%s" % ((n.get("det") or {}).get("file"), n.get("fn"))) if n.get("fn") and (n.get("det") or {}).get("file") else None})
@@ -429,7 +439,7 @@ def _entity_shape_rule(amap: dict) -> tuple[dict[str, set], dict[str, set], dict
     dom_ents: dict[str, set] = {}
     for slug, ent in (amap.get("entities") or {}).items():
         for ep in ent.get("endpoints") or []:
-            if str(ep.get("method") or "").upper() in ("BOOT", "TASK"):
+            if _stacks.is_pseudo(ep.get("method")):
                 continue
             dom = (_segs(ep.get("path") or "") or ["/"])[0]
             dom_ents.setdefault(dom, set()).add(slug)

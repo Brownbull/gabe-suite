@@ -43,6 +43,23 @@ for c in S.CONCEPTS:
     assert S.resolve(c), f"{c} is in the vocabulary with no arm — declare it or drop it"
 # PSEUDO_ROOTS are the non-URL methods; they must not collide with HTTP verbs
 assert S.PSEUDO_ROOTS.isdisjoint({"GET","POST","PUT","PATCH","DELETE"}), "pseudo-root shadows a verb"
+# the helpers every consumer uses INSTEAD of a literal roster — the literals are what silently
+# excluded ACTION from five sites written before it existed
+assert S.is_pseudo("ACTION") and S.is_pseudo("task") and not S.is_pseudo("GET")
+assert not S.path_is_url("ACTION"), "a server action's path is a NAME, never a URL"
+assert S.path_is_url("POST") and S.node_is_pseudo("endpoint:ACTION login")
+assert not S.node_is_pseudo("endpoint:GET /login")
+# a SKILL cannot import a generator across the install boundary, so draft-workflows MIRRORS the
+# roster. Drift between the two is exactly how ACTION got excluded from five sites — pin it.
+# The path is derived from this module's own location, never written out: a shipped surface that
+# names one machine is a portability failure (suite-doctor P6).
+import re as _re, pathlib as _pl
+_p = _pl.Path.cwd().parents[2] / "skills" / "gabe-cc-update" / "scripts" / "draft-workflows.py"
+assert _p.exists(), f"draft-workflows.py not where expected: {_p}"
+_m = _re.search(r'PSEUDO_ROOTS = frozenset\(\{([^}]*)\}\)', _p.read_text())
+assert _m, "draft-workflows lost its mirrored roster"
+_mirror = {x.strip().strip('"\'') for x in _m.group(1).split(",") if x.strip()}
+assert _mirror == set(S.PSEUDO_ROOTS), f"roster drift: {_mirror} vs {set(S.PSEUDO_ROOTS)}"
 # what _a3_code claims it can probe must match what it declares
 assert set(C.CONCEPTS) <= vocab, "module CONCEPTS drifted from the register vocabulary"
 for c in C.CONCEPTS:
