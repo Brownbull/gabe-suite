@@ -199,7 +199,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   ok(dup.length === 0, 'the definition appears once, at the end — never repeated above it', dup.join(' | ').slice(0, 140)); }
 // ── every control block FOLDS AWAY without losing its settings (operator 2026-09-11) ──
 { const blks = await p.$$eval('.barblk', els => els.map(e => e.id));
-  ok(blks.length === 4, 'four control blocks', blks.join(','));
+  ok(blks.length === 5, 'five control blocks', blks.join(','));
   const before = await p.evaluate(() => window.COPYTXT.tabs());
   await p.click('#blk-tabs .mnb'); await p.waitForTimeout(120);
   ok(await p.$eval('#blk-tabs', e => e.classList.contains('min')), 'a block folds when its chevron is clicked');
@@ -214,7 +214,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
     return { mode: window.TABCFG.iconMode, size: window.TABCFG.iconSize, overflow: getComputedStyle(t).overflow,
              glyph: Math.round(ib.height), button: Math.round(tb.height), pos: getComputedStyle(i).position,
              op: +getComputedStyle(i).opacity }; });
-  ok(g.mode === 'ghost' && g.size === 24, 'the button row opens with the clipped watermark', JSON.stringify({ m: g.mode, s: g.size }));
+  ok(g.mode === 'ghost' && g.size === 22, 'the button row opens with the clipped watermark', JSON.stringify({ m: g.mode, s: g.size }));
   ok(g.overflow === 'hidden', 'the button CLIPS it — the glyph never goes beyond the border (operator 2026-09-11)', g.overflow);
   ok(g.glyph > g.button, 'and the glyph is genuinely bigger than the button, so it reads as a watermark', g.glyph + ' in ' + g.button);
   ok(g.pos === 'absolute' && g.op < .5, 'placed to the right, translucent', JSON.stringify({ p: g.pos, o: g.op })); }
@@ -266,7 +266,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   { const pos = {}; for (const v of [0, 50, 100]) { await p.evaluate(x => { window.TABCFG.iconX = x; window.drawTabs(); }, v); await p.waitForTimeout(90);
       pos[v] = await p.$eval('#tabs .tab .tabi', e => Math.round(e.getBoundingClientRect().left - e.closest('.tab').getBoundingClientRect().left)); }
     ok(pos[0] < pos[50] && pos[50] < pos[100], 'the side bar slides the glyph continuously across the button', JSON.stringify(pos)); }
-  await p.evaluate(() => { window.TABCFG.iconX = 92; window.drawTabs(); window.drawTabCfg(); }); await p.waitForTimeout(100);
+  await p.evaluate(() => { window.TABCFG.iconX = 73; window.drawTabs(); window.drawTabCfg(); }); await p.waitForTimeout(100);
   // FOCUS: the open part keeps its colour, every other button goes mono
   await p.click('#tabcfg .ib[data-palette="focus"]'); await p.waitForTimeout(120);
   { const cols = await p.$$eval('#tabs .tab', els => els.map(e => ({ on: e.classList.contains('on'), c: e.style.getPropertyValue('--tc') })));
@@ -279,9 +279,63 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
     ok(on && on.k === 'tests' && !/var\(--muted\)/.test(on.c), 'the colour FOLLOWS the part you open', JSON.stringify(on));
     await p.click('#tabs .tab[data-tab="data"]'); await p.waitForTimeout(120); }
   // back to the defaults so the rest of the probe sees a known row
-  await p.evaluate(() => { Object.assign(window.TABCFG, { intensity: 'mid', palette: 'station', pattern: 'valley',
-    iconSize: 24, iconMode: 'ghost', iconX: 92, numSize: 12, numShape: 'pill', shape: 'rect', layout: 'fill', width: 'wide' });
+  await p.evaluate(() => { Object.assign(window.TABCFG, { intensity: 'dim', palette: 'focus', pattern: 'valley',
+    iconSize: 22, iconMode: 'ghost', iconX: 73, caseMode: 'caps', numSize: 12, numShape: 'pill', shape: 'rect', layout: 'fill', width: 'wide' });
     window.drawTabs(); window.drawTabCfg(); }); await p.waitForTimeout(120); }
+
+// ══ THE FRAME (operator 2026-09-12): each row's height, its own outline, the divider under it and
+//    the gap after it. Measured on the rendered box, never read back off the config. ══
+{ const subs = await p.$$eval('#framecfg .cfsub', els => els.map(e => e.firstChild.textContent.trim()));
+  ok(subs.join(',') === 'the bench,head bar,part buttons', 'the frame block names the three things it frames', subs.join(','));
+  const labels = await p.$$eval('#framecfg .cfl', els => els.map(e => e.textContent));
+  ok(labels.join(',') === 'outline,pattern,height,outline,pattern,divider,pattern,gap after,height,outline,pattern,divider,pattern,gap after',
+     'fourteen dials: a height, an outline, a divider and a gap for each row', labels.join(','));
+  ok(await p.$$eval('#framecfg .sld', els => els.length === 9), 'every RANGE is a dragged bar, not a set of steps');
+  ok(await p.$$eval('#framecfg .ibwrap .ib', els => els.length === 5 * 4), 'and every line pattern is a button drawing that pattern');
+  ok(await p.$$eval('#framecfg .ibwrap .ib svg path', els => els.length >= 5), 'the pattern buttons draw real lines, not words');
+  const boot = await p.evaluate(() => window.COPYTXT.frame());
+  // ROW HEIGHT
+  await p.evaluate(() => { window.FRAME.headH = 84; window.FRAME.tabsH = 72; window.applyFrame(); }); await p.waitForTimeout(120);
+  ok(await p.$eval('#headstrip', e => Math.round(e.getBoundingClientRect().height) >= 84, ), 'the head bar takes the height the bar sets',
+     String(await p.$eval('#headstrip', e => Math.round(e.getBoundingClientRect().height))));
+  ok(await p.$eval('#tabs .tab', e => Math.round(e.getBoundingClientRect().height) === 72), 'and every part button takes its own',
+     String(await p.$eval('#tabs .tab', e => Math.round(e.getBoundingClientRect().height))));
+  // THE DIVIDERS — pattern and absence
+  await p.evaluate(() => { window.FRAME.headDivS = 'dashed'; window.applyFrame(); }); await p.waitForTimeout(90);
+  ok(await p.$eval('#headstrip', e => getComputedStyle(e).borderBottomStyle === 'dashed'), 'the divider under the head bar takes its own pattern');
+  await p.evaluate(() => { window.FRAME.headDivS = 'none'; window.applyFrame(); }); await p.waitForTimeout(90);
+  { const d = await p.$eval('#headstrip', e => ({ s: getComputedStyle(e).borderBottomStyle, w: getComputedStyle(e).borderBottomWidth }));
+    ok(d.s === 'none' && parseFloat(d.w) === 0, 'set to NONE it is genuinely absent — no line, no width', JSON.stringify(d)); }
+  await p.evaluate(() => { window.FRAME.headDivS = 'solid'; window.FRAME.headDivW = 0; window.applyFrame(); }); await p.waitForTimeout(90);
+  ok(await p.$eval('#headstrip', e => parseFloat(getComputedStyle(e).borderBottomWidth) === 0), 'and a thickness of zero removes it the other way');
+  // A ROW'S OWN OUTLINE, distinct from the divider under it
+  await p.evaluate(() => { window.FRAME.headDivW = 1; window.FRAME.headBw = 2; window.FRAME.headBs = 'dotted'; window.applyFrame(); }); await p.waitForTimeout(90);
+  { const b = await p.$eval('#headstrip', e => { const c = getComputedStyle(e);
+      return { t: c.borderTopWidth, ts: c.borderTopStyle, bb: c.borderBottomWidth, bs: c.borderBottomStyle }; });
+    ok(parseFloat(b.t) === 2 && b.ts === 'dotted', 'a row can carry its own outline', JSON.stringify(b));
+    ok(parseFloat(b.bb) === 1 && b.bs === 'solid', 'and the divider under it keeps its own pattern at the same time', JSON.stringify(b)); }
+  // THE BENCH'S OUTER LINE — the one the operator wants transparent
+  await p.evaluate(() => { window.FRAME.benchS = 'none'; window.applyFrame(); }); await p.waitForTimeout(90);
+  ok(await p.$eval('#bench', e => getComputedStyle(e).borderTopStyle === 'none' && parseFloat(getComputedStyle(e).borderTopWidth) === 0),
+     'the outer container line goes transparent on the same rule');
+  await p.evaluate(() => { window.FRAME.benchS = 'solid'; window.applyFrame(); }); await p.waitForTimeout(90);
+  // THE GAP between the rows
+  await p.evaluate(() => { window.FRAME.headGap = 24; window.FRAME.tabsGap = 12; window.applyFrame(); }); await p.waitForTimeout(120);
+  { const g = await p.evaluate(() => { const h = document.getElementById('headstrip').getBoundingClientRect(),
+        t = document.getElementById('tabs').getBoundingClientRect(), pn = document.getElementById('panel').getBoundingClientRect();
+      return { a: Math.round(t.top - h.bottom), b: Math.round(pn.top - t.bottom) }; });
+    ok(g.a === 24, 'the space after the head bar is the space the bar sets', JSON.stringify(g));
+    ok(g.b === 12, 'and the space after the buttons is its own', JSON.stringify(g)); }
+  // the copy line says NONE where a line is off
+  await p.evaluate(() => { window.FRAME.tabsDivS = 'none'; window.applyFrame(); }); await p.waitForTimeout(60);
+  ok(/part buttons .*divider none/.test(await p.evaluate(() => window.COPYTXT.frame())), 'the copy line says NONE where a line was switched off',
+     await p.evaluate(() => window.COPYTXT.frame()));
+  // back to the boot frame, and prove the page opened there
+  await p.evaluate(() => { Object.assign(window.FRAME, { benchW: 1, benchS: 'solid',
+    headH: 42, headBw: 0, headBs: 'solid', headDivW: 1, headDivS: 'solid', headGap: 0,
+    tabsH: 46, tabsBw: 0, tabsBs: 'solid', tabsDivW: 1, tabsDivS: 'solid', tabsGap: 0 });
+    window.applyFrame(); window.drawFrameCfg(); }); await p.waitForTimeout(120);
+  ok(await p.evaluate(() => window.COPYTXT.frame()) === boot, 'the bench returns to exactly the frame it booted with', boot); }
 // the rail: three tabs, one section at a time, and every control an icon with a hover card
 // AT BOOT — before any click — exactly one rail section is visible, and it is the controls
 // THE OPERATOR'S OWN BAR (pasted back from the copy button 2026-09-11) is the default — pinned here
@@ -309,7 +363,7 @@ for (const t of rtabs) { await p.click(`#railtabs .rtb[data-rt="${t}"]`); await 
   ok(shown.length === 1 && shown[0] === 'rt-' + t, `rail toggle ${t} shows one section, never both`, shown.join(',')); }
 await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(90);
 const blocks = await p.$$eval('#rt-controls .barblk .bhl b', els => els.map(e => e.textContent));
-ok(blocks.join(',') === 'bench,head bar,part buttons,part bars', 'the controls tab separates bench · head bar · part buttons · part bars into blocks', blocks.join(','));
+ok(blocks.join(',') === 'bench,head bar,part buttons,frame,part bars', 'the controls tab separates bench · head bar · part buttons · frame · part bars into blocks', blocks.join(','));
 const prows = await p.$$eval('#partcfg .prow', els => els.length);
 ok(prows === 6, 'the BARS tab separates the controls per part — one row each', String(prows));
 const varBtns = await p.$$eval('#partcfg .ib', els => els.length);
@@ -342,9 +396,9 @@ const zones = await p.$$eval('#barcfg .dzone', els => els.map(e => e.dataset.sid
 ok(zones.join(',') === 'left,right', 'the rail shows one drop zone per pile, divided', zones.join(','));
 // a copy button per control block, each producing a readable line
 const cpb = await p.$$('.barblk .cpb');
-ok(cpb.length === 4, 'every control block has a COPY button', String(cpb.length));
+ok(cpb.length === 5, 'every control block has a COPY button', String(cpb.length));
 const lines = await p.evaluate(() => Object.keys(window.COPYTXT).map(k => window.COPYTXT[k]()));
-ok(lines.length === 4 && lines.every(l => l.length > 20), 'each copy line names that section\'s selections', lines.join(' // ').slice(0, 160));
+ok(lines.length === 5 && lines.every(l => l.length > 20), 'each copy line names that section\'s selections', lines.join(' // ').slice(0, 160));
 ok(/head bar · verbosity .* LEFT .* RIGHT .* off .* styles /.test(lines[1]), 'the head-bar copy line carries verbosity, both piles, what is off, and the per-element styles', lines[1]);
 // ── per-element options: shown · text · container (operator 2026-09-11) ──
 await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(80);

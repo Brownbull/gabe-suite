@@ -37,6 +37,10 @@
           <div class="bhl"><span class="bhi"></span><b>part buttons</b><span class="bhn">the row of six</span></div>
           <div class="blkbody"><div id="tabcfg"></div></div>
         </div>
+        <div class="barblk" id="blk-frame">
+          <div class="bhl"><span class="bhi"></span><b>frame</b><span class="bhn">heights · lines · spacing</span></div>
+          <div class="blkbody"><div id="framecfg"></div></div>
+        </div>
         <div class="barblk" id="blk-parts">
           <div class="bhl"><span class="bhi"></span><b>part bars</b><span class="bhn">one distribution each</span></div>
           <div class="blkbody"><div id="partcfg"></div></div>
@@ -520,6 +524,97 @@
       b.onclick = function(ev){ ev.stopPropagation(); st.fit = o[0]; drawHead(); drawBarCfg(); }; return b; });
     row("fit", fitBtns);
     box.append(ed); }
+  /* ══ THE FRAME (operator 2026-09-12) — each row's height, the outer container line, the divider
+     under a row and the space that follows it. Every line can go to nothing; transparent is a
+     setting, not an absence. ══ */
+  var FRAME = window.FRAME = {
+    benchW: 1, benchS: "solid",
+    headH: 42, headBw: 0, headBs: "solid", headDivW: 1, headDivS: "solid", headGap: 0,
+    tabsH: 46, tabsBw: 0, tabsBs: "solid", tabsDivW: 1, tabsDivS: "solid", tabsGap: 0 };
+  var FRVAR = { benchW: "--bench-bw", benchS: "--bench-bs",
+    headH: "--head-h", headBw: "--head-bw", headBs: "--head-bs", headDivW: "--head-divw", headDivS: "--head-divs", headGap: "--head-gap",
+    tabsH: "--tabs-h", tabsBw: "--tabs-bw", tabsBs: "--tabs-bs", tabsDivW: "--tabs-divw", tabsDivS: "--tabs-divs", tabsGap: "--tabs-gap" };
+  function applyFrame(){ var b = document.getElementById("bench");
+    Object.keys(FRVAR).forEach(function(k){ var v = FRAME[k];
+      b.style.setProperty(FRVAR[k], typeof v === "number" ? v + "px" : v); }); }
+  window.applyFrame = applyFrame;
+  /* the line options ARE lines — each button draws the pattern it sets (the legend law) */
+  var LINES = [
+    ["solid",  "a continuous line",           '<path d="M3 12h18"/>'],
+    ["dashed", "a line drawn in dashes",      '<path d="M3 12h18" stroke-dasharray="5 4"/>'],
+    ["dotted", "a line drawn in dots",        '<path d="M3 12h18" stroke-dasharray="1.5 3.5"/>'],
+    ["none",   "no line — the edge is transparent, and the rows meet with nothing between them",
+                                              '<path d="M3 12h18" opacity=".22"/><path d="m5 19 14-14"/>'] ];
+  function lineIco(pat, size){ var o = LINES.filter(function(x){ return x[0] === pat; })[0] || LINES[0];
+    return '<svg viewBox="0 0 24 24" width="' + (size || 15) + '" height="' + (size || 15) + '" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">' + o[2] + '</svg>'; }
+
+  function drawFrameCfg(){ var box = document.getElementById("framecfg"); box.innerHTML = "";
+    function sub(t, why){ var d = el("div", { class: "cfsub" }, t); if (why) d.append(el("i", {}, why)); box.append(d); }
+    /* a dragged bar for anything that is a RANGE — height, thickness, spacing */
+    function sld(o){
+      box.append(el("div", { class: "cfl" }, o.label),
+        slider({ min: o.min, max: o.max, step: 1, value: FRAME[o.key], label: o.label,
+          fmt: function(v){ return v === 0 && o.zero ? o.zero : v + "px"; },
+          card: hcard({ title: o.label, value: FRAME[o.key] + "px", icon: o.icon || "shape",
+            rows: [["range", o.min + " — " + o.max + "px"]].concat(o.rows || []),
+            plain: o.plain }),
+          on: function(v){ FRAME[o.key] = v; applyFrame(); } })); }
+    /* the PATTERN of a line — including none, which is how a line becomes transparent */
+    function pat(key, plain, of){
+      var label = "pattern", w = el("div", { class: "ibwrap" });
+      LINES.forEach(function(o){
+        var btn = el("button", { class: "ib" + (FRAME[key] === o[0] ? " on" : "") });
+        btn.dataset.line = o[0]; btn.innerHTML = lineIco(o[0]);
+        hoverBind(btn, hcard({ title: o[0], value: of, icon: "shape",
+          rows: [["sets", "the pattern of " + plain]], plain: o[1] }));
+        btn.onclick = function(ev){ ev.stopPropagation(); FRAME[key] = o[0]; applyFrame(); drawFrameCfg(); };
+        w.append(btn); });
+      box.append(el("div", { class: "cfl sub" }, label), w); }
+
+    sub("the bench", "the box everything is drawn in");
+    sld({ label: "outline", key: "benchW", min: 0, max: 4, zero: "none", icon: "shape",
+      rows: [["at 0", "the bench has no outer line and sits on the page's own ground"]],
+      plain: "the line drawn around the whole console" });
+    pat("benchS", "the bench's outer line", "the bench outline");
+
+    sub("head bar", "the row of chips");
+    sld({ label: "height", key: "headH", min: 24, max: 96, icon: "bars",
+      rows: [["sets", "the row's minimum height — the chips stay centred inside it"],
+             ["chips", "a chip's own height comes from its glyph size, set in the head-bar block"]],
+      plain: "how tall this row stands" });
+    sld({ label: "outline", key: "headBw", min: 0, max: 4, zero: "none", icon: "shape",
+      rows: [["at 0", "the row has no box of its own — only the divider below it separates it"]],
+      plain: "a line drawn around this row alone" });
+    pat("headBs", "the head bar's own box", "the head bar outline");
+    sld({ label: "divider", key: "headDivW", min: 0, max: 4, zero: "none", icon: "shape",
+      rows: [["sits", "between the head bar and the part buttons"]],
+      plain: "the line between this row and the one under it" });
+    pat("headDivS", "the line under the head bar", "the head bar divider");
+    sld({ label: "gap after", key: "headGap", min: 0, max: 32, zero: "none", icon: "shape",
+      rows: [["sets", "the empty space between this row and the part buttons"],
+             ["with a divider", "the line stays on the head bar; the gap opens below it"]],
+      plain: "how far the next row sits" });
+
+    sub("part buttons", "the row of six");
+    sld({ label: "height", key: "tabsH", min: 24, max: 96, icon: "bars",
+      rows: [["sets", "each button's height"],
+             ["the glyph", "its size is its own dial; a ghost glyph is clipped by this height"]],
+      plain: "how tall the buttons stand" });
+    sld({ label: "outline", key: "tabsBw", min: 0, max: 4, zero: "none", icon: "shape",
+      rows: [["at 0", "the row has no box of its own — each button still carries its own border"]],
+      plain: "a line drawn around the whole button row" });
+    pat("tabsBs", "the button row's own box", "the button row outline");
+    sld({ label: "divider", key: "tabsDivW", min: 0, max: 4, zero: "none", icon: "shape",
+      rows: [["sits", "between the buttons and the panel they open"]],
+      plain: "the line between the buttons and the panel" });
+    pat("tabsDivS", "the line under the buttons", "the button row divider");
+    sld({ label: "gap after", key: "tabsGap", min: 0, max: 32, zero: "none", icon: "shape",
+      rows: [["sets", "the empty space between the buttons and the panel"]],
+      plain: "how far the panel sits" });
+
+    box.append(el("div", { class: "cfread" }, "every line has NONE — transparent is a setting here, not a missing one. A row can carry its own outline, the divider below it, both, or neither.")); }
+  window.drawFrameCfg = drawFrameCfg;
+
   /* ── the PART BUTTONS block in the rail ── */
   function drawTabCfg(){ var box = document.getElementById("tabcfg"); box.innerHTML = "";
     function row(label, opts, key, iconFor, extra){
@@ -587,8 +682,8 @@
      button · pill counts · wide buttons filling the row — plus FOCUS colour, which is what they
      asked for next: the open part keeps its colour and every other button goes mono. */
   var TABCFG = window.TABCFG = { intensity: "dim", palette: "focus", pattern: "valley",
-    iconSize: 24, iconMode: "ghost", iconX: 92, numSize: 12, numShape: "pill", shape: "rect",
-    layout: "fill", width: "wide", caseMode: "word" };
+    iconSize: 22, iconMode: "ghost", iconX: 73, numSize: 12, numShape: "pill", shape: "rect",
+    layout: "fill", width: "wide", caseMode: "caps" };
   function tabCol(P, isOn){
     /* FOCUS: only the open part is coloured; the rest read mono, so the row points at one thing */
     if (TABCFG.palette === "focus") return isOn ? P.col : "var(--muted)";
@@ -651,7 +746,11 @@
     tabs: function(){ return "part buttons · colour " + TABCFG.palette + " · intensity " + TABCFG.intensity + " · pattern " + TABCFG.pattern
       + " · glyph " + TABCFG.iconSize + "px " + TABCFG.iconMode + " at " + TABCFG.iconX + "%"
       + " · titles " + TABCFG.caseMode + " · count " + TABCFG.numSize + "px " + TABCFG.numShape
-      + " · button " + TABCFG.shape + " · row " + TABCFG.layout + " " + TABCFG.width; } };
+      + " · button " + TABCFG.shape + " · row " + TABCFG.layout + " " + TABCFG.width; },
+    frame: function(){ function ln(w, st){ return w === 0 || st === "none" ? "none" : w + "px " + st; }
+      return "frame · bench outline " + ln(FRAME.benchW, FRAME.benchS)
+        + " · head bar " + FRAME.headH + "px, outline " + ln(FRAME.headBw, FRAME.headBs) + ", divider " + ln(FRAME.headDivW, FRAME.headDivS) + ", gap " + FRAME.headGap + "px"
+        + " · part buttons " + FRAME.tabsH + "px, outline " + ln(FRAME.tabsBw, FRAME.tabsBs) + ", divider " + ln(FRAME.tabsDivW, FRAME.tabsDivS) + ", gap " + FRAME.tabsGap + "px"; } };
   function copyBtn(kind, what){ var b = el("button", { class: "cpb" }); b.innerHTML = labIco("copy", 13);
     hoverBind(b, function(){ return '<div class="cphd">' + labIco("copy", 15, "var(--accent)") + '<b>copy</b></div><div class="cpsub">' + what + '</div><div class="cpbody">puts this section\'s selections on the clipboard as one line:<br><code>' + window.COPYTXT[kind]().replace(/</g, "&lt;") + '</code></div>'; });
     b.onclick = function(ev){ ev.stopPropagation(); copyText(window.COPYTXT[kind](), b); }; return b; }
@@ -668,7 +767,9 @@
   document.getElementById("blk-parts").querySelector(".bhl").append(copyBtn("parts", "the distribution chosen for each part"));
   document.getElementById("blk-tabs").querySelector(".bhi").innerHTML = S.icon("shape", 13, "var(--accent)");
   document.getElementById("blk-tabs").querySelector(".bhl").append(copyBtn("tabs", "how the five part buttons are drawn"));
-  ["blk-bench", "blk-head", "blk-tabs", "blk-parts"].forEach(foldable);
+  document.getElementById("blk-frame").querySelector(".bhi").innerHTML = labIco("bars", 13, "var(--accent)");
+  document.getElementById("blk-frame").querySelector(".bhl").append(copyBtn("frame", "the rows' heights, lines and spacing"));
+  ["blk-bench", "blk-head", "blk-tabs", "blk-frame", "blk-parts"].forEach(foldable);
   document.getElementById("blk-head").querySelector(".bhi").innerHTML = labIco("bars", 13, "var(--accent)");
   document.getElementById("blk-head").querySelector(".bhl").append(copyBtn("head", "the head bar's verbosity, piles and order"));
   document.getElementById("blk-parts").querySelector(".bhi").innerHTML = S.icon("layers", 13, "var(--accent)");
@@ -745,7 +846,7 @@
       try { v.render(ghost, F, S); } catch (e) { console.warn("prewalk " + k + "/" + v.key, e); } }); });
     ghost.remove(); })();
 
-  drawTabs(); drawTabCfg();
+  drawTabs(); drawTabCfg(); applyFrame(); drawFrameCfg();
   var first = (location.hash || "#data").slice(1); show(order.indexOf(first) >= 0 ? first : "data");
   window.__eplabReady = true;
 })();
