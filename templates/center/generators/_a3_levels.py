@@ -349,6 +349,32 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
                 if _t not in _seen:
                     _seen.add(_t)
                     _q.append(_t)
+    # 3b2 · A RESOLVED PORT HOP IS DRAWN (2026-09-12) — the target of a `binds` edge whose SOURCE
+    #       is already drawn. The port arms resolve a call the indexer could not: they are the only
+    #       reason `FirebaseTokenVerifier.verify` is reachable at all. Without this it stayed
+    #       invisible anyway — rule 3 wants a handler source, 3b wants a write to descend toward,
+    #       2b wants a table of its own, and a token verifier is none of the three. Its whole value
+    #       is that it is the END of the chain, so the chain has to be allowed to reach it.
+    #       Bounded by construction: only edges the arms MINTED (rel `binds`), only from an
+    #       already-drawn source, one hop — never a general reachability walk.
+    _binds = [c for c in (_gf.get("calls") or []) if c.get("rel") == "binds"]
+    if _binds:
+        for _pass in range(4):                      # a binding can chain (service → store → repo)
+            _grew = False
+            for c in _binds:
+                if c["s"] not in drawn_fn or c["t"] in drawn_fn:
+                    continue
+                drawn_fn[c["t"]] = c["ts"]
+                _grew = True
+            if not _grew:
+                break
+        _have_b = {(e["s"], e["t"]) for e in _fedges}
+        for c in _binds:
+            if c["s"] in drawn_fn and c["t"] in drawn_fn and (c["s"], c["t"]) not in _have_b:
+                _have_b.add((c["s"], c["t"]))
+                _fedges.append({"s": c["s"], "ss": c["ss"], "t": c["t"], "ds": c["ts"],
+                                "rel": "binds", "conf": c.get("conf", "inferred")})
+
     # 3c · DATA REACH (tier0 review 2026-09-07) — the READ path the write rule cannot see. Rule 3b descends only
     #      toward a WRITE (d2w), so a helper that only READS a table two hops under the handler never drew:
     #      login_access_token → crud.authenticate → get_user_by_email (User r) stopped at the handler, and the

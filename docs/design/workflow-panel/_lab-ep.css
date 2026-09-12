@@ -771,7 +771,11 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
   align-content:start; }
 .form-block .bkhd{ flex-wrap:wrap; align-items:baseline; row-gap:3px; }
 .form-block .sqs{ margin-left:0; padding-left:0; width:100%; }
-.form-block .blk{ align-self:start; }
+/* NO align-self:start here. A grid row is sized by its tallest item, and an item that opts out of
+   stretching keeps its own fractional height — which rounded UP past the row and made the blocks
+   below ride into it (measured: row 57.05px, block 58px, 1px of overlap per row). Letting the blocks
+   stretch makes a row's height and its blocks' heights the same number by construction. */
+.form-block .blk{ align-self:stretch; }
 .bkhd .bki{ display:inline-flex; flex:none; }
 .bkhd .bke{ display:inline-flex; align-items:center; gap:4px; }
 .bkhd .bkm{ display:inline-flex; align-items:center; gap:4px; }
@@ -799,3 +803,24 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
    the line keeps its shape, which means it also needs somewhere to stop */
 .bkln b, .bkln .bkm, .bkln .bke{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .bkln{ max-width:100%; }
+
+/* ══ A LINE HAS TWO COLUMNS (operator 2026-09-12) — left is pushed left, right is pushed right. And a
+   LINE IS ONE LINE: it must not wrap, because a wrapping line makes a grid row shorter than the block
+   it holds and the blocks then OVERLAP (measured: row 101px, block 112px). The ellipsis stops it. ══ */
+.bkln{ display:flex; align-items:center; gap:10px; width:100%; min-width:0; flex-wrap:nowrap; }
+.bkcol{ display:flex; align-items:center; gap:7px; min-width:0; }
+.bkcol.l{ flex:1 1 auto; }
+.bkcol.r{ flex:0 0 auto; margin-left:auto; }
+.bkcol.r:empty{ display:none; }
+/* the title's count chip: a word, or a glyph and a number */
+.sechd .cnt .dcn{ display:inline-flex; align-items:center; gap:4px; }
+.sechd .cnt .dcn svg{ display:block; }
+.sechd .cnt .dcn b{ font-weight:800; }
+.sechd .cnt .dcsep{ font-style:normal; opacity:.45; margin:0 5px; }
+/* the rail's line editor: a label, then the left and right drop zones with the divide between them */
+.lnrow{ display:flex; align-items:center; gap:8px; }
+.lnrow .dzl{ flex:none; width:52px; }
+.lnsides{ flex:1; display:flex; align-items:stretch; gap:6px; min-width:0; }
+.lnsides .dzone{ flex:1 1 0; min-width:0; }
+.lnmid{ flex:none; width:2px; align-self:stretch; background:repeating-linear-gradient(var(--line) 0 3px, transparent 3px 6px); }
+.cfnote{ font-size:12px; color:var(--muted); line-height:1.9; }

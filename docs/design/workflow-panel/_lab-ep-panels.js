@@ -689,7 +689,7 @@
      table — said here once, because the operator asked what "Location" was. */
   var BKDEF = { form: "row", icon: 1, rw: 1, name: 1, ent: "word", count: "words", model: "word",
     iconCol: "model", sel: "icon",
-    rows: [["icon", "rw", "name", "ent", "count", "model"], [], []],
+    rows: [{ l: ["icon", "rw", "name", "ent", "count", "model"], r: [] }, { l: [], r: [] }, { l: [], r: [] }],
     size: { icon: 13, rw: 12, name: 13, ent: 12, count: 12, model: 12 } };
   function bkcfg(){ var c = (window.DATACFG || {}).bk || {}, o = {};
     Object.keys(BKDEF).forEach(function(k){ o[k] = c[k] == null ? BKDEF[k] : c[k]; }); return o; }
@@ -736,11 +736,14 @@
       if (B.model === "word" || B.model === "both") m.append(E("span", null, esc(t.model)));
       return m; }
     return null; }
-  /* the title is LINES of parts — drag a part to another line in the rail and it moves here */
+  /* the title is LINES, and a line has TWO COLUMNS (operator 2026-09-12): what sits left is pushed
+     left, what sits right is pushed right. A line with nothing in it is not drawn. */
   function bkLines(t, S){ var B = bkcfg(), out = [];
-    (B.rows || []).forEach(function(row){ var line = [];
-      (row || []).forEach(function(k){ var n = bkPart(k, t, S, B); if (n) line.push(n); });
-      if (line.length) out.push(line); });
+    (B.rows || []).forEach(function(row){
+      var L = [], R = [];
+      ((row && row.l) || []).forEach(function(k){ var n = bkPart(k, t, S, B); if (n) L.push(n); });
+      ((row && row.r) || []).forEach(function(k){ var n = bkPart(k, t, S, B); if (n) R.push(n); });
+      if (L.length || R.length) out.push({ l: L, r: R }); });
     return out; }
   function renderDataBlocks(box, F, S){
     var D = F.data, TS = dtables(D), DC = window.DATACFG || {}, B = bkcfg();
@@ -758,8 +761,9 @@
       blk.dataset.table = t.table;
       var hd = E("div", { class: "bkhd" }), ti = E("div", { class: "bkti" });
       bkLines(t, S).forEach(function(line){ var ln = E("div", { class: "bkln" });
-        line.forEach(function(n){ if (typeof n === "string") ln.insertAdjacentHTML("beforeend", n); else ln.append(n); });
-        ti.append(ln); });
+        function put(into, ns){ ns.forEach(function(n){ if (typeof n === "string") into.insertAdjacentHTML("beforeend", n); else into.append(n); }); }
+        var L = E("div", { class: "bkcol l" }), R = E("div", { class: "bkcol r" });
+        put(L, line.l); put(R, line.r); ln.append(L, R); ti.append(ln); });
       hd.append(ti);
       var sqs = E("div", { class: "sqs" });
       t.cols.forEach(function(c){ var tc = typeOf(c[1]), opt = isOpt(c[1]), isFk = fkSet[c[0]], isUq = uqSet[c[0]];
@@ -994,7 +998,8 @@
      carries the definition for whoever wants it. */
   function opsCard(D, ts, S){
     var rd = D.tables.filter(function(t){ return t.rw !== "w"; }).length, wr = D.tables.filter(function(t){ return t.rw !== "r"; }).length;
-    return card({ title: "ops", icon: "table", color: S.KINDCOL.model, sub: "one op = one table on one channel",
+    return card({ title: "what the title counts", icon: "model", color: S.KINDCOL.model,
+      sub: ts.length + " of " + D.tables.length + " tables · " + colsOf(ts) + " of " + colsOf(D.tables) + " fields · one op = one table on one channel",
       rows: [["read ops", rd + " — the tables this door reads", RWC.r],
              ["write ops", wr + " — the tables it writes", RWC.w],
              ["together", rd + " + " + wr + " = " + (rd + wr) + " ops"],
@@ -1021,12 +1026,30 @@
     return w; }
   /* ONE head for every DATA distribution: the title, the ops count (hoverable — it finally says what an
      op is), and the channel bar on the right of that same row. */
+  /* THE TITLE COUNTS WHAT IS SHOWN (operator 2026-09-12): how many tables and how many FIELDS, both
+     moving with the channel switches. Each can be a word or an icon, or go. */
+  var DCOUNT = [
+    { key: "tables", icon: "model", word: function(n){ return n + " table" + (n === 1 ? "" : "s"); },
+      get: function(ts){ return ts.length; }, plain: "how many tables the channels you left on are showing" },
+    { key: "fields", icon: "table", word: function(n){ return n + " field" + (n === 1 ? "" : "s"); },
+      get: function(ts){ return colsOf(ts); }, plain: "how many columns those tables hold, added up" },
+    { key: "ops", icon: "role", word: function(n){ return n + " op" + (n === 1 ? "" : "s"); },
+      get: function(ts){ return opsOf(ts); }, plain: "one op is one table on one channel — a table on both is two" } ];
+  function countMode(k){ var c = (window.DATACFG || {}).counts;
+    if (typeof c === "string") return k === "tables" ? "word" : k === "ops" && c === "ops" ? "word" : "off";  /* the old string form */
+    return (c || {})[k] || "off"; }
+  function dcountHTML(ts, S){ var out = [];
+    DCOUNT.forEach(function(c){ var m = countMode(c.key); if (m === "off") return;
+      var n = c.get(ts);
+      out.push('<span class="dcn" data-count="' + c.key + '">'
+        + (m === "icon" ? ico(c.icon, 13, "currentColor") + '<b>' + n + '</b>' : c.word(n)) + '</span>'); });
+    return out.join('<i class="dcsep">·</i>'); }
   function dhead(box, F, D, ts, icon, note){
-    var showOps = (window.DATACFG || {}).counts === "ops";
-    var h = head(box, icon || "table", "Data",
-      (showOps ? opsOf(ts) + " ops · " : "") + ts.length + " table" + (ts.length === 1 ? "" : "s"), note);
+    var h = head(box, icon || "table", "Data", "—", note);
     var sh = h.querySelector(".sechd");
-    if (sh) { var cnt = sh.querySelector(".cnt"); if (cnt) bind(cnt, opsCard(D, ts, S));
+    if (sh) { var cnt = sh.querySelector(".cnt");
+      if (cnt) { var html = dcountHTML(ts, S);
+        if (html) { cnt.innerHTML = html; bind(cnt, opsCard(D, ts, S)); } else cnt.remove(); }
       sh.append(chanBar(D, S)); }
     return h; }
   /* an empty result is a RESULT — say what was measured instead of drawing nothing */

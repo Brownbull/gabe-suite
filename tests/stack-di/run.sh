@@ -142,5 +142,18 @@ print("ok")
 XAPY
 ) >/dev/null 2>&1; then ok; else bad "a task/action root's cross-entity data edge must survive the merge"; fi
 
+# ── BOTH arms' bindings must reach derive_functions ──────────────────────────────────────────
+# The call site passed only the TypeScript arm's edges after the Python arm was added, so the
+# Firebase hop resolved and then vanished — the arm's stats said "resolved: 1" while the map drew
+# nothing. Only the baseline gate caught it (gustify census identical when it should have moved).
+# A source pin is the right tool here: exercising the handoff needs a graft INDEX in the fixture,
+# and this is the exact line that regressed.
+grep -q "bindings=_dibind" "$GEN/_a3_graft.py" \
+  && grep -q '_dibind = list(_di.get("edges") or \[\]) + list(_pdi.get("edges") or \[\])' "$GEN/_a3_graft.py" \
+  && ok || bad "derive_functions must receive BOTH port arms' bindings (_dibind), not one arm's"
+# and the substrate the derivations read must carry them too, or d2w stays blind past the port
+grep -q "for _e in _dibind\]" "$GEN/_a3_graft.py" \
+  && ok || bad "the bindings must also enter the wiring the behind/d2w/roles derivations read"
+
 echo "stack-di: $pass passed, $fail failed"
 [ "$fail" = 0 ] || exit 1

@@ -930,7 +930,16 @@ def graft_arm(root: Path, entities: dict[str, Any],
             _di = _dimod.parse(root, wiring)
         except Exception as _de:  # noqa: BLE001
             _di = {"present": False, "reason": f"di arm error: {_de}", "edges": [], "stats": {}}
-        _dibind = list(_di.get("edges") or [])
+        # the PYTHON twin: a Protocol implementation declares nothing, so there is no `implements`
+        # edge to join — the FACTORY is the declaration instead (`get_verifier() -> TokenVerifier`
+        # returning FirebaseTokenVerifier under its predicate). Separate arm, separate try/except.
+        _pdi: dict = {"present": False, "reason": "not attempted", "edges": [], "stats": {}}
+        try:
+            import _a3_stacks_pydi as _pdimod
+            _pdi = _pdimod.parse(root, wiring)
+        except Exception as _pe:  # noqa: BLE001
+            _pdi = {"present": False, "reason": f"pydi arm error: {_pe}", "edges": [], "stats": {}}
+        _dibind = list(_di.get("edges") or []) + list(_pdi.get("edges") or [])
         _w2 = wiring
         if _disp or _mcalls or _dibind:
             _w2 = dict(wiring)
@@ -974,7 +983,7 @@ def graft_arm(root: Path, entities: dict[str, Any],
                     bentities[_sl] = _e
         out = derive_cross(wiring, entities)       # ORIGINAL wiring + entities — L1 kinds untouched (P5)
         fout = derive_functions(wiring, bentities, dispatches=_disp, module_calls=_mcalls,
-                                bindings=_di.get("edges"))   # ORIGINAL calls + dispatches + module calls + port bindings; boot-homed
+                                bindings=_dibind)   # ORIGINAL calls + dispatches + module calls + BOTH port arms' bindings; boot-homed
         behind = derive_behind(_w2, bentities)     # {<file>#<fn> → {fns, depth}} per endpoint handler (+ the BOOT root)
         endpoint_access = derive_endpoint_access(_w2, bentities, faccess)  # A2: ORM access via the call-tree
         fn_roles = derive_fn_roles(_w2, faccess)   # C1: accessor/caller/gate/pure per function
@@ -999,6 +1008,7 @@ def graft_arm(root: Path, entities: dict[str, Any],
             "present": True, "reason": reason, "index_hash": fp,
             "derived": _derived,
             "di": {k: _di.get(k) for k in ("present", "reason", "stats")},
+            "pydi": {k: _pdi.get(k) for k in ("present", "reason", "stats")},
             "index_nodes": meta.get("nodeCount"), "index_edges": meta.get("edgeCount"),
             "pairs": out["pairs"], "stats": out["stats"],
             "functions": fout,   # {fn_slug, calls} — the fn-level slice the LEVELS graph draws

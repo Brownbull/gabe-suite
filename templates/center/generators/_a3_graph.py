@@ -1572,7 +1572,8 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                        # the port-seam arm's own record: how many injected calls it resolved,
                        # how many fanned to several implementations, and which file it read as
                        # the composition root
-                       "di": graft.get("di") or {}}
+                       "di": graft.get("di") or {},
+                       "pydi": graft.get("pydi") or {}}
                       if graft_present else
                       {"present": False,
                        "reason": (graft or {}).get("reason", "not attempted")}),

@@ -143,3 +143,79 @@ which is what caught the phase-0 crash within a minute of being added.
 drawn-graph facts but not the c4 `access_edges` / `cross_edges` fields, so those before-values come
 from the phase-3 gate output rather than the snapshot file. The snapshot is at
 [before-after.json](before-after.json).
+
+---
+
+## Phase 4 — the Python port seam (`this commit`)
+
+**Firebase is back in gustify's auth journey.**
+
+```
+build_auth_context → FirebaseTokenVerifier.verify   [binds]  settings.auth_provider is ProviderMode.REAL
+                   → MockTokenVerifier.verify       [binds]  not (settings.auth_provider is ProviderMode.REAL)
+```
+
+That hop had been missing since the centre shipped.
+
+### Python needed a different mechanism, not a translation
+
+The TypeScript arm joins a constructor parameter property to graft's `implements` edges. Python
+cannot be read that way, and the reason matters:
+
+* A `Protocol` implementation **declares nothing**. `class FirebaseTokenVerifier:` has no base
+  naming the port — conformance is structural — so there is no `implements` edge to join. gustify
+  carries exactly **1** across 25,220 calls, and it belongs to a TypeScript file.
+* The binding is a **factory**, not a constructor: `get_verifier() -> TokenVerifier` returns
+  `FirebaseTokenVerifier(settings)` or `MockTokenVerifier()` on a condition.
+
+So the factory IS the declaration, and a better one: its return annotation names the port, its body
+names the implementations, and the branch names the predicate. `_a3_stacks_pydi.py` reads all of it
+with **`ast`**, not regex — Python hands the shapes over exactly.
+
+The four facts: a class whose bases include `Protocol`/`ABC` (the port) · a class returned by a
+function annotated `-> Port`, or one that subclasses it (the abc idiom) · a name annotated with the
+port — parameter, attribute or variable (the receiver) · `<receiver>.<method>(` inside a function.
+
+### Three false positives caught before shipping
+
+| accepted | consequence, measured |
+|---|---|
+| any return annotation as a port | **`Any` became a port**, `MappingProxyType` its implementation — **414 phantom edges** on gustify, drawing `recipe_techniques → ApplicationDefault` |
+| a non-abstract annotation as a port | gastify's result dataclasses became ports — `_raw_output → Agent` |
+| an unguarded fallback as unconditional | `MockTokenVerifier` read as always-on, the **opposite** of true |
+
+The floor that fixed the first two: **a port must be declared abstract.** A concrete base used as an
+injected type is not read, and the census says so rather than this arm guessing.
+
+### A fourth rule the phase needed
+
+Rule **3b2**: the target of a `binds` edge whose source is already drawn is drawn. Without it the
+resolution stayed invisible anyway — rule 3 wants a handler source, 3b wants a write to descend
+toward, 2b wants a table of its own, and a token verifier is none of the three. Its whole value is
+being the END of the chain, so the chain must be allowed to reach it. Bounded by construction: only
+arm-minted edges, only from a drawn source, at most four chained hops.
+
+### Measured
+
+| | gustify | gastify | tier3 | keypro |
+|---|---|---|---|---|
+| fn_nodes | **299 → 301** | unchanged | **2,666 → 2,719** | **40 → 60** |
+| fn_edges | **427 → 429** | unchanged | **3,348 → 3,461** | **40 → 66** |
+| cross data edges | unchanged | unchanged | **1,891 → 2,032** | unchanged |
+| homing_agree | unchanged | unchanged | **1,318 → 1,331** | unchanged |
+| ports · impls | 6 · 2 | 1 · 0 | 60 · 125 | — (TS arm) |
+
+gastify is **census-identical** and honest-empty with a reason: *"no abstraction has a known
+implementation."* keypro's +20 nodes are the in-memory arm of each binding, now drawn beside the
+Postgres arm with the opposite predicate.
+
+### The handoff bug that nearly shipped
+
+`derive_functions` was being passed `_di.get("edges")` — the TypeScript arm only — after the Python
+arm was added to `_dibind`. The arm's stats read `resolved: 1` while the map drew nothing. **Only
+the baseline gate caught it**: gustify's census came back identical when it should have moved. The
+call site is now pinned by a source assertion in `tests/stack-di`, mutation-proven.
+
+`tests/stack-pydi` 2/2 (**5 mutants**: any-is-port · concrete-is-port · no-negation · no-factory ·
+no-ast-guard) · `tests/stack-di` 4/4 (+ the handoff pin) · 11 other batteries green ·
+suite-doctor CLEAN.

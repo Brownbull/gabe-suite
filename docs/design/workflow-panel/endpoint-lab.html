@@ -655,13 +655,13 @@
      out. Hiding is a CHOICE, never a loss: the element stays in the page, one click brings it back, and
      a section that the open distribution does not draw says so instead of pretending to work. ══ */
   var DATACFG = window.DATACFG = {
-    show: { note: 1, counts: 1, shapes: 1, rw: 1, commit: 1, ev: 1, mdl: 1, ents: 1, legend: 1 },
+    show: { note: 0, counts: 1, shapes: 1, rw: 1, commit: 1, ev: 1, mdl: 1, ents: 1, legend: 1 },
     width: "flex", tiles: "stack", order: "size",
     chan: { w: 1, r: 1, rw: 1 },     /* APPENDABLE channels — all three on IS "every table" */
-    counts: "tables",                /* the title's count: "tables" or "ops" (the operator found ops implicit) */
+    counts: { tables: "word", fields: "word", ops: "off" },   /* what the title counts, and how */
     bk: { form: "block", icon: 1, rw: 1, name: 1, ent: "word", count: "words", model: "word",
           iconCol: "model", sel: "icon",              /* the glyph's colour is a SETTING, not the entity's */
-          rows: [["icon", "rw", "name", "ent", "count", "model"], [], []],
+          rows: [{ l: ["icon", "rw", "name", "ent", "count", "model"], r: [] }, { l: [], r: [] }, { l: [], r: [] }],
           size: { icon: 13, rw: 12, name: 13, ent: 12, count: 12, model: 12 } },
     sqSize: 11, sqGap: 2, sqShape: "round", sqPal: "type", sqOpt: 1 };
   var DSEC = [
@@ -748,10 +748,25 @@
         b.onclick = function(ev){ ev.stopPropagation(); DATACFG.chan[o[0]] = on ? 0 : 1;
           window.showTab("data"); drawDataCfg(); }; w.append(b); });
       box.append(el("div", { class: "cfl" }, "tables"), w); }
-    pick("count", "counts", [
-      ["tables", "the title counts tables and nothing else", "tables only"],
-      ["ops", "the title also counts OPS — one table on one channel, so a both-channel table is two", "ops too"]],
-      function(o){ return labIco(o[0] === "tables" ? "wauto" : "wwide", 15); });
+    /* what the TITLE counts — each count its own row, each a word or an icon (operator 2026-09-12) */
+    function cpick(label, key, iconName, plain){
+      var w = el("div", { class: "ibwrap" });
+      [["word", "spelled out — \u201c13 tables\u201d", "in words"],
+       ["icon", "the glyph and the number alone", "a glyph"],
+       ["off", "not counted in the title", "off"]].forEach(function(o){
+        var b = el("button", { class: "ib" + (DATACFG.counts[key] === o[0] ? " on" : "") });
+        b.dataset["cnt" + key] = o[0];
+        b.innerHTML = o[0] === "word" ? labIco("ton", 15) : o[0] === "icon" ? S.icon(iconName, 15) : labIco("toff", 15);
+        hoverBind(b, hcard({ title: o[2], value: label, icon: iconName,
+          rows: [["what it counts", plain], ["moves with", "the channel switches — it counts what is SHOWN, not what exists"]],
+          plain: o[1] }));
+        b.onclick = function(ev){ ev.stopPropagation(); DATACFG.counts[key] = o[0]; window.showTab("data"); drawDataCfg(); };
+        w.append(b); });
+      box.append(el("div", { class: "cfl sub" }, label), w); }
+    box.append(el("div", { class: "cfl" }, "title"), el("div", { class: "cfnote" }, "what the count chip carries"));
+    cpick("tables", "tables", "model", "how many tables the channels you left on are showing");
+    cpick("fields", "fields", "table", "how many columns those tables hold, added up");
+    cpick("ops", "ops", "role", "one op is one table on one channel — a table on both is two");
 
     sub("the block title", "which parts of a table's title line are drawn");
     function bpick(label, key, opts, iconFor){
@@ -811,15 +826,16 @@
     sub("the title lines", "drag a part to another line · click it to size it");
     { var B = DATACFG.bk, PARTS = window.BKPART || [];
       var byKey = {}; PARTS.forEach(function(x){ byKey[x.key] = x; });
-      function lineZone(i){
-        var z = el("div", { class: "dzone", "data-line": String(i) });
-        (B.rows[i] || []).forEach(function(k){ var d = byKey[k]; if (!d) return;
+      function lineZone(i, side){
+        var z = el("div", { class: "dzone", "data-line": String(i), "data-side": side });
+        (((B.rows[i] || {})[side]) || []).forEach(function(k){ var d = byKey[k]; if (!d) return;
           var shown = k === "icon" ? B.icon : k === "rw" ? B.rw : k === "name" ? B.name : B[k] !== "off";
           var b = el("button", { class: "ib dg" + (shown ? " on" : "") + (B.sel === k ? " sel" : ""), draggable: "true" });
           b.dataset.bkpart = k; b.innerHTML = S.icon(d.ico, 14);
-          hoverBind(b, hcard({ title: d.word, value: (shown ? "drawn" : "hidden") + " · line " + (i + 1) + " · " + (B.size[k] || 12) + "px",
+          hoverBind(b, hcard({ title: d.word, value: (shown ? "drawn" : "hidden") + " · line " + (i + 1) + " " + (side === "l" ? "left" : "right") + " · " + (B.size[k] || 12) + "px",
             icon: d.ico, rows: [["what it is", d.note], ["click", "select it, and the bar below sizes it"],
-                                ["drag", "move it along this line, or onto another one"]],
+                                ["drag", "along this column to reorder, or into another column to move it"],
+                                ["the columns", "what sits LEFT is pushed left, what sits RIGHT is pushed right"]],
             plain: "one part of a table's title line" }));
           b.onclick = function(ev){ ev.stopPropagation(); B.sel = k; drawDataCfg(); };
           b.addEventListener("dragstart", function(ev){ ev.dataTransfer.setData("text/plain", k); ev.dataTransfer.effectAllowed = "move"; b.classList.add("dragging"); window.hoverHide(); });
@@ -832,9 +848,12 @@
           var kids = [].slice.call(z.querySelectorAll(".ib")).filter(function(x){ return x.dataset.bkpart !== key; });
           var idx = kids.length;
           for (var j = 0; j < kids.length; j++) { var r = kids[j].getBoundingClientRect(); if (ev.clientX < r.left + r.width / 2) { idx = j; break; } }
-          window.moveBkPart(key, i, idx); });
-        return el("div", { class: "dzwrap" }, el("div", { class: "dzl" }, "line " + (i + 1)), z); }
-      var zs = el("div", { class: "zones lines" }); [0, 1, 2].forEach(function(i){ zs.append(lineZone(i)); });
+          window.moveBkPart(key, i, side, idx); });
+        return z; }
+      var zs = el("div", { class: "zones lines" });
+      [0, 1, 2].forEach(function(i){ zs.append(el("div", { class: "lnrow" },
+        el("div", { class: "dzl" }, "line " + (i + 1)),
+        el("div", { class: "lnsides" }, lineZone(i, "l"), el("i", { class: "lnmid" }), lineZone(i, "r")))); });
       box.append(el("div", { class: "cfl" }, "lines"), zs);
       var selKey = B.sel, selDef = byKey[selKey] || PARTS[0];
       box.append(el("div", { class: "cfl sub" }, "size"),
@@ -846,7 +865,7 @@
                    ["what it sizes", selDef.note]],
             plain: "how big this part of the title is drawn" }),
           on: function(v){ B.size[selKey] = v; window.showTab("data"); } }));
-      box.append(el("div", { class: "cfread" }, "the selected part is outlined. Drag a part onto LINE 2 or LINE 3 and the title stacks — a block can read as three short lines instead of one long one.")); }
+      box.append(el("div", { class: "cfread" }, "the selected part is outlined. Each line has TWO columns: what you drop on the left is pushed left, what you drop on the right is pushed right. Drag onto line 2 or 3 and the title stacks.")); }
 
     sub("the squares", "only the Blocks distribution reads these");
     box.append(el("div", { class: "cfl sub" }, "size"),
@@ -899,12 +918,13 @@
     box.append(el("div", { class: "cfread" }, "a hidden section is still in the page and one click brings it back. The no-loss checklist records what each part has DRAWN since the page opened and never un-ticks — so read it as what the design can show, not as what is on screen right now.")); }
   window.drawDataCfg = drawDataCfg;
   /* move a title part to a line, at an index — one call, so the probe drives the same path a drag does */
-  window.moveBkPart = function(key, line, idx){ var B = DATACFG.bk;
-    B.rows = B.rows.map(function(r){ return r.filter(function(k){ return k !== key; }); });
-    while (B.rows.length <= line) B.rows.push([]);
-    var row = B.rows[line]; row.splice(Math.max(0, Math.min(idx, row.length)), 0, key);
+  window.moveBkPart = function(key, line, side, idx){ var B = DATACFG.bk;
+    B.rows = B.rows.map(function(r){ return { l: r.l.filter(function(k){ return k !== key; }), r: r.r.filter(function(k){ return k !== key; }) }; });
+    while (B.rows.length <= line) B.rows.push({ l: [], r: [] });
+    var col = B.rows[line][side === "r" ? "r" : "l"];
+    col.splice(Math.max(0, Math.min(idx == null ? col.length : idx, col.length)), 0, key);
     B.sel = key; window.showTab("data"); drawDataCfg(); };
-  window.bkRows = function(){ return DATACFG.bk.rows.map(function(r){ return r.slice(); }); };
+  window.bkRows = function(){ return DATACFG.bk.rows.map(function(r){ return { l: r.l.slice(), r: r.r.slice() }; }); };
 
   /* ── the PART BUTTONS block in the rail ── */
   function drawTabCfg(){ var box = document.getElementById("tabcfg"); box.innerHTML = "";
@@ -1042,10 +1062,12 @@
       var hidden = DSEC.filter(function(x){ return !DATACFG.show[x.key]; }).map(function(x){ return x.key; });
       var ch = ["w", "r", "rw"].filter(function(k){ return DATACFG.chan[k]; });
       var B = DATACFG.bk;
-      return "data · shown as " + dataVar() + " · tables " + (ch.length === 3 ? "all" : ch.join("+") || "none") + " · count " + DATACFG.counts
+      var C = DATACFG.counts;
+      return "data · shown as " + dataVar() + " · tables " + (ch.length === 3 ? "all" : ch.join("+") || "none")
+        + " · title counts tables " + C.tables + ", fields " + C.fields + ", ops " + C.ops
         + " · block " + B.form + " (icon " + (B.icon ? "on" : "off") + " " + B.iconCol + ", chip " + (B.rw ? "on" : "off") + ", name " + (B.name ? "on" : "off")
         + ", entity " + B.ent + ", count " + B.count + ", model " + B.model + ")"
-        + " · lines " + B.rows.map(function(r){ return r.join(" ") || "—"; }).join(" / ")
+        + " · lines " + B.rows.map(function(r){ return (r.l.join(" ") || "—") + " | " + (r.r.join(" ") || "—"); }).join(" / ")
         + " · sizes " + Object.keys(B.size).map(function(k){ return k + " " + B.size[k]; }).join(" ")
         + " · squares " + DATACFG.sqSize + "px gap " + DATACFG.sqGap + " " + DATACFG.sqShape + " by " + DATACFG.sqPal + (DATACFG.sqOpt ? ", optional marked" : "")
         + " · grounds by " + DATACFG.order + ", width " + DATACFG.width + ", tiles " + DATACFG.tiles

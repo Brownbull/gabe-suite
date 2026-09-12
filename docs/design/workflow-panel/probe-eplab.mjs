@@ -50,10 +50,11 @@ ok(tabs.join(',') === 'data,schemas,functions,tests,widening,security', 'SIX tab
 
 // the DATA panel boots on the operator's own default line (2026-09-12)
 ok(await p.evaluate(() => window.COPYTXT.data()) ===
-   'data · shown as blocks · tables all · count tables · block block (icon on model, chip on, name on, entity word, count words, model word)'
-   + ' · lines icon rw name ent count model / — / — · sizes icon 13 rw 12 name 13 ent 12 count 12 model 12'
+   'data · shown as blocks · tables all · title counts tables word, fields word, ops off'
+   + ' · block block (icon on model, chip on, name on, entity word, count words, model word)'
+   + ' · lines icon rw name ent count model | — / — | — / — | — · sizes icon 13 rw 12 name 13 ent 12 count 12 model 12'
    + ' · squares 11px gap 2 round by type, optional marked · grounds by size, width flex, tiles stack'
-   + ' · drawn note counts shapes rw commit ev mdl ents legend · nothing hidden',
+   + ' · drawn counts shapes rw commit ev mdl ents legend · hidden note',
    'the data panel boots on the operator\'s default line', await p.evaluate(() => window.COPYTXT.data()));
 
 // the head strip carries the station card's head
@@ -394,6 +395,8 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   // HIDE → the element is invisible but still in the page; SHOW → it comes back
   for (const [sec, sel] of [['note', '#panel .phdnote'], ['commit', '#panel .commit'], ['ev', '#panel .kv.ev'],
                             ['mdl', '#panel .kv.mdl'], ['legend', '#panel .plgd'], ['shapes', '#panel .shape']]) {
+    // start from SHOWN — the operator's default hides the note, and this proves the round trip either way
+    if (!await p.evaluate(k => !!window.DATACFG.show[k], sec)) { await p.click(`#datacfg .ib[data-sec="${sec}"]`); await p.waitForTimeout(140); }
     const before = await p.$$eval(sel, els => els.length);
     await p.click(`#datacfg .ib[data-sec="${sec}"]`); await p.waitForTimeout(110);
     const hid = await p.evaluate(s => { const e = document.querySelector(s); return e ? { n: document.querySelectorAll(s).length, d: getComputedStyle(e).display } : null; }, sel);
@@ -403,7 +406,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
     ok(await p.evaluate(s => getComputedStyle(document.querySelector(s)).display !== 'none', sel), `and one click brings ${sec} back`); }
   // the copy line names what is drawn and what is away
   await p.click('#datacfg .ib[data-sec="legend"]'); await p.waitForTimeout(90);
-  ok(/hidden legend/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line says which section was put away',
+  ok(/hidden [a-z ]*legend/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line says which section was put away',
      await p.evaluate(() => window.COPYTXT.data()));
   await p.click('#datacfg .ib[data-sec="legend"]'); await p.waitForTimeout(90);
   // THE GROUNDS' LAYOUT — order · width · tiles, each read off the drawn picture
@@ -460,30 +463,52 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
     ok(many > 1, 'and it CAN take the entity instead, when that is what you want to read', String(many));
     await p.click('#datacfg .ib[data-bkicon-col="model"]'); await p.waitForTimeout(280); }
   // ══ THE TITLE'S PARTS: order, line and size — the head bar's registry applied to a table ══
-  { const zones = await p.$$eval('#datacfg .zones.lines .dzone', els => els.map(e => e.dataset.line));
-    ok(zones.join(',') === '0,1,2', 'three lines to drag a part onto', zones.join(','));
-    const chips = await p.$$eval('#datacfg .dzone[data-line="0"] .ib', els => els.map(e => e.dataset.bkpart));
+  { const zones = await p.$$eval('#datacfg .zones.lines .dzone', els => els.map(e => e.dataset.line + e.dataset.side));
+    ok(zones.join(',') === '0l,0r,1l,1r,2l,2r', 'three lines, each with a LEFT and a RIGHT column', zones.join(','));
+    const chips = await p.$$eval('#datacfg .dzone[data-line="0"][data-side="l"] .ib', els => els.map(e => e.dataset.bkpart));
     ok(chips.join(',') === 'icon,rw,name,ent,count,model', 'every part of the title is a draggable chip', chips.join(','));
     ok(await p.$$eval('#datacfg .dzone .ib', els => els.every(e => e.getAttribute('draggable') === 'true')), 'and every one of them drags');
     ok(await p.$$eval('#panel .blk:first-child .bkln', els => els.length) === 1, 'the title starts on ONE line');
     // move two parts onto line 2 — the block stacks
-    await p.evaluate(() => { window.moveBkPart('count', 1, 0); window.moveBkPart('model', 1, 1); }); await p.waitForTimeout(300);
+    await p.evaluate(() => { window.moveBkPart('count', 1, 'l', 0); window.moveBkPart('model', 1, 'l', 1); }); await p.waitForTimeout(300);
     const lines = await p.$$eval('#panel .blk:first-child .bkln', els => els.map(e => e.innerText.replace(/\s+/g, ' ').trim()));
     ok(lines.length === 2, 'moving parts to line 2 stacks the title', JSON.stringify(lines));
     ok(/fields/.test(lines[1]), 'and the moved parts are the ones on the new line', lines[1]);
-    ok(await p.$$eval('#datacfg .dzone[data-line="1"] .ib', els => els.map(e => e.dataset.bkpart).join(',')) === 'count,model',
+    ok(await p.$$eval('#datacfg .dzone[data-line="1"][data-side="l"] .ib', els => els.map(e => e.dataset.bkpart).join(',')) === 'count,model',
        'the rail shows them on that line too');
-    // reorder within a line
-    await p.evaluate(() => window.moveBkPart('model', 1, 0)); await p.waitForTimeout(280);
-    ok(await p.evaluate(() => window.bkRows()[1].join(',')) === 'model,count', 'a part can be reordered inside its line',
-       await p.evaluate(() => window.bkRows()[1].join(',')));
+    // reorder within a column
+    await p.evaluate(() => window.moveBkPart('model', 1, 'l', 0)); await p.waitForTimeout(280);
+    ok(await p.evaluate(() => window.bkRows()[1].l.join(',')) === 'model,count', 'a part can be reordered inside its column',
+       await p.evaluate(() => window.bkRows()[1].l.join(',')));
+    // the RIGHT column pushes its parts right (operator 2026-09-12)
+    await p.evaluate(() => window.moveBkPart('count', 1, 'r', 0)); await p.waitForTimeout(300);
+    ok(await p.evaluate(() => window.bkRows()[1].r.join(',')) === 'count', 'a part can be moved into the RIGHT column');
+    ok(await p.evaluate(() => { const b = document.querySelector('#panel .blk'), ln = b.querySelectorAll('.bkln')[1];
+        const L = ln.querySelector('.bkcol.l').getBoundingClientRect(), R = ln.querySelector('.bkcol.r').getBoundingClientRect();
+        return R.right <= Math.round(ln.getBoundingClientRect().right) + 1 && R.left > L.left; }),
+      'and it is pushed to the right edge of its line');
+    await p.evaluate(() => window.moveBkPart('count', 1, 'l', 1)); await p.waitForTimeout(260);
     // SIZE per part, with the 12px floor held on text
     await p.click('#datacfg .dzone[data-line="0"] .ib[data-bkpart="name"]'); await p.waitForTimeout(200);
     await p.evaluate(() => { window.DATACFG.bk.size.name = 22; window.showTab('data'); }); await p.waitForTimeout(280);
     ok(await p.$eval('#panel .blk b', e => Math.round(parseFloat(getComputedStyle(e).fontSize)) === 22), 'a part takes the size its bar sets',
        await p.$eval('#panel .blk b', e => getComputedStyle(e).fontSize));
-    await p.evaluate(() => { window.DATACFG.bk.size.name = 13; window.moveBkPart('count', 0, 4); window.moveBkPart('model', 0, 5); }); await p.waitForTimeout(300);
-    ok(await p.evaluate(() => window.bkRows()[0].join(',')) === 'icon,rw,name,ent,count,model', 'and everything goes back to one line');
+    await p.evaluate(() => { window.DATACFG.bk.size.name = 13; window.moveBkPart('count', 0, 'l', 4); window.moveBkPart('model', 0, 'l', 5); }); await p.waitForTimeout(300);
+    ok(await p.evaluate(() => window.bkRows()[0].l.join(',')) === 'icon,rw,name,ent,count,model', 'and everything goes back to one line');
+    // ── BLOCKS MUST NEVER OVERLAP (operator 2026-09-12) — a wrapping title line made the grid row
+    //    shorter than the block it held, and the blocks below rode up into it. Measured at three widths. ──
+    for (const w of [820, 1100, 1500]) {
+      await p.evaluate(x => { document.getElementById('bench').style.setProperty('--bw', x + 'px'); }, w);
+      await p.waitForTimeout(220);
+      const over = await p.evaluate(() => { const bs = [...document.querySelectorAll('#panel .blk')].map(e => { const r = e.getBoundingClientRect();
+          return { t: e.dataset.table, x: r.left, y: r.top, w: r.width, h: r.height }; });
+        const hits = [];
+        for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) { const a = bs[i], c = bs[j];
+          if (a.x < c.x + c.w - 1 && c.x < a.x + a.w - 1 && a.y < c.y + c.h - 1 && c.y < a.y + a.h - 1) hits.push(a.t + ' × ' + c.t); }
+        return { hits, n: bs.length, first: bs.slice(0, 4).map(x => x.t.slice(0, 10) + '@' + Math.round(x.x) + ',' + Math.round(x.y) + '+' + Math.round(x.h)),
+                 form: document.querySelector('#panel .bkbody').className, disp: getComputedStyle(document.querySelector('#panel .bkbody')).display }; });
+      ok(over.hits.length === 0, `no two blocks overlap at ${w}px`, over.hits.slice(0, 2).join(' | ') + ' :: ' + over.form + '/' + over.disp + ' :: ' + over.first.join(' ')); }
+    await p.evaluate(() => { document.getElementById('bench').style.setProperty('--bw', '1100px'); }); await p.waitForTimeout(200);
     // nothing in a title may run past its block — a nowrap name needs somewhere to stop
     ok(await p.$$eval('#panel .blk', els => els.every(b => {
       const r = b.getBoundingClientRect();
@@ -502,17 +527,33 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
     ok(bar[0].n === part.w && bar[1].n === part.r && bar[2].n === part.rw,
        'every switch carries its count', JSON.stringify(bar.map(b => b.k + '=' + b.n)));
     ok(bar[0].zero === (part.w === 0), 'a channel that holds nothing is drawn HOLLOW — a measured zero is a result', JSON.stringify(bar[0])); }
-  // the title counts TABLES by default — the ops half is the operator's option, not the default
-  { const cnt = await p.$eval('#panel .sechd .cnt', e => e.textContent);
-    ok(cnt === TB.length + ' tables', 'the title counts tables and nothing else by default', cnt);
+  // ══ THE TITLE COUNTS WHAT IS SHOWN (operator 2026-09-12): tables AND fields, both moving with the
+  //    channel switches, each a word or a glyph. ══
+  { const allCols = TB.reduce((n, t) => n + t.cols.length, 0);
+    const readCnt = () => p.$eval('#panel .sechd .cnt', e => e.innerText.replace(/\s+/g, ' ').replace(/\s*·\s*/g, ' · ').trim().toLowerCase());
+    const cnt = await readCnt();
+    ok(cnt === TB.length + ' tables · ' + allCols + ' fields', 'the title counts tables AND fields', cnt);
     await p.hover('#panel .sechd .cnt'); await p.waitForTimeout(200);
     ok(/one op = one table on one channel/i.test(await p.evaluate(() => document.getElementById('hover').innerText)),
        'and the card still says what an op is, for whoever wants it');
-    await p.click('#datacfg .ib[data-counts="ops"]'); await p.waitForTimeout(240);
+    // the counts MOVE with the channel — they count what is shown, not what exists
+    await p.click('#panel .chbar .chb[data-chan="rw"]'); await p.waitForTimeout(300);
+    const keep = TB.filter(t => t.rw !== 'rw');
+    ok(await readCnt() === keep.length + ' tables · ' + keep.reduce((n, t) => n + t.cols.length, 0) + ' fields',
+       'and both move when a channel is switched off', await readCnt());
+    await p.click('#panel .chbar .chb[data-chan="rw"]'); await p.waitForTimeout(300);
+    // a count can be a GLYPH instead of a word
+    await p.click('#datacfg .ib[data-cnttables="icon"]'); await p.waitForTimeout(280);
+    ok(await p.$eval('#panel .sechd .cnt [data-count="tables"]', (e, n) => !!e.querySelector('svg') && e.innerText.trim() === String(n), TB.length),
+       'a count can be a GLYPH and a number instead of a word');
+    await p.click('#datacfg .ib[data-cntfields="off"]'); await p.waitForTimeout(280);
+    ok(await p.$$eval('#panel .sechd .cnt [data-count]', els => els.length === 1), 'and a count can go entirely');
+    await p.click('#datacfg .ib[data-cntops="word"]'); await p.waitForTimeout(280);
     const rd = TB.filter(t => t.rw !== 'w').length, wr = TB.filter(t => t.rw !== 'r').length;
-    ok(await p.$eval('#panel .sechd .cnt', e => e.textContent) === (rd + wr) + ' ops · ' + TB.length + ' tables',
-       'switching ops ON puts the arithmetic back in the title');
-    await p.click('#datacfg .ib[data-counts="tables"]'); await p.waitForTimeout(240); }
+    ok(await p.$eval('#panel .sechd .cnt [data-count="ops"]', e => e.innerText.trim().toLowerCase()) === (rd + wr) + ' ops',
+       'ops can come back as its own count', await p.$eval('#panel .sechd .cnt [data-count="ops"]', e => e.innerText));
+    await p.click('#datacfg .ib[data-cnttables="word"]'); await p.click('#datacfg .ib[data-cntfields="word"]');
+    await p.click('#datacfg .ib[data-cntops="off"]'); await p.waitForTimeout(300); }
   // ANY COMBINATION is legal — switching one off leaves the others alone
   { await p.click('#panel .chbar .chb[data-chan="rw"]'); await p.waitForTimeout(280);
     const n1 = await p.$$eval('#panel .blk, #panel .fcard, #panel .ground .tile', els => els.length);
