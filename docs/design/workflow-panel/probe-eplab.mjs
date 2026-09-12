@@ -50,11 +50,11 @@ ok(tabs.join(',') === 'data,schemas,functions,tests,widening,security', 'SIX tab
 
 // the DATA panel boots on the operator's own default line (2026-09-12)
 ok(await p.evaluate(() => window.COPYTXT.data()) ===
-   'data · shown as blocks · tables all · title counts tables word, fields word, ops off'
+   'data · shown as blocks · tables all · title counts tables icon, fields icon, ops icon'
    + ' · block block (icon on model, chip on, name on, entity word, count words, model word)'
    + ' · lines icon rw name ent count model | — / — | — / — | — · sizes icon 13 rw 12 name 13 ent 12 count 12 model 12'
    + ' · squares 11px gap 2 round by type, optional marked · grounds by size, width flex, tiles stack'
-   + ' · drawn counts shapes rw commit ev mdl ents legend · hidden note',
+   + ' · drawn title counts shapes rw commit ev mdl ents legend · hidden note',
    'the data panel boots on the operator\'s default line', await p.evaluate(() => window.COPYTXT.data()));
 
 // the head strip carries the station card's head
@@ -384,7 +384,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   const lay = await p.$$eval('#datacfg .ib[data-dlayout]', els => els.map(e => e.dataset.dlayout));
   ok(lay.join(',') === 'grounds,flow,ledger,fields,blocks', 'the data block carries all five distributions', lay.join(','));
   const secs = await p.$$eval('#datacfg .ib[data-sec]', els => els.map(e => e.dataset.sec));
-  ok(secs.join(',') === 'note,counts,shapes,rw,commit,ev,mdl,ents,legend', 'nine sections, each its own toggle', secs.join(','));
+  ok(secs.join(',') === 'title,note,counts,shapes,rw,commit,ev,mdl,ents,legend', 'ten sections, each its own toggle', secs.join(','));
   ok(await p.$$eval('#datacfg .ib', els => els.every(e => !e.innerText.trim() && (!!e.querySelector('svg') || !!e.querySelector('.chsw')))),
      'every data control is DRAWN — an icon or the colour it filters by, never a word');
   // a section the OPEN distribution does not draw is marked, not silently inert
@@ -530,7 +530,12 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   // ══ THE TITLE COUNTS WHAT IS SHOWN (operator 2026-09-12): tables AND fields, both moving with the
   //    channel switches, each a word or a glyph. ══
   { const allCols = TB.reduce((n, t) => n + t.cols.length, 0);
-    const readCnt = () => p.$eval('#panel .sechd .cnt', e => e.innerText.replace(/\s+/g, ' ').replace(/\s*·\s*/g, ' · ').trim().toLowerCase());
+    const readCnt = () => p.$eval('#panel .sechd .dcnts', e => e.innerText.replace(/\s+/g, ' ').replace(/\s*·\s*/g, ' · ').trim().toLowerCase());
+    // the operator's default draws them as GLYPHS — the numbers alone
+    const opsN = TB.filter(t => t.rw !== 'w').length + TB.filter(t => t.rw !== 'r').length;
+    ok(await readCnt() === TB.length + ' · ' + allCols + ' · ' + opsN, 'the counts open as glyphs and numbers', await readCnt());
+    await p.click('#datacfg .ib[data-cnttables="word"]'); await p.click('#datacfg .ib[data-cntfields="word"]');
+    await p.click('#datacfg .ib[data-cntops="off"]'); await p.waitForTimeout(320);
     const cnt = await readCnt();
     ok(cnt === TB.length + ' tables · ' + allCols + ' fields', 'the title counts tables AND fields', cnt);
     await p.hover('#panel .sechd .cnt'); await p.waitForTimeout(200);
@@ -552,8 +557,23 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
     const rd = TB.filter(t => t.rw !== 'w').length, wr = TB.filter(t => t.rw !== 'r').length;
     ok(await p.$eval('#panel .sechd .cnt [data-count="ops"]', e => e.innerText.trim().toLowerCase()) === (rd + wr) + ' ops',
        'ops can come back as its own count', await p.$eval('#panel .sechd .cnt [data-count="ops"]', e => e.innerText));
-    await p.click('#datacfg .ib[data-cnttables="word"]'); await p.click('#datacfg .ib[data-cntfields="word"]');
-    await p.click('#datacfg .ib[data-cntops="off"]'); await p.waitForTimeout(300); }
+    // ── one pill or a pill EACH, and a colour of its own (operator 2026-09-12) ──
+    await p.click('#datacfg .ib[data-cnttables="icon"]'); await p.click('#datacfg .ib[data-cntfields="icon"]');
+    await p.click('#datacfg .ib[data-cntops="icon"]'); await p.waitForTimeout(320);
+    ok(await p.$$eval('#panel .sechd .dcnts .dcp', els => els.length === 1), 'the counts share ONE pill by default');
+    await p.click('#datacfg .ib[data-count-pills="each"]'); await p.waitForTimeout(300);
+    ok(await p.$$eval('#panel .sechd .dcnts .dcp', els => els.length === 3), 'and can split into a pill EACH');
+    await p.click('#datacfg .ib[data-count-col="kind"]'); await p.waitForTimeout(300);
+    ok(await p.$$eval('#panel .sechd .dcnts .dcp', els => new Set(els.map(e => getComputedStyle(e).color)).size === 3),
+       'BY WHAT IT COUNTS gives each pill the colour of the thing it counts');
+    await p.click('#datacfg .ib[data-count-col="plain"]'); await p.click('#datacfg .ib[data-count-pills="one"]'); await p.waitForTimeout(320); }
+  // ── the TITLE itself can go (operator 2026-09-12) ──
+  { ok(await p.$eval('#panel .phd .sechd', e => /data/i.test(e.innerText)), 'the part names itself in the title');
+    await p.click('#datacfg .ib[data-sec="title"]'); await p.waitForTimeout(280);
+    ok(await p.$eval('#panel .phd .sechd > span:not(.cnt):not(.dcnts)', e => getComputedStyle(e).display === 'none'),
+       'switching the title off takes the name away');
+    ok(await p.$eval('#panel .sechd .dcnts', e => getComputedStyle(e).display !== 'none'), 'and leaves the counts and the switches standing');
+    await p.click('#datacfg .ib[data-sec="title"]'); await p.waitForTimeout(280); }
   // ANY COMBINATION is legal — switching one off leaves the others alone
   { await p.click('#panel .chbar .chb[data-chan="rw"]'); await p.waitForTimeout(280);
     const n1 = await p.$$eval('#panel .blk, #panel .fcard, #panel .ground .tile', els => els.length);
@@ -666,6 +686,24 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
     ok(g.title && /ellipse/.test(g.title), "a table wears the graph's own model glyph — the DB drum", (g.title || '').slice(0, 60));
     ok(g.title !== g.button, 'and NOT the grid that belongs to the Data part button'); }
 }
+
+// ── THE RAIL SCROLLS ON ITS OWN (operator 2026-09-12): the page scrolled and the controls left the
+//    screen. The page no longer scrolls vertically at all — each region carries its own scrollbar. ──
+{ const geo = await p.evaluate(() => ({ doc: document.documentElement.scrollHeight, win: window.innerHeight,
+    railH: Math.round(document.getElementById('notes').getBoundingClientRect().height),
+    railScroll: document.getElementById('notes').scrollHeight,
+    railClient: document.getElementById('notes').clientHeight,
+    ovy: getComputedStyle(document.getElementById('notes')).overflowY }));
+  ok(geo.doc <= geo.win + 2, 'the page itself does not scroll vertically', JSON.stringify(geo));
+  ok(geo.railH <= geo.win, 'the rail never grows taller than the window', JSON.stringify(geo));
+  ok(geo.railScroll > geo.railClient + 4 && /auto|scroll/.test(geo.ovy), 'and carries its own scrollbar', JSON.stringify(geo));
+  // scrolling the rail moves the rail, and nothing else
+  const benchTop = await p.$eval('#bench', e => Math.round(e.getBoundingClientRect().top));
+  await p.evaluate(() => { document.getElementById('notes').scrollTop = 400; }); await p.waitForTimeout(200);
+  ok(await p.evaluate(() => document.getElementById('notes').scrollTop) > 100, 'the rail scrolls');
+  ok(await p.$eval('#bench', e => Math.round(e.getBoundingClientRect().top)) === benchTop,
+     'and the bench does not move with it — the two scroll independently');
+  await p.evaluate(() => { document.getElementById('notes').scrollTop = 0; }); await p.waitForTimeout(160); }
 
 // the rail: three tabs, one section at a time, and every control an icon with a hover card
 // AT BOOT — before any click — exactly one rail section is visible, and it is the controls

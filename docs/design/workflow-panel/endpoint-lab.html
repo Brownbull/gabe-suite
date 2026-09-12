@@ -655,16 +655,19 @@
      out. Hiding is a CHOICE, never a loss: the element stays in the page, one click brings it back, and
      a section that the open distribution does not draw says so instead of pretending to work. ══ */
   var DATACFG = window.DATACFG = {
-    show: { note: 0, counts: 1, shapes: 1, rw: 1, commit: 1, ev: 1, mdl: 1, ents: 1, legend: 1 },
+    show: { title: 1, note: 0, counts: 1, shapes: 1, rw: 1, commit: 1, ev: 1, mdl: 1, ents: 1, legend: 1 },
     width: "flex", tiles: "stack", order: "size",
     chan: { w: 1, r: 1, rw: 1 },     /* APPENDABLE channels — all three on IS "every table" */
-    counts: { tables: "word", fields: "word", ops: "off" },   /* what the title counts, and how */
+    counts: { tables: "icon", fields: "icon", ops: "icon" },  /* what the title counts, and how */
+    countPills: "one", countCol: "plain",                     /* one pill or a pill each, and its colour */
     bk: { form: "block", icon: 1, rw: 1, name: 1, ent: "word", count: "words", model: "word",
           iconCol: "model", sel: "icon",              /* the glyph's colour is a SETTING, not the entity's */
           rows: [{ l: ["icon", "rw", "name", "ent", "count", "model"], r: [] }, { l: [], r: [] }, { l: [], r: [] }],
           size: { icon: 13, rw: 12, name: 13, ent: 12, count: 12, model: 12 } },
     sqSize: 11, sqGap: 2, sqShape: "round", sqPal: "type", sqOpt: 1 };
   var DSEC = [
+    { key: "title",  word: "the title",   icon: "layers", on: ["grounds", "flow", "ledger", "fields", "blocks"],
+      what: "the part's own name and glyph, left of the counts", lost: "which part you are looking at; the counts and the switches stay" },
     { key: "note",   word: "the note",    icon: "doc",    on: ["grounds", "flow", "ledger", "fields", "blocks"],
       what: "the sentence under the title", lost: "how to read the picture, said once in words" },
     { key: "counts", word: "counts",      icon: "info",   on: ["grounds", "flow", "ledger", "fields", "blocks"],
@@ -704,8 +707,10 @@
         b.dataset[key] = o[0]; b.innerHTML = iconFor(o);
         hoverBind(b, hcard({ title: o[2] || o[0], value: label, icon: "shape",
           rows: na ? [["drawn in", onlyIn + " — not in " + live + ", so this does nothing right now"]] : null, plain: o[1] }));
+        /* every dial here changes what the panel DRAWS, so every one of them redraws it — the earlier
+           allow-list silently made two dials look broken (the pill split and its colour) */
         b.onclick = function(ev){ ev.stopPropagation(); DATACFG[key] = o[0];
-          applyData(); if (key === "order" || key === "counts" || key === "sqPal") window.showTab("data"); drawDataCfg(); }; w.append(b); });
+          applyData(); window.showTab("data"); drawDataCfg(); }; w.append(b); });
       box.append(el("div", { class: "cfl" }, label), w); }
 
     sub("layout", "the same facts, distributed differently");
@@ -767,6 +772,19 @@
     cpick("tables", "tables", "model", "how many tables the channels you left on are showing");
     cpick("fields", "fields", "table", "how many columns those tables hold, added up");
     cpick("ops", "ops", "role", "one op is one table on one channel — a table on both is two");
+
+    pick("pills", "countPills", [
+      ["one", "the counts share a single pill, separated by a dot", "one pill"],
+      ["each", "every count gets a pill of its own", "a pill each"]],
+      function(o){ return labIco(o[0] === "one" ? "wauto" : "laycfill", 15); });
+    pick("pill col", "countCol", [
+      ["plain", "every pill in the panel's own chip colour", "the chip's own"],
+      ["kind", "each pill takes the station colour of the thing it counts — tables teal, fields cyan, ops blue", "by what it counts"],
+      ["accent", "every pill in the page's accent", "the accent"],
+      ["muted", "every pill quiet enough to recede", "quiet"]],
+      function(o){ return o[0] === "plain" ? labIco("patflat", 15)
+        : o[0] === "kind" ? labIco("pathatch", 15)
+        : '<i class="chsw" style="background:' + (o[0] === "accent" ? "var(--accent)" : "var(--muted)") + '"></i>'; });
 
     sub("the block title", "which parts of a table's title line are drawn");
     function bpick(label, key, opts, iconFor){

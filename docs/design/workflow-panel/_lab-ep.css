@@ -786,7 +786,9 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
    wrapped onto a second line at 1500px, which put the portrait UNDER the bench and broke the very
    relationship the panel exists to show. The row scrolls sideways instead — the console is wide. */
 #row{ flex-wrap:nowrap; }
-#lab{ overflow-x:auto; }
+/* NO overflow on #lab. An overflow container becomes the sticky ancestor, so the rail below would
+   stick to a box that never scrolls vertically and slide off the top with the page. The document
+   scrolls sideways on its own once the row is wider than the window. */
 /* the rail declares order:1 and the bench order:2, so a new region MUST declare its own — without it
    the portrait panel inherits order 0 and renders FIRST, at the far left of the row */
 #port{ order:3; }
@@ -824,3 +826,22 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 .lnsides .dzone{ flex:1 1 0; min-width:0; }
 .lnmid{ flex:none; width:2px; align-self:stretch; background:repeating-linear-gradient(var(--line) 0 3px, transparent 3px 6px); }
 .cfnote{ font-size:12px; color:var(--muted); line-height:1.9; }
+
+/* ── THE COUNT PILLS (operator 2026-09-12): one pill, or a pill each, each colourable ── */
+.dcnts{ display:inline-flex; align-items:center; gap:5px; }
+.sechd .dcp{ cursor:help; }
+.dcnts.each .dcp{ padding-inline:7px; }
+/* ── THE TITLE ITSELF can go: the part's glyph and word, left of the counts ── */
+#panel[data-tab="data"].dh-title .phd .sechd > svg,
+#panel[data-tab="data"].dh-title .phd .sechd > span:not(.cnt):not(.dcnts){ display:none; }
+/* ══ THE RAIL SCROLLS ON ITS OWN (operator 2026-09-12) — "let's make that panel with the controls
+   scroll independently from the rest of the page". Sticky was the wrong tool: a sticky element can
+   only move inside its containing block, and the rail IS the tallest child of the row, so the row is
+   exactly its height and there is no slack to stick in. Instead the PAGE stops scrolling vertically:
+   the lab fills the window, the row takes what is left, and each region carries its own scrollbar. ══ */
+html, body{ height:100%; }
+#lab{ height:100vh; display:flex; flex-direction:column; min-height:0; overflow-x:auto; overflow-y:hidden; }
+#lede{ flex:none; }
+#row{ flex:1 1 auto; min-height:0; align-items:stretch; }
+#notes{ height:auto; max-height:100%; overflow-y:auto; align-self:stretch; }
+#bench, #port{ align-self:flex-start; }

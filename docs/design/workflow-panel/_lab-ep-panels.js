@@ -1038,18 +1038,36 @@
   function countMode(k){ var c = (window.DATACFG || {}).counts;
     if (typeof c === "string") return k === "tables" ? "word" : k === "ops" && c === "ops" ? "word" : "off";  /* the old string form */
     return (c || {})[k] || "off"; }
-  function dcountHTML(ts, S){ var out = [];
-    DCOUNT.forEach(function(c){ var m = countMode(c.key); if (m === "off") return;
-      var n = c.get(ts);
-      out.push('<span class="dcn" data-count="' + c.key + '">'
-        + (m === "icon" ? ico(c.icon, 13, "currentColor") + '<b>' + n + '</b>' : c.word(n)) + '</span>'); });
-    return out.join('<i class="dcsep">·</i>'); }
+  /* the counts sit in ONE pill or in a pill EACH, and a pill can take its own colour (operator
+     2026-09-12). "kind" gives each count the station colour of the thing it counts. */
+  var DCCOL = {
+    plain: { word: "the chip's own", get: function(){ return null; }, plain: "every pill in the panel's own chip colour" },
+    accent: { word: "the accent", get: function(){ return "var(--accent)"; }, plain: "every pill in the page's accent" },
+    kind: { word: "by what it counts", get: function(c, S){ return c.key === "tables" ? S.KINDCOL.model : c.key === "fields" ? S.KINDCOL.schema : S.OPC.call; },
+      plain: "each pill takes the station colour of the thing it counts — tables teal, fields cyan, ops blue" },
+    muted: { word: "quiet", get: function(){ return "var(--muted)"; }, plain: "every pill quiet enough to recede" } };
+  function dcountPills(ts, S, D){
+    var cfg = window.DATACFG || {}, split = cfg.countPills === "each", colDef = DCCOL[cfg.countCol] || DCCOL.plain;
+    var live = DCOUNT.filter(function(c){ return countMode(c.key) !== "off"; });
+    if (!live.length) return null;
+    function body(c){ var m = countMode(c.key), n = c.get(ts), col = colDef.get(c, S);
+      return '<span class="dcn" data-count="' + c.key + '"' + (col && split ? '' : col ? ' style="color:' + col + '"' : '') + '>'
+        + (m === "icon" ? ico(c.icon, 13, "currentColor") + '<b>' + n + '</b>' : c.word(n)) + '</span>'; }
+    var wrap = E("div", { class: "dcnts" + (split ? " each" : " one") });
+    if (split) { live.forEach(function(c){ var col = colDef.get(c, S);
+        var pill = E("span", { class: "cnt dcp", style: col ? "color:" + col + ";border-color:color-mix(in srgb," + col + " 45%, var(--line))" : null });
+        pill.innerHTML = body(c); bind(pill, opsCard(D, ts, S)); wrap.append(pill); }); }
+    else { var pill = E("span", { class: "cnt dcp" });
+      var col = colDef.get(live[0], S);
+      if (col && cfg.countCol !== "kind") pill.style.color = col;
+      pill.innerHTML = live.map(body).join('<i class="dcsep">·</i>');
+      bind(pill, opsCard(D, ts, S)); wrap.append(pill); }
+    return wrap; }
   function dhead(box, F, D, ts, icon, note){
     var h = head(box, icon || "table", "Data", "—", note);
     var sh = h.querySelector(".sechd");
-    if (sh) { var cnt = sh.querySelector(".cnt");
-      if (cnt) { var html = dcountHTML(ts, S);
-        if (html) { cnt.innerHTML = html; bind(cnt, opsCard(D, ts, S)); } else cnt.remove(); }
+    if (sh) { var cnt = sh.querySelector(".cnt"); if (cnt) cnt.remove();
+      var pills = dcountPills(ts, S, D); if (pills) sh.append(pills);
       sh.append(chanBar(D, S)); }
     return h; }
   /* an empty result is a RESULT — say what was measured instead of drawing nothing */
