@@ -1064,6 +1064,10 @@
         el("span", {}, "this part draws no portrait of its own. Data does: click a table and it is drawn here, four ways.")));
       return; }
     if (!portVar[cur]) portVar[cur] = vs[0].key;
+    /* the header names the SUBJECT — what is drawn — not the part it came from */
+    var subj = P.portraitSubject ? P.portraitSubject(F) : null;
+    document.getElementById("portt").textContent = subj || P.word.toLowerCase();
+    document.getElementById("porthd").querySelector(".pti").innerHTML = S.icon(subj ? "model" : P.icon, 14, subj ? "var(--accent)" : P.col);
     vs.forEach(function(v){ var b = el("button", { class: "ptv" + (portVar[cur] === v.key ? " on" : "") });
       b.dataset.pvar = v.key; b.innerHTML = S.icon(v.icon, 14);
       hoverBind(b, hcard({ title: v.label, value: "a way of drawing it", icon: v.icon, plain: v.hint }));

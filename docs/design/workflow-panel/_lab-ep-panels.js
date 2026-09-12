@@ -782,6 +782,7 @@
     var b = E("div", { class: "ptbody" });
     function row(k, v, col){ b.append(E("div", { class: "ptrow" }, E("span", { class: "k" }, k),
       E("span", { class: "v", style: col ? "color:" + col : null }, v))); }
+    row("table", t.table, ec);
     row("entity", t.entity || "—", ec);
     row("channel", t.rw === "rw" ? "read + write" : t.rw === "w" ? "write" : "read", RWC[t.rw]);
     row("model", t.model + " — the Python class that maps to this table");
@@ -1192,6 +1193,7 @@
   /* ── the registry — icons are STATION icons (words on hover), counts answer A ─────────── */
   window.PANELS = {
     data: { icon: "table", word: "Data", col: S.KINDCOL.model,
+      portraitSubject: function(F){ var t = selTable(F); return t ? t.table : null; },
       portraits: [ { key: "record", label: "Record", icon: "doc", hint: "everything the feed knows about the table, in rows — the densest honest reading", render: dataPortrait },
                    { key: "shape", label: "Shape", icon: "model", hint: "the drum as the graph draws it, with every field a cell beneath it", render: dataShape },
                    { key: "wheel", label: "Wheel", icon: "target", hint: "the fields laid in a ring, so what the table is MADE OF reads at a glance", render: dataWheel },

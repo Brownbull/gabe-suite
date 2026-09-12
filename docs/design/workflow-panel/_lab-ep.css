@@ -777,3 +777,12 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 .bkhd .bkm{ display:inline-flex; align-items:center; gap:4px; }
 .bkhd .bkn.badge{ padding:0 6px; border:1px solid var(--line); border-radius:999px; background:var(--panel);
   font:700 12px/1.5 var(--font-mono); color:var(--ink); }
+
+/* THE THREE REGIONS STAY IN A ROW (operator 2026-09-12): rail · middle section · portrait panel. They
+   wrapped onto a second line at 1500px, which put the portrait UNDER the bench and broke the very
+   relationship the panel exists to show. The row scrolls sideways instead — the console is wide. */
+#row{ flex-wrap:nowrap; }
+#lab{ overflow-x:auto; }
+/* the rail declares order:1 and the bench order:2, so a new region MUST declare its own — without it
+   the portrait panel inherits order 0 and renders FIRST, at the far left of the row */
+#port{ order:3; }

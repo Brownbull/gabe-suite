@@ -27,7 +27,7 @@ const { chromium } = require(PW);
 let pass = 0, fail = 0;
 const ok = (c, m, extra) => { if (c) pass++; else { fail++; console.log('  FAIL: ' + m + (extra ? ' — ' + extra : '')); } };
 const b = await chromium.launch({ executablePath: CHROME, args: ['--use-angle=swiftshader', '--no-sandbox', '--disable-gpu-sandbox', '--disable-dev-shm-usage'] });
-const p = await b.newPage({ viewport: { width: 1500, height: 1000 } });
+const p = await b.newPage({ viewport: { width: 1920, height: 1040 } });
 const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
 await p.goto('file://' + PAGE);
 await p.waitForFunction('window.__eplabReady===true', { timeout: 20000 }).catch(() => {});
@@ -298,11 +298,11 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
 // ══ THE FRAME (operator 2026-09-12): each row's height, its own outline, the divider under it and
 //    the gap after it. Measured on the rendered box, never read back off the config. ══
 { const subs = await p.$$eval('#framecfg .cfsub', els => els.map(e => e.firstChild.textContent.trim()));
-  ok(subs.join(',') === 'the bench,head bar,part buttons,the portrait', 'the frame block names the four things it frames', subs.join(','));
+  ok(subs.join(',') === 'the bench,head bar,part buttons,the portrait panel', 'the frame block names the four things it frames', subs.join(','));
   const labels = await p.$$eval('#framecfg .cfl', els => els.map(e => e.textContent));
-  ok(labels.join(',') === 'outline,pattern,height,outline,pattern,divider,pattern,gap after,row,button,outline,pattern,divider,pattern,gap after,width,rule,pattern,gap',
-     'nineteen dials: a box height per row, the button, the portrait, and every line', labels.join(','));
-  ok(await p.$$eval('#framecfg .sld', els => els.length === 13), 'every RANGE is a dragged bar, not a set of steps');
+  ok(labels.join(',') === 'outline,pattern,height,outline,pattern,divider,pattern,gap after,row,button,outline,pattern,divider,pattern,gap after,width,height,outline,pattern,gap',
+     'twenty dials: a box height per row, the button, the portrait panel, and every line', labels.join(','));
+  ok(await p.$$eval('#framecfg .sld', els => els.length === 14), 'every RANGE is a dragged bar, not a set of steps');
   ok(await p.$$eval('#framecfg .ibwrap .ib', els => els.length === 6 * 4), 'and every line pattern is a button drawing that pattern');
   ok(await p.$$eval('#framecfg .ibwrap .ib svg path', els => els.length >= 5), 'the pattern buttons draw real lines, not words');
   const boot = await p.evaluate(() => window.COPYTXT.frame());
@@ -515,40 +515,69 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
     await p.click('#datacfg .ib[data-bkname="1"]'); await p.click('#datacfg .ib[data-bkent="word"]');
     await p.click('#datacfg .ib[data-bkcount="words"]'); await p.click('#datacfg .ib[data-bkmodel="word"]'); await p.waitForTimeout(280); }
 
-  // ══ THE PORTRAIT — the console's second region, filled by what you click in the panel ══
-  { const w = await p.$eval('#portrait', e => Math.round(e.getBoundingClientRect().width));
-    ok(w === await p.evaluate(() => window.FRAME.portW), 'the portrait stands at the width the frame sets', String(w));
-    ok(await p.evaluate(() => { const s = document.getElementById('stage').getBoundingClientRect(),
-        pn = document.getElementById('panel').getBoundingClientRect(), pt = document.getElementById('portrait').getBoundingClientRect();
-      return Math.round(pn.height) === Math.round(pt.height) && pt.left >= pn.right - 1 && Math.round(pt.right) <= Math.round(s.right) + 1; }),
-      'beside the panel, the same height, inside the bench');
-    ok(await p.$eval('#portrait .ptidle', e => /nothing selected/i.test(e.innerText)), 'and it says what a selection would put there');
-    // click a table → its whole record opens in the portrait, and the panel marks it
-    const first = await p.$eval('#panel .blk', e => e.dataset.table);
-    await p.click('#panel .blk .bkhd'); await p.waitForTimeout(260);
-    ok(await p.$eval('#portrait .pthd', (e, f) => e.innerText.toLowerCase().indexOf(f.toLowerCase()) >= 0, first), 'clicking a table opens THAT table in the portrait', first);
-    ok(await p.$eval('#panel .blk', e => e.classList.contains('sel')), 'and the panel marks which one is selected');
-    { const t = F.data.tables.filter(x => x.table === first)[0];
-      const txt = await p.$eval('#portrait', e => e.innerText);
-      const low = txt.toLowerCase();
-      ok(low.indexOf(t.model.toLowerCase()) >= 0 && low.indexOf(t.entity.toLowerCase()) >= 0 && low.indexOf(t.file.toLowerCase()) >= 0,
-         'the portrait carries the entity, the class and the file', [t.model, t.entity, t.file].join(' · '));
-      ok(await p.$$eval('#portrait .flds .fld', els => els.length) === t.cols.length, 'and every field of that table'); }
-    // the selection survives a distribution change
-    await p.evaluate(() => window.showVariant('data', 'grounds')); await p.waitForTimeout(240);
-    ok(await p.$eval('#portrait .pthd', (e, f) => e.innerText.toLowerCase().indexOf(f.toLowerCase()) >= 0, first), 'the selection survives a change of distribution');
-    await p.evaluate(() => window.showVariant('data', 'blocks')); await p.waitForTimeout(240);
-    // a part with no portrait says so rather than showing the last one
-    await p.evaluate(() => window.showTab('tests')); await p.waitForTimeout(260);
-    ok(await p.$eval('#portrait .ptidle', e => /draws no portrait/i.test(e.innerText)), 'a part with no portrait of its own says so');
-    await p.evaluate(() => window.showTab('data')); await p.waitForTimeout(260);
-    // width 0 turns it off, and the click falls back to opening the fields in place
-    await p.evaluate(() => { window.FRAME.portW = 0; window.applyFrame(); window.showTab('data'); }); await p.waitForTimeout(280);
-    ok(await p.$eval('#portrait', e => getComputedStyle(e).display === 'none'), 'a width of 0 takes the portrait away');
-    await p.click('#panel .blk .bkhd'); await p.waitForTimeout(220);
-    ok(await p.$eval('#panel .blk', e => e.classList.contains('open')), 'and then a click opens the fields in place instead');
-    await p.evaluate(() => { window.FRAME.portW = 300; window.applyFrame(); window.showTab('data'); }); await p.waitForTimeout(280); }
-  await p.click('#datacfg .ib[data-dlayout="grounds"]'); await p.waitForTimeout(240); }
+  // ══ THE PORTRAIT PANEL — a SEPARATE region beside the bench, TALLER than it, holding what the middle
+  //    panel selected, in four representations (operator 2026-09-12). ══
+  { const geo = await p.evaluate(() => { const b = document.getElementById('bench').getBoundingClientRect(),
+        t = document.getElementById('port').getBoundingClientRect(), pn = document.getElementById('panel').getBoundingClientRect();
+      return { bx: Math.round(b.right), px: Math.round(t.left), pw: Math.round(t.width), ph: Math.round(t.height),
+               bh: Math.round(b.height), panelH: Math.round(pn.height) }; });
+    ok(geo.px >= geo.bx, 'the portrait panel is a SEPARATE box, to the RIGHT of the bench', JSON.stringify(geo));
+    ok(geo.pw === await p.evaluate(() => window.FRAME.portW) && geo.ph === await p.evaluate(() => window.FRAME.portH),
+       'at the width and height the frame sets', JSON.stringify(geo));
+    ok(geo.ph > geo.panelH, 'and TALLER than the middle section it sits beside', geo.ph + ' vs ' + geo.panelH);
+    ok(Math.abs(geo.pw - geo.ph) / geo.ph < 0.45, 'roughly square, so a thing can be DRAWN in it', JSON.stringify({ w: geo.pw, h: geo.ph })); }
+  { const vs = await p.$$eval('#portvars .ptv', els => els.map(e => e.dataset.pvar));
+    ok(vs.join(',') === 'record,shape,wheel,keys', 'four representations of the selected table', vs.join(','));
+    ok(await p.$eval('#portbody .ptidle', e => /nothing selected/i.test(e.innerText)), 'and it says what a selection would put there'); }
+  // click a table → it is drawn in the portrait panel, and the middle panel marks which one
+  const first = await p.$eval('#panel .blk', e => e.dataset.table);
+  await p.click('#panel .blk .bkhd'); await p.waitForTimeout(280);
+  ok(await p.$eval('#portbody', (e, f) => e.innerText.toLowerCase().indexOf(f.toLowerCase()) >= 0, first),
+     'clicking a table draws THAT table in the portrait panel', first);
+  ok(await p.$eval('#panel .blk', e => e.classList.contains('sel')), 'and the middle panel marks which one is selected');
+  { const t = F.data.tables.filter(x => x.table === first)[0];
+    const low = (await p.$eval('#portbody', e => e.innerText)).toLowerCase();
+    ok(low.indexOf(t.model.toLowerCase()) >= 0 && low.indexOf(t.entity.toLowerCase()) >= 0 && low.indexOf(t.file.toLowerCase()) >= 0,
+       'RECORD carries the entity, the class and the file', [t.model, t.entity, t.file].join(' · '));
+    ok(await p.$$eval('#portbody .flds .fld', els => els.length) === t.cols.length, 'and every field of that table');
+    // SHAPE — the drum plus one cell per field
+    await p.click('#portvars .ptv[data-pvar="shape"]'); await p.waitForTimeout(240);
+    ok(await p.$$eval('#portbody .shgrid .shcell', els => els.length) === t.cols.length, 'SHAPE draws one cell per field');
+    ok(await p.$eval('#portbody .shdrum svg', e => !!e), 'under the drum the graph itself uses');
+    // WHEEL — one segment per field, and the mix legible
+    await p.click('#portvars .ptv[data-pvar="wheel"]'); await p.waitForTimeout(240);
+    ok(await p.$$eval('#portbody .wsvg .wseg', els => els.length) === t.cols.length, 'WHEEL lays one segment per field in a ring');
+    ok(await p.$eval('#portbody .wwrap', e => { const r = e.getBoundingClientRect(); return Math.abs(r.width - r.height) < 2 && r.width > 100; }),
+       'in a square that uses the room');
+    ok(await p.$$eval('#portbody .wlgd .lg', els => els.length >= 3), 'with the mix named beside it');
+    // KEYS — outbound from the feed, inbound derived, both stated
+    await p.click('#portvars .ptv[data-pvar="keys"]'); await p.waitForTimeout(240);
+    const secs = await p.$$eval('#portbody .ptsec', els => els.map(e => e.textContent));
+    ok(secs.join(',') === 'points at,pointed at by,unique', 'KEYS shows out, in and unique', secs.join(','));
+    ok(await p.$$eval('#portbody .krow.out', els => els.length) === (t.fks || []).length, 'the outbound keys are the feed\'s own');
+    ok(await p.$eval('#portbody', e => /not in the feed|points at nothing|nothing is latched/i.test(e.innerText)),
+       'and a floor is named out loud where the feed stops');
+    await p.click('#portvars .ptv[data-pvar="record"]'); await p.waitForTimeout(200); }
+  // the selection survives a distribution change; a part with no portrait says so
+  await p.evaluate(() => window.showVariant('data', 'grounds')); await p.waitForTimeout(240);
+  ok(await p.$eval('#portbody', (e, f) => e.innerText.toLowerCase().indexOf(f.toLowerCase()) >= 0, first),
+     'the selection survives a change of distribution');
+  await p.evaluate(() => window.showVariant('data', 'blocks')); await p.waitForTimeout(240);
+  await p.evaluate(() => window.showTab('tests')); await p.waitForTimeout(260);
+  ok(await p.$eval('#portbody .ptidle', e => /draws no portrait/i.test(e.innerText)), 'a part with no portrait of its own says so');
+  ok(await p.$$eval('#portvars .ptv', els => els.length === 0), 'and offers no representations it cannot draw');
+  await p.evaluate(() => window.showTab('data')); await p.waitForTimeout(260);
+  // width 0 takes the whole panel away
+  await p.evaluate(() => { window.FRAME.portW = 0; window.applyFrame(); }); await p.waitForTimeout(200);
+  ok(await p.$eval('#port', e => e.hidden), 'a width of 0 takes the portrait panel away');
+  await p.evaluate(() => { window.FRAME.portW = 440; window.applyFrame(); window.showTab('data'); }); await p.waitForTimeout(280);
+  // THE TABLE GLYPH IS THE GRAPH'S OWN MODEL GLYPH — the DB drum, not the grid on the DATA button
+  { const g = await p.evaluate(() => { const a = document.querySelector('#panel .blk .bki svg'),
+        b = document.querySelector('#tabs .tab[data-tab="data"] .tabi svg');
+      return { title: a ? a.innerHTML.replace(/\s+/g, '') : null, button: b ? b.innerHTML.replace(/\s+/g, '') : null }; });
+    ok(g.title && /ellipse/.test(g.title), "a table wears the graph's own model glyph — the DB drum", (g.title || '').slice(0, 60));
+    ok(g.title !== g.button, 'and NOT the grid that belongs to the Data part button'); }
+}
 
 // the rail: three tabs, one section at a time, and every control an icon with a hover card
 // AT BOOT — before any click — exactly one rail section is visible, and it is the controls
