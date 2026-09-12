@@ -226,8 +226,21 @@ def derive_functions(wiring: dict[str, Any],
         s, t = _b.get("s"), _b.get("t")                # interface, resolved through the binding
         if s in fn_slug and t in fn_slug and s != t and (s, t) not in _seen_calls:
             _seen_calls.add((s, t))
-            calls.append({"s": s, "t": t, "ss": fn_slug[s], "ts": fn_slug[t],
-                          "conf": "inferred", "rel": "binds"})
+            # CARRY THE VERDICT. Both arms compute which implementation runs and under what
+            # condition; dropping it here was the whole point of the seam thrown away one line
+            # before the map. Without `bind` a one-of-N hop is indistinguishable from a resolved
+            # one — gustify drew MockTokenVerifier beside FirebaseTokenVerifier as equals, and
+            # 47 of tier3's 76 port hops are `ambiguous`. Guarded to `binds`: no other fn_edge
+            # gains a key, so every other edge stays byte-identical.
+            _e = {"s": s, "t": t, "ss": fn_slug[s], "ts": fn_slug[t],
+                  "conf": "inferred", "rel": "binds"}
+            if _b.get("predicate"):
+                _e["pred"] = _b["predicate"]
+            if _b.get("binding"):
+                _e["bind"] = _b["binding"]
+            if _b.get("port"):
+                _e["port"] = _b["port"]
+            calls.append(_e)
     for m in module_calls or []:                       # class 14: module-attribute calls the graft could not resolve — a plain call, suite-extracted
         s, t = m.get("s"), m.get("t")
         if s in fn_slug and t in fn_slug and s != t and (s, t) not in _seen_calls:

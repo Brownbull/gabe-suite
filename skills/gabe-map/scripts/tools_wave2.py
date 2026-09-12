@@ -222,7 +222,12 @@ def t_center_overview(args: dict, roots) -> dict:
                          "fe": {"present": bool((c.get("fe") or {}).get("pieces")), "homing": (st.get("fe") or {}).get("homing")},
                          "providers": sorted(((st.get("providers") or {}).get("by_provider") or {}).keys()),
                          "app_middleware": len(a.get("app_middleware") or []), "gate_endpoints": st.get("gate_endpoints"),
-                         "tasks": len(a.get("task_roots") or [])},
+                         "tasks": len(a.get("task_roots") or []),
+                         # the port seams — a call that stops at an injected abstraction. Absent
+                         # here, an orienting reader saw no sign the map had resolved any.
+                         "port_seam": {k: ((st.get("graft") or {}).get(v) or {}).get("present")
+                                       for k, v in (("ts", "di"), ("py", "pydi"))
+                                       if ((st.get("graft") or {}).get(v))}},
                 "census_gaps": {"files_unclaimed": gap("file_census"), "models_unclaimed": gap("model_census"), "routes_unclaimed": gap("route_census"),
                                 "schemas_unwired": gap("schema_homing", "unwired"), "schemas_ambiguous": gap("schema_homing", "ambiguous")},
                 "census_absent": [k for k in ("file_census", "model_census", "route_census", "schema_homing") if not (isinstance(a.get(k), dict) and a.get(k))],

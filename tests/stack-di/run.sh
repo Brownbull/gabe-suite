@@ -120,6 +120,150 @@ DIPY
 # _a3_graph merged only nodes+edges when folding a root into an existing entity, dropping every
 # xaccess it produced — and a root's data edge is almost always cross-entity, because the table it
 # writes is declared elsewhere. keypro's 10 action rollups drew 0 edges; tier3 lost 263.
+# ── the six fixes the port-seam review measured on the study repos ────────────
+mkdir -p "$T/b/src/__tests__"
+cat > "$T/b/src/svc.ts" <<'TS'
+export class Service {
+  constructor(
+    private readonly store: Store,
+    private readonly clock: Clock,
+  ) {}
+
+  // a DESTRUCTURED parameter: the body brace sits past the parameter list
+  async load({ id }: Args) {
+    clearInterval(this.timer);
+    return this.store.read(id);
+  }
+
+  get ready() { return true; }
+}
+
+// a class must end at its own closing brace — what follows is NOT its body
+interface ParsedHash {
+  readonly token: Store;
+  readonly nonce: Clock;
+}
+
+export const KEY = "k";
+TS
+cat > "$T/b/src/disk.ts" <<'TS'
+export class DiskStore {
+  async read(id: string) { return id; }
+}
+TS
+cat > "$T/b/src/__tests__/fake.ts" <<'TS'
+export class FakeStore {
+  async read(id: string) { return id; }
+}
+TS
+cat > "$T/b/src/container.ts" <<'TS'
+function build() {
+  const seen = new Set();
+  const err = new Error("x");
+  const other = new Map();
+  if (!useDisk) {
+    return { store: new MemStore() };
+  }
+  return { store: new DiskStore() };
+}
+TS
+cat > "$T/b/src/vm.ts" <<'TS'
+export function vm() {
+  const a = new Set(); const b = new Set(); const c = new Set();
+  const d = new Map(); const e = new Map(); const f = new Error("x");
+  return [a, b, c, d, e, f];
+}
+TS
+cat > "$T/b/wiring.json" <<'JSON'
+{"meta":{"version":1},"nodes":[],"edges":[
+ {"source":"src/disk.ts#DiskStore","target":"src/ports.ts#Store","relation":"implements","confidence":"extracted"},
+ {"source":"src/__tests__/fake.ts#FakeStore","target":"src/ports.ts#Store","relation":"implements","confidence":"extracted"},
+ {"source":"src/clock.ts#SystemClock","target":"Clock","relation":"implements","confidence":"extracted"}]}
+JSON
+if (cd "$GEN" && python3 - "$T/b" <<'DIBPY'
+import sys, pathlib, json
+import _a3_stacks_di as D
+root = pathlib.Path(sys.argv[1])
+o = D.parse(root, json.load(open(root / "wiring.json")))
+st = o["stats"]
+got = {(e["s"].split("#")[-1], e["t"].split("#")[-1]) for e in o["edges"]}
+
+# 1 · di-caller-nearest-call-line — the site sits in `load`, whose body brace is past a
+#     DESTRUCTURED parameter list, and a bare `clearInterval(` precedes the call.
+assert ("Service.load", "DiskStore.read") in got, f"the caller was misattributed or abstained: {sorted(got)}"
+assert not any(c.startswith("Service.ready") or c.startswith("Service.clearInterval")
+               for c, _ in got), f"a getter or a bare call stole the attribution: {sorted(got)}"
+
+# 2 · di-field-span-overrun — `interface ParsedHash` follows the class; its two members are NOT
+#     the class's fields. Running a class to the NEXT class harvested them on every study repo.
+assert st["fields"] == 2, f"the class span overran into the interface below it: fields={st['fields']}"
+
+# 3 · di-impls-include-test-doubles — a FakeStore under __tests__ is not the composed
+#     implementation. gustify's entire published TS seam was one test helper.
+assert ("Service.load", "FakeStore.read") not in got, "a test double was drawn as an implementation"
+
+# 4 · a `#`-less implements target is unresolvable and COUNTED, never guessed
+assert st.get("ports_unresolved") == 1, f"a bare port name must be counted: {st}"
+
+# 5 · di-root-counts-builtins — `new Set/Map/Error` are not compositions. `vm.ts` builds SIX and
+#     no implementation; `container.ts` builds one known impl. Neither reaches two, so there is
+#     NO root, said out loud — gustify crowned a file with 10 `new Set(` and zero project classes.
+assert st["root"] is None, f"a builtin-constructing file was crowned the composition root: {st['root']}"
+assert "two or more known implementation" in (st.get("root_reason") or ""), st
+assert st.get("capped") is False and st.get("files"), f"the cap must be published: {st}"
+print("ok")
+DIBPY
+) >/dev/null 2>&1; then ok; else bad "di: caller containment · class span · test doubles · bare port · root ignores builtins"; fi
+
+# SILENT / REASON: the reason must be DERIVED. gastify shipped "no class declares a port-typed
+# field" beside a census reading `fields: 12`.
+mkdir -p "$T/c/src"
+cat > "$T/c/src/a.ts" <<'TS'
+export class Holder {
+  constructor(private readonly sock: Sock) {}
+  close() { return this.sock?.close(); }
+}
+TS
+cat > "$T/c/wiring.json" <<'JSON'
+{"meta":{"version":1},"nodes":[],"edges":[
+ {"source":"src/impl.ts#RealSock","target":"src/ports.ts#Other","relation":"implements","confidence":"extracted"}]}
+JSON
+mkdir -p "$T/c-plain/src"
+cat > "$T/c-plain/src/b.ts" <<'TS'
+export class Plain {
+  constructor(private readonly sock: Sock) {}
+  close() { return this.sock.close(); }
+}
+TS
+if (cd "$GEN" && python3 - "$T/c" <<'DICPY'
+import sys, pathlib, json
+import _a3_stacks_di as D
+root = pathlib.Path(sys.argv[1])
+o = D.parse(root, json.load(open(root / "wiring.json")))
+st = o["stats"]
+assert o["present"] is False, o
+# the field IS declared and counted — so the reason may not claim otherwise
+assert st["fields"] == 1, st
+# `this.sock?.close()` is not matched (optional chaining, a named floor), so sites == 0 — and the
+# reason must say THAT, not "no class declares a port-typed field" while shipping `fields: 1`.
+assert st["sites"] == 0, st
+assert "declare 1 port-typed field" in o["reason"] and "none is called" in o["reason"], \
+    f"the reason is not derived from the stats beside it: {o['reason']}"
+
+# the THIRD clause: fields declared, sites called, nothing reaching an implemented port
+o3 = D.parse(pathlib.Path(sys.argv[1] + "-plain"), json.load(open(root / "wiring.json")))
+assert o3["stats"]["sites"] > 0 and o3["present"] is False, o3["stats"]
+assert "none reaching a port" in o3["reason"] and "optional chaining" in o3["reason"], \
+    f"the third clause must name the unread floors: {o3['reason']}"
+
+# and with NO implements edge at all, the cause is the index, not the source
+o2 = D.parse(root, {"edges": []})
+assert "implements" in o2["reason"], o2["reason"]
+print("ok")
+DICPY
+) >/dev/null 2>&1; then ok; else bad "di: the silence reason is DERIVED from the stats, never hardcoded"; fi
+
+
 if (cd "$GEN" && python3 - <<'XAPY'
 import _a3_graph as G
 amap = {"head": "h", "generated": "g", "entities": {

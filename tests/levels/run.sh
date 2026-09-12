@@ -442,6 +442,36 @@ AMAPn = json.loads(json.dumps(AMAPt)); AMAPn.pop("task_roots", None)
 ck(json.dumps(_a3_levels.build_levels(AMAPn, graph, graft=_GWx)["fn_edges"], sort_keys=True) == json.dumps(_lvx["fn_edges"], sort_keys=True)
    and json.dumps(_a3_levels.build_levels(AMAPn, graph, graft=_GWx)["fn_edges"], sort_keys=True) != json.dumps(_lvt["fn_edges"], sort_keys=True),
    "class 13 byte-identical: the task-root arm changes nothing when task_roots is absent — and something when present")
+# ── rule 3b2 · A RESOLVED PORT HOP IS DRAWN (2026-09-12) — the port arms resolve a call the indexer
+#    could not, so the implementation they name is the whole reason the chain reaches a store. The
+#    hop is drawn from EITHER end: requiring a drawn source discarded 74 of tier3's binds edges whose
+#    target was already on the map, and left keypro with 5 caller-less repository nodes. ──
+_GB = {"present": True, "functions": {"fn_slug": dict(_GW["functions"]["fn_slug"],
+        **{"svc/pg.py#PgSessions.create": "orders", "svc/detached.py#Caller.go": "orders"}),
+        "calls": [{"s": "api/orders.py#list_orders", "t": "svc/pg.py#PgSessions.create", "ss": "orders", "ts": "orders",
+                   "conf": "inferred", "rel": "binds", "port": "SessionRepository", "bind": "selected", "pred": "config"},
+                  {"s": "svc/detached.py#Caller.go", "t": "svc/o.py#writer", "ss": "orders", "ts": "orders",
+                   "conf": "inferred", "rel": "binds", "port": "Writer", "bind": "ambiguous"},
+                  # a PLAIN call CARRYING verdict keys: the gate is the `rel`, not key presence
+                  {"s": "api/orders.py#list_orders", "t": "svc/o.py#writer", "ss": "orders", "ts": "orders",
+                   "conf": "extracted", "port": "NotAPort", "bind": "selected", "pred": "leak"}]}}
+_lvb = _a3_levels.build_levels(AMAP, graph, graft=_GB)
+_bb = {(e["s"], e["t"]): e for e in _lvb["fn_edges"] if e.get("rel") == "binds"}
+_idb = {n["id"] for n in _lvb["fn_nodes"]}
+ck(("api/orders.py#list_orders", "svc/pg.py#PgSessions.create") in _bb and "svc/pg.py#PgSessions.create" in _idb,
+   "3b2 FIRE (target): a binds edge from a DRAWN source draws its implementation")
+ck(("svc/detached.py#Caller.go", "svc/o.py#writer") in _bb and "svc/detached.py#Caller.go" in _idb,
+   "3b2 FIRE (source): a binds edge INTO a drawn target draws its caller — symmetric, or the map shows a store nobody reaches")
+_vb = _bb[("api/orders.py#list_orders", "svc/pg.py#PgSessions.create")]
+ck(_vb.get("pred") == "config" and _vb.get("bind") == "selected" and _vb.get("port") == "SessionRepository",
+   "3b2: the VERDICT rides the edge (pred · bind · port) — a binds wire without its condition cannot be hovered")
+ck(not any(e.get("pred") or e.get("bind") or e.get("port")
+           for e in _lvb["fn_edges"] if e.get("rel") != "binds"),
+   "3b2 SILENT: the verdict keys ride binds edges ONLY, never a plain call")
+_GB0 = {"present": True, "functions": {"fn_slug": _GB["functions"]["fn_slug"], "calls": []}}
+ck(_a3_levels.build_levels(AMAP, graph, graft=_GB0)["fn_edges"] == lv["fn_edges"],
+   "3b2 byte-identical: no binds edge → the rule changes nothing")
+
 # entity-models (2026-09-06): a `models` key on the levels dict rides emit() untouched (the function-id half of the views)
 import tempfile, pathlib, json as _j
 _lv2 = copy.deepcopy(levels) if "levels" in dir() else _a3_levels.build_levels(AMAP, _a3_graph.build_c4_graph(AMAP, labels={}, status={}))

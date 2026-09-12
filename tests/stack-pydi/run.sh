@@ -136,5 +136,118 @@ print("ok")
 BAREPY
 ) >/dev/null 2>&1; then ok; else bad "pydi: honest-empty · unparseable counted · never raises"; fi
 
+# ── the three fixes the port-seam review measured ──────────────────────────────
+# Each was a real defect on the study repos, each is mutation-provable by reverting its guard.
+mkdir -p "$T/shapes"
+cat > "$T/shapes/ports.py" <<'PYF'
+from abc import ABC, abstractmethod
+from typing import Generic, TypeVar
+
+T = TypeVar("T")
+
+
+class Store(ABC):
+    @abstractmethod
+    def read(self) -> str: ...
+
+
+class Tool(ABC, Generic[T]):
+    @abstractmethod
+    def run(self) -> T: ...
+
+
+class DiskStore(Store):
+    def read(self) -> str:
+        return "disk"
+
+    def flush(self) -> None:
+        return None
+
+
+class MemStore(Store):
+    def read(self) -> str:
+        return "mem"
+
+
+class SearchTool(Tool[str]):
+    def run(self) -> str:
+        return "hit"
+PYF
+cat > "$T/shapes/use.py" <<'PYF'
+from shapes.ports import Store, Tool
+
+
+class Service:
+    # constructor injection — the dominant Python port shape
+    def __init__(self, store: Store, tools: dict[str, Tool]):
+        self.store = store
+        self.tools = tools
+
+    def load(self) -> str:
+        return self.store.read()
+
+    def drop(self) -> None:
+        # only DiskStore defines flush(); MemStore must NOT be a target
+        return self.store.flush()
+
+    def purge(self) -> None:
+        # NO implementation defines purge() — the site must abstain, and say so
+        return self.store.purge()
+
+    def shadowed(self) -> str:
+        # a LOCAL of the same name shadows the class field — this call is not the port's
+        store = OtherThing()
+        return store.read()
+
+    def count(self) -> int:
+        # `tools` is a DICT of ports, not a port
+        return self.tools.get("x")
+
+
+def run_tool(t: Tool) -> str:
+    return t.run()
+PYF
+if (cd "$GEN" && python3 - "$T/shapes" <<'SHAPEPY'
+import sys, pathlib
+import _a3_stacks_pydi as P
+o = P.parse(pathlib.Path(sys.argv[1]))
+E = o["edges"]
+pair = lambda: {(e["s"].split("#")[-1], e["t"].split("#")[-1]) for e in E}
+got = pair()
+
+# 1 · CONSTRUCTOR INJECTION resolves. `def __init__(self, store: Store)` then `self.store.read()`
+#     in a SIBLING method: the param belongs to the CLASS, not to `__init__`. Filed under
+#     `Service.__init__`, 41 tier3 sites resolved to nothing.
+assert ("Service.load", "DiskStore.read") in got, f"constructor injection resolved nothing: {sorted(got)}"
+assert ("Service.load", "MemStore.read") in got, sorted(got)
+
+# 2 · the TARGET METHOD must EXIST on the implementation. `self.store.flush()` is DiskStore's
+#     alone — MemStore.flush does not exist and must not be drawn. 115 of tier3's 180 resolutions
+#     named an attribute the class never defines.
+assert ("Service.drop", "DiskStore.flush") in got, f"a real method was dropped: {sorted(got)}"
+assert ("Service.drop", "MemStore.flush") not in got, "drew a method the implementation never defines"
+assert not [e for e in E if e["s"].endswith("Service.purge")], \
+    "drew a method NO implementation defines"
+assert o["stats"]["no_such_method"] == 1, f"an abstaining site must be COUNTED: {o['stats']}"
+
+# 4 · SHADOWING. `store = OtherThing()` rebinds the name inside the method; the class field's
+#     annotation describes a different object, and taking it draws a hop that never happens.
+assert not [e for e in E if e["s"].endswith("Service.shadowed")], \
+    f"a local shadowing the field took the field's port: {[e['t'] for e in E if e['s'].endswith('Service.shadowed')]}"
+
+# 3a · a CONTAINER of ports is not a port. `dict[str, Tool]` receiving `.get(...)` resolved to
+#      `SearchTool.get` — every such edge was a call on the container, 76 of them on tier3.
+assert not [e for e in E if e["s"].endswith("Service.count")], \
+    f"a dict[str, Tool] registered as a port receiver: {[e['t'] for e in E if e['s'].endswith('Service.count')]}"
+
+# 3b · but a SUBSCRIPTED BASE still declares inheritance. `class SearchTool(Tool[str])` is only
+#      visible through the subscript — the container guard ALONE deletes this correct edge.
+assert ("run_tool", "SearchTool.run") in got, \
+    f"the container guard took a generic-base implementation with it: {sorted(got)}"
+print("ok")
+SHAPEPY
+) >/dev/null 2>&1; then ok; else bad "pydi: ctor injection · target method exists · container≠port, generic base IS a base"; fi
+
+
 echo "stack-pydi: $pass passed, $fail failed"
 [ "$fail" = 0 ] || exit 1

@@ -102,10 +102,17 @@ check('_dropped++;return' not in page.replace(" ", ""),
 # the 4 wave-C L2 kinds are registered so wave C draws them (no NaN, no drop)
 for _k in ("middleware", "provider", "flag", "prompt"):
     check(('KINDS.'+_k+'=') in page.replace(" ", ""), "pre-C: KINDS.%s not registered" % _k)
-# the 7 wave-C rels carry colour + weight + REL2KIND bucket (pv:0 — inferred floor, never "proven")
-for _r in ("depends", "gated_by", "dispatches", "serializes", "reaches", "walls", "fnprompts"):
+# every emitted rel carries colour + weight + REL2KIND bucket (pv:0 — an inferred floor, never
+# "proven"). `binds` is here because it SHIPPED without any of them: an undeclared rel falls to
+# LINKMETA[rel]||{w:2,pv:1}, so the port-seam wires — the least proven edges on the map, resolved
+# through an interface the indexer could not follow — were labelled "structural join" and
+# "test-proven route" on the link card.
+for _r in ("depends", "gated_by", "dispatches", "serializes", "reaches", "walls", "fnprompts",
+           "binds"):
     check(('RELCOL.'+_r+'=') in page.replace(" ", "") and ('LINKMETA.'+_r+'=') in page.replace(" ", "")
           and (_r+":'") in page.replace(" ", ""), "pre-C: rel %s missing from RELCOL/LINKMETA/REL2KIND" % _r)
+check("LINKMETA.binds={w:4,pv:0}" in page.replace(" ", ""),
+      "binds must declare pv:0 — an undeclared rel defaults to pv:1 and reads as a PROVEN join")
 
 # ── 10d. batch-2 layout engine: entity-layout (chain/force/spread) + cluster-core (layer/kind/tests) + 2nd tab ──
 check('entLayout:"force"' in page and 'coreBy:"layer"' in page, "CFG missing entLayout/coreBy fields")

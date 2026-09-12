@@ -147,6 +147,20 @@ def _fe_slim(nodes: list[dict[str, Any]]) -> dict[str, Any]:
     return {"count": len(nodes), "by_kind": dict(sorted(by_kind.items())), "pieces": pieces}
 
 
+def _fedge(c: dict, s: str, t: str, ss: str, ds: str) -> dict:
+    """One fn_edge, carrying the arms' VERDICT when the call is a port binding. A `binds` edge
+    without `bind` is indistinguishable from a resolved hop — 47 of tier3's 76 are `ambiguous`,
+    and gustify drew MockTokenVerifier beside FirebaseTokenVerifier as equals. Only `binds` edges
+    gain keys, so every other edge stays byte-identical."""
+    out = {"s": s, "ss": ss, "t": t, "ds": ds,
+           "rel": c.get("rel", "calls"), "conf": c.get("conf", "inferred")}
+    if out["rel"] == "binds":
+        for k in ("pred", "bind", "port"):
+            if c.get(k):
+                out[k] = c[k]
+    return out
+
+
 def build_levels(amap: dict[str, Any], graph: dict[str, Any],
                  graft: dict[str, Any] | None = None) -> dict[str, Any]:
     """Pure derivation of the LEVELS graph from the archmap + the C4 graph."""
@@ -297,8 +311,7 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
             continue
         drawn_fn.setdefault(c["s"], c["ss"])
         drawn_fn.setdefault(c["t"], c["ts"])
-        _fedges.append({"s": c["s"], "ss": c["ss"], "t": c["t"], "ds": c["ts"],
-                        "rel": c.get("rel", "calls"), "conf": c.get("conf", "inferred")})  # class 6 + 13: event-bus AND task-enqueue edges keep rel:'dispatches'
+        _fedges.append(_fedge(c, c["s"], c["t"], c["ss"], c["ts"]))  # class 6 + 13: event-bus AND task-enqueue edges keep rel:'dispatches'
     # 3a · class 8 · DEPENDS edges (the K1 gate chain): endpoint handler → its gate dependency —
     #      a SIGNATURE fact the framework injects before the body (graft has 0 call edges into a
     #      Depends target). Handler-rooted like calls; the dep joins drawn_fn so §3b descends its
@@ -344,8 +357,7 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
                 drawn_fn.setdefault(_t, c["ts"])
                 if (_s, _t) not in _have:
                     _have.add((_s, _t))
-                    _fedges.append({"s": _s, "ss": c["ss"], "t": _t, "ds": c["ts"],
-                                    "rel": c.get("rel", "calls"), "conf": c.get("conf", "inferred")})
+                    _fedges.append(_fedge(c, _s, _t, c["ss"], c["ts"]))
                 if _t not in _seen:
                     _seen.add(_t)
                     _q.append(_t)
@@ -362,9 +374,17 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
         for _pass in range(4):                      # a binding can chain (service → store → repo)
             _grew = False
             for c in _binds:
-                if c["s"] not in drawn_fn or c["t"] in drawn_fn:
-                    continue
-                drawn_fn[c["t"]] = c["ts"]
+                _hs, _ht = c["s"] in drawn_fn, c["t"] in drawn_fn
+                if _hs == _ht:
+                    continue                        # both drawn, or neither — nothing to mint
+                # SYMMETRIC. Requiring a drawn SOURCE discarded 74 of tier3's dropped binds edges
+                # whose TARGET was already on the map, and left keypro with 5 caller-less
+                # `PostgresUserRepository.*` nodes — drawn, reached by nothing, when the arm knew
+                # exactly who called them. A resolved binding is evidence in both directions.
+                if _hs:
+                    drawn_fn[c["t"]] = c["ts"]
+                else:
+                    drawn_fn.setdefault(c["s"], c["ss"])
                 _grew = True
             if not _grew:
                 break
@@ -372,42 +392,34 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
         for c in _binds:
             if c["s"] in drawn_fn and c["t"] in drawn_fn and (c["s"], c["t"]) not in _have_b:
                 _have_b.add((c["s"], c["t"]))
-                _fedges.append({"s": c["s"], "ss": c["ss"], "t": c["t"], "ds": c["ts"],
-                                "rel": "binds", "conf": c.get("conf", "inferred")})
+                _fedges.append(_fedge(c, c["s"], c["t"], c["ss"], c["ts"]))
 
-    # 3c · DATA REACH (tier0 review 2026-09-07) — the READ path the write rule cannot see. Rule 3b descends only
-    #      toward a WRITE (d2w), so a helper that only READS a table two hops under the handler never drew:
-    #      login_access_token → crud.authenticate → get_user_by_email (User r) stopped at the handler, and the
-    #      table the spine reads was invisible. From every drawn fn, ALSO draw a callee that CARRIES access.ops
-    #      (function_insight — the ops are already on the archmap), to a bounded depth (_DATA_REACH_DEPTH — the
-    #      file's first walk cap, said here: a reader three hops down stays undrawn, a floor never a census).
-    #      A pass-through helper WITHOUT ops is not admitted (no lookahead — honest, cheap). Honest-empty: no such
-    #      callee → no new edge → byte-identical.
-    _DATA_REACH_DEPTH = 2
+    # 3c · DATA READ WIRES (tier0 review 2026-09-07; collapsed 2026-09-12) — the READ path the write
+    #      rule cannot see. Rule 3b descends only toward a WRITE (d2w), so a helper that only READS
+    #      a table never drew: login_access_token → crud.authenticate → get_user_by_email (User r)
+    #      stopped at the handler, and the table the spine reads was invisible.
+    #      This pass draws WIRES, not nodes. It was written as a bounded BFS that also admitted
+    #      nodes, but rule 2b above draws every ops-carrying function UNCONDITIONALLY, so 3c's
+    #      admission test ("the callee carries access.ops") is a strict subset of what is already
+    #      drawn: instrumented, it admitted 0 nodes on all four study repos, and mutating the depth
+    #      to 1, 2 or 5 left every baseline byte-identical. One pass over the drawn set is the same
+    #      result, said honestly.
+    #      DEPENDS ON: rule 2b staying unconditional. If 2b ever gates which ops-carrying functions
+    #      it draws, the walk has to come back — this pass can no longer reach what 2b skipped.
     _adj3: dict[str, list[dict[str, Any]]] = {}
     for c in _gf.get("calls") or []:
         _adj3.setdefault(c["s"], []).append(c)
     if _adj3:
         _have3 = {(e["s"], e["t"]) for e in _fedges}
-        _front = sorted(drawn_fn)
-        for _hop in range(_DATA_REACH_DEPTH):
-            _nxt: list[str] = []
-            for _s in _front:
-                for c in _adj3.get(_s, []):
-                    _t = c["t"]
-                    _ops = ((FI.get(_t.replace("#", "::", 1), {}) or {}).get("access") or {}).get("ops")
-                    if not _ops:
-                        continue
-                    if _t not in drawn_fn:
-                        drawn_fn[_t] = c["ts"]
-                        _nxt.append(_t)
-                    if (_s, _t) not in _have3:
-                        _have3.add((_s, _t))
-                        _fedges.append({"s": _s, "ss": c["ss"], "t": _t, "ds": c["ts"],
-                                        "rel": c.get("rel", "calls"), "conf": c.get("conf", "inferred")})
-            _front = sorted(_nxt)
-            if not _front:
-                break
+        for _s in sorted(drawn_fn):
+            for c in _adj3.get(_s, []):
+                _t = c["t"]
+                if _t not in drawn_fn or (_s, _t) in _have3:
+                    continue
+                if not ((FI.get(_t.replace("#", "::", 1), {}) or {}).get("access") or {}).get("ops"):
+                    continue
+                _have3.add((_s, _t))
+                _fedges.append(_fedge(c, _s, _t, c["ss"], c["ts"]))
     # both endpoints are now in drawn_fn by construction; keep the edge only if so
     _fedges = [e for e in _fedges if e["s"] in drawn_fn and e["t"] in drawn_fn]
     # class 9 · reaches — a drawn fn → provider:<name> (external SDK/LLM edge). The provider is NOT a

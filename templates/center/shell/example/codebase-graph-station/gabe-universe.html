@@ -1265,8 +1265,14 @@ if(typeof GLYPH!=="undefined"){
 /* the seven wave-C wire kinds: colour + weight, pv:0 (inferred/extracted floor — never "proven"). */
 RELCOL.depends="#6366f1"; RELCOL.gated_by="#7048e8"; RELCOL.dispatches="#f76707";
 RELCOL.serializes="#0ca678"; RELCOL.reaches="#e8590c"; RELCOL.walls="#e03131"; RELCOL.fnprompts="#ae3ec9";
+RELCOL.binds="#d6336c";   /* the PORT SEAM: a call resolved through an interface to the implementation the composition root binds */
 LINKMETA.depends={w:4,pv:0}; LINKMETA.gated_by={w:5,pv:0}; LINKMETA.dispatches={w:4,pv:0};
 LINKMETA.serializes={w:2,pv:0}; LINKMETA.reaches={w:3,pv:0}; LINKMETA.walls={w:4,pv:0}; LINKMETA.fnprompts={w:2,pv:0};
+/* `binds` MUST be declared here. An undeclared rel falls to `LINKMETA[rel]||{w:2,pv:1}` below —
+   pv:1 — so the Trust row read "structural join" and the Test chip "test-proven route" over an
+   edge the emitter stamped `inferred`. The port arms resolve a call the indexer could NOT: that is
+   the least proven wire on the map, not the most. pv:0. */
+LINKMETA.binds={w:4,pv:0};
 /* a synthetic generic KINDS entry for a kind no registry knows — so a NEWER emitter's kind draws
    (grey, generic glyph, its raw name) instead of vanishing. Called by the drop guard below. */
 function _genericKind(kind){ return { col:"#8a8f98", form:"panel", label:"", type:kind, layer:"data",
@@ -1745,7 +1751,7 @@ var CONN={ fk:{color:0x5893ad,style:'sparse',density:2.7,trust:0.9,grad:true,thi
   dispatches:{color:0xf76707,style:'longdash',density:1.9,trust:0.55,grad:false,thick:1,gmode:'type'} };   /* a hand-off BY NAME (a queue or the event bus): long dashes, the RELCOL amber (#f76707) — NB the #e8590c provider/reaches neighbourhood; legend pass 2026-09-06 */
 var CONN_KINDS=['fk','bridge','calls','imports','rollup','access','dispatches'];
 /* each graph REL → its connector KIND (fk=data coupling · calls=fn/data access · imports=component wiring · bridge=web→API fetch) */
-var REL2KIND={ fk:'fk', pk:'fk', nests:'fk', handler:'calls', touch:'calls', touches:'calls', resp:'calls', uses:'calls', calls:'calls', consumes:'calls', fetches:'bridge', bridge:'bridge', renders:'imports', mounts:'imports', reads:'imports', imports:'imports', typed:'imports', fecall:'calls', bundle:'calls', reads_from:'rollup', writes_to:'rollup', fnreads:'access', fnwrites:'access', depends:'calls', gated_by:'calls', dispatches:'dispatches', serializes:'fk', reaches:'calls', walls:'access', fnprompts:'calls' };
+var REL2KIND={ fk:'fk', pk:'fk', nests:'fk', handler:'calls', touch:'calls', touches:'calls', resp:'calls', uses:'calls', calls:'calls', consumes:'calls', fetches:'bridge', bridge:'bridge', renders:'imports', mounts:'imports', reads:'imports', imports:'imports', typed:'imports', fecall:'calls', bundle:'calls', reads_from:'rollup', writes_to:'rollup', fnreads:'access', fnwrites:'access', depends:'calls', gated_by:'calls', dispatches:'dispatches', serializes:'fk', reaches:'calls', walls:'access', fnprompts:'calls', binds:'calls' };
 function __uniCurve(A,B,dir,len){ var mid=A.clone().add(B).multiplyScalar(0.5);
   var up=new T.Vector3(0,1,0), perp=new T.Vector3().crossVectors(dir,up);
   if(perp.lengthSq()<1e-4) perp.set(1,0,0);
@@ -6264,7 +6270,7 @@ var KINDCARD=(function(){
       E("div",{class:"sec"}, sechd("layers","Weight"), E("div",{class:"ubar"}, E("div",{class:"ufill",style:"width:"+Math.min(100,(l.w||1)/6*100)+"%"})), E("div",{class:"sublbl"}, "edge-kind weight "+(l.w||1)+" (fixed per kind)")),
       l.payload?E("div",{class:"sec"}, sechd("table","Payload"), E("div",{class:"sublbl"}, icoEl("table"), "carries "+l.payload+" field"+(l.payload>1?"s":"")+" — "+((tk==="schema"||tk==="model")?tl:"the target structure"))):null,
       E("div",{class:"sec"}, (function(){ var _ch=sechd("truck","Cargo"); try{ if(window.__uniAssetThumb) _ch.append(window.__uniAssetThumb(function(){ return window.__uniAssets.cargo(); }, "cargo shuttle \u2014 the graph asset")); }catch(_e){} return _ch; })(), (function(){ var _x=(typeof linkCross==="function"&&linkCross(l)); return _x   ? E("div",{class:"flagrow ok"}, icoEl("test"), E("span",{class:"flbl"}, l.payload? ("present \u00b7 carries "+l.payload+" data field"+(l.payload>1?"s":"")) : "present \u00b7 empty (no payload)"))   : E("div",{class:"flagrow"}, icoEl("skip"), E("span",{class:"flbl"}, "no cargo \u00b7 same-entity wire (no transit)")); })()),E("div",{class:"sec"}, (function(){ var _tc=sechd("test","Test chip"); try{ if(window.__uniAssetThumb) _tc.append(window.__uniAssetThumb(function(){ return window.__uniAssets.testchip(); }, "test chip \u2014 the graph asset")); }catch(_e){} return _tc; })(), (function(){ var _x=(typeof linkCross==="function"&&linkCross(l)); return _x   ? E("div",{class:"flagrow ok"}, icoEl("test"), E("span",{class:"flbl"}, l.proven? "present \u00b7 test-proven route" : "present \u00b7 route not test-proven"))   : E("div",{class:"flagrow"}, icoEl("skip"), E("span",{class:"flbl"}, "no test chip \u00b7 same-entity wire (no transit)")); })()),
-      E("div",{class:"sec"}, sechd("info","Trust"), kv(null,"kind", ({fk:"structural · foreign-key join", touches:"structural · archmap touch", bridge:"inferred · web-bridge floor (method+path)", calls:"inferred · graft call floor", imports:"inferred · import floor", dispatches:"inferred · by-name floor (the target is resolved from its registered name)"}[l.rel]) || (l.proven?"structural join":"inferred floor"))),
+      E("div",{class:"sec"}, sechd("info","Trust"), kv(null,"kind", ({binds:"inferred · port binding — the implementation the composition root selects; hover the wire for its condition", fk:"structural · foreign-key join", touches:"structural · archmap touch", bridge:"inferred · web-bridge floor (method+path)", calls:"inferred · graft call floor", imports:"inferred · import floor", dispatches:"inferred · by-name floor (the target is resolved from its registered name)"}[l.rel]) || (l.proven?"structural join":"inferred floor"))),
       E("div",{class:"sec"}, sechd("role","Direction"), kv(null,"flow", sl+" → "+tl)),
       carriesSec(l)
     ]; };

@@ -337,14 +337,36 @@ def map_health(a: dict, c: dict) -> dict:
     # c4 graft stats, which is the only place that knows (the census runs before the graph is built).
     _der = ((st.get("graft") or {}).get("derived") or {})
     _blocked = {k: v for k, v in _der.items() if isinstance(v, dict) and not v.get("present")}
-    if _blocked:
-        out["arms"]["blocked_derivations"] = {
-            k: {"needs": v.get("needs") or [], "reason": v.get("reason") or ""}
-            for k, v in _blocked.items()}
+    if arms.get("concepts"):
+        if _blocked:
+            out["arms"]["blocked_derivations"] = {
+                k: {"needs": v.get("needs") or [], "reason": v.get("reason") or ""}
+                for k, v in _blocked.items()}
     else:
+        # the `not_emitted` verdict belongs to a MISSING census, not to a clean one. Bound to
+        # `_blocked` it fired whenever every derivation ran — which is all four study repos — so a
+        # current map reported its own arms census as absent and told the reader to regen.
         out["arms"] = {"state": "not_emitted",
                        "reason": "this map predates the arms census (archmap v4) — regen to learn "
                                  "which concepts had no detector for this stack"}
+    # THE PORT SEAMS. Both arms emit `{present, reason, stats}` and nothing read them, so a reader
+    # asking where the map is partial never learned that a call through an injected abstraction
+    # either resolved or did not. Reported here rather than as an arms-register concept: the
+    # register's `_produced()` has no archmap key to count for these, and would publish `empty`
+    # for keypro's 37 resolved bindings.
+    for _k, _label in (("di", "port_seam_ts"), ("pydi", "port_seam_py")):
+        _a = ((st.get("graft") or {}).get(_k)) or {}
+        if not _a:
+            continue
+        _s = _a.get("stats") or {}
+        _row = {"state": "present" if _a.get("present") else "empty",
+                "resolved": _s.get("resolved") or 0, "ambiguous": _s.get("ambiguous") or 0}
+        if not _a.get("present"):
+            _row["reason"] = _a.get("reason") or ""
+        for _extra in ("capped", "caveat", "no_such_method", "root_reason"):
+            if _s.get(_extra):
+                _row[_extra] = _s[_extra]
+        out[_label] = _row
     return out
 
 

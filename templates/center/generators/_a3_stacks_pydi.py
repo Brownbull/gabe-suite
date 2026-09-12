@@ -43,6 +43,13 @@ _SKIP = ("/.venv/", "/venv/", "/node_modules/", "/site-packages/", "/__pycache__
          "/alembic/", "/vendor/")
 _FILE_CAP = 6000
 _ABSTRACT_BASES = frozenset({"Protocol", "ABC", "ABCMeta", "Generic"})
+# `dict[str, CacheBackend]` is a DICT, not a cache backend. Unwrapping any subscript to its first
+# capitalised element registered the container as a receiver, so `caches.get(name)` resolved to
+# `RedisCacheBackend.get` — 76 such edges on tier3, every one of them a call on the container.
+_CONTAINERS = frozenset({
+    "list", "List", "dict", "Dict", "set", "Set", "frozenset", "FrozenSet", "tuple", "Tuple",
+    "Sequence", "MutableSequence", "Mapping", "MutableMapping", "Iterable", "Iterator",
+    "AsyncIterable", "AsyncIterator", "Collection", "Deque", "DefaultDict", "Counter"})
 # A PORT must be an abstraction the PROJECT declares. Without this floor a factory annotated
 # `-> Any` made `Any` a port and `MappingProxyType` its implementation — 414 phantom edges on
 # gustify, drawing `recipe_techniques → ApplicationDefault`. Two guards: the name must be a class
@@ -67,8 +74,13 @@ def _ann_name(node: ast.AST | None) -> str | None:
     if isinstance(node, ast.Attribute):
         return node.attr if node.attr[:1].isupper() else None
     if isinstance(node, ast.Subscript):
+        outer = node.value
+        base = outer.id if isinstance(outer, ast.Name) else (
+            outer.attr if isinstance(outer, ast.Attribute) else None)
+        if base in _CONTAINERS:
+            return None                  # a container OF ports is not a port — see _CONTAINERS
         inner = _ann_name(node.slice)
-        return inner or _ann_name(node.value)
+        return inner or _ann_name(outer)
     if isinstance(node, ast.BinOp):                      # `X | None`
         return _ann_name(node.left) or _ann_name(node.right)
     if isinstance(node, ast.Tuple):
@@ -81,18 +93,6 @@ def _ann_name(node: ast.AST | None) -> str | None:
     return None
 
 
-def _pred_of(stack: list[ast.AST]) -> str:
-    """The `if` test a node sits under, as source. Empty when unconditional. The INNERMOST test
-    wins — a return nested two ifs deep is selected by the nearer one."""
-    for node in reversed(stack):
-        if isinstance(node, ast.If):
-            try:
-                return ast.unparse(node.test)
-            except Exception:  # noqa: BLE001
-                return "<unparseable test>"
-    return ""
-
-
 class _Walker(ast.NodeVisitor):
     """One pass per file: ports, factories, annotated receivers, and the calls on them."""
 
@@ -103,8 +103,10 @@ class _Walker(ast.NodeVisitor):
         self.factories: list[dict] = []          # {port, impl, pred, fn}
         self.recv: dict[str, dict[str, str]] = {}   # scope key → {name → PortName}
         self.calls: list[dict] = []              # {scope, name, method, line}
+        self.methods: set[tuple[str, str]] = set()   # (ClassName, method) actually DEFINED here
+        # names BOUND in each scope (assignments + parameters) — the shadowing guard reads this
+        self.locals_of: dict[str, set[str]] = {}
         self._scope: list[str] = []
-        self._stack: list[ast.AST] = []
 
     # ── scope bookkeeping ────────────────────────────────────────────────
     def _key(self) -> str:
@@ -113,23 +115,44 @@ class _Walker(ast.NodeVisitor):
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         bases = [b.id for b in node.bases if isinstance(b, ast.Name)]
         bases += [b.attr for b in node.bases if isinstance(b, ast.Attribute)]
+        # a generic base is still a base: `class SearchTool(Tool[str])` subclasses Tool. The
+        # container guard in _ann_name would otherwise take these with it.
+        for b in node.bases:
+            if isinstance(b, ast.Subscript):
+                v = b.value
+                nm = v.id if isinstance(v, ast.Name) else (v.attr if isinstance(v, ast.Attribute) else None)
+                if nm:
+                    bases.append(nm)
         self.bases[node.name] = bases
         if _ABSTRACT_BASES & set(bases):
             self.ports[node.name] = self.rel
         self._scope.append(node.name)
-        self._stack.append(node)
         self.generic_visit(node)
-        self._stack.pop()
         self._scope.pop()
 
     def _fn(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+        if self._scope:                               # a def directly inside a class IS a method
+            self.methods.add((self._scope[-1], node.name))
         # 3 · RECEIVERS — a parameter annotated with a class
         self._scope.append(node.name)
         key = self._key()
+        # a constructor's annotated parameters belong to the CLASS: `def __init__(self, cache:
+        # CacheBackend)` then `self.cache.get(...)` in a sibling method. Filing them under
+        # `Class.__init__` left 41 tier3 sites — the dominant Python port shape — resolving nothing.
+        _recv_key = ".".join(self._scope[:-1]) if node.name == "__init__" and len(self._scope) > 1 else key
+        _loc = self.locals_of.setdefault(key, set())
         for a in list(node.args.args) + list(node.args.kwonlyargs) + list(node.args.posonlyargs):
+            _loc.add(a.arg)
             port = _ann_name(a.annotation)
             if port:
-                self.recv.setdefault(key, {})[a.arg] = port
+                self.recv.setdefault(_recv_key, {})[a.arg] = port
+        for sub in ast.walk(node):
+            if isinstance(sub, ast.Assign):
+                for t in sub.targets:
+                    if isinstance(t, ast.Name):
+                        _loc.add(t.id)
+            elif isinstance(sub, (ast.For, ast.AsyncFor)) and isinstance(sub.target, ast.Name):
+                _loc.add(sub.target.id)
         # 2 · FACTORY — a function whose RETURN annotation names a class, returning constructions
         ret = _ann_name(node.returns)
         if ret:
@@ -169,9 +192,7 @@ class _Walker(ast.NodeVisitor):
                     if not x["pred"]:
                         x["pred"] = _neg
             self.factories.extend(picked)
-        self._stack.append(node)
         self.generic_visit(node)
-        self._stack.pop()
         self._scope.pop()
 
     visit_FunctionDef = _fn          # type: ignore[assignment]
@@ -183,7 +204,12 @@ class _Walker(ast.NodeVisitor):
         name = tgt.id if isinstance(tgt, ast.Name) else (
             tgt.attr if isinstance(tgt, ast.Attribute) else None)
         if port and name:
-            self.recv.setdefault(self._key(), {})[name] = port
+            # `self.x: Port` inside a method describes the CLASS, not that method
+            _k = self._key()
+            if isinstance(tgt, ast.Attribute) and isinstance(tgt.value, ast.Name) \
+                    and tgt.value.id == "self" and len(self._scope) > 1:
+                _k = ".".join(self._scope[:-1])
+            self.recv.setdefault(_k, {})[name] = port
         self.generic_visit(node)
 
     # 4 · CALL SITES — `<name>.<method>(` / `self.<name>.<method>(`
@@ -211,7 +237,7 @@ def parse(repo: Path, wiring: dict[str, Any] | None = None) -> dict:
     repo = Path(repo)
     res: dict = {"present": False, "reason": "", "edges": [], "stats": {
         "files": 0, "unparseable": 0, "ports": 0, "impls": 0, "receivers": 0, "sites": 0,
-        "resolved": 0, "ambiguous": 0}}
+        "resolved": 0, "ambiguous": 0, "no_such_method": 0}}
     try:
         walkers: list[_Walker] = []
         n = 0
@@ -232,6 +258,19 @@ def parse(repo: Path, wiring: dict[str, Any] | None = None) -> dict:
             w.visit(tree)
             walkers.append(w)
         res["stats"]["files"] = n
+        res["stats"]["capped"] = n >= _FILE_CAP
+        if res["stats"]["capped"]:
+            res["stats"]["caveat"] = ("scan clipped at %d files — any port seam past the cap is "
+                                      "unread" % _FILE_CAP)
+        # MEASURE BEFORE ANY EARLY RETURN. These two are free — `w.recv`/`w.calls` are already
+        # populated — and emitting them from inside the resolution loop published a 0 for
+        # "never computed" on exactly the repos that return early. A zero that means two
+        # different things is the defect `_a3_arms` exists to kill.
+        res["stats"]["receivers"] = sum(len(v) for w in walkers for v in w.recv.values())
+        res["stats"]["sites"] = sum(len(w.calls) for w in walkers)
+        if n == 0:
+            res["reason"] = "no Python files scanned — this tree carries none the scan admits"
+            return res
 
         # ── the PORT registry: declared-abstract classes, plus every class a factory returns for
         ports: dict[str, str] = {}
@@ -269,11 +308,15 @@ def parse(repo: Path, wiring: dict[str, Any] | None = None) -> dict:
                              "under a port-annotated return, and no class subclasses one")
             return res
 
-        # where each implementation's methods live: `<file>#<Class>.<method>`
-        meth_of: dict[tuple[str, str], str] = {}
+        # WHICH METHODS EACH IMPLEMENTATION ACTUALLY DEFINES. Emitting `<Impl>.<method>` for every
+        # registered implementation, unchecked, named an absent attribute in 115 of tier3's 507
+        # edges (22.7%) — `.append`, `.extend`, `.setdefault`, `.load_from_state` — because the
+        # roster is one level deep and the method lives on a sibling or a subclass.
+        # Built from DEFINITIONS, never from call sites: a call-site roster would drop 12
+        # legitimate call-free targets (PostgresCacheLock.owned, RedisCacheBackend.__init__, …).
+        defines: set[tuple[str, str]] = set()
         for w in walkers:
-            for c in w.calls:                    # cheap: the scope keys carry Class.method
-                pass
+            defines |= w.methods
         cls_file: dict[str, str] = {}
         for w in walkers:
             for cls in w.bases:
@@ -283,19 +326,28 @@ def parse(repo: Path, wiring: dict[str, Any] | None = None) -> dict:
                 cls_file.setdefault(f["impl"], f["file"])
 
         for w in walkers:
-            res["stats"]["receivers"] += sum(len(v) for v in w.recv.values())
             for c in w.calls:
-                res["stats"]["sites"] += 1
                 scope = c["scope"]
                 port = None
-                # the nearest enclosing scope that annotated this name
+                # the nearest enclosing scope that annotated this name. A name annotated in the
+                # INNER scope shadows the class field of the same name — the outer annotation
+                # describes a different object, and taking it draws a hop that never happens.
                 parts = scope.split(".")
                 while parts and port is None:
                     port = (w.recv.get(".".join(parts)) or {}).get(c["name"])
+                    if port is None and c["name"] in (w.locals_of.get(".".join(parts)) or ()):
+                        break                      # shadowed by a local — this call is not the port's
                     parts = parts[:-1]
                 if not port or port not in impls:
                     continue
-                targets = impls[port]
+                targets = [t for t in impls[port] if (t["cls"], c["method"]) in defines]
+                if not targets:
+                    # the port has implementations, none of which defines this method — ABSTAIN and
+                    # COUNT. The method is usually on a subclass the one-level roster never reached
+                    # (onyx: 52 concrete connectors under BaseConnector), and naming a target that
+                    # has no such attribute is worse than drawing nothing.
+                    res["stats"]["no_such_method"] += 1
+                    continue
                 many = len(targets) > 1
                 for t in sorted(targets, key=lambda x: x["cls"]):
                     f = cls_file.get(t["cls"]) or t["file"]

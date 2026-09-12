@@ -158,7 +158,14 @@ def center(root: str, head: str):
                "route_mounts": {"mounted": 1, "routers": 1, "scanned": 1, "unresolved": [{"file": "apps/api/app.py", "line": 3, "why": "non-literal prefix: settings.PREFIX"}]},
                "fn_similarity": {"mode": "blocked", "pairs": 10, "budget": 5, "sizable": 9, "rare_df": 40},
                "unparseable": [["apps/api/integrations/x.py", "unparseable: bad"]],
-               "app_middleware": [{"cls": "RateLimiterMiddleware", "file": "apps/api/app.py", "line": 12, "order": 0, "scope": "all"}]}
+               "app_middleware": [{"cls": "RateLimiterMiddleware", "file": "apps/api/app.py", "line": 12, "order": 0, "scope": "all"}],
+               "arms": {"concepts": {"request_roots": {"state": "present"},
+                                     "call_graph": {"state": "present"},
+                                     "tables": {"state": "unsupported_language",
+                                                "reason": "no SQL dialect detected",
+                                                "sentinel": {"idiom": "CREATE TABLE"}}},
+                        "implies": [], "langs": ["python"], "capped": False,
+                        "elsewhere": {"call_graph": "c4-graph.json stats.graft"}}}
     ep_id = "endpoint:GET /things/{item_id}"
     # entity models (Phase 3, 2026-09-06): the emitter's block as it sits on c4 — one function piece (`thing`) the SEEDED view moves to
     # `other`, one endpoint the DERIVED view homes to a table cluster `d:things` (a name that is NOT a slug), one abstained endpoint.
@@ -214,7 +221,14 @@ def center(root: str, head: str):
                              "name": "loginLoginAccessTokenData", "kind": "fe-type"}], "edges": [],
                  "homes": [{"id": "fe·thing", "kind": "fe", "pair": "thing", "pieces": 1, "areas": 1}]},
           "stats": {"models": {"present": True, "views": ["claim", "seeded", "derived", "proposed"], "features": 1, "shared": 1, "seeded_moved": 1, "derived_abstained": 1, "candidates": 0},
-                    "graft": {"present": True, "index_hash": "abc123abc123"},
+                    "graft": {"present": True, "index_hash": "abc123abc123",
+                              "derived": {"d2w": {"present": True}},
+                              "di": {"present": True, "reason": "",
+                                     "stats": {"resolved": 3, "ambiguous": 1, "capped": False,
+                                               "root": "src/container.ts"}},
+                              "pydi": {"present": False,
+                                       "reason": "no Python files scanned",
+                                       "stats": {"resolved": 0, "ambiguous": 0}}},
                     "web": {"present": True, "extractor": "fetch", "screens": 1, "fetch_sites": 3, "matched": 1, "dynamic": 0, "unhomed": 1,
                             "other_roots": ["mobile/src"], "unmatched": [{"m": "GET", "p": "/x", "from": "web:apps/web/src/other"},
                                                                           {"m": "GET", "p": "/api/v1/things/{id}", "from": "web:apps/web/src/other"}]},
@@ -403,6 +417,18 @@ def run(T):
     ok(h and h["route_mounts"] == {"state": "present", "mounted": 1, "routers": 1, "unresolved": 1} and h["fn_similarity"]["mode"] == "blocked" and h["fn_similarity"]["sizable"] == 9
        and h["web"]["other_roots"] == ["mobile/src"] and h["web"]["unmatched"] == 2 and h["unparseable"] == {"state": "present", "count": 1} and h["schemas_zero"] is False,
        "F5 FIRE: map_health names the unresolved mount, the blocked twin pass (sizable over budget), the unscanned root, the unparseable file", h)
+    # a CLEAN arms census is PRESENT, not absent. The `not_emitted` verdict hung off
+    # blocked-derivations, so a map whose every derivation ran reported its own census missing and
+    # told the reader to regen — true on all four study repos, invisible to 199 assertions.
+    ok(h and h["arms"]["state"] == "present" and "tables" in h["arms"]["not_present"]
+       and h["arms"]["present"] == ["call_graph", "request_roots"]
+       and "blocked_derivations" not in h["arms"],
+       "F5 FIRE: a clean arms census reads PRESENT (no blocked derivation ≠ no census)", h and h.get("arms"))
+    # the port seams were emitted by both arms and read by nothing
+    ok(h and h["port_seam_ts"] == {"state": "present", "resolved": 3, "ambiguous": 1}
+       and h["port_seam_py"]["state"] == "empty" and h["port_seam_py"]["reason"] == "no Python files scanned",
+       "F5 FIRE: map_health reports both port seams — present with counts, empty with its reason",
+       h and {k: h.get(k) for k in ("port_seam_ts", "port_seam_py")})
     ok(d and d["freshness"]["freshness"] == "fresh" and d["freshness"]["commits_since"] == 2, "docs-only commits after the regen read FRESH (base = regen commit)", d and d.get("freshness"))
     ok(d and d["graft"]["index_present"] and d["graft"]["match"] is False and "note" in d["graft"], "graft index hash mismatch is explained, never called stale", d and d.get("graft"))
     ok(d and d["file_census"] == {"claimed": 8, "unclaimed": 1}, "file_census summarized", d and d.get("file_census"))
@@ -580,6 +606,9 @@ def run(T):
     ok(d and d["web"]["extractor"] == "fetch" and d["web"]["unmatched"] == 2 and d["web"]["other_roots"] == ["mobile/src"] and d["arms"]["providers"] == ["litellm"] and d["arms"]["fe"] == {"present": True, "homing": "config"}
        and d["arms"]["app_middleware"] == 1 and d["arms"]["gate_endpoints"] == 2 and d["arms"]["tasks"] == 1 and d["map_health"]["route_mounts"]["unresolved"] == 1 and d["census_gaps"]["routes_unclaimed"] is None and "route_census" in d["census_absent"],
        "F7 FIRE: the web arm (a LIST unmatched counts), named providers, fe homing, middleware/gates/tasks, map_health; an absent census block is None + named", d and {k: d.get(k) for k in ("web", "arms", "census_absent")})
+    ok(d and d["arms"]["port_seam"] == {"ts": True, "py": False},
+       "F7 FIRE: center_overview names each port seam's presence (nothing read the arms before)",
+       d and (d.get("arms") or {}).get("port_seam"))
     d, _, _, _ = call_json(c, "blast_radius", {"files": ["apps/api/services/thing.py"]})
     ok(d and d["touched_entities"] == {"thing": 1} and "endpoint:GET /things/{item_id}" in d["endpoints_reached"] and d["reading"] == "contained" and "floor" in d, "blast_radius: owners + endpoints via behind.names (floor) + reading", d and {k: d.get(k) for k in ("touched_entities", "endpoints_reached", "reading")})
     ok(d and d["tasks_dispatched"] == [] and d["tasks_defined"] == [], "F15 SILENT: a change that dispatches nothing lists no task", d and {k: d.get(k) for k in ("tasks_dispatched", "tasks_defined")})
