@@ -48,6 +48,27 @@ import os as _os
 _INDEX_REL = Path(_os.environ.get("GABE_GRAFT_INDEX") or (Path("graft") / ".graph" / "wiring.json"))   # an ABSOLUTE GABE_GRAFT_INDEX reads an index built out of tree (`graft --dir <out> build <repo>`; review 2026-09-06) — unset keeps byte-identical behaviour
 _NOISE_SUFFIXES = (".js", ".mjs", ".jsx")
 _NOISE_PARTS = ("node_modules", "dist", "build", "storybook-static", "__pycache__")
+# THE CENTER IS NOT THE CODEBASE. Adopting a center vendors this generator stack into
+# `<repo>/scripts/`, the shell into `<repo>/templates/center/`, and renders the pages into
+# `<repo>/docs/site/` — and graft indexes all of it as if it were the project's own code. The
+# damage scales inversely with repo size, so the study case is the worst case: measured, the
+# machinery is 1% of onyx's index, 7% of gustify's, and **61% of keypro's** (953 of 1,565 nodes),
+# where a reader of the map is mostly reading us.
+# DERIVED from this directory, never a hand-list: propagate.sh copies exactly these basenames, so
+# a generator added upstream is excluded the day it ships.
+_CENTER_DIRS = ("docs/site/", "templates/center/")
+
+
+def _center_files() -> frozenset[str]:
+    try:
+        here = Path(__file__).resolve().parent
+        return frozenset(f.name for f in here.iterdir()
+                         if f.is_file() and f.suffix in (".py", ".mjs", ".sh"))
+    except Exception:  # noqa: BLE001 — an unreadable dir must not take the arm down
+        return frozenset()
+
+
+_CENTER_FILES = _center_files()
 # P1 (graft adoption): consume ALL of graft's edge relations, not just calls/imports.
 # contains = file→symbol (a file's API); extends/implements = the type hierarchy;
 # references = a cross-file symbol use. contains is intra-file → intra-entity (drops out
@@ -138,8 +159,18 @@ def load_wiring(idx: Path) -> tuple[dict[str, Any], str]:
     return data, hashlib.sha256(raw).hexdigest()[:12]
 
 
+def _is_center(path: str) -> bool:
+    """The adopted center's OWN vendored machinery, which is not the project's code."""
+    if path.startswith(_CENTER_DIRS):
+        return True
+    # the generators land FLAT in `<repo>/scripts/` — depth 1, and only our basenames, so a
+    # project's own `scripts/deploy.py` is untouched
+    return path.startswith("scripts/") and path.count("/") == 1 \
+        and path.split("/")[-1] in _CENTER_FILES
+
+
 def _is_noise(path: str) -> bool:
-    if path.endswith(_NOISE_SUFFIXES):
+    if path.endswith(_NOISE_SUFFIXES) or _is_center(path):
         return True
     parts = path.split("/")
     return any(p in _NOISE_PARTS for p in parts)
@@ -607,7 +638,8 @@ def derive_cross(wiring: dict[str, Any],
     node_ids = {n["id"] for n in wiring.get("nodes") or []}
     pairs: dict[tuple[str, str], dict[str, int]] = {}
     conf = {r: {"extracted": 0, "inferred": 0} for r in _RELATIONS}
-    dropped = {"noise": 0, "unresolved_target": 0, "unmapped_file": 0, "intra_entity": 0}
+    dropped = {"noise": 0, "center_machinery": 0, "unresolved_target": 0, "unmapped_file": 0,
+               "intra_entity": 0}
     # EVIDENCE for the drop counters: top dropped path prefixes per reason — a bare
     # integer cannot distinguish "storybook output correctly excluded" from "my whole
     # backend was classified as noise"; three prefixes can.
@@ -628,6 +660,12 @@ def derive_cross(wiring: dict[str, Any],
             dropped["unresolved_target"] += 1
             continue
         src_f, dst_f = _file_of(src_id), _file_of(dst_id)
+        if _is_center(src_f) or _is_center(dst_f):
+            # counted SEPARATELY from build-output noise: "the center indexed itself" and "a
+            # bundler emitted this" are different facts, and folding them hides the first
+            dropped["center_machinery"] += 1
+            _hit("center_machinery", dst_f if _is_center(dst_f) else src_f)
+            continue
         if _is_noise(src_f) or _is_noise(dst_f):
             dropped["noise"] += 1
             _hit("noise", dst_f if _is_noise(dst_f) else src_f)

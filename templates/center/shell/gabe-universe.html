@@ -2165,7 +2165,11 @@ function _buildFnData(){ var D=window.GABE_LEVELS; if(!D||!D.fn_nodes||!KINDS["f
       role:f.role, access:f.access, sinks:f.sinks, d2w:f.d2w,   // C1/C2/C4: role badge + ops/sinks; D2W: hops-to-a-write (call-wire heat, 0 is real → keep undefined distinct)
       m:{ behind:_num(beh.fns), depth:_num(beh.depth), tests:null, cols:0, fanin:_indeg[f.id]||0, usage:_num(f.hub&&f.hub.usage), god:!!f.god, method:null },
       det:det, behind:beh }; });
-  _FNLINKS=(D.fn_edges||[]).map(function(e){ return {source:e.s, target:e.t, rel:e.rel||"calls"}; });
+  _FNLINKS=(D.fn_edges||[]).map(function(e){ var _l={source:e.s, target:e.t, rel:e.rel||"calls"};
+    /* a port binding carries WHICH implementation was selected and under what condition.
+       Dropping these made an `ambiguous` guess indistinguishable from a resolved hop. */
+    if(_l.rel==="binds"){ if(e.pred)_l.pred=e.pred; if(e.bind)_l.bind=e.bind; if(e.port)_l.port=e.port; }
+    return _l; });
   /* endpoint → HANDLER wires (batch 46): the endpoint's own handler fn is in the pool — wire it
      so a data-edge-less endpoint (DELETE …/cupo) joins the call net the moment Functions is ON. */
   var _fnset={}; _FNNODES.forEach(function(f){ _fnset[f.id]=1; });
@@ -2195,7 +2199,11 @@ function toggleFns(on){ _fnsOn=on; if(!_FNNODES) _buildFnData(); if(!_FNNODES) r
       n.x=(EX[n.ent]||0)+Math.cos(a)*rr; n.y=(EY[n.ent]||0)+Math.sin(a)*rr; n.z=(EZ[n.ent]||0)+((i%23)-11);
       nodes.push(n); NIDS[n.id]=n; } });
     _FNLINKS.forEach(function(fl){ if(NIDS[fl.source]&&NIDS[fl.target]&&fl.source!==fl.target){
-      var mm=LINKMETA[fl.rel]||{w:2,pv:1}; links.push({source:fl.source,target:fl.target,rel:fl.rel,w:mm.w,proven:!!mm.pv,payload:0,__fn:true}); } });
+      var mm=LINKMETA[fl.rel]||{w:2,pv:1};
+      var _ln={source:fl.source,target:fl.target,rel:fl.rel,w:mm.w,proven:!!mm.pv,payload:0,__fn:true};
+      /* second hop of the same carry: this rebuild dropped the port verdict again */
+      if(fl.rel==="binds"){ if(fl.pred)_ln.pred=fl.pred; if(fl.bind)_ln.bind=fl.bind; if(fl.port)_ln.port=fl.port; }
+      links.push(_ln); } });
   } else {
     for(var i=links.length-1;i>=0;i--){ if(links[i].__fn) links.splice(i,1); }
     for(var j=nodes.length-1;j>=0;j--){ if(nodes[j].__fn){ delete NIDS[nodes[j].id]; nodes.splice(j,1); } }
@@ -6270,7 +6278,15 @@ var KINDCARD=(function(){
       E("div",{class:"sec"}, sechd("layers","Weight"), E("div",{class:"ubar"}, E("div",{class:"ufill",style:"width:"+Math.min(100,(l.w||1)/6*100)+"%"})), E("div",{class:"sublbl"}, "edge-kind weight "+(l.w||1)+" (fixed per kind)")),
       l.payload?E("div",{class:"sec"}, sechd("table","Payload"), E("div",{class:"sublbl"}, icoEl("table"), "carries "+l.payload+" field"+(l.payload>1?"s":"")+" — "+((tk==="schema"||tk==="model")?tl:"the target structure"))):null,
       E("div",{class:"sec"}, (function(){ var _ch=sechd("truck","Cargo"); try{ if(window.__uniAssetThumb) _ch.append(window.__uniAssetThumb(function(){ return window.__uniAssets.cargo(); }, "cargo shuttle \u2014 the graph asset")); }catch(_e){} return _ch; })(), (function(){ var _x=(typeof linkCross==="function"&&linkCross(l)); return _x   ? E("div",{class:"flagrow ok"}, icoEl("test"), E("span",{class:"flbl"}, l.payload? ("present \u00b7 carries "+l.payload+" data field"+(l.payload>1?"s":"")) : "present \u00b7 empty (no payload)"))   : E("div",{class:"flagrow"}, icoEl("skip"), E("span",{class:"flbl"}, "no cargo \u00b7 same-entity wire (no transit)")); })()),E("div",{class:"sec"}, (function(){ var _tc=sechd("test","Test chip"); try{ if(window.__uniAssetThumb) _tc.append(window.__uniAssetThumb(function(){ return window.__uniAssets.testchip(); }, "test chip \u2014 the graph asset")); }catch(_e){} return _tc; })(), (function(){ var _x=(typeof linkCross==="function"&&linkCross(l)); return _x   ? E("div",{class:"flagrow ok"}, icoEl("test"), E("span",{class:"flbl"}, l.proven? "present \u00b7 test-proven route" : "present \u00b7 route not test-proven"))   : E("div",{class:"flagrow"}, icoEl("skip"), E("span",{class:"flbl"}, "no test chip \u00b7 same-entity wire (no transit)")); })()),
-      E("div",{class:"sec"}, sechd("info","Trust"), kv(null,"kind", ({binds:"inferred · port binding — the implementation the composition root selects; hover the wire for its condition", fk:"structural · foreign-key join", touches:"structural · archmap touch", bridge:"inferred · web-bridge floor (method+path)", calls:"inferred · graft call floor", imports:"inferred · import floor", dispatches:"inferred · by-name floor (the target is resolved from its registered name)"}[l.rel]) || (l.proven?"structural join":"inferred floor"))),
+      (l.rel==="binds")?E("div",{class:"sec"}, sechd("link","Binding"),
+        kv(null,"port", l.port||"—"),
+        kv(null,"verdict", l.bind==="selected"
+           ? "selected — the composition root distinguishes this implementation"
+           : (l.bind==="ambiguous"
+              ? "ambiguous — the root does not distinguish it from its siblings; every candidate is drawn"
+              : "—")),
+        kv(null,"condition", l.pred || "unconditional (no branch selects it)")):null,
+      E("div",{class:"sec"}, sechd("info","Trust"), kv(null,"kind", ({binds:"inferred · port binding — the implementation the composition root selects; see Binding above for the verdict", fk:"structural · foreign-key join", touches:"structural · archmap touch", bridge:"inferred · web-bridge floor (method+path)", calls:"inferred · graft call floor", imports:"inferred · import floor", dispatches:"inferred · by-name floor (the target is resolved from its registered name)"}[l.rel]) || (l.proven?"structural join":"inferred floor"))),
       E("div",{class:"sec"}, sechd("role","Direction"), kv(null,"flow", sl+" → "+tl)),
       carriesSec(l)
     ]; };

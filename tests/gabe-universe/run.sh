@@ -113,6 +113,22 @@ for _r in ("depends", "gated_by", "dispatches", "serializes", "reaches", "walls"
           and (_r+":'") in page.replace(" ", ""), "pre-C: rel %s missing from RELCOL/LINKMETA/REL2KIND" % _r)
 check("LINKMETA.binds={w:4,pv:0}" in page.replace(" ", ""),
       "binds must declare pv:0 — an undeclared rel defaults to pv:1 and reads as a PROVEN join")
+# the VERDICT must survive the fn_edge → link map. It reached the FEED (pred · bind · port on every
+# binds edge) and died one step short of the picture: the map kept {source,target,rel}, so keypro
+# drew 57 port bindings and not one of them could say which implementation, or under what condition.
+_pg = page.replace(" ", "")
+check('if(e.pred)_l.pred=e.pred;if(e.bind)_l.bind=e.bind;if(e.port)_l.port=e.port;' in _pg,
+      "the fn_edge → link map must carry pred/bind/port onto a binds link, or the verdict never renders")
+check('if(_l.rel==="binds"){' in _pg,
+      "the verdict keys must be gated on rel binds — carrying them onto every link re-lies about plain calls")
+# the SECOND hop: _FNLINKS → links rebuilds the object, and dropped the verdict again. Fixing only
+# the first hop left every keypro binds wire still carrying nothing — the picture is what is read.
+check('if(fl.pred)_ln.pred=fl.pred;if(fl.bind)_ln.bind=fl.bind;if(fl.port)_ln.port=fl.port;' in _pg,
+      "the _FNLINKS → links rebuild must carry the verdict too — it is dropped TWICE at this seam")
+check('sechd("link","Binding")' in page and '"ambiguous — the root does not distinguish it' in page,
+      "the wire card must show the BINDING verdict (port · selected/ambiguous · condition)")
+check("hover the wire for its condition" not in page,
+      "the Trust row promised a HOVER; the wire card opens on CLICK and must not claim otherwise")
 
 # ── 10d. batch-2 layout engine: entity-layout (chain/force/spread) + cluster-core (layer/kind/tests) + 2nd tab ──
 check('entLayout:"force"' in page and 'coreBy:"layer"' in page, "CFG missing entLayout/coreBy fields")

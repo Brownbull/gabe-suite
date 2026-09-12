@@ -32,27 +32,31 @@ CENTER="$REPO/docs/site/center"
 [ -f "$CENTER/gabe-universe.html" ] || {
   echo "FAIL: no station at $CENTER/gabe-universe.html — regen the center first" >&2; exit 1; }
 [ -n "$NAME" ] || NAME="$(basename "$REPO")"
-[ -n "$OUT" ] || OUT="$REPO/docs/site/export"
-DEST="$OUT/${NAME}-universe"
+# OUTSIDE the repo by default. Writing the bundle to `<repo>/docs/site/export/` put 7 JavaScript
+# files inside the very tree the map indexes: keypro's next build read them and `unmapped_file` went
+# 1,981 → 1,985, so exporting a map CHANGED that map. It is also the wrong thing to do to a
+# codebase someone lent you. A sibling directory is one `cd ..` away and the paths are printed.
+[ -n "$OUT" ] || OUT="$(dirname "$REPO")"
+DEST="$OUT/${NAME}-universe-export"
 
 echo "── export $NAME → $DEST"
 rm -rf "$DEST"; mkdir -p "$DEST/assets"
 
-# the station's five script siblings. c4-graph.js and levels.js are the map; the other three are
-# optional content whose absence is silent, so each is REPORTED either way.
+# WHAT THE STATION ACTUALLY LOADS. A hardcoded roster shipped five script siblings and two asset
+# bundles — and the station also references `sim.data.js` and `assets/gabe-icon.png`, so the first
+# export 404'd twice the moment it was opened, silently: a feed loader's onerror is swallowed, and a
+# missing icon just looks broken. The list is DERIVED from the station's own `src=`/`href=`
+# references instead, so a reference added upstream ships without anyone remembering this script.
+mapfile -t REFS < <(python3 "$(dirname "$0")/_export_refs.py" "$CENTER/gabe-universe.html")
 missing=""
-for f in c4-graph.js levels.js commits.js workflows.js workflows.draft.js; do
-  if [ -f "$CENTER/$f" ]; then cp "$CENTER/$f" "$DEST/$f"
+for f in "${REFS[@]}"; do
+  if [ -f "$CENTER/$f" ]; then mkdir -p "$DEST/$(dirname "$f")"; cp "$CENTER/$f" "$DEST/$f"
   else missing="$missing $f"; fi
 done
-for f in c4-graph.js levels.js; do
-  [ -f "$DEST/$f" ] || { echo "FAIL: $f is required and absent — the station would draw nothing" >&2; exit 1; }
-done
-
-# the two asset bundles the station loads (3D renderer + the chip/icon atlas)
-for f in 3d-bundle.js chip-assets.js; do
-  [ -f "$CENTER/assets/$f" ] || { echo "FAIL: assets/$f absent — the station cannot render" >&2; exit 1; }
-  cp "$CENTER/assets/$f" "$DEST/assets/$f"
+# the feeds and bundles WITHOUT which the station draws nothing — a hard floor, because whether a
+# derived reference is load-bearing is exactly what deriving it cannot tell you
+for f in c4-graph.js levels.js assets/3d-bundle.js assets/chip-assets.js; do
+  [ -f "$DEST/$f" ] || { echo "FAIL: $f is required and absent — the station would not render" >&2; exit 1; }
 done
 
 # the station, with links to unshipped pages made inert
@@ -118,18 +122,26 @@ echo "  files: $(find "$DEST" -type f | wc -l) · size: $SIZE"
 if [ "$ZIP" = 1 ]; then
   # Python's zipfile, not zip(1): the binary is absent on this host, and a .tar.gz is the wrong
   # thing to hand someone on Windows, which is where these get opened.
-  python3 - "$OUT" "${NAME}-universe" <<'ZIPPY'
+  # $DEST, never a re-derived name: the folder name and the zip name were computed independently
+  # and drifted apart the moment the default OUT moved — the run reported a cheerful "0.0 MB" zip
+  # of a directory that did not exist, which is the one failure a person cannot see until the
+  # recipient opens it.
+  python3 - "$DEST" <<'ZIPPY'
 import pathlib, sys, zipfile
-out, name = pathlib.Path(sys.argv[1]), sys.argv[2]
-src = out / name
-dst = out / (name + ".zip")
+src = pathlib.Path(sys.argv[1])
+dst = src.with_suffix(".zip")
 if dst.exists():
     dst.unlink()
+n = 0
 with zipfile.ZipFile(dst, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
     for p in sorted(src.rglob("*")):
         if p.is_file():
-            z.write(p, arcname=str(pathlib.Path(name) / p.relative_to(src)))
-print("  zip: %s (%.1f MB)" % (dst, dst.stat().st_size / 1048576))
+            z.write(p, arcname=str(pathlib.Path(src.name) / p.relative_to(src)))
+            n += 1
+if not n:
+    dst.unlink(missing_ok=True)
+    raise SystemExit("FAIL: the zip would be EMPTY — %s holds no files" % src)
+print("  zip: %s (%d files, %.1f MB)" % (dst, n, dst.stat().st_size / 1048576))
 ZIPPY
 fi
 echo "  open: $DEST/index.html"

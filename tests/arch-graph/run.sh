@@ -210,6 +210,8 @@ WIRING = {
     {"id": "apps/api/beta.py#do_b2", "kind": "function", "path": "apps/api/beta.py"},
     {"id": "web/dist/bundle.js#x", "kind": "function", "path": "web/dist/bundle.js"},
     {"id": "apps/api/stray.py#s", "kind": "function", "path": "apps/api/stray.py"},
+    {"id": "scripts/_a3_levels.py#build_levels", "kind": "function", "path": "scripts/_a3_levels.py"},
+    {"id": "scripts/deploy.py#ship", "kind": "function", "path": "scripts/deploy.py"},
   ],
   "edges": [
     {"source": "apps/api/alpha.py#do_a", "target": "apps/api/beta.py#do_b",  "relation": "calls",   "confidence": "inferred"},
@@ -218,14 +220,29 @@ WIRING = {
     {"source": "apps/api/alpha.py#do_a", "target": "web/dist/bundle.js#x",   "relation": "calls",   "confidence": "inferred"},
     {"source": "apps/api/alpha.py",      "target": "react",                  "relation": "imports", "confidence": "extracted"},
     {"source": "apps/api/stray.py#s",    "target": "apps/api/beta.py#do_b",  "relation": "calls",   "confidence": "inferred"},
+    {"source": "scripts/_a3_levels.py#build_levels", "target": "apps/api/beta.py#do_b", "relation": "calls", "confidence": "inferred"},
+    {"source": "scripts/deploy.py#ship", "target": "apps/api/beta.py#do_b",  "relation": "calls",   "confidence": "inferred"},
   ],
 }
 _gx = GG.derive_cross(WIRING, FIX["entities"])
 check(_gx["pairs"] == {("alpha", "beta"): {"calls": 1, "imports": 1}},
       "graft arm: exactly the cross-entity calls+imports pair survives")
-check(_gx["stats"]["dropped"] == {"noise": 1, "unresolved_target": 1,
-                                  "unmapped_file": 1, "intra_entity": 1},
+check(_gx["stats"]["dropped"] == {"noise": 1, "center_machinery": 1, "unresolved_target": 1,
+                                  "unmapped_file": 2, "intra_entity": 1},
       "graft arm: every dropped edge is COUNTED by reason (no silent caps)")
+# THE CENTER IS NOT THE CODEBASE. Adopting a center vendors this generator stack into
+# `<repo>/scripts/` and renders pages into `<repo>/docs/site/`, and graft indexed all of it as the
+# project's own code — 61% of keypro's 1,565 nodes, and 82% of everything its map called an
+# "unmapped file". Counted under its OWN reason, because "the center indexed itself" and "a bundler
+# emitted this" are different facts.
+check(_gx["stats"]["dropped"]["center_machinery"] == 1,
+      "the center's own vendored generator is dropped as CENTER MACHINERY, not as project code")
+check(_gx["stats"]["dropped"]["unmapped_file"] == 2,
+      "a project's OWN scripts/deploy.py is untouched by the center filter — only our basenames go")
+check(GG._is_center("docs/site/center/x.js") and GG._is_center("templates/center/shell/a.html")
+      and not GG._is_center("backend/onyx/scripts/_a3_levels.py")
+      and not GG._is_center("src/app/page.tsx"),
+      "the center footprint is the rendered site + the vendored shell + FLAT scripts/ basenames only")
 check(_gx["stats"]["confidence"]["calls"] == {"extracted": 0, "inferred": 1},
       "graft arm: the trust split rides the stats (cross-file calls are a floor)")
 
