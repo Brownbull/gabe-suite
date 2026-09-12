@@ -35,7 +35,7 @@ ok(await p.evaluate(() => window.__eplabReady === true), 'the page boots (window
 ok(errs.length === 0, 'no page errors', errs.slice(0, 3).join(' | '));
 const F = await p.evaluate(() => window.LABEP);
 const tabs = await p.$$eval('#tabs .tab', els => els.map(e => e.dataset.tab));
-ok(tabs.join(',') === 'data,functions,tests,widening,security', 'five tabs in part order', tabs.join(','));
+ok(tabs.join(',') === 'data,schemas,functions,tests,widening,security', 'SIX tabs — data and schemas split again (operator 2026-09-12)', tabs.join(','));
 // the head strip carries the station card's head
 const head = await p.$eval('#headstrip', e => e.innerText);
 for (const s of [F.identity.path, String(F.identity.status), F.identity.file + ':' + F.identity.flines]) ok(head.includes(s), 'head strip shows ' + s);
@@ -219,7 +219,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   ok(g.glyph > g.button, 'and the glyph is genuinely bigger than the button, so it reads as a watermark', g.glyph + ' in ' + g.button);
   ok(g.pos === 'absolute' && g.op < .5, 'placed to the right, translucent', JSON.stringify({ p: g.pos, o: g.op })); }
 { const rows = await p.$$eval('#tabcfg .cfl', els => els.map(e => e.textContent));
-  ok(rows.join(',') === 'colour,intensity,pattern,glyph,glyph shown,glyph side,titles,count size,count shape,button shape,row,width',
+  ok(rows.join(',') === 'colour,intensity,pattern,glyph size,glyph shown,glyph side,titles,count size,count shape,button shape,row,width',
      'twelve dials for the part-button row', rows.join(','));
   const t0 = await p.$eval('#tabs', e => e.className);
   await p.click('#tabcfg .ib[data-palette="mono"]'); await p.waitForTimeout(100);
@@ -233,10 +233,20 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
     return { pos: getComputedStyle(e).position, over: Math.round(b.height - t.height), op: +getComputedStyle(e).opacity }; });
   ok(bleed.pos === 'absolute' && bleed.over > 0 && bleed.op < .5,
      'the BLEED glyph is a big translucent watermark that overflows the button top and bottom', JSON.stringify(bleed));
-  await p.click('#tabcfg .ib[data-iconsize="30"]'); await p.waitForTimeout(100);
-  ok(await p.$eval('#tabs .tab .tabi svg', e => +e.getAttribute('width') > 60), 'the glyph size dial scales the watermark');
+  // the glyph's size and side are DRAGGED BARS now (operator 2026-09-12)
+  { const sl = await p.$$('#tabcfg .sld'); ok(sl.length === 2, 'glyph size and glyph side are sliders', String(sl.length));
+    const drag = async (i, frac) => { const t = (await p.$$('#tabcfg .sldt'))[i]; const r = await t.boundingBox();
+      await p.mouse.move(r.x + r.width * frac, r.y + r.height / 2); await p.mouse.down();
+      await p.mouse.move(r.x + r.width * frac, r.y + r.height / 2, { steps: 3 }); await p.mouse.up(); await p.waitForTimeout(110); };
+    await drag(0, 0.98);   // glyph size to its maximum
+    const big = await p.evaluate(() => ({ cfg: window.TABCFG.iconSize, svg: +document.querySelector('#tabs .tab .tabi svg').getAttribute('width') }));
+    ok(big.cfg >= 44 && big.svg > 100, 'dragging the size bar to the end enlarges the watermark', JSON.stringify(big));
+    await drag(0, 0.02);
+    const small = await p.evaluate(() => window.TABCFG.iconSize);
+    ok(small <= 13, 'and dragging it back shrinks it', String(small));
+    await p.evaluate(() => { window.TABCFG.iconSize = 24; window.drawTabs(); window.drawTabCfg(); }); await p.waitForTimeout(100); }
   await p.click('#tabcfg .ib[data-iconmode="inline"]'); await p.waitForTimeout(100);
-  ok(await p.$eval('#tabs .tab .tabi svg', e => +e.getAttribute('width') === 30), 'and the inline glyph takes the size literally');
+  ok(await p.$eval('#tabs .tab .tabi svg', e => +e.getAttribute('width') === 24), 'the inline glyph takes the size literally');
   await p.click('#tabcfg .ib[data-numshape="circle"]'); await p.waitForTimeout(100);
   ok(await p.$eval('#tabs .tab .tabn', e => getComputedStyle(e).borderRadius.startsWith('50')), 'the count wears its own shape');
   await p.click('#tabcfg .ib[data-numsize="17"]'); await p.waitForTimeout(100);
@@ -252,11 +262,11 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   ok(await p.$eval('#tabs .tab .tabw', e => getComputedStyle(e).textTransform === 'uppercase'), 'the titles can go ALL CAPS');
   await p.click('#tabcfg .ib[data-casemode="word"]'); await p.waitForTimeout(100);
   ok(await p.$eval('#tabs .tab .tabw', e => getComputedStyle(e).textTransform === 'none'), 'and back to as-written');
-  await p.click('#tabcfg .ib[data-iconmode="ghost"]'); await p.waitForTimeout(100);   // the side dial only means anything on a watermark
-  { const pos = {}; for (const v of ['left', 'center', 'right']) { await p.click(`#tabcfg .ib[data-iconpos="${v}"]`); await p.waitForTimeout(100);
+  await p.click('#tabcfg .ib[data-iconmode="ghost"]'); await p.waitForTimeout(100);   // the side bar only means anything on a watermark
+  { const pos = {}; for (const v of [0, 50, 100]) { await p.evaluate(x => { window.TABCFG.iconX = x; window.drawTabs(); }, v); await p.waitForTimeout(90);
       pos[v] = await p.$eval('#tabs .tab .tabi', e => Math.round(e.getBoundingClientRect().left - e.closest('.tab').getBoundingClientRect().left)); }
-    ok(pos.left < pos.center && pos.center < pos.right, 'the glyph slides left and right across the button', JSON.stringify(pos)); }
-  await p.click('#tabcfg .ib[data-iconpos="right"]'); await p.waitForTimeout(100);
+    ok(pos[0] < pos[50] && pos[50] < pos[100], 'the side bar slides the glyph continuously across the button', JSON.stringify(pos)); }
+  await p.evaluate(() => { window.TABCFG.iconX = 92; window.drawTabs(); window.drawTabCfg(); }); await p.waitForTimeout(100);
   // FOCUS: the open part keeps its colour, every other button goes mono
   await p.click('#tabcfg .ib[data-palette="focus"]'); await p.waitForTimeout(120);
   { const cols = await p.$$eval('#tabs .tab', els => els.map(e => ({ on: e.classList.contains('on'), c: e.style.getPropertyValue('--tc') })));
@@ -270,7 +280,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
     await p.click('#tabs .tab[data-tab="data"]'); await p.waitForTimeout(120); }
   // back to the defaults so the rest of the probe sees a known row
   await p.evaluate(() => { Object.assign(window.TABCFG, { intensity: 'mid', palette: 'station', pattern: 'valley',
-    iconSize: 22, iconMode: 'ghost', numSize: 12, numShape: 'pill', shape: 'rect', layout: 'fill', width: 'auto' });
+    iconSize: 24, iconMode: 'ghost', iconX: 92, numSize: 12, numShape: 'pill', shape: 'rect', layout: 'fill', width: 'wide' });
     window.drawTabs(); window.drawTabCfg(); }); await p.waitForTimeout(120); }
 // the rail: three tabs, one section at a time, and every control an icon with a hover card
 // AT BOOT — before any click — exactly one rail section is visible, and it is the controls
@@ -301,9 +311,9 @@ await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(90);
 const blocks = await p.$$eval('#rt-controls .barblk .bhl b', els => els.map(e => e.textContent));
 ok(blocks.join(',') === 'bench,head bar,part buttons,part bars', 'the controls tab separates bench · head bar · part buttons · part bars into blocks', blocks.join(','));
 const prows = await p.$$eval('#partcfg .prow', els => els.length);
-ok(prows === 5, 'the BARS tab separates the controls per part — one row each', String(prows));
+ok(prows === 6, 'the BARS tab separates the controls per part — one row each', String(prows));
 const varBtns = await p.$$eval('#partcfg .ib', els => els.length);
-ok(varBtns === 12, 'every distribution is an icon button in its part row', String(varBtns));
+ok(varBtns === 14, 'every distribution is an icon button in its part row', String(varBtns));
 const iconOnlyCtl = await p.$$eval('#partcfg .ib, #barcfg .ib, #boxes .ib, #dens .ib, #motionwrap .ib', els => els.every(e => !e.innerText.trim() && !!e.querySelector('svg')));
 ok(iconOnlyCtl, 'every control in the rail is an ICON — its word lives on the hover card');
 const ctl = (await p.$$('#partcfg .ib'))[0]; await ctl.hover(); await p.waitForTimeout(120);

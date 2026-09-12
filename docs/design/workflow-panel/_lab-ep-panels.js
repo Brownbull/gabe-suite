@@ -58,31 +58,13 @@
      the response shape (lines). Hover any bar or tile for the exact fields.
      ══════════════════════════════════════════════════════════════════════════════════════ */
   function renderData(box, F, S){
-    var D = F.data, I = F.identity, req = D.schemas.request, res = D.schemas.response;
-    head(box, "table", "Data + schemas", D.ops.length + " ops · " + D.tables.length + " tables",
-      "what crosses the door is a SHAPE (lines, never the data) · what it lands on is a TABLE (a stack, its height = its columns)");
-    var body = E("div", { class: "dbody" });
-
-    /* left — the request shape */
-    var reqCol = E("div", { class: "dcol dside" });
-    var nestSetReq = {}; (req.nested || []).forEach(function(n){ nestSetReq[n.name] = 1; });
-    reqCol.append(E("div", { class: "dslbl in" }, ico("down", 12, S.OPC.read), "REQUEST", E("span", { class: "n" }, String((req.cols || []).length))));
-    var reqShape = E("div", { class: "schm", style: "border-color:" + (req.entity_color || "var(--line)") },
-      E("div", { class: "snm" }, ico("schema", 12, S.KINDCOL.schema), esc(req.name || "—")),
-      shapeStack(req.name, req.cols || [], { color: S.KINDCOL.schema, nestSet: nestSetReq }));
-    bind(reqShape, card({ title: req.name, icon: "schema", color: S.KINDCOL.schema, sub: "request body · entity " + req.entity,
-      rows: [["fields", String((req.cols || []).length)], ["nested", String((req.nested || []).length) + " shapes"], ["file", String(req.file || "—")], ["doc", (req.doc || "—").slice(0, 90)]],
-      fields: (req.cols || []).map(function(c){ return c[0] + " · " + c[1]; }), station: "schema:" + req.name }));
-    reqCol.append(reqShape);
-    var nb = E("div", { class: "nests" });
-    (req.nested || []).forEach(function(n){ var t = E("span", { class: "pchip schema" }, ico("schema", 11), esc(n.name) + " ·" + n.cols.length);
-      bind(t, card({ title: n.name, icon: "schema", color: S.KINDCOL.schema, sub: "nested in " + req.name + " · " + n.cols.length + " fields",
-        fields: n.cols.map(function(c){ return c[0] + " · " + c[1]; }), station: "schema:" + n.name })); nb.append(t); });
-    if ((req.nested || []).length) reqCol.append(E("div", { class: "dnlbl" }, "nested ×" + req.nested.length), nb);
-    body.append(reqCol);
+    var D = F.data, I = F.identity;
+    head(box, "table", "Data", D.ops.length + " ops · " + D.tables.length + " tables",
+      "every table this door touches, grouped on its entity's ground — each tile a stack whose height is its column count");
+    var body = E("div", { class: "dbody nowings" });
 
     /* middle — the grounds */
-    var mid = E("div", { class: "dcol dmid" });
+    var mid = E("div", { class: "dcol dmid wide" });
     var grounds = {}; D.tables.forEach(function(t){ (grounds[t.entity || "—"] = grounds[t.entity || "—"] || []).push(t); });
     var order = Object.keys(grounds).sort(function(a, b){ return grounds[b].length - grounds[a].length || a.localeCompare(b); });
     var gwrap = E("div", { class: "grounds" });
@@ -126,23 +108,6 @@
     mid.append(cm);
     body.append(mid);
 
-    /* right — the response shape */
-    var resCol = E("div", { class: "dcol dside" });
-    var nestSetRes = {}; (res.nested || []).forEach(function(n){ nestSetRes[n.name] = 1; });
-    resCol.append(E("div", { class: "dslbl out" }, ico("down", 12, S.OPC.write), "RESPONSE", E("span", { class: "n" }, String((res.cols || []).length))));
-    var resShape = E("div", { class: "schm", style: "border-color:" + (res.entity_color || "var(--line)") },
-      E("div", { class: "snm" }, ico("schema", 12, S.KINDCOL.schema), esc(res.name || "—")),
-      shapeStack(res.name, res.cols || [], { color: S.KINDCOL.schema, nestSet: nestSetRes }));
-    bind(resShape, card({ title: res.name, icon: "schema", color: S.KINDCOL.schema, sub: "response body · entity " + res.entity,
-      rows: [["fields ferried", String((I.payload || {}).n != null ? I.payload.n : (res.cols || []).length)], ["nested", String((res.nested || []).length) + " shapes"], ["also returned by", String(F.widening.response_consumers.length) + " other endpoint(s)"], ["file", String(res.file || "—")]],
-      fields: (res.cols || []).map(function(c){ return c[0] + " · " + c[1]; }), station: "schema:" + res.name }));
-    resCol.append(resShape);
-    var nb2 = E("div", { class: "nests" });
-    (res.nested || []).forEach(function(n){ var t = E("span", { class: "pchip schema" }, ico("schema", 11), esc(n.name) + " ·" + n.cols.length);
-      bind(t, card({ title: n.name, icon: "schema", color: S.KINDCOL.schema, sub: "nested in " + res.name + " · " + n.cols.length + " fields",
-        fields: n.cols.map(function(c){ return c[0] + " · " + c[1]; }), station: "schema:" + n.name })); nb2.append(t); });
-    if ((res.nested || []).length) resCol.append(E("div", { class: "dnlbl" }, "nested ×" + res.nested.length), nb2);
-    body.append(resCol);
     box.append(body);
 
     /* the foot: the evidence row (home_ev), the entity-model row, and the legend */
@@ -170,6 +135,98 @@
     box.append(foot);
 
     COV.mark("ACCESSES", "data"); COV.mark("PAYLOAD", "data"); COV.mark("CONNECTIONS", "data");
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════════════════
+     1b · SCHEMAS — its own part again (operator 2026-09-12: merging it into DATA was too much).
+     What crosses the door, drawn as lines: the request shape in, the response shape out, each
+     nested shape a stack of its own. The exact fields live on the hover cards.
+     ══════════════════════════════════════════════════════════════════════════════════════ */
+  function schemaBlock(sc, dir, F, S){
+    var nest = {}; (sc.nested || []).forEach(function(n){ nest[n.name] = 1; });
+    var col = E("div", { class: "scol " + dir });
+    col.append(E("div", { class: "dslbl " + (dir === "in" ? "in" : "out") },
+      ico("down", 12, dir === "in" ? S.OPC.read : S.OPC.write), dir === "in" ? "REQUEST" : "RESPONSE",
+      E("span", { class: "n" }, String((sc.cols || []).length))));
+    if (!sc.present) { col.append(E("div", { class: "wempty" }, sc.why || "— not carried by the feed")); return col; }
+    var main = E("div", { class: "schm" }, E("div", { class: "snm" }, ico("schema", 12, S.KINDCOL.schema), esc(sc.name)),
+      shapeStack(sc.name, sc.cols || [], { color: S.KINDCOL.schema, nestSet: nest }));
+    bind(main, card({ title: sc.name, icon: "schema", color: S.KINDCOL.schema, sub: (dir === "in" ? "request body" : "response body") + " · entity " + sc.entity,
+      rows: [["fields", String((sc.cols || []).length)], ["nested", String((sc.nested || []).length) + " shapes"], ["file", String(sc.file || "—")],
+             sc.doc ? ["doc", sc.doc.slice(0, 90)] : null],
+      fields: (sc.cols || []).map(function(c){ return c[0] + " · " + c[1]; }), station: "schema:" + sc.name }));
+    col.append(main);
+    if ((sc.nested || []).length) {
+      col.append(E("div", { class: "dnlbl" }, "nested ×" + sc.nested.length + " — each one a shape of its own"));
+      var nb = E("div", { class: "nestgrid" });
+      sc.nested.forEach(function(n){
+        var t = E("div", { class: "nestcard" }, E("div", { class: "snm" }, ico("schema", 11, S.KINDCOL.schema), esc(n.name), E("span", { class: "tc" }, String(n.cols.length))),
+          shapeStack(n.name, n.cols, { color: S.KINDCOL.schema, cls: "tbars" }));
+        bind(t, card({ title: n.name, icon: "schema", color: S.KINDCOL.schema, sub: "nested in " + sc.name + " · " + n.cols.length + " fields",
+          fields: n.cols.map(function(c){ return c[0] + " · " + c[1]; }), station: "schema:" + n.name }));
+        nb.append(t); });
+      col.append(nb); }
+    return col; }
+
+  function renderSchemas(box, F, S){
+    var D = F.data, I = F.identity, req = D.schemas.request, res = D.schemas.response;
+    var nIn = (req.cols || []).length, nOut = (res.cols || []).length;
+    head(box, "schema", "Schemas", nIn + " in · " + nOut + " out",
+      "the shapes that cross the door, drawn as LINES — one line per field, its height the field count; the exact fields live on the hover cards");
+    var body = E("div", { class: "scbody" });
+    body.append(schemaBlock(req, "in", F, S));
+    body.append(E("div", { class: "dfarrow" }, ico("drill", 15, "var(--muted)")));
+    body.append(schemaBlock(res, "out", F, S));
+    box.append(body);
+    var foot = E("div", { class: "pfoot" });
+    var pr = E("div", { class: "kv" }, ico("down", 13, S.OPC.write), E("span", { class: "k" }, "payload"), E("span", { class: "v" },
+      ((I.payload || {}).n != null ? I.payload.n : nOut) + " fields ferried → " + (res.name || "—")
+      + (F.widening.response_consumers.length ? " · also returned by " + F.widening.response_consumers.length + " other door(s)" : "")));
+    bind(pr, card({ title: "payload", icon: "down", color: S.OPC.write, sub: "the response contract's field count",
+      rows: [["schema", res.name || "—"], ["fields", String((I.payload || {}).n != null ? I.payload.n : nOut)],
+             ["shared with", F.widening.response_consumers.join(" · ") || "— this door alone"]],
+      body: "the cargo shuttle in the graph scales with this number." }));
+    foot.append(pr);
+    foot.append(legend([
+      { t: "a line = a field", swatch: "background:var(--muted);height:2px;width:16px", tip: card({ title: "the abstraction", sub: "E — how deep", body: "a shape is a STACK; its height is its field count. The exact field only ever appears on the hover card." }) },
+      { t: "nested shape", swatch: "background:#06b6d4;height:3px;width:16px", tip: card({ title: "a nested shape", sub: "a field whose type is another schema", body: "drawn brighter in the parent, then given its own stack below." }) },
+      { t: "in", swatch: "background:" + S.OPC.read }, { t: "out", swatch: "background:" + S.OPC.write }]));
+    box.append(foot);
+    COV.mark("PAYLOAD", "schemas"); COV.mark("CONNECTIONS", "schemas");
+  }
+
+  /* SCHEMAS · B "fields" — every field of both shapes as rows, nested ones indented under their parent */
+  function renderSchemaFields(box, F, S){
+    var D = F.data, I = F.identity;
+    var nIn = (D.schemas.request.cols || []).length, nOut = (D.schemas.response.cols || []).length;
+    head(box, "schema", "Schemas", nIn + " in · " + nOut + " out",
+      "every field of both shapes, one per row — the densest reading, with each nested shape under its parent");
+    var body = E("div", { class: "lbody" });
+    [["in", D.schemas.request], ["out", D.schemas.response]].forEach(function(pair){
+      var dir = pair[0], sc = pair[1]; if (!sc.present) return;
+      var hd = E("div", { class: "lschm" }, ico("schema", 13, S.KINDCOL.schema), E("b", null, esc(sc.name)),
+        E("span", { class: "ls" }, (dir === "in" ? "request" : "response") + " · " + (sc.cols || []).length + " fields · " + (sc.nested || []).length + " nested · " + sc.entity));
+      bind(hd, card({ title: sc.name, icon: "schema", color: S.KINDCOL.schema, sub: dir === "in" ? "request body" : "response body",
+        rows: [["file", String(sc.file || "—")]], fields: (sc.cols || []).map(function(c){ return c[0] + " · " + c[1]; }) }));
+      body.append(hd);
+      var nestOf = {}; (sc.nested || []).forEach(function(n){ nestOf[n.name] = n; });
+      var rows = [];
+      (sc.cols || []).forEach(function(c){
+        var base = String(c[1]).replace(/\s*\|\s*None$/, "").replace(/^(list|List|Optional)\[(.*)\]$/, "$2");
+        var n = nestOf[base];
+        rows.push({ cells: [dir === "in" ? "→" : "←", "<b>" + esc(c[0]) + "</b>", esc(c[1]), n ? n.cols.length + " fields" : "—"],
+          card: card({ title: c[0], icon: n ? "schema" : "table", color: n ? S.KINDCOL.schema : null, sub: String(c[1]),
+            rows: [["in", sc.name], n ? ["a nested shape", n.name + " · " + n.cols.length + " fields"] : null],
+            fields: n ? n.cols.map(function(x){ return x[0] + " · " + x[1]; }) : null }) });
+        if (n) n.cols.forEach(function(x){ rows.push({ cls: "sub", cells: ["", "<span class='nsub'>" + esc(x[0]) + "</span>", esc(x[1]), ""],
+          card: card({ title: x[0], sub: String(x[1]), rows: [["in", n.name], ["nested in", sc.name]] }) }); }); });
+      ledger(body, ["dir", "field", "type", "nested"], rows, { grid: "28px 1fr 190px 74px" }); });
+    box.append(body);
+    var foot = E("div", { class: "pfoot" });
+    foot.append(E("div", { class: "kv" }, ico("down", 13, S.OPC.write), E("span", { class: "k" }, "payload"),
+      E("span", { class: "v" }, ((I.payload || {}).n != null ? I.payload.n : nOut) + " fields ferried → " + (D.schemas.response.name || "—"))));
+    box.append(foot);
+    COV.mark("PAYLOAD", "schemas"); COV.mark("CONNECTIONS", "schemas");
   }
 
   /* ══════════════════════════════════════════════════════════════════════════════════════
@@ -485,21 +542,10 @@
 
   /* ── DATA · B "flow" — the width used: request → the whole table field (wrapped, writes first) → response ── */
   function renderDataFlow(box, F, S){
-    var D = F.data, I = F.identity, req = D.schemas.request, res = D.schemas.response;
-    head(box, "table", "Data + schemas", D.ops.length + " ops · " + D.tables.length + " tables",
-      "ONE axis, left to right: the shape that enters · every table it lands on (writes first, entity by its dot) · the shape that leaves");
+    var D = F.data, I = F.identity;
+    head(box, "table", "Data", D.ops.length + " ops · " + D.tables.length + " tables",
+      "every table on ONE field, writes first, each tile carrying its entity's dot — the widest reading of the same facts");
     var body = E("div", { class: "dfbody" });
-    var mk = function(sc, dir){ var nest = {}; (sc.nested || []).forEach(function(n){ nest[n.name] = 1; });
-      var w = E("div", { class: "dfside" },
-        E("div", { class: "dslbl " + dir }, ico("down", 12, dir === "in" ? S.OPC.read : S.OPC.write), dir === "in" ? "REQUEST" : "RESPONSE", E("span", { class: "n" }, String((sc.cols || []).length))),
-        E("div", { class: "schm" }, E("div", { class: "snm" }, ico("schema", 12, S.KINDCOL.schema), esc(sc.name || "—")), shapeStack(sc.name, sc.cols || [], { color: S.KINDCOL.schema, nestSet: nest })),
-        E("div", { class: "dnlbl" }, "nested ×" + (sc.nested || []).length));
-      var nb = E("div", { class: "nests" });
-      (sc.nested || []).forEach(function(n){ var c = E("span", { class: "pchip schema" }, ico("schema", 11), esc(n.name) + " ·" + n.cols.length);
-        bind(c, card({ title: n.name, icon: "schema", color: S.KINDCOL.schema, sub: "nested in " + sc.name, fields: n.cols.map(function(x){ return x[0] + " · " + x[1]; }) })); nb.append(c); });
-      w.append(nb); return w; };
-    body.append(mk(req, "in"));
-    body.append(E("div", { class: "dfarrow" }, ico("drill", 15, "var(--muted)")));
     var field = E("div", { class: "dffield" });
     var fhd = E("div", { class: "dfhd" }, sechd("key", "the door writes, then reads", D.tables.length, false),
       E("span", { class: "dfnote" }, D.writes.length + " write ops · " + D.reads.length + " read ops · " + D.entities.length + " entities · " + D.both.length + " tables on both channels"));
@@ -520,31 +566,21 @@
       E("span", { class: "cnote" }, "one transaction · " + D.writes.length + " writes become permanent"), E("i", { class: "pulse" }));
     bind(cm, card({ title: "the DB transaction commits", icon: "key", color: S.OPC.write, sub: "access.commits — never a git commit",
       rows: [["writes", String(D.writes.length)], ["idempotency", F.security.idempotent ? "guarded by " + F.security.idempotency_table : "none"]] }));
-    field.append(cm); body.append(field);
-    body.append(E("div", { class: "dfarrow" }, ico("drill", 15, "var(--muted)")));
-    body.append(mk(res, "out"));
-    box.append(body);
+    field.append(cm); body.append(field); box.append(body);
     var foot = E("div", { class: "pfoot" });
     foot.append(E("div", { class: "kv" }, ico("role", 13), E("span", { class: "k" }, "entities"), E("span", { class: "v" }, D.entities.join(" · ") + " — the dot on each tile says which")));
     foot.append(legend([{ t: "reads", swatch: "background:" + RWC.r }, { t: "writes", swatch: "background:" + RWC.w }, { t: "both", swatch: "background:" + RWC.rw },
       { t: "a line = a field", swatch: "background:var(--muted);height:2px;width:16px" }]));
     box.append(foot);
-    COV.mark("ACCESSES", "data"); COV.mark("PAYLOAD", "data"); COV.mark("CONNECTIONS", "data"); COV.mark("EVIDENCE", "data"); COV.mark("MODEL ROW", "data");
+    COV.mark("ACCESSES", "data"); COV.mark("CONNECTIONS", "data"); COV.mark("EVIDENCE", "data"); COV.mark("MODEL ROW", "data");
   }
 
   /* ── DATA · C "ledger" — the densest honest form: one row per table, every column the feed knows ── */
   function renderDataLedger(box, F, S){
     var D = F.data, I = F.identity;
-    head(box, "table", "Data + schemas", D.ops.length + " ops · " + D.tables.length + " tables",
-      "one row per table · the bar strip is still the shape (a line per column) · the two schemas book-end the list");
+    head(box, "table", "Data", D.ops.length + " ops · " + D.tables.length + " tables",
+      "one row per table, every column the feed knows — the bar strip is still the shape, a line per column");
     var body = E("div", { class: "lbody" });
-    [["request", D.schemas.request], ["response", D.schemas.response]].forEach(function(pair){
-      var sc = pair[1], r = E("div", { class: "lschm" }, ico("schema", 13, S.KINDCOL.schema), E("b", null, esc(sc.name)),
-        E("span", { class: "ls" }, pair[0] + " · " + (sc.cols || []).length + " fields · " + (sc.nested || []).length + " nested · " + (sc.entity || "—")),
-        shapeStack(sc.name, sc.cols || [], { color: S.KINDCOL.schema, cls: "inline" }));
-      bind(r, card({ title: sc.name, icon: "schema", color: S.KINDCOL.schema, sub: pair[0] + " · entity " + sc.entity,
-        fields: (sc.cols || []).map(function(c){ return c[0] + " · " + c[1]; }), station: "schema:" + sc.name }));
-      body.append(r); });
     var rows = D.tables.slice().sort(function(a, b){ return (a.entity || "").localeCompare(b.entity || "") || b.cols.length - a.cols.length; }).map(function(t){
       var fkSet = {}; (t.fks || []).forEach(function(f){ fkSet[Array.isArray(f) ? f[0] : f] = true; });
       var uqSet = {}; (t.uqs || []).forEach(function(u){ (Array.isArray(u) ? u : [u]).forEach(function(c){ uqSet[c] = 1; }); });
@@ -560,7 +596,7 @@
     foot.append(E("div", { class: "kv" }, ico("key", 13, S.OPC.write), E("span", { class: "k" }, "commit"), E("span", { class: "v" }, D.commits ? "one transaction makes the " + D.writes.length + " writes permanent · " + (F.security.idempotent ? "idempotency guarded by " + F.security.idempotency_table : "no idempotency") : "reads only")));
     foot.append(legend([{ t: "reads", swatch: "background:" + RWC.r }, { t: "writes", swatch: "background:" + RWC.w }, { t: "both", swatch: "background:" + RWC.rw }]));
     box.append(foot);
-    COV.mark("ACCESSES", "data"); COV.mark("PAYLOAD", "data"); COV.mark("CONNECTIONS", "data"); COV.mark("EVIDENCE", "data"); COV.mark("MODEL ROW", "data");
+    COV.mark("ACCESSES", "data"); COV.mark("CONNECTIONS", "data"); COV.mark("EVIDENCE", "data"); COV.mark("MODEL ROW", "data");
   }
 
   /* ── FUNCTIONS · B "chain" — the walk as ONE horizontal spine; the level you pick opens below ── */
@@ -757,11 +793,15 @@
 
   /* ── the registry — icons are STATION icons (words on hover), counts answer A ─────────── */
   window.PANELS = {
-    data: { icon: "table", word: "Data", col: S.KINDCOL.model, hint: "where the reads and writes land (13 tables on 5 entities, one DB commit) and the shapes that cross the door (request 7 · response 6) — abstractions drawn as lines, the exact columns on hover",
+    data: { icon: "table", word: "Data", col: S.KINDCOL.model, hint: "every table this door reads or writes — 13 of them on 5 entity grounds, one DB commit; each tile a stack whose height is its column count",
       count: function(F){ return F.data.tables.length; },
       variants: [ { key: "grounds", label: "Grounds", hint: "tables tiled on entity-coloured grounds; the shape stacks stand vertically. Reads by entity first.", render: renderData },
                   { key: "flow", label: "Flow", hint: "ONE left-to-right axis — request → the whole table field (writes first, entity by dot) → response. Uses the width.", render: renderDataFlow },
                   { key: "ledger", label: "Ledger", hint: "one row per table with every column the feed knows (entity · rw · shape · cols · fk · uq · model). The densest honest form.", render: renderDataLedger } ] },
+    schemas: { icon: "schema", word: "Schemas", col: S.KINDCOL.schema, hint: "the shapes that cross the door — the request's 7 fields with 6 nested shapes in, the response's 6 with 5 nested out; drawn as lines, the exact fields on hover",
+      count: function(F){ return (F.data.schemas.request.cols || []).length + (F.data.schemas.response.cols || []).length; },
+      variants: [ { key: "shapes", label: "Shapes", hint: "the two shapes side by side as stacks, each nested shape given its own stack below its parent.", render: renderSchemas },
+                  { key: "fields", label: "Fields", hint: "every field of both shapes as rows, nested fields indented under the one that carries them.", render: renderSchemaFields } ] },
     functions: { icon: "function", word: "Functions", col: S.KINDCOL["function"], hint: "the handler and the call tree behind it — reach 5 · 29 behind; the levels walk 3·16·5·1 with the confidence of each hop; ONE bead walks it",
       count: function(F){ return F.functions.behind.fns; },
       variants: [ { key: "levels", label: "Levels", hint: "one column per hop, every callee visible at once; the bead crosses the strip.", render: renderFunctions },

@@ -34,7 +34,7 @@
           <div class="blkbody"><div id="barcfg"></div></div>
         </div>
         <div class="barblk" id="blk-tabs">
-          <div class="bhl"><span class="bhi"></span><b>part buttons</b><span class="bhn">the row of five</span></div>
+          <div class="bhl"><span class="bhi"></span><b>part buttons</b><span class="bhn">the row of six</span></div>
           <div class="blkbody"><div id="tabcfg"></div></div>
         </div>
         <div class="barblk" id="blk-parts">
@@ -131,6 +131,35 @@
     return '<svg viewBox="0 0 24 20" width="' + (size || 20) + '" height="' + Math.round((size || 20) * 20 / 24) + '" fill="none" stroke="currentColor" stroke-width="1.6">'
       + '<rect x="' + ((24 - W) / 2).toFixed(1) + '" y="' + ((20 - H) / 2).toFixed(1) + '" width="' + W + '" height="' + H + '" rx="1.5"/></svg>'; }
   function ib(html, cardHtml, on){ var b = E("button", { class: "ib" + (on ? " on" : "") }); b.innerHTML = html; hoverBind(b, cardHtml); return b; }
+  /* a dragged bar — a volume slider, for the dials that are a RANGE rather than a set of choices.
+     Drag the track, click anywhere on it, or use the arrow keys. Live: the row redraws as it moves. */
+  function slider(opt){
+    var wrap = E("div", { class: "sld" + (opt.cls ? " " + opt.cls : "") });
+    var track = E("div", { class: "sldt", tabindex: "0", role: "slider",
+      "aria-valuemin": String(opt.min), "aria-valuemax": String(opt.max), "aria-label": opt.label || "" });
+    var fill = E("i", { class: "sldf" }), knob = E("i", { class: "sldk" });
+    var out = E("span", { class: "sldv" });
+    track.append(fill, knob); wrap.append(track, out);
+    var val = opt.value;
+    function paint(){ var pct = (val - opt.min) / (opt.max - opt.min) * 100;
+      fill.style.width = pct + "%"; knob.style.left = pct + "%";
+      out.textContent = (opt.fmt ? opt.fmt(val) : String(val));
+      track.setAttribute("aria-valuenow", String(val)); }
+    function setFromX(clientX){ var r = track.getBoundingClientRect();
+      var t = Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+      var v = opt.min + t * (opt.max - opt.min);
+      v = Math.round(v / (opt.step || 1)) * (opt.step || 1);
+      if (v !== val) { val = v; paint(); opt.on(val); } else { paint(); } }
+    track.addEventListener("pointerdown", function(ev){ ev.preventDefault(); ev.stopPropagation();
+      track.setPointerCapture(ev.pointerId); track.classList.add("drag"); setFromX(ev.clientX); });
+    track.addEventListener("pointermove", function(ev){ if (track.hasPointerCapture(ev.pointerId)) setFromX(ev.clientX); });
+    track.addEventListener("pointerup", function(ev){ track.classList.remove("drag"); try { track.releasePointerCapture(ev.pointerId); } catch (e) {} });
+    track.addEventListener("keydown", function(ev){ var d = ev.key === "ArrowLeft" || ev.key === "ArrowDown" ? -1 : (ev.key === "ArrowRight" || ev.key === "ArrowUp" ? 1 : 0);
+      if (!d) return; ev.preventDefault(); var v = Math.min(opt.max, Math.max(opt.min, val + d * (opt.step || 1)));
+      if (v !== val) { val = v; paint(); opt.on(val); } });
+    if (opt.card) hoverBind(track, opt.card);
+    paint(); wrap.__set = function(v){ val = v; paint(); };
+    return wrap; }
 
   /* ── coverage: the station inventory (ep-brief.md) — a renderer marks a row when it draws it ── */
   var INV = [
@@ -511,16 +540,24 @@
     row("pattern", [["valley", "strongest at the rim, falling away toward the middle — the SC2 face", "valley"],
                     ["flat", "one even wash", "flat"], ["glow", "a light from the top edge", "glow"], ["hatch", "diagonal ruling, like the app band", "hatch"], ["none", "no fill — a bordered box", "none"]],
         "pattern", function(o){ return labIco("pat" + (o[0] === "none" ? "flat" : o[0]), 15); });
-    row("glyph", [[13, "small", "13px"], [16, "medium", "16px"], [19, "the default", "19px"], [24, "large", "24px"], [30, "very large", "30px"]],
-        "iconSize", function(o){ return S.icon("shape", Math.min(o[0], 18)); });
+    box.append(el("div", { class: "cfl" }, "glyph size"),
+      slider({ min: 11, max: 48, step: 1, value: TABCFG.iconSize, label: "glyph size",
+        fmt: function(v){ return v + "px"; },
+        card: hcard({ title: "glyph size", value: "11 — 48px", icon: "shape",
+          rows: [["inline", "the glyph is drawn at this size beside the name"], ["watermark", "it is drawn 2.6× this, then clipped by the button"]],
+          plain: "how loud the picture is said — drag the bar, the row follows as you move" }),
+        on: function(v){ TABCFG.iconSize = v; drawTabs(); } }));
     row("glyph shown", [["inline", "beside the name, at its own size", "inline"],
                         ["ghost", "a big translucent glyph on the right, clipped to the button — a watermark", "watermark"],
                         ["bleed", "the same watermark, larger, spilling past the button's top and bottom edges", "watermark, bleeding"]],
         "iconMode", function(o){ return labIco("ic" + o[0], 15); });
-    row("glyph side", [["left", "pushed to the left, under the name", "left"], ["midleft", "left of centre", "left of centre"],
-                       ["center", "centred in the button", "centred"], ["midright", "right of centre", "right of centre"],
-                       ["right", "hard against the right edge — the default", "right"]],
-        "iconPos", function(o){ return labIco("pos" + o[0], 15); });
+    box.append(el("div", { class: "cfl" }, "glyph side"),
+      slider({ min: 0, max: 100, step: 1, value: TABCFG.iconX, label: "glyph side",
+        fmt: function(v){ return v === 0 ? "far left" : v === 100 ? "far right" : v + "%"; },
+        card: hcard({ title: "glyph side", value: "left — right", icon: "shape",
+          rows: [["0%", "against the left edge, under the name"], ["50%", "centred in the button"], ["100%", "against the right edge, behind the count"]],
+          plain: "where the watermark sits across the button — drag it anywhere between the two edges" }),
+        on: function(v){ TABCFG.iconX = v; drawTabs(); } }));
     row("titles", [["word", "as written — Data, Functions, Tests", "as written"], ["caps", "ALL CAPS", "all caps"]],
         "caseMode", function(o){ return el("span", { class: "numz" }, o[0] === "caps" ? "AA" : "Aa").outerHTML; });
     row("count size", [[11, "small", "11px"], [12, "the default", "12px"], [14, "large", "14px"], [17, "very large", "17px"]],
@@ -541,7 +578,7 @@
   /* ── tabs: SC2 command buttons — a square per part, icon + NAME + the count badge (operator 2026-09-11).
      The face is a VALLEY: the part's colour is strongest at the rim and falls away toward the middle. ── */
   var TABS = document.getElementById("tabs"), PANEL = document.getElementById("panel"), VARBAR = document.getElementById("varbar"), cur = null, curVar = {};
-  var order = ["data", "functions", "tests", "widening", "security"];
+  var order = ["data", "schemas", "functions", "tests", "widening", "security"];   /* the six PARTS — data and schemas split again (operator 2026-09-12) */
   /* ══ THE PART BUTTONS — every dial the operator asked for (2026-09-11) ══════════════════════
      colour intensity · which colours · the pattern inside · the glyph's size and how it is shown
      (inline · a watermark · a watermark that bleeds past the button's edges) · the count's size and
@@ -550,7 +587,7 @@
      button · pill counts · wide buttons filling the row — plus FOCUS colour, which is what they
      asked for next: the open part keeps its colour and every other button goes mono. */
   var TABCFG = window.TABCFG = { intensity: "dim", palette: "focus", pattern: "valley",
-    iconSize: 24, iconMode: "ghost", iconPos: "right", numSize: 12, numShape: "pill", shape: "rect",
+    iconSize: 24, iconMode: "ghost", iconX: 92, numSize: 12, numShape: "pill", shape: "rect",
     layout: "fill", width: "wide", caseMode: "word" };
   function tabCol(P, isOn){
     /* FOCUS: only the open part is coloured; the rest read mono, so the row points at one thing */
@@ -560,18 +597,19 @@
       : TABCFG.palette === "accent" ? "var(--accent)" : "var(--muted)"; }
   function drawTabs(){ TABS.innerHTML = "";
     TABS.className = "pal-" + TABCFG.palette + " int-" + TABCFG.intensity + " pat-" + TABCFG.pattern
-      + " ic-" + TABCFG.iconMode + " icp-" + TABCFG.iconPos + " sh-" + TABCFG.shape + " lay-" + TABCFG.layout
+      + " ic-" + TABCFG.iconMode + " sh-" + TABCFG.shape + " lay-" + TABCFG.layout
       + " w-" + TABCFG.width + " nsh-" + TABCFG.numShape + " case-" + TABCFG.caseMode;
     order.forEach(function(k){ var P = window.PANELS[k]; if (!P) return;
       var b = document.createElement("button"); b.className = "tab" + (cur === k ? " on" : ""); b.setAttribute("role", "tab"); b.dataset.tab = k;
       b.style.setProperty("--tc", tabCol(P, cur === k));
       b.style.setProperty("--nz", TABCFG.numSize + "px");
+      b.style.setProperty("--ix", TABCFG.iconX + "%");
       var glyph = S.icon(P.icon, TABCFG.iconMode === "inline" ? TABCFG.iconSize : Math.round(TABCFG.iconSize * 2.6), "currentColor");
       b.innerHTML = '<span class="tabn">' + P.count(F) + '</span>'
         + '<span class="tabi">' + glyph + '</span>'
         + '<span class="tabw">' + P.word + '</span>';
-      hoverBind(b, function(){ return hcard({ title: P.word, value: "part " + (order.indexOf(k) + 1) + " of 5", icon: P.icon, color: P.col,
-        rows: [["inside", P.count(F) + " " + (k === "data" ? "tables" : k === "functions" ? "functions behind" : k === "tests" ? "tests" : k === "widening" ? "pieces reached" : "guards")],
+      hoverBind(b, function(){ return hcard({ title: P.word, value: "part " + (order.indexOf(k) + 1) + " of 6", icon: P.icon, color: P.col,
+        rows: [["inside", P.count(F) + " " + (k === "data" ? "tables" : k === "schemas" ? "fields across both shapes" : k === "functions" ? "functions behind" : k === "tests" ? "tests" : k === "widening" ? "pieces reached" : "guards")],
                ["distributions", P.variants.length + " to choose from"]],
         plain: P.hint }); });
       b.onclick = function(ev){ ev.stopPropagation(); show(k); }; TABS.appendChild(b); }); }
@@ -611,7 +649,7 @@
       + " · styles " + (styled || "—"); },
     parts: function(){ return "part bars · " + order.map(function(k){ return k + "=" + (curVar[k] || window.PANELS[k].variants[0].key); }).join(" · "); },
     tabs: function(){ return "part buttons · colour " + TABCFG.palette + " · intensity " + TABCFG.intensity + " · pattern " + TABCFG.pattern
-      + " · glyph " + TABCFG.iconSize + "px " + TABCFG.iconMode + " " + TABCFG.iconPos
+      + " · glyph " + TABCFG.iconSize + "px " + TABCFG.iconMode + " at " + TABCFG.iconX + "%"
       + " · titles " + TABCFG.caseMode + " · count " + TABCFG.numSize + "px " + TABCFG.numShape
       + " · button " + TABCFG.shape + " · row " + TABCFG.layout + " " + TABCFG.width; } };
   function copyBtn(kind, what){ var b = el("button", { class: "cpb" }); b.innerHTML = labIco("copy", 13);
