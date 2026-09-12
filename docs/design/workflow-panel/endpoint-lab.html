@@ -60,7 +60,10 @@
     <section id="bench" class="box-work" aria-label="the console's middle region, boxed — only what would be built">
       <div id="headstrip"></div>
       <nav id="tabs" role="tablist"></nav>
-      <div id="panel" role="tabpanel"></div>
+      <div id="stage">
+        <div id="panel" role="tabpanel"></div>
+        <aside id="portrait" aria-label="the portrait — what you selected in the panel"></aside>
+      </div>
     </section>
   </div>
 </div>
@@ -534,13 +537,16 @@
   var FRAME = window.FRAME = {
     benchW: 1, benchS: "solid",
     headH: 45, headBw: 0, headBs: "solid", headDivW: 1, headDivS: "none", headGap: 0,
-    tabsRow: 52, tabsH: 43, tabsBw: 0, tabsBs: "solid", tabsDivW: 1, tabsDivS: "none", tabsGap: 0 };
+    tabsRow: 52, tabsH: 43, tabsBw: 0, tabsBs: "solid", tabsDivW: 1, tabsDivS: "none", tabsGap: 0,
+    portW: 300, portDivW: 1, portDivS: "solid", portGap: 0 };
   var FRVAR = { benchW: "--bench-bw", benchS: "--bench-bs",
     headH: "--head-h", headBw: "--head-bw", headBs: "--head-bs", headDivW: "--head-divw", headDivS: "--head-divs", headGap: "--head-gap",
+    portW: "--port-w", portDivW: "--port-divw", portDivS: "--port-divs", portGap: "--port-gap",
     tabsRow: "--tabs-row", tabsH: "--tabs-h", tabsBw: "--tabs-bw", tabsBs: "--tabs-bs", tabsDivW: "--tabs-divw", tabsDivS: "--tabs-divs", tabsGap: "--tabs-gap" };
   function applyFrame(){ var b = document.getElementById("bench");
     Object.keys(FRVAR).forEach(function(k){ var v = FRAME[k];
-      b.style.setProperty(FRVAR[k], typeof v === "number" ? v + "px" : v); }); }
+      b.style.setProperty(FRVAR[k], typeof v === "number" ? v + "px" : v); });
+    b.classList.toggle("no-port", FRAME.portW === 0); }
   window.applyFrame = applyFrame;
   /* the line options ARE lines — each button draws the pattern it sets (the legend law) */
   var LINES = [
@@ -622,6 +628,18 @@
       rows: [["sets", "the empty space between the buttons and the panel"]],
       plain: "how far the panel sits" });
 
+    sub("the portrait", "the console's second region, beside the panel");
+    sld({ label: "width", key: "portW", min: 0, max: 520, zero: "off", icon: "shape",
+      rows: [["at 0", "the portrait is off and the panel takes the whole stage"],
+             ["what it holds", "whatever you selected in the panel — in Data, the table you clicked"]],
+      plain: "how wide the second region stands" });
+    sld({ label: "rule", key: "portDivW", min: 0, max: 4, zero: "none", icon: "shape",
+      rows: [["sits", "between the panel and the portrait, running down"]],
+      plain: "the line between the two regions" });
+    pat("portDivS", "the line between panel and portrait", "the portrait rule");
+    sld({ label: "gap", key: "portGap", min: 0, max: 32, zero: "none", icon: "shape",
+      rows: [["sets", "the space between the panel and the portrait"]],
+      plain: "how far the portrait sits from the panel" });
     box.append(el("div", { class: "cfread" }, "every line has NONE — transparent is a setting here, not a missing one. A row can carry its own outline, the divider below it, both, or neither.")); }
   window.drawFrameCfg = drawFrameCfg;
 
@@ -631,7 +649,9 @@
   var DATACFG = window.DATACFG = {
     show: { note: 1, counts: 1, shapes: 1, rw: 1, commit: 1, ev: 1, mdl: 1, ents: 1, legend: 1 },
     width: "flex", tiles: "stack", order: "size",
-    channel: "all",                                     /* the PANEL's filter — every distribution reads it */
+    chan: { w: 1, r: 1, rw: 1 },     /* APPENDABLE channels — all three on IS "every table" */
+    counts: "tables",                /* the title's count: "tables" or "ops" (the operator found ops implicit) */
+    bk: { form: "row", icon: 1, rw: 1, name: 1, ent: "word", count: "words", model: "word" },
     sqSize: 11, sqGap: 2, sqShape: "round", sqPal: "type", sqOpt: 1 };
   var DSEC = [
     { key: "note",   word: "the note",    icon: "doc",    on: ["grounds", "flow", "ledger", "fields", "blocks"],
@@ -674,7 +694,7 @@
         hoverBind(b, hcard({ title: o[2] || o[0], value: label, icon: "shape",
           rows: na ? [["drawn in", onlyIn + " — not in " + live + ", so this does nothing right now"]] : null, plain: o[1] }));
         b.onclick = function(ev){ ev.stopPropagation(); DATACFG[key] = o[0];
-          applyData(); if (key === "order" || key === "channel" || key === "sqPal") window.showTab("data"); drawDataCfg(); }; w.append(b); });
+          applyData(); if (key === "order" || key === "counts" || key === "sqPal") window.showTab("data"); drawDataCfg(); }; w.append(b); });
       box.append(el("div", { class: "cfl" }, label), w); }
 
     sub("layout", "the same facts, distributed differently");
@@ -703,14 +723,68 @@
         w.append(b); });
       box.append(el("div", { class: "cfl" }, "drawn"), w); }
 
-    sub("the channel", "every distribution reads this — the same four buttons sit in the panel's own title row");
-    pick("tables", "channel", [
-      ["all", "every table this door touches, whichever way the data moves", "all of them"],
-      ["w", "tables it writes and never reads — it puts data there and never looks", "written only"],
-      ["r", "tables it reads and never writes — it needs them to answer, never changes them", "read only"],
-      ["rw", "tables it both reads and writes — where a read and a write meet on one table", "both"]],
-      function(o){ return o[0] === "all" ? labIco("wwide", 15)
-        : '<i class="chsw" style="background:' + (o[0] === "w" ? S.RW.w : o[0] === "r" ? S.RW.r : S.RW.rw) + '"></i>'; });
+    sub("the channel", "three independent switches — the same three sit in the panel's own title row");
+    { var w = el("div", { class: "ibwrap" });
+      [["w", S.RW.w, "written only", "tables it writes and never reads — it puts data there and never looks"],
+       ["r", S.RW.r, "read only", "tables it reads and never writes — it needs them to answer, never changes them"],
+       ["rw", S.RW.rw, "both", "tables it both reads and writes — where a read and a write meet on one table"]
+      ].forEach(function(o){ var on = !!DATACFG.chan[o[0]];
+        var b = el("button", { class: "ib" + (on ? " on" : "") }); b.dataset.chan = o[0];
+        b.innerHTML = '<i class="chsw" style="background:' + o[1] + '"></i>';
+        hoverBind(b, hcard({ title: o[2], value: on ? "on" : "off", icon: "shape",
+          rows: [["what it keeps", o[3]], ["click", on ? "switches it off and leaves the others alone" : "adds it to what is already shown"]],
+          plain: "one of three switches — any combination is legal, and all three on is every table" }));
+        b.onclick = function(ev){ ev.stopPropagation(); DATACFG.chan[o[0]] = on ? 0 : 1;
+          window.showTab("data"); drawDataCfg(); }; w.append(b); });
+      box.append(el("div", { class: "cfl" }, "tables"), w); }
+    pick("count", "counts", [
+      ["tables", "the title counts tables and nothing else", "tables only"],
+      ["ops", "the title also counts OPS — one table on one channel, so a both-channel table is two", "ops too"]],
+      function(o){ return labIco(o[0] === "tables" ? "wauto" : "wwide", 15); });
+
+    sub("the block title", "which parts of a table's title line are drawn");
+    function bpick(label, key, opts, iconFor){
+      var w = el("div", { class: "ibwrap" });
+      opts.forEach(function(o){ var b = el("button", { class: "ib" + (DATACFG.bk[key] === o[0] ? " on" : "") + (live === "blocks" ? "" : " na") });
+        b.dataset["bk" + key] = String(o[0]); b.innerHTML = iconFor(o);
+        hoverBind(b, hcard({ title: o[2] || String(o[0]), value: label, icon: "shape",
+          rows: live === "blocks" ? null : [["drawn in", "blocks — not in " + live + ", so this does nothing right now"]], plain: o[1] }));
+        b.onclick = function(ev){ ev.stopPropagation(); DATACFG.bk[key] = o[0]; window.showTab("data"); drawDataCfg(); };
+        w.append(b); });
+      box.append(el("div", { class: "cfl sub" }, label), w); }
+    bpick("form", "form", [
+      ["row", "one table per full-width row — the list reads top to bottom", "rows"],
+      ["block", "the tables as blocks that wrap — more of them on screen, each its own tile", "blocks"]],
+      function(o){ return labIco(o[0] === "row" ? "normal" : "wauto", 15); });
+    bpick("table", "icon", [
+      [1, "a table glyph opens the line", "icon on"],
+      [0, "no glyph — the name starts the line", "icon off"]],
+      function(o){ return o[0] ? S.icon("table", 15) : labIco("eyeoff", 15); });
+    bpick("channel", "rw", [
+      [1, "the R · W · RW chip stays", "chip on"], [0, "no chip — the row's left rail still carries the entity", "chip off"]],
+      function(o){ return o[0] ? labIco("eye", 15) : labIco("eyeoff", 15); });
+    bpick("name", "name", [
+      [1, "the table's name, in words", "name on"], [0, "no name — only the glyph and what is inside", "name off"]],
+      function(o){ return o[0] ? labIco("ton", 15) : labIco("toff", 15); });
+    bpick("entity", "ent", [
+      ["word", "the entity spelled out, in its own colour", "the word"],
+      ["icon", "the entity as its glyph — the cube, in its colour", "the glyph"],
+      ["both", "glyph and word together", "both"],
+      ["off", "no entity on the line; the left rail still carries its colour", "off"]],
+      function(o){ return o[0] === "icon" ? S.icon("entity", 15) : o[0] === "word" ? labIco("ton", 15)
+        : o[0] === "both" ? labIco("tauto", 15) : labIco("toff", 15); });
+    bpick("count", "count", [
+      ["words", "\"10 fields\" — the number and what it counts", "in words"],
+      ["badge", "just the number, in a badge", "a badge"],
+      ["off", "no count on the line; the squares still show how many", "off"]],
+      function(o){ return o[0] === "words" ? labIco("ton", 15) : o[0] === "badge" ? labIco("sh-pill", 15) : labIco("toff", 15); });
+    bpick("model", "model", [
+      ["word", "the class name, in words — the Python class that maps to this table", "the word"],
+      ["icon", "the class as a glyph", "the glyph"],
+      ["both", "glyph and word together", "both"],
+      ["off", "no class on the line", "off"]],
+      function(o){ return o[0] === "icon" ? S.icon("model", 15) : o[0] === "word" ? labIco("ton", 15)
+        : o[0] === "both" ? labIco("tauto", 15) : labIco("toff", 15); });
 
     sub("the squares", "only the Blocks distribution reads these");
     box.append(el("div", { class: "cfl sub" }, "size"),
@@ -897,7 +971,11 @@
       + " · button " + TABCFG.shape + " · row " + TABCFG.layout + " " + TABCFG.width; },
     data: function(){ var shown = DSEC.filter(function(x){ return DATACFG.show[x.key]; }).map(function(x){ return x.key; });
       var hidden = DSEC.filter(function(x){ return !DATACFG.show[x.key]; }).map(function(x){ return x.key; });
-      return "data · shown as " + dataVar() + " · tables " + DATACFG.channel
+      var ch = ["w", "r", "rw"].filter(function(k){ return DATACFG.chan[k]; });
+      var B = DATACFG.bk;
+      return "data · shown as " + dataVar() + " · tables " + (ch.length === 3 ? "all" : ch.join("+") || "none") + " · count " + DATACFG.counts
+        + " · block " + B.form + " (icon " + (B.icon ? "on" : "off") + ", chip " + (B.rw ? "on" : "off") + ", name " + (B.name ? "on" : "off")
+        + ", entity " + B.ent + ", count " + B.count + ", model " + B.model + ")"
         + " · squares " + DATACFG.sqSize + "px gap " + DATACFG.sqGap + " " + DATACFG.sqShape + " by " + DATACFG.sqPal + (DATACFG.sqOpt ? ", optional marked" : "")
         + " · grounds by " + DATACFG.order + ", width " + DATACFG.width + ", tiles " + DATACFG.tiles
         + " · drawn " + shown.join(" ") + (hidden.length ? " · hidden " + hidden.join(" ") : " · nothing hidden"); },
@@ -964,7 +1042,21 @@
     try { v.render(PANEL, F, S); } catch (e) { PANEL.innerHTML = '<div class="perr">render error: ' + e.message + '</div>'; console.error(e); }
     if (window.applyData) window.applyData();
     if (window.drawDataCfg && k === "data") window.drawDataCfg();   /* which sections THIS distribution draws */
+    drawPortrait();
     readBox(); }
+  /* THE PORTRAIT (operator 2026-09-12): a panel publishes `portrait(box, F, S)` and the stage draws it
+     beside the picture. Selection is one call — the panel says what was picked, the portrait reads it. */
+  var PORT = document.getElementById("portrait");
+  function drawPortrait(){ if (!PORT) return; PORT.innerHTML = "";
+    var P = window.PANELS[cur];
+    if (P && P.portrait) { try { P.portrait(PORT, F, S); } catch (e) { PORT.innerHTML = '<div class="perr">portrait error: ' + e.message + '</div>'; console.error(e); } return; }
+    PORT.append(el("div", { class: "ptidle" }, el("b", {}, "nothing to select here yet"),
+      el("span", {}, "this part draws no portrait of its own. Data does: click a table and its whole record opens here."))); }
+  window.drawPortrait = drawPortrait;
+  window.selectIn = function(panel, id){ window.SEL = window.SEL || {}; window.SEL[panel] = id;
+    drawPortrait();
+    /* mark the picture too — the portrait says WHAT is open, the panel says WHICH row it came from */
+    [].forEach.call(PANEL.querySelectorAll("[data-table]"), function(e){ e.classList.toggle("sel", e.dataset.table === id); }); };
   window.showTab = show; window.showVariant = function(k, v){ curVar[k] = v; show(k); };
   window.PANELVAR = function(k){ return curVar[k] || (window.PANELS[k] ? window.PANELS[k].variants[0].key : null); };
 

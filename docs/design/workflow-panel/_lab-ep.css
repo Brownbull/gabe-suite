@@ -700,3 +700,43 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 .bkfl .fld .sq{ margin-right:7px; cursor:help; }
 #bench[class*="box-dock"] .bkbody{ padding:5px 8px; gap:3px; }
 #bench[class*="box-dock"] .bkhd .bkm{ display:none; }
+
+/* ══ THE PORTRAIT (operator 2026-09-12) — the console's second region, beside the panel. What you
+   SELECT in the panel is drawn here at full detail, so the panel can stay a picture and the reading
+   happens next to it instead of inside it. ══ */
+/* THE PORTRAIT IS EXTRA ROOM, NOT A SPLIT. The box presets name the console's MIDDLE region, so the
+   portrait sits beside it and the bench grows by its width — taking 300px out of an 826px dock would
+   starve the very picture the preset exists to test. */
+#stage{ display:flex; align-items:stretch; height:var(--bh, 420px); min-height:0; }
+#stage #panel{ flex:none; width:var(--bw, 1100px); min-width:0; height:auto; }
+#bench{ width:calc(var(--bw, 1100px) + var(--port-w, 0px) + var(--port-gap, 0px) + var(--port-divw, 0px)); }
+#bench.no-port{ width:var(--bw, 1100px); }
+#portrait{ flex:none; width:var(--port-w, 300px); min-width:0; display:flex; flex-direction:column;
+  overflow:hidden; background:var(--panel);
+  border-left:var(--port-divw, 1px) var(--port-divs, solid) var(--line);
+  margin-left:var(--port-gap, 0px); }
+#bench.no-port #portrait{ display:none; }
+.pthd{ flex:none; display:flex; align-items:center; gap:7px; padding:7px 11px; border-bottom:1px solid var(--line);
+  font:700 12px/1.3 var(--font-mono); letter-spacing:.05em; text-transform:uppercase; color:var(--ink); }
+.pthd .ptn{ margin-left:auto; text-transform:none; letter-spacing:0; color:var(--muted); font-weight:600; }
+.ptbody{ flex:1; min-height:0; overflow-y:auto; padding:8px 11px; }
+.ptidle{ display:flex; flex-direction:column; gap:6px; padding:14px 12px; color:var(--muted); font-size:12px; line-height:1.5; }
+.ptidle b{ color:var(--ink); font:700 12px/1.4 var(--font-mono); }
+.ptrow{ display:flex; align-items:baseline; gap:8px; padding:3px 0; border-bottom:1px solid color-mix(in srgb, var(--line) 50%, transparent); }
+.ptrow .k{ flex:none; width:76px; font:700 12px/1.4 var(--font-mono); text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+.ptrow .v{ flex:1; min-width:0; font:600 12px/1.4 var(--font-mono); color:var(--ink); word-break:break-word; }
+.ptsec{ margin:9px 0 4px; font:700 12px/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+/* the selected row in the panel wears the mark */
+.blk.sel, .fcard.sel, .tile.sel{ border-color:var(--accent) !important; box-shadow:0 0 0 1px var(--accent); }
+
+/* BLOCKS as BLOCKS (operator 2026-09-12) — the same rows, wrapped into tiles */
+.bkbody.form-block{ display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:6px;
+  align-content:start; }
+.form-block .bkhd{ flex-wrap:wrap; align-items:baseline; row-gap:3px; }
+.form-block .sqs{ margin-left:0; padding-left:0; width:100%; }
+.form-block .blk{ align-self:start; }
+.bkhd .bki{ display:inline-flex; flex:none; }
+.bkhd .bke{ display:inline-flex; align-items:center; gap:4px; }
+.bkhd .bkm{ display:inline-flex; align-items:center; gap:4px; }
+.bkhd .bkn.badge{ padding:0 6px; border:1px solid var(--line); border-radius:999px; background:var(--panel);
+  font:700 12px/1.5 var(--font-mono); color:var(--ink); }

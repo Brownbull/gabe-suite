@@ -298,12 +298,12 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
 // ══ THE FRAME (operator 2026-09-12): each row's height, its own outline, the divider under it and
 //    the gap after it. Measured on the rendered box, never read back off the config. ══
 { const subs = await p.$$eval('#framecfg .cfsub', els => els.map(e => e.firstChild.textContent.trim()));
-  ok(subs.join(',') === 'the bench,head bar,part buttons', 'the frame block names the three things it frames', subs.join(','));
+  ok(subs.join(',') === 'the bench,head bar,part buttons,the portrait', 'the frame block names the four things it frames', subs.join(','));
   const labels = await p.$$eval('#framecfg .cfl', els => els.map(e => e.textContent));
-  ok(labels.join(',') === 'outline,pattern,height,outline,pattern,divider,pattern,gap after,row,button,outline,pattern,divider,pattern,gap after',
-     'fifteen dials: a box height for each row, the button height, an outline, a divider and a gap', labels.join(','));
-  ok(await p.$$eval('#framecfg .sld', els => els.length === 10), 'every RANGE is a dragged bar, not a set of steps');
-  ok(await p.$$eval('#framecfg .ibwrap .ib', els => els.length === 5 * 4), 'and every line pattern is a button drawing that pattern');
+  ok(labels.join(',') === 'outline,pattern,height,outline,pattern,divider,pattern,gap after,row,button,outline,pattern,divider,pattern,gap after,width,rule,pattern,gap',
+     'nineteen dials: a box height per row, the button, the portrait, and every line', labels.join(','));
+  ok(await p.$$eval('#framecfg .sld', els => els.length === 13), 'every RANGE is a dragged bar, not a set of steps');
+  ok(await p.$$eval('#framecfg .ibwrap .ib', els => els.length === 6 * 4), 'and every line pattern is a button drawing that pattern');
   ok(await p.$$eval('#framecfg .ibwrap .ib svg path', els => els.length >= 5), 'the pattern buttons draw real lines, not words');
   const boot = await p.evaluate(() => window.COPYTXT.frame());
   // ROW HEIGHT — the box, both ways. Dragging it LEFT must genuinely shrink the row: the defect the
@@ -436,43 +436,50 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   ok(await p.$$eval('#panel .fld.uq .fn', els => els.length > 0 && els.every(e => /dashed/.test(getComputedStyle(e).borderBottom))),
      'a unique column is latched with a dashed underline');
   ok(await p.$eval('#panel .shape', e => !!e).catch(() => false) === false, 'the line stacks are gone here — the names replaced them');
-  ok(await p.$$eval('#datacfg .ib[data-channel]', els => els.length === 4), 'the channel dial mirrors the four buttons in the panel head');
+  ok(await p.$$eval('#datacfg .ib[data-chan]', els => els.length === 3), 'the rail mirrors the three switches in the panel head');
   ok(/tables all/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line names the channel', await p.evaluate(() => window.COPYTXT.data()));
   // the shapes dial has nothing to hide here, and says so instead of pretending
   ok(await p.$eval('#datacfg .ib[data-sec="shapes"]', e => e.classList.contains('na')),
      'the shapes toggle is marked NOT DRAWN in Fields — the names took their place');
   await p.click('#datacfg .ib[data-dlayout="grounds"]'); await p.waitForTimeout(220);
 
-  // ══ THE CHANNEL BUTTONS live in the PANEL's own title row (operator 2026-09-12), and they PARTITION
-  //    the tables: written-only + read-only + both = every table, once each. That arithmetic is the
-  //    answer to "what are the 24 ops" — a table on both channels is two ops. ══
+  // ══ THE CHANNELS ARE APPENDABLE (operator 2026-09-12): three independent switches in the panel's own
+  //    title row. All three on IS every table, so the old fourth button is gone. ══
   const TB = F.data.tables, part = { w: TB.filter(t => t.rw === 'w').length, r: TB.filter(t => t.rw === 'r').length, rw: TB.filter(t => t.rw === 'rw').length };
   ok(part.w + part.r + part.rw === TB.length, 'the three channels partition the tables exactly once', JSON.stringify(part));
-  { const bar = await p.$$eval('#panel .sechd .chbar .chb', els => els.map(e => ({ k: e.dataset.chan, n: +e.querySelector('.chn').textContent, on: e.classList.contains('on'), zero: e.classList.contains('zero') })));
-    ok(bar.length === 4 && bar.map(b => b.k).join(',') === 'all,w,r,rw', 'four filter buttons sit in the panel title row', JSON.stringify(bar.map(b => b.k)));
+  { const bar = await p.$$eval('#panel .sechd .chbar .chb', els => els.map(e => ({ k: e.dataset.chan, n: +e.querySelector('.chn').textContent, on: e.dataset.on === '1', zero: e.classList.contains('zero') })));
+    ok(bar.length === 3 && bar.map(b => b.k).join(',') === 'w,r,rw', 'THREE switches in the panel title row — no "every table" button', JSON.stringify(bar.map(b => b.k)));
+    ok(bar.every(b => b.on), 'all three start on, which IS every table');
     ok(await p.$eval('#panel .sechd .chbar', e => { const r = e.getBoundingClientRect(), s = e.closest('.sechd').getBoundingClientRect();
         return r.right <= s.right + 1 && r.left > s.left + s.width / 2; }), 'on the RIGHT of that row');
-    ok(bar[1].n === part.w && bar[2].n === part.r && bar[3].n === part.rw && bar[0].n === TB.length,
-       'every button carries its count, so the arithmetic is readable before a click', JSON.stringify(bar.map(b => b.k + '=' + b.n)));
-    ok(bar[1].zero === (part.w === 0), 'a channel that holds nothing is drawn HOLLOW — a measured zero is a result', JSON.stringify(bar[1])); }
-  { const ops = await p.$eval('#panel .sechd .cnt', e => e.textContent);
-    const rd = TB.filter(t => t.rw !== 'w').length, wr = TB.filter(t => t.rw !== 'r').length;
-    ok(ops === (rd + wr) + ' ops · ' + TB.length + ' tables', 'the title counts ops as read-ops + write-ops', ops + ' vs ' + (rd + wr));
+    ok(bar[0].n === part.w && bar[1].n === part.r && bar[2].n === part.rw,
+       'every switch carries its count', JSON.stringify(bar.map(b => b.k + '=' + b.n)));
+    ok(bar[0].zero === (part.w === 0), 'a channel that holds nothing is drawn HOLLOW — a measured zero is a result', JSON.stringify(bar[0])); }
+  // the title counts TABLES by default — the ops half is the operator's option, not the default
+  { const cnt = await p.$eval('#panel .sechd .cnt', e => e.textContent);
+    ok(cnt === TB.length + ' tables', 'the title counts tables and nothing else by default', cnt);
     await p.hover('#panel .sechd .cnt'); await p.waitForTimeout(200);
-    const t = await p.evaluate(() => document.getElementById('hover').innerText);
-    ok(/one op = one table on one channel/i.test(t), 'and hovering it finally says what an op IS', t.slice(0, 80)); }
-  // the buttons drive EVERY distribution, not only one
-  for (const v of ['grounds', 'ledger', 'blocks']) {
-    await p.evaluate(k => window.showVariant('data', k), v); await p.waitForTimeout(220);
-    await p.click('#panel .chbar .chb[data-chan="r"]'); await p.waitForTimeout(260);
-    const n = await p.$$eval('#panel .blk, #panel .ldg .lrow:not(.lhd), #panel .ground .tile', els => els.length);
-    ok(n === part.r, `the ${v} distribution redraws to the channel's ${part.r} table(s)`, String(n));
-    await p.click('#panel .chbar .chb[data-chan="all"]'); await p.waitForTimeout(260); }
-  // a channel with nothing in it renders the MEASUREMENT, not a blank
-  await p.click('#panel .chbar .chb[data-chan="w"]'); await p.waitForTimeout(280);
-  ok(await p.$eval('#panel .pempty', e => /no table is written only/.test(e.innerText)), 'an empty channel says what was measured instead of drawing nothing',
-     await p.$eval('#panel .pempty', e => e.innerText.slice(0, 60)).catch(() => 'MISSING'));
-  await p.click('#panel .chbar .chb[data-chan="all"]'); await p.waitForTimeout(220);
+    ok(/one op = one table on one channel/i.test(await p.evaluate(() => document.getElementById('hover').innerText)),
+       'and the card still says what an op is, for whoever wants it');
+    await p.click('#datacfg .ib[data-counts="ops"]'); await p.waitForTimeout(240);
+    const rd = TB.filter(t => t.rw !== 'w').length, wr = TB.filter(t => t.rw !== 'r').length;
+    ok(await p.$eval('#panel .sechd .cnt', e => e.textContent) === (rd + wr) + ' ops · ' + TB.length + ' tables',
+       'switching ops ON puts the arithmetic back in the title');
+    await p.click('#datacfg .ib[data-counts="tables"]'); await p.waitForTimeout(240); }
+  // ANY COMBINATION is legal — switching one off leaves the others alone
+  { await p.click('#panel .chbar .chb[data-chan="rw"]'); await p.waitForTimeout(280);
+    const n1 = await p.$$eval('#panel .blk, #panel .fcard, #panel .ground .tile', els => els.length);
+    ok(n1 === part.w + part.r, 'switching BOTH off leaves written-only + read-only', n1 + ' vs ' + (part.w + part.r));
+    await p.click('#panel .chbar .chb[data-chan="r"]'); await p.waitForTimeout(280);
+    ok(await p.$eval('#panel .pempty', e => /no table is/.test(e.innerText)), 'switching the rest off draws the measurement, not a blank');
+    await p.click('#panel .chbar .chb[data-chan="rw"]'); await p.waitForTimeout(280);
+    const n2 = await p.$$eval('#panel .blk, #panel .fcard, #panel .ground .tile', els => els.length);
+    ok(n2 === part.rw, 'and switching one back on shows exactly that channel', n2 + ' vs ' + part.rw);
+    await p.click('#panel .chbar .chb[data-chan="r"]'); await p.waitForTimeout(280);
+    const n3 = await p.$$eval('#panel .blk, #panel .fcard, #panel .ground .tile', els => els.length);
+    ok(n3 === part.rw + part.r, 'two switches on show BOTH channels, appended', n3 + ' vs ' + (part.rw + part.r));
+    await p.click('#panel .chbar .chb[data-chan="w"]'); await p.waitForTimeout(280);
+    await p.click('#panel .chbar .chb[data-chan="w"]'); await p.waitForTimeout(280); }
 
   // ══ BLOCKS: one row per table, each field a square coloured by the KIND of value it holds ══
   await p.evaluate(() => window.showVariant('data', 'blocks')); await p.waitForTimeout(300);
@@ -482,44 +489,65 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
     ok(sq === TB.reduce((n, t) => n + t.cols.length, 0), 'and one square per field', String(sq));
     const hd = await p.$eval('#panel .blk .bkhd', e => e.innerText.replace(/\s+/g, ' '));
     ok(/fields/.test(hd) && TB.some(t => hd.indexOf(t.entity) >= 0), 'the row names the table, its entity and how many fields', hd.slice(0, 70));
-    // the KIND is read from the declared type — a bool and a datetime never share a colour
     const cols = await p.$$eval('#panel .bkhd .sq', els => els.map(e => ({ c: getComputedStyle(e).backgroundColor, k: (e.className.match(/t-(\w+)/) || [])[1] })));
     const byKind = {}; cols.forEach(c => { (byKind[c.k] = byKind[c.k] || new Set()).add(c.c); });
     ok(Object.keys(byKind).length >= 4, 'at least four kinds of field are distinguished', Object.keys(byKind).join(','));
     ok(Object.values(byKind).every(s => s.size === 1), 'a kind is ONE colour everywhere');
     ok(new Set(Object.values(byKind).map(s => [...s][0])).size === Object.keys(byKind).length, 'and no two kinds share one');
-    // a square that accepts None is drawn paler
     ok(await p.$$eval('#panel .sq.opt', els => els.length > 0 && els.every(e => +getComputedStyle(e).opacity < 1)), 'an optional column is drawn paler');
     await p.click('#datacfg .ib[data-sq-opt="0"]'); await p.waitForTimeout(160);
     ok(await p.$$eval('#panel .sq.opt', els => els.every(e => +getComputedStyle(e).opacity === 1)), 'and that mark can be switched off');
     await p.click('#datacfg .ib[data-sq-opt="1"]'); await p.waitForTimeout(160); }
-  // CLICK a row → every field of that table named at once
-  { ok(await p.$eval('#panel .blk .bkfl', e => getComputedStyle(e).display === 'none'), 'a row starts closed');
-    await p.click('#panel .blk .bkhd'); await p.waitForTimeout(200);
-    const open = await p.$eval('#panel .blk', e => ({ cls: e.classList.contains('open'), d: getComputedStyle(e.querySelector('.bkfl')).display,
-      n: e.querySelectorAll('.bkfl .fld').length, first: e.querySelector('.bkfl .fn').textContent }));
-    ok(open.cls && open.d !== 'none' && open.n > 0, 'clicking it names every field of that table at once', JSON.stringify(open));
-    // an opened row must not squeeze the rows below it — a flex column shrinks its children by default
-    { const hs = await p.$$eval('#panel .blk', els => els.map(e => Math.round(e.getBoundingClientRect().height)));
-      ok(hs.slice(1).every(h => h >= 20), 'and the rows below it keep their full height', hs.join(',')); }
-    await p.click('#panel .blk .bkhd'); await p.waitForTimeout(160);
-    ok(await p.$eval('#panel .blk .bkfl', e => getComputedStyle(e).display === 'none'), 'and clicking again folds it back'); }
-  // the square dials
-  { await p.evaluate(() => { window.DATACFG.sqSize = 20; window.DATACFG.sqGap = 5; window.applyData(); }); await p.waitForTimeout(160);
-    ok(await p.$eval('#panel .sq', e => Math.round(e.getBoundingClientRect().width) === 20), 'the size bar sets the square',
-       String(await p.$eval('#panel .sq', e => Math.round(e.getBoundingClientRect().width))));
-    ok(await p.$eval('#panel .sqs', e => parseFloat(getComputedStyle(e).gap) === 5), 'and the gap bar the space between them');
-    await p.evaluate(() => { window.DATACFG.sqSize = 11; window.DATACFG.sqGap = 2; window.applyData(); }); await p.waitForTimeout(120); }
-  { await p.click('#datacfg .ib[data-sq-shape="circle"]'); await p.waitForTimeout(160);
-    ok(await p.$eval('#panel .sq', e => getComputedStyle(e).borderRadius === '50%'), 'the shape dial rounds the square to a dot');
-    await p.click('#datacfg .ib[data-sq-shape="round"]'); await p.waitForTimeout(160); }
-  { await p.click('#datacfg .ib[data-sq-pal="mono"]'); await p.waitForTimeout(280);
-    const n = await p.$$eval('#panel .bkhd .sq', els => new Set(els.map(e => getComputedStyle(e).backgroundColor)).size);
-    ok(n === 1, 'MONO takes every colour out — the count and the shape carry alone', String(n));
-    await p.click('#datacfg .ib[data-sq-pal="channel"]'); await p.waitForTimeout(280);
-    const ch = await p.$$eval('#panel .blk', els => els.map(e => new Set([...e.querySelectorAll('.bkhd .sq')].map(q => getComputedStyle(q).backgroundColor)).size));
-    ok(ch.every(x => x === 1), 'BY CHANNEL gives one table one colour', ch.join(','));
-    await p.click('#datacfg .ib[data-sq-pal="type"]'); await p.waitForTimeout(280); }
+  // ── the block TITLE, part by part (operator 2026-09-12) ──
+  { await p.click('#datacfg .ib[data-bkform="block"]'); await p.waitForTimeout(240);
+    ok(await p.$eval('#panel .bkbody', e => getComputedStyle(e).display === 'grid'), 'the form dial turns the rows into BLOCKS');
+    await p.click('#datacfg .ib[data-bkform="row"]'); await p.waitForTimeout(240);
+    ok(await p.$eval('#panel .bkbody', e => getComputedStyle(e).display !== 'grid'), 'and back to rows');
+    await p.click('#datacfg .ib[data-bkent="icon"]'); await p.waitForTimeout(240);
+    ok(await p.$eval('#panel .blk .bke', e => !!e.querySelector('svg') && !e.innerText.trim()), 'the entity can be its GLYPH instead of its word');
+    await p.click('#datacfg .ib[data-bkcount="badge"]'); await p.waitForTimeout(240);
+    ok(await p.$eval('#panel .blk .bkn', e => e.classList.contains('badge') && /^\d+$/.test(e.textContent.trim())), 'the field count can shrink to a BADGE',
+       await p.$eval('#panel .blk .bkn', e => e.textContent));
+    await p.click('#datacfg .ib[data-bkmodel="icon"]'); await p.waitForTimeout(240);
+    ok(await p.$eval('#panel .blk .bkm', e => !!e.querySelector('svg') && !e.innerText.trim()), 'so can the class that maps to the table');
+    await p.click('#datacfg .ib[data-bkname="0"]'); await p.waitForTimeout(240);
+    ok(await p.$$eval('#panel .blk .bkhd b', els => els.length === 0), 'and the name itself can go');
+    await p.click('#datacfg .ib[data-bkname="1"]'); await p.click('#datacfg .ib[data-bkent="word"]');
+    await p.click('#datacfg .ib[data-bkcount="words"]'); await p.click('#datacfg .ib[data-bkmodel="word"]'); await p.waitForTimeout(280); }
+
+  // ══ THE PORTRAIT — the console's second region, filled by what you click in the panel ══
+  { const w = await p.$eval('#portrait', e => Math.round(e.getBoundingClientRect().width));
+    ok(w === await p.evaluate(() => window.FRAME.portW), 'the portrait stands at the width the frame sets', String(w));
+    ok(await p.evaluate(() => { const s = document.getElementById('stage').getBoundingClientRect(),
+        pn = document.getElementById('panel').getBoundingClientRect(), pt = document.getElementById('portrait').getBoundingClientRect();
+      return Math.round(pn.height) === Math.round(pt.height) && pt.left >= pn.right - 1 && Math.round(pt.right) <= Math.round(s.right) + 1; }),
+      'beside the panel, the same height, inside the bench');
+    ok(await p.$eval('#portrait .ptidle', e => /nothing selected/i.test(e.innerText)), 'and it says what a selection would put there');
+    // click a table → its whole record opens in the portrait, and the panel marks it
+    const first = await p.$eval('#panel .blk', e => e.dataset.table);
+    await p.click('#panel .blk .bkhd'); await p.waitForTimeout(260);
+    ok(await p.$eval('#portrait .pthd', (e, f) => e.innerText.toLowerCase().indexOf(f.toLowerCase()) >= 0, first), 'clicking a table opens THAT table in the portrait', first);
+    ok(await p.$eval('#panel .blk', e => e.classList.contains('sel')), 'and the panel marks which one is selected');
+    { const t = F.data.tables.filter(x => x.table === first)[0];
+      const txt = await p.$eval('#portrait', e => e.innerText);
+      const low = txt.toLowerCase();
+      ok(low.indexOf(t.model.toLowerCase()) >= 0 && low.indexOf(t.entity.toLowerCase()) >= 0 && low.indexOf(t.file.toLowerCase()) >= 0,
+         'the portrait carries the entity, the class and the file', [t.model, t.entity, t.file].join(' · '));
+      ok(await p.$$eval('#portrait .flds .fld', els => els.length) === t.cols.length, 'and every field of that table'); }
+    // the selection survives a distribution change
+    await p.evaluate(() => window.showVariant('data', 'grounds')); await p.waitForTimeout(240);
+    ok(await p.$eval('#portrait .pthd', (e, f) => e.innerText.toLowerCase().indexOf(f.toLowerCase()) >= 0, first), 'the selection survives a change of distribution');
+    await p.evaluate(() => window.showVariant('data', 'blocks')); await p.waitForTimeout(240);
+    // a part with no portrait says so rather than showing the last one
+    await p.evaluate(() => window.showTab('tests')); await p.waitForTimeout(260);
+    ok(await p.$eval('#portrait .ptidle', e => /draws no portrait/i.test(e.innerText)), 'a part with no portrait of its own says so');
+    await p.evaluate(() => window.showTab('data')); await p.waitForTimeout(260);
+    // width 0 turns it off, and the click falls back to opening the fields in place
+    await p.evaluate(() => { window.FRAME.portW = 0; window.applyFrame(); window.showTab('data'); }); await p.waitForTimeout(280);
+    ok(await p.$eval('#portrait', e => getComputedStyle(e).display === 'none'), 'a width of 0 takes the portrait away');
+    await p.click('#panel .blk .bkhd'); await p.waitForTimeout(220);
+    ok(await p.$eval('#panel .blk', e => e.classList.contains('open')), 'and then a click opens the fields in place instead');
+    await p.evaluate(() => { window.FRAME.portW = 300; window.applyFrame(); window.showTab('data'); }); await p.waitForTimeout(280); }
   await p.click('#datacfg .ib[data-dlayout="grounds"]'); await p.waitForTimeout(240); }
 
 // the rail: three tabs, one section at a time, and every control an icon with a hover card
