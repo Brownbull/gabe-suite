@@ -60,10 +60,14 @@
     <section id="bench" class="box-work" aria-label="the console's middle region, boxed — only what would be built">
       <div id="headstrip"></div>
       <nav id="tabs" role="tablist"></nav>
-      <div id="stage">
-        <div id="panel" role="tabpanel"></div>
-        <aside id="portrait" aria-label="the portrait — what you selected in the panel"></aside>
-      </div>
+      <div id="panel" role="tabpanel"></div>
+    </section>
+    <!-- THE PORTRAIT PANEL — a SEPARATE region of the console, right of the middle section and TALLER
+         than it (operator 2026-09-12), roughly square so a selected thing can be DRAWN rather than
+         listed. It holds whatever the middle panel selected, in several representations. -->
+    <section id="port" aria-label="the portrait panel — the selected thing, drawn">
+      <header id="porthd"><span class="pti"></span><b id="portt">portrait</b><span class="ptsub" id="portsub">—</span><nav id="portvars"></nav></header>
+      <div id="portbody"></div>
     </section>
   </div>
 </div>
@@ -538,15 +542,16 @@
     benchW: 1, benchS: "solid",
     headH: 45, headBw: 0, headBs: "solid", headDivW: 1, headDivS: "none", headGap: 0,
     tabsRow: 52, tabsH: 43, tabsBw: 0, tabsBs: "solid", tabsDivW: 1, tabsDivS: "none", tabsGap: 0,
-    portW: 300, portDivW: 1, portDivS: "solid", portGap: 0 };
+    portW: 440, portH: 560, portBw: 1, portBs: "solid", portGap: 12 };
   var FRVAR = { benchW: "--bench-bw", benchS: "--bench-bs",
     headH: "--head-h", headBw: "--head-bw", headBs: "--head-bs", headDivW: "--head-divw", headDivS: "--head-divs", headGap: "--head-gap",
-    portW: "--port-w", portDivW: "--port-divw", portDivS: "--port-divs", portGap: "--port-gap",
+    portW: "--port-w", portH: "--port-h", portBw: "--port-bw", portBs: "--port-bs", portGap: "--port-gap",
     tabsRow: "--tabs-row", tabsH: "--tabs-h", tabsBw: "--tabs-bw", tabsBs: "--tabs-bs", tabsDivW: "--tabs-divw", tabsDivS: "--tabs-divs", tabsGap: "--tabs-gap" };
-  function applyFrame(){ var b = document.getElementById("bench");
+  function applyFrame(){ var b = document.getElementById("bench"), pt = document.getElementById("port");
     Object.keys(FRVAR).forEach(function(k){ var v = FRAME[k];
-      b.style.setProperty(FRVAR[k], typeof v === "number" ? v + "px" : v); });
-    b.classList.toggle("no-port", FRAME.portW === 0); }
+      b.style.setProperty(FRVAR[k], typeof v === "number" ? v + "px" : v);
+      if (pt) pt.style.setProperty(FRVAR[k], typeof v === "number" ? v + "px" : v); });
+    if (pt) pt.hidden = FRAME.portW === 0; }
   window.applyFrame = applyFrame;
   /* the line options ARE lines — each button draws the pattern it sets (the legend law) */
   var LINES = [
@@ -628,18 +633,21 @@
       rows: [["sets", "the empty space between the buttons and the panel"]],
       plain: "how far the panel sits" });
 
-    sub("the portrait", "the console's second region, beside the panel");
-    sld({ label: "width", key: "portW", min: 0, max: 520, zero: "off", icon: "shape",
-      rows: [["at 0", "the portrait is off and the panel takes the whole stage"],
-             ["what it holds", "whatever you selected in the panel — in Data, the table you clicked"]],
-      plain: "how wide the second region stands" });
-    sld({ label: "rule", key: "portDivW", min: 0, max: 4, zero: "none", icon: "shape",
-      rows: [["sits", "between the panel and the portrait, running down"]],
-      plain: "the line between the two regions" });
-    pat("portDivS", "the line between panel and portrait", "the portrait rule");
-    sld({ label: "gap", key: "portGap", min: 0, max: 32, zero: "none", icon: "shape",
-      rows: [["sets", "the space between the panel and the portrait"]],
-      plain: "how far the portrait sits from the panel" });
+    sub("the portrait panel", "a SEPARATE region, right of the middle section and taller than it");
+    sld({ label: "width", key: "portW", min: 0, max: 720, zero: "off", icon: "shape",
+      rows: [["at 0", "the portrait panel is gone and only the middle section stands"],
+             ["what it holds", "whatever the middle panel selected — in Data, the table you clicked"]],
+      plain: "how wide the second panel stands" });
+    sld({ label: "height", key: "portH", min: 240, max: 900, icon: "bars",
+      rows: [["the console", "this region runs TALLER than the middle section, like the minimap on the other side"],
+             ["roughly square", "so a thing can be DRAWN here instead of listed"]],
+      plain: "how tall the second panel stands" });
+    sld({ label: "outline", key: "portBw", min: 0, max: 4, zero: "none", icon: "shape",
+      rows: [["at 0", "the panel has no line of its own"]], plain: "the line around the second panel" });
+    pat("portBs", "the portrait panel's own box", "the portrait outline");
+    sld({ label: "gap", key: "portGap", min: 0, max: 48, zero: "none", icon: "shape",
+      rows: [["sets", "the space between the middle section and this panel"]],
+      plain: "how far the second panel sits from the bench" });
     box.append(el("div", { class: "cfread" }, "every line has NONE — transparent is a setting here, not a missing one. A row can carry its own outline, the divider below it, both, or neither.")); }
   window.drawFrameCfg = drawFrameCfg;
 
@@ -1046,12 +1054,25 @@
     readBox(); }
   /* THE PORTRAIT (operator 2026-09-12): a panel publishes `portrait(box, F, S)` and the stage draws it
      beside the picture. Selection is one call — the panel says what was picked, the portrait reads it. */
-  var PORT = document.getElementById("portrait");
-  function drawPortrait(){ if (!PORT) return; PORT.innerHTML = "";
-    var P = window.PANELS[cur];
-    if (P && P.portrait) { try { P.portrait(PORT, F, S); } catch (e) { PORT.innerHTML = '<div class="perr">portrait error: ' + e.message + '</div>'; console.error(e); } return; }
-    PORT.append(el("div", { class: "ptidle" }, el("b", {}, "nothing to select here yet"),
-      el("span", {}, "this part draws no portrait of its own. Data does: click a table and its whole record opens here."))); }
+  var PORT = document.getElementById("portbody"), PORTV = document.getElementById("portvars");
+  var portVar = {};                                   /* which representation each part's portrait wears */
+  function drawPortrait(){ if (!PORT) return; PORT.innerHTML = ""; PORTV.innerHTML = "";
+    var P = window.PANELS[cur], vs = (P && P.portraits) || null;
+    document.getElementById("portt").textContent = vs ? P.word.toLowerCase() : "portrait";
+    if (!vs) { document.getElementById("portsub").textContent = "—";
+      PORT.append(el("div", { class: "ptidle" }, el("b", {}, "nothing to select here yet"),
+        el("span", {}, "this part draws no portrait of its own. Data does: click a table and it is drawn here, four ways.")));
+      return; }
+    if (!portVar[cur]) portVar[cur] = vs[0].key;
+    vs.forEach(function(v){ var b = el("button", { class: "ptv" + (portVar[cur] === v.key ? " on" : "") });
+      b.dataset.pvar = v.key; b.innerHTML = S.icon(v.icon, 14);
+      hoverBind(b, hcard({ title: v.label, value: "a way of drawing it", icon: v.icon, plain: v.hint }));
+      b.onclick = function(ev){ ev.stopPropagation(); portVar[cur] = v.key; drawPortrait(); }; PORTV.append(b); });
+    var chosen = vs.filter(function(v){ return v.key === portVar[cur]; })[0] || vs[0];
+    document.getElementById("portsub").textContent = chosen.label;
+    try { chosen.render(PORT, F, S); } catch (e) { PORT.innerHTML = '<div class="perr">portrait error: ' + e.message + '</div>'; console.error(e); } }
+  window.portraitVar = function(k){ return portVar[k]; };
+  window.showPortraitVar = function(v){ portVar[cur] = v; drawPortrait(); };
   window.drawPortrait = drawPortrait;
   window.selectIn = function(panel, id){ window.SEL = window.SEL || {}; window.SEL[panel] = id;
     drawPortrait();

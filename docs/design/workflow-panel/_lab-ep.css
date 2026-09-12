@@ -701,33 +701,70 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 #bench[class*="box-dock"] .bkbody{ padding:5px 8px; gap:3px; }
 #bench[class*="box-dock"] .bkhd .bkm{ display:none; }
 
-/* ══ THE PORTRAIT (operator 2026-09-12) — the console's second region, beside the panel. What you
-   SELECT in the panel is drawn here at full detail, so the panel can stay a picture and the reading
-   happens next to it instead of inside it. ══ */
-/* THE PORTRAIT IS EXTRA ROOM, NOT A SPLIT. The box presets name the console's MIDDLE region, so the
-   portrait sits beside it and the bench grows by its width — taking 300px out of an 826px dock would
-   starve the very picture the preset exists to test. */
-#stage{ display:flex; align-items:stretch; height:var(--bh, 420px); min-height:0; }
-#stage #panel{ flex:none; width:var(--bw, 1100px); min-width:0; height:auto; }
-#bench{ width:calc(var(--bw, 1100px) + var(--port-w, 0px) + var(--port-gap, 0px) + var(--port-divw, 0px)); }
-#bench.no-port{ width:var(--bw, 1100px); }
-#portrait{ flex:none; width:var(--port-w, 300px); min-width:0; display:flex; flex-direction:column;
-  overflow:hidden; background:var(--panel);
-  border-left:var(--port-divw, 1px) var(--port-divs, solid) var(--line);
-  margin-left:var(--port-gap, 0px); }
-#bench.no-port #portrait{ display:none; }
-.pthd{ flex:none; display:flex; align-items:center; gap:7px; padding:7px 11px; border-bottom:1px solid var(--line);
-  font:700 12px/1.3 var(--font-mono); letter-spacing:.05em; text-transform:uppercase; color:var(--ink); }
-.pthd .ptn{ margin-left:auto; text-transform:none; letter-spacing:0; color:var(--muted); font-weight:600; }
-.ptbody{ flex:1; min-height:0; overflow-y:auto; padding:8px 11px; }
-.ptidle{ display:flex; flex-direction:column; gap:6px; padding:14px 12px; color:var(--muted); font-size:12px; line-height:1.5; }
+/* ══ THE PORTRAIT PANEL (operator 2026-09-12) — a SEPARATE region of the console, right of the middle
+   section and TALLER than it, roughly square. What the middle panel selects is DRAWN here, four ways.
+   It is its own box: the bench keeps its preset width, this panel keeps its own. ══ */
+#port{ flex:none; width:var(--port-w, 440px); height:var(--port-h, 560px); margin-left:var(--port-gap, 12px);
+  display:flex; flex-direction:column; overflow:hidden; background:var(--panel); border-radius:12px;
+  border:var(--port-bw, 1px) var(--port-bs, solid) var(--line); }
+#porthd{ flex:none; display:flex; align-items:center; gap:7px; padding:0 10px; min-height:38px;
+  border-bottom:1px solid var(--line); background:var(--nav-bg);
+  font:800 12px/1 var(--font-mono); letter-spacing:.06em; text-transform:uppercase; color:var(--ink); }
+#porthd .pti{ display:inline-flex; } #porthd .ptsub{ color:var(--muted); font-weight:600; text-transform:none; letter-spacing:0; }
+#portvars{ margin-left:auto; display:flex; gap:3px; }
+.ptv{ display:inline-flex; align-items:center; justify-content:center; width:26px; height:24px; padding:0;
+  border:1px solid var(--line); border-radius:6px; background:var(--chip-bg); color:var(--muted); cursor:pointer; }
+.ptv svg{ display:block; } .ptv:hover{ color:var(--ink); border-color:var(--accent); }
+.ptv.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
+#portbody{ flex:1; min-height:0; overflow:hidden; display:flex; }
+.ptidle{ flex:1; display:flex; flex-direction:column; justify-content:center; gap:6px; padding:16px 14px; color:var(--muted); font-size:12px; line-height:1.5; }
 .ptidle b{ color:var(--ink); font:700 12px/1.4 var(--font-mono); }
+.ptbody{ flex:1; min-height:0; min-width:0; overflow-y:auto; padding:9px 12px; }
 .ptrow{ display:flex; align-items:baseline; gap:8px; padding:3px 0; border-bottom:1px solid color-mix(in srgb, var(--line) 50%, transparent); }
-.ptrow .k{ flex:none; width:76px; font:700 12px/1.4 var(--font-mono); text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+.ptrow .k{ flex:none; width:80px; font:700 12px/1.4 var(--font-mono); text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
 .ptrow .v{ flex:1; min-width:0; font:600 12px/1.4 var(--font-mono); color:var(--ink); word-break:break-word; }
-.ptsec{ margin:9px 0 4px; font:700 12px/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
-/* the selected row in the panel wears the mark */
+.ptsec{ margin:10px 0 5px; font:700 12px/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+/* the selected row in the middle panel wears the mark */
 .blk.sel, .fcard.sel, .tile.sel{ border-color:var(--accent) !important; box-shadow:0 0 0 1px var(--accent); }
+
+/* SHAPE — the drum as the graph draws it, the fields as cells beneath */
+.ptbody.shp{ display:flex; flex-direction:column; gap:9px; }
+.shdrum{ flex:none; display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 0 2px; cursor:help; }
+.shdrum b{ font:700 14px/1.3 var(--font-mono); color:var(--ink); }
+.shdrum span{ font:600 12px/1.3 var(--font-mono); color:var(--muted); }
+.shgrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(122px, 1fr)); gap:4px; align-content:start; }
+.shcell{ display:flex; align-items:center; gap:5px; padding:4px 6px; border-radius:6px; cursor:help;
+  background:color-mix(in srgb, var(--fc) 13%, transparent); border:1px solid color-mix(in srgb, var(--fc) 34%, transparent); }
+.shcell .shsw{ flex:none; width:8px; height:8px; border-radius:2px; background:var(--fc); }
+.shcell .fn{ font:600 12px/1.3 var(--font-mono); color:var(--ink); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.shcell .ft{ margin-left:auto; font:600 12px/1.3 var(--font-mono); color:var(--muted); white-space:nowrap; }
+.shcell.opt{ opacity:.62; } .shcell.fk{ box-shadow:inset 2px 0 0 var(--c-external, #94a3b8); }
+.shcell.uq .fn{ border-bottom:1px dashed var(--c-gate, #eab308); }
+.shcell:hover{ border-color:var(--fc); }
+
+/* WHEEL — the fields in a ring around the drum; the MIX is the picture */
+.ptbody.whl{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+.wwrap{ position:relative; flex:none; width:min(100%, 300px); aspect-ratio:1; }
+.wsvg{ width:100%; height:100%; display:block; }
+.wseg{ cursor:help; transition:fill-opacity .12s; } .wseg:hover{ fill-opacity:1 !important; }
+.whub{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; pointer-events:none; }
+.whub b{ font:800 17px/1 var(--font-mono); color:var(--ink); }
+.whub span{ font:600 12px/1 var(--font-mono); color:var(--muted); }
+.wlgd{ display:flex; flex-wrap:wrap; justify-content:center; gap:5px 10px; }
+.wlgd .lg{ display:inline-flex; align-items:center; gap:5px; font-size:12px; color:var(--muted); cursor:help; }
+.wlgd .lg .sw{ width:9px; height:9px; border-radius:2px; display:inline-block; }
+
+/* KEYS — what it points at, and what points back */
+.ptbody.keys .kcentre{ display:flex; flex-direction:column; align-items:center; gap:2px; padding:4px 0 6px; }
+.ptbody.keys .kcentre b{ font:700 13px/1.3 var(--font-mono); color:var(--ink); }
+.ptbody.keys .kcentre span{ font:600 12px/1.3 var(--font-mono); color:var(--muted); }
+.krow{ display:flex; align-items:center; gap:6px; padding:4px 7px; margin-bottom:3px; border-radius:6px; cursor:help;
+  background:var(--chip-bg); border:1px solid var(--line); font:600 12px/1.4 var(--font-mono); }
+.krow.in{ border-left:3px solid var(--ec, var(--line)); }
+.krow .kc{ color:var(--ink); } .krow .kt{ color:var(--muted); min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.krow .ka{ color:var(--muted); opacity:.7; }
+.krow:hover{ border-color:var(--accent); }
+.kempty{ font-size:12px; line-height:1.45; color:var(--muted); padding:2px 2px 4px; }
 
 /* BLOCKS as BLOCKS (operator 2026-09-12) — the same rows, wrapped into tiles */
 .bkbody.form-block{ display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:6px;

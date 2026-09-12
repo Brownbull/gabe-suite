@@ -180,7 +180,8 @@ def _file2slug(entities: dict[str, Any]) -> dict[str, str]:
 def derive_functions(wiring: dict[str, Any],
                      entities: dict[str, Any],
                      dispatches: list[dict] | None = None,
-                     module_calls: list[dict] | None = None) -> dict[str, Any]:
+                     module_calls: list[dict] | None = None,
+                     bindings: list[dict] | None = None) -> dict[str, Any]:
     """The function-level slice the LEVELS graph draws: every graft FUNCTION node homed
     to its entity (``id`` = ``path#symbol``, homed by file → entity) + the ``calls``
     edges between two homed functions. ``_a3_levels`` selects the trace-relevant subset
@@ -221,6 +222,12 @@ def derive_functions(wiring: dict[str, Any],
             calls.append({"s": s, "t": t, "ss": fn_slug[s], "ts": fn_slug[t],
                           "conf": d.get("conf", "extracted"), "rel": "dispatches"})
     _seen_calls = {(c["s"], c["t"]) for c in calls}
+    for _b in bindings or []:                          # the PORT SEAM: a call that stopped at an
+        s, t = _b.get("s"), _b.get("t")                # interface, resolved through the binding
+        if s in fn_slug and t in fn_slug and s != t and (s, t) not in _seen_calls:
+            _seen_calls.add((s, t))
+            calls.append({"s": s, "t": t, "ss": fn_slug[s], "ts": fn_slug[t],
+                          "conf": "inferred", "rel": "binds"})
     for m in module_calls or []:                       # class 14: module-attribute calls the graft could not resolve — a plain call, suite-extracted
         s, t = m.get("s"), m.get("t")
         if s in fn_slug and t in fn_slug and s != t and (s, t) not in _seen_calls:
@@ -915,12 +922,27 @@ def graft_arm(root: Path, entities: dict[str, Any],
         # DISTINCT rel. Byte-identical when there are no dispatches (_w2 is wiring).
         _disp = dispatches or []
         _mcalls = module_calls or []                  # class 14: module-attribute calls — the same fold, so behind/d2w/roles see the hop
+        # the PORT-SEAM arm: its own try/except, like the web and sql arms, so a parser bug
+        # degrades it to honest-empty and never touches the call topology it folds into
+        _di: dict = {"present": False, "reason": "not attempted", "edges": [], "stats": {}}
+        try:
+            import _a3_stacks_di as _dimod
+            _di = _dimod.parse(root, wiring)
+        except Exception as _de:  # noqa: BLE001
+            _di = {"present": False, "reason": f"di arm error: {_de}", "edges": [], "stats": {}}
+        _dibind = list(_di.get("edges") or [])
         _w2 = wiring
-        if _disp or _mcalls:
+        if _disp or _mcalls or _dibind:
             _w2 = dict(wiring)
+            # the port bindings ride HERE too, not only in derive_functions' output: behind, d2w
+            # and fn_roles all read this wiring, so a binding that only reached the call list left
+            # the write-distance gradient blind to everything past the port — and rule 3b descends
+            # by that gradient, so the walk still stopped at the service.
             _w2["edges"] = list(wiring.get("edges") or []) + [
                 {"source": _e["s"], "target": _e["t"], "relation": "calls", "confidence": "extracted"}
-                for _e in list(_disp) + list(_mcalls)]
+                for _e in list(_disp) + list(_mcalls)] + [
+                {"source": _e["s"], "target": _e["t"], "relation": "calls", "confidence": "inferred"}
+                for _e in _dibind]
         # class 7 · home the BOOT root's file (main.py — unclaimed) into __unclaimed__ so its
         # lifespan fn homes and the graft calls behind it survive the both-ends-homed drop. Only for
         # the FUNCTION/behind/access derives; derive_cross reads the ORIGINAL entities (P5: L1 pairs
@@ -951,7 +973,8 @@ def graft_arm(root: Path, entities: dict[str, Any],
                     _e["endpoints"] = _eps + [_r]
                     bentities[_sl] = _e
         out = derive_cross(wiring, entities)       # ORIGINAL wiring + entities — L1 kinds untouched (P5)
-        fout = derive_functions(wiring, bentities, dispatches=_disp, module_calls=_mcalls)   # ORIGINAL calls + dispatches + module calls appended once; boot-homed
+        fout = derive_functions(wiring, bentities, dispatches=_disp, module_calls=_mcalls,
+                                bindings=_di.get("edges"))   # ORIGINAL calls + dispatches + module calls + port bindings; boot-homed
         behind = derive_behind(_w2, bentities)     # {<file>#<fn> → {fns, depth}} per endpoint handler (+ the BOOT root)
         endpoint_access = derive_endpoint_access(_w2, bentities, faccess)  # A2: ORM access via the call-tree
         fn_roles = derive_fn_roles(_w2, faccess)   # C1: accessor/caller/gate/pure per function
@@ -975,6 +998,7 @@ def graft_arm(root: Path, entities: dict[str, Any],
         return {
             "present": True, "reason": reason, "index_hash": fp,
             "derived": _derived,
+            "di": {k: _di.get(k) for k in ("present", "reason", "stats")},
             "index_nodes": meta.get("nodeCount"), "index_edges": meta.get("edgeCount"),
             "pairs": out["pairs"], "stats": out["stats"],
             "functions": fout,   # {fn_slug, calls} — the fn-level slice the LEVELS graph draws

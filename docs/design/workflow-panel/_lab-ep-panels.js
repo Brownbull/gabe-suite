@@ -691,7 +691,7 @@
     form: c.form || "row", icon: c.icon == null ? 1 : c.icon, rw: c.rw == null ? 1 : c.rw,
     name: c.name == null ? 1 : c.name, ent: c.ent || "word", count: c.count || "words", model: c.model || "word" }; }
   function bkTitle(t, S, mix){ var B = bkcfg(), ec = t.entity_color || "#888", out = [];
-    if (B.icon) out.push('<span class="bki">' + ico("table", 13, ec) + '</span>');
+    if (B.icon) out.push('<span class="bki">' + ico("model", 13, ec) + '</span>');   /* the graph's own model glyph — the DB drum */
     if (B.rw) out.push(rwChip(t.rw));
     if (B.name) out.push(E("b", null, esc(t.table)));
     if (B.ent !== "off") { var e = E("span", { class: "bke" });
@@ -701,7 +701,7 @@
     if (B.count !== "off") out.push(E("span", { class: "bkn" + (B.count === "badge" ? " badge" : "") },
       B.count === "badge" ? String(t.cols.length) : t.cols.length + " fields"));
     if (B.model !== "off") { var m = E("span", { class: "bkm" });
-      if (B.model === "icon" || B.model === "both") m.insertAdjacentHTML("beforeend", ico("model", 13, S.KINDCOL.model));
+      if (B.model === "icon" || B.model === "both") m.insertAdjacentHTML("beforeend", ico("doc", 13, S.KINDCOL.schema));   /* the CLASS, not the table */
       if (B.model === "word" || B.model === "both") m.append(E("span", null, esc(t.model)));
       out.push(m); }
     return out; }
@@ -734,7 +734,7 @@
           body: "the kind is read from the DECLARED type, never guessed from the name." }));
         sqs.append(q); });
       hd.append(sqs);
-      bind(hd, card({ title: t.table, icon: "table", color: t.entity_color, sub: "entity " + t.entity + " · model " + t.model,
+      bind(hd, card({ title: t.table, icon: "model", color: t.entity_color, sub: "entity " + t.entity + " · model " + t.model,
         rows: [["here", t.rw === "rw" ? "reads + writes" : t.rw === "w" ? "writes" : "reads", RWC[t.rw]],
                ["fields", String(t.cols.length) + (t.cols_more ? " (+" + t.cols_more + " the feed did not carry)" : "")],
                ["what is inside", TYPEC.filter(function(x){ return mix[x.key]; }).map(function(x){ return mix[x.key] + " " + x.word; }).join(" · ")],
@@ -767,18 +767,18 @@
   }
 
   /* ── THE DATA PORTRAIT — whatever table you clicked, at full detail, beside the picture ── */
+  /* the table the middle panel selected, or null — every representation starts here */
+  function selTable(F){ var sel = (window.SEL || {}).data;
+    return F.data.tables.filter(function(x){ return x.table === sel; })[0] || null; }
+  function ptIdle(box, what){ box.append(E("div", { class: "ptidle" }, E("b", null, "nothing selected"),
+    E("span", null, "click a table in the middle panel and " + what))); }
   function dataPortrait(box, F, S){
-    var D = F.data, sel = (window.SEL || {}).data;
-    var t = D.tables.filter(function(x){ return x.table === sel; })[0];
-    if (!t) { box.append(E("div", { class: "ptidle" }, E("b", null, "nothing selected"),
-      E("span", null, "click a table in the panel and its whole record opens here: which entity claims it, the class that maps to it, the file it lives in, and every field with its kind.")));
-      return; }
+    var D = F.data, t = selTable(F);
+    if (!t) { ptIdle(box, "its whole record opens here: which entity claims it, the class that maps to it, the file it lives in, and every field with its kind."); return; }
     var ec = t.entity_color || "#888";
     var fkSet = {}; (t.fks || []).forEach(function(f){ fkSet[Array.isArray(f) ? f[0] : f] = (Array.isArray(f) && f[1]) ? f[1] : true; });
     var uqSet = {}; (t.uqs || []).forEach(function(u){ (Array.isArray(u) ? u : [u]).forEach(function(c){ uqSet[c] = 1; }); });
     var mix = {}; t.cols.forEach(function(c){ var k = typeOf(c[1]).key; mix[k] = (mix[k] || 0) + 1; });
-    box.append(E("div", { class: "pthd" }, ico("table", 14, ec), E("span", null, esc(t.table)),
-      E("span", { class: "ptn" }, t.cols.length + " fields")));
     var b = E("div", { class: "ptbody" });
     function row(k, v, col){ b.append(E("div", { class: "ptrow" }, E("span", { class: "k" }, k),
       E("span", { class: "v", style: col ? "color:" + col : null }, v))); }
@@ -805,6 +805,117 @@
     box.append(b);
     COV.mark("PAYLOAD", "data");
   }
+  /* ── THE SHAPE — the table as the graph draws it: the drum, and every field a cell under it. The
+     square room is used for SIZE, so a wide table looks wide and a deep one deep. ── */
+  function dataShape(box, F, S){
+    var t = selTable(F);
+    if (!t) { ptIdle(box, "it is drawn here as the graph draws it — the drum, with every field a cell beneath it."); return; }
+    var ec = t.entity_color || "#888";
+    var fkSet = {}; (t.fks || []).forEach(function(f){ fkSet[Array.isArray(f) ? f[0] : f] = (Array.isArray(f) && f[1]) ? f[1] : true; });
+    var uqSet = {}; (t.uqs || []).forEach(function(u){ (Array.isArray(u) ? u : [u]).forEach(function(c){ uqSet[c] = 1; }); });
+    var b = E("div", { class: "ptbody shp" });
+    var drum = E("div", { class: "shdrum" }, ico("model", 58, ec), E("b", null, esc(t.table)),
+      E("span", null, esc(t.entity || "—") + " · " + t.cols.length + " fields"));
+    bind(drum, card({ title: t.table, icon: "model", color: ec, sub: "the graph's own model glyph",
+      rows: [["entity", t.entity || "—"], ["class", t.model], ["channel", t.rw === "rw" ? "read + write" : t.rw === "w" ? "write" : "read", RWC[t.rw]]],
+      body: "this is the node you would click in the universe graph." }));
+    b.append(drum);
+    var grid = E("div", { class: "shgrid" });
+    t.cols.forEach(function(c){ var tc = typeOf(c[1]), isFk = fkSet[c[0]], isUq = uqSet[c[0]];
+      var cell = E("div", { class: "shcell" + (isOpt(c[1]) ? " opt" : "") + (isFk ? " fk" : "") + (isUq ? " uq" : ""),
+        style: "--fc:" + tc.col(S) },
+        E("i", { class: "shsw" }), E("span", { class: "fn" }, esc(c[0])), E("span", { class: "ft" }, esc(c[1] || "—")));
+      bind(cell, card({ title: c[0], sub: String(c[1] || "—"), icon: isFk ? "key" : "table", color: tc.col(S),
+        rows: [["kind", tc.word + " — " + tc.plain], ["in", t.table],
+               isFk ? ["foreign key", "→ " + (isFk === true ? "another table" : isFk)] : null,
+               isUq ? ["unique", "the DB refuses a second row with this value"] : null] }));
+      grid.append(cell); });
+    b.append(grid);
+    if (t.cols_more) b.append(E("div", { class: "ptsec" }, "+" + t.cols_more + " more the feed did not carry"));
+    box.append(b); }
+
+  /* ── THE WHEEL — the same fields laid round the drum, so the MIX is the picture: a table that is
+     mostly time reads as violet, one that is mostly keys reads teal. Drawn, never listed. ── */
+  function dataWheel(box, F, S){
+    var t = selTable(F);
+    if (!t) { ptIdle(box, "its fields are laid in a ring around it, so what the table is MADE OF reads at a glance."); return; }
+    var ec = t.entity_color || "#888", n = t.cols.length, R = 118, r0 = 62;
+    var fkSet = {}; (t.fks || []).forEach(function(f){ fkSet[Array.isArray(f) ? f[0] : f] = true; });
+    var uqSet = {}; (t.uqs || []).forEach(function(u){ (Array.isArray(u) ? u : [u]).forEach(function(c){ uqSet[c] = 1; }); });
+    var b = E("div", { class: "ptbody whl" });
+    var NS = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", "0 0 300 300"); svg.setAttribute("class", "wsvg");
+    function seg(i){ var a0 = (i / n) * Math.PI * 2 - Math.PI / 2, a1 = ((i + 1) / n) * Math.PI * 2 - Math.PI / 2, g = 0.012;
+      a0 += g; a1 -= g;
+      var p = document.createElementNS(NS, "path");
+      var x0 = 150 + R * Math.cos(a0), y0 = 150 + R * Math.sin(a0), x1 = 150 + R * Math.cos(a1), y1 = 150 + R * Math.sin(a1);
+      var x2 = 150 + r0 * Math.cos(a1), y2 = 150 + r0 * Math.sin(a1), x3 = 150 + r0 * Math.cos(a0), y3 = 150 + r0 * Math.sin(a0);
+      p.setAttribute("d", "M" + x0 + " " + y0 + "A" + R + " " + R + " 0 0 1 " + x1 + " " + y1
+        + "L" + x2 + " " + y2 + "A" + r0 + " " + r0 + " 0 0 0 " + x3 + " " + y3 + "Z");
+      return p; }
+    t.cols.forEach(function(c, i){ var tc = typeOf(c[1]), isFk = fkSet[c[0]], isUq = uqSet[c[0]];
+      var p = seg(i); p.setAttribute("fill", tc.col(S));
+      p.setAttribute("fill-opacity", isOpt(c[1]) ? ".42" : ".92");
+      if (isFk) { p.setAttribute("stroke", S.KINDCOL.external); p.setAttribute("stroke-width", "2"); }
+      if (isUq) { p.setAttribute("stroke", S.OPC.gate); p.setAttribute("stroke-width", "1.5"); p.setAttribute("stroke-dasharray", "3 2"); }
+      p.setAttribute("class", "wseg");
+      bind(p, card({ title: c[0], sub: String(c[1] || "—"), icon: isFk ? "key" : "table", color: tc.col(S),
+        rows: [["kind", tc.word + " — " + tc.plain], ["in", t.table], ["position", (i + 1) + " of " + n + " going clockwise from the top"],
+               isOpt(c[1]) ? ["optional", "drawn paler — the column accepts None"] : null,
+               isFk ? ["foreign key", "ringed in the external colour"] : null,
+               isUq ? ["unique", "ringed in a dashed latch"] : null] }));
+      svg.append(p); });
+    b.append(E("div", { class: "wwrap" }, svg, E("div", { class: "whub" }, ico("model", 42, ec),
+      E("b", null, String(n)), E("span", null, "fields"))));
+    var mix = {}; t.cols.forEach(function(c){ var k = typeOf(c[1]).key; mix[k] = (mix[k] || 0) + 1; });
+    b.append(E("div", { class: "wlgd" }, TYPEC.filter(function(x){ return mix[x.key]; }).map(function(x){
+      var w = E("span", { class: "lg" }, E("i", { class: "sw", style: "background:" + x.col(S) }), x.word + " " + mix[x.key]);
+      bind(w, card({ title: x.word, sub: mix[x.key] + " of " + n + " fields in " + t.table, body: x.plain })); return w; })));
+    b.append(E("div", { class: "ptsec" }, esc(t.table) + " · " + esc(t.entity || "—")));
+    box.append(b); }
+
+  /* ── THE KEYS — what this table points at, and what points back. Outbound comes from the feed's own
+     fks; inbound is DERIVED by reading every other table's fks, so it is exact for the tables this door
+     touches and says so for the rest of the database, which the feed does not carry. ── */
+  function dataKeys(box, F, S){
+    var D = F.data, t = selTable(F);
+    if (!t) { ptIdle(box, "what it points at and what points back is drawn here."); return; }
+    var ec = t.entity_color || "#888";
+    var out = (t.fks || []).map(function(f){ return Array.isArray(f) ? { col: f[0], to: f[1] } : { col: f, to: null }; });
+    var inb = [];
+    D.tables.forEach(function(o){ if (o.table === t.table) return;
+      (o.fks || []).forEach(function(f){ var col = Array.isArray(f) ? f[0] : f, to = Array.isArray(f) ? f[1] : null;
+        if (to && String(to).split(".")[0] === t.table) inb.push({ from: o.table, col: col, ec: o.entity_color, ent: o.entity }); }); });
+    var b = E("div", { class: "ptbody keys" });
+    b.append(E("div", { class: "kcentre" }, ico("model", 34, ec), E("b", null, esc(t.table)),
+      E("span", null, (t.uqs || []).length + " unique · " + out.length + " out · " + inb.length + " in")));
+    function lane(title, rows, empty){
+      b.append(E("div", { class: "ptsec" }, title));
+      if (!rows.length) { b.append(E("div", { class: "kempty" }, empty)); return; }
+      rows.forEach(function(r){ b.append(r); }); }
+    lane("points at", out.map(function(o){
+      var row = E("div", { class: "krow out" }, ico("key", 13, S.KINDCOL.external),
+        E("span", { class: "kc" }, esc(o.col)), E("span", { class: "ka" }, "→"), E("span", { class: "kt" }, esc(o.to || "another table")));
+      bind(row, card({ title: o.col, icon: "key", color: S.KINDCOL.external, sub: "a foreign key out of " + t.table,
+        rows: [["points at", o.to || "another table — the feed did not carry which"],
+               ["means", "a row here leans on a row there; deleting that one breaks this"]] }));
+      return row; }), "this table points at nothing — it stands on its own");
+    lane("pointed at by", inb.map(function(o){
+      var row = E("div", { class: "krow in", style: "--ec:" + (o.ec || "#888") }, ico("key", 13, o.ec || "#888"),
+        E("span", { class: "kt" }, esc(o.from)), E("span", { class: "ka" }, "→"), E("span", { class: "kc" }, esc(o.col)));
+      bind(row, card({ title: o.from, icon: "model", color: o.ec, sub: "entity " + o.ent,
+        rows: [["through", o.col], ["means", "that table leans on this one"],
+               ["measured over", "the " + D.tables.length + " tables THIS DOOR touches — the rest of the database is not in the feed"]] }));
+      return row; }), "no table this door touches points back — the rest of the database is not in the feed, so this is a floor, not a fact about the whole schema");
+    lane("unique", (t.uqs || []).map(function(u){
+      var cols = Array.isArray(u) ? u : [u];
+      var row = E("div", { class: "krow uq" }, ico("key", 13, S.OPC.gate), E("span", { class: "kc" }, cols.join(" + ")));
+      bind(row, card({ title: cols.join(" + "), icon: "key", color: S.OPC.gate, sub: "a unique latch",
+        rows: [["means", cols.length > 1 ? "no two rows may share this COMBINATION" : "no two rows may share this value"]] }));
+      return row; }), "nothing is latched unique on this table");
+    box.append(b); }
+
   window.DATAPORTRAIT = dataPortrait;
 
   /* ══ DATA · THE CHANNEL (operator 2026-09-12) ═══════════════════════════════════════════════════
@@ -1080,7 +1191,11 @@
 
   /* ── the registry — icons are STATION icons (words on hover), counts answer A ─────────── */
   window.PANELS = {
-    data: { icon: "table", word: "Data", col: S.KINDCOL.model, portrait: dataPortrait, hint: "every table this door reads or writes — 13 of them on 5 entity grounds, one DB commit; each tile a stack whose height is its column count",
+    data: { icon: "table", word: "Data", col: S.KINDCOL.model,
+      portraits: [ { key: "record", label: "Record", icon: "doc", hint: "everything the feed knows about the table, in rows — the densest honest reading", render: dataPortrait },
+                   { key: "shape", label: "Shape", icon: "model", hint: "the drum as the graph draws it, with every field a cell beneath it", render: dataShape },
+                   { key: "wheel", label: "Wheel", icon: "target", hint: "the fields laid in a ring, so what the table is MADE OF reads at a glance", render: dataWheel },
+                   { key: "keys", label: "Keys", icon: "key", hint: "what this table points at, and what points back", render: dataKeys } ], hint: "every table this door reads or writes — 13 of them on 5 entity grounds, one DB commit; each tile a stack whose height is its column count",
       count: function(F){ return F.data.tables.length; },
       variants: [ { key: "grounds", label: "Grounds", hint: "tables tiled on entity-coloured grounds; the shape stacks stand vertically. Reads by entity first.", render: renderData },
                   { key: "flow", label: "Flow", hint: "ONE left-to-right axis — request → the whole table field (writes first, entity by dot) → response. Uses the width.", render: renderDataFlow },

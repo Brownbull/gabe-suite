@@ -1127,6 +1127,15 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                 _seen_ids = {n["id"] for n in l2[_home]["nodes"]}
                 l2[_home]["nodes"].extend(n for n in _tg["nodes"] if n["id"] not in _seen_ids)
                 l2[_home]["edges"].extend(_tg["edges"])
+                # the CROSS-entity lists too. Merging only nodes+edges dropped every xaccess /
+                # xtouch / xcons a TASK or ACTION root produced — and a root's data edge is almost
+                # always cross-entity, because the table it writes is declared somewhere else. The
+                # global resolve below pops these per l2 entry, so a dropped list is a data edge
+                # that silently never lands: keypro's 10 action rollups drew 0 edges, and tier3's
+                # 46 task roots have been losing theirs since the seam shipped.
+                for _xk in ("xaccess", "xtouch", "xcons"):
+                    if _tg.get(_xk):
+                        l2[_home].setdefault(_xk, []).extend(_tg[_xk])
                 l2[_home]["nodes"].sort(key=lambda n: (_L2_KINDS.index(n["kind"]), n["id"]))
                 _stamp_l2(l2[_home])
             else:
@@ -1559,7 +1568,11 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                        "dropped": (graft.get("stats") or {}).get("dropped"),
                        # which derivations could not run and what they lacked — so a flat write
                        # heat reads as "no input" rather than as "nothing here writes"
-                       "derived": graft.get("derived") or {}}
+                       "derived": graft.get("derived") or {},
+                       # the port-seam arm's own record: how many injected calls it resolved,
+                       # how many fanned to several implementations, and which file it read as
+                       # the composition root
+                       "di": graft.get("di") or {}}
                       if graft_present else
                       {"present": False,
                        "reason": (graft or {}).get("reason", "not attempted")}),

@@ -2,7 +2,7 @@
  "action_roots": 0,
  "app_middleware": 4,
  "boot_roots": 0,
- "cross_edges": 1628,
+ "cross_edges": 1891,
  "endpoints": 512,
  "entities": 9,
  "fe_edges": 5345,
