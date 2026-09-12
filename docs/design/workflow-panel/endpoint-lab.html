@@ -630,16 +630,18 @@
      a section that the open distribution does not draw says so instead of pretending to work. ══ */
   var DATACFG = window.DATACFG = {
     show: { note: 1, counts: 1, shapes: 1, rw: 1, commit: 1, ev: 1, mdl: 1, ents: 1, legend: 1 },
-    width: "flex", tiles: "stack", order: "size", fieldsOf: "all" };
+    width: "flex", tiles: "stack", order: "size",
+    channel: "all",                                     /* the PANEL's filter — every distribution reads it */
+    sqSize: 11, sqGap: 2, sqShape: "round", sqPal: "type", sqOpt: 1 };
   var DSEC = [
-    { key: "note",   word: "the note",    icon: "doc",    on: ["grounds", "flow", "ledger", "fields"],
+    { key: "note",   word: "the note",    icon: "doc",    on: ["grounds", "flow", "ledger", "fields", "blocks"],
       what: "the sentence under the title", lost: "how to read the picture, said once in words" },
-    { key: "counts", word: "counts",      icon: "info",   on: ["grounds", "flow", "ledger", "fields"],
+    { key: "counts", word: "counts",      icon: "info",   on: ["grounds", "flow", "ledger", "fields", "blocks"],
       what: "the number beside every name", lost: "how many — the first question the card answers" },
     { key: "shapes", word: "the shapes",  icon: "table",  on: ["grounds", "flow", "ledger"],
       what: "the line stack inside each table — one line per column", lost: "how deep each table is; the names stay",
       note: "the Fields distribution draws the names instead, so this dial has nothing to hide there" },
-    { key: "rw",     word: "read/write",  icon: "model",  on: ["grounds", "flow", "ledger", "fields"],
+    { key: "rw",     word: "read/write",  icon: "model",  on: ["grounds", "flow", "ledger", "fields", "blocks"],
       what: "the R · W · RW chip on every table", lost: "which way the data moves; the colour still carries it" },
     { key: "commit", word: "the commit",  icon: "key",    on: ["grounds", "flow", "fields"],
       what: "the DB COMMIT pulse under the tables", lost: "that every write lands in ONE transaction" },
@@ -649,13 +651,17 @@
       what: "the entity-model row — claim · seeded · derived · proposed", lost: "which model would re-home this door" },
     { key: "ents",   word: "entities",    icon: "entity", on: ["flow"],
       what: "the entities line under the field", lost: "the roster of grounds the dots stand for" },
-    { key: "legend", word: "the legend",  icon: "layers", on: ["grounds", "flow", "ledger", "fields"],
+    { key: "legend", word: "the legend",  icon: "layers", on: ["grounds", "flow", "ledger", "fields", "blocks"],
       what: "the strip of swatches at the foot", lost: "what a colour and a line mean, drawn as they are drawn" } ];
   function dataVar(){ return (window.PANELVAR && window.PANELVAR("data")) || "grounds"; }
   function applyData(){ var pn = document.getElementById("panel");
     Object.keys(DATACFG.show).forEach(function(k){ pn.classList.toggle("dh-" + k, !DATACFG.show[k]); });
     pn.classList.toggle("dgw-equal", DATACFG.width === "equal");
-    pn.classList.toggle("dtl-grid", DATACFG.tiles === "grid"); }
+    pn.classList.toggle("dtl-grid", DATACFG.tiles === "grid");
+    pn.style.setProperty("--sq", DATACFG.sqSize + "px");
+    pn.style.setProperty("--sqg", DATACFG.sqGap + "px");
+    ["square", "round", "circle"].forEach(function(k){ pn.classList.toggle("sqs-" + k, DATACFG.sqShape === k); });
+    pn.classList.toggle("sq-noopt", !DATACFG.sqOpt); }
   window.applyData = applyData;
   function drawDataCfg(){ var box = document.getElementById("datacfg"); box.innerHTML = "";
     var live = dataVar();
@@ -668,7 +674,7 @@
         hoverBind(b, hcard({ title: o[2] || o[0], value: label, icon: "shape",
           rows: na ? [["drawn in", onlyIn + " — not in " + live + ", so this does nothing right now"]] : null, plain: o[1] }));
         b.onclick = function(ev){ ev.stopPropagation(); DATACFG[key] = o[0];
-          applyData(); if (key === "order" || key === "fieldsOf") window.showTab("data"); drawDataCfg(); }; w.append(b); });
+          applyData(); if (key === "order" || key === "channel" || key === "sqPal") window.showTab("data"); drawDataCfg(); }; w.append(b); });
       box.append(el("div", { class: "cfl" }, label), w); }
 
     sub("layout", "the same facts, distributed differently");
@@ -697,15 +703,48 @@
         w.append(b); });
       box.append(el("div", { class: "cfl" }, "drawn"), w); }
 
-    sub("the fields", "only the Fields distribution reads this");
-    pick("channel", "fieldsOf", [
+    sub("the channel", "every distribution reads this — the same four buttons sit in the panel's own title row");
+    pick("tables", "channel", [
       ["all", "every table this door touches, whichever way the data moves", "all of them"],
-      ["w", "only the tables the door WRITES — what this request changes", "written"],
-      ["r", "only the tables the door READS — what it needs to answer", "read"],
-      ["rw", "only the tables it does BOTH to — where a read and a write meet", "both"]],
+      ["w", "tables it writes and never reads — it puts data there and never looks", "written only"],
+      ["r", "tables it reads and never writes — it needs them to answer, never changes them", "read only"],
+      ["rw", "tables it both reads and writes — where a read and a write meet on one table", "both"]],
       function(o){ return o[0] === "all" ? labIco("wwide", 15)
-        : '<i class="chsw" style="background:' + (o[0] === "w" ? S.RW.w : o[0] === "r" ? S.RW.r : S.RW.rw) + '"></i>'; },
-      "fields");
+        : '<i class="chsw" style="background:' + (o[0] === "w" ? S.RW.w : o[0] === "r" ? S.RW.r : S.RW.rw) + '"></i>'; });
+
+    sub("the squares", "only the Blocks distribution reads these");
+    box.append(el("div", { class: "cfl sub" }, "size"),
+      slider({ min: 6, max: 24, step: 1, value: DATACFG.sqSize, label: "square size",
+        fmt: function(v){ return v + "px"; },
+        card: hcard({ title: "square size", value: DATACFG.sqSize + "px", icon: "shape",
+          rows: [["range", "6 — 24px"], ["what it sets", "every field square in the Blocks row"]],
+          plain: "how big one field is drawn" }),
+        on: function(v){ DATACFG.sqSize = v; applyData(); } }));
+    box.append(el("div", { class: "cfl sub" }, "gap"),
+      slider({ min: 0, max: 6, step: 1, value: DATACFG.sqGap, label: "square gap",
+        fmt: function(v){ return v === 0 ? "touching" : v + "px"; },
+        card: hcard({ title: "square gap", value: DATACFG.sqGap + "px", icon: "shape",
+          rows: [["range", "0 — 6px"], ["at 0", "the squares touch and the row reads as one bar"]],
+          plain: "how far apart the fields sit" }),
+        on: function(v){ DATACFG.sqGap = v; applyData(); } }));
+    pick("shape", "sqShape", [
+      ["square", "sharp corners — the field is a cell", "square"],
+      ["round", "softened corners", "rounded"],
+      ["circle", "a dot per field", "circle"]],
+      function(o){ return labIco(o[0] === "square" ? "sh-square" : o[0] === "round" ? "sh-rect" : "sh-circle", 15); }, "blocks");
+    pick("colour", "sqPal", [
+      ["type", "each square takes the colour of the KIND of value it holds — id · text · number · flag · time · list", "by kind"],
+      ["channel", "every square takes its table's channel — read green, write orange, both amber", "by channel"],
+      ["entity", "every square takes its entity's colour — the row reads as one place", "by entity"],
+      ["mono", "no colour at all; only the count and the shape carry", "mono"]],
+      function(o){ return o[0] === "type" ? labIco("pathatch", 15)
+        : o[0] === "channel" ? '<i class="chsw" style="background:' + S.RW.rw + '"></i>'
+        : o[0] === "entity" ? '<i class="chsw" style="background:' + S.KINDCOL.entity + '"></i>'
+        : labIco("patflat", 15); }, "blocks");
+    pick("optional", "sqOpt", [
+      [1, "a column that accepts None is drawn paler", "marked"],
+      [0, "every square at full strength, optional or not", "not marked"]],
+      function(o){ return labIco(o[0] ? "eye" : "eyeoff", 15); }, "blocks");
 
     sub("the grounds", "only the Grounds distribution reads these");
     pick("order", "order", [
@@ -858,7 +897,9 @@
       + " · button " + TABCFG.shape + " · row " + TABCFG.layout + " " + TABCFG.width; },
     data: function(){ var shown = DSEC.filter(function(x){ return DATACFG.show[x.key]; }).map(function(x){ return x.key; });
       var hidden = DSEC.filter(function(x){ return !DATACFG.show[x.key]; }).map(function(x){ return x.key; });
-      return "data · shown as " + dataVar() + " · fields " + DATACFG.fieldsOf + " · grounds by " + DATACFG.order + ", width " + DATACFG.width + ", tiles " + DATACFG.tiles
+      return "data · shown as " + dataVar() + " · tables " + DATACFG.channel
+        + " · squares " + DATACFG.sqSize + "px gap " + DATACFG.sqGap + " " + DATACFG.sqShape + " by " + DATACFG.sqPal + (DATACFG.sqOpt ? ", optional marked" : "")
+        + " · grounds by " + DATACFG.order + ", width " + DATACFG.width + ", tiles " + DATACFG.tiles
         + " · drawn " + shown.join(" ") + (hidden.length ? " · hidden " + hidden.join(" ") : " · nothing hidden"); },
     frame: function(){ function ln(w, st){ return w === 0 || st === "none" ? "none" : w + "px " + st; }
       return "frame · bench outline " + ln(FRAME.benchW, FRAME.benchS)
@@ -894,7 +935,7 @@
   document.getElementById("blk-parts").querySelector(".bhi").innerHTML = S.icon("layers", 13, "var(--accent)");
 
   /* ── the variant bar: one panel, several DISTRIBUTIONS — proposals to compare, not settings ── */
-  var VARICO = { grounds: "entity", flow: "drill", ledger: "table", fields: "schema", levels: "layers", chain: "merge", status: "info", ladder: "up", band: "shield", gauntlet: "drill" };
+  var VARICO = { grounds: "entity", flow: "drill", ledger: "table", fields: "schema", blocks: "layers", levels: "layers", chain: "merge", status: "info", ladder: "up", band: "shield", gauntlet: "drill" };
   function drawVars(){ var PC = document.getElementById("partcfg"); PC.innerHTML = "";
     order.forEach(function(k){ var P = window.PANELS[k];
       var row = E("div", { class: "prow" + (cur === k ? " on" : "") });

@@ -58,14 +58,15 @@
      the response shape (lines). Hover any bar or tile for the exact fields.
      ══════════════════════════════════════════════════════════════════════════════════════ */
   function renderData(box, F, S){
-    var D = F.data, I = F.identity;
-    head(box, "table", "Data", D.ops.length + " ops · " + D.tables.length + " tables",
+    var D = F.data, I = F.identity, TS = dtables(D);
+    dhead(box, F, D, TS, "table",
       "every table this door touches, grouped on its entity's ground — each tile a stack whose height is its column count");
+    if (!TS.length) { chanEmpty(box, D, S); COV.mark("ACCESSES", "data"); return; }
     var body = E("div", { class: "dbody nowings" });
 
     /* middle — the grounds */
     var mid = E("div", { class: "dcol dmid wide" });
-    var grounds = {}; D.tables.forEach(function(t){ (grounds[t.entity || "—"] = grounds[t.entity || "—"] || []).push(t); });
+    var grounds = {}; TS.forEach(function(t){ (grounds[t.entity || "—"] = grounds[t.entity || "—"] || []).push(t); });
     var DC = window.DATACFG || { order: "size" };
     var order = Object.keys(grounds).sort(function(a, b){
       if (DC.order === "name") return a.localeCompare(b);
@@ -547,16 +548,17 @@
 
   /* ── DATA · B "flow" — the width used: request → the whole table field (wrapped, writes first) → response ── */
   function renderDataFlow(box, F, S){
-    var D = F.data, I = F.identity;
-    head(box, "table", "Data", D.ops.length + " ops · " + D.tables.length + " tables",
+    var D = F.data, I = F.identity, TS = dtables(D);
+    dhead(box, F, D, TS, "table",
       "every table on ONE field, writes first, each tile carrying its entity's dot — the widest reading of the same facts");
+    if (!TS.length) { chanEmpty(box, D, S); COV.mark("ACCESSES", "data"); return; }
     var body = E("div", { class: "dfbody" });
     var field = E("div", { class: "dffield" });
-    var fhd = E("div", { class: "dfhd" }, sechd("key", "the door writes, then reads", D.tables.length, false),
+    var fhd = E("div", { class: "dfhd" }, sechd("key", "the door writes, then reads", TS.length, false),
       E("span", { class: "dfnote" }, D.writes.length + " write ops · " + D.reads.length + " read ops · " + D.entities.length + " entities · " + D.both.length + " tables on both channels"));
     field.append(fhd);
     var grid = E("div", { class: "dfgrid" });
-    D.tables.slice().sort(function(a, b){ return (a.rw === "r") - (b.rw === "r") || b.cols.length - a.cols.length; }).forEach(function(t){
+    TS.slice().sort(function(a, b){ return (a.rw === "r") - (b.rw === "r") || b.cols.length - a.cols.length; }).forEach(function(t){
       var fkSet = {}; (t.fks || []).forEach(function(f){ fkSet[Array.isArray(f) ? f[0] : f] = true; });
       var uqSet = {}; (t.uqs || []).forEach(function(u){ (Array.isArray(u) ? u : [u]).forEach(function(c){ uqSet[c] = 1; }); });
       var tile = E("div", { class: "tile rw-" + t.rw, style: "--ec:" + (t.entity_color || "#888") },
@@ -582,11 +584,12 @@
 
   /* ── DATA · C "ledger" — the densest honest form: one row per table, every column the feed knows ── */
   function renderDataLedger(box, F, S){
-    var D = F.data, I = F.identity;
-    head(box, "table", "Data", D.ops.length + " ops · " + D.tables.length + " tables",
+    var D = F.data, I = F.identity, TS = dtables(D);
+    dhead(box, F, D, TS, "table",
       "one row per table, every column the feed knows — the bar strip is still the shape, a line per column");
+    if (!TS.length) { chanEmpty(box, D, S); COV.mark("ACCESSES", "data"); return; }
     var body = E("div", { class: "lbody" });
-    var rows = D.tables.slice().sort(function(a, b){ return (a.entity || "").localeCompare(b.entity || "") || b.cols.length - a.cols.length; }).map(function(t){
+    var rows = TS.slice().sort(function(a, b){ return (a.entity || "").localeCompare(b.entity || "") || b.cols.length - a.cols.length; }).map(function(t){
       var fkSet = {}; (t.fks || []).forEach(function(f){ fkSet[Array.isArray(f) ? f[0] : f] = true; });
       var uqSet = {}; (t.uqs || []).forEach(function(u){ (Array.isArray(u) ? u : [u]).forEach(function(c){ uqSet[c] = 1; }); });
       return { cells: ['<i class="pdot" style="background:' + (t.entity_color || "#888") + '"></i>' + esc(t.entity || "—"), rwChip(t.rw), "<b>" + esc(t.table) + "</b>",
@@ -610,16 +613,11 @@
      Here the names ARE the picture, filtered by the channel the door uses the table on.
      HONEST FLOOR: the feed records the channel per TABLE, never per COLUMN. A field wears its table's
      channel and the note says so — nothing here claims to know which column was written. ── */
-  var FPICK = { all: "every table this door touches", w: "only the tables it WRITES",
-                r: "only the tables it READS", rw: "only the tables it does BOTH to" };
-  function fieldsKeep(D, pick){ return D.tables.filter(function(t){
-    return pick === "w" ? t.rw !== "r" : pick === "r" ? t.rw !== "w" : pick === "rw" ? t.rw === "rw" : true; }); }
-  window.FIELDSKEEP = fieldsKeep;
   function renderDataFields(box, F, S){
-    var D = F.data, DC = window.DATACFG || {}, pick = DC.fieldsOf || "all";
-    var keep = fieldsKeep(D, pick), cols = function(ts){ return ts.reduce(function(n, t){ return n + t.cols.length; }, 0); };
-    head(box, "schema", "Data", cols(keep) + " of " + cols(D.tables) + " fields",
-      "the columns themselves, named — " + FPICK[pick] + ". The channel is the TABLE's: the feed knows which tables this door reads and writes, never which column.");
+    var D = F.data, keep = dtables(D), cols = colsOf;
+    dhead(box, F, D, keep, "schema",
+      "the columns themselves, named — " + chanDef().plain + ". The channel is the TABLE's: the feed knows which tables this door reads and writes, never which column.");
+    if (!keep.length) { chanEmpty(box, D, S); COV.mark("ACCESSES", "data"); return; }
     var body = E("div", { class: "fbody" });
     var grid = E("div", { class: "fgrid" });
     keep.slice().sort(function(a, b){ return (a.rw === "r") - (b.rw === "r") || b.cols.length - a.cols.length; }).forEach(function(t){
@@ -654,7 +652,7 @@
     box.append(cm);
     var foot = E("div", { class: "pfoot" });
     foot.append(E("div", { class: "kv flt" }, ico("schema", 13), E("span", { class: "k" }, "showing"),
-      E("span", { class: "v" }, FPICK[pick] + " — " + keep.length + " of " + D.tables.length + " tables, " + cols(keep) + " fields")));
+      E("span", { class: "v" }, chanDef().plain + " — " + keep.length + " of " + D.tables.length + " tables, " + cols(keep) + " fields")));
     foot.append(legend([
       { t: "reads", swatch: "background:" + RWC.r }, { t: "writes", swatch: "background:" + RWC.w }, { t: "both", swatch: "background:" + RWC.rw },
       { t: "fk", swatch: "background:" + S.KINDCOL.external + ";height:2px;width:16px", tip: card({ title: "foreign key", sub: "a column that points out", body: "the name is drawn in the external colour — the table leans on another table." }) },
@@ -662,6 +660,157 @@
     box.append(foot);
     COV.mark("ACCESSES", "data"); COV.mark("PAYLOAD", "data"); COV.mark("CONNECTIONS", "data");
   }
+
+  /* ── DATA · E "blocks" — one ROW per table: everything the feed knows about it on a single line, and
+     what is INSIDE it as a run of little squares, one per field, coloured by the kind of field
+     (operator 2026-09-12). Without clicking you read: which table, whose entity, how many fields and
+     what kinds. Click the row and every field is named at once.
+     THE CLASS IS READ FROM THE DECLARED TYPE, nothing is guessed: `uuid.UUID` → id, `str` → text,
+     `int`/`float`/`Decimal` → number, `bool` → flag, `datetime`/`date` → time, `list[…]`/`dict` → list,
+     anything else → other, said as "other" rather than filed under a guess. A ` | None` suffix makes
+     the square paler — the column accepts nothing, which is not one of law G's three certainties. ── */
+  var TYPEC = [
+    { key: "id",    word: "id",      col: function(S){ return S.KINDCOL.model; },  rx: /^uuid|UUID/,                  plain: "a key — the row's own name, or another row's" },
+    { key: "text",  word: "text",    col: function(S){ return S.KINDCOL.route; },  rx: /^str\b|^Text|^EmailStr/,      plain: "words — anything the user or the system typed" },
+    { key: "num",   word: "number",  col: function(S){ return S.OPC.schema; },     rx: /^int\b|^float|^Decimal/,      plain: "a number you can count or add up" },
+    { key: "flag",  word: "flag",    col: function(S){ return S.KINDCOL.entity; }, rx: /^bool/,                       plain: "yes or no — one bit, nothing in between" },
+    { key: "time",  word: "time",    col: function(S){ return S.KINDCOL.screen; }, rx: /^datetime|^date\b|^time/,     plain: "a moment — when it happened" },
+    { key: "list",  word: "list",    col: function(S){ return S.KINDCOL.store; },  rx: /^list|^dict|^Json|^JSON/,     plain: "many values in one column, not one" },
+    { key: "other", word: "other",   col: function(S){ return S.KINDCOL.type; },   rx: null,                          plain: "a type this rule does not name — said out loud instead of filed under a guess" } ];
+  function typeOf(t){ var base = String(t || "").replace(/\s*\|\s*None\s*$/, "").trim();
+    for (var i = 0; i < TYPEC.length - 1; i++) if (TYPEC[i].rx.test(base)) return TYPEC[i];
+    return TYPEC[TYPEC.length - 1]; }
+  function isOpt(t){ return /\|\s*None\s*$/.test(String(t || "")); }
+  function sqCol(t, c, S){ var DC = window.DATACFG || {}, pal = DC.sqPal || "type";
+    return pal === "channel" ? RWC[t.rw] : pal === "entity" ? (t.entity_color || "#888")
+      : pal === "mono" ? "var(--muted)" : typeOf(c[1]).col(S); }
+  function renderDataBlocks(box, F, S){
+    var D = F.data, TS = dtables(D), DC = window.DATACFG || {};
+    dhead(box, F, D, TS, "layers",
+      "one row per table — whose entity, how many fields and what kinds, without opening anything. Each square is one field, coloured by the kind of value it holds; click a row to name them all.");
+    if (!TS.length) { chanEmpty(box, D, S); COV.mark("ACCESSES", "data"); return; }
+    var body = E("div", { class: "bkbody" });
+    TS.slice().sort(function(a, b){ return (a.rw === "r") - (b.rw === "r") || b.cols.length - a.cols.length; }).forEach(function(t){
+      var fkSet = {}; (t.fks || []).forEach(function(f){ fkSet[Array.isArray(f) ? f[0] : f] = (Array.isArray(f) && f[1]) ? f[1] : true; });
+      var uqSet = {}; (t.uqs || []).forEach(function(u){ (Array.isArray(u) ? u : [u]).forEach(function(c){ uqSet[c] = 1; }); });
+      var mix = {}; t.cols.forEach(function(c){ var k = typeOf(c[1]).key; mix[k] = (mix[k] || 0) + 1; });
+      var blk = E("div", { class: "blk rw-" + t.rw, style: "--ec:" + (t.entity_color || "#888") });
+      var hd = E("div", { class: "bkhd" },
+        '<i class="pdot" style="background:' + (t.entity_color || "#888") + '"></i>', rwChip(t.rw),
+        E("b", null, esc(t.table)),
+        E("span", { class: "bke" }, esc(t.entity || "—")),
+        E("span", { class: "bkn" }, String(t.cols.length) + " fields"),
+        E("span", { class: "bkm" }, esc(t.model)));
+      var sqs = E("div", { class: "sqs" });
+      t.cols.forEach(function(c){ var tc = typeOf(c[1]), opt = isOpt(c[1]), isFk = fkSet[c[0]], isUq = uqSet[c[0]];
+        var q = E("i", { class: "sq t-" + tc.key + (opt ? " opt" : "") + (isFk ? " fk" : "") + (isUq ? " uq" : ""),
+          style: "background:" + sqCol(t, c, S) });
+        bind(q, card({ title: c[0], sub: String(c[1] || "—"), icon: isFk ? "key" : "table", color: sqCol(t, c, S),
+          rows: [["kind", tc.word + " — " + tc.plain],
+                 ["in", t.table + " · " + t.entity],
+                 ["the door", t.rw === "rw" ? "reads and writes this table" : t.rw === "w" ? "writes this table" : "reads this table", RWC[t.rw]],
+                 opt ? ["optional", "the column accepts None — the square is drawn paler"] : null,
+                 isFk ? ["foreign key", "→ " + (isFk === true ? "another table" : isFk)] : null,
+                 isUq ? ["unique", "the DB refuses a second row with this value"] : null],
+          body: "the kind is read from the DECLARED type, never guessed from the name." }));
+        sqs.append(q); });
+      hd.append(sqs);
+      bind(hd, card({ title: t.table, icon: "model", color: S.KINDCOL.model, sub: "model " + t.model + " · entity " + t.entity,
+        rows: [["here", t.rw === "rw" ? "reads + writes — two ops" : t.rw === "w" ? "writes — one op" : "reads — one op", RWC[t.rw]],
+               ["fields", String(t.cols.length) + (t.cols_more ? " (+" + t.cols_more + " the feed did not carry)" : "")],
+               ["what is inside", TYPEC.filter(function(x){ return mix[x.key]; }).map(function(x){ return mix[x.key] + " " + x.word; }).join(" · ")],
+               (t.fks || []).length ? ["foreign keys", String(t.fks.length)] : null,
+               (t.uqs || []).length ? ["unique", String(t.uqs.length)] : null,
+               ["file", String(t.file || "—")]],
+        body: "click the row to name every field at once.", station: t.id }));
+      blk.append(hd);
+      var list = E("div", { class: "flds bkfl" });
+      t.cols.forEach(function(c){ var tc = typeOf(c[1]), isFk = fkSet[c[0]], isUq = uqSet[c[0]];
+        list.append(E("div", { class: "fld" + (isFk ? " fk" : "") + (isUq ? " uq" : "") },
+          E("i", { class: "sq t-" + tc.key + (isOpt(c[1]) ? " opt" : ""), style: "background:" + sqCol(t, c, S) }),
+          E("span", { class: "fn" }, esc(c[0])), E("span", { class: "ft" }, esc(c[1] || "—")))); });
+      blk.append(list);
+      hd.addEventListener("click", function(){ blk.classList.toggle("open"); });
+      body.append(blk); });
+    box.append(body);
+    var mixAll = {}; TS.forEach(function(t){ t.cols.forEach(function(c){ var k = typeOf(c[1]).key; mixAll[k] = (mixAll[k] || 0) + 1; }); });
+    var foot = E("div", { class: "pfoot" });
+    foot.append(E("div", { class: "kv" }, ico("layers", 13), E("span", { class: "k" }, "click a row"),
+      E("span", { class: "v" }, "names every field of that table at once — " + colsOf(TS) + " fields across " + TS.length + " tables")));
+    foot.append(legend(TYPEC.filter(function(x){ return mixAll[x.key]; }).map(function(x){
+      return { t: x.word + " " + mixAll[x.key], swatch: "background:" + x.col(S),
+        tip: card({ title: x.word, sub: mixAll[x.key] + " of " + colsOf(TS) + " fields", body: x.plain + "<br><br>read from the declared type, never from the column's name." }) }; })
+      .concat([{ t: "optional", swatch: "background:var(--muted);opacity:.45", tip: card({ title: "optional", sub: "the column accepts None", body: "drawn paler. Not one of law G's three marks — dashed means inferred, hatched unmeasured, hollow a measured zero." }) }])));
+    box.append(foot);
+    COV.mark("ACCESSES", "data"); COV.mark("PAYLOAD", "data"); COV.mark("CONNECTIONS", "data");
+  }
+
+  /* ══ DATA · THE CHANNEL (operator 2026-09-12) ═══════════════════════════════════════════════════
+     An OP is one table on one channel. The operator asked what the title's "24 ops · 13 tables" meant:
+     this door reads 13 tables and writes 11 of them, and 13 + 11 = 24. Two tables are read and never
+     written; eleven are read AND written; none is written without being read. The four buttons in the
+     panel's title row are that partition, and their counts make the arithmetic visible before a click.
+     EXCLUSIVE by design — "only write" means written and not read, so a zero is a MEASUREMENT (law G),
+     not a gap, and the empty state says so rather than looking broken. ══ */
+  var CHAN = [
+    { key: "all", word: "every table", icon: "table",
+      keep: function(){ return true; }, plain: "every table this door touches, whichever way the data moves" },
+    { key: "w", word: "written only", icon: "key", col: function(S){ return S.RW.w; },
+      keep: function(t){ return t.rw === "w"; }, plain: "tables this door writes and never reads — it puts data there and never looks" },
+    { key: "r", word: "read only", icon: "doc", col: function(S){ return S.RW.r; },
+      keep: function(t){ return t.rw === "r"; }, plain: "tables this door reads and never writes — it needs them to answer, it never changes them" },
+    { key: "rw", word: "both", icon: "merge", col: function(S){ return S.RW.rw; },
+      keep: function(t){ return t.rw === "rw"; }, plain: "tables this door both reads and writes — where a read and a write meet on one table" } ];
+  function chanOf(){ return (window.DATACFG || {}).channel || "all"; }
+  function chanDef(k){ return CHAN.filter(function(c){ return c.key === (k || chanOf()); })[0] || CHAN[0]; }
+  /* every DATA distribution draws THIS list — the filter is the panel's, not one layout's */
+  function dtables(D, k){ var c = chanDef(k); return D.tables.filter(c.keep); }
+  window.DTABLES = dtables;
+  function opsOf(ts){ return ts.reduce(function(n, t){ return n + (t.rw === "rw" ? 2 : 1); }, 0); }
+  function colsOf(ts){ return ts.reduce(function(n, t){ return n + t.cols.length; }, 0); }
+  /* the count chip on the DATA title, and the card that finally says what an OP is */
+  function opsCard(D, ts, S){
+    var rd = D.tables.filter(function(t){ return t.rw !== "w"; }).length, wr = D.tables.filter(function(t){ return t.rw !== "r"; }).length;
+    return card({ title: "ops", icon: "table", color: S.KINDCOL.model, sub: "one op = one table on one channel",
+      rows: [["read ops", rd + " — the tables this door reads", RWC.r],
+             ["write ops", wr + " — the tables it writes", RWC.w],
+             ["together", rd + " + " + wr + " = " + (rd + wr) + " ops"],
+             ["over", D.tables.length + " distinct tables"],
+             ["shown now", ts.length + " table(s) · " + opsOf(ts) + " op(s) · " + colsOf(ts) + " fields"]],
+      body: "an op is an ACCESS, not a function and not a SQL statement: the archmap records that this handler reads a table, writes it, or both. A table on BOTH channels is two ops, which is why 13 tables come to 24." }); }
+  /* the four filter buttons, in the panel's own title row, on the right (operator 2026-09-12) */
+  function chanBar(D, S){
+    var w = E("div", { class: "chbar" });
+    CHAN.forEach(function(c){ var ts = D.tables.filter(c.keep), on = chanOf() === c.key;
+      var b = E("button", { class: "chb" + (on ? " on" : "") + (ts.length ? "" : " zero") });
+      b.dataset.chan = c.key;
+      b.innerHTML = ico(c.icon, 13, c.col ? c.col(S) : "currentColor") + '<span class="chn">' + ts.length + '</span>';
+      bind(b, card({ title: c.word, icon: c.icon, color: c.col ? c.col(S) : null,
+        sub: ts.length + " of " + D.tables.length + " tables · " + opsOf(ts) + " of " + opsOf(D.tables) + " ops · " + colsOf(ts) + " fields",
+        rows: [["what it keeps", c.plain],
+               ts.length ? null : ["measured zero", "no table matches — this is what the feed says, not a gap in it"]],
+        body: c.key === "all" ? "the three below PARTITION this: written-only + read-only + both = every table, once each."
+          : "hollow when it holds nothing: a measured zero is drawn, never hidden." }));
+      b.onclick = function(ev){ ev.stopPropagation(); window.DATACFG.channel = c.key;
+        window.showTab("data"); if (window.drawDataCfg) window.drawDataCfg(); };
+      w.append(b); });
+    return w; }
+  /* ONE head for every DATA distribution: the title, the ops count (hoverable — it finally says what an
+     op is), and the channel bar on the right of that same row. */
+  function dhead(box, F, D, ts, icon, note){
+    var h = head(box, icon || "table", "Data", opsOf(ts) + " ops · " + ts.length + " tables", note);
+    var sh = h.querySelector(".sechd");
+    if (sh) { var cnt = sh.querySelector(".cnt"); if (cnt) bind(cnt, opsCard(D, ts, S));
+      sh.append(chanBar(D, S)); }
+    return h; }
+  /* an empty channel is a RESULT — say what was measured instead of drawing nothing */
+  function chanEmpty(box, D, S){
+    var c = chanDef();
+    box.append(E("div", { class: "pempty" }, ico(c.icon, 15, "var(--muted)"),
+      E("b", null, "no table is " + c.word),
+      E("span", null, "of the " + D.tables.length + " tables this door touches, none is " + c.plain.split(" — ")[0]
+        + ". The count on the button said 0 before you clicked it — that is the measurement, not a gap.")));
+    return box; }
 
   /* ── FUNCTIONS · B "chain" — the walk as ONE horizontal spine; the level you pick opens below ── */
   function renderFnChain(box, F, S){
@@ -862,7 +1011,8 @@
       variants: [ { key: "grounds", label: "Grounds", hint: "tables tiled on entity-coloured grounds; the shape stacks stand vertically. Reads by entity first.", render: renderData },
                   { key: "flow", label: "Flow", hint: "ONE left-to-right axis — request → the whole table field (writes first, entity by dot) → response. Uses the width.", render: renderDataFlow },
                   { key: "ledger", label: "Ledger", hint: "one row per table with every column the feed knows (entity · rw · shape · cols · fk · uq · model). The densest honest form.", render: renderDataLedger },
-                  { key: "fields", label: "Fields", hint: "the columns THEMSELVES, named and typed, filtered by channel — written, read, or both. The one distribution where the fields ARE the picture instead of a stack of lines.", render: renderDataFields } ] },
+                  { key: "fields", label: "Fields", hint: "the columns THEMSELVES, named and typed, filtered by channel — written, read, or both. The one distribution where the fields ARE the picture instead of a stack of lines.", render: renderDataFields },
+                  { key: "blocks", label: "Blocks", hint: "one ROW per table — whose entity, how many fields, what kinds — and each field a little coloured square. Click a row to name every field at once.", render: renderDataBlocks } ] },
     schemas: { icon: "schema", word: "Schemas", col: S.KINDCOL.schema, hint: "the shapes that cross the door — the request's 7 fields with 6 nested shapes in, the response's 6 with 5 nested out; drawn as lines, the exact fields on hover",
       count: function(F){ return (F.data.schemas.request.cols || []).length + (F.data.schemas.response.cols || []).length; },
       variants: [ { key: "shapes", label: "Shapes", hint: "the two shapes side by side as stacks, each nested shape given its own stack below its parent.", render: renderSchemas },

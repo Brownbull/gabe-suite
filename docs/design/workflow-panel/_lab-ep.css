@@ -652,3 +652,51 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 #bench[class*="box-dock"] .fgrid{ grid-template-columns:repeat(auto-fill, minmax(186px, 1fr)); gap:6px; }
 /* the channel swatch in the rail — the option IS the colour it filters by */
 .chsw{ display:block; width:15px; height:11px; border-radius:3px; }
+
+/* ══ DATA · the CHANNEL bar in the panel's own title row, and the BLOCKS distribution
+   (operator 2026-09-12). The bar partitions the tables: written-only + read-only + both = all, once
+   each. A button that holds nothing is drawn HOLLOW with its zero showing — a measured zero is a
+   result, so it is never hidden. ══ */
+.chbar{ display:flex; align-items:center; gap:4px; margin-left:auto; }
+.chb{ display:inline-flex; align-items:center; gap:4px; padding:1px 6px 1px 4px; height:21px;
+  border:1px solid var(--line); border-radius:999px; background:var(--chip-bg); cursor:pointer;
+  color:var(--muted); font:700 12px/1 var(--font-mono); }
+.chb svg{ display:block; flex:none; }
+.chb .chn{ font:700 12px/1 var(--font-mono); }
+.chb:hover{ border-color:var(--accent); color:var(--ink); }
+.chb.on{ border-color:var(--accent); background:color-mix(in srgb, var(--accent) 20%, transparent); color:var(--ink); }
+.chb.zero{ background:none; border-style:dashed; opacity:.7; }
+/* an empty channel says what was measured */
+.pempty{ flex:1; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:6px; padding:18px 16px; }
+.pempty b{ font:700 13px/1.3 var(--font-mono); color:var(--ink); }
+.pempty span{ font-size:12px; line-height:1.5; color:var(--muted); max-width:62ch; }
+
+/* BLOCKS — one row per table, the fields as squares inside that row */
+.bkbody{ flex:1; min-height:0; overflow-y:auto; padding:7px 12px; display:flex; flex-direction:column; gap:4px; }
+.blk{ flex:none; border:1px solid var(--line); border-left:3px solid var(--ec, var(--line)); border-radius:7px;
+  background:var(--chip-bg); overflow:hidden; }   /* flex:none — a column of flex children SHRINKS without it,
+     and an opened row squeezed every row below it into a few unreadable pixels */
+.bkhd{ display:flex; align-items:center; gap:7px; padding:4px 9px; cursor:pointer;
+  font:600 12px/1.4 var(--font-mono); color:var(--muted); }
+.bkhd:hover{ background:color-mix(in srgb, var(--ec) 12%, transparent); }
+.bkhd b{ color:var(--ink); white-space:nowrap; }
+.bkhd .bke{ color:var(--ec); }
+.bkhd .bkn{ color:var(--muted); }
+.bkhd .bkm{ color:var(--muted); opacity:.72; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sqs{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--sqg, 2px); margin-left:auto; padding-left:10px; }
+.sq{ display:block; flex:none; width:var(--sq, 11px); height:var(--sq, 11px); border-radius:2px; cursor:help; }
+#panel.sqs-square .sq{ border-radius:0; }
+#panel.sqs-round .sq{ border-radius:calc(var(--sq, 11px) * .28); }
+#panel.sqs-circle .sq{ border-radius:50%; }
+.sq.opt{ opacity:.45; }
+#panel.sq-noopt .sq.opt{ opacity:1; }
+.sq.fk{ box-shadow:inset 0 0 0 1px var(--panel); }
+.sq:hover{ outline:1px solid var(--ink); outline-offset:1px; }
+/* the expanded field list — every field of that table, named at once */
+.bkfl{ display:none; border-top:1px solid var(--line); }
+.blk.open .bkfl{ display:block; }
+.blk.open{ border-color:color-mix(in srgb, var(--ec) 55%, var(--line)); }
+.bkfl .fld{ padding-left:9px; }
+.bkfl .fld .sq{ margin-right:7px; cursor:help; }
+#bench[class*="box-dock"] .bkbody{ padding:5px 8px; gap:3px; }
+#bench[class*="box-dock"] .bkhd .bkm{ display:none; }
