@@ -288,18 +288,38 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
 { const subs = await p.$$eval('#framecfg .cfsub', els => els.map(e => e.firstChild.textContent.trim()));
   ok(subs.join(',') === 'the bench,head bar,part buttons', 'the frame block names the three things it frames', subs.join(','));
   const labels = await p.$$eval('#framecfg .cfl', els => els.map(e => e.textContent));
-  ok(labels.join(',') === 'outline,pattern,height,outline,pattern,divider,pattern,gap after,height,outline,pattern,divider,pattern,gap after',
-     'fourteen dials: a height, an outline, a divider and a gap for each row', labels.join(','));
-  ok(await p.$$eval('#framecfg .sld', els => els.length === 9), 'every RANGE is a dragged bar, not a set of steps');
+  ok(labels.join(',') === 'outline,pattern,height,outline,pattern,divider,pattern,gap after,row,button,outline,pattern,divider,pattern,gap after',
+     'fifteen dials: a box height for each row, the button height, an outline, a divider and a gap', labels.join(','));
+  ok(await p.$$eval('#framecfg .sld', els => els.length === 10), 'every RANGE is a dragged bar, not a set of steps');
   ok(await p.$$eval('#framecfg .ibwrap .ib', els => els.length === 5 * 4), 'and every line pattern is a button drawing that pattern');
   ok(await p.$$eval('#framecfg .ibwrap .ib svg path', els => els.length >= 5), 'the pattern buttons draw real lines, not words');
   const boot = await p.evaluate(() => window.COPYTXT.frame());
-  // ROW HEIGHT
-  await p.evaluate(() => { window.FRAME.headH = 84; window.FRAME.tabsH = 72; window.applyFrame(); }); await p.waitForTimeout(120);
-  ok(await p.$eval('#headstrip', e => Math.round(e.getBoundingClientRect().height) >= 84, ), 'the head bar takes the height the bar sets',
-     String(await p.$eval('#headstrip', e => Math.round(e.getBoundingClientRect().height))));
-  ok(await p.$eval('#tabs .tab', e => Math.round(e.getBoundingClientRect().height) === 72), 'and every part button takes its own',
-     String(await p.$eval('#tabs .tab', e => Math.round(e.getBoundingClientRect().height))));
+  // ROW HEIGHT — the box, both ways. Dragging it LEFT must genuinely shrink the row: the defect the
+  // operator caught was a fixed padding that already exceeded the minimum the bar was setting.
+  await p.evaluate(() => { window.FRAME.headH = 84; window.FRAME.tabsRow = 92; window.FRAME.tabsH = 72; window.applyFrame(); }); await p.waitForTimeout(140);
+  const tall = await p.evaluate(() => ({ h: Math.round(document.getElementById('headstrip').getBoundingClientRect().height),
+    r: Math.round(document.getElementById('tabs').getBoundingClientRect().height),
+    b: Math.round(document.querySelector('#tabs .tab').getBoundingClientRect().height) }));
+  ok(tall.h === 84, 'the head bar takes the height the bar sets', JSON.stringify(tall));
+  ok(tall.r === 92 && tall.b === 72, 'the button ROW and the BUTTON are two heights, each its own', JSON.stringify(tall));
+  await p.evaluate(() => { window.FRAME.headH = 28; window.FRAME.tabsRow = 46; window.FRAME.tabsH = 46; window.applyFrame(); }); await p.waitForTimeout(140);
+  const short = await p.evaluate(() => ({ h: Math.round(document.getElementById('headstrip').getBoundingClientRect().height),
+    r: Math.round(document.getElementById('tabs').getBoundingClientRect().height) }));
+  ok(short.h < tall.h && short.r < tall.r, 'dragging a height LEFT genuinely shrinks the row — no padding floor under it',
+     JSON.stringify({ tall, short }));
+  // the INSET is what sits between a button and the row's edge — at row = button it is zero, and the
+  // divider then sits directly on the buttons (the row box carries the line's 1px under border-box)
+  { const inset = await p.evaluate(() => { const r = document.getElementById('tabs').getBoundingClientRect(),
+        b = document.querySelector('#tabs .tab').getBoundingClientRect(); return Math.round(b.top - r.top); });
+    ok(inset === 0, 'at row = button the inset is gone: no space left before the divider', String(inset)); }
+  // the space BEFORE a divider is the row box, and nothing else: with the rows at their content height
+  // and every line and gap off, the two rows meet with zero between them
+  await p.evaluate(() => { Object.assign(window.FRAME, { headDivS: 'none', headGap: 0, headH: 28, tabsRow: 46 }); window.applyFrame(); }); await p.waitForTimeout(140);
+  ok(await p.evaluate(() => Math.round(document.getElementById('tabs').getBoundingClientRect().top
+      - document.getElementById('headstrip').getBoundingClientRect().bottom)) === 0,
+     'with the divider hidden the rows touch — no distance survives it',
+     String(await p.evaluate(() => Math.round(document.getElementById('tabs').getBoundingClientRect().top - document.getElementById('headstrip').getBoundingClientRect().bottom))));
+  await p.evaluate(() => { Object.assign(window.FRAME, { headDivS: 'solid', headH: 84, tabsRow: 92, tabsH: 72 }); window.applyFrame(); }); await p.waitForTimeout(120);
   // THE DIVIDERS — pattern and absence
   await p.evaluate(() => { window.FRAME.headDivS = 'dashed'; window.applyFrame(); }); await p.waitForTimeout(90);
   ok(await p.$eval('#headstrip', e => getComputedStyle(e).borderBottomStyle === 'dashed'), 'the divider under the head bar takes its own pattern');
@@ -333,7 +353,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   // back to the boot frame, and prove the page opened there
   await p.evaluate(() => { Object.assign(window.FRAME, { benchW: 1, benchS: 'solid',
     headH: 42, headBw: 0, headBs: 'solid', headDivW: 1, headDivS: 'solid', headGap: 0,
-    tabsH: 46, tabsBw: 0, tabsBs: 'solid', tabsDivW: 1, tabsDivS: 'solid', tabsGap: 0 });
+    tabsRow: 60, tabsH: 46, tabsBw: 0, tabsBs: 'solid', tabsDivW: 1, tabsDivS: 'solid', tabsGap: 0 });
     window.applyFrame(); window.drawFrameCfg(); }); await p.waitForTimeout(120);
   ok(await p.evaluate(() => window.COPYTXT.frame()) === boot, 'the bench returns to exactly the frame it booted with', boot); }
 // the rail: three tabs, one section at a time, and every control an icon with a hover card
@@ -433,8 +453,10 @@ for (const z of ['11', '24', '13']) { await p.click(`.elned .ib[data-size="${z}"
   const w = await p.$eval('#headstrip .hel[data-el="status"] svg', e => e.getAttribute('width'));
   ok(w === z, `icon size ${z} reaches the drawn glyph`, String(w)); }
 
-// a big CIRCLE must not move the bar's margins: it bleeds over the row instead of growing it
-{ const before = await p.$eval('#headstrip', e => e.getBoundingClientRect().height);
+// a big CIRCLE must not move the bar's margins: it bleeds over the row instead of growing it.
+// The row's height FLOOR goes to its minimum first — a floor taller than the disc would hide both outcomes.
+{ await p.evaluate(() => { window.FRAME.headH = 24; window.applyFrame(); }); await p.waitForTimeout(120);
+  const before = await p.$eval('#headstrip', e => e.getBoundingClientRect().height);
   await p.evaluate(() => { const st = window.elStyle('kind'); st.shape = 'circle'; st.size = 24; st.fit = 'bleed'; window.drawHead(); });
   await p.waitForTimeout(160);
   const after = await p.$eval('#headstrip', e => e.getBoundingClientRect().height);
@@ -445,6 +467,7 @@ for (const z of ['11', '24', '13']) { await p.click(`.elned .ib[data-size="${z}"
   await p.evaluate(() => { const st = window.elStyle('kind'); st.fit = 'grow'; window.drawHead(); }); await p.waitForTimeout(120);
   const grown = await p.$eval('#headstrip', e => e.getBoundingClientRect().height);
   ok(grown > after + 4, 'fit GROW opts back into pushing the bar taller', after + ' → ' + grown);
+  await p.evaluate(() => { window.FRAME.headH = 42; window.applyFrame(); }); await p.waitForTimeout(100);
   await p.evaluate(() => { const st = window.elStyle('kind'); st.shape = 'none'; st.size = 20; st.fit = 'bleed'; window.drawHead(); }); await p.waitForTimeout(120); }
 // the editor can hide the element too
 await p.click('.elned .ib[data-shown="off"]'); await p.waitForTimeout(100);

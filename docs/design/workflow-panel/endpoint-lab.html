@@ -530,10 +530,10 @@
   var FRAME = window.FRAME = {
     benchW: 1, benchS: "solid",
     headH: 42, headBw: 0, headBs: "solid", headDivW: 1, headDivS: "solid", headGap: 0,
-    tabsH: 46, tabsBw: 0, tabsBs: "solid", tabsDivW: 1, tabsDivS: "solid", tabsGap: 0 };
+    tabsRow: 60, tabsH: 46, tabsBw: 0, tabsBs: "solid", tabsDivW: 1, tabsDivS: "solid", tabsGap: 0 };
   var FRVAR = { benchW: "--bench-bw", benchS: "--bench-bs",
     headH: "--head-h", headBw: "--head-bw", headBs: "--head-bs", headDivW: "--head-divw", headDivS: "--head-divs", headGap: "--head-gap",
-    tabsH: "--tabs-h", tabsBw: "--tabs-bw", tabsBs: "--tabs-bs", tabsDivW: "--tabs-divw", tabsDivS: "--tabs-divs", tabsGap: "--tabs-gap" };
+    tabsRow: "--tabs-row", tabsH: "--tabs-h", tabsBw: "--tabs-bw", tabsBs: "--tabs-bs", tabsDivW: "--tabs-divw", tabsDivS: "--tabs-divs", tabsGap: "--tabs-gap" };
   function applyFrame(){ var b = document.getElementById("bench");
     Object.keys(FRVAR).forEach(function(k){ var v = FRAME[k];
       b.style.setProperty(FRVAR[k], typeof v === "number" ? v + "px" : v); }); }
@@ -579,9 +579,10 @@
 
     sub("head bar", "the row of chips");
     sld({ label: "height", key: "headH", min: 24, max: 96, icon: "bars",
-      rows: [["sets", "the row's minimum height — the chips stay centred inside it"],
-             ["chips", "a chip's own height comes from its glyph size, set in the head-bar block"]],
-      plain: "how tall this row stands" });
+      rows: [["sets", "the row's whole box — the chips centre inside it and the divider sits on its edge"],
+             ["so", "dragging it left closes the space between the chips and the line below them"],
+             ["floor", "a chip is about 26px tall; below that the row stops shrinking"]],
+      plain: "how tall this row stands, edge to edge" });
     sld({ label: "outline", key: "headBw", min: 0, max: 4, zero: "none", icon: "shape",
       rows: [["at 0", "the row has no box of its own — only the divider below it separates it"]],
       plain: "a line drawn around this row alone" });
@@ -596,10 +597,15 @@
       plain: "how far the next row sits" });
 
     sub("part buttons", "the row of six");
-    sld({ label: "height", key: "tabsH", min: 24, max: 96, icon: "bars",
-      rows: [["sets", "each button's height"],
+    sld({ label: "row", key: "tabsRow", min: 24, max: 120, icon: "bars",
+      rows: [["sets", "the row's whole box — the buttons centre inside it"],
+             ["the inset", "half the difference between this and the button height is the space above and below them"],
+             ["at equal", "set it to the button height and the buttons touch both edges — no space before the divider"]],
+      plain: "how tall the row of buttons stands, edge to edge" });
+    sld({ label: "button", key: "tabsH", min: 24, max: 96, icon: "bars",
+      rows: [["sets", "each button's own height"],
              ["the glyph", "its size is its own dial; a ghost glyph is clipped by this height"]],
-      plain: "how tall the buttons stand" });
+      plain: "how tall each button stands" });
     sld({ label: "outline", key: "tabsBw", min: 0, max: 4, zero: "none", icon: "shape",
       rows: [["at 0", "the row has no box of its own — each button still carries its own border"]],
       plain: "a line drawn around the whole button row" });
@@ -750,7 +756,7 @@
     frame: function(){ function ln(w, st){ return w === 0 || st === "none" ? "none" : w + "px " + st; }
       return "frame · bench outline " + ln(FRAME.benchW, FRAME.benchS)
         + " · head bar " + FRAME.headH + "px, outline " + ln(FRAME.headBw, FRAME.headBs) + ", divider " + ln(FRAME.headDivW, FRAME.headDivS) + ", gap " + FRAME.headGap + "px"
-        + " · part buttons " + FRAME.tabsH + "px, outline " + ln(FRAME.tabsBw, FRAME.tabsBs) + ", divider " + ln(FRAME.tabsDivW, FRAME.tabsDivS) + ", gap " + FRAME.tabsGap + "px"; } };
+        + " · part buttons row " + FRAME.tabsRow + "px, button " + FRAME.tabsH + "px, outline " + ln(FRAME.tabsBw, FRAME.tabsBs) + ", divider " + ln(FRAME.tabsDivW, FRAME.tabsDivS) + ", gap " + FRAME.tabsGap + "px"; } };
   function copyBtn(kind, what){ var b = el("button", { class: "cpb" }); b.innerHTML = labIco("copy", 13);
     hoverBind(b, function(){ return '<div class="cphd">' + labIco("copy", 15, "var(--accent)") + '<b>copy</b></div><div class="cpsub">' + what + '</div><div class="cpbody">puts this section\'s selections on the clipboard as one line:<br><code>' + window.COPYTXT[kind]().replace(/</g, "&lt;") + '</code></div>'; });
     b.onclick = function(ev){ ev.stopPropagation(); copyText(window.COPYTXT[kind](), b); }; return b; }

@@ -572,11 +572,15 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
    the gap that follows. Every line reaches NONE, which is how it becomes transparent. These rules
    come LAST so they beat the base #bench / #headstrip / #tabs declarations above. ══ */
 #bench{ border:var(--bench-bw, 1px) var(--bench-bs, solid) var(--line); }
-#headstrip{ min-height:var(--head-h, 42px); box-sizing:border-box;
+/* A ROW'S HEIGHT IS ITS WHOLE BOX. The fixed vertical padding is gone from both rows — it was the
+   distance that survived hiding a divider, and it was what made the height bar look dead (the bar set
+   a MINIMUM the padding already exceeded). The content centres; the divider sits on the box's edge. */
+#headstrip{ min-height:var(--head-h, 42px); padding-block:0; box-sizing:border-box;
   border:var(--head-bw, 0px) var(--head-bs, solid) var(--line);
   border-bottom:var(--head-divw, 1px) var(--head-divs, solid) var(--line);
   margin-bottom:var(--head-gap, 0px); }
-#tabs{ box-sizing:border-box;
+#tabs, #bench[class*="box-dock"] #tabs{ min-height:var(--tabs-row, 60px); padding-block:0; box-sizing:border-box;
+  align-items:center;
   border:var(--tabs-bw, 0px) var(--tabs-bs, solid) var(--line);
   border-bottom:var(--tabs-divw, 1px) var(--tabs-divs, solid) var(--line);
   margin-bottom:var(--tabs-gap, 0px); }
