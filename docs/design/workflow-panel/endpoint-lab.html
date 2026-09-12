@@ -630,17 +630,18 @@
      a section that the open distribution does not draw says so instead of pretending to work. ══ */
   var DATACFG = window.DATACFG = {
     show: { note: 1, counts: 1, shapes: 1, rw: 1, commit: 1, ev: 1, mdl: 1, ents: 1, legend: 1 },
-    width: "flex", tiles: "stack", order: "size" };
+    width: "flex", tiles: "stack", order: "size", fieldsOf: "all" };
   var DSEC = [
-    { key: "note",   word: "the note",    icon: "doc",    on: ["grounds", "flow", "ledger"],
+    { key: "note",   word: "the note",    icon: "doc",    on: ["grounds", "flow", "ledger", "fields"],
       what: "the sentence under the title", lost: "how to read the picture, said once in words" },
-    { key: "counts", word: "counts",      icon: "info",   on: ["grounds", "flow", "ledger"],
+    { key: "counts", word: "counts",      icon: "info",   on: ["grounds", "flow", "ledger", "fields"],
       what: "the number beside every name", lost: "how many — the first question the card answers" },
     { key: "shapes", word: "the shapes",  icon: "table",  on: ["grounds", "flow", "ledger"],
-      what: "the line stack inside each table — one line per column", lost: "how deep each table is; the names stay" },
-    { key: "rw",     word: "read/write",  icon: "model",  on: ["grounds", "flow", "ledger"],
+      what: "the line stack inside each table — one line per column", lost: "how deep each table is; the names stay",
+      note: "the Fields distribution draws the names instead, so this dial has nothing to hide there" },
+    { key: "rw",     word: "read/write",  icon: "model",  on: ["grounds", "flow", "ledger", "fields"],
       what: "the R · W · RW chip on every table", lost: "which way the data moves; the colour still carries it" },
-    { key: "commit", word: "the commit",  icon: "key",    on: ["grounds", "flow"],
+    { key: "commit", word: "the commit",  icon: "key",    on: ["grounds", "flow", "fields"],
       what: "the DB COMMIT pulse under the tables", lost: "that every write lands in ONE transaction" },
     { key: "ev",     word: "evidence",    icon: "role",   on: ["grounds"],
       what: "the membership row — file · users · data", lost: "that the three witnesses disagree about this door's home" },
@@ -648,7 +649,7 @@
       what: "the entity-model row — claim · seeded · derived · proposed", lost: "which model would re-home this door" },
     { key: "ents",   word: "entities",    icon: "entity", on: ["flow"],
       what: "the entities line under the field", lost: "the roster of grounds the dots stand for" },
-    { key: "legend", word: "the legend",  icon: "layers", on: ["grounds", "flow", "ledger"],
+    { key: "legend", word: "the legend",  icon: "layers", on: ["grounds", "flow", "ledger", "fields"],
       what: "the strip of swatches at the foot", lost: "what a colour and a line mean, drawn as they are drawn" } ];
   function dataVar(){ return (window.PANELVAR && window.PANELVAR("data")) || "grounds"; }
   function applyData(){ var pn = document.getElementById("panel");
@@ -659,13 +660,15 @@
   function drawDataCfg(){ var box = document.getElementById("datacfg"); box.innerHTML = "";
     var live = dataVar();
     function sub(t, why){ var d = el("div", { class: "cfsub" }, t); if (why) d.append(el("i", {}, why)); box.append(d); }
-    function pick(label, key, opts, iconFor){
+    function pick(label, key, opts, iconFor, onlyIn){
+      var na = onlyIn && onlyIn !== live;
       var w = el("div", { class: "ibwrap" });
-      opts.forEach(function(o){ var b = el("button", { class: "ib" + (DATACFG[key] === o[0] ? " on" : "") });
+      opts.forEach(function(o){ var b = el("button", { class: "ib" + (DATACFG[key] === o[0] ? " on" : "") + (na ? " na" : "") });
         b.dataset[key] = o[0]; b.innerHTML = iconFor(o);
-        hoverBind(b, hcard({ title: o[2] || o[0], value: label, icon: "shape", rows: o[3] || null, plain: o[1] }));
+        hoverBind(b, hcard({ title: o[2] || o[0], value: label, icon: "shape",
+          rows: na ? [["drawn in", onlyIn + " — not in " + live + ", so this does nothing right now"]] : null, plain: o[1] }));
         b.onclick = function(ev){ ev.stopPropagation(); DATACFG[key] = o[0];
-          applyData(); if (key === "order") window.showTab("data"); drawDataCfg(); }; w.append(b); });
+          applyData(); if (key === "order" || key === "fieldsOf") window.showTab("data"); drawDataCfg(); }; w.append(b); });
       box.append(el("div", { class: "cfl" }, label), w); }
 
     sub("layout", "the same facts, distributed differently");
@@ -687,26 +690,37 @@
         hoverBind(b, hcard({ title: sec.word, value: shown ? "drawn" : "hidden", icon: sec.icon,
           rows: [["what it is", sec.what],
                  ["hiding it drops", sec.lost],
-                 ["drawn in", sec.on.join(" · ") + (here ? "" : " — not in " + live + ", so this does nothing right now")]],
+                 ["drawn in", sec.on.join(" · ") + (here ? "" : " — not in " + live + ", so this does nothing right now")],
+                 sec.note ? ["note", sec.note] : null],
           plain: "a row of the Data panel you can put away and bring back" }));
         b.onclick = function(ev){ ev.stopPropagation(); DATACFG.show[sec.key] = shown ? 0 : 1; applyData(); drawDataCfg(); };
         w.append(b); });
       box.append(el("div", { class: "cfl" }, "drawn"), w); }
+
+    sub("the fields", "only the Fields distribution reads this");
+    pick("channel", "fieldsOf", [
+      ["all", "every table this door touches, whichever way the data moves", "all of them"],
+      ["w", "only the tables the door WRITES — what this request changes", "written"],
+      ["r", "only the tables the door READS — what it needs to answer", "read"],
+      ["rw", "only the tables it does BOTH to — where a read and a write meet", "both"]],
+      function(o){ return o[0] === "all" ? labIco("wwide", 15)
+        : '<i class="chsw" style="background:' + (o[0] === "w" ? S.RW.w : o[0] === "r" ? S.RW.r : S.RW.rw) + '"></i>'; },
+      "fields");
 
     sub("the grounds", "only the Grounds distribution reads these");
     pick("order", "order", [
       ["size", "the ground holding the most tables leads", "by size"],
       ["home", "the door's own entity leads, whatever its size", "home first"],
       ["name", "alphabetical — the same order every time, whatever the feed says", "by name"]],
-      function(o){ return labIco(o[0] === "size" ? "wwide" : o[0] === "home" ? "posleft" : "normal", 15); });
+      function(o){ return labIco(o[0] === "size" ? "wwide" : o[0] === "home" ? "posleft" : "normal", 15); }, "grounds");
     pick("width", "width", [
       ["flex", "a ground as wide as the tables it holds — the picture shows the weight", "proportional"],
       ["equal", "every ground the same width, whatever it holds — the picture shows the roster", "equal"]],
-      function(o){ return labIco(o[0] === "flex" ? "laycfill" : "layleft", 15); });
+      function(o){ return labIco(o[0] === "flex" ? "laycfill" : "layleft", 15); }, "grounds");
     pick("tiles", "tiles", [
       ["stack", "one table under the next, each full width of its ground", "stacked"],
       ["grid", "tables side by side, wrapping — more of them on screen at once", "grid"]],
-      function(o){ return labIco(o[0] === "stack" ? "normal" : "wauto", 15); });
+      function(o){ return labIco(o[0] === "stack" ? "normal" : "wauto", 15); }, "grounds");
     box.append(el("div", { class: "cfread" }, "a hidden section is still in the page and one click brings it back. The no-loss checklist records what each part has DRAWN since the page opened and never un-ticks — so read it as what the design can show, not as what is on screen right now.")); }
   window.drawDataCfg = drawDataCfg;
 
@@ -844,7 +858,7 @@
       + " · button " + TABCFG.shape + " · row " + TABCFG.layout + " " + TABCFG.width; },
     data: function(){ var shown = DSEC.filter(function(x){ return DATACFG.show[x.key]; }).map(function(x){ return x.key; });
       var hidden = DSEC.filter(function(x){ return !DATACFG.show[x.key]; }).map(function(x){ return x.key; });
-      return "data · shown as " + dataVar() + " · grounds by " + DATACFG.order + ", width " + DATACFG.width + ", tiles " + DATACFG.tiles
+      return "data · shown as " + dataVar() + " · fields " + DATACFG.fieldsOf + " · grounds by " + DATACFG.order + ", width " + DATACFG.width + ", tiles " + DATACFG.tiles
         + " · drawn " + shown.join(" ") + (hidden.length ? " · hidden " + hidden.join(" ") : " · nothing hidden"); },
     frame: function(){ function ln(w, st){ return w === 0 || st === "none" ? "none" : w + "px " + st; }
       return "frame · bench outline " + ln(FRAME.benchW, FRAME.benchS)
@@ -870,13 +884,17 @@
   document.getElementById("blk-frame").querySelector(".bhl").append(copyBtn("frame", "the rows' heights, lines and spacing"));
   document.getElementById("blk-data").querySelector(".bhi").innerHTML = S.icon("table", 13, "var(--accent)");
   document.getElementById("blk-data").querySelector(".bhl").append(copyBtn("data", "which sections the Data panel draws, and how"));
-  ["blk-bench", "blk-head", "blk-tabs", "blk-frame", "blk-data", "blk-parts"].forEach(foldable);
+  /* THE RAIL OPENS ON ONE REGION (operator 2026-09-12): every block folds away except the one being
+     worked on. Moving to the next region is this one line. */
+  var OPENBLK = window.OPENBLK = "blk-data";
+  ["blk-bench", "blk-head", "blk-tabs", "blk-frame", "blk-data", "blk-parts"].forEach(function(id){
+    foldable(id); if (id !== OPENBLK) document.getElementById(id).classList.add("min"); });
   document.getElementById("blk-head").querySelector(".bhi").innerHTML = labIco("bars", 13, "var(--accent)");
   document.getElementById("blk-head").querySelector(".bhl").append(copyBtn("head", "the head bar's verbosity, piles and order"));
   document.getElementById("blk-parts").querySelector(".bhi").innerHTML = S.icon("layers", 13, "var(--accent)");
 
   /* ── the variant bar: one panel, several DISTRIBUTIONS — proposals to compare, not settings ── */
-  var VARICO = { grounds: "entity", flow: "drill", ledger: "table", levels: "layers", chain: "merge", status: "info", ladder: "up", band: "shield", gauntlet: "drill" };
+  var VARICO = { grounds: "entity", flow: "drill", ledger: "table", fields: "schema", levels: "layers", chain: "merge", status: "info", ladder: "up", band: "shield", gauntlet: "drill" };
   function drawVars(){ var PC = document.getElementById("partcfg"); PC.innerHTML = "";
     order.forEach(function(k){ var P = window.PANELS[k];
       var row = E("div", { class: "prow" + (cur === k ? " on" : "") });

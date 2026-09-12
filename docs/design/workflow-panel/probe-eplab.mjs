@@ -36,6 +36,18 @@ ok(errs.length === 0, 'no page errors', errs.slice(0, 3).join(' | '));
 const F = await p.evaluate(() => window.LABEP);
 const tabs = await p.$$eval('#tabs .tab', els => els.map(e => e.dataset.tab));
 ok(tabs.join(',') === 'data,schemas,functions,tests,widening,security', 'SIX tabs — data and schemas split again (operator 2026-09-12)', tabs.join(','));
+// ── THE RAIL OPENS ON ONE REGION (operator 2026-09-12) — every block but the one in play is folded at
+//    BOOT. Pinned here, before anything clicks, because the rest of the probe needs them open. ──
+{ const folded = await p.$$eval('.barblk.min', els => els.map(e => e.id));
+  const all = await p.$$eval('.barblk', els => els.map(e => e.id));
+  const open = all.filter(id => folded.indexOf(id) < 0);
+  ok(open.length === 1, 'exactly ONE control block is open at boot', open.join(',') || 'none');
+  ok(open[0] === await p.evaluate(() => window.OPENBLK), 'and it is the region being worked on', open[0]);
+  ok(await p.$eval('#blk-bench .blkbody', e => getComputedStyle(e).display === 'none'), 'a folded block really is away');
+  // open them all so the rest of the probe can reach every control
+  await p.evaluate(() => document.querySelectorAll('.barblk.min').forEach(b => b.classList.remove('min')));
+  await p.waitForTimeout(120); }
+
 // the head strip carries the station card's head
 const head = await p.$eval('#headstrip', e => e.innerText);
 for (const s of [F.identity.path, String(F.identity.status), F.identity.file + ':' + F.identity.flines]) ok(head.includes(s), 'head strip shows ' + s);
@@ -361,11 +373,11 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
 { await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(80);
   await p.evaluate(() => window.showVariant('data', 'grounds')); await p.waitForTimeout(200);
   const lay = await p.$$eval('#datacfg .ib[data-dlayout]', els => els.map(e => e.dataset.dlayout));
-  ok(lay.join(',') === 'grounds,flow,ledger', 'the data block carries the three distributions', lay.join(','));
+  ok(lay.join(',') === 'grounds,flow,ledger,fields', 'the data block carries all four distributions', lay.join(','));
   const secs = await p.$$eval('#datacfg .ib[data-sec]', els => els.map(e => e.dataset.sec));
   ok(secs.join(',') === 'note,counts,shapes,rw,commit,ev,mdl,ents,legend', 'nine sections, each its own toggle', secs.join(','));
-  ok(await p.$$eval('#datacfg .ib', els => els.every(e => !e.innerText.trim() && !!e.querySelector('svg'))),
-     'every data control is an ICON — its word lives on the hover card');
+  ok(await p.$$eval('#datacfg .ib', els => els.every(e => !e.innerText.trim() && (!!e.querySelector('svg') || !!e.querySelector('.chsw')))),
+     'every data control is DRAWN — an icon or the colour it filters by, never a word');
   // a section the OPEN distribution does not draw is marked, not silently inert
   ok(await p.$eval('#datacfg .ib[data-sec="ents"]', e => e.classList.contains('na')),
      'the entities row is marked NOT DRAWN while Grounds is open — it belongs to Flow');
@@ -406,7 +418,37 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   await p.click('#datacfg .ib[data-tiles="grid"]'); await p.waitForTimeout(160);
   ok(await p.$eval('#panel .tiles', e => getComputedStyle(e).display === 'grid'), 'GRID wraps the tables side by side');
   await p.click('#datacfg .ib[data-tiles="stack"]'); await p.waitForTimeout(160);
-  ok(await p.$eval('#panel .tiles', e => getComputedStyle(e).display !== 'grid'), 'and STACKED puts them back one under the next'); }
+  ok(await p.$eval('#panel .tiles', e => getComputedStyle(e).display !== 'grid'), 'and STACKED puts them back one under the next');
+  // ── FIELDS: the columns themselves, named — and the channel filter counted on the drawn picture ──
+  await p.click('#datacfg .ib[data-dlayout="fields"]'); await p.waitForTimeout(260);
+  const allF = await p.$$eval('#panel .fld:not(.more) .fn', els => els.map(e => e.textContent));
+  const feedCols = F.data.tables.reduce((n, t) => n + t.cols.length, 0);
+  ok(allF.length === feedCols, 'FIELDS draws every column the feed knows, by name', allF.length + ' vs ' + feedCols);
+  ok(allF.indexOf('policy_version') >= 0 && allF.indexOf('accepted_at') >= 0,
+     'and they are the real column names, not a stack of lines', allF.slice(0, 4).join(','));
+  ok(await p.$$eval('#panel .fld .ft', els => els.length > 0 && els.every(e => e.textContent.trim().length > 0)),
+     'every field carries its type beside it');
+  { const fk = await p.evaluate(() => { const f = document.querySelector('.fld.fk'), pl = document.querySelector('.fld:not(.fk):not(.uq)');
+      return { n: document.querySelectorAll('.fld.fk').length, mark: getComputedStyle(f).boxShadow,
+               fkCol: getComputedStyle(f.querySelector('.fn')).color, plainCol: getComputedStyle(pl.querySelector('.fn')).color }; });
+    ok(fk.n > 0 && fk.mark !== 'none', 'a foreign key carries a SHAPE mark, not only a tint', JSON.stringify(fk));
+    ok(fk.fkCol === fk.plainCol, 'and its name reads at full ink — a marked field is never dimmer than a plain one', JSON.stringify(fk)); }
+  ok(await p.$$eval('#panel .fld.uq .fn', els => els.length > 0 && els.every(e => /dashed/.test(getComputedStyle(e).borderBottom))),
+     'a unique column is latched with a dashed underline');
+  ok(await p.$eval('#panel .shape', e => !!e).catch(() => false) === false, 'the line stacks are gone here — the names replaced them');
+  for (const [ch, want] of [['w', 'w'], ['r', 'r'], ['rw', 'rw']]) {
+    await p.click(`#datacfg .ib[data-fields-of="${ch}"]`); await p.waitForTimeout(240);
+    const kept = await p.$$eval('#panel .fcard', els => els.map(e => e.className.match(/rw-(\w+)/)[1]));
+    const expect = F.data.tables.filter(t => want === 'w' ? t.rw !== 'r' : want === 'r' ? t.rw !== 'w' : t.rw === 'rw').length;
+    ok(kept.length === expect && kept.every(k => want === 'rw' ? k === 'rw' : want === 'w' ? k !== 'r' : k !== 'w'),
+       `the ${ch} channel keeps only the tables the door uses that way`, kept.join(',') + ' vs ' + expect); }
+  await p.click('#datacfg .ib[data-fields-of="all"]'); await p.waitForTimeout(240);
+  ok(await p.$$eval('#panel .fcard', els => els.length) === F.data.tables.length, 'and ALL brings every table back');
+  ok(/fields all/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line names the channel', await p.evaluate(() => window.COPYTXT.data()));
+  // the shapes dial has nothing to hide here, and says so instead of pretending
+  ok(await p.$eval('#datacfg .ib[data-sec="shapes"]', e => e.classList.contains('na')),
+     'the shapes toggle is marked NOT DRAWN in Fields — the names took their place');
+  await p.click('#datacfg .ib[data-dlayout="grounds"]'); await p.waitForTimeout(220); }
 
 // the rail: three tabs, one section at a time, and every control an icon with a hover card
 // AT BOOT — before any click — exactly one rail section is visible, and it is the controls
@@ -439,7 +481,7 @@ ok(blocks.join(',') === 'bench,head bar,part buttons,frame,data panel,part bars'
 const prows = await p.$$eval('#partcfg .prow', els => els.length);
 ok(prows === 6, 'the BARS tab separates the controls per part — one row each', String(prows));
 const varBtns = await p.$$eval('#partcfg .ib', els => els.length);
-ok(varBtns === 14, 'every distribution is an icon button in its part row', String(varBtns));
+ok(varBtns === 15, 'every distribution is an icon button in its part row', String(varBtns));
 const iconOnlyCtl = await p.$$eval('#partcfg .ib, #barcfg .ib, #boxes .ib, #dens .ib, #motionwrap .ib', els => els.every(e => !e.innerText.trim() && !!e.querySelector('svg')));
 ok(iconOnlyCtl, 'every control in the rail is an ICON — its word lives on the hover card');
 const ctl = (await p.$$('#partcfg .ib'))[0]; await ctl.hover(); await p.waitForTimeout(120);

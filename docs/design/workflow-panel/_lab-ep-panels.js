@@ -604,6 +604,65 @@
     COV.mark("ACCESSES", "data"); COV.mark("CONNECTIONS", "data");   /* no evidence / model row in this distribution */
   }
 
+  /* ── DATA · D "fields" — the columns THEMSELVES, named (operator 2026-09-12: "instead of showing the
+     shapes as bars, we can actually see them"). This distribution deliberately breaks law E for one
+     view: everywhere else a shape is a stack of lines and the exact field lives only on a hover card.
+     Here the names ARE the picture, filtered by the channel the door uses the table on.
+     HONEST FLOOR: the feed records the channel per TABLE, never per COLUMN. A field wears its table's
+     channel and the note says so — nothing here claims to know which column was written. ── */
+  var FPICK = { all: "every table this door touches", w: "only the tables it WRITES",
+                r: "only the tables it READS", rw: "only the tables it does BOTH to" };
+  function fieldsKeep(D, pick){ return D.tables.filter(function(t){
+    return pick === "w" ? t.rw !== "r" : pick === "r" ? t.rw !== "w" : pick === "rw" ? t.rw === "rw" : true; }); }
+  window.FIELDSKEEP = fieldsKeep;
+  function renderDataFields(box, F, S){
+    var D = F.data, DC = window.DATACFG || {}, pick = DC.fieldsOf || "all";
+    var keep = fieldsKeep(D, pick), cols = function(ts){ return ts.reduce(function(n, t){ return n + t.cols.length; }, 0); };
+    head(box, "schema", "Data", cols(keep) + " of " + cols(D.tables) + " fields",
+      "the columns themselves, named — " + FPICK[pick] + ". The channel is the TABLE's: the feed knows which tables this door reads and writes, never which column.");
+    var body = E("div", { class: "fbody" });
+    var grid = E("div", { class: "fgrid" });
+    keep.slice().sort(function(a, b){ return (a.rw === "r") - (b.rw === "r") || b.cols.length - a.cols.length; }).forEach(function(t){
+      var fkSet = {}; (t.fks || []).forEach(function(f){ fkSet[Array.isArray(f) ? f[0] : f] = (Array.isArray(f) && f[1]) ? f[1] : true; });
+      var uqSet = {}; (t.uqs || []).forEach(function(u){ (Array.isArray(u) ? u : [u]).forEach(function(c){ uqSet[c] = 1; }); });
+      var fc = E("div", { class: "fcard rw-" + t.rw, style: "--ec:" + (t.entity_color || "#888") });
+      var fh = E("div", { class: "fhd" }, '<i class="pdot" style="background:' + (t.entity_color || "#888") + '"></i>',
+        rwChip(t.rw), E("b", null, esc(t.table)), E("span", { class: "tc" }, String(t.cols.length)));
+      bind(fh, card({ title: t.table, icon: "model", color: S.KINDCOL.model, sub: "model " + t.model + " · entity " + t.entity,
+        rows: [["here", t.rw === "rw" ? "reads + writes" : t.rw === "w" ? "writes" : "reads", RWC[t.rw]],
+               ["columns", String(t.cols.length)], ["file", String(t.file || "—")]],
+        body: "the channel is this TABLE's — the feed does not record which of its columns the door wrote.",
+        station: t.id }));
+      fc.append(fh);
+      var list = E("div", { class: "flds" });
+      t.cols.forEach(function(c){ var isFk = fkSet[c[0]], isUq = uqSet[c[0]];
+        var f = E("div", { class: "fld" + (isFk ? " fk" : "") + (isUq ? " uq" : "") },
+          E("span", { class: "fn" }, esc(c[0])), E("span", { class: "ft" }, esc(c[1] || "—")));
+        bind(f, card({ title: c[0], sub: String(c[1] || "—"), icon: isFk ? "key" : "table", color: t.entity_color,
+          rows: [["in", t.table], ["the door", t.rw === "rw" ? "reads and writes this table" : t.rw === "w" ? "writes this table" : "reads this table", RWC[t.rw]],
+                 isFk ? ["foreign key", "→ " + (isFk === true ? "another table" : isFk)] : null,
+                 isUq ? ["unique", "the DB refuses a second row with this value"] : null],
+          body: "per-COLUMN direction is not in the feed — this field carries its table's channel, said out loud rather than guessed." }));
+        list.append(f); });
+      if (t.cols_more) list.append(E("div", { class: "fld more" }, E("span", { class: "fn" }, "+" + t.cols_more + " more"), E("span", { class: "ft" }, "not in the feed")));
+      fc.append(list); grid.append(fc); });
+    body.append(grid); box.append(body);
+    var cm = E("div", { class: "commit" + (D.commits ? " on" : " off") }, ico("key", 13, S.OPC.write), E("b", null, "DB COMMIT"),
+      E("span", { class: "cnote" }, "one transaction · " + D.writes.length + " writes become permanent"), E("i", { class: "pulse" }));
+    bind(cm, card({ title: "the DB transaction commits", icon: "key", color: S.OPC.write, sub: "access.commits — never a git commit",
+      rows: [["writes", String(D.writes.length)], ["idempotency", F.security.idempotent ? "guarded by " + F.security.idempotency_table : "none"]] }));
+    box.append(cm);
+    var foot = E("div", { class: "pfoot" });
+    foot.append(E("div", { class: "kv flt" }, ico("schema", 13), E("span", { class: "k" }, "showing"),
+      E("span", { class: "v" }, FPICK[pick] + " — " + keep.length + " of " + D.tables.length + " tables, " + cols(keep) + " fields")));
+    foot.append(legend([
+      { t: "reads", swatch: "background:" + RWC.r }, { t: "writes", swatch: "background:" + RWC.w }, { t: "both", swatch: "background:" + RWC.rw },
+      { t: "fk", swatch: "background:" + S.KINDCOL.external + ";height:2px;width:16px", tip: card({ title: "foreign key", sub: "a column that points out", body: "the name is drawn in the external colour — the table leans on another table." }) },
+      { t: "unique", swatch: "background:transparent;border:1px dashed " + S.OPC.gate + ";height:5px;width:16px", tip: card({ title: "unique", sub: "a latch on the column", body: "the DB refuses a second row with this value." }) }]));
+    box.append(foot);
+    COV.mark("ACCESSES", "data"); COV.mark("PAYLOAD", "data"); COV.mark("CONNECTIONS", "data");
+  }
+
   /* ── FUNCTIONS · B "chain" — the walk as ONE horizontal spine; the level you pick opens below ── */
   function renderFnChain(box, F, S){
     var FN = F.functions, h = FN.handler, RC = S.BADGE_COL.role || {};
@@ -802,7 +861,8 @@
       count: function(F){ return F.data.tables.length; },
       variants: [ { key: "grounds", label: "Grounds", hint: "tables tiled on entity-coloured grounds; the shape stacks stand vertically. Reads by entity first.", render: renderData },
                   { key: "flow", label: "Flow", hint: "ONE left-to-right axis — request → the whole table field (writes first, entity by dot) → response. Uses the width.", render: renderDataFlow },
-                  { key: "ledger", label: "Ledger", hint: "one row per table with every column the feed knows (entity · rw · shape · cols · fk · uq · model). The densest honest form.", render: renderDataLedger } ] },
+                  { key: "ledger", label: "Ledger", hint: "one row per table with every column the feed knows (entity · rw · shape · cols · fk · uq · model). The densest honest form.", render: renderDataLedger },
+                  { key: "fields", label: "Fields", hint: "the columns THEMSELVES, named and typed, filtered by channel — written, read, or both. The one distribution where the fields ARE the picture instead of a stack of lines.", render: renderDataFields } ] },
     schemas: { icon: "schema", word: "Schemas", col: S.KINDCOL.schema, hint: "the shapes that cross the door — the request's 7 fields with 6 nested shapes in, the response's 6 with 5 nested out; drawn as lines, the exact fields on hover",
       count: function(F){ return (F.data.schemas.request.cols || []).length + (F.data.schemas.response.cols || []).length; },
       variants: [ { key: "shapes", label: "Shapes", hint: "the two shapes side by side as stacks, each nested shape given its own stack below its parent.", render: renderSchemas },
