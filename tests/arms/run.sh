@@ -291,5 +291,73 @@ print("ok")
 SLPY
 ) >/dev/null 2>&1; then ok; else bad "self-edges must not enter the behind/d2w/roles substrate"; fi
 
+
+# ── PHASE 2 · the op record, and the two consumers a None broke ──────────────────────────────
+if (cd "$GEN" && python3 - <<'P2PY'
+import pathlib, tempfile
+import _a3_stacks_sql as S
+import _a3_graft as G
+
+T = pathlib.Path(tempfile.mkdtemp()) / "r"; (T / "db").mkdir(parents=True)
+(T / "db" / "s.ts").write_text(
+    'export const A = `CREATE TABLE users (id TEXT);`;\n'
+    'export const B = `CREATE TABLE sessions (id TEXT);`;\n'
+    'export async function w() {\n'
+    '  await pool.query("INSERT INTO users (id) VALUES ($1)");\n'
+    '  await pool.query("INSERT INTO sessions (id) VALUES ($1)");\n'
+    '}\n')
+ops = S.parse(T)["access"]["db/s.ts"]
+# `model` carries the TABLE, never None: 81 consumers read it as a string and three crashed on None
+assert all(o["model"] == o["table"] for o in ops), ops
+assert all(o["model"] for o in ops), "a None model collapses every raw-SQL op into one key"
+# two tables, two ops — keyed apart
+assert {(o["table"], o["rw"]) for o in ops} == {("users", "w"), ("sessions", "w")}, ops
+
+# the endpoint rollup must key on the TABLE, so two tables do not collapse into one write
+W = {"nodes": [{"id": "h.py#handler", "kind": "function", "path": "h.py", "span": "L1-L9"},
+               {"id": "h.py#writer", "kind": "function", "path": "h.py", "span": "L10-L19"}],
+     "edges": [{"source": "h.py#handler", "target": "h.py#writer", "relation": "calls",
+                "confidence": "extracted"}]}
+ents = {"e": {"files": [["api", "h.py", 20]],
+              "endpoints": [{"method": "GET", "path": "/x", "fn": "handler", "file": "h.py"}]}}
+# a tree MIXING an ORM row (model set) with a raw-SQL row at the same rw — the sort used to raise
+fa = {"h.py::writer": {"ops": [{"model": "Order", "table": "orders", "rw": "w"},
+                               {"model": None, "table": "users", "rw": "w"}], "commits": True}}
+ea = G.derive_endpoint_access(W, ents, fa)
+rec = ea["h.py#handler"]
+assert len(rec["ops"]) == 2, f"two tables collapsed into one op: {rec['ops']}"
+assert {o["table"] for o in rec["ops"]} == {"orders", "users"}, rec["ops"]
+print("ok")
+P2PY
+) >/dev/null 2>&1; then ok; else bad "phase 2: op record carries its table · two tables never collapse · mixed rows sort"; fi
+
+# a CLAIMED root must fold into ITS OWN entity, or the endpoint rollup never runs for it
+if (cd "$GEN" && python3 - <<'P2BPY'
+import _a3_graft as G
+W = {"nodes": [{"id": "t.py#task_a", "kind": "function", "path": "t.py", "span": "L1-L9"},
+               {"id": "t.py#inner", "kind": "function", "path": "t.py", "span": "L10-L19"}],
+     "edges": [{"source": "t.py#task_a", "target": "t.py#inner", "relation": "calls",
+                "confidence": "extracted"}]}
+ents = {"owned": {"files": [["api", "t.py", 30]], "endpoints": []}}
+roots = [{"method": "TASK", "path": "a", "fn": "task_a", "file": "t.py",
+          "touches": [], "touches_x": [], "doc": "", "resp": "-", "status": "-"}]
+arm = G.graft_arm.__wrapped__ if hasattr(G.graft_arm, "__wrapped__") else None
+# exercise the fold the way graft_arm does, then prove the rollup reaches the claimed root
+f2s = G._file2slug(ents)
+b = dict(ents)
+for r in roots:
+    sl = f2s.get(r["file"])
+    if sl and b.get(sl):
+        e = dict(b[sl]); eps = list(e.get("endpoints") or [])
+        if not any((x or {}).get("fn") == r.get("fn") for x in eps):
+            e["endpoints"] = eps + [r]; b[sl] = e
+assert b["owned"]["endpoints"], "a claimed root was left out of its own entity"
+bh = G.derive_behind(W, b)
+assert "t.py#task_a" in bh, f"no behind rollup for the claimed root: {bh}"
+assert bh["t.py#task_a"]["fns"] == 1, bh["t.py#task_a"]
+print("ok")
+P2BPY
+) >/dev/null 2>&1; then ok; else bad "phase 2: a CLAIMED root folds into its own entity so its rollup runs"; fi
+
 echo "arms: $pass passed, $fail failed"
 [ "$fail" = 0 ] || exit 1

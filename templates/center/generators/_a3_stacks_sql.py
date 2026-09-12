@@ -19,7 +19,10 @@ Contract (frozen, matching the FastAPI arm's records so every consumer is untouc
             ran html.escape over it, and each crash took the whole regen down to render one link.
             A nullable field that 81 readers assume is a string is not a contract, it is a fuse.
             The table name is also exactly what every surface would have labelled it.
-  R4 access {model, table, rw}  — `model` is None for the same reason; `table` carries the name.
+  R4 access {model, table, rw}  — `model` CARRIES THE TABLE NAME, for the same reason `cls` does.
+            A None there collapsed every raw-SQL op into one key (_a3_graft:433 keys on
+            (model, rw)), crashed the sort at :439 on any tree mixing ORM and raw-SQL rows, and
+            drew `model:null` in the station (:2173). One None, three breakages.
             FLOOR: an access table must be lower_snake, or `SELECT Id FROM User` (Salesforce SOQL,
             measured on tier3) counts as one of the app's tables. A PascalCase table is missed and
             reported by the census, never guessed at.
@@ -212,7 +215,7 @@ def join_functions(repo: Path, access: dict[str, list]) -> dict[str, dict]:
                 continue
             key = f"{rel}::{best[2]}"
             rec = out.setdefault(key, {"file": rel, "fn": best[2], "access": {"ops": []}})
-            op = {"model": None, "table": site["table"], "rw": site["rw"]}
+            op = {"model": site["table"], "table": site["table"], "rw": site["rw"]}
             if op not in rec["access"]["ops"]:
                 rec["access"]["ops"].append(op)
     return out
@@ -323,7 +326,7 @@ def parse(repo: Path, orm_tables: int = 0, orm_access: int = 0) -> dict:
                 if k in seen:
                     continue
                 seen.add(k)
-                uniq.append({"model": None, "table": tbl, "rw": rw, "line": line})
+                uniq.append({"model": tbl, "table": tbl, "rw": rw, "line": line})
             if uniq and not _is_migration(rel):
                 access[rel] = uniq
                 res["stats"]["statements"] += len(uniq)

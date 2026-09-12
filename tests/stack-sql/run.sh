@@ -96,7 +96,9 @@ assert t["sessions"]["fks"] == {"user_id": "users.id"}, t["sessions"]["fks"]
 # rebalanced so a functional index is not truncated to `lower(email`
 assert t["users"]["uqs"] == ["UNIQUE (lower(email))"], t["users"]["uqs"]
 ops = o["access"]["db/repo.ts"]
-assert all(x["model"] is None and x["table"] for x in ops), ops
+# `model` carries the TABLE, not None — the same verdict as `cls`: a None collapsed every
+# raw-SQL op into one key, crashed the endpoint-rollup sort, and drew `model:null` in the station
+assert all(x["model"] == x["table"] and x["table"] for x in ops), ops
 got = {(x["table"], x["rw"]) for x in ops}
 assert got == {("users", "r"), ("users", "w"), ("sessions", "w")}, got
 PY
@@ -178,6 +180,10 @@ assert set(j) == {"src/repo.ts::Repo.list", "src/repo.ts::Repo.save", "src/repo.
 assert "src/repo.ts::Repo.wrap" not in j, "an enclosing method stole a nested function's statement"
 assert [(x["table"], x["rw"]) for x in j["src/repo.ts::inner"]["access"]["ops"]] == [("sessions", "w")]
 assert [(x["table"], x["rw"]) for x in j["src/repo.ts::Repo.list"]["access"]["ops"]] == [("users", "r")]
+# the JOINED op carries its table as `model` too — a separate construction site from parse()'s,
+# and the one that lands in function_insight where 81 consumers read ["model"] as a string
+_jo = j["src/repo.ts::Repo.list"]["access"]["ops"][0]
+assert _jo["model"] == _jo["table"] == "users", f"the joined op lost its model: {_jo}"
 assert [(x["table"], x["rw"]) for x in j["src/repo.ts::Repo.save"]["access"]["ops"]] == [("users", "w")]
 # a statement at MODULE scope belongs to no function — dropped, never hung on a neighbour
 assert not any("audit_log" in str(v) for v in j.values()), j

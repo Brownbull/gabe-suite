@@ -430,13 +430,19 @@ def derive_endpoint_access(wiring: dict[str, Any], entities: dict[str, Any],
                 if a.get("commits"):
                     commits = True
                 for o in a.get("ops") or []:
-                    ops[(o["model"], o["rw"])] = {"model": o["model"], "table": o["table"], "rw": o["rw"]}
+                    # key on the TABLE, not the model: a raw-SQL row once carried model=None and
+                    # every such op collapsed into one entry, so `users` and `sessions` writes
+                    # became a single write. The table is the thing that is always present.
+                    ops[(o.get("table") or o.get("model"), o["rw"])] = {
+                        "model": o.get("model") or o.get("table"), "table": o["table"], "rw": o["rw"]}
                 for s in a.get("sinks") or []:                 # C4: non-ORM sink categories via the call-tree
                     sinks.add(s)
                 for x in a.get("externals") or []:             # class 9: providers reached via the call-tree
                     externals.add(x)
             if ops or commits or sinks or externals:
-                out[key] = {"ops": sorted(ops.values(), key=lambda x: (x["rw"], x["model"])),
+                # `or ""`: sorting on a bare model raised TypeError the moment one tree mixed an
+                # ORM row (model set) with a raw-SQL row (model absent) at the same rw
+                out[key] = {"ops": sorted(ops.values(), key=lambda x: (x["rw"], x.get("model") or "")),
                             "commits": commits}
                 if sinks:
                     out[key]["sinks"] = sorted(sinks)
@@ -928,6 +934,22 @@ def graft_arm(root: Path, entities: dict[str, Any],
             _bu["files"] = list(_bu.get("files") or []) + [["boot", r["file"], 0] for r in _unowned]
             _bu["endpoints"] = list(_bu.get("endpoints") or []) + list(_unowned)
             bentities["__unclaimed__"] = _bu
+            # A CLAIMED root must be folded into ITS OWN entity, not merely left alone. The line
+            # above assumes a claimed root already sits in that entity's `endpoints` — true for a
+            # FastAPI handler, which the Python scanner puts there, and false for every ACTION and
+            # TASK root, which live on amap.action_roots / task_roots instead. keypro-front's 11
+            # action roots are all in claimed files, so they entered nowhere and the endpoint→table
+            # rollup never ran for a single one of them.
+            for _r in boot_roots:
+                _sl = _f2s0.get(_r["file"])
+                if not _sl or not bentities.get(_sl):
+                    continue
+                _e = dict(bentities[_sl])
+                _eps = list(_e.get("endpoints") or [])
+                if not any((x or {}).get("fn") == _r.get("fn") and (x or {}).get("file") == _r.get("file")
+                           for x in _eps):
+                    _e["endpoints"] = _eps + [_r]
+                    bentities[_sl] = _e
         out = derive_cross(wiring, entities)       # ORIGINAL wiring + entities — L1 kinds untouched (P5)
         fout = derive_functions(wiring, bentities, dispatches=_disp, module_calls=_mcalls)   # ORIGINAL calls + dispatches + module calls appended once; boot-homed
         behind = derive_behind(_w2, bentities)     # {<file>#<fn> → {fns, depth}} per endpoint handler (+ the BOOT root)
