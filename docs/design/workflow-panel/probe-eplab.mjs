@@ -199,7 +199,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   ok(dup.length === 0, 'the definition appears once, at the end — never repeated above it', dup.join(' | ').slice(0, 140)); }
 // ── every control block FOLDS AWAY without losing its settings (operator 2026-09-11) ──
 { const blks = await p.$$eval('.barblk', els => els.map(e => e.id));
-  ok(blks.length === 5, 'five control blocks', blks.join(','));
+  ok(blks.length === 6, 'six control blocks', blks.join(','));
   const before = await p.evaluate(() => window.COPYTXT.tabs());
   await p.click('#blk-tabs .mnb'); await p.waitForTimeout(120);
   ok(await p.$eval('#blk-tabs', e => e.classList.contains('min')), 'a block folds when its chevron is clicked');
@@ -352,10 +352,62 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
      await p.evaluate(() => window.COPYTXT.frame()));
   // back to the boot frame, and prove the page opened there
   await p.evaluate(() => { Object.assign(window.FRAME, { benchW: 1, benchS: 'solid',
-    headH: 42, headBw: 0, headBs: 'solid', headDivW: 1, headDivS: 'solid', headGap: 0,
-    tabsRow: 60, tabsH: 46, tabsBw: 0, tabsBs: 'solid', tabsDivW: 1, tabsDivS: 'solid', tabsGap: 0 });
+    headH: 45, headBw: 0, headBs: 'solid', headDivW: 1, headDivS: 'none', headGap: 0,
+    tabsRow: 52, tabsH: 43, tabsBw: 0, tabsBs: 'solid', tabsDivW: 1, tabsDivS: 'none', tabsGap: 0 });
     window.applyFrame(); window.drawFrameCfg(); }); await p.waitForTimeout(120);
   ok(await p.evaluate(() => window.COPYTXT.frame()) === boot, 'the bench returns to exactly the frame it booted with', boot); }
+// ══ THE DATA PANEL's own block (operator 2026-09-12): show or hide each section, and lay the grounds
+//    out. Hiding must be REVERSIBLE and must not delete anything — the no-loss law as a measurement. ══
+{ await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(80);
+  await p.evaluate(() => window.showVariant('data', 'grounds')); await p.waitForTimeout(200);
+  const lay = await p.$$eval('#datacfg .ib[data-dlayout]', els => els.map(e => e.dataset.dlayout));
+  ok(lay.join(',') === 'grounds,flow,ledger', 'the data block carries the three distributions', lay.join(','));
+  const secs = await p.$$eval('#datacfg .ib[data-sec]', els => els.map(e => e.dataset.sec));
+  ok(secs.join(',') === 'note,counts,shapes,rw,commit,ev,mdl,ents,legend', 'nine sections, each its own toggle', secs.join(','));
+  ok(await p.$$eval('#datacfg .ib', els => els.every(e => !e.innerText.trim() && !!e.querySelector('svg'))),
+     'every data control is an ICON — its word lives on the hover card');
+  // a section the OPEN distribution does not draw is marked, not silently inert
+  ok(await p.$eval('#datacfg .ib[data-sec="ents"]', e => e.classList.contains('na')),
+     'the entities row is marked NOT DRAWN while Grounds is open — it belongs to Flow');
+  ok(await p.$eval('#datacfg .ib[data-sec="ev"]', e => !e.classList.contains('na')),
+     'and the evidence row is not marked, because Grounds does draw it');
+  // HIDE → the element is invisible but still in the page; SHOW → it comes back
+  for (const [sec, sel] of [['note', '#panel .phdnote'], ['commit', '#panel .commit'], ['ev', '#panel .kv.ev'],
+                            ['mdl', '#panel .kv.mdl'], ['legend', '#panel .plgd'], ['shapes', '#panel .shape']]) {
+    const before = await p.$$eval(sel, els => els.length);
+    await p.click(`#datacfg .ib[data-sec="${sec}"]`); await p.waitForTimeout(110);
+    const hid = await p.evaluate(s => { const e = document.querySelector(s); return e ? { n: document.querySelectorAll(s).length, d: getComputedStyle(e).display } : null; }, sel);
+    ok(before > 0 && hid && hid.d === 'none' && hid.n === before,
+       `hiding ${sec} makes it invisible and keeps it in the page — nothing is lost`, JSON.stringify({ before, hid }));
+    await p.click(`#datacfg .ib[data-sec="${sec}"]`); await p.waitForTimeout(110);
+    ok(await p.evaluate(s => getComputedStyle(document.querySelector(s)).display !== 'none', sel), `and one click brings ${sec} back`); }
+  // the copy line names what is drawn and what is away
+  await p.click('#datacfg .ib[data-sec="legend"]'); await p.waitForTimeout(90);
+  ok(/hidden legend/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line says which section was put away',
+     await p.evaluate(() => window.COPYTXT.data()));
+  await p.click('#datacfg .ib[data-sec="legend"]'); await p.waitForTimeout(90);
+  // THE GROUNDS' LAYOUT — order · width · tiles, each read off the drawn picture
+  const groundNames = () => p.$$eval('#panel .ground .ghd', els => els.map(e => e.textContent.replace(/\d+$/, '').trim()));
+  const bySize = await groundNames();
+  await p.click('#datacfg .ib[data-order="name"]'); await p.waitForTimeout(220);
+  const byName = await groundNames();
+  ok(byName.join(',') === byName.slice().sort((a, b) => a.localeCompare(b)).join(','), 'BY NAME orders the grounds alphabetically', byName.join(','));
+  await p.click('#datacfg .ib[data-order="home"]'); await p.waitForTimeout(220);
+  const byHome = await groundNames();
+  ok(byHome[0] === F.identity.entity, "HOME FIRST puts the door's own entity in front", byHome.join(','));
+  await p.click('#datacfg .ib[data-order="size"]'); await p.waitForTimeout(220);
+  ok((await groundNames()).join(',') === bySize.join(','), 'and BY SIZE comes back to what it was');
+  await p.click('#datacfg .ib[data-width="equal"]'); await p.waitForTimeout(160);
+  { const ws = await p.$$eval('#panel .ground', els => els.map(e => Math.round(e.getBoundingClientRect().width)));
+    ok(new Set(ws).size === 1, 'EQUAL gives every ground the same width, whatever it holds', ws.join(',')); }
+  await p.click('#datacfg .ib[data-width="flex"]'); await p.waitForTimeout(160);
+  { const ws = await p.$$eval('#panel .ground', els => els.map(e => Math.round(e.getBoundingClientRect().width)));
+    ok(new Set(ws).size > 1, 'PROPORTIONAL gives the heaviest ground the most room', ws.join(',')); }
+  await p.click('#datacfg .ib[data-tiles="grid"]'); await p.waitForTimeout(160);
+  ok(await p.$eval('#panel .tiles', e => getComputedStyle(e).display === 'grid'), 'GRID wraps the tables side by side');
+  await p.click('#datacfg .ib[data-tiles="stack"]'); await p.waitForTimeout(160);
+  ok(await p.$eval('#panel .tiles', e => getComputedStyle(e).display !== 'grid'), 'and STACKED puts them back one under the next'); }
+
 // the rail: three tabs, one section at a time, and every control an icon with a hover card
 // AT BOOT — before any click — exactly one rail section is visible, and it is the controls
 // THE OPERATOR'S OWN BAR (pasted back from the copy button 2026-09-11) is the default — pinned here
@@ -383,7 +435,7 @@ for (const t of rtabs) { await p.click(`#railtabs .rtb[data-rt="${t}"]`); await 
   ok(shown.length === 1 && shown[0] === 'rt-' + t, `rail toggle ${t} shows one section, never both`, shown.join(',')); }
 await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(90);
 const blocks = await p.$$eval('#rt-controls .barblk .bhl b', els => els.map(e => e.textContent));
-ok(blocks.join(',') === 'bench,head bar,part buttons,frame,part bars', 'the controls tab separates bench · head bar · part buttons · frame · part bars into blocks', blocks.join(','));
+ok(blocks.join(',') === 'bench,head bar,part buttons,frame,data panel,part bars', 'the controls tab gives every region its own block', blocks.join(','));
 const prows = await p.$$eval('#partcfg .prow', els => els.length);
 ok(prows === 6, 'the BARS tab separates the controls per part — one row each', String(prows));
 const varBtns = await p.$$eval('#partcfg .ib', els => els.length);
@@ -416,9 +468,9 @@ const zones = await p.$$eval('#barcfg .dzone', els => els.map(e => e.dataset.sid
 ok(zones.join(',') === 'left,right', 'the rail shows one drop zone per pile, divided', zones.join(','));
 // a copy button per control block, each producing a readable line
 const cpb = await p.$$('.barblk .cpb');
-ok(cpb.length === 5, 'every control block has a COPY button', String(cpb.length));
+ok(cpb.length === 6, 'every control block has a COPY button', String(cpb.length));
 const lines = await p.evaluate(() => Object.keys(window.COPYTXT).map(k => window.COPYTXT[k]()));
-ok(lines.length === 5 && lines.every(l => l.length > 20), 'each copy line names that section\'s selections', lines.join(' // ').slice(0, 160));
+ok(lines.length === 6 && lines.every(l => l.length > 20), 'each copy line names that section\'s selections', lines.join(' // ').slice(0, 160));
 ok(/head bar · verbosity .* LEFT .* RIGHT .* off .* styles /.test(lines[1]), 'the head-bar copy line carries verbosity, both piles, what is off, and the per-element styles', lines[1]);
 // ── per-element options: shown · text · container (operator 2026-09-11) ──
 await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(80);

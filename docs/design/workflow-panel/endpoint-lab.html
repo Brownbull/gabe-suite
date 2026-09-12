@@ -41,6 +41,10 @@
           <div class="bhl"><span class="bhi"></span><b>frame</b><span class="bhn">heights · lines · spacing</span></div>
           <div class="blkbody"><div id="framecfg"></div></div>
         </div>
+        <div class="barblk" id="blk-data">
+          <div class="bhl"><span class="bhi"></span><b>data panel</b><span class="bhn">sections · layout</span></div>
+          <div class="blkbody"><div id="datacfg"></div></div>
+        </div>
         <div class="barblk" id="blk-parts">
           <div class="bhl"><span class="bhi"></span><b>part bars</b><span class="bhn">one distribution each</span></div>
           <div class="blkbody"><div id="partcfg"></div></div>
@@ -529,8 +533,8 @@
      setting, not an absence. ══ */
   var FRAME = window.FRAME = {
     benchW: 1, benchS: "solid",
-    headH: 42, headBw: 0, headBs: "solid", headDivW: 1, headDivS: "solid", headGap: 0,
-    tabsRow: 60, tabsH: 46, tabsBw: 0, tabsBs: "solid", tabsDivW: 1, tabsDivS: "solid", tabsGap: 0 };
+    headH: 45, headBw: 0, headBs: "solid", headDivW: 1, headDivS: "none", headGap: 0,
+    tabsRow: 52, tabsH: 43, tabsBw: 0, tabsBs: "solid", tabsDivW: 1, tabsDivS: "none", tabsGap: 0 };
   var FRVAR = { benchW: "--bench-bw", benchS: "--bench-bs",
     headH: "--head-h", headBw: "--head-bw", headBs: "--head-bs", headDivW: "--head-divw", headDivS: "--head-divs", headGap: "--head-gap",
     tabsRow: "--tabs-row", tabsH: "--tabs-h", tabsBw: "--tabs-bw", tabsBs: "--tabs-bs", tabsDivW: "--tabs-divw", tabsDivS: "--tabs-divs", tabsGap: "--tabs-gap" };
@@ -621,6 +625,91 @@
     box.append(el("div", { class: "cfread" }, "every line has NONE — transparent is a setting here, not a missing one. A row can carry its own outline, the divider below it, both, or neither.")); }
   window.drawFrameCfg = drawFrameCfg;
 
+  /* ══ THE DATA PANEL (operator 2026-09-12) — which of its sections are drawn, and how the grounds lay
+     out. Hiding is a CHOICE, never a loss: the element stays in the page, one click brings it back, and
+     a section that the open distribution does not draw says so instead of pretending to work. ══ */
+  var DATACFG = window.DATACFG = {
+    show: { note: 1, counts: 1, shapes: 1, rw: 1, commit: 1, ev: 1, mdl: 1, ents: 1, legend: 1 },
+    width: "flex", tiles: "stack", order: "size" };
+  var DSEC = [
+    { key: "note",   word: "the note",    icon: "doc",    on: ["grounds", "flow", "ledger"],
+      what: "the sentence under the title", lost: "how to read the picture, said once in words" },
+    { key: "counts", word: "counts",      icon: "info",   on: ["grounds", "flow", "ledger"],
+      what: "the number beside every name", lost: "how many — the first question the card answers" },
+    { key: "shapes", word: "the shapes",  icon: "table",  on: ["grounds", "flow", "ledger"],
+      what: "the line stack inside each table — one line per column", lost: "how deep each table is; the names stay" },
+    { key: "rw",     word: "read/write",  icon: "model",  on: ["grounds", "flow", "ledger"],
+      what: "the R · W · RW chip on every table", lost: "which way the data moves; the colour still carries it" },
+    { key: "commit", word: "the commit",  icon: "key",    on: ["grounds", "flow"],
+      what: "the DB COMMIT pulse under the tables", lost: "that every write lands in ONE transaction" },
+    { key: "ev",     word: "evidence",    icon: "role",   on: ["grounds"],
+      what: "the membership row — file · users · data", lost: "that the three witnesses disagree about this door's home" },
+    { key: "mdl",    word: "model row",   icon: "link",   on: ["grounds"],
+      what: "the entity-model row — claim · seeded · derived · proposed", lost: "which model would re-home this door" },
+    { key: "ents",   word: "entities",    icon: "entity", on: ["flow"],
+      what: "the entities line under the field", lost: "the roster of grounds the dots stand for" },
+    { key: "legend", word: "the legend",  icon: "layers", on: ["grounds", "flow", "ledger"],
+      what: "the strip of swatches at the foot", lost: "what a colour and a line mean, drawn as they are drawn" } ];
+  function dataVar(){ return (window.PANELVAR && window.PANELVAR("data")) || "grounds"; }
+  function applyData(){ var pn = document.getElementById("panel");
+    Object.keys(DATACFG.show).forEach(function(k){ pn.classList.toggle("dh-" + k, !DATACFG.show[k]); });
+    pn.classList.toggle("dgw-equal", DATACFG.width === "equal");
+    pn.classList.toggle("dtl-grid", DATACFG.tiles === "grid"); }
+  window.applyData = applyData;
+  function drawDataCfg(){ var box = document.getElementById("datacfg"); box.innerHTML = "";
+    var live = dataVar();
+    function sub(t, why){ var d = el("div", { class: "cfsub" }, t); if (why) d.append(el("i", {}, why)); box.append(d); }
+    function pick(label, key, opts, iconFor){
+      var w = el("div", { class: "ibwrap" });
+      opts.forEach(function(o){ var b = el("button", { class: "ib" + (DATACFG[key] === o[0] ? " on" : "") });
+        b.dataset[key] = o[0]; b.innerHTML = iconFor(o);
+        hoverBind(b, hcard({ title: o[2] || o[0], value: label, icon: "shape", rows: o[3] || null, plain: o[1] }));
+        b.onclick = function(ev){ ev.stopPropagation(); DATACFG[key] = o[0];
+          applyData(); if (key === "order") window.showTab("data"); drawDataCfg(); }; w.append(b); });
+      box.append(el("div", { class: "cfl" }, label), w); }
+
+    sub("layout", "the same facts, distributed differently");
+    { var w = el("div", { class: "ibwrap" }), P = window.PANELS.data;
+      P.variants.forEach(function(v){ var b = el("button", { class: "ib" + (live === v.key ? " on" : "") });
+        b.dataset.dlayout = v.key; b.innerHTML = S.icon(VARICO[v.key] || "shape", 15);
+        hoverBind(b, hcard({ title: v.label, value: "a distribution of Data", icon: VARICO[v.key] || "shape", color: P.col,
+          rows: [["draws", DSEC.filter(function(x){ return x.on.indexOf(v.key) >= 0; }).map(function(x){ return x.word; }).join(" · ")]],
+          plain: v.hint }));
+        b.onclick = function(ev){ ev.stopPropagation(); window.showVariant("data", v.key); applyData(); drawDataCfg(); };
+        w.append(b); });
+      box.append(el("div", { class: "cfl" }, "shown as"), w); }
+
+    sub("sections", "one click hides a row — nothing leaves the page");
+    { var w = el("div", { class: "ibwrap dsec" });
+      DSEC.forEach(function(sec){ var here = sec.on.indexOf(live) >= 0, shown = !!DATACFG.show[sec.key];
+        var b = el("button", { class: "ib" + (shown ? " on" : "") + (here ? "" : " na") });
+        b.dataset.sec = sec.key; b.innerHTML = S.icon(sec.icon, 15);
+        hoverBind(b, hcard({ title: sec.word, value: shown ? "drawn" : "hidden", icon: sec.icon,
+          rows: [["what it is", sec.what],
+                 ["hiding it drops", sec.lost],
+                 ["drawn in", sec.on.join(" · ") + (here ? "" : " — not in " + live + ", so this does nothing right now")]],
+          plain: "a row of the Data panel you can put away and bring back" }));
+        b.onclick = function(ev){ ev.stopPropagation(); DATACFG.show[sec.key] = shown ? 0 : 1; applyData(); drawDataCfg(); };
+        w.append(b); });
+      box.append(el("div", { class: "cfl" }, "drawn"), w); }
+
+    sub("the grounds", "only the Grounds distribution reads these");
+    pick("order", "order", [
+      ["size", "the ground holding the most tables leads", "by size"],
+      ["home", "the door's own entity leads, whatever its size", "home first"],
+      ["name", "alphabetical — the same order every time, whatever the feed says", "by name"]],
+      function(o){ return labIco(o[0] === "size" ? "wwide" : o[0] === "home" ? "posleft" : "normal", 15); });
+    pick("width", "width", [
+      ["flex", "a ground as wide as the tables it holds — the picture shows the weight", "proportional"],
+      ["equal", "every ground the same width, whatever it holds — the picture shows the roster", "equal"]],
+      function(o){ return labIco(o[0] === "flex" ? "laycfill" : "layleft", 15); });
+    pick("tiles", "tiles", [
+      ["stack", "one table under the next, each full width of its ground", "stacked"],
+      ["grid", "tables side by side, wrapping — more of them on screen at once", "grid"]],
+      function(o){ return labIco(o[0] === "stack" ? "normal" : "wauto", 15); });
+    box.append(el("div", { class: "cfread" }, "a hidden section is still in the page and one click brings it back. The no-loss checklist records what each part has DRAWN since the page opened and never un-ticks — so read it as what the design can show, not as what is on screen right now.")); }
+  window.drawDataCfg = drawDataCfg;
+
   /* ── the PART BUTTONS block in the rail ── */
   function drawTabCfg(){ var box = document.getElementById("tabcfg"); box.innerHTML = "";
     function row(label, opts, key, iconFor, extra){
@@ -688,7 +777,7 @@
      button · pill counts · wide buttons filling the row — plus FOCUS colour, which is what they
      asked for next: the open part keeps its colour and every other button goes mono. */
   var TABCFG = window.TABCFG = { intensity: "dim", palette: "focus", pattern: "valley",
-    iconSize: 22, iconMode: "ghost", iconX: 73, numSize: 12, numShape: "pill", shape: "rect",
+    iconSize: 22, iconMode: "ghost", iconX: 77, numSize: 12, numShape: "pill", shape: "rect",
     layout: "fill", width: "wide", caseMode: "caps" };
   function tabCol(P, isOn){
     /* FOCUS: only the open part is coloured; the rest read mono, so the row points at one thing */
@@ -753,6 +842,10 @@
       + " · glyph " + TABCFG.iconSize + "px " + TABCFG.iconMode + " at " + TABCFG.iconX + "%"
       + " · titles " + TABCFG.caseMode + " · count " + TABCFG.numSize + "px " + TABCFG.numShape
       + " · button " + TABCFG.shape + " · row " + TABCFG.layout + " " + TABCFG.width; },
+    data: function(){ var shown = DSEC.filter(function(x){ return DATACFG.show[x.key]; }).map(function(x){ return x.key; });
+      var hidden = DSEC.filter(function(x){ return !DATACFG.show[x.key]; }).map(function(x){ return x.key; });
+      return "data · shown as " + dataVar() + " · grounds by " + DATACFG.order + ", width " + DATACFG.width + ", tiles " + DATACFG.tiles
+        + " · drawn " + shown.join(" ") + (hidden.length ? " · hidden " + hidden.join(" ") : " · nothing hidden"); },
     frame: function(){ function ln(w, st){ return w === 0 || st === "none" ? "none" : w + "px " + st; }
       return "frame · bench outline " + ln(FRAME.benchW, FRAME.benchS)
         + " · head bar " + FRAME.headH + "px, outline " + ln(FRAME.headBw, FRAME.headBs) + ", divider " + ln(FRAME.headDivW, FRAME.headDivS) + ", gap " + FRAME.headGap + "px"
@@ -775,7 +868,9 @@
   document.getElementById("blk-tabs").querySelector(".bhl").append(copyBtn("tabs", "how the five part buttons are drawn"));
   document.getElementById("blk-frame").querySelector(".bhi").innerHTML = labIco("bars", 13, "var(--accent)");
   document.getElementById("blk-frame").querySelector(".bhl").append(copyBtn("frame", "the rows' heights, lines and spacing"));
-  ["blk-bench", "blk-head", "blk-tabs", "blk-frame", "blk-parts"].forEach(foldable);
+  document.getElementById("blk-data").querySelector(".bhi").innerHTML = S.icon("table", 13, "var(--accent)");
+  document.getElementById("blk-data").querySelector(".bhl").append(copyBtn("data", "which sections the Data panel draws, and how"));
+  ["blk-bench", "blk-head", "blk-tabs", "blk-frame", "blk-data", "blk-parts"].forEach(foldable);
   document.getElementById("blk-head").querySelector(".bhi").innerHTML = labIco("bars", 13, "var(--accent)");
   document.getElementById("blk-head").querySelector(".bhl").append(copyBtn("head", "the head bar's verbosity, piles and order"));
   document.getElementById("blk-parts").querySelector(".bhi").innerHTML = S.icon("layers", 13, "var(--accent)");
@@ -808,8 +903,11 @@
     PANEL.innerHTML = ""; PANEL.dataset.tab = k; PANEL.dataset.variant = curVar[k];
     var v = P.variants.filter(function(x){ return x.key === curVar[k]; })[0] || P.variants[0];
     try { v.render(PANEL, F, S); } catch (e) { PANEL.innerHTML = '<div class="perr">render error: ' + e.message + '</div>'; console.error(e); }
+    if (window.applyData) window.applyData();
+    if (window.drawDataCfg && k === "data") window.drawDataCfg();   /* which sections THIS distribution draws */
     readBox(); }
   window.showTab = show; window.showVariant = function(k, v){ curVar[k] = v; show(k); };
+  window.PANELVAR = function(k){ return curVar[k] || (window.PANELS[k] ? window.PANELS[k].variants[0].key : null); };
 
   /* ── the box: four presets. The two DOCK sizes are the console's real middle region — the wide one is
      what dropping COMMAND + EVIDENCE buys (portrait only); the two WORK sizes are the bench. ── */
@@ -852,7 +950,7 @@
       try { v.render(ghost, F, S); } catch (e) { console.warn("prewalk " + k + "/" + v.key, e); } }); });
     ghost.remove(); })();
 
-  drawTabs(); drawTabCfg(); applyFrame(); drawFrameCfg();
+  drawTabs(); drawTabCfg(); applyFrame(); drawFrameCfg(); applyData(); drawDataCfg();
   var first = (location.hash || "#data").slice(1); show(order.indexOf(first) >= 0 ? first : "data");
   window.__eplabReady = true;
 })();

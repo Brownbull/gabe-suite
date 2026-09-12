@@ -598,3 +598,29 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
   display:flex; align-items:baseline; gap:7px; }
 .cfsub:first-child{ margin-top:3px; padding-top:0; border-top:none; }
 .cfsub i{ font-style:normal; font-weight:600; text-transform:none; letter-spacing:0; color:var(--muted); }
+
+/* ══ THE DATA PANEL's own controls (operator 2026-09-12) — a section can be put away and brought back.
+   Every rule is scoped to the Data panel so a class never reaches another part. Hiding is display:none
+   on a drawn element: it stays in the page, which is what makes it reversible. ══ */
+#panel[data-tab="data"].dh-note .phdnote{ display:none; }
+#panel[data-tab="data"].dh-counts .cnt, #panel[data-tab="data"].dh-counts .tile .tc,
+#panel[data-tab="data"].dh-counts .ghd .n{ display:none; }
+#panel[data-tab="data"].dh-shapes .shape{ display:none; }
+#panel[data-tab="data"].dh-rw .jdrw{ display:none; }
+#panel[data-tab="data"].dh-commit .commit{ display:none; }
+#panel[data-tab="data"].dh-ev .kv.ev{ display:none; }
+#panel[data-tab="data"].dh-mdl .kv.mdl{ display:none; }
+#panel[data-tab="data"].dh-ents .kv.ents{ display:none; }
+#panel[data-tab="data"].dh-legend .plgd{ display:none; }
+/* the grounds' own layout */
+#panel[data-tab="data"].dgw-equal .ground{ flex-grow:1 !important; flex-basis:0; }
+#panel[data-tab="data"].dtl-grid .tiles{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); align-content:start; }
+/* a control the OPEN distribution does not draw says so — it stays clickable, it just cannot show here */
+#datacfg{ display:grid; grid-template-columns:88px 1fr; gap:7px 8px; align-items:center; margin-top:7px; }
+#datacfg .cfl{ line-height:1.9; }
+#datacfg .cfsub{ grid-column:1 / -1; }
+#datacfg .cfread{ grid-column:1 / -1; margin-top:4px; font-size:12px; line-height:1.45; }
+#datacfg .ib:not(.on){ opacity:.5; }
+#datacfg .ib.on{ opacity:1; }
+#datacfg .dsec .ib.na{ opacity:.22; border-style:dashed; }
+#datacfg .dsec .ib.na.on{ opacity:.34; }

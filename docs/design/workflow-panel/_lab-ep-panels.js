@@ -66,11 +66,16 @@
     /* middle — the grounds */
     var mid = E("div", { class: "dcol dmid wide" });
     var grounds = {}; D.tables.forEach(function(t){ (grounds[t.entity || "—"] = grounds[t.entity || "—"] || []).push(t); });
-    var order = Object.keys(grounds).sort(function(a, b){ return grounds[b].length - grounds[a].length || a.localeCompare(b); });
+    var DC = window.DATACFG || { order: "size" };
+    var order = Object.keys(grounds).sort(function(a, b){
+      if (DC.order === "name") return a.localeCompare(b);
+      if (DC.order === "home") return (b === I.entity) - (a === I.entity) || grounds[b].length - grounds[a].length || a.localeCompare(b);
+      return grounds[b].length - grounds[a].length || a.localeCompare(b); });
     var gwrap = E("div", { class: "grounds" });
     order.forEach(function(ent){
       var ts = grounds[ent], ec = ts[0].entity_color || "#8794ab";
-      var g = E("div", { class: "ground" + (ent === I.entity ? " home" : ""), style: "--ec:" + ec + ";flex-grow:" + Math.min(3, ts.length) });
+      var g = E("div", { class: "ground" + (ent === I.entity ? " home" : ""),
+        style: "--ec:" + ec + ";flex-grow:" + (DC.width === "equal" ? 1 : Math.min(3, ts.length)) });
       var gh = E("div", { class: "ghd" }, '<i class="pdot" style="background:' + ec + '"></i>', esc(ent), E("span", { class: "n" }, String(ts.length)));
       bind(gh, card({ title: ent, icon: "entity", color: ec, sub: "entity ground · " + ts.length + " table(s) this door touches",
         rows: [["writes", String(ts.filter(function(t){ return t.rw !== "r"; }).length)], ["reads", String(ts.filter(function(t){ return t.rw !== "w"; }).length)], ["own entity", ent === I.entity ? "yes — the door's own" : "no — the door reaches across"]],
@@ -115,12 +120,12 @@
     var ev = I.home_ev;
     if (ev && ev.verdict) { var top = function(m){ var ks = Object.keys(m || {}); if (!ks.length) return null; ks.sort(function(a, b){ return m[b] - m[a]; }); var tot = ks.reduce(function(s, k){ return s + m[k]; }, 0); return ks[0] + " " + Math.round(100 * m[ks[0]] / tot) + "% of " + tot; };
       var u = top(ev.users), d = top(ev.data);
-      var er = E("div", { class: "kv" }, ico("role", 13), E("span", { class: "k" }, "evidence"), E("span", { class: "v" }, "home " + I.entity + " by its file claim · users say " + (u || "abstain") + " · data says " + (d || "abstain") + " → " + String(ev.verdict).toUpperCase()));
+      var er = E("div", { class: "kv ev" }, ico("role", 13), E("span", { class: "k" }, "evidence"), E("span", { class: "v" }, "home " + I.entity + " by its file claim · users say " + (u || "abstain") + " · data says " + (d || "abstain") + " → " + String(ev.verdict).toUpperCase()));
       bind(er, card({ title: "membership evidence", icon: "role", sub: "file · users · data — the three witnesses",
         rows: [["home by", String(ev.by)], ["users", u || "abstain"], ["data", d || "abstain"], ["verdict", String(ev.verdict).toUpperCase()]],
         body: "the FILE wins here — evidence only, nothing is re-homed. The data witness leans <b>settings</b> because 5 of the 13 tables this door writes belong to settings." }));
       foot.append(er); COV.mark("EVIDENCE", "data"); }
-    var mh = I.models_home || {}; var mrow = E("div", { class: "kv" }, ico("link", 13), E("span", { class: "k" }, "model"), E("span", { class: "v" }, "claim " + I.entity + (mh.seeded || mh.derived || mh.proposed ? " · a view re-homes it" : " · every entity model keeps it here (no delta)")));
+    var mh = I.models_home || {}; var mrow = E("div", { class: "kv mdl" }, ico("link", 13), E("span", { class: "k" }, "model"), E("span", { class: "v" }, "claim " + I.entity + (mh.seeded || mh.derived || mh.proposed ? " · a view re-homes it" : " · every entity model keeps it here (no delta)")));
     bind(mrow, card({ title: "entity model", icon: "link", sub: "claim is the join key; seeded · derived · proposed are views",
       rows: [["claim", I.entity], ["seeded", mh.seeded || "no delta"], ["derived", mh.derived || "no delta"], ["proposed", mh.proposed || "no delta"]],
       body: "the station is settled on <b>seeded</b>; a view moves a piece as a DELTA, nothing is re-homed on disk." }));
@@ -568,11 +573,11 @@
       rows: [["writes", String(D.writes.length)], ["idempotency", F.security.idempotent ? "guarded by " + F.security.idempotency_table : "none"]] }));
     field.append(cm); body.append(field); box.append(body);
     var foot = E("div", { class: "pfoot" });
-    foot.append(E("div", { class: "kv" }, ico("role", 13), E("span", { class: "k" }, "entities"), E("span", { class: "v" }, D.entities.join(" · ") + " — the dot on each tile says which")));
+    foot.append(E("div", { class: "kv ents" }, ico("role", 13), E("span", { class: "k" }, "entities"), E("span", { class: "v" }, D.entities.join(" · ") + " — the dot on each tile says which")));
     foot.append(legend([{ t: "reads", swatch: "background:" + RWC.r }, { t: "writes", swatch: "background:" + RWC.w }, { t: "both", swatch: "background:" + RWC.rw },
       { t: "a line = a field", swatch: "background:var(--muted);height:2px;width:16px" }]));
     box.append(foot);
-    COV.mark("ACCESSES", "data"); COV.mark("CONNECTIONS", "data"); COV.mark("EVIDENCE", "data"); COV.mark("MODEL ROW", "data");
+    COV.mark("ACCESSES", "data"); COV.mark("CONNECTIONS", "data");   /* no evidence / model row in this distribution */
   }
 
   /* ── DATA · C "ledger" — the densest honest form: one row per table, every column the feed knows ── */
@@ -593,10 +598,10 @@
     ledger(body, ["entity", "rw", "table", "shape", "cols", "fk", "uq", "model"], rows, { grid: "104px 34px 1fr 128px 44px 34px 34px 150px" });
     box.append(body);
     var foot = E("div", { class: "pfoot" });
-    foot.append(E("div", { class: "kv" }, ico("key", 13, S.OPC.write), E("span", { class: "k" }, "commit"), E("span", { class: "v" }, D.commits ? "one transaction makes the " + D.writes.length + " writes permanent · " + (F.security.idempotent ? "idempotency guarded by " + F.security.idempotency_table : "no idempotency") : "reads only")));
+    foot.append(E("div", { class: "kv cmt" }, ico("key", 13, S.OPC.write), E("span", { class: "k" }, "commit"), E("span", { class: "v" }, D.commits ? "one transaction makes the " + D.writes.length + " writes permanent · " + (F.security.idempotent ? "idempotency guarded by " + F.security.idempotency_table : "no idempotency") : "reads only")));
     foot.append(legend([{ t: "reads", swatch: "background:" + RWC.r }, { t: "writes", swatch: "background:" + RWC.w }, { t: "both", swatch: "background:" + RWC.rw }]));
     box.append(foot);
-    COV.mark("ACCESSES", "data"); COV.mark("CONNECTIONS", "data"); COV.mark("EVIDENCE", "data"); COV.mark("MODEL ROW", "data");
+    COV.mark("ACCESSES", "data"); COV.mark("CONNECTIONS", "data");   /* no evidence / model row in this distribution */
   }
 
   /* ── FUNCTIONS · B "chain" — the walk as ONE horizontal spine; the level you pick opens below ── */
