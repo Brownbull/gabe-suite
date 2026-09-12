@@ -786,3 +786,16 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 /* the rail declares order:1 and the bench order:2, so a new region MUST declare its own — without it
    the portrait panel inherits order 0 and renders FIRST, at the far left of the row */
 #port{ order:3; }
+
+/* the title is LINES of parts (operator 2026-09-12) — drag a part to another line and the block stacks */
+.bkti{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.bkln{ display:flex; align-items:center; gap:7px; min-width:0; flex-wrap:wrap; }
+.bkhd .bki{ display:inline-flex; flex:none; align-items:center; }
+.bkhd .bkrw{ display:inline-flex; align-items:center; }
+.form-block .bkti{ width:100%; }
+.zones.lines{ display:flex; flex-direction:column; gap:5px; }
+.zones.lines .dzwrap{ flex:1 1 auto; }
+/* a long table name must ELLIPSIS inside its block, never run past the edge — the name is nowrap so
+   the line keeps its shape, which means it also needs somewhere to stop */
+.bkln b, .bkln .bkm, .bkln .bke{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.bkln{ max-width:100%; }

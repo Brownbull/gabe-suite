@@ -687,23 +687,60 @@
   /* THE BLOCK TITLE is configurable part by part (operator 2026-09-12): an icon can stand in for a word,
      a count can shrink to a badge, and anything can go. The MODEL is the Python class that maps to this
      table — said here once, because the operator asked what "Location" was. */
-  function bkcfg(){ var c = (window.DATACFG || {}).bk || {}; return {
-    form: c.form || "row", icon: c.icon == null ? 1 : c.icon, rw: c.rw == null ? 1 : c.rw,
-    name: c.name == null ? 1 : c.name, ent: c.ent || "word", count: c.count || "words", model: c.model || "word" }; }
-  function bkTitle(t, S, mix){ var B = bkcfg(), ec = t.entity_color || "#888", out = [];
-    if (B.icon) out.push('<span class="bki">' + ico("model", 13, ec) + '</span>');   /* the graph's own model glyph — the DB drum */
-    if (B.rw) out.push(rwChip(t.rw));
-    if (B.name) out.push(E("b", null, esc(t.table)));
-    if (B.ent !== "off") { var e = E("span", { class: "bke" });
-      if (B.ent === "icon" || B.ent === "both") e.insertAdjacentHTML("beforeend", ico("entity", 13, ec));
+  var BKDEF = { form: "row", icon: 1, rw: 1, name: 1, ent: "word", count: "words", model: "word",
+    iconCol: "model", sel: "icon",
+    rows: [["icon", "rw", "name", "ent", "count", "model"], [], []],
+    size: { icon: 13, rw: 12, name: 13, ent: 12, count: 12, model: 12 } };
+  function bkcfg(){ var c = (window.DATACFG || {}).bk || {}, o = {};
+    Object.keys(BKDEF).forEach(function(k){ o[k] = c[k] == null ? BKDEF[k] : c[k]; }); return o; }
+  /* THE GLYPH'S COLOUR IS A SETTING, NOT THE ENTITY'S (operator 2026-09-12): the drum took pantry's
+     colour on one row and settings' on the next, which made ONE kind of thing look like six. It now
+     takes one colour for every table by default — the graph's own colour for a model — and the entity
+     stays readable in its own part of the line. */
+  var BKICOL = {
+    model: { word: "the model colour", get: function(t, S){ return S.KINDCOL.model; },
+      plain: "one colour for every table — the graph's own colour for a model" },
+    ink: { word: "ink", get: function(){ return "var(--ink)"; }, plain: "one colour for every table — the page's own text colour" },
+    muted: { word: "quiet", get: function(){ return "var(--muted)"; }, plain: "one colour for every table, quiet enough to recede" },
+    entity: { word: "the entity", get: function(t){ return t.entity_color || "#888"; },
+      plain: "the glyph takes its entity's colour — one kind of thing drawn in many colours" },
+    channel: { word: "the channel", get: function(t){ return RWC[t.rw]; },
+      plain: "the glyph takes its channel — read green, write orange, both amber" } };
+  function bkIconCol(t, S){ var B = bkcfg(); return (BKICOL[B.iconCol] || BKICOL.model).get(t, S); }
+  window.BKICOL = BKICOL;
+  /* EVERY PART of a table's title line is built the same way, so its ORDER, its LINE and its SIZE are
+     all data the operator drags and drives (operator 2026-09-12, the head-bar registry applied here) */
+  var BKPART = [
+    { key: "icon", word: "the table glyph", ico: "model", note: "the DB drum — the same glyph the universe graph draws for a model" },
+    { key: "rw", word: "the channel chip", ico: "role", note: "R · W · RW — which way the data moves through this table" },
+    { key: "name", word: "the table name", ico: "doc", note: "the table as the database names it" },
+    { key: "ent", word: "the entity", ico: "entity", note: "which entity claims the table — word, glyph or both" },
+    { key: "count", word: "the field count", ico: "info", note: "how many columns — in words or as a badge" },
+    { key: "model", word: "the class", ico: "schema", note: "the Python class that maps to this table" } ];
+  window.BKPART = BKPART;
+  function bkPart(key, t, S, B){ var ec = t.entity_color || "#888", z = (B.size || {})[key] || 12;
+    if (key === "icon") return B.icon ? '<span class="bki">' + ico("model", z, bkIconCol(t, S)) + '</span>' : null;
+    if (key === "rw") return B.rw ? '<span class="bkrw" style="font-size:' + z + 'px">' + rwChip(t.rw) + '</span>' : null;
+    if (key === "name") return B.name ? E("b", { style: "font-size:" + z + "px" }, esc(t.table)) : null;
+    if (key === "ent") { if (B.ent === "off") return null;
+      var e = E("span", { class: "bke", style: "color:" + ec + ";font-size:" + z + "px" });
+      if (B.ent === "icon" || B.ent === "both") e.insertAdjacentHTML("beforeend", ico("entity", z, ec));
       if (B.ent === "word" || B.ent === "both") e.append(E("span", null, esc(t.entity || "—")));
-      e.style.setProperty("color", ec); out.push(e); }
-    if (B.count !== "off") out.push(E("span", { class: "bkn" + (B.count === "badge" ? " badge" : "") },
-      B.count === "badge" ? String(t.cols.length) : t.cols.length + " fields"));
-    if (B.model !== "off") { var m = E("span", { class: "bkm" });
-      if (B.model === "icon" || B.model === "both") m.insertAdjacentHTML("beforeend", ico("doc", 13, S.KINDCOL.schema));   /* the CLASS, not the table */
+      return e; }
+    if (key === "count") { if (B.count === "off") return null;
+      return E("span", { class: "bkn" + (B.count === "badge" ? " badge" : ""), style: "font-size:" + z + "px" },
+        B.count === "badge" ? String(t.cols.length) : t.cols.length + " fields"); }
+    if (key === "model") { if (B.model === "off") return null;
+      var m = E("span", { class: "bkm", style: "font-size:" + z + "px" });
+      if (B.model === "icon" || B.model === "both") m.insertAdjacentHTML("beforeend", ico("doc", z, S.KINDCOL.schema));
       if (B.model === "word" || B.model === "both") m.append(E("span", null, esc(t.model)));
-      out.push(m); }
+      return m; }
+    return null; }
+  /* the title is LINES of parts — drag a part to another line in the rail and it moves here */
+  function bkLines(t, S){ var B = bkcfg(), out = [];
+    (B.rows || []).forEach(function(row){ var line = [];
+      (row || []).forEach(function(k){ var n = bkPart(k, t, S, B); if (n) line.push(n); });
+      if (line.length) out.push(line); });
     return out; }
   function renderDataBlocks(box, F, S){
     var D = F.data, TS = dtables(D), DC = window.DATACFG || {}, B = bkcfg();
@@ -719,7 +756,11 @@
       var mix = {}; t.cols.forEach(function(c){ var k = typeOf(c[1]).key; mix[k] = (mix[k] || 0) + 1; });
       var blk = E("div", { class: "blk rw-" + t.rw + (sel === t.table ? " sel" : ""), style: "--ec:" + (t.entity_color || "#888") });
       blk.dataset.table = t.table;
-      var hd = E("div", { class: "bkhd" }); bkTitle(t, S, mix).forEach(function(n){ if (typeof n === "string") hd.insertAdjacentHTML("beforeend", n); else hd.append(n); });
+      var hd = E("div", { class: "bkhd" }), ti = E("div", { class: "bkti" });
+      bkLines(t, S).forEach(function(line){ var ln = E("div", { class: "bkln" });
+        line.forEach(function(n){ if (typeof n === "string") ln.insertAdjacentHTML("beforeend", n); else ln.append(n); });
+        ti.append(ln); });
+      hd.append(ti);
       var sqs = E("div", { class: "sqs" });
       t.cols.forEach(function(c){ var tc = typeOf(c[1]), opt = isOpt(c[1]), isFk = fkSet[c[0]], isUq = uqSet[c[0]];
         var q = E("i", { class: "sq t-" + tc.key + (opt ? " opt" : "") + (isFk ? " fk" : "") + (isUq ? " uq" : ""),
@@ -1193,6 +1234,7 @@
   /* ── the registry — icons are STATION icons (words on hover), counts answer A ─────────── */
   window.PANELS = {
     data: { icon: "table", word: "Data", col: S.KINDCOL.model,
+      defaultVariant: "blocks",      /* the operator's default line, 2026-09-12 */
       portraitSubject: function(F){ var t = selTable(F); return t ? t.table : null; },
       portraits: [ { key: "record", label: "Record", icon: "doc", hint: "everything the feed knows about the table, in rows — the densest honest reading", render: dataPortrait },
                    { key: "shape", label: "Shape", icon: "model", hint: "the drum as the graph draws it, with every field a cell beneath it", render: dataShape },

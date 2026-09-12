@@ -48,6 +48,14 @@ ok(tabs.join(',') === 'data,schemas,functions,tests,widening,security', 'SIX tab
   await p.evaluate(() => document.querySelectorAll('.barblk.min').forEach(b => b.classList.remove('min')));
   await p.waitForTimeout(120); }
 
+// the DATA panel boots on the operator's own default line (2026-09-12)
+ok(await p.evaluate(() => window.COPYTXT.data()) ===
+   'data · shown as blocks · tables all · count tables · block block (icon on model, chip on, name on, entity word, count words, model word)'
+   + ' · lines icon rw name ent count model / — / — · sizes icon 13 rw 12 name 13 ent 12 count 12 model 12'
+   + ' · squares 11px gap 2 round by type, optional marked · grounds by size, width flex, tiles stack'
+   + ' · drawn note counts shapes rw commit ev mdl ents legend · nothing hidden',
+   'the data panel boots on the operator\'s default line', await p.evaluate(() => window.COPYTXT.data()));
+
 // the head strip carries the station card's head
 const head = await p.$eval('#headstrip', e => e.innerText);
 for (const s of [F.identity.path, String(F.identity.status), F.identity.file + ':' + F.identity.flines]) ok(head.includes(s), 'head strip shows ' + s);
@@ -442,6 +450,45 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   ok(await p.$eval('#datacfg .ib[data-sec="shapes"]', e => e.classList.contains('na')),
      'the shapes toggle is marked NOT DRAWN in Fields — the names took their place');
   await p.click('#datacfg .ib[data-dlayout="grounds"]'); await p.waitForTimeout(220);
+
+  // ══ THE GLYPH'S COLOUR IS A SETTING (operator 2026-09-12): one kind of thing must not look like six ══
+  { await p.evaluate(() => window.showVariant('data', 'blocks')); await p.waitForTimeout(280);
+    const one = await p.$$eval('#panel .blk .bki svg', els => new Set(els.map(e => e.getAttribute('stroke') || getComputedStyle(e).stroke)).size);
+    ok(one === 1, 'every table glyph is ONE colour by default — the table is one kind of thing', String(one));
+    await p.click('#datacfg .ib[data-bkicon-col="entity"]'); await p.waitForTimeout(280);
+    const many = await p.$$eval('#panel .blk .bki svg', els => new Set(els.map(e => e.getAttribute('stroke') || getComputedStyle(e).stroke)).size);
+    ok(many > 1, 'and it CAN take the entity instead, when that is what you want to read', String(many));
+    await p.click('#datacfg .ib[data-bkicon-col="model"]'); await p.waitForTimeout(280); }
+  // ══ THE TITLE'S PARTS: order, line and size — the head bar's registry applied to a table ══
+  { const zones = await p.$$eval('#datacfg .zones.lines .dzone', els => els.map(e => e.dataset.line));
+    ok(zones.join(',') === '0,1,2', 'three lines to drag a part onto', zones.join(','));
+    const chips = await p.$$eval('#datacfg .dzone[data-line="0"] .ib', els => els.map(e => e.dataset.bkpart));
+    ok(chips.join(',') === 'icon,rw,name,ent,count,model', 'every part of the title is a draggable chip', chips.join(','));
+    ok(await p.$$eval('#datacfg .dzone .ib', els => els.every(e => e.getAttribute('draggable') === 'true')), 'and every one of them drags');
+    ok(await p.$$eval('#panel .blk:first-child .bkln', els => els.length) === 1, 'the title starts on ONE line');
+    // move two parts onto line 2 — the block stacks
+    await p.evaluate(() => { window.moveBkPart('count', 1, 0); window.moveBkPart('model', 1, 1); }); await p.waitForTimeout(300);
+    const lines = await p.$$eval('#panel .blk:first-child .bkln', els => els.map(e => e.innerText.replace(/\s+/g, ' ').trim()));
+    ok(lines.length === 2, 'moving parts to line 2 stacks the title', JSON.stringify(lines));
+    ok(/fields/.test(lines[1]), 'and the moved parts are the ones on the new line', lines[1]);
+    ok(await p.$$eval('#datacfg .dzone[data-line="1"] .ib', els => els.map(e => e.dataset.bkpart).join(',')) === 'count,model',
+       'the rail shows them on that line too');
+    // reorder within a line
+    await p.evaluate(() => window.moveBkPart('model', 1, 0)); await p.waitForTimeout(280);
+    ok(await p.evaluate(() => window.bkRows()[1].join(',')) === 'model,count', 'a part can be reordered inside its line',
+       await p.evaluate(() => window.bkRows()[1].join(',')));
+    // SIZE per part, with the 12px floor held on text
+    await p.click('#datacfg .dzone[data-line="0"] .ib[data-bkpart="name"]'); await p.waitForTimeout(200);
+    await p.evaluate(() => { window.DATACFG.bk.size.name = 22; window.showTab('data'); }); await p.waitForTimeout(280);
+    ok(await p.$eval('#panel .blk b', e => Math.round(parseFloat(getComputedStyle(e).fontSize)) === 22), 'a part takes the size its bar sets',
+       await p.$eval('#panel .blk b', e => getComputedStyle(e).fontSize));
+    await p.evaluate(() => { window.DATACFG.bk.size.name = 13; window.moveBkPart('count', 0, 4); window.moveBkPart('model', 0, 5); }); await p.waitForTimeout(300);
+    ok(await p.evaluate(() => window.bkRows()[0].join(',')) === 'icon,rw,name,ent,count,model', 'and everything goes back to one line');
+    // nothing in a title may run past its block — a nowrap name needs somewhere to stop
+    ok(await p.$$eval('#panel .blk', els => els.every(b => {
+      const r = b.getBoundingClientRect();
+      return [...b.querySelectorAll('.bkln b, .bkln .bkm, .bkln .bke, .bkln .bkn')].every(e => e.getBoundingClientRect().right <= r.right + 1); })),
+      'no part of a title runs past the block that holds it'); }
 
   // ══ THE CHANNELS ARE APPENDABLE (operator 2026-09-12): three independent switches in the panel's own
   //    title row. All three on IS every table, so the old fourth button is gone. ══
