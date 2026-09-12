@@ -1,0 +1,188 @@
+{
+ "before": {
+  "gastify": {
+   "census": {
+    "action_roots": 0,
+    "app_middleware": 3,
+    "boot_roots": 1,
+    "cross_edges": 122,
+    "endpoints": 49,
+    "entities": 5,
+    "fe_edges": 890,
+    "fe_pieces": 415,
+    "files_claimed": 127,
+    "fn_edges": 141,
+    "fn_nodes": 136,
+    "function_insight": 453,
+    "homing_agree": 309,
+    "homing_move": 7,
+    "l1_edges": 12,
+    "l2_edges": 245,
+    "l2_nodes": 218,
+    "lv_models": 8,
+    "models": 14,
+    "schema_edges": 221,
+    "task_roots": 0,
+    "unparseable": 0,
+    "use_edges": 45,
+    "web_fetch_sites": 71,
+    "web_matched": 43
+   },
+   "drawn": {
+    "fn_edges": 141,
+    "fn_nodes": 136,
+    "with_access": 87,
+    "with_d2w": 61
+   },
+   "graft": {
+    "calls": 18972,
+    "edges": 39461,
+    "extracted": 13606,
+    "implements": 3,
+    "inferred": 5366,
+    "nodes": 14866,
+    "self_loops": 214
+   }
+  },
+  "gustify": {
+   "census": {
+    "action_roots": 0,
+    "app_middleware": 3,
+    "boot_roots": 1,
+    "cross_edges": 343,
+    "endpoints": 80,
+    "entities": 8,
+    "fe_edges": 3229,
+    "fe_pieces": 1078,
+    "files_claimed": 397,
+    "fn_edges": 427,
+    "fn_nodes": 299,
+    "function_insight": 522,
+    "homing_agree": 609,
+    "homing_move": 20,
+    "l1_edges": 36,
+    "l2_edges": 479,
+    "l2_nodes": 312,
+    "lv_models": 8,
+    "models": 57,
+    "schema_edges": 77,
+    "task_roots": 0,
+    "unparseable": 0,
+    "use_edges": 173,
+    "web_fetch_sites": 55,
+    "web_matched": 53
+   },
+   "drawn": {
+    "fn_edges": 427,
+    "fn_nodes": 299,
+    "with_access": 165,
+    "with_d2w": 157
+   },
+   "graft": {
+    "calls": 25220,
+    "edges": 49601,
+    "extracted": 15762,
+    "implements": 1,
+    "inferred": 9458,
+    "nodes": 19210,
+    "self_loops": 281
+   },
+   "probes": {
+    "FirebaseTokenVerifier.verify": false,
+    "TokenVerifier.verify": false
+   }
+  },
+  "keypro": {
+   "census": {
+    "action_roots": 11,
+    "app_middleware": 0,
+    "boot_roots": 0,
+    "cross_edges": 0,
+    "endpoints": 0,
+    "entities": 5,
+    "fe_edges": 236,
+    "fe_pieces": 190,
+    "files_claimed": 90,
+    "fn_edges": 23,
+    "fn_nodes": 37,
+    "function_insight": 15,
+    "homing_agree": 34,
+    "homing_move": 2,
+    "l1_edges": 10,
+    "l2_edges": 1,
+    "l2_nodes": 13,
+    "lv_models": 8,
+    "models": 2,
+    "schema_edges": 0,
+    "task_roots": 0,
+    "unparseable": 0,
+    "use_edges": 0,
+    "web_fetch_sites": 0,
+    "web_matched": 0
+   },
+   "drawn": {
+    "fn_edges": 23,
+    "fn_nodes": 37,
+    "with_access": 15,
+    "with_d2w": 11
+   },
+   "graft": {
+    "calls": 2266,
+    "edges": 4268,
+    "extracted": 1267,
+    "implements": 12,
+    "inferred": 999,
+    "nodes": 1547,
+    "self_loops": 21
+   },
+   "probes": {
+    "CookieSessionStore.save": false,
+    "PostgresSessionRepository.create": true
+   }
+  },
+  "tier3": {
+   "census": {
+    "action_roots": 0,
+    "app_middleware": 4,
+    "boot_roots": 0,
+    "cross_edges": 1628,
+    "endpoints": 512,
+    "entities": 9,
+    "fe_edges": 5345,
+    "fe_pieces": 2608,
+    "files_claimed": 1926,
+    "fn_edges": 3348,
+    "fn_nodes": 2666,
+    "function_insight": 8445,
+    "homing_agree": 1329,
+    "homing_move": 245,
+    "l1_edges": 63,
+    "l2_edges": 190,
+    "l2_nodes": 794,
+    "lv_models": 8,
+    "models": 155,
+    "schema_edges": 0,
+    "task_roots": 46,
+    "unparseable": 0,
+    "use_edges": 1125,
+    "web_fetch_sites": 352,
+    "web_matched": 188
+   },
+   "drawn": {
+    "fn_edges": 3348,
+    "fn_nodes": 2666,
+    "with_access": 710,
+    "with_d2w": 875
+   },
+   "graft": {
+    "calls": 57923,
+    "edges": 142152,
+    "extracted": 22935,
+    "implements": 0,
+    "inferred": 34988,
+    "nodes": 49676,
+    "self_loops": 463
+   }
+  }
+ }
+}

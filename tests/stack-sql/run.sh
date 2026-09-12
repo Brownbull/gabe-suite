@@ -86,11 +86,15 @@ o = json.loads(sys.argv[1])
 assert o["present"] and o["role"] == "fallback", o
 t = {x["table"]: x for x in o["tables"]}
 assert set(t) == {"users", "sessions"}, list(t)
-assert t["users"]["cls"] is None, "a CREATE TABLE literal has no class — the R2 contract"
+# cls CARRIES THE TABLE NAME. It was None until three consumers crashed on it (re.sub,
+# html.escape, re.findall over a list) — 81 hard ["cls"] reads make nullable untenable.
+assert t["users"]["cls"] == "users", "cls must carry the table name, not None"
 cols = [c[0] for c in t["users"]["cols"]]
 assert cols == ["id", "username", "role", "created_at", "email"], cols   # ALTER appended, CREATE first
 assert t["sessions"]["fks"] == {"user_id": "users.id"}, t["sessions"]["fks"]
-assert t["users"]["uqs"] == [["lower(email)"]], t["users"]["uqs"]         # rebalanced, not truncated
+# uqs is a list of STRINGS, matching the Python arm's constraint text; the expression is
+# rebalanced so a functional index is not truncated to `lower(email`
+assert t["users"]["uqs"] == ["UNIQUE (lower(email))"], t["users"]["uqs"]
 ops = o["access"]["db/repo.ts"]
 assert all(x["model"] is None and x["table"] for x in ops), ops
 got = {(x["table"], x["rw"]) for x in ops}
@@ -199,6 +203,43 @@ assert t["widgets"]["file"] == "db/schema.ts", t["widgets"]["file"]
 print("ok")
 HOMEPY
 ) >/dev/null 2>&1; then ok; else bad "home: a test file must not win a table's home"; fi
+
+# ── R2 CONFORMANCE: the record must match the shape 81 consumers already assume ───────────────
+# The plan froze R2 and said `cls` was nullable with consumers keying on `table`. There are 81 hard
+# `["cls"]` reads across the generators, and THREE of them killed the whole build: _a3_tests ran
+# re.sub over None, _a3_codetab ran html.escape over it, and _dm_detail ran re.findall over a
+# list-of-lists `uqs`. Each crash took the entire regen down to render one link. So the shape is
+# pinned here by TYPE, against a record the Python arm actually produced.
+if (cd "$GEN" && python3 - <<'CONFPY'
+import sys, pathlib
+import _a3_stacks_sql as S
+
+T = pathlib.Path("/tmp/_r2fix"); (T / "db").mkdir(parents=True, exist_ok=True)
+(T / "db" / "s.ts").write_text(
+    'export const S = `CREATE TABLE IF NOT EXISTS users ('
+    ' id TEXT PRIMARY KEY, email TEXT );\n'
+    'CREATE UNIQUE INDEX users_lower ON users (lower(email));`;\n')
+rec = S.parse(T)["tables"][0]
+
+# the REFERENCE shape: field → the type the Python arm emits (a str cls, a list of str uqs, …)
+REF = {"cls": str, "table": str, "file": str, "doc": str,
+       "cols": list, "fks": dict, "rels": list, "uqs": list}
+for k, ty in REF.items():
+    assert k in rec, f"R2 is missing {k} — a consumer will KeyError"
+    assert isinstance(rec[k], ty), f"R2 {k} is {type(rec[k]).__name__}, consumers assume {ty.__name__}"
+assert rec["cls"], "cls must never be empty: 81 consumers read it as a string, 3 of them crash on None"
+assert all(isinstance(u, str) for u in rec["uqs"]), \
+    f"uqs must be a list of STRINGS like the Python arm's UniqueConstraint(...) text — got {rec['uqs']}"
+assert all(isinstance(c, list) and len(c) == 3 for c in rec["cols"]), \
+    f"cols must be [name, type, desc] triples — got {rec['cols'][:2]}"
+assert all(isinstance(v, str) for v in rec["fks"].values()), "fks values must be 'table.col' strings"
+# and the anchor helper must survive a None whatever any caller does
+import _a3_code
+_a = _a3_code._anchor("dm", "app", None)          # the point is that it RETURNS, not its exact text
+assert isinstance(_a, str) and _a.startswith("dm-app"), f"_anchor must degrade on None — got {_a!r}"
+print("ok")
+CONFPY
+) >/dev/null 2>&1; then ok; else bad "R2 conformance: the record must match the shape consumers assume"; fi
 
 echo "stack-sql: $pass passed, $fail failed"
 [ "$fail" = 0 ] || exit 1

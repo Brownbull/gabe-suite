@@ -265,5 +265,31 @@ print("ok")
 NEEDSPY
 ) >/dev/null 2>&1; then ok; else bad "derivations: DERIVED_NEEDS contract"; fi
 
+
+# ── SELF-EDGES never enter the behind/d2w/roles substrate (phase 1) ───────────────────────────
+# graft's same-file resolver takes the first match with no not-the-caller guard, so
+# `return (await this.pool()).query(sql)` inside `query` resolves to `query` itself — 979 such
+# edges across the four study repos, all at `extracted`, its HIGHEST confidence. The three
+# call-edge builders already filtered them; _behind_context did not, and each one minted a
+# `behind` record of {fns: 0, depth: 0} — an empty entry where honest-empty says there is none.
+if (cd "$GEN" && python3 - <<'SLPY'
+import _a3_graft as G
+W = {"nodes": [{"id": "a.py#f", "kind": "function", "path": "a.py", "span": "L1-L9"},
+               {"id": "a.py#g", "kind": "function", "path": "a.py", "span": "L10-L19"}],
+     "edges": [{"source": "a.py#f", "target": "a.py#f", "relation": "calls", "confidence": "extracted"},
+               {"source": "a.py#f", "target": "a.py#g", "relation": "calls", "confidence": "extracted"}]}
+ids, adj = G._behind_context(W)
+assert adj.get("a.py#f") == ["a.py#g"], f"a self-edge entered the adjacency: {adj}"
+b = G.derive_fn_behind(W)
+assert "a.py#g" not in b, "a leaf must carry NO behind record"
+assert b.get("a.py#f", {}).get("fns") == 1, f"the real callee still counts: {b.get('a.py#f')}"
+# a self-edge ALONE must mint nothing — the empty {fns:0, depth:0} record is the defect
+W2 = {"nodes": [{"id": "a.py#f", "kind": "function", "path": "a.py", "span": "L1-L9"}],
+      "edges": [{"source": "a.py#f", "target": "a.py#f", "relation": "calls", "confidence": "extracted"}]}
+assert G.derive_fn_behind(W2) == {}, f"a self-edge alone minted a behind record: {G.derive_fn_behind(W2)}"
+print("ok")
+SLPY
+) >/dev/null 2>&1; then ok; else bad "self-edges must not enter the behind/d2w/roles substrate"; fi
+
 echo "arms: $pass passed, $fail failed"
 [ "$fail" = 0 ] || exit 1

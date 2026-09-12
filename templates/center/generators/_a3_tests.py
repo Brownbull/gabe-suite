@@ -578,10 +578,14 @@ def untested_surface(repo: Path, slug: str, app: bool = False) -> str:
         if rec.get("direct") or rec.get("via_route"):
             continue
         kind = "schema" if m in amap.get("schemas", []) else "model"
+        # a raw-SQL table has no class (R2 with cls=None) — it is named by its table. Keying on
+        # `cls` alone crashed the whole build here: _anchor ran re.sub over None (TypeError), and
+        # keypro-front's regen died the moment its 2 tables entered entities[].models.
+        _mname = m.get("cls") or m.get("table") or ""
         rows.append([*_ent(m.get("file", "")),
                      f'<a class="dlink" href="{xp["dm"]}#'
-                     f'{_anchor("dm", scope, m["cls"])}">'
-                     f'<code>{E(m["cls"])}</code></a>',
+                     f'{_anchor("dm", scope, _mname)}">'
+                     f'<code>{E(_mname)}</code></a>',
                      f"<small>{kind}</small>",
                      "never touched by name nor via any route"])
     fi = _a3_code.function_insight(repo)

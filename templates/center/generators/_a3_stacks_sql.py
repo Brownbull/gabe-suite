@@ -13,7 +13,12 @@ covers — none of it is here, and the arms census reports the gap rather than t
 
 Contract (frozen, matching the FastAPI arm's records so every consumer is untouched):
   R2 table  {cls, table, file, doc, cols[(name, type, desc)], fks{col: "table.col"}, rels[], uqs[]}
-            `cls` is None — a CREATE TABLE literal has no class. Consumers key on `table`.
+            `cls` CARRIES THE TABLE NAME, not None. The plan said cls was nullable and consumers
+            would key on `table`; 81 hard `["cls"]` reads across the generators said otherwise, and
+            three of them killed the build outright — _a3_tests ran re.sub over None, _a3_codetab
+            ran html.escape over it, and each crash took the whole regen down to render one link.
+            A nullable field that 81 readers assume is a string is not a contract, it is a fuse.
+            The table name is also exactly what every surface would have labelled it.
   R4 access {model, table, rw}  — `model` is None for the same reason; `table` carries the name.
             FLOOR: an access table must be lower_snake, or `SELECT Id FROM User` (Salesforce SOQL,
             measured on tier3) counts as one of the app's tables. A PascalCase table is missed and
@@ -251,7 +256,7 @@ def parse(repo: Path, orm_tables: int = 0, orm_access: int = 0) -> dict:
                 continue
             for m in _CREATE_RX.finditer(text):
                 tbl, body = m.group(1), m.group(2)
-                rec = by_table.setdefault(tbl, {"cls": None, "table": tbl, "file": rel, "doc": "",
+                rec = by_table.setdefault(tbl, {"cls": tbl, "table": tbl, "file": rel, "doc": "",
                                                 "cols": [], "fks": {}, "rels": [], "uqs": []})
                 # a table's HOME must not be a test file: files are walked sorted, so
                 # `schema.test.ts` claimed `users` before `schema.ts` did — and the code map
@@ -271,7 +276,7 @@ def parse(repo: Path, orm_tables: int = 0, orm_access: int = 0) -> dict:
                     rec["fks"][f.group(1)] = f"{f.group(2)}.{f.group(3)}"
             for m in _ALTER_ADD_RX.finditer(text):
                 tbl, col, typ = m.group(1), m.group(2), m.group(3).strip()
-                rec = by_table.setdefault(tbl, {"cls": None, "table": tbl, "file": rel, "doc": "",
+                rec = by_table.setdefault(tbl, {"cls": tbl, "table": tbl, "file": rel, "doc": "",
                                                 "cols": [], "fks": {}, "rels": [], "uqs": []})
                 # a table's HOME must not be a test file: files are walked sorted, so
                 # `schema.test.ts` claimed `users` before `schema.ts` did — and the code map
@@ -284,8 +289,11 @@ def parse(repo: Path, orm_tables: int = 0, orm_access: int = 0) -> dict:
             for m in _UQ_RX.finditer(text):
                 rec = by_table.get(m.group(2))
                 if rec is not None:
-                    # a FUNCTIONAL index reads `lower(email)`, and `([^)]*)` stops at the inner
-                    # paren — rebalance so the expression is recorded whole, not as `lower(email`
+                    # `uqs` is a list of STRINGS — the constraint's source text, matching the
+                    # Python arm ("UniqueConstraint('user_id', name='uq_…')"). Emitting a list of
+                    # lists here made _a3_codetab._dm_detail run re.findall over a list and take
+                    # the whole regen down. A functional index also reads `lower(email)`, and
+                    # `([^)]*)` stops at the inner paren, so the expression is rebalanced first.
                     cols = []
                     for c in m.group(3).split(","):
                         c = c.strip().strip('"`[]')
@@ -293,8 +301,10 @@ def parse(repo: Path, orm_tables: int = 0, orm_access: int = 0) -> dict:
                             c += ")" * (c.count("(") - c.count(")"))
                         if c:
                             cols.append(c)
-                    if cols and cols not in rec["uqs"]:
-                        rec["uqs"].append(cols)
+                    if cols:
+                        _uq = "UNIQUE (%s)" % ", ".join(cols)
+                        if _uq not in rec["uqs"]:
+                            rec["uqs"].append(_uq)
             # (the lower_snake floor now lives at module scope as _tbl_ok)
             # SQL is case-insensitive but the
             # convention is overwhelming, and the alternative is counting `SELECT Id FROM User` —

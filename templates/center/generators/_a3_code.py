@@ -557,9 +557,12 @@ def parse_schemas(repo: Path, files: list[str]) -> list[dict]:
     return out
 
 
-def _anchor(kind: str, slug: str, name: str) -> str:
+def _anchor(kind: str, slug: str, name: str | None) -> str:
+    """An anchor id. `name` tolerates None: a raw-SQL table carries no class, and a re.sub over
+    None raised TypeError from inside a page renderer — killing the whole build to render one
+    link. An anchor is a cosmetic string; it degrades, it does not gate."""
     import re as _re
-    return f"{kind}-{slug}-{_re.sub(r'[^A-Za-z0-9]+', '-', name).strip('-')}"
+    return f"{kind}-{slug}-{_re.sub(r'[^A-Za-z0-9]+', '-', str(name or '')).strip('-')}"
 
 
 def parse_defines(repo: Path, rel: str) -> list[str]:

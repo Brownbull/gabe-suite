@@ -253,7 +253,16 @@ def _behind_context(wiring: dict[str, Any]) -> tuple[set[str], dict[str, list[st
     for e in wiring.get("edges") or []:
         if e.get("relation") == "calls":
             s, t = e.get("source"), e.get("target")
-            if s in fn_ids and t in fn_ids:   # both ends real source functions
+            # `s != t` like the three call-edge builders below (:215/:220/:226) already do.
+            # graft's same-file resolver takes the first match with no not-the-caller guard, so
+            # `return (await this.pool()).query(sql)` inside `query` resolves to `query` itself —
+            # 979 such edges across the four study repos (gustify 281 · gastify 214 · tier3 463 ·
+            # keypro 21), all at `extracted`, its HIGHEST confidence. They never reached fn_edges
+            # (those builders filter), but they reached HERE, and a self-edge minted a `behind`
+            # record of `{fns: 0, depth: 0}` — an empty entry where the honest-empty law says
+            # there should be none (measured: 20 on gustify, 7 on keypro). A self-edge also adds
+            # no reachability, so nothing downstream loses information.
+            if s in fn_ids and t in fn_ids and s != t:   # both ends real source functions
                 adj.setdefault(s, []).append(t)
     return fn_ids, adj
 
