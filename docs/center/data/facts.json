@@ -1,8 +1,8 @@
 {
-  "generated": "2026-09-11",
-  "head": "3e24583",
+  "generated": "2026-09-13",
+  "head": "75df3ab",
   "dirty": true,
-  "method": "batteries: PARTIAL refresh — 1 of 47 re-run (gabe-universe); the other 45 carried from their own run_at/run_head stamps by docs/center/generators/write_facts.py with the doctor's G3 exclusions honoured; assertions + failures parsed from each battery's own summary line (failures > 0 is RED even at exit 0), `protects` from its header comment, FIRE/SILENT from the battery's own text (run.sh + the siblings it delegates to). hooks: probed by hand 2026-07-26 (each hook executed in a hermetic temp repo against realistic stdin payloads) — a different instrument, carried as recorded.",
+  "method": "batteries: PARTIAL refresh — 1 of 52 re-run (pulse-angles); the other 45 carried from their own run_at/run_head stamps by docs/center/generators/write_facts.py with the doctor's G3 exclusions honoured; assertions + failures parsed from each battery's own summary line (failures > 0 is RED even at exit 0), `protects` from its header comment, FIRE/SILENT from the battery's own text (run.sh + the siblings it delegates to). hooks: probed by hand 2026-07-26 (each hook executed in a hermetic temp repo against realistic stdin payloads) — a different instrument, carried as recorded.",
   "hooks": [
     {
       "name": "plan-proof-guard",
@@ -73,6 +73,17 @@
   ],
   "batteries": [
     {
+      "name": "action-roots",
+      "beat": "center",
+      "assertions": 0,
+      "failures": 0,
+      "status": "NOT RUN",
+      "protects": "ACTION roots (class 15) fixture battery — `_a3_code.parse_action_roots` executable contract.",
+      "proves_fire": true,
+      "proves_silent": true,
+      "note": "no recorded run yet — run write_facts.py without --only"
+    },
+    {
       "name": "arch-graph",
       "beat": "center",
       "assertions": 329,
@@ -85,6 +96,17 @@
       "seconds": 0.1,
       "run_at": "2026-09-11",
       "run_head": "3e24583"
+    },
+    {
+      "name": "arms",
+      "beat": "center",
+      "assertions": 0,
+      "failures": 0,
+      "status": "NOT RUN",
+      "protects": "Arms register battery (extractor-gateway plan, step 2) — the executable contract of _a3_stacks.REGISTER and _a3_code.probe().",
+      "proves_fire": true,
+      "proves_silent": true,
+      "note": "no recorded run yet — run write_facts.py without --only"
     },
     {
       "name": "artifact-chrome",
@@ -493,14 +515,16 @@
     {
       "name": "pulse-angles",
       "beat": "satellites",
-      "assertions": 91,
+      "assertions": 100,
       "failures": 0,
       "status": "GREEN",
       "protects": "ANGLE-signal battery — the executable contract of skills/gabe-pulse/scripts/angles.py.",
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 6.8
+      "seconds": 8.1,
+      "run_at": "2026-09-13",
+      "run_head": "75df3ab"
     },
     {
       "name": "pulse-scripts",
@@ -596,6 +620,39 @@
       "proves_silent": true,
       "rc": 0,
       "seconds": 0.2
+    },
+    {
+      "name": "stack-di",
+      "beat": "center",
+      "assertions": 0,
+      "failures": 0,
+      "status": "NOT RUN",
+      "protects": "Port-seam arm battery (dispatch-gap phase 3) — _a3_stacks_di's executable contract.",
+      "proves_fire": false,
+      "proves_silent": true,
+      "note": "no recorded run yet — run write_facts.py without --only"
+    },
+    {
+      "name": "stack-pydi",
+      "beat": "center",
+      "assertions": 0,
+      "failures": 0,
+      "status": "NOT RUN",
+      "protects": "Python port-seam battery — _a3_stacks_pydi's executable contract.",
+      "proves_fire": true,
+      "proves_silent": true,
+      "note": "no recorded run yet — run write_facts.py without --only"
+    },
+    {
+      "name": "stack-sql",
+      "beat": "center",
+      "assertions": 0,
+      "failures": 0,
+      "status": "NOT RUN",
+      "protects": "Raw-SQL arm battery (extractor-gateway plan, step 8) — _a3_stacks_sql's executable contract.",
+      "proves_fire": true,
+      "proves_silent": true,
+      "note": "no recorded run yet — run write_facts.py without --only"
     },
     {
       "name": "suite-center",

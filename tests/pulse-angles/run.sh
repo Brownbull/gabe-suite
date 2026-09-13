@@ -440,10 +440,6 @@ r=$(repo s18f); mkc4 "$r" '{"head":"abc1234","stats":{}}'; mkdraft "$r" '{not js
 run "$r" | grep -q "entity proposals" && bad "S18 fired on an unparseable draft" || ok "S18 silent (0, never a crash) on an unparseable draft"
 run "$r" >/dev/null 2>&1 && ok "angles.py exits clean with a broken draft on disk" || bad "angles.py crashed on a broken draft"
 
-echo "pulse-angles: $pass passed, $fail failed"
-[ "$fail" -eq 0 ] || exit 1
-
-
 # ── S19 · arms census — the zeros that are NOT the app's doing (archmap v4 `arms` block) ──
 # An `empty` concept is the arm running over real code and finding none: honest, never nagged.
 # `unmatched` and `unsupported_language` are the map describing a stack it cannot read, and every
@@ -465,3 +461,6 @@ run "$r" | grep -q "arms census" && bad "S19 fired on a v3 map with no arms bloc
 r=$(repo s19e); mkarchmap "$r" '{not json'
 run "$r" | grep -q "arms census" && bad "S19 fired on an unparseable archmap" || ok "S19 silent (never a crash) on an unparseable archmap"
 run "$r" >/dev/null 2>&1 && ok "angles.py exits clean with a broken archmap on disk" || bad "angles.py crashed on a broken archmap"
+
+echo "pulse-angles: $pass passed, $fail failed"
+[ "$fail" -eq 0 ] || exit 1
