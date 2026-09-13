@@ -1,0 +1,1163 @@
+<title>Element Forms</title>
+
+<style>
+  /* ── gabe-artifact kit: font roster, title face, floor steps ── */
+  :root { --af-stack: ui-monospace, monospace; --af-size: 15px; --af-track: -0.025em; }
+  :root { --af-title: "Bahnschrift", "DIN Alternate", "Roboto Condensed", "Arial Narrow", ui-sans-serif, system-ui, sans-serif; }
+  :root { --fs-sm: calc(var(--af-size) * 0.92); --fs-xs: calc(var(--af-size) * 0.855); --fs-min: calc(var(--af-size) * 0.82); }
+
+  :root, :root[data-skin="catalog"] {
+    --ground:#f6f7f9; --card:#ffffff; --raised:#fbfcfd; --ink:#141a24; --ink-soft:#3d4756; --muted:#7a8595;
+    --rule:#e7e9ee; --rule-soft:#eef0f4; --accent:#4f46e5; --accent-soft:#eef0fe; --strong:#101726;
+    --radius:10px; --rail:5px; --shadow:0 1px 2px rgba(16,24,40,.05), 0 4px 14px rgba(16,24,40,.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]), :root[data-skin="catalog"]:not([data-theme="light"]) {
+      --ground:#101726; --card:#1b2436; --raised:#212b40; --ink:#e7ebf3; --ink-soft:#c7cfdd; --muted:#79839a;
+      --rule:#2c3648; --rule-soft:#232d3f; --accent:#8b83f5; --accent-soft:#23214a; --strong:#c7cfdd;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="dark"], :root[data-skin="catalog"][data-theme="dark"] {
+    --ground:#101726; --card:#1b2436; --raised:#212b40; --ink:#e7ebf3; --ink-soft:#c7cfdd; --muted:#79839a;
+    --rule:#2c3648; --rule-soft:#232d3f; --accent:#8b83f5; --accent-soft:#23214a; --strong:#c7cfdd;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
+  }
+  :root[data-skin="catalog"][data-theme="light"] {
+    --ground:#f6f7f9; --card:#ffffff; --raised:#fbfcfd; --ink:#141a24; --ink-soft:#3d4756; --muted:#7a8595;
+    --rule:#e7e9ee; --rule-soft:#eef0f4; --accent:#4f46e5; --accent-soft:#eef0fe; --strong:#101726;
+  }
+  :root[data-skin="blueprint"] {
+    --ground:#f6f8fc; --card:#fdfeff; --raised:#f1f5fd; --ink:#16233b; --ink-soft:#41547a; --muted:#8494b5;
+    --rule:#c3d0f0; --rule-soft:#dde5f8; --accent:#1d4ed8; --accent-soft:#e4ecfe; --strong:#16233b; --radius:6px; --rail:5px; --shadow:none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-skin="blueprint"]:not([data-theme="light"]) {
+      --ground:#0b1220; --card:#101a2e; --raised:#142138; --ink:#dce6fa; --ink-soft:#a8bce4; --muted:#7286b0;
+      --rule:#23375f; --rule-soft:#1a2942; --accent:#6f9bff; --accent-soft:#16264a; --strong:#a8bce4; --shadow:none;
+    }
+  }
+  :root[data-skin="blueprint"][data-theme="dark"] {
+    --ground:#0b1220; --card:#101a2e; --raised:#142138; --ink:#dce6fa; --ink-soft:#a8bce4; --muted:#7286b0;
+    --rule:#23375f; --rule-soft:#1a2942; --accent:#6f9bff; --accent-soft:#16264a; --strong:#a8bce4; --shadow:none;
+  }
+  :root[data-skin="blueprint"][data-theme="light"] {
+    --ground:#f6f8fc; --card:#fdfeff; --raised:#f1f5fd; --ink:#16233b; --ink-soft:#41547a; --muted:#8494b5;
+    --rule:#c3d0f0; --rule-soft:#dde5f8; --accent:#1d4ed8; --accent-soft:#e4ecfe; --strong:#16233b;
+  }
+  :root[data-skin="mission"] {
+    --ground:#eef1f4; --card:#ffffff; --raised:#f6f8fa; --ink:#1a2b36; --ink-soft:#4a6272; --muted:#7d92a0;
+    --rule:#c8d4dc; --rule-soft:#e2e9ee; --accent:#0e7c8c; --accent-soft:#e0f1f4; --strong:#1a2b36; --radius:4px; --rail:5px; --shadow:none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-skin="mission"]:not([data-theme="light"]) {
+      --ground:#0e161c; --card:#16222b; --raised:#1b2934; --ink:#e3edf3; --ink-soft:#b3c6d2; --muted:#7d92a0;
+      --rule:#27394a; --rule-soft:#1e2c39; --accent:#2ba7bb; --accent-soft:#0f3038; --strong:#b3c6d2; --shadow:none;
+    }
+  }
+  :root[data-skin="mission"][data-theme="dark"] {
+    --ground:#0e161c; --card:#16222b; --raised:#1b2934; --ink:#e3edf3; --ink-soft:#b3c6d2; --muted:#7d92a0;
+    --rule:#27394a; --rule-soft:#1e2c39; --accent:#2ba7bb; --accent-soft:#0f3038; --strong:#b3c6d2; --shadow:none;
+  }
+  :root[data-skin="mission"][data-theme="light"] {
+    --ground:#eef1f4; --card:#ffffff; --raised:#f6f8fa; --ink:#1a2b36; --ink-soft:#4a6272; --muted:#7d92a0;
+    --rule:#c8d4dc; --rule-soft:#e2e9ee; --accent:#0e7c8c; --accent-soft:#e0f1f4; --strong:#1a2b36;
+  }
+  :root { --sec1:#2b3a55; --sec2:#2f4858; --sec3:#1f5453; --sec4:#2e5339; --sec5:#5a4a2b; --sec6:#5c3340; --sec7:#4a3560; --sec8:#33415c; --sec9:#6b3f2e; --sec-ink:#f7f8fa; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --sec1:#9fb4d6; --sec2:#a3bfcd; --sec3:#8fc9c4; --sec4:#a8cfa6; --sec5:#d8c48d; --sec6:#d9a3b0; --sec7:#bda8dd; --sec8:#a6b6d9; --sec9:#e3ab8f; --sec-ink:#111722; }
+  }
+  :root[data-theme="dark"] { --sec1:#9fb4d6; --sec2:#a3bfcd; --sec3:#8fc9c4; --sec4:#a8cfa6; --sec5:#d8c48d; --sec6:#d9a3b0; --sec7:#bda8dd; --sec8:#a6b6d9; --sec9:#e3ab8f; --sec-ink:#111722; }
+  :root[data-theme="light"] { --sec1:#2b3a55; --sec2:#2f4858; --sec3:#1f5453; --sec4:#2e5339; --sec5:#5a4a2b; --sec6:#5c3340; --sec7:#4a3560; --sec8:#33415c; --sec9:#6b3f2e; --sec-ink:#f7f8fa; }
+  :root { --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; } }
+  :root[data-theme="dark"] { --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; }
+
+  body { background: var(--ground); color: var(--ink); font-family: var(--af-stack); font-size: var(--af-size); letter-spacing: var(--af-track); line-height: 1.55; text-align: left; -webkit-font-smoothing: antialiased; }
+  :root { --sb-thumb: color-mix(in srgb, var(--accent) 42%, var(--rule)); scrollbar-width: thin; scrollbar-color: var(--sb-thumb) var(--rule-soft); }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--rule-soft); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb { background: var(--sb-thumb); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); background-clip: padding-box; }
+  ::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+  ::-webkit-scrollbar-corner { background: transparent; }
+  .artifact-page { max-width: 74rem; margin: 0 auto 0 clamp(16px, 4vw, 56px); padding: 32px 24px 48px; display: flex; flex-direction: column; gap: 30px; text-align: left; }
+  .artifact-page > :first-child { padding-right: 56px; }
+  :is(a, button, select, input, textarea, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  p { margin: 0; }
+  .sec { display: flex; flex-direction: column; gap: 14px; }
+  .sec-head { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--rule); padding-bottom: 8px; }
+  .sec-head .n { margin-left: auto; font-size: var(--fs-min); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+  .sec-head h2 { margin: 0; background: var(--sec, var(--strong)); color: var(--sec-ink, var(--ground)); padding: 2px 11px 2px 9px; border-radius: 999px; font-family: var(--af-title); font-size: 1em; font-weight: 600; letter-spacing: .045em; text-transform: uppercase; line-height: 1.34; display: inline-flex; align-items: center; gap: 7px; }
+  .sec-head h2 svg { width: 1.02em; height: 1.02em; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .sec[data-sec="1"] { --sec: var(--sec1); } .sec[data-sec="2"] { --sec: var(--sec2); } .sec[data-sec="3"] { --sec: var(--sec3); }
+  .sec[data-sec="4"] { --sec: var(--sec4); } .sec[data-sec="5"] { --sec: var(--sec5); } .sec[data-sec="6"] { --sec: var(--sec6); }
+  .panel { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius, 10px); padding: 15px; display: flex; flex-direction: column; gap: 12px; }
+  :root .panel { border-left: var(--rail) solid var(--accent); }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 14px; align-items: start; }
+  .af-chrome { position: fixed; top: 14px; right: 14px; z-index: 200; }
+  .af-cog { display: grid; place-items: center; width: 38px; height: 38px; background: var(--card); color: var(--muted); border: 1px solid var(--rule); border-radius: 10px; box-shadow: var(--shadow); cursor: pointer; transition: color .15s ease, border-color .15s ease, transform .25s ease; }
+  .af-cog:hover { color: var(--accent); border-color: var(--accent); }
+  .af-cog[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); transform: rotate(45deg); }
+  .af-cog svg { width: 18px; height: 18px; display: block; }
+  .af-panel { position: absolute; top: 46px; right: 0; width: 262px; background: var(--card); border: 1px solid var(--rule); border-radius: 12px; box-shadow: var(--shadow); padding: 14px; display: none; flex-direction: column; gap: 11px; max-height: 82vh; overflow-y: auto; }
+  .af-panel[data-open="true"] { display: flex; }
+  .af-group { display: flex; flex-direction: column; gap: 7px; }
+  .af-legend { font-size: .72em; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .af-opt { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; width: 100%; text-align: left; cursor: pointer; font-family: inherit; background: var(--raised); color: var(--ink); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 11px; }
+  .af-opt:hover { border-color: var(--accent); }
+  .af-opt[aria-checked="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .af-opt .af-name { font-size: 14px; line-height: 1.2; }
+  .af-opt .af-spec { font-size: 12px; color: var(--muted); letter-spacing: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .af-opt[aria-checked="true"] .af-spec { color: var(--accent); }
+  .af-foot { font-size: 12px; color: var(--muted); margin: 0; letter-spacing: 0; }
+  .af-divider { height: 1px; background: var(--rule-soft); }
+  :root[data-motion="off"] *, :root[data-motion="off"] *::before { animation-play-state: paused !important; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+  /* ══ the page: element forms — slots every kind of piece must define ══ */
+  .sec[data-sec="7"] { --sec: var(--sec7); } .sec[data-sec="8"] { --sec: var(--sec8); } .sec[data-sec="9"] { --sec: var(--sec9); }
+  .eyebrow { font-size: var(--fs-min); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  h1 { font-size: 2em; line-height: 1.15; margin: 8px 0 0; text-wrap: balance; }
+  .lede { color: var(--ink-soft); max-width: 68ch; margin-top: 12px; }
+  h3 { margin: 0; font-size: 1em; }
+  .intro { color: var(--ink-soft); max-width: 72ch; font-size: var(--fs-sm); }
+  .cite { font-size: var(--fs-min); color: var(--muted); font-family: ui-monospace, monospace; overflow-wrap: anywhere; }
+
+  .tbl { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); }
+  th, td { text-align: left; vertical-align: top; padding: 6px 9px; border-bottom: 1px solid var(--rule-soft); }
+  th { font-size: var(--fs-min); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  td.slot { white-space: nowrap; }
+  td.slot code { color: var(--accent); font-weight: 700; margin-right: 6px; }
+
+  /* the five slot states, and the finding mark */
+  .stc { display: inline-block; font-size: var(--fs-min); line-height: 1.5; padding: 0 8px; border-radius: 999px; white-space: nowrap; font-weight: 700; border: 1px solid transparent; }
+  .st-d { color: var(--ink); background: color-mix(in srgb, var(--good) 22%, var(--card)); border-color: var(--good); }
+  .st-f { color: var(--ink); background: color-mix(in srgb, var(--s1) 14%, var(--card)); border-color: var(--s1); }
+  .st-m { color: #fff; background: var(--critical); border-color: var(--critical); }
+  .st-u { color: var(--ink); background: color-mix(in srgb, var(--warning) 20%, var(--card)); border: 1px dashed var(--warning); }
+  .st-n { color: var(--muted); border-color: var(--rule); }
+  .flg { display: block; margin-top: 3px; color: var(--critical); font-weight: 600; font-size: var(--fs-min); }
+  .legend { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr)); gap: 8px 16px; }
+  .legend li { display: grid; grid-template-columns: 6.4em 1fr; gap: 8px; align-items: baseline; }
+  .legend span.t { color: var(--ink-soft); font-size: var(--fs-sm); }
+
+  /* the form, drawn as bands */
+  .bands, .kinds { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr)); gap: 10px; align-items: start; }
+  .card { border: 1px solid var(--rule); border-radius: var(--radius); background: var(--card); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .card h3 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+  .card h3 small { color: var(--muted); font-weight: 400; font-size: var(--fs-min); }
+  .slots { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .slots li { display: grid; grid-template-columns: 2.7em 1fr; gap: 6px; }
+  .slots code { font-size: var(--fs-min); color: var(--accent); font-weight: 700; padding-top: 1px; }
+  .slots b { display: block; font-size: var(--fs-sm); font-weight: 600; }
+  .slots span { display: block; color: var(--ink-soft); font-size: var(--fs-min); }
+  .cls { font-size: var(--fs-min); letter-spacing: .06em; text-transform: uppercase; padding: 0 7px; border-radius: 999px; border: 1px solid var(--rule); color: var(--muted); }
+  .cls.paths { color: var(--accent); border-color: var(--accent); }
+  .cls.gates { color: var(--ink-soft); border-color: var(--warning); }
+
+  /* a filled form */
+  .piece { gap: 10px; }
+  .phd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+  .phd b { font-size: 1.05em; }
+  .kind { font-size: var(--fs-min); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .psum { color: var(--ink-soft); font-size: var(--fs-sm); max-width: 80ch; }
+  .strip { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+  .band { display: inline-flex; align-items: center; gap: 3px; }
+  .band i { font-style: normal; font-size: var(--fs-min); color: var(--muted); margin-right: 4px; letter-spacing: .06em; text-transform: uppercase; }
+  .cell { width: 17px; height: 17px; border-radius: 4px; border: 1px solid transparent; padding: 0; cursor: pointer; position: relative; background: none; }
+  .cell.c-d { background: var(--good); }
+  .cell.c-f { background: color-mix(in srgb, var(--s1) 60%, transparent); border-color: var(--s1); }
+  .cell.c-m { background: var(--critical); }
+  .cell.c-u { background: repeating-linear-gradient(45deg, var(--warning) 0 3px, transparent 3px 6px); border-color: var(--warning); }
+  .cell.c-n { border-color: var(--rule); }
+  .cell.fl::after { content: ""; position: absolute; right: -4px; top: -4px; width: 8px; height: 8px; border-radius: 50%; background: var(--critical); border: 2px solid var(--card); }
+  .cell:hover { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .ptools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: var(--fs-sm); color: var(--ink-soft); }
+  .seg { display: inline-flex; }
+  .seg button { font: inherit; font-size: var(--fs-sm); background: var(--raised); color: var(--ink); border: 1px solid var(--rule); padding: 3px 10px; cursor: pointer; }
+  .seg button:first-child { border-radius: 8px 0 0 8px; } .seg button:last-child { border-radius: 0 8px 8px 0; border-left: 0; }
+  .seg button[aria-checked="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .piece[data-show="gaps"] tr[data-gap="0"] { display: none; }
+  tr.flash td { background: var(--accent-soft); }
+  .subhd { font-size: var(--fs-min); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+  ol.finds { margin: 0; padding-left: 1.5em; display: flex; flex-direction: column; gap: 7px; font-size: var(--fs-sm); }
+  ol.finds li::marker { color: var(--critical); font-weight: 700; }
+  ol.finds .cite, ul.notes .cite { display: block; }
+  ul.notes { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; font-size: var(--fs-sm); color: var(--ink-soft); }
+  ul.notes li::marker { content: "✓  "; color: var(--good); }
+  details.pc { border: 0; }
+  details.pc > summary { cursor: pointer; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  details.pc > summary::-webkit-details-marker { display: none; }
+  details.pc > summary .phd b::before { content: "▸ "; color: var(--accent); }
+  details.pc[open] > summary .phd b::before { content: "▾ "; }
+  details.pc > .pbody { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+  .sweep { display: flex; flex-direction: column; gap: 12px; }
+  .num { font-variant-numeric: tabular-nums; text-align: right; }
+  .n0 { color: var(--muted); }
+  .nm { color: var(--critical); font-weight: 700; }
+
+  /* coverage today */
+  .cv { display: inline-block; font-size: var(--fs-min); font-weight: 700; line-height: 1.5; padding: 0 8px; border-radius: 999px; white-space: nowrap; border: 1px solid; }
+  .cv-c { color: var(--ink); border-color: var(--good); background: color-mix(in srgb, var(--good) 22%, var(--card)); }
+  .cv-p { color: var(--ink); border-color: var(--warning); background: color-mix(in srgb, var(--warning) 20%, var(--card)); }
+  .cv-a { color: #fff; border-color: var(--critical); background: var(--critical); }
+  .rules { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .rules li { display: flex; flex-direction: column; gap: 2px; }
+  .rules span { color: var(--ink-soft); font-size: var(--fs-sm); }
+  ol.steps { margin: 0; padding-left: 1.5em; display: flex; flex-direction: column; gap: 10px; }
+  ol.steps li::marker { color: var(--accent); font-weight: 700; }
+  ol.steps span { display: block; color: var(--ink-soft); font-size: var(--fs-sm); }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 14px; align-items: start; }
+
+  @media (max-width: 640px) {
+    .tbl table, .tbl tbody, .tbl tr, .tbl td { display: block; width: auto; }
+    .tbl thead { display: none; }
+    .tbl tr { border: 1px solid var(--rule); border-radius: 8px; padding: 6px 10px; margin-bottom: 8px; background: var(--card); }
+    .tbl td { border: 0; padding: 2px 0; white-space: normal; }
+    .tbl td[data-l]::before { content: attr(data-l); display: block; font-size: var(--fs-min); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    .tbl td:first-child::before { display: none; }
+    .piece[data-show="gaps"] tr[data-gap="0"] { display: none; }
+  }
+
+  ol.steps span.cite, .rules span.cite { color: var(--muted); font-size: var(--fs-min); }
+  .bar { display: inline-block; width: 72px; height: 8px; border-radius: 999px; background: var(--rule-soft); vertical-align: middle; margin-right: 8px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--critical); }
+</style>
+
+<div class="artifact-page">
+  <header>
+    <p class="eyebrow">logic-map draft · slot forms · gustify @ b205563c</p>
+    <h1>Element Forms</h1>
+    <p class="lede">Every kind of piece gets a form: the slots it must define, read in the order a call lives. A filled slot shows what the piece decided. An empty slot is a finding, the way a scorecard with no capping rule or no adverse-action code was a finding.</p>
+  </header>
+
+  <section class="sec" data-sec="1">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>From scorecard to code</h2><span class="n">one slot per model rule</span></div>
+    <p class="intro">Each rule a scoring model had to define has a counterpart in a piece of app logic. The right column fills it from POST /setup/complete.</p>
+    <div class="tbl"><table id="tab-score"></table></div>
+  </section>
+
+  <section class="sec" data-sec="2">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>The form</h2><span class="n">14 slots · 5 bands · 5 states</span></div>
+    <p class="intro">Fourteen slots for every piece that carries logic, in five bands read top to bottom: what comes in, what decides, what it does, how it fails, how we know.</p>
+    <div class="bands" id="bands"></div>
+    <h3>Every slot gets a state</h3>
+    <ul class="legend" id="legend"></ul>
+  </section>
+
+  <section class="sec" data-sec="3">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>Slots by kind</h2><span class="n" id="kinds-n">—</span></div>
+    <p class="intro">A kind adds the slots its own failures hide in. Data-shaped kinds carry no paths, so they take a short form of gates and defaults instead of the fourteen.</p>
+    <div class="kinds" id="kinds"></div>
+  </section>
+
+  <section class="sec" data-sec="4">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>POST /setup/complete</h2><span class="n">API endpoint · filled</span></div>
+    <p class="intro">Filled from the source and both test files. Click a square in the strip to find its row; a red dot marks a slot that is filled but carries a finding.</p>
+    <div id="pc-setup"></div>
+  </section>
+
+  <section class="sec" data-sec="5">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>RequireSetup</h2><span class="n">route guard · filled</span></div>
+    <p class="intro">Filled from the guard, the query client's retry policy, the locale strings and the end-to-end journeys.</p>
+    <div id="pc-guard"></div>
+  </section>
+
+  <section class="sec" data-sec="6">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>The sweep</h2><span class="n" id="sweep-n">—</span></div>
+    <p class="intro">Seventeen more pieces, filled by three read-only sweeps over gustify at b205563c. A finding marked “checked against source” was re-read by hand; the rest are candidates. First, which universal slots go empty most often; then what repeats; then every piece.</p>
+    <div class="tbl"><table id="tab-gaps"></table></div>
+    <div class="panel">
+      <h3>What repeats across pieces</h3>
+      <ul class="rules">
+        <li><b>Refusals are text.</b><span>A status and an English sentence, no stable reason — the setup endpoint, the history read, the pantry reset, the rate limiter, the stream's HTTP refusals. Every client piece swept reads the status only, and the setup screen shows “in progress” for consent required.</span></li>
+        <li><b>Declared contracts show only success.</b><span>All three endpoints declare no refusal, so the OpenAPI the web and Android clients are generated from misses every one.</span></li>
+        <li><b>Look up, then insert — with no recovery.</b><span>The pantry reset, the stream and the skills handler race on a unique key and answer 500 or drop a write. The setup claim already solves this with a savepoint; nothing reuses it.</span></li>
+        <li><b>One rule, several homes, nothing checking.</b><span>quantity above 0 in the schema but not the table; notes capped on batch but not single; one flag as an API constant, an API setting and a web constant; SSE and WebSocket twins with different key rules.</span></li>
+        <li><b>Error states with no way out.</b><span>RequireSetup's splash, the pantry's Retry button with no handler, a “Retrying…” toast gone in 5 seconds.</span></li>
+        <li><b>Paths leave no trace.</b><span>Observability is missing or left to the framework on most pieces; where a failure counter exists, nothing reads it.</span></li>
+      </ul>
+    </div>
+
+    <div class="tbl"><table id="tab-sweep"></table></div>
+    <div class="sweep" id="sweep"></div>
+  </section>
+
+  <section class="sec" data-sec="7">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>What the map captures</h2><span class="n" id="cover-n">—</span></div>
+    <p class="intro">Every slot, checked against the generators and gustify's committed map from 2026-09-11. Captured means a real field in the output holds the value. Four claims were re-read by hand: the cited helpers exist, the port-seam walker records an if-test per return, and gustify's map holds no min_length and no server_default.</p>
+    <div class="cols">
+      <div class="panel">
+        <h3>What the map is today</h3>
+        <ul class="rules">
+          <li><b>Reach, not decisions.</b><span>It records what a piece touches — tables read and written, commits, callers, tests per element. It records almost nothing a piece decides: no raise, no branch, no try/except.</span></li>
+          <li><b>Effects are the strong slot.</b><span>function_insight's access ops, commits and sinks already fill Effects, a model's Writers and a schema's Consumers.</span></li>
+          <li><b>The short forms are one pass away.</b><span>parse_schemas, parse_models and parse_flags already open the right nodes, then drop the keyword arguments that carry defaults, bounds and constraints.</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Traps in the current fields</h3>
+        <ul class="rules">
+          <li><b>guards counts definitions, not gates.</b><span>levels' endpoints[].guards reads 6 for POST /setup/complete because the guard file declares six defs.</span></li>
+          <li><b>Tests are credited by reach.</b><span>test_insight gives POST /setup/complete 26 cases, including cooking tests that call it only to create a user.</span></li>
+          <li><b>gustify's map predates the Python port seam.</b><span>The feeds are from 2026-09-11, so the binds predicate added on 2026-09-12 cannot be seen there.</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tbl"><table id="tab-cover"></table></div>
+  </section>
+
+  <section class="sec" data-sec="8">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Into the generators</h2><span class="n">the practical approach</span></div>
+    <p class="intro">The map already records what a piece touches. A form needs what a piece decides. That takes a slot registry, one new pass per stack and a feed — on rails the suite already runs.</p>
+    <ol class="steps">
+      <li><b>Declare the forms as data.</b><span>One flat registry module, shaped like the REGISTER in _a3_stacks.py — flat because bootstrap and propagate copy a flat glob. Per kind, each slot names the output field it reads, the rule that sets its state, and whether it needs a person. A new slot is a data edit.</span><span class="cite">templates/center/generators/_a3_stacks.py:58</span></li>
+      <li><b>Add a path pass for each stack.</b><span>Backend: a new _a3_paths.py beside _a3_code.py walks a handler and one call level — raises, if → raise or return, try/except, a service error translated to a status. It reuses _raise_status, _flag_gates, _orm_access and _endpoint_middleware. Frontend: _a3_fe_extract.mjs learns if → return, Navigate targets and factory query keys.</span><span class="cite">_a3_code.py:1321 · :1335 · :1703 · :2122</span></li>
+      <li><b>Build on the port-seam walker, not the levels walk.</b><span>_a3_stacks_pydi's walker already records the innermost if-test for each return and negates it for the fallback: path and predicate extraction, so far only for factories. The levels walk reads no source; it only supplies the one-call-level set.</span><span class="cite">_a3_stacks_pydi.py:158-196</span></li>
+      <li><b>Widen the arms that half-read today.</b><span>parse_schemas keeps Field defaults, bounds and extra; parse_models keeps CheckConstraint, nullable, server_default and ondelete; parse_flags reads int and string settings; function_insight serialises params. Each is small, and together they fill most of the three short forms.</span><span class="cite">_a3_code.py:532 parse_schemas · :1241 parse_flags</span></li>
+      <li><b>Land it in a forms feed, keyed by existing ids.</b><span>forms.json — or an element_forms key — keyed file::fn, endpoint:…, fe:…, under its own try/except. With the arm absent nothing is written, so archmap, c4 and levels stay byte-identical.</span><span class="cite">the suite's honest-empty rule</span></li>
+      <li><b>Compute the states; name the judgement.</b><span>defined = a fact found · default = a framework rule declared in the registry (a body schema implies 422) · n/a = a kind rule · missing = the pass ran, the slot applies, nothing found · unknown = the pass is absent or the code is dynamic. Purpose, invariants and “is this gap intended” stay with a person.</span></li>
+      <li><b>Send findings down rails that already fire.</b><span>A pulse angle beside S19 that nags missing and only counts unknown; a FORM DRIFT review subject with a --diff mode, like fetch_bridge.py; form fields on gabe-map's touches and trace, plus map_census kind=forms. Report, never gate.</span><span class="cite">skills/gabe-pulse/scripts/angles.py:754</span></li>
+    </ol>
+    <div class="cols">
+      <div class="panel">
+        <h3>The first slice</h3>
+        <ul class="rules">
+          <li><b>FastAPI endpoints, three slots.</b><span>Refusal reasons, the status contract (declared vs produced) and preconditions inside the handler: the raises in a handler and one call level, joined through except → HTTPException.</span></li>
+          <li><b>What it should print for POST /setup/complete.</b><span>Declares 200. Raises 400 and two 409s. Every refusal is text with no code.</span></li>
+          <li><b>Why these three first.</b><span>They came up empty on the endpoints the sweep filled, _raise_status already parses a raise, and the result needs no judgement — a refusal either carries a code or it doesn't.</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>The battery that proves it</h3>
+        <ul class="rules">
+          <li><b>Fires.</b><span>A raise in the handler; a service error translated to a status; a declared 201 beside a produced 409.</span></li>
+          <li><b>Stays silent.</b><span>A handler with no raise reads n/a; a refusal that carries a code raises no text finding.</span></li>
+          <li><b>Honest-empty.</b><span>With the pass off, archmap, c4 and levels are byte-identical.</span></li>
+          <li><b>Mutation and determinism.</b><span>Delete the except and the finding flips; two runs produce identical bytes.</span></li>
+        </ul>
+        <p class="cite">tests/element-forms/run.sh · hermetic, like tests/stack-pydi</p>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="sec" data-sec="9">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>What changed on the way</h2><span class="n">corrections · form fit · open</span></div>
+    <div class="cols">
+      <div class="panel">
+        <h3>Corrections</h3>
+        <ul class="rules">
+          <li><b>RequireSetup retries once, not without limit.</b><span>An earlier answer said the splash waits on an endless retry. The query retries a 5xx or network failure once, and never a 4xx.</span><span class="cite">apps/web/src/lib/query/client.ts:14-20</span></li>
+          <li><b>FastAPI is 0.136.3.</b><span>The drawn map cited 0.135.3.</span><span class="cite">apps/api/.venv fastapi METADATA</span></li>
+          <li><b>A missing bearer header answers 401.</b><span>One sweep said 403; on this version HTTPBearer raises 401.</span><span class="cite">fastapi/security/http.py:87-89</span></li>
+          <li><b>The 404 tests were fixture callers.</b><span>POST /setup/complete's own tests assert no 404; twenty-odd other files call it only to create a user.</span><span class="cite">apps/api/tests</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Open checks, settled</h3>
+        <ul class="rules">
+          <li><b>Dependencies run before the body is validated.</b><span>FastAPI calls the sub-dependencies first, then validates path, query, header, cookie and body. A request refused with 422 has already committed a new user.</span><span class="cite">fastapi/dependencies/utils.py:628-706</span></li>
+          <li><b>POST /setup/complete takes the tight window.</b><span>It is first on the sensitive list: 20 a minute per IP.</span><span class="cite">middleware/rate_limit.py:27-28</span></li>
+          <li><b>Still open: is a constraint violation meant to be a 500?</b><span>The code can't say. It recurs on four pieces, so it is one policy for a person to set once.</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>What the form learns</h3>
+        <ul class="rules">
+          <li><b>Add Mirrors.</b><span>Where else this rule lives, and what checks they agree: schema vs table, single vs batch, Zod vs Pydantic, three copies of one flag, SSE vs WebSocket.</span></li>
+          <li><b>Pair a refusal catalog with a reason map.</b><span>An endpoint lists its refusals; a client piece maps each one to its copy. A client's refusal slot can't be judged without the server's list.</span></li>
+          <li><b>Split repeat safety in three.</b><span>Double submit · key scope, per attempt or per intent · response races.</span></li>
+          <li><b>Split defaults into client and server.</b><span>The favorites read stops at 20 because an omitted limit means the server's default.</span></li>
+          <li><b>Add dead affordances, response use and inherited effects.</b><span>A Retry button with no handler; a preview whose answer is dropped; a GET that commits through its auth dependency.</span></li>
+          <li><b>Add slots where the kind needs them.</b><span>Cost per path for anything that spends money; lifecycle reset for stores; ordering for lists; key identity for throttles.</span></li>
+          <li><b>A sixth state: external.</b><span>Flag values that live in the deploy platform otherwise read unknown forever.</span></li>
+          <li><b>Pure gates get their own short form.</b><span>Six of the fourteen universal slots were n/a for the seed gate.</span></li>
+        </ul>
+      </div>
+    </div>
+
+  </section>
+</div>
+
+<div class="af-chrome">
+  <button class="af-cog" id="af-cog" type="button" aria-expanded="false" aria-controls="af-panel" aria-label="Display options">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.2"></circle>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    </svg>
+  </button>
+  <div class="af-panel" id="af-panel" data-open="false">
+    <div class="af-group" role="radiogroup" aria-label="Font family" id="af-fonts"><p class="af-legend">Font family</p></div>
+    <div class="af-divider"></div>
+    <div class="af-group" role="radiogroup" aria-label="Theme" id="af-skins"><p class="af-legend">Theme</p></div>
+    <div class="af-divider"></div>
+    <div class="af-group" role="radiogroup" aria-label="Motion" id="af-motion"><p class="af-legend">Motion</p></div>
+    <p class="af-foot" id="af-foot">—</p>
+  </div>
+</div>
+
+<script>
+var MOTION = { on: true };
+(function () {
+  "use strict";
+  var FONTS = [
+    { id: "mono",  label: "Mono",     stack: 'ui-monospace, monospace', size: 15, track: -0.025 },
+    { id: "segoe", label: "Segoe UI", stack: '"Segoe UI", sans-serif',  size: 16, track: -0.015 }
+  ];
+  var SKINS = [
+    { id: "catalog",   label: "Catalog",         note: "center · indigo" },
+    { id: "blueprint", label: "Blueprint",       note: "skin F · blue" },
+    { id: "mission",   label: "Mission Console", note: "skin B · teal" }
+  ];
+  var FKEY = "gabe:artifact:font", SKEY = "gabe:artifact:skin";
+  var root = document.documentElement;
+  var cog = document.getElementById("af-cog"), panel = document.getElementById("af-panel");
+  var fhost = document.getElementById("af-fonts"), shost = document.getElementById("af-skins");
+  var mhost = document.getElementById("af-motion"), foot = document.getElementById("af-foot");
+  function read(key, list, dflt) { try { var v = window.localStorage.getItem(key); return list.some(function (x) { return x.id === v; }) ? v : dflt; } catch (e) { return dflt; } }
+  function write(key, v) { try { window.localStorage.setItem(key, v); } catch (e) {} }
+  function opt(host, item, spec, onPick) {
+    var b = document.createElement("button"); b.type = "button"; b.className = "af-opt";
+    b.setAttribute("role", "radio"); b.setAttribute("data-id", item.id); b.setAttribute("aria-checked", "false");
+    var n = document.createElement("span"); n.className = "af-name"; n.textContent = item.label; if (item.stack) n.style.fontFamily = item.stack;
+    var s = document.createElement("span"); s.className = "af-spec"; s.textContent = spec;
+    b.appendChild(n); b.appendChild(s); b.addEventListener("click", function () { onPick(item.id); }); host.appendChild(b);
+  }
+  function mark(host, id) { host.querySelectorAll(".af-opt").forEach(function (o) { o.setAttribute("aria-checked", String(o.getAttribute("data-id") === id)); }); }
+  function applyFont(id) { var f = FONTS.filter(function (x) { return x.id === id; })[0] || FONTS[0];
+    root.style.setProperty("--af-stack", f.stack); root.style.setProperty("--af-size", f.size + "px"); root.style.setProperty("--af-track", f.track + "em");
+    write(FKEY, f.id); mark(fhost, f.id); foot.textContent = f.size + "px · " + f.track + "em"; }
+  function applySkin(id) { root.setAttribute("data-skin", id); write(SKEY, id); mark(shost, id); }
+  function setMotion(on) { MOTION.on = on; root.setAttribute("data-motion", on ? "on" : "off");
+    if (window.__rebuildMotion) window.__rebuildMotion();
+    document.querySelectorAll("svg").forEach(function (s) { if (s.pauseAnimations && s.unpauseAnimations) { on ? s.unpauseAnimations() : s.pauseAnimations(); } });
+    mark(mhost, on ? "on" : "off"); }
+  FONTS.forEach(function (f) { opt(fhost, f, f.size + " / " + f.track, applyFont); });
+  SKINS.forEach(function (s) { opt(shost, s, s.note, applySkin); });
+  [{ id: "on", label: "Playing" }, { id: "off", label: "Paused" }].forEach(function (m) { opt(mhost, m, m.id === "on" ? "loops + replays" : "frozen", function (id) { setMotion(id === "on"); }); });
+  function open(next) { panel.setAttribute("data-open", String(next)); cog.setAttribute("aria-expanded", String(next)); }
+  cog.addEventListener("click", function (e) { e.stopPropagation(); open(panel.getAttribute("data-open") !== "true"); });
+  panel.addEventListener("click", function (e) { e.stopPropagation(); });
+  document.addEventListener("click", function () { if (panel.getAttribute("data-open") === "true") open(false); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && panel.getAttribute("data-open") === "true") { open(false); cog.focus(); } });
+  applyFont(read(FKEY, FONTS, "mono"));
+  applySkin(read(SKEY, SKINS, "catalog"));
+  setMotion(!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  window.__setSkin = applySkin; window.__setMotion = setMotion;
+})();
+</script>
+
+<script>
+(function () {
+  "use strict";
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  /* ── the five states a slot can be in ── */
+  var ST = { d: ["defined", "st-d"], f: ["default", "st-f"], m: ["missing", "st-m"], u: ["unknown", "st-u"], n: ["n/a", "st-n"] };
+  var LEGEND = [
+    ["d", "the piece defines it — the row cites the line"],
+    ["f", "framework or library behaviour stands in; nothing in the piece says so"],
+    ["m", "the piece needs it and nothing defines it — a finding"],
+    ["u", "the code cannot tell; it needs a person or a run"],
+    ["n", "this kind has no such slot"] ];
+  function chip(s) { return '<span class="stc ' + ST[s][1] + '">' + ST[s][0] + "</span>"; }
+  document.getElementById("legend").innerHTML = LEGEND.map(function (l) { return "<li>" + chip(l[0]) + '<span class="t">' + l[1] + "</span></li>"; }).join("")
+    + '<li><span class="stc st-d" style="position:relative">defined<i class="cell c-d fl" style="position:absolute;right:-2px;top:-2px;width:0;height:0;border:0"></i></span><span class="t">a red dot on a square or a ⚑ line: filled, but the filling carries a finding</span></li>';
+
+  /* ── scorecard → code ── */
+  var SCORE = [
+    ["Input specification — which report fields, which types", "Inputs", "SetupCompleteRequest: household_name required, every nested block optional"],
+    ["Default conditions and default values", "Defaults", "every nested input defaults; no entitlement row means tier free"],
+    ["Exclusions and eligibility — no hit, thin file", "Preconditions", "a bearer token, an Idempotency-Key, consent at the current policy version"],
+    ["Capping and flooring", "Bounds", "name 1–120 characters; lists capped; credits remaining never below 0"],
+    ["Adverse action codes", "Refusal reasons", "two 409s, told apart only by their text"],
+    ["Minimum and maximum deltas", "Invariants", "never downgrade a tier; never overwrite a finished setup"],
+    ["Score range and output specification", "Paths + status contract", "produces 200 · 400 · 401 · 409 · 422 · 429 · 500; declares only 200"],
+    ["Attribute lineage", "Effects", "eleven tables and the key written in one commit"],
+    ["Model version", "Switches & flags", "CONSENT_POLICY_VERSION decides which consent counts"],
+    ["Overrides and environment modes", "Switches & flags", "auth_provider real or mock; rate_limit_active"],
+    ["Reproducible re-scoring", "Repeat safety", "the idempotency claim: replay, in progress, reclaim after its time-to-live"],
+    ["Performance monitoring", "Observability", "no log line of its own on any path"],
+    ["Backtesting coverage", "Tests per path", "7 of 10 paths asserted"] ];
+  (function () {
+    var head = ["Credit model rule", "Slot", "In POST /setup/complete"];
+    document.getElementById("tab-score").innerHTML = "<thead><tr>" + head.map(function (h) { return "<th>" + h + "</th>"; }).join("") + "</tr></thead><tbody>"
+      + SCORE.map(function (r) { return "<tr>" + r.map(function (c, i) { return '<td data-l="' + head[i] + '">' + (i === 1 ? "<b>" + esc(c) + "</b>" : esc(c)) + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody>";
+  })();
+
+  /* ── the form: fourteen universal slots in five bands ── */
+  var FORM = [
+    { band: "In", note: "before any work", slots: [
+      ["U1", "Purpose", "one plain line: what the piece is for"],
+      ["U2", "Inputs", "what it takes, required or optional, and from where"],
+      ["U3", "Preconditions", "the gates that must pass before any work"],
+      ["U4", "Defaults", "what happens when an input, a row or a value is absent"],
+      ["U5", "Bounds", "caps, floors, lengths, windows, timeouts"] ] },
+    { band: "Decide", note: "which way it goes", slots: [
+      ["U6", "Paths", "every path named, each with its exit"],
+      ["U7", "Refusal reasons", "does each refusal carry a stable code, or only text"],
+      ["U8", "Switches & flags", "settings that pick behaviour, and their fallback"] ] },
+    { band: "Act", note: "what it changes", slots: [
+      ["U9", "Effects", "reads, writes, commits, outside calls, events — and who commits"],
+      ["U10", "Invariants", "never-do rules that hold on every path"] ] },
+    { band: "Fail", note: "when it goes wrong", slots: [
+      ["U11", "Failure handling", "catch, rollback, retry, timeout — and what surfaces"],
+      ["U12", "Repeat safety", "a second call, a double click, two at once"] ] },
+    { band: "Prove", note: "how we know", slots: [
+      ["U13", "Observability", "the trace a path leaves: a log, a metric, an audit row"],
+      ["U14", "Tests per path", "which paths a test asserts, and which none does"] ] } ];
+  var UNAME = {}, UBAND = {};
+  FORM.forEach(function (b) { b.slots.forEach(function (s) { UNAME[s[0]] = s[1]; UBAND[s[0]] = b.band; }); });
+  function slotList(slots) { return '<ul class="slots">' + slots.map(function (s) { return "<li><code>" + s[0] + "</code><div><b>" + esc(s[1]) + "</b>" + (s[2] ? "<span>" + esc(s[2]) + "</span>" : "") + "</div></li>"; }).join("") + "</ul>"; }
+  document.getElementById("bands").innerHTML = FORM.map(function (b) {
+    return '<div class="card"><h3>' + b.band + " <small>" + b.note + "</small></h3>" + slotList(b.slots) + "</div>"; }).join("");
+
+  /* ── slots by kind ── */
+  var KINDS = [
+    { id: "endpoint", name: "API endpoint", cls: "paths", slots: [["K1", "Status contract", "declared responses vs the exits the code produces"], ["K2", "Auth scope", "who may call, beyond being signed in"], ["K3", "Rate limit", "which window applies"], ["K4", "Response per exit", "the body each exit returns"]] },
+    { id: "stream", name: "Streaming endpoint", cls: "paths", slots: [["K1", "Status contract", "declared responses vs the exits the code produces"], ["K2", "Auth scope", "who may call, beyond being signed in"], ["K3", "Rate limit", "which windows apply"], ["K4", "Response per exit", "the frames and the error events"], ["K5", "Disconnect", "the caller leaves mid-answer"], ["K6", "Resume", "a reconnect continues, or starts over"]] },
+    { id: "service", name: "Service function", cls: "paths", slots: [["K1", "Commit ownership", "commits itself, or leaves it to the caller"], ["K2", "Raised errors", "what it raises, and who translates each"]] },
+    { id: "task", name: "Task · event handler", cls: "paths", slots: [["K1", "Trigger", "what starts it"], ["K2", "Retry & backoff", "how often, how far apart"], ["K3", "After the last failure", "dropped, parked or reported"], ["K4", "Concurrency", "two at once, a schedule overlapping itself"]] },
+    { id: "mw", name: "Middleware · dependency", cls: "paths", slots: [["K1", "Order", "where it sits in the chain"], ["K2", "Scope", "which paths it covers, which are exempt"], ["K3", "Short-circuit exits", "answers it gives without the handler"]] },
+    { id: "guard", name: "Route guard", cls: "paths", slots: [["K1", "State coverage", "loading, error, denied, allowed"], ["K2", "Redirect targets", "where each denial lands"], ["K3", "Loop safety", "a redirect that cannot land on itself"], ["K4", "Recovery", "the way out of an error state"]] },
+    { id: "hook", name: "Hook", cls: "paths", slots: [["K1", "When it runs", "its enabled conditions"], ["K2", "Cache key", "what identifies its data"], ["K3", "Invalidated by", "the writes that refresh it"], ["K4", "Stale & retry", "how old, how many tries"], ["K5", "Error surface", "where a failure shows"]] },
+    { id: "component", name: "Component", cls: "paths", slots: [["K1", "Render states", "loading, empty, error, partial, ready"], ["K2", "Actions → effects", "what each control does"], ["K3", "Client vs server rules", "validation that mirrors the server, or drifts"]] },
+    { id: "store", name: "Store action", cls: "paths", slots: [["K1", "Transitions", "state before and after"], ["K2", "Optimistic update", "shown early — and undone how"], ["K3", "Persistence", "what survives a reload"]] },
+    { id: "schema", name: "Schema", cls: "gates", slots: [["S1", "Purpose"], ["S2", "Required fields"], ["S3", "Defaults"], ["S4", "Bounds"], ["S5", "Allowed values"], ["S6", "Unknown keys"], ["S7", "Normalisation"], ["S8", "Cross-field rules"], ["S9", "Error shape"], ["S10", "Consumers"], ["S11", "Refusal tests"]] },
+    { id: "model", name: "Model · table", cls: "gates", slots: [["M1", "Purpose"], ["M2", "Keys & unique"], ["M3", "Foreign keys & delete"], ["M4", "Check constraints"], ["M5", "Nullable vs assumed"], ["M6", "Defaults: code vs server"], ["M7", "Write hooks"], ["M8", "Migration parity"], ["M9", "Writers"], ["M10", "Violation → API"]] },
+    { id: "flag", name: "Flag · setting", cls: "gates", slots: [["F1", "Purpose"], ["F2", "Allowed values"], ["F3", "Default"], ["F4", "Per environment"], ["F5", "Readers"], ["F6", "Fallback"], ["F7", "Startup check"], ["F8", "Tests per value"]] },
+    { id: "none", name: "Type · entity", cls: "none", slots: [], note: "No form. Its rules live in the schema or the model that carries it." } ];
+  var KBY = {}; KINDS.forEach(function (k) { KBY[k.id] = k; });
+  var CLSNAME = { paths: "14 slots +", gates: "short form", none: "no form" };
+  document.getElementById("kinds").innerHTML = KINDS.map(function (k) {
+    return '<div class="card"><h3>' + esc(k.name) + ' <span class="cls ' + k.cls + '">' + CLSNAME[k.cls] + "</span></h3>"
+      + (k.slots.length ? slotList(k.slots) : '<p class="intro">' + esc(k.note) + "</p>") + "</div>"; }).join("");
+  document.getElementById("kinds-n").textContent = KINDS.filter(function (k) { return k.cls === "paths"; }).length + " with paths · "
+    + KINDS.filter(function (k) { return k.cls === "gates"; }).length + " short forms · 1 with none";
+
+  function slotName(kind, code) {
+    if (UNAME[code]) return UNAME[code];
+    var k = KBY[kind], hit = k && k.slots.filter(function (s) { return s[0] === code; })[0];
+    return hit ? hit[1] : code; }
+  function bandOf(code) { return UBAND[code] || (code.charAt(0) === "K" ? "Kind" : "Form"); }
+
+  /* ── a filled form: rows are [slot, state, value, cite, finding?] ── */
+  function isGap(r) { return r[1] === "m" || r[1] === "u" || !!r[4]; }
+  function counts(p) {
+    var c = { d: 0, f: 0, m: 0, u: 0, n: 0, fl: 0, gaps: 0 };
+    p.rows.forEach(function (r) { c[r[1]]++; if (r[4]) c.fl++; if (isGap(r)) c.gaps++; });
+    return c; }
+  function stripHTML(p) {
+    var groups = [];
+    p.rows.forEach(function (r, i) { var b = bandOf(r[0]), g = groups[groups.length - 1]; if (!g || g.band !== b) { g = { band: b, cells: [] }; groups.push(g); } g.cells.push(i); });
+    return '<div class="strip">' + groups.map(function (g) {
+      return '<span class="band"><i>' + g.band + "</i>" + g.cells.map(function (i) {
+        var r = p.rows[i], t = r[0] + " " + slotName(p.kind, r[0]) + " · " + ST[r[1]][0] + (r[4] ? " · finding" : "");
+        return '<button type="button" class="cell c-' + r[1] + (r[4] ? " fl" : "") + '" data-row="' + i + '" title="' + esc(t) + '" aria-label="' + esc(t) + '"></button>'; }).join("") + "</span>"; }).join("") + "</div>"; }
+  function bodyHTML(p) {
+    var c = counts(p), head = ["Slot", "State", "Value", "Cite"];
+    var h = '<div class="ptools"><span>' + ["d", "f", "m", "u", "n"].filter(function (s) { return c[s]; }).map(function (s) { return c[s] + " " + ST[s][0]; }).join(" · ")
+      + (c.fl ? " · " + c.fl + " with a finding" : "") + '</span><span class="seg" role="radiogroup" aria-label="Rows shown">'
+      + '<button type="button" role="radio" aria-checked="true" data-show="all">All ' + p.rows.length + " slots</button>"
+      + '<button type="button" role="radio" aria-checked="false" data-show="gaps">Gaps · ' + c.gaps + "</button></span></div>";
+    h += '<div class="tbl"><table><thead><tr>' + head.map(function (x) { return "<th>" + x + "</th>"; }).join("") + "</tr></thead><tbody>"
+      + p.rows.map(function (r, i) {
+        return '<tr data-i="' + i + '" data-gap="' + (isGap(r) ? 1 : 0) + '"><td class="slot" data-l="Slot"><code>' + r[0] + "</code>" + esc(slotName(p.kind, r[0])) + "</td>"
+          + '<td data-l="State">' + chip(r[1]) + "</td>"
+          + '<td data-l="Value">' + esc(r[2]) + (r[4] ? '<span class="flg">⚑ ' + esc(r[4]) + "</span>" : "") + "</td>"
+          + '<td data-l="Cite" class="cite">' + esc(r[3]) + "</td></tr>"; }).join("") + "</tbody></table></div>";
+    if (p.finds && p.finds.length) h += '<p class="subhd">Findings · candidates, not yet checked against intent</p><ol class="finds">'
+      + p.finds.map(function (f) { return "<li>" + esc(f[0]) + (f[1] ? '<span class="cite">' + esc(f[1]) + "</span>" : "") + "</li>"; }).join("") + "</ol>";
+    if (p.notes && p.notes.length) h += '<p class="subhd">Settled on the way</p><ul class="notes">'
+      + p.notes.map(function (f) { return "<li>" + esc(f[0]) + (f[1] ? '<span class="cite">' + esc(f[1]) + "</span>" : "") + "</li>"; }).join("") + "</ul>";
+    return h; }
+  function headHTML(p) {
+    var k = KBY[p.kind];
+    return '<div class="phd"><b>' + esc(p.name) + '</b><span class="kind">' + esc(k ? k.name : p.kind) + '</span><span class="cite">' + esc(p.file) + "</span></div>"
+      + (p.sum ? '<p class="psum">' + esc(p.sum) + "</p>" : "") + stripHTML(p); }
+  function mount(host, p, open) {
+    host.classList.add("panel", "piece"); host.id = host.id || "pc-" + p.id; host.setAttribute("data-show", "all");
+    if (open) host.innerHTML = headHTML(p) + bodyHTML(p);
+    else host.innerHTML = '<details class="pc"><summary>' + headHTML(p) + '</summary><div class="pbody">' + bodyHTML(p) + "</div></details>";
+    host.addEventListener("click", function (ev) {
+      var seg = ev.target.closest(".seg button");
+      if (seg) { host.setAttribute("data-show", seg.getAttribute("data-show"));
+        [].forEach.call(host.querySelectorAll(".seg button"), function (b) { b.setAttribute("aria-checked", String(b === seg)); }); return; }
+      var cell = ev.target.closest(".cell");
+      if (cell) { ev.preventDefault();
+        var d = host.querySelector("details.pc"); if (d) d.open = true;
+        var row = host.querySelector('tr[data-i="' + cell.getAttribute("data-row") + '"]');
+        if (row && row.getAttribute("data-gap") === "0" && host.getAttribute("data-show") === "gaps") host.querySelector('.seg button[data-show="all"]').click();
+        if (row) { row.scrollIntoView({ block: "nearest", behavior: "smooth" }); row.classList.add("flash"); setTimeout(function () { row.classList.remove("flash"); }, 1600); } } }); }
+
+  /* ══ filled: POST /setup/complete ══ */
+  var SETUP = { id: "setup", kind: "endpoint", name: "POST /setup/complete", file: "apps/api/api/setup.py:183 → services/setup.py complete_setup",
+    sum: "First-run setup: creates the household, its preferences and the entitlement in one commit, then answers with the profile.",
+    rows: [
+      ["U1", "d", "Finish first-run setup and answer with the user's profile, setup_required false.", "api/setup.py:183-205"],
+      ["U2", "d", "A bearer token, an Idempotency-Key header, and a SetupCompleteRequest body: household_name required, every nested block optional.", "schemas/setup.py:21-44"],
+      ["U3", "d", "The rate window, a bearer token, a verified identity, the key, a valid body, and consent at the current policy version — in that order.", "api/setup.py:185-194 · services/setup.py:372-374"],
+      ["U4", "d", "Every nested input has a default; no entitlement row means tier free; a legacy diet folds into preferences.", "schemas/preferences.py · services/setup.py:198-210"],
+      ["U5", "d", "Name 1–120 characters; ISO country and currency; allergen and exploration lists capped; credits never below 0; the claim's time-to-live.", "schemas/setup.py · services/ai_credits.py:77-100 · services/idempotency.py CLAIM_TTL"],
+      ["U6", "d", "Ten: first setup · replay · already set up · in progress · consent missing · no key · bad body · bad token · throttled · unexpected error.", "docs/design/logic-map/shallow-logic-maps.html"],
+      ["U7", "m", "Refusals carry text only. The two 409s share a status and differ in their detail string.", "api/setup.py:196-203", "a client must compare strings to tell in progress from consent required"],
+      ["U8", "d", "auth_provider picks the token verifier; rate_limit_active is on in production; the credit allowance switches by tier, and an unknown tier fails closed.", "config.py:85, 248-254 · services/ai_credits.py:63-68"],
+      ["U9", "d", "Eleven tables and the key written, one commit inside the service. The auth dependency commits a new user earlier.", "services/setup.py:388 · auth/context.py:79", "a request refused for its key or body still leaves a committed user"],
+      ["U10", "d", "Never overwrite a finished setup; never downgrade a tier; one principal Despensa per household.", "services/setup.py:351-362, 198-210 · uq_location_principal_per_household"],
+      ["U11", "d", "Anything raised after the claim rolls back and discards the claim. Two errors become 409s; every other one surfaces as a 500.", "services/setup.py:403-407 · api/setup.py:196-203", "a database constraint other than the key race answers a bare 500"],
+      ["U12", "d", "The idempotency claim: a completed key replays, a pending one answers 409, an abandoned one is reclaimed; the unique key settles a race.", "services/idempotency.py:94-146"],
+      ["U13", "m", "No log, metric or audit line on any path. The file's only logger call belongs to DELETE /me.", "api/setup.py:42, 249"],
+      ["U14", "d", "Seven of ten paths asserted, at the route or in the service. Bad token, throttled and the route's 500 have none.", "tests/test_setup_routes.py C1048–C1057 · tests/test_setup_service.py C1058–C1067", "in progress and already set up are asserted only below the route"],
+      ["K1", "m", "Declares response_model=MeResponse only, so the contract shows 200 and the automatic 422. The code also exits 400, 401, 409, 429 and 500.", "api/setup.py:183"],
+      ["K2", "d", "Any verified identity. No role check: the caller becomes the new household's primary cook.", "api/setup.py:185-190 · services/ownership.py:89-140"],
+      ["K3", "d", "A sensitive prefix: 20 requests a minute per IP inside the global 120, whenever rate_limit_active is on.", "middleware/rate_limit.py:27-28 · config.py:137-140"],
+      ["K4", "f", "200 returns MeResponse. Refusals take FastAPI's {detail} shape: a string for 400, 409 and 429, a list for 422.", "api/setup.py:192-203 · middleware/rate_limit.py:129"] ],
+    finds: [
+      ["Refusal reasons are text. The two 409s differ only in detail, and the tests assert the word \"consent\" inside it.", "api/setup.py:196-203 · tests/test_setup_routes.py:127"],
+      ["The status contract names 200 and 422. Five other exits the code produces are invisible to a client generated from it.", "api/setup.py:183"],
+      ["No path leaves a trace of its own: a consent refusal or a rolled-back write is visible only as a framework status line.", "api/setup.py:42"],
+      ["Bad token, throttled and the route's 500 have no test; in progress and already set up are proven only in the service.", "tests/test_setup_service.py C1061 · C1062 · C1063"],
+      ["A constraint violation other than the key race surfaces as a 500 with no reason.", "services/setup.py:403-407"] ],
+    notes: [
+      ["Its own test files assert no 404. The 404 asserts belong to twenty-odd files that call this endpoint only to create a user.", "grep setup/complete apps/api/tests"],
+      ["The endpoint is on the rate limiter's sensitive list.", "middleware/rate_limit.py:28"],
+      ["A missing bearer header answers 401 on the installed FastAPI 0.136.3; the one unauthenticated test, on GET /me, still accepts 401 or 403.", "fastapi/security/http.py:87-89 · tests/test_setup_routes.py:106-108"],
+      ["FastAPI resolves the dependencies before it validates the body, so a request refused with 422 has already committed a new user.", "fastapi/dependencies/utils.py:628-706"] ] };
+
+  /* ══ filled: RequireSetup ══ */
+  var GUARD = { id: "guard", kind: "guard", name: "RequireSetup", file: "apps/web/src/routes/RequireSetup.tsx",
+    sum: "The second route guard: holds the app until GET /me says setup is complete, and sends an unfinished user to /setup.",
+    rows: [
+      ["U1", "d", "Block the app on GET /me; route an unfinished user to /setup.", "RequireSetup.tsx:1-16"],
+      ["U2", "d", "The useMe() query state — data, pending, error — and the session RequireAuth already proved.", "RequireSetup.tsx:31-33"],
+      ["U3", "d", "Renders only inside RequireAuth, so the user is signed in.", "RequireSetup.tsx:1-4 · routes/router.tsx"],
+      ["U4", "d", "While the query is pending it renders the splash and never guesses the setup state.", "RequireSetup.tsx:45-47"],
+      ["U5", "f", "The query client's defaults: a 5xx or network failure retried once, a 4xx never; data fresh for 30 seconds.", "lib/query/client.ts:14-29"],
+      ["U6", "d", "Six: signed out · loading · session died · other error · needs setup · ready.", "docs/design/logic-map/shallow-logic-maps.html"],
+      ["U7", "d", "Reads the status only: a 401 signs out; every other status is one path.", "RequireSetup.tsx:38-41", "a 403, a 404 and a 500 look the same to the user"],
+      ["U8", "n", "No flag. The decision is GET /me's setup_required, made on the server.", "api/setup.py:207"],
+      ["U9", "d", "GET /api/v1/me; signOut() on a 401; a toast on any other error; a replace redirect to /setup.", "RequireSetup.tsx:37-43, 59-61"],
+      ["U10", "d", "Never redirect while pending. /setup stays a sibling of this guard, so its redirect cannot land on itself.", "RequireSetup.tsx:45-47, 56-58"],
+      ["U11", "d", "Any error but a 401 holds the splash and shows \"We couldn't load your account. Retrying…\"", "RequireSetup.tsx:41, 49-53 · shared/locale/en-US.json:4", "the toast promises a retry that a 4xx never gets, and vanishes after 5 seconds"],
+      ["U12", "f", "TanStack dedupes GET /me under one cache key shared by every caller.", "features/me/useMe.ts:23"],
+      ["U13", "m", "No telemetry when a session dies or the splash holds.", "RequireSetup.tsx"],
+      ["U14", "d", "The end-to-end core journey signs in a set-up user and walks Ready. No test covers the other five paths.", "tests/web-e2e/web-journey-core.spec.ts:108-124", "1 of 6 paths"],
+      ["K1", "d", "All four states handled: pending, error (401 and other), setup required, ready.", "RequireSetup.tsx:45-63"],
+      ["K2", "d", "/setup by replace; /login through RequireAuth once signOut clears the session.", "RequireSetup.tsx:59-61"],
+      ["K3", "d", "Router topology keeps /setup outside the guard. A comment states it; nothing checks it.", "RequireSetup.tsx:56-58", "moving /setup under the guard would loop, and no test would fail"],
+      ["K4", "m", "The splash offers no action. It recovers only when the network reconnects or the user reloads.", "lib/query/client.ts:28-29 · RequireSetup.tsx:49-53"] ],
+    finds: [
+      ["The toast says \"Retrying…\", but a 4xx is never retried: the user waits on a splash for a retry that never comes.", "RequireSetup.tsx:41 · shared/locale/en-US.json:4 · lib/query/client.ts:17-19"],
+      ["The toast sets no duration, so it disappears after 5 seconds and leaves a bare splash. Found by the store's form.", "RequireSetup.tsx:41 · design-system/molecules/ToastProvider.tsx:36, 56"],
+      ["No way out of the error splash: no retry button, and a refetch only on network reconnect.", "lib/query/client.ts:28-29"],
+      ["Five of six paths have no test; only Ready is walked, by the end-to-end sign-in.", "tests/web-e2e/web-journey-core.spec.ts:108-124"],
+      ["Loop safety rests on a comment about router topology, not on a check.", "RequireSetup.tsx:56-58"] ],
+    notes: [
+      ["Corrected: the guard does not retry without limit. The query retries a 5xx or network failure once and never retries a 4xx.", "lib/query/client.ts:14-20"] ] };
+
+  mount(document.getElementById("pc-setup"), SETUP, true);
+  mount(document.getElementById("pc-guard"), GUARD, true);
+
+  /* ══ the sweep ══ */
+  var SWEEP = [
+    /* ── backend pieces with paths · cites under apps/api ── */
+    { id: "history", kind: "endpoint", name: "GET /history/dishes", file: "apps/api/api/history.py:23 → services/dish_history.py",
+      sum: "A read endpoint with paging: the caller's cooked dishes, newest first.",
+      rows: [
+        ["U1", "d", "A paged list of the caller's cooked dishes, newest first.", "api/history.py:3-5"],
+        ["U2", "d", "A bearer token; optional limit and offset; the household from the auth context.", "api/history.py:25-28"],
+        ["U3", "d", "A valid token (401) and a household (409 “setup required”).", "auth/context.py:23, 98-99 · api/history.py:30"],
+        ["U4", "d", "limit 20, offset 0; no rows → an empty page with total 0.", "api/history.py:27-28 · tests/test_history.py:161-169"],
+        ["U5", "d", "limit 1–100; offset ≥0.", "api/history.py:27-28", "offset has no ceiling, and the query no timeout"],
+        ["U6", "d", "no or bad token → 401 · no household → 409 · bad limit or offset → 422 · a page → 200 · empty → 200.", "auth/context.py:98-99 · api/history.py:27-39"],
+        ["U7", "m", "Refusals are text only: “invalid token”, “setup required”.", "auth/context.py:55, 99"],
+        ["U8", "n", "No setting changes its behaviour.", "api/history.py:23-39"],
+        ["U9", "d", "A COUNT and one page of dish history.", "services/dish_history.py:26-38", "the auth dependency upserts the user and commits on every GET"],
+        ["U10", "d", "Scoped by user, not household; newest first with an id tiebreak.", "services/dish_history.py:26, 34"],
+        ["U11", "f", "Nothing caught; a database error becomes the framework's 500.", "api/history.py:31-33"],
+        ["U12", "d", "Read-only, but offset paging over a newest-first list, with the count and the page in separate statements.", "services/dish_history.py:5-6, 27-38", "a new cook shifts every page: duplicates or skips"],
+        ["U13", "f", "No log or metric of its own: the access log, and Sentry when a DSN is set.", "main.py:65-71"],
+        ["U14", "d", "No auth C502, 409 C503, empty C504, paging C499–C500, user scope C501.", "tests/test_history.py:90-169", "422 bounds, a bad token and a far offset untested"],
+        ["K1", "m", "Declares response_model only; 401 and 409 never reach the OpenAPI the clients are generated from.", "api/history.py:23 · main.py:143-144"],
+        ["K2", "d", "A bearer token; a household is required, but the query filters by user only.", "api/history.py:30-32"],
+        ["K3", "f", "The global 120 a minute per IP, when limiting is on; not a sensitive prefix.", "middleware/rate_limit.py:119-121"],
+        ["K4", "d", "200 {items, total, limit, offset}; errors {detail}.", "schemas/cooking.py:214-220"] ],
+      finds: [
+        ["Newest-first offset paging shifts when a new dish lands, so pages duplicate or skip; the comment's stability claim holds only oldest-first.", "services/dish_history.py:5-6, 34-36"],
+        ["A read endpoint commits on every call, through the auth upsert, so it is never free of side effects.", "auth/context.py:78-79"],
+        ["No status contract: 401 and 409 are missing from the OpenAPI the web and Android clients are generated from.", "api/history.py:23"],
+        ["offset has no upper bound: a huge offset forces a full count and a deep scan.", "api/history.py:28"],
+        ["A household is required but never filters the query, so dishes from an old household still show. Possibly intended.", "services/dish_history.py:26"] ] },
+
+    { id: "stream", kind: "stream", name: "GET /recipe-creation/gustify/stream", file: "apps/api/api/recipe_stream.py:114 → services/ai_recipe_stream.py",
+      sum: "A streaming AI endpoint: recipe generation as server-sent events, persisted once at the end.",
+      rows: [
+        ["U1", "d", "Stream AI recipe generation as events; persist once, at the final result.", "api/recipe_stream.py:124-130 · services/ai_recipe_stream.py:140-143"],
+        ["U2", "d", "Query: token ≤4096, mode ≤40, idempotency_key ≤200, model_tier ≤8 (default lite).", "auth/context.py:105 · api/recipe_stream.py:120-122", "the key has no minimum length — checked"],
+        ["U3", "d", "Before the stream: token 401, creation flag 403, household 409. Inside it: tier, replay, spend cap, credits, stage gates.", "api/recipe_stream.py:135-140 · services/ai_recipe_stream.py:144-175"],
+        ["U4", "d", "tier lite; missing allergens → none; an abandoned pending row is reclaimed; no provider → a deferred result.", "services/ai_recipe_stream.py:152-213"],
+        ["U5", "d", "Heartbeat every 15 s; Gemini timeout 45 s lite, 120 s full; 6 candidates.", "api/recipe_stream.py:52 · config.py:164, 177-178", "no cap on the stream's total duration"],
+        ["U6", "d", "Four refusals before the stream; after the 200 line: error · replay · cap · deferred · typed error · completed · race → replay the winner · disconnect.", "services/ai_recipe_stream.py:144-308"],
+        ["U7", "d", "Inside the stream, errors carry codes: invalid_request, rate_limited, insufficient_credits, provider_unavailable, provider_error.", "services/ai_recipe_stream.py:81-126", "the HTTP refusals before the stream are text only, and rate_limited covers four different limits"],
+        ["U8", "d", "The creation flag (constant OR setting), ai_provider, the rate-limit and spend-cap switches.", "constants.py:68 · config.py:247-262, 362-372"],
+        ["U9", "d", "Reads, one Gemini call, then at the end: the request row, spend and credits, unknown ingredients queued, commit.", "services/ai_recipe_stream.py:150-178, 287-302", "spend is recorded only at the end, so a disconnect after the call spends money nothing records"],
+        ["U10", "d", "Persist only at the end; no credits when the provider didn't run; after the 200 line, failures travel as events.", "services/ai_recipe_stream.py:141-142, 210, 216"],
+        ["U11", "d", "Typed errors → a final error event; a unique-key clash → rollback and replay the winner.", "services/ai_recipe_stream.py:199-225, 301-308", "an untyped exception after the 200 line ends the stream with no final event"],
+        ["U12", "d", "Replays a finished key; a unique constraint on user and key.", "services/ai_recipe_stream.py:153-157 · models/recipe.py:361", "nothing claims the key while a stream runs, so two same-key streams both call Gemini"],
+        ["U13", "d", "Metrics on deferred, provider error, completed, spend capped and insufficient credits.", "services/ai_recipe_stream.py:202, 219-234", "nothing on disconnect, replay or rate limiting"],
+        ["U14", "d", "C1106–C1116 and C1123–C1125: completed, deferred, bad mode, bad tier, credits, 422, 401, 409, replay, disconnect, parity, heartbeat.", "tests/test_streaming.py:193-549", "the SSE 403, the spend cap, provider errors and the race replay untested"],
+        ["K1", "m", "No responses= and no schema; the refusals and the event vocabulary live only in code.", "api/recipe_stream.py:114 · streaming/events.py:1-13"],
+        ["K2", "d", "The token rides in the URL, so access logs must redact it; scoped to user and household.", "auth/context.py:102-117 · main.py:76-77"],
+        ["K3", "d", "The sensitive HTTP prefix, plus 5 a minute per user, 10 per IP, a global dollar cap and monthly credits.", "middleware/rate_limit.py:29 · config.py:186-195"],
+        ["K4", "d", "Frames of id, event, data; error {code, message, retry_after}; HTTP errors {detail}.", "api/recipe_stream.py:58 · streaming/events.py:97-134"],
+        ["K5", "d", "The finally block cancels the in-flight step and closes the producer; nothing persists.", "api/recipe_stream.py:88-99 · tests/test_streaming.py:369-403"],
+        ["K6", "m", "seq is sent as the event id, but resume is deferred: a reconnect is a new request.", "api/recipe_stream.py:56-57"] ],
+      finds: [
+        ["An empty idempotency_key passes on SSE while the WebSocket twin rejects it, so every empty-key request shares one row and replays an old result. Checked against source.", "api/recipe_stream.py:121 vs :220"],
+        ["An untyped exception after the 200 line escapes with no final event, breaking the stream's own contract.", "services/ai_recipe_stream.py:199-303 · api/recipe_stream.py:76-99"],
+        ["Spend lands only at the end: a disconnect or bad output after the provider answered spends money the global cap never counts.", "services/ai_recipe_stream.py:214-225, 296-299"],
+        ["No in-flight claim: two same-key streams both call Gemini, and the loser's rollback also discards its spend row.", "services/ai_recipe_stream.py:186-189, 301-308"],
+        ["On SSE the 403 and 409 carry no code, while the WebSocket twin sends creation_disabled and setup_required.", "api/recipe_stream.py:136-140 vs 186, 198"],
+        ["One code, rate_limited, covers the per-user limit, the per-IP limit, the global budget and the Gemini quota — “wait a minute” and “budget gone” look the same.", "services/ai_recipe_stream.py:86-114"] ] },
+
+    { id: "spend", kind: "service", name: "record_spend", file: "apps/api/services/ai_spend.py:76",
+      sum: "A service function with no refusals: write one spend row, and never fail the caller.",
+      rows: [
+        ["U1", "d", "Write one ai_spend_log row with a real call's cost and credit charge.", "services/ai_spend.py:76-93"],
+        ["U2", "d", "cost_usd required; user, mode, tokens; credits 0 and tier “full” by default. One caller.", "services/ai_spend.py:76-85 · services/ai_recipes.py:325-333"],
+        ["U3", "d", "Skips entirely when cost and credits are both zero or less.", "services/ai_spend.py:94-95"],
+        ["U4", "d", "occurred_at from the server clock; the user may be empty.", "models/ai_spend.py:24-32"],
+        ["U5", "m", "No check for a negative cost, or for mode over 40 and tier over 8 characters.", "models/ai_spend.py:32 · services/ai_spend.py:94-101"],
+        ["U6", "d", "free → return · insert in a savepoint → return · insert fails → log and return.", "services/ai_spend.py:94-105"],
+        ["U7", "n", "Never refuses.", "—"],
+        ["U8", "n", "The caller decides whether credits are charged.", "services/ai_recipes.py:320-324"],
+        ["U9", "d", "session.add inside a savepoint; no commit.", "services/ai_spend.py:97-101"],
+        ["U10", "d", "Never fail an already-billed recipe over a meter write; never infer credits from cost.", "services/ai_spend.py:86-93, 102"],
+        ["U11", "d", "Catches everything, rolls the savepoint back and logs; no retry.", "services/ai_spend.py:102-105"],
+        ["U12", "m", "No key or unique constraint: two calls write two rows and charge credits twice.", "models/ai_spend.py:24"],
+        ["U13", "d", "Logs on failure only.", "services/ai_spend.py:103-105", "no counter: a meter that keeps failing silently switches off the cap and credit charging"],
+        ["U14", "d", "Insert C92, free skip C93, credit with zero cost C34, mock writes nothing C35.", "tests/test_ai_spend.py:46-56", "the swallow path — its main promise — has no test"],
+        ["K1", "d", "The caller commits; any caller rollback removes the row.", "services/ai_spend.py:97 · services/ai_recipe_stream.py:301-304"],
+        ["K2", "d", "Raises nothing; the caller is never told the write failed.", "services/ai_spend.py:102"] ],
+      finds: [
+        ["A swallowed meter failure is one log line with no counter, so a meter that keeps failing silently disables the spend cap and credit charging.", "services/ai_spend.py:102-105 · events/bus.py:25-28"],
+        ["The swallow path has no test; a regression that re-raises would turn billed results into 500s.", "tests/test_ai_spend.py:46-56"],
+        ["It returns nothing on all three paths, so the caller cannot tell recorded, skipped and failed apart.", "services/ai_spend.py:76-105"],
+        ["Its best-effort promise dies with the caller's rollback: the stream's replay path discards the row.", "services/ai_recipe_stream.py:303-304"] ] },
+
+    { id: "skills", kind: "task", name: "skills.on_cooked_meal_created", file: "apps/api/services/skills.py:213 via events/bus.py",
+      sum: "gustify has no background task — no scheduler, no queue. The nearest kind is this in-process event handler, run inside the cooking-complete request.",
+      rows: [
+        ["U1", "d", "Recount skills for the cooked recipe; mark a skill learned at the threshold.", "services/skills.py:1-9, 146-156"],
+        ["U2", "d", "The event's user, recipe and time, and the publisher's session.", "services/skills.py:213-217 · events/types.py:11-19"],
+        ["U3", "f", "None; a missing recipe, or one with no skills, returns early.", "services/skills.py:47-48, 159-161"],
+        ["U4", "d", "The threshold from skill_unlock_threshold (3); rows older than migration 0037 fall back to the live recipe.", "services/skills.py:98-158 · config.py:185"],
+        ["U5", "d", "Scans only the latest 2000 dish rows; threshold ≥1.", "services/skills.py:37, 94 · config.py:240-245"],
+        ["U6", "d", "no skills → return · new → attempted · crosses the threshold → learned · already learned → count only · raises → dropped.", "services/skills.py:159-190 · events/bus.py:76-87"],
+        ["U7", "n", "Handlers don't refuse.", "—"],
+        ["U8", "d", "skill_unlock_threshold from the environment, falling back to 3.", "config.py:185"],
+        ["U9", "d", "Reads the recipe, ingredients, dish history and progress; writes progress; flush only — the route commits.", "services/skills.py:44-190 · api/cooking.py:425"],
+        ["U10", "d", "learned never reverts; learned_at is set once; handlers must not commit.", "services/skills.py:81-82, 186-189 · events/bus.py:30-34"],
+        ["U11", "d", "Each handler runs in its own savepoint; a failure rolls back that handler only, logged and counted.", "events/bus.py:75-87"],
+        ["U12", "d", "Idempotent: it counts distinct sessions, so a re-run doesn't double count (C1085).", "services/skills.py:66-70 · tests/test_skills.py:174-194", "two concurrent cooks can collide on the unique key and drop an update"],
+        ["U13", "d", "A failure log and an in-process counter.", "events/bus.py:55-58, 81-87", "nothing reads the counter outside tests"],
+        ["U14", "d", "C1082–C1087, C688 bus isolation, and the counter test.", "tests/test_skills.py:90-215", "a missing recipe, never-revert and the race untested"],
+        ["K1", "d", "Published synchronously by POST /cooking/sessions/{id}/complete, after that route commits.", "api/cooking.py:410-424 · events/bus.py:106"],
+        ["K2", "d", "Never retried; dropping is the design.", "events/bus.py:30-34, 82-83"],
+        ["K3", "d", "Swallowed, and said to self-heal on the next event.", "events/bus.py:31-33", "a later cook recounts only its own recipe's skills; the rest stay stale"],
+        ["K4", "d", "Runs inside the request, in order — skills, then progression — in one process.", "events/bus.py:72-78, 106-107"] ],
+      finds: [
+        ["Self-heal is narrower than promised: a dropped run is repaired only for skills a later recipe shares.", "events/bus.py:31-33 · services/skills.py:159-189"],
+        ["The swallowed-failure counter is read by no endpoint, metric or health check, and resets on restart.", "events/bus.py:55-58"],
+        ["The comment at the publish site is stale: it says the handler commits, and handlers must not.", "api/cooking.py:415-416 vs events/bus.py:34"],
+        ["The cook commits first; if the route's second commit fails, the client gets a 500 for a completed cook.", "api/cooking.py:410-425"] ] },
+
+    { id: "ratelimit", kind: "mw", name: "RateLimitMiddleware", file: "apps/api/middleware/rate_limit.py:93",
+      sum: "A middleware: a sliding-window throttle per client IP, tighter on cost-bearing paths.",
+      rows: [
+        ["U1", "d", "Throttle per IP with a tighter window on cost-bearing prefixes; answer 429 with Retry-After.", "middleware/rate_limit.py:1-5"],
+        ["U2", "d", "The path, the forwarded-for headers, the socket peer, a monotonic clock.", "middleware/rate_limit.py:107-112 · net/client_ip.py:63-79"],
+        ["U3", "d", "Runs only when rate_limit_active — the flag, or production.", "middleware/rate_limit.py:98, 108 · config.py:247-254"],
+        ["U4", "d", "An unresolvable IP falls back to the peer, then to “unknown” — one shared bucket.", "net/client_ip.py:79 · middleware/rate_limit.py:82-84"],
+        ["U5", "d", "Global 120 a minute, sensitive 20, a 60-second window; sweeps past 1024 keys.", "config.py:138-140 · middleware/rate_limit.py:47, 64-65"],
+        ["U6", "d", "off → pass · /healthz → pass · sensitive over → 429 · global over → 429 · otherwise → next.", "middleware/rate_limit.py:108-123"],
+        ["U7", "m", "One message for both limits: no code, and no word on which limit tripped.", "middleware/rate_limit.py:125-131"],
+        ["U8", "d", "rate_limit_enabled, forced on in production; limits and window from the environment; trusted proxy hops 1.", "config.py:137-148, 254"],
+        ["U9", "d", "In-process memory only.", "middleware/rate_limit.py:52, 58-69"],
+        ["U10", "d", "Never throttle /healthz; production is always limited.", "middleware/rate_limit.py:40 · config.py:249-254"],
+        ["U11", "f", "Nothing caught; an exception in the IP parsing or the limiter is a 500.", "middleware/rate_limit.py:107-123"],
+        ["U12", "d", "State per process, reset on restart; check and append run with no await between them.", "middleware/rate_limit.py:7-10, 58-69"],
+        ["U13", "m", "No log or metric on a 429.", "middleware/rate_limit.py:13-131"],
+        ["U14", "d", "C770–C781, and the switch C191–C192.", "tests/test_rate_limit.py:19-150", "no test trips the sensitive limit through the middleware"],
+        ["K1", "d", "CORS (outermost) → rate limit → idempotency → routes.", "main.py:119-138"],
+        ["K2", "d", "Every HTTP path but /healthz; seven sensitive prefixes.", "middleware/rate_limit.py:27-40", "WebSockets bypass it"],
+        ["K3", "d", "429 {detail} with Retry-After, from two places.", "middleware/rate_limit.py:117-131"] ],
+      finds: [
+        ["The sensitive prefix /api/v1/cooking/sessions also matches the GET photo reads, so browsing photos burns the 20-a-minute window. Checked against source.", "middleware/rate_limit.py:30 · api/cooking.py:527"],
+        ["429s leave no log or metric, so real abuse and false positives are both invisible.", "middleware/rate_limit.py:125-131"],
+        ["The sensitive hit is recorded before the global check, so a globally refused request still spends a sensitive slot.", "middleware/rate_limit.py:114-121"],
+        ["No test trips the sensitive limit through the middleware.", "tests/test_rate_limit.py:85-121"] ] },
+
+    { id: "seedgate", kind: "mw", name: "_require_seed_controls", file: "apps/api/api/e2e_seed.py:58",
+      sum: "A dependency that is a pure gate: hide the end-to-end seed routes unless seed controls are on.",
+      rows: [
+        ["U1", "d", "Answer 404 on the seed routes unless seed controls are on.", "api/e2e_seed.py:58-60"],
+        ["U2", "n", "None; it reads cached settings.", "api/e2e_seed.py:59"],
+        ["U3", "n", "It is the precondition.", "—"],
+        ["U4", "d", "seed_controls_enabled defaults to false.", "config.py:103"],
+        ["U5", "n", "No bounds.", "—"],
+        ["U6", "d", "flag on → continue · flag off → 404.", "api/e2e_seed.py:59-60"],
+        ["U7", "d", "A bare 404 on purpose: indistinguishable from an unmounted route.", "api/e2e_seed.py:60"],
+        ["U8", "d", "The flag, an environment wall (local and staging-e2e) and a production guard.", "config.py:103, 298-299, 351-360"],
+        ["U9", "n", "No effects.", "—"],
+        ["U10", "d", "Never on in production or staging; validators run at boot.", "config.py:298-299, 351-360"],
+        ["U11", "n", "Bad settings fail at boot, not here.", "main.py:59"],
+        ["U12", "n", "A pure read of cached settings.", "config.py:387-389"],
+        ["U13", "m", "The refusal is not logged.", "api/e2e_seed.py:58-60"],
+        ["U14", "m", "The environment wall is tested (C299–C302); nothing tests this 404.", "tests/test_e2e_seed.py:9-42"],
+        ["K1", "f", "Decorator dependencies run before parameter dependencies, so an unauthenticated probe gets 404, not 401 — FastAPI behaviour, untested.", "api/e2e_seed.py:66-70"],
+        ["K2", "d", "Attached per route; the router itself has no dependencies.", "api/e2e_seed.py:43, 66, 118"],
+        ["K3", "d", "HTTPException 404.", "api/e2e_seed.py:60"] ],
+      finds: [
+        ["The gate can't fire in a running process: the router mounts only when the same cached flag is already on. The real wall is the conditional mount.", "main.py:174-177 · config.py:387-389"],
+        ["Neither the 404 nor the conditional mount has a test; if the mount ever became unconditional, this untested gate would be the only wall.", "tests/test_e2e_seed.py:9-42"],
+        ["The gate sits per route, so a new seed route added without it is protected only by the mount.", "api/e2e_seed.py:43, 66, 118"] ] },
+
+    /* ── data-shaped pieces · short forms · cites under apps/api ── */
+    { id: "pantrycreate", kind: "schema", name: "PantryItemCreate", file: "apps/api/schemas/pantry.py:14",
+      sum: "The request body for adding one pantry row — a write that is not setup.",
+      rows: [
+        ["S1", "d", "Named by its route: add one pantry row and a purchase event. No docstring.", "schemas/pantry.py:14 · api/pantry.py:120-133"],
+        ["S2", "d", "ingredient_code and display_name.", "schemas/pantry.py:15-16"],
+        ["S3", "d", "kind ingredient, quantity 1.0, unit_code “unit”; location, expiry and notes empty.", "schemas/pantry.py:18-27", "the batch sibling defaults unit_code to “un”"],
+        ["S4", "d", "Code ≤80, name ≤200, quantity >0, unit ≤20. No minimum length, no quantity maximum, notes unbounded.", "schemas/pantry.py:15-27", "batch caps notes at 500; single create stores any size"],
+        ["S5", "m", "Only kind has an allow-list. unit_code and ingredient_code are free strings, never checked against the catalog.", "schemas/pantry.py:18,20 · services/pantry.py:35-49"],
+        ["S6", "f", "No model_config, so unknown keys are ignored — the setup schemas forbid them.", "schemas/pantry.py:14 · schemas/setup.py:24"],
+        ["S7", "m", "No strip or lower-casing, though ingredient_code is a case-sensitive join to the catalog.", "schemas/pantry.py:14-27 · services/pantry.py:126"],
+        ["S8", "n", "No field depends on another.", "schemas/pantry.py:22-26"],
+        ["S9", "f", "FastAPI's default 422 list. A database refusal after the schema becomes a 500.", "main.py (no exception handler) · api/pantry.py:130-133"],
+        ["S10", "d", "POST /pantry/items; rebuilt per row by POST /pantry/items/batch.", "api/pantry.py:125-126, 238-247"],
+        ["S11", "m", "No test sends a refused body to /pantry/items.", "tests/test_pantry.py:114-340"] ],
+      finds: [
+        ["notes is unbounded on single create and capped at 500 on batch — one column, two rules.", "schemas/pantry.py:27 vs :329"],
+        ["The unit default is “unit” on single create and “un” on batch, so one item gets two unit words.", "schemas/pantry.py:20 vs :326"],
+        ["expiry_date is only regex-checked and stored as text: “2026-99-99” is saved.", "schemas/pantry.py:22-26 · models/pantry.py:62"],
+        ["Single create never checks that location_id belongs to the caller's household, though batch does; a missing location answers 500.", "api/pantry.py:130-133 vs :219-237"],
+        ["Empty strings pass for ingredient_code and display_name.", "schemas/pantry.py:15-16"] ] },
+
+    { id: "shopresp", kind: "schema", name: "ShoppingItemResponse", file: "apps/api/schemas/shopping.py:19",
+      sum: "A response shape: the shopping_items row without household_id.",
+      rows: [
+        ["S1", "d", "The shopping_items row minus household_id; no docstring.", "schemas/shopping.py:19-22"],
+        ["S2", "d", "id, ingredient_code, display_name, quantity, unit_code, status, source, created_at.", "schemas/shopping.py:21-30"],
+        ["S3", "d", "notes and bought_at default to empty.", "schemas/shopping.py:29,31"],
+        ["S4", "n", "A response; the lengths live on the model (80, 200, 20).", "models/shopping.py:39-46"],
+        ["S5", "m", "status and source are plain strings; pending · bought and manual · frequent · suggested · planned never reach the contract.", "schemas/shopping.py:27-28 · services/shopping.py:187,393,449"],
+        ["S6", "f", "Reads declared fields only; household_id is left out on purpose.", "schemas/shopping.py:20,22"],
+        ["S7", "n", "Stored values are returned as they are.", "—"],
+        ["S8", "m", "bought_at is set exactly when status is bought — enforced by one UPDATE, stated nowhere.", "services/shopping.py:449"],
+        ["S9", "f", "A row that fails validation raises inside the handler: a 500, not a 422.", "api/shopping.py:91,107"],
+        ["S10", "d", "GET /shopping, four shopping writes, and the weekly meal-plan list.", "api/shopping.py:37-107 · api/meal_plan.py:40"],
+        ["S11", "u", "No assert on status, source or bought_at found; the OpenAPI contract test was not read.", "tests/test_shopping.py:91"] ],
+      finds: [
+        ["status and source are bare strings where the pantry's kind is a Literal, so a new value ships silently.", "schemas/shopping.py:27-28 vs schemas/pantry.py:50"],
+        ["The table has no CHECK on status or source either, so no layer stops an unknown value.", "models/shopping.py:47-52"] ] },
+
+    { id: "pantryitem", kind: "model", name: "PantryItem", file: "apps/api/models/pantry.py:33",
+      sum: "A current-state inventory row — what the household is believed to have.",
+      rows: [
+        ["M1", "d", "“A current-state inventory row — what is believed to exist in the household pantry.”", "models/pantry.py:33"],
+        ["M2", "d", "Primary key only. With no unique key, one ingredient can hold many rows.", "models/pantry.py:36-45", "whether those are batches or duplicates is stated nowhere"],
+        ["M3", "d", "household CASCADE; location and added_by SET NULL. ingredient_code has no foreign key.", "models/pantry.py:46-74"],
+        ["M4", "d", "Only ck_pantry_items_kind. No CHECK on quantity >0, on status or on unit_code.", "models/pantry.py:40-42", "quantity >0 lives only in the schemas"],
+        ["M5", "d", "Five nullable columns, all optional in the response; no reader assumes them.", "models/pantry.py:59-74 · schemas/pantry.py:53-55"],
+        ["M6", "d", "kind, quantity, status: code and server. id, unit_code: code only. Timestamps: server only.", "models/pantry.py:45, 54-80"],
+        ["M7", "f", "No validators or events; the rules sit in the schema and one CHECK.", "models/"],
+        ["M8", "d", "Migrations 0004, 0011, 0018 and 0035 build it; timestamps are nullable there, not in the model.", "alembic/versions/0004_pantry_and_history.py:31-47", "no test compares the model with the migrations"],
+        ["M9", "d", "Inserted by add_pantry_item, confirm_bought, cooking and the sandbox seed; updated by edit, reset and location delete.", "services/pantry.py:35 · services/shopping.py:452 · services/cooking.py:608"],
+        ["M10", "m", "Batch turns an IntegrityError into a per-row message; single create catches nothing, so a violation is a 500.", "api/pantry.py:257-262, 130-133"] ],
+      finds: [
+        ["quantity >0 exists only in the schemas; confirm_bought and cooking write rows without them, so 0 or a negative can land.", "models/pantry.py:57 · services/shopping.py:452 · services/cooking.py:608"],
+        ["status is a free 20-character string and reads filter on “active”, so a typo hides the row.", "models/pantry.py:69-71 · services/pantry_reset.py:29"],
+        ["A comment says the IntegrityError catch refuses unknown ingredient codes, but no foreign key exists — they are saved.", "api/pantry.py:257-259 · models/pantry.py:49"],
+        ["Local dev SQLite enforces no foreign keys (only the test conftest turns them on), so CASCADE behaves differently by lane.", "tests/conftest.py:129"] ] },
+
+    { id: "resetop", kind: "model", name: "PantryResetOperation", file: "apps/api/models/pantry.py:110",
+      sum: "One pantry reset: its scope, its summary, and a unique key used as logic.",
+      rows: [
+        ["M1", "d", "“A pantry reset operation — scope + summary. Idempotency-required.”", "models/pantry.py:110"],
+        ["M2", "d", "uq_pantry_reset_ops_hh_key: a retried reset in one household returns the stored result.", "models/pantry.py:115 · services/pantry_reset.py:49-60"],
+        ["M3", "d", "household CASCADE; scope location and actor SET NULL; its decisions CASCADE with it.", "models/pantry.py:119-155"],
+        ["M4", "m", "No CHECK on status or scope; scope is checked only by the schema's regex.", "models/pantry.py:123-131 · schemas/pantry.py:213"],
+        ["M5", "d", "summary is nullable, and the route falls back to zeros.", "models/pantry.py:126-141 · api/pantry.py:534"],
+        ["M6", "d", "scope “all”, status “pending” in code and server.", "models/pantry.py:123-138", "the only writer starts at “in_progress”; “pending” is never written or read"],
+        ["M7", "f", "None.", "models/pantry.py:109-141"],
+        ["M8", "d", "Migration 0004 matches: the same columns, unique key and index.", "alembic/versions/0004_pantry_and_history.py:66-80"],
+        ["M9", "d", "Only apply_reset, behind POST /pantry/reset/apply.", "services/pantry_reset.py:62-90"],
+        ["M10", "m", "Only ResetConflictError becomes a 409. A key race, a key over 255 characters or a repeated decision is a 500.", "api/pantry.py:529-532 · services/pantry_reset.py:71-72,146"] ],
+      finds: [
+        ["apply_reset looks the key up, then inserts, with no recovery: two concurrent applies both pass the lookup and the loser gets a 500. The setup claim already solves this with a savepoint. Checked against source.", "services/pantry_reset.py:49-72 vs services/idempotency.py:137-145"],
+        ["The “in progress” 409 looks unreachable: the row commits only once completed, so a real conflict arrives as that 500.", "services/pantry_reset.py:57-60, 68, 87"],
+        ["Nothing caps the Idempotency-Key header, but the column holds 255 characters.", "middleware/idempotency.py:23-25 · models/pantry.py:122"],
+        ["decisions has no size cap and no uniqueness; a repeated item hits a unique key and answers 500.", "schemas/pantry.py:212 · models/pantry.py:149"],
+        ["A move never checks the target location's household, and a move with no location counts as moved.", "services/pantry_reset.py:84-85, 139-144"] ] },
+
+    { id: "flagcreate", kind: "flag", name: "recipe_creation_enabled", file: "apps/api/config.py:112 + constants.py:68",
+      sum: "A feature flag: the end-to-end lane's override that turns recipe creation back on while the shipped constant says off.",
+      rows: [
+        ["F1", "d", "The effective flag is the RECIPE_CREATION_ENABLED constant OR this setting.", "config.py:105-112 · constants.py:62-68"],
+        ["F2", "d", "A typed bool; the constant is Final[bool].", "config.py:112 · constants.py:68"],
+        ["F3", "d", "False for both; the web keeps its own hard-coded false.", "config.py:112 · web lib/featureFlags.ts:26"],
+        ["F4", "u", "Local and CI unset; staging-e2e true only by comment; staging and production forbidden.", ".env.example · ci-rebuild.yml:199-202 · config.py:110-111"],
+        ["F5", "d", "Four gates — manual POST, gustify POST, SSE, WebSocket — and two validators. The web never reads it.", "api/recipe_creation.py:72,235 · api/recipe_stream.py:135,195"],
+        ["F6", "d", "Unset → false → 403 “recipe creation is disabled”, or a creation_disabled event on the socket.", "api/recipe_creation.py:72-76 · api/recipe_stream.py:195-199"],
+        ["F7", "d", "Validated at import: allowed only in local and staging-e2e.", "config.py:298-303, 362-372"],
+        ["F8", "d", "Flag off: manual and gustify answer 403 (C969, C971); on: C970.", "tests/test_recipes.py:947-1032", "the SSE and WebSocket gates have no flag-off test"] ],
+      finds: [
+        ["No test runs the SSE or WebSocket gate with the flag off, and an autouse fixture turns creation on for the whole suite.", "tests/conftest.py:222-236"],
+        ["One decision lives in three places — API constant, API setting, web constant — held together by “keep in lockstep” comments.", "constants.py:68 · web lib/featureFlags.ts:6-8, 26"],
+        ["staging-e2e needs it true, but no tracked file sets it.", "config.py:110-111"] ] },
+
+    { id: "credits", kind: "flag", name: "ai_credits_chef", file: "apps/api/config.py:202",
+      sum: "A numeric setting used as a cap: the chef tier's monthly AI credit allowance.",
+      rows: [
+        ["F1", "d", "Monthly allowance; remaining is the allowance minus the credits charged this calendar month.", "config.py:196-202 · services/ai_credits.py:63-68"],
+        ["F2", "m", "A plain int with no bounds: 0, negative or huge values pass. The photo limits nearby have ≥1 validators.", "config.py:202, 212-217"],
+        ["F3", "d", "chef 15, free 0.", "config.py:201-202"],
+        ["F4", "u", "No GUSTIFY_AI_CREDITS_* in .env.example, compose, railway.json or CI; deployed values cannot be seen.", "apps/api/.env.example"],
+        ["F5", "d", "allowance_for feeds the credits summary (setup, settings, profile, e2e seed) and the credit check before AI recipes.", "services/ai_credits.py:67, 103, 136"],
+        ["F6", "d", "Unset → 15. An unknown tier gets the free allowance. Remaining never shows below 0.", "services/ai_credits.py:64-68, 105"],
+        ["F7", "m", "No validator, and the production guard skips credits.", "config.py:201-202, 284-328"],
+        ["F8", "d", "Defaults C198, per tier C21, enforcement C26–C33, route 402 C80.", "tests/test_ai_credits.py:78-183", "nothing tests 0, a negative or env parsing"] ],
+      finds: [
+        ["Two tier vocabularies: ALLOWED_TIERS says free and pro and is read nowhere; the real tiers are free and chef, with no CHECK.", "constants.py:60 · models/subscription.py:29"],
+        ["A 0 or negative chef allowance boots fine; every chef user then gets 402, and nothing points at the config.", "config.py:202 · services/ai_credits.py:138-139"],
+        ["The cap is enforced only when ai_provider is real; staging runs mock AI, so only production exercises it.", "services/ai_credits.py:132-133"] ] },
+
+    /* ── frontend pieces · cites under apps/web/src unless marked api ── */
+    { id: "applyreset", kind: "hook", name: "useApplyReset", file: "apps/web/src/features/pantry/usePantryMutations.ts:212",
+      sum: "A mutation hook: saves keep, discard and move choices for the whole pantry in one server transaction.",
+      rows: [
+        ["U1", "d", "Save the reset decisions for the pantry or one location in one transaction.", "usePantryMutations.ts:212-224"],
+        ["U2", "d", "ResetApplyRequest — decisions, scope, scope_location_id — built by the container.", "PantryContainer.tsx:252-281"],
+        ["U3", "d", "The server needs a household and an Idempotency-Key; the client gates nothing.", "api/pantry.py:523-528"],
+        ["U4", "d", "scope defaults to “all”; a move with no principal location becomes a keep.", "api schemas/pantry.py:213 · PantryContainer.tsx:264-274"],
+        ["U5", "m", "decisions has no cap on either side, and the fetch has no timeout.", "api schemas/pantry.py:212 · lib/api/client.ts:145-150"],
+        ["U6", "d", "ok → refresh pantry reads · 409 · 422 · 401 → sign out · network. Every failure ends in one toast.", "usePantryMutations.ts:218-223 · PantryScreen.tsx:275-282"],
+        ["U7", "m", "Reads no reason; the server's 409 text is “Conflict”; the screen shows one fixed message.", "api/pantry.py:531-532 · PantryScreen.tsx:280"],
+        ["U8", "n", "None.", "—"],
+        ["U9", "d", "POST reset/apply with an automatic Idempotency-Key; invalidates pantry.all.", "lib/api/idempotency.ts:20 · lib/query/keys.ts:104"],
+        ["U10", "d", "Never hand-mint the key; mutations never auto-retry; never send a move without a target.", "lib/query/client.ts:31-36 · PantryContainer.tsx:249-250"],
+        ["U11", "d", "No retry, and no optimistic update to undo.", "lib/query/client.ts:35", "the sheet closes before the request settles, so a failure loses the user's decisions"],
+        ["U12", "f", "A key per request, reused only on the 401 retry; a second apply by the user gets a new key.", "lib/api/client.ts:87-91", "the key covers the transport retry, not the user's intent"],
+        ["U13", "m", "No telemetry.", "—"],
+        ["U14", "m", "Hook tests cover only delete; nothing covers apply.", "usePantryMutations.test.tsx:30-68"],
+        ["K1", "d", "mutateAsync from handleResetApply, fired by the sheet's apply.", "PantryContainer.tsx:179-183"],
+        ["K2", "n", "No mutation key.", "—"],
+        ["K3", "d", "Invalidates pantry.all only.", "lib/query/keys.ts:104-105", "recipe availability comes from the pantry and stays stale"],
+        ["K4", "d", "retry false for every mutation.", "lib/query/client.ts:31-36"],
+        ["K5", "d", "The screen catches the error and shows a generic toast for 6 seconds.", "PantryScreen.tsx:268, 279-280"] ],
+      finds: [
+        ["A failure destroys the user's work: the sheet unmounts before the POST settles, and a 6-second toast is the only trace.", "PantryScreen.tsx:501-505, 268"],
+        ["All refusals look alike: in progress, invalid and missing share one message, and the server sends no reason.", "api/pantry.py:531-532 · PantryScreen.tsx:280"],
+        ["No invalidation runs from pantry writes to recipes, so availability filters stay stale until the recipe query expires.", "lib/query/keys.ts:104-105 · lib/query/cache-policy.ts:20"],
+        ["The one destructive bulk write has no test and no telemetry.", "usePantryMutations.test.tsx:30-68"] ] },
+
+    { id: "recipesearch", kind: "hook", name: "useRecipeSearch", file: "apps/web/src/features/cooking/useRecipeSearch.ts",
+      sum: "A query hook with 32 optional filters and paging over GET /recipes.",
+      rows: [
+        ["U1", "d", "GET /recipes: the filtered, paged catalog with pantry availability.", "useRecipeSearch.ts:1-8, 173-185"],
+        ["U2", "d", "32 optional filters, plus enabled and keepPrevious options.", "useRecipeSearch.ts:25-116"],
+        ["U3", "d", "enabled, default true; callers gate sub-tabs by visibility.", "useRecipeSearch.ts:177 · RecipeBrowseContainer.tsx:348-371"],
+        ["U4", "d", "An omitted limit means the server's default of 20; the pages use 12.", "useRecipeSearch.ts:174 · api/recipes.py:315 · Pager.tsx:22", "the client default and the server default differ"],
+        ["U5", "d", "300 ms debounce, 12 per page; the server caps q at 120 and limit at 100.", "RecipeBrowseContainer.tsx:112,148 · api/recipes.py:48,315", "the search box has no maxLength"],
+        ["U6", "d", "disabled · loading · keep previous page · empty with facets · empty · data · error.", "useRecipeSearch.ts:177-178 · renderRecipeBrowseView.tsx:249-260"],
+        ["U7", "m", "A 422 becomes the generic error screen; status and detail are never read.", "lib/screenState.ts:46 · renderRecipeBrowseView.tsx:256"],
+        ["U8", "d", "The mode lens defaults to “para-ti”; equipment is omitted when the inventory is empty.", "RecipeBrowseContainer.tsx:332, 337"],
+        ["U9", "d", "One GET with an abort signal; no writes.", "useRecipeSearch.ts:179-183"],
+        ["U10", "d", "Never send an allergen param; never send an empty q, which would fork the cache key.", "useRecipeSearch.ts:27-41 · useRecipeSearch.test.ts:101-111"],
+        ["U11", "f", "One retry on a 5xx or network failure, none on a 4xx, then the full-screen error.", "lib/query/client.ts:14-20"],
+        ["U12", "f", "The params-keyed cache and the abort signal drop superseded responses.", "useRecipeSearch.ts:179 · RecipeBrowseContainer.tsx:313-321"],
+        ["U13", "m", "No telemetry.", "—"],
+        ["U14", "d", "Param forwarding tested (C1435–C1437, C2115).", "useRecipeSearch.test.ts:13-101", "enabled, keepPrevious, error and paging paths untested"],
+        ["K1", "d", "options.enabled, default true.", "useRecipeSearch.ts:177"],
+        ["K2", "d", "[recipes, search, params] — the whole params object.", "lib/query/keys.ts:49"],
+        ["K3", "d", "Settings, cooking and equipment writes invalidate recipes.", "lib/query/keys.ts:96-119", "pantry writes change availability but do not invalidate it"],
+        ["K4", "d", "Fresh for 30 seconds, not persisted, one retry.", "lib/query/cache-policy.ts:20, 43-63"],
+        ["K5", "d", "An error wins over placeholder data and shows the error screen.", "renderRecipeBrowseView.tsx:256-260, 351"] ],
+      finds: [
+        ["The “every favorite” read stops at 20: it sends no limit, so a cook with more favorites loses titles and steps.", "RecipeBrowseContainer.tsx:356-362 · api/recipes.py:315"],
+        ["The client does not enforce q ≤120; a long paste returns 422 and turns the whole catalog into its error state.", "api/recipes.py:48 · SearchRow.tsx"],
+        ["No refusal reason is read on any path.", "renderRecipeBrowseView.tsx:256"] ] },
+
+    { id: "pantryscreen", kind: "component", name: "PantryContainer", file: "apps/web/src/features/pantry/PantryContainer.tsx",
+      sum: "A list screen: the pantry. It owns the reads and ten writes; the showcase screen renders in live mode.",
+      rows: [
+        ["U1", "d", "The pantry screen's container: reads, writes, sheets.", "PantryContainer.tsx:1-19"],
+        ["U2", "d", "Overview, locations and history queries; /me allergens; platform; sheet state.", "PantryContainer.tsx:72-99"],
+        ["U3", "d", "RequireAuth and RequireSetup wrap it; it gates nothing itself.", "routes/router.tsx:5-7"],
+        ["U4", "d", "Locations pending or failed → an empty list; no overview → empty.", "PantryContainer.tsx:86-88, 108-110"],
+        ["U5", "u", "No list cap or virtualization seen.", "PantryScreen.tsx:263-270"],
+        ["U6", "d", "loading → skeleton · error → sync error · empty → staples and manual actions · ready · a write fails → toast.", "PantryContainer.tsx:102-104 · PantryViews.tsx:112-126"],
+        ["U7", "m", "One fixed failure string per action; the server's principal-location 409 reads like a network drop.", "PantryContainer.tsx:163-173 · PantryScreen.tsx:279-280"],
+        ["U8", "d", "live swaps the showcase for server state; platform picks the layout.", "PantryScreen.tsx:184"],
+        ["U9", "d", "Item and location writes, reset preview and apply, navigation, batch and staples sheets.", "PantryContainer.tsx:90-196"],
+        ["U10", "d", "Mappers never read the clock; no optimistic edits in live mode.", "PantryContainer.tsx:106-107 · PantryScreen.tsx:242-250"],
+        ["U11", "d", "Load error → the sync error state; write error → a toast; a route error boundary catches render throws.", "PantryStateViews.tsx:62-67 · routes/router.tsx:92-93", "the error state's Retry and “use offline” buttons have no handler"],
+        ["U12", "f", "Sheets close before the request; no per-row pending state; the last write wins.", "PantryScreen.tsx:459-470"],
+        ["U13", "m", "No telemetry in the container or the screen.", "—"],
+        ["U14", "d", "Source-scan contract tests and live location calls.", "PantryScreen.contract.test.ts:93-368", "no test drives loading, error, empty or a rejected write"],
+        ["K1", "d", "loading · error · empty · ready.", "PantryContainer.tsx:102-104 · PantryViews.tsx:116-126", "no partial state — a locations failure is silent — and the first-time state is unreachable"],
+        ["K2", "d", "Twelve handlers map to writes.", "PantryContainer.tsx:114-183", "the reset preview's answer is thrown away, and two buttons do nothing"],
+        ["K3", "m", "The create builder applies no caps; the server caps name at 200, code at 80, quantity above 0.", "pantryModel.ts:353-359 · api schemas/pantry.py:15-19"] ],
+      finds: [
+        ["The load-error state is a dead end: Retry and “use offline” have no handler, and the query already gave up after one retry. Checked against source.", "PantryStateViews.tsx:62-67 · lib/query/client.ts:14-29"],
+        ["The reset preview runs and its answer is discarded; the sheet builds its own list.", "PantryContainer.tsx:175-177 · PantryScreen.tsx:286-290"],
+        ["A locations failure renders as “no locations”, and reset moves quietly become keeps.", "PantryContainer.tsx:108, 264-274"],
+        ["The server's principal-Despensa 409s show the same copy as a network failure.", "PantryContainer.tsx:163-173 · api/pantry.py:461-490"] ] },
+
+    { id: "toast", kind: "store", name: "useUiStore.pushToast", file: "apps/web/src/store/ui.ts:68",
+      sum: "The app's one store with actions: queue a toast for the aria-live portal.",
+      rows: [
+        ["U1", "d", "Queue a toast; return its id for early dismissal.", "store/ui.ts:8-10, 46-47"],
+        ["U2", "d", "tone, message, and optional duration, action label and action.", "store/ui.ts:20-30"],
+        ["U3", "n", "None.", "—"],
+        ["U4", "d", "The store says an absent duration is sticky; the provider treats it as 5 seconds.", "store/ui.ts:25 · ToastProvider.tsx:36, 56-57", "the store and its consumer disagree — checked"],
+        ["U5", "m", "No cap on the queue, no dedupe, no message length limit.", "store/ui.ts:79"],
+        ["U6", "d", "push → timed dismiss · manual dismiss · action tap runs and dismisses · sticky at 0.", "ToastProvider.tsx:53-62, 138-139"],
+        ["U7", "n", "No refusals.", "—"],
+        ["U8", "d", "tone danger → an assertive alert region; the others are polite.", "ToastProvider.tsx:31-34, 111-112"],
+        ["U9", "d", "set() only; the id comes from crypto.randomUUID.", "store/ui.ts:63-81"],
+        ["U10", "d", "“danger” is reserved for allergen and safety warnings.", "store/ui.ts:3-6, 17", "four generic failure toasts use danger"],
+        ["U11", "f", "randomUUID has no fallback; the idempotency helper has one.", "store/ui.ts:63-66 · lib/api/idempotency.ts:47-53"],
+        ["U12", "m", "Identical toasts stack; there is no dedupe key.", "store/ui.ts:79"],
+        ["U13", "n", "UI-only state.", "—"],
+        ["U14", "m", "No toast tests.", "HomeActionablePanel.test.tsx:117, 133"],
+        ["K1", "d", "append · filter by id · reset to empty.", "store/ui.ts:79, 82-83"],
+        ["K2", "n", "UI-only state.", "—"],
+        ["K3", "d", "In memory, not persisted.", "store/ui.ts:58-60, 68", "clearToasts has no caller, so toasts outlive sign-out"] ],
+      finds: [
+        ["RequireSetup's “Retrying…” toast sets no duration, so it vanishes after 5 seconds and leaves the bare splash. Checked against source.", "routes/RequireSetup.tsx:41 · ToastProvider.tsx:36, 56"],
+        ["The danger tone meant for safety warnings is used by four ordinary failures, so screen readers get alerts for routine errors.", "store/ui.ts:17 · AccountDangerZoneSection.tsx:84 · useAddStaples.ts:52"],
+        ["Nothing resets the store on sign-out: toasts and a pending resume session survive on a shared device.", "store/ui.ts:58-60, 83"] ] },
+
+    { id: "setupscreen", kind: "component", name: "SetupScreen + useCompleteSetup", file: "apps/web/src/features/auth/SetupScreen.tsx",
+      sum: "The screen that calls POST /setup/complete: a first-run wizard, a redo mode and a consent gate — four pieces acting as one.",
+      rows: [
+        ["U1", "d", "First-run wizard → POST /setup/complete; redo mode patches settings instead.", "SetupScreen.tsx:1-20 · useCompleteSetup.ts:26-31"],
+        ["U2", "d", "Wizard state, the Firebase name and email, /me, consent status, ?redo=1.", "SetupScreen.tsx:57-80"],
+        ["U3", "d", "/me and consent loaded; consent not required, else the consent gate. The server re-checks the version.", "SetupScreen.tsx:110-125 · api services/setup.py:372-374"],
+        ["U4", "d", "Household name from the display name → the email → “Mi Cocina”; CL, CLP, es; notifications on.", "setupMapping.ts:48-110"],
+        ["U5", "d", "Zod checks name ≤120, allergens ≤5, preferences ≤20, explore ≤3 before the POST.", "shared/schemas/setup.schema.ts:19-105", "no request timeout"],
+        ["U6", "d", "Eight: /me missing · consent loading · consent gate · mapping throws · 200 · a refusal · 401 twice · redo.", "SetupScreen.tsx:81-124 · useCompleteSetup.ts:43"],
+        ["U7", "m", "Branches on status only: any 409 shows the “in progress” copy; a 422 shows the first raw Pydantic message.", "SetupScreen.tsx:41-51"],
+        ["U8", "d", "redo switches the endpoint; the locale comes from useT.", "SetupScreen.tsx:67, 86-90", "the consent gate's error is hard-coded Spanish"],
+        ["U9", "d", "POST with an automatic key; seeds the /me cache and invalidates me and settings; redo PATCHes twice.", "useCompleteSetup.ts:35-46 · useRedoSetup.ts:25-45"],
+        ["U10", "d", "First run never navigates — the guard does; redo never POSTs; redo never seeds before /me.", "useCompleteSetup.ts:5-6 · SetupScreen.tsx:64-66, 137-146"],
+        ["U11", "d", "No retry; an error card sits above the button.", "SetupScreen.tsx:92-103", "a redo that fails halfway has no rollback and cannot say which half saved"],
+        ["U12", "f", "A key per request, reused only on the 401 retry; the button disables while pending.", "lib/api/client.ts:87-91 · InitialSetupScreen.tsx:492", "two submits before a re-render send two keys, and both claim NEW"],
+        ["U13", "m", "No telemetry; the analytics union has no setup event.", "lib/analytics.ts:24-29"],
+        ["U14", "d", "The API end-to-end run covers create and replay; the mapping has unit tests.", "tests/web-e2e/staging-e2e-setup.spec.ts:26, 61", "no test renders a 409, 422, consent or redo branch"],
+        ["K1", "d", "Loading renders blank; consent gate; wizard; submitting; error card.", "SetupScreen.tsx:110-159", "loading renders nothing — no splash"],
+        ["K2", "d", "Next on the last step maps and submits; Accept posts consent; Back disables while submitting.", "InitialSetupScreen.tsx:238-240, 490"],
+        ["K3", "d", "Zod mirrors the caps and allow-lists, and the client is stricter.", "setup.schema.ts:104-115 · api schemas/setup.py:24-38", "allow-list parity with the server is not checked"] ],
+      finds: [
+        ["Consent required is shown as “setup already in progress”: the 409 branch never reads detail. Checked against source.", "SetupScreen.tsx:43 · api/setup.py:201-202"],
+        ["The “in progress” 409 is practically unreachable from this client, which reuses a key only on its own 401 retry.", "api services/setup.py:342-348 · lib/api/client.ts:87-91"],
+        ["A double submit before a re-render sends two keys; both claim NEW, and whether a constraint stops a second household is unknown.", "useCompleteSetup.ts:9-10 · lib/api/client.ts:90-91"],
+        ["Raw server text reaches the user: an English Pydantic message on a 422, “Request failed with status 500” on a 5xx.", "SetupScreen.tsx:44-48 · lib/api/errors.ts:107-113"],
+        ["A local validation failure says “we couldn't save” though nothing was sent.", "SetupScreen.tsx:50, 81-84"],
+        ["No telemetry on the most important funnel step, and no UI test for any refusal branch.", "lib/analytics.ts:24-29"] ] },
+
+  ];
+  (function () {
+    var head = ["Piece", "Kind", "Slots", "Defined", "Default", "Missing", "Unknown", "Findings"];
+    var all = [SETUP, GUARD].concat(SWEEP);
+    var kindsUsed = {}; all.forEach(function (p) { kindsUsed[p.kind] = 1; });
+    document.getElementById("sweep-n").textContent = all.length + " pieces · " + Object.keys(kindsUsed).length + " kinds";
+
+    /* which universal slots go empty most often, across every piece that has paths */
+    var G = {};
+    all.forEach(function (p) { p.rows.forEach(function (r) {
+      if (!UNAME[r[0]]) return;
+      var g = G[r[0]] || (G[r[0]] = { n: 0, na: 0, m: 0, u: 0, fl: 0, gap: 0 });
+      if (r[1] === "n") { g.na++; return; }
+      g.n++; if (r[1] === "m") g.m++; if (r[1] === "u") g.u++; if (r[4]) g.fl++; if (isGap(r)) g.gap++; }); });
+    var gh = ["Slot", "Applies", "Missing", "Unknown", "With a finding", "Open"];
+    var order = Object.keys(G).sort(function (a, b) { var A = G[a], B = G[b];
+      return (B.gap / (B.n || 1)) - (A.gap / (A.n || 1)) || (+a.slice(1)) - (+b.slice(1)); });
+    document.getElementById("tab-gaps").innerHTML = "<thead><tr>" + gh.map(function (h, i) { return "<th" + (i > 0 && i < 5 ? ' class="num"' : "") + ">" + h + "</th>"; }).join("") + "</tr></thead><tbody>"
+      + order.map(function (k) { var g = G[k], pct = Math.round(100 * g.gap / (g.n || 1));
+        return '<tr><td class="slot" data-l="Slot"><code>' + k + "</code>" + esc(UNAME[k]) + '</td><td class="num" data-l="Applies">' + g.n + (g.na ? ' <span class="n0">+' + g.na + " n/a</span>" : "") + "</td>"
+          + '<td class="num ' + (g.m ? "nm" : "n0") + '" data-l="Missing">' + g.m + '</td><td class="num ' + (g.u ? "" : "n0") + '" data-l="Unknown">' + g.u + "</td>"
+          + '<td class="num ' + (g.fl ? "" : "n0") + '" data-l="With a finding">' + g.fl + '</td><td data-l="Open"><span class="bar"><i style="width:' + pct + '%"></i></span>' + pct + "%</td></tr>"; }).join("") + "</tbody>";
+    document.getElementById("tab-sweep").innerHTML = "<thead><tr>" + head.map(function (h, i) { return "<th" + (i > 1 ? ' class="num"' : "") + ">" + h + "</th>"; }).join("") + "</tr></thead><tbody>"
+      + all.map(function (p) { var c = counts(p), k = KBY[p.kind];
+        function n(v, bad) { return '<td class="num ' + (v ? (bad ? "nm" : "") : "n0") + '"'; }
+        return '<tr><td data-l="Piece"><a href="#pc-' + p.id + '">' + esc(p.name) + '</a></td><td data-l="Kind">' + esc(k ? k.name : p.kind) + "</td>"
+          + n(1) + ' data-l="Slots">' + p.rows.length + "</td>" + n(c.d) + ' data-l="Defined">' + c.d + "</td>" + n(c.f) + ' data-l="Default">' + c.f + "</td>"
+          + n(c.m, 1) + ' data-l="Missing">' + c.m + "</td>" + n(c.u, 1) + ' data-l="Unknown">' + c.u + "</td>" + n((p.finds || []).length) + ' data-l="Findings">' + (p.finds || []).length + "</td></tr>"; }).join("") + "</tbody>";
+    var host = document.getElementById("sweep");
+    SWEEP.forEach(function (p) { var d = document.createElement("div"); d.id = "pc-" + p.id; host.appendChild(d); mount(d, p, false); });
+  })();
+
+  /* ══ what the map captures today ══ */
+  var COVER = [
+    ["U1 Purpose", "p", "_a3_code.py _first_sentence → function_insight[].doc · endpoints[].doc", "A handler with no docstring has no purpose; module intent is dropped.", "Convention (docstring) + judgement", "S"],
+    ["U2 Inputs", "p", "endpoints[].touches · c4 det.gsig", "Params are computed in function_insight but never serialised; headers read in the body go unnamed.", "AST · existing arm (function_insight)", "S"],
+    ["U3 Preconditions", "p", "endpoints[].middleware (gate by name) · flag walls · graft fn_roles gate", "Guards inside the body, predicate text, nested dependencies.", "AST · new path arm", "M"],
+    ["U4 Defaults", "a", "only archmap.flags[].default", "Param defaults, Field defaults, or-fallbacks, constants.", "AST · existing arms (parse_schemas, function_insight)", "S"],
+    ["U5 Bounds", "a", "none — min_length appears 0 times in gustify's archmap and c4", "Field bounds, clamps in code, numeric config caps.", "AST · existing arm; clamps need the path arm", "S–M"],
+    ["U6 Paths", "a", "reach only: c4 behind · levels fn_edges, every call unioned", "No branch → exit list.", "AST · new path arm + judgement on the collapse rule", "L"],
+    ["U7 Refusal reasons", "a", "_a3_code.py:1321 _raise_status — feeds only flag walls", "Raise sites, their status, text vs a stable code.", "AST · new path arm reusing _raise_status", "S–M"],
+    ["U8 Switches & flags", "p", "archmap.flags (bool only) · DI binds pred from _a3_stacks_pydi", "if-not-flag arms skipped on purpose; non-bool switches; general predicates.", "AST · existing arms + path arm", "M"],
+    ["U9 Effects", "c", "function_insight[].access {ops, commits} · sinks · externals · c4 reads_from / writes_to", "The split per path; some outside calls missed.", "Existing arm; the per-path split rides the path arm", "M"],
+    ["U10 Invariants", "a", "none", "Any stated or asserted never-do rule.", "Convention (a tag or an assert) + judgement", "M"],
+    ["U11 Failure handling", "a", "none — no generator reads try/except", "Catch, rollback, retry, timeout, swallowed errors.", "AST · new path arm", "M"],
+    ["U12 Repeat safety", "a", "none — the endpoint lab guesses it from touching idempotency_keys", "Key read, claim call, unique key as a guard, locks.", "AST · path arm + a declared allow-list", "M"],
+    ["U13 Observability", "a", "none — logger calls sit only in a name bag", "Log level per exit, metrics, spans.", "AST · existing arm (call scan)", "S"],
+    ["U14 Tests per path", "p", "test_insight.by_endpoint (26 C-ids for setup) · c4 det.cases", "Counted per element, not per path; fixture callers are over-credited.", "AST · _a3_tests asserted status, joined to the exits", "M"],
+    ["Endpoint · status contract", "p", "endpoints[].status (declared, default 200) → c4 det.status", "The exits the code produces: raised 400 and 409, framework 401 and 422.", "AST · path arm + declared framework rules", "M"],
+    ["Endpoint · auth scope", "p", "endpoints[].middleware[].fn · the gates tool", "Which role or scope a gate enforces. levels guards = 6 counts defs in a file, not gates.", "AST · existing arm + one level in", "S–M"],
+    ["Endpoint · rate limit", "p", "archmap.app_middleware (order, scope all) · flags.rate_limit_enabled", "The window per route; numeric limits.", "AST · existing arm + config", "S"],
+    ["Endpoint · response per exit", "p", "endpoints[].resp · c4 det.payload — success only", "The error body of each exit.", "Path arm + declared framework default", "M"],
+    ["Service · commit ownership", "p", "function_insight[].access.commits", "Owner vs nested commits; rollback sites.", "Existing arm + path arm", "S"],
+    ["Service · raised errors → translator", "a", "none — error names sit in a touches bag", "Service raise × caller except × HTTP status.", "AST · path arm, one call level", "M"],
+    ["Task · trigger", "p", "task_map dispatches · task_roots", "Beat and cron schedules.", "AST · existing arm", "S"],
+    ["Task · retry, final failure, concurrency", "a", "_task_registry reads only name=", "autoretry, backoff, on_failure, acks_late, locks.", "AST · existing arm; worker count is runtime only", "S–M"],
+    ["Middleware · order", "p", "app_middleware[].order — the order added", "True run order (the last added runs outermost); dependency declaration order is lost.", "AST · existing arm", "S"],
+    ["Middleware · scope, short-circuits", "a", "scope is the constant “all”", "Path allow-lists, router dependencies, early 401 · 403 · 429.", "AST · existing arm + path arm over dependencies", "M"],
+    ["Frontend · state coverage, render states", "a", "pieces[].state means “on the state channel”, not query states", "isPending, isError and data branches, and what each renders.", "TS AST · extend _a3_fe_extract.mjs", "M"],
+    ["Frontend · redirect targets", "a", "RequireSetup's edges keep useMe and AuthSplash; Navigate's target is dropped", "Navigate to, navigate() arguments, resolved PATHS.", "TS AST · existing extractor", "S–M"],
+    ["Frontend · cache key & invalidation", "p", "pieces[].cache · a literal queryKey only", "Factory keys like queryKeys.me(), invalidateQueries, setQueryData.", "TS AST + type checker", "M"],
+    ["Frontend · optimistic rollback", "a", "none", "onMutate, onError, context.", "TS AST · existing extractor", "S"],
+    ["Schema · required, defaults, bounds, unknown keys", "a", "schemas[].fields = [name, type, desc]", "Field defaults, constraints, extra=forbid.", "AST · parse_schemas", "S"],
+    ["Schema · allowed values, normalisation, cross-field", "p", "Literal annotations only; validators exist as unlinked defs", "Enum members; the validator → field link; what a validator does.", "parse_schemas + judgement", "S–M"],
+    ["Schema · error shape", "a", "none", "The 422 body; custom exception handlers.", "Config + AST", "S"],
+    ["Schema · consumers", "c", "model_insight[].internal_refs · c4 touches · schema_homing", "—", "Existing", "—"],
+    ["Model · keys, foreign keys", "p", "models[].uqs · fks — ondelete dropped", "primary_key and unique kwargs; ondelete.", "AST · parse_models", "S"],
+    ["Model · checks, nullable, defaults, hooks", "a", "none — server_default appears 0 times in gustify's archmap", "CheckConstraint, nullable=, server_default, onupdate, @validates.", "AST · parse_models", "S"],
+    ["Model · migration parity", "a", "none — migrations are skipped by the SQL and DI arms", "A model vs migration diff.", "New arm, or runtime (alembic check)", "L"],
+    ["Model · writers", "c", "function_insight access ops (rw w) · c4 writes_to", "—", "Existing", "—"],
+    ["Model · violation → API", "a", "none", "IntegrityError catch → status; unhandled → 500.", "Path arm + judgement", "M"],
+    ["Flag · default", "c", "archmap.flags[].default · c4 flag det.default", "—", "Existing", "—"],
+    ["Flag · allowed values, readers, fallback", "p", "bool flags only; readers only where a flag raises (1 of 5 drawn)", "int and string settings; property readers; arms that don't raise.", "AST · parse_flags", "S"],
+    ["Flag · per environment", "a", "none", ".env and deploy values.", "Config, or runtime only", "M"],
+    ["Flag · startup check, tests per value", "a", "none", "Settings validators; a monkeypatch per case.", "AST · parse_flags + _a3_tests", "S–M"],
+
+  ];
+  (function () {
+    var CV = { c: ["captured", "cv-c"], p: ["partial", "cv-p"], a: ["absent", "cv-a"] };
+    var head = ["Slot", "Today", "Where it lives", "What is missing", "How to extract", "Effort"];
+    var n = { c: 0, p: 0, a: 0 }; COVER.forEach(function (r) { if (n[r[1]] != null) n[r[1]]++; });
+    document.getElementById("cover-n").textContent = COVER.length + " slots · " + n.c + " captured · " + n.p + " partial · " + n.a + " absent";
+    document.getElementById("tab-cover").innerHTML = "<thead><tr>" + head.map(function (h) { return "<th>" + h + "</th>"; }).join("") + "</tr></thead><tbody>"
+      + COVER.map(function (r) { return '<tr><td data-l="Slot"><b>' + esc(r[0]) + '</b></td><td data-l="Today"><span class="cv ' + CV[r[1]][1] + '">' + CV[r[1]][0] + "</span></td>"
+        + '<td data-l="Where it lives" class="cite">' + esc(r[2]) + '</td><td data-l="What is missing">' + esc(r[3]) + '</td><td data-l="How to extract">' + esc(r[4]) + '</td><td data-l="Effort">' + esc(r[5]) + "</td></tr>"; }).join("") + "</tbody>";
+  })();
+})();
+</script>
