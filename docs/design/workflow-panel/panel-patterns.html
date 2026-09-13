@@ -431,6 +431,7 @@
         <li><b>A table with named columns is one grid.</b><span>Rows borrow the table's columns (subgrid), so every row lines up under its head.</span><span class="why">rows sizing their own columns put the keys at a different x on every row</span></li>
         <li><b>A column head never wraps.</b><span>The column never goes narrower than its own head.</span></li>
         <li><b>A long type breaks at its word boundaries.</b><span>A 28-letter class name wraps between its words onto a second line — never cut, never mid-word.</span><span class="why">SetupCompleteRequest's record ran 38px past the portrait</span></li>
+        <li><b>A grid row never squeezes its block.</b><span>Block rows are sized to their content and the body scrolls.</span><span class="why">26 function blocks were squeezed to 51px of their 68</span></li>
         <li><b>The 12px floor is measured.</b><span>Rendered size, not authored size. An exception is named per part, at exactly the size the operator set (the count and channel chips at 11px).</span></li>
       </ul>
     </div>
@@ -450,6 +451,7 @@
           <li><b>A dial lives with its part.</b><span>The chip's box, fill and size sit under the Channel row of Block title, not in a group of their own.</span></li>
           <li><b>Every block copies one line.</b><span>The hover on the copy button shows the line before you click.</span></li>
           <li><b>Shared looks are read, not copied.</b><span>Schemas reads Data's pill colour, chip box/fill/size, field marks and edge, and its rail says where they are set.</span></li>
+          <li><b>A choice made alone becomes an option.</b><span>Each carried-over part gets a "map" fold: what a mark is, what gets a block, which colour, shared or own looks — compared in the panel instead of ruled blind.</span><span class="why">operator: "build them all and have them as options to choose in the left panel"</span></li>
         </ul>
       </div>
       <figure><div class="shot"><img src="patterns/p-rail-folded.png" alt="The data rail with twelve folded groups, each header summarising its settings"></div><figcaption>The rail at rest: twelve folds, each header a summary.</figcaption></figure>
@@ -629,6 +631,7 @@
       <ol class="steps">
         <li><b>Inventory.</b> List what the station card shows today for this part: nothing on it may be lost, and a hover card counts.</li>
         <li><b>Name the things and their pieces.</b> For Data, the thing was a table and the piece was a field. Decide both before drawing.</li>
+        <li><b>Make every choice an option.</b> What a mark is, what gets a block, which colour, whose look — each goes into the part's "map" fold, so the operator compares them in the panel.</li>
         <li><b>Title row.</b> Count pills with factor cards on the left; appendable filters, a divider and a sort on the right.</li>
         <li><b>Blocks.</b> One block per thing: a title as ordered lines of parts, then its pieces as marks read from declared facts.</li>
         <li><b>Cards.</b> One hover per drawn thing, on the card law; the thing's card mirrors its block.</li>
@@ -645,7 +648,7 @@
         <thead><tr><th>Part</th><th>The thing (a block)</th><th>Its pieces (marks)</th><th>Count pills</th><th>Filter like channels</th></tr></thead>
         <tbody>
           <tr><td class="nw"><b>Schemas</b> · built 13 Sep</td><td>a shape — each body and every shape nested in it (13)</td><td>fields; a field typed as another shape wears the shape mark</td><td>shapes · fields · nested</td><td>IN · OUT (request green · response orange)</td></tr>
-          <tr><td class="nw"><b>Functions</b></td><td>a function on the walk</td><td>the tables it touches, the calls it makes</td><td>functions · hops · commits</td><td>role: accessor · caller · gate · pure</td></tr>
+          <tr><td class="nw"><b>Functions</b> · built 13 Sep</td><td>a function — the handler at L0 and the 25 the walk reaches</td><td>tables it reads or writes, or functions it calls (an option)</td><td>functions · levels · commits</td><td>roles: accessor · caller · gate · pure</td></tr>
           <tr><td class="nw"><b>Tests</b></td><td>a test case</td><td>the status codes it asserts</td><td>tests · codes · journeys</td><td>by asserted code</td></tr>
           <tr><td class="nw"><b>Widening</b></td><td>a rung: hook, screen, route</td><td>the pieces on that rung</td><td>screens · hooks · routes</td><td>by frontend kind</td></tr>
           <tr><td class="nw"><b>Security</b></td><td>a gate or dependency</td><td>the checks it runs</td><td>deps · walls · lanes</td><td>by layer</td></tr>
@@ -659,6 +662,7 @@
         <li><b>The middle panel's field lists</b><span>(Fields view, an opened block) still use the older row, not the three-column table.</span></li>
         <li><b>The head bar and part buttons</b><span>predate the fold rail; their dials follow the older block layout.</span></li>
         <li><b>Schemas took the pattern on 13 Sep</b><span>— blocks, cards, footer, record and rail folds — and wears Data's looks until the operator tunes it.</span></li>
+        <li><b>Functions took it the same day</b><span>and is built from the rail kit (named folds, picks, switches, sliders, title lines, footer switches, own-look dials). Schemas' rail predates the kit and is owed the same fold-in.</span></li>
       </ul>
     </div>
     <div class="src">
