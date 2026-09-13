@@ -1,0 +1,782 @@
+<title>Panel Pattern Book</title>
+
+<style>
+  /* ── font roster (H3) — the script keeps these in sync ─────────────── */
+  :root { --af-stack: ui-monospace, monospace; --af-size: 15px; --af-track: -0.025em; }
+  :root {
+    --af-title: "Bahnschrift", "DIN Alternate", "Roboto Condensed",
+                "Arial Narrow", ui-sans-serif, system-ui, sans-serif;
+  }
+  :root {
+    --fs-sm:  calc(var(--af-size) * 0.92);
+    --fs-xs:  calc(var(--af-size) * 0.855);
+    --fs-min: calc(var(--af-size) * 0.82);
+  }
+
+  /* ── Catalog · cool developer portal (default) ── */
+  :root, :root[data-skin="catalog"] {
+    --ground:#f6f7f9; --card:#ffffff; --raised:#fbfcfd;
+    --ink:#141a24; --ink-soft:#3d4756; --muted:#7a8595;
+    --rule:#e7e9ee; --rule-soft:#eef0f4;
+    --accent:#4f46e5; --accent-soft:#eef0fe; --strong:#101726;
+    --radius:10px; --rail:5px;
+    --shadow:0 1px 2px rgba(16,24,40,.05), 0 4px 14px rgba(16,24,40,.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]), :root[data-skin="catalog"]:not([data-theme="light"]) {
+      --ground:#101726; --card:#1b2436; --raised:#212b40;
+      --ink:#e7ebf3; --ink-soft:#c7cfdd; --muted:#79839a;
+      --rule:#2c3648; --rule-soft:#232d3f;
+      --accent:#8b83f5; --accent-soft:#23214a; --strong:#c7cfdd;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="dark"], :root[data-skin="catalog"][data-theme="dark"] {
+    --ground:#101726; --card:#1b2436; --raised:#212b40;
+    --ink:#e7ebf3; --ink-soft:#c7cfdd; --muted:#79839a;
+    --rule:#2c3648; --rule-soft:#232d3f;
+    --accent:#8b83f5; --accent-soft:#23214a; --strong:#c7cfdd;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
+  }
+  :root[data-skin="catalog"][data-theme="light"] {
+    --ground:#f6f7f9; --card:#ffffff; --raised:#fbfcfd;
+    --ink:#141a24; --ink-soft:#3d4756; --muted:#7a8595;
+    --rule:#e7e9ee; --rule-soft:#eef0f4; --accent:#4f46e5; --accent-soft:#eef0fe;
+    --strong:#101726;
+  }
+
+  /* ── Blueprint · skin F, blue ink ── */
+  :root[data-skin="blueprint"] {
+    --ground:#f6f8fc; --card:#fdfeff; --raised:#f1f5fd;
+    --ink:#16233b; --ink-soft:#41547a; --muted:#8494b5;
+    --rule:#c3d0f0; --rule-soft:#dde5f8;
+    --accent:#1d4ed8; --accent-soft:#e4ecfe; --strong:#16233b;
+    --radius:6px; --rail:5px; --shadow:none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-skin="blueprint"]:not([data-theme="light"]) {
+      --ground:#0b1220; --card:#101a2e; --raised:#142138;
+      --ink:#dce6fa; --ink-soft:#a8bce4; --muted:#7286b0;
+      --rule:#23375f; --rule-soft:#1a2942;
+      --accent:#6f9bff; --accent-soft:#16264a; --strong:#a8bce4; --shadow:none;
+    }
+  }
+  :root[data-skin="blueprint"][data-theme="dark"] {
+    --ground:#0b1220; --card:#101a2e; --raised:#142138;
+    --ink:#dce6fa; --ink-soft:#a8bce4; --muted:#7286b0;
+    --rule:#23375f; --rule-soft:#1a2942;
+    --accent:#6f9bff; --accent-soft:#16264a; --strong:#a8bce4; --shadow:none;
+  }
+  :root[data-skin="blueprint"][data-theme="light"] {
+    --ground:#f6f8fc; --card:#fdfeff; --raised:#f1f5fd;
+    --ink:#16233b; --ink-soft:#41547a; --muted:#8494b5;
+    --rule:#c3d0f0; --rule-soft:#dde5f8; --accent:#1d4ed8; --accent-soft:#e4ecfe;
+    --strong:#16233b;
+  }
+
+  /* ── Mission Console · skin B, teal ops console ── */
+  :root[data-skin="mission"] {
+    --ground:#eef1f4; --card:#ffffff; --raised:#f6f8fa;
+    --ink:#1a2b36; --ink-soft:#4a6272; --muted:#7d92a0;
+    --rule:#c8d4dc; --rule-soft:#e2e9ee;
+    --accent:#0e7c8c; --accent-soft:#e0f1f4; --strong:#1a2b36;
+    --radius:4px; --rail:5px; --shadow:none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-skin="mission"]:not([data-theme="light"]) {
+      --ground:#0e161c; --card:#16222b; --raised:#1b2934;
+      --ink:#e3edf3; --ink-soft:#b3c6d2; --muted:#7d92a0;
+      --rule:#27394a; --rule-soft:#1e2c39;
+      --accent:#2ba7bb; --accent-soft:#0f3038; --strong:#b3c6d2; --shadow:none;
+    }
+  }
+  :root[data-skin="mission"][data-theme="dark"] {
+    --ground:#0e161c; --card:#16222b; --raised:#1b2934;
+    --ink:#e3edf3; --ink-soft:#b3c6d2; --muted:#7d92a0;
+    --rule:#27394a; --rule-soft:#1e2c39;
+    --accent:#2ba7bb; --accent-soft:#0f3038; --strong:#b3c6d2; --shadow:none;
+  }
+  :root[data-skin="mission"][data-theme="light"] {
+    --ground:#eef1f4; --card:#ffffff; --raised:#f6f8fa;
+    --ink:#1a2b36; --ink-soft:#4a6272; --muted:#7d92a0;
+    --rule:#c8d4dc; --rule-soft:#e2e9ee; --accent:#0e7c8c; --accent-soft:#e0f1f4;
+    --strong:#1a2b36;
+  }
+
+  /* ══ section blocks ══ */
+  :root {
+    --sec1:#2b3a55; --sec2:#2f4858; --sec3:#1f5453; --sec4:#2e5339;
+    --sec5:#5a4a2b; --sec6:#5c3340; --sec7:#4a3560; --sec8:#33415c;
+    --sec9:#6b3f2e;
+    --sec-ink:#f7f8fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sec1:#9fb4d6; --sec2:#a3bfcd; --sec3:#8fc9c4; --sec4:#a8cfa6;
+      --sec5:#d8c48d; --sec6:#d9a3b0; --sec7:#bda8dd; --sec8:#a6b6d9;
+      --sec9:#e3ab8f;
+      --sec-ink:#111722;
+    }
+  }
+  :root[data-theme="dark"] {
+    --sec1:#9fb4d6; --sec2:#a3bfcd; --sec3:#8fc9c4; --sec4:#a8cfa6;
+    --sec5:#d8c48d; --sec6:#d9a3b0; --sec7:#bda8dd; --sec8:#a6b6d9;
+    --sec9:#e3ab8f;
+    --sec-ink:#111722;
+  }
+  :root[data-theme="light"] {
+    --sec1:#2b3a55; --sec2:#2f4858; --sec3:#1f5453; --sec4:#2e5339;
+    --sec5:#5a4a2b; --sec6:#5c3340; --sec7:#4a3560; --sec8:#33415c;
+    --sec9:#6b3f2e;
+    --sec-ink:#f7f8fa;
+  }
+
+  :root {
+    --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+    --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; }
+  }
+  :root[data-theme="dark"] { --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; }
+
+  body {
+    background: var(--ground); color: var(--ink);
+    font-family: var(--af-stack); font-size: var(--af-size); letter-spacing: var(--af-track);
+    line-height: 1.55; text-align: left; -webkit-font-smoothing: antialiased;
+  }
+  :root {
+    --sb-thumb: color-mix(in srgb, var(--accent) 42%, var(--rule));
+    scrollbar-width: thin;
+    scrollbar-color: var(--sb-thumb) var(--rule-soft);
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--rule-soft); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--sb-thumb); border-radius: 999px;
+    border: 2px solid transparent; background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); background-clip: padding-box; }
+  ::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+  ::-webkit-scrollbar-corner { background: transparent; }
+
+  .artifact-page {
+    max-width: 74rem;
+    margin: 0 auto 0 clamp(16px, 4vw, 56px);
+    padding: 32px 24px 48px;
+    display: flex; flex-direction: column; gap: 30px;
+    text-align: left;
+  }
+  .artifact-page > :first-child { padding-right: 56px; }
+  :is(a, button, select, input, textarea, summary):focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px;
+  }
+  p { margin: 0; }
+
+  .sec { display: flex; flex-direction: column; gap: 14px; }
+  .sec-head { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--rule); padding-bottom: 8px; }
+  .sec-head .n { margin-left: auto; font-size: var(--fs-min); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+  .sec-head h2 {
+    margin: 0; background: var(--sec, var(--strong)); color: var(--sec-ink, var(--ground));
+    padding: 2px 11px 2px 9px; border-radius: 999px;
+    font-family: var(--af-title);
+    font-size: 1em; font-weight: 600; letter-spacing: .045em; text-transform: uppercase;
+    line-height: 1.34;
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .sec-head h2 svg {
+    width: 1.02em; height: 1.02em; flex: 0 0 auto;
+    fill: none; stroke: currentColor; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .sec[data-sec="1"] { --sec: var(--sec1); } .sec[data-sec="2"] { --sec: var(--sec2); }
+  .sec[data-sec="3"] { --sec: var(--sec3); } .sec[data-sec="4"] { --sec: var(--sec4); }
+  .sec[data-sec="5"] { --sec: var(--sec5); } .sec[data-sec="6"] { --sec: var(--sec6); }
+  .sec[data-sec="7"] { --sec: var(--sec7); } .sec[data-sec="8"] { --sec: var(--sec8); }
+  .sec[data-sec="9"] { --sec: var(--sec9); }
+
+  .panel {
+    background: var(--card); border: 1px solid var(--rule);
+    border-radius: var(--radius, 10px); padding: 15px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  :root .panel { border-left: var(--rail) solid var(--accent); }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 14px; align-items: start; }
+
+  .af-chrome { position: fixed; top: 14px; right: 14px; z-index: 200; }
+  .af-cog {
+    display: grid; place-items: center; width: 38px; height: 38px;
+    background: var(--card); color: var(--muted);
+    border: 1px solid var(--rule); border-radius: 10px; box-shadow: var(--shadow);
+    cursor: pointer; transition: color .15s ease, border-color .15s ease, transform .25s ease;
+  }
+  .af-cog:hover { color: var(--accent); border-color: var(--accent); }
+  .af-cog[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); transform: rotate(45deg); }
+  .af-cog svg { width: 18px; height: 18px; display: block; }
+  .af-panel {
+    position: absolute; top: 46px; right: 0; width: 262px;
+    background: var(--card); border: 1px solid var(--rule); border-radius: 12px;
+    box-shadow: var(--shadow); padding: 14px;
+    display: none; flex-direction: column; gap: 11px; max-height: 82vh; overflow-y: auto;
+  }
+  .af-panel[data-open="true"] { display: flex; }
+  .af-group { display: flex; flex-direction: column; gap: 7px; }
+  .af-legend { font-size: .72em; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .af-opt {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+    width: 100%; text-align: left; cursor: pointer; font-family: inherit;
+    background: var(--raised); color: var(--ink);
+    border: 1px solid var(--rule); border-radius: 8px; padding: 8px 11px;
+  }
+  .af-opt:hover { border-color: var(--accent); }
+  .af-opt[aria-checked="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .af-opt .af-name { font-size: 14px; line-height: 1.2; }
+  .af-opt .af-spec { font-size: 12px; color: var(--muted); letter-spacing: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .af-opt[aria-checked="true"] .af-spec { color: var(--accent); }
+  .af-foot { font-size: 12px; color: var(--muted); margin: 0; letter-spacing: 0; }
+  .af-divider { height: 1px; background: var(--rule-soft); }
+
+  :root[data-motion="off"] *, :root[data-motion="off"] *::before { animation-play-state: paused !important; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+  /* ══ this page: a pattern book — rules, the ruling behind each, and the picture ══ */
+  .eyebrow { font-size: var(--fs-min); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  h1 { font-size: 2em; line-height: 1.15; margin: 8px 0 0; text-wrap: balance; }
+  .lede { color: var(--ink-soft); max-width: 66ch; margin-top: 12px; }
+  h3 { margin: 0; font-size: 1em; line-height: 1.3; }
+  .intro { color: var(--ink-soft); max-width: 70ch; font-size: var(--fs-sm); }
+  .rules { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 11px; }
+  .rules li { display: flex; flex-direction: column; gap: 3px; }
+  .rules b { color: var(--ink); }
+  .rules .why { font-size: var(--fs-min); color: var(--muted); }
+  .rules .why::before { content: "why · "; color: var(--accent); }
+  .code { font-size: var(--fs-min); color: var(--ink-soft); background: var(--raised); border: 1px solid var(--rule-soft); border-radius: 6px; padding: 6px 9px; overflow-x: auto; white-space: nowrap; }
+  ol.steps { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 8px; }
+  ol.steps li::marker { color: var(--accent); font-weight: 700; }
+  figure { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+  figure .shot { background: #0e1524; border: 1px solid var(--rule); border-radius: 8px; padding: 8px; overflow: hidden; }
+  figure img { display: block; max-width: 100%; height: auto; margin: 0; }
+  figure.w img { width: 100%; }
+  figcaption { font-size: var(--fs-min); color: var(--muted); }
+  .laws { counter-reset: law; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr)); gap: 10px; }
+  .laws li { counter-increment: law; background: var(--raised); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .laws li::before { content: "law " counter(law); font-size: var(--fs-min); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+  .tbl { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); }
+  th, td { text-align: left; vertical-align: top; padding: 7px 10px; border-bottom: 1px solid var(--rule-soft); }
+  th { font-size: var(--fs-min); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  td.nw { white-space: nowrap; }
+  .sw { display: inline-block; width: 13px; height: 13px; border-radius: 3px; vertical-align: -2px; margin-right: 6px; border: 1px solid rgba(127,127,127,.35); }
+  .mk { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; margin-right: 6px; background: var(--c); }
+  .mk.circle { border-radius: 50%; }
+  .mk.square { border-radius: 2px; }
+  .mk.diamond { transform: rotate(45deg) scale(.8); border-radius: 1px; }
+  .mk.triangle { clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+  .mk.ring { background: none; border: 3px solid var(--c); border-radius: 50%; box-sizing: border-box; }
+  .mk.bars { background: repeating-linear-gradient(var(--c) 0 3px, transparent 3px 5px); }
+  .mk.cross { clip-path: polygon(35% 0, 65% 0, 65% 35%, 100% 35%, 100% 65%, 65% 65%, 65% 100%, 35% 100%, 35% 65%, 0 65%, 0 35%, 35% 35%); }
+  .ch { display: inline-block; min-width: 1.3em; text-align: center; font-weight: 700; }
+  .chip { display: inline-block; font-weight: 700; font-size: var(--fs-min); padding: 1px 8px; border-radius: 999px; color: #0b0e13; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: -1px; margin-right: 5px; }
+  .dot.hollow { border: 2px solid currentColor; box-sizing: border-box; }
+  .lg { display: inline-block; width: 30px; height: 10px; vertical-align: -1px; margin-right: 6px; border-radius: 2px; }
+  .note { font-size: var(--fs-sm); color: var(--ink-soft); border-left: 3px solid var(--accent); padding: 4px 0 4px 10px; }
+  .src { font-size: var(--fs-min); color: var(--muted); display: flex; flex-direction: column; gap: 3px; }
+  /* on a phone a four-column table is a sideways scroll — each row stacks into a card, its column named beside each value */
+  @media (max-width: 640px) {
+    .tbl table, .tbl tbody, .tbl tr, .tbl td { display: block; width: auto; }
+    .tbl thead { display: none; }
+    .tbl tr { border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; background: var(--card); }
+    .tbl td { border: 0; padding: 3px 0; white-space: normal; }
+    .tbl td[data-l]::before { content: attr(data-l); display: block; font-size: var(--fs-min); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    .tbl td:first-child::before { display: none; }
+    .tbl td:first-child { font-size: 1.05em; }
+  }
+</style>
+
+<div class="artifact-page">
+  <header>
+    <p class="eyebrow">endpoint lab · data panel · 51 commits, 11–13 Sep 2026</p>
+    <h1>The Panel Pattern Book</h1>
+    <p class="lede">Every pattern the Data panel settled while we tuned it on POST /setup/complete, written as rules you can carry to Schemas, Functions, Tests, Widening and Security. Each rule names the ruling or the bug that made it, and the pictures are the real panel.</p>
+  </header>
+
+  <!-- 0 · THE FIVE LAWS -->
+  <section aria-label="Five laws" style="display:flex;flex-direction:column;gap:10px">
+    <p class="eyebrow">five laws · everything else follows</p>
+    <p class="intro">If you only read one part, read these. Every rule further down is one of them applied to a specific piece of the panel.</p>
+    <ol class="laws">
+      <li><b>The panel holds only what ships.</b><span>Every knob, preset and checklist lives in the left rail, never on the panel being judged.</span></li>
+      <li><b>Icons are the labels.</b><span>A word appears on the hover card, not beside the icon. Hints are one grey phrase.</span></li>
+      <li><b>A card mirrors its thing.</b><span>It wears the thing's own glyph, colour, chip and pill, and never says a fact twice.</span></li>
+      <li><b>Every look is a setting.</b><span>You tune it in the rail, copy one line, paste it back, and that line becomes the default.</span></li>
+      <li><b>Measure what is drawn.</b><span>Checks read the rendered page (computed styles, text width, pixels), never the config that should have produced it.</span></li>
+    </ol>
+  </section>
+
+  <!-- 1 · ANATOMY -->
+  <section class="sec" data-sec="1">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>Anatomy</h2><span class="n">top to bottom</span></div>
+    <p class="intro">The console's middle region, read in the order a reader meets it. Every panel we build next has the same slots.</p>
+    <ol class="steps">
+      <li><b>Head bar</b> — the element itself. Two piles, left and right, each an ordered list of elements.</li>
+      <li><b>Part buttons</b> — wide rectangles, one per part, only the open one in colour.</li>
+      <li><b>Panel title row</b> — count pills on the left; filter switches, a divider and the sort on the right.</li>
+      <li><b>Body</b> — one distribution (Blocks, Fields, Grounds, Flow or Ledger for Data), chosen in the rail.</li>
+      <li><b>Footer row</b> — ordered parts in a left and a right column: the hint, then the legend with counts.</li>
+      <li><b>Portrait</b> — a separate panel to the right, taller than the middle one and roughly square. A click in the body opens the selected thing there.</li>
+    </ol>
+    <figure class="w"><div class="shot"><img src="patterns/p-headstrip.png" alt="Head bar: bolt glyph, POST badge, /setup/complete, a 200 pill, a red risk glyph; on the right the file path and three round up-level chips"></div><figcaption>1 · Head bar. The kind glyph stands bare; entity and cluster ride the up-level chips on the right.</figcaption></figure>
+    <figure class="w"><div class="shot"><img src="patterns/p-tabs.png" alt="Part buttons: six wide rectangles with icon, name and count badge; only Data is coloured"></div><figcaption>2 · Part buttons. Focus colour: the open part keeps its colour, every other button goes mono.</figcaption></figure>
+    <figure class="w"><div class="shot"><img src="patterns/p-panel.png" alt="The Data panel in Blocks: title row with three count pills and channel switches, a grid of table blocks with field marks, and a footer row of kind icons with counts"></div><figcaption>3–5 · Title row, body (Blocks) and footer row, at the operator's default.</figcaption></figure>
+    <div class="cols">
+      <div class="panel">
+        <h3>Frame rules</h3>
+        <ul class="rules">
+          <li><b>A row's height is its whole box.</b><span>No hidden padding: the dial sets the box, content centres, the divider sits on the edge.</span><span class="why">a fixed padding was the distance that survived hiding a divider, and it made the height bar look dead</span></li>
+          <li><b>An outline and a divider are two lines.</b><span>A row can be boxed while the line under it is gone. Each has its own width and pattern.</span></li>
+          <li><b>"None" is a setting.</b><span>Every line set offers none. Transparent is chosen, not missing.</span></li>
+          <li><b>Regions scroll on their own.</b><span>The page never scrolls; the rail, the panel and the portrait each carry a scrollbar.</span><span class="why">a sticky rail cannot stick when it is the tallest child of its row</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Placement rules</h3>
+        <ul class="rules">
+          <li><b>The portrait is its own panel.</b><span>Beside the middle region, not a column inside it. Width 0 turns it off, and a click then opens the detail in place.</span></li>
+          <li><b>Regions never wrap under each other.</b><span>The row scrolls sideways instead, because the portrait's meaning is "beside".</span></li>
+          <li><b>Degrade on purpose at the small box.</b><span>At 826×264 the grounds become rows of compact tiles; nothing clips.</span></li>
+          <li><b>A container can bleed.</b><span>A disc around a glyph overflows its row without growing it (fit bleed); grow is the opt-in.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · HOVER CARDS -->
+  <section class="sec" data-sec="2">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Hover cards</h2><span class="n">one law, every card</span></div>
+    <p class="intro">The card law came from the conflict card: "this will determine a lot of things for all the other hover windows". A reader learns the order once and every card after that reads the same way.</p>
+    <div class="cols">
+      <div class="panel">
+        <h3>The card law, in order</h3>
+        <ol class="steps">
+          <li><b>The thing and its value</b> on one line: "declares 200", "fields 86".</li>
+          <li><b>The factors that decide it, as a list.</b> Each carries its value, its threshold and a quiet note when the calculation needs saying.</li>
+          <li><b>This element's own facts</b> as label–value rows. A value over 30 characters drops onto its own line.</li>
+          <li><b>A separator.</b></li>
+          <li><b>The plain line, once, last.</b> Reader's side, present tense, concrete noun first, one dash for the clause that sharpens it.</li>
+        </ol>
+      </div>
+      <div class="panel">
+        <h3>What a card never does</h3>
+        <ul class="rules">
+          <li><b>No questions.</b><span>A card states what is. "Worth asking…" lines were removed.</span></li>
+          <li><b>No fact twice.</b><span>The definition under the title went; the plain line at the end is the only definition.</span></li>
+          <li><b>No feed-wide comparison.</b><span>Rank, median and the heaviest doors belong one level up (cluster, entity). The card says where they went.</span></li>
+          <li><b>No stale numbers.</b><span>Every number counts what is shown, so switching a channel off changes the card too.</span></li>
+          <li><b>No squeezed tables.</b><span>Factors are a list, so the rules that did not fire stay readable.</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="cols">
+      <figure><div class="shot"><img src="patterns/p-card-status.png" alt="Declares card: title declares 200; a list of every asserted code with a filled green dot on 200 marked SUCCESS and hollow rings on 400, 404, 409, 422; rows defining a test; the plain line at the end"></div><figcaption>The law on the status card. Filled dot = the declared code; hollow ring = the others, still in full ink.</figcaption></figure>
+      <figure><div class="shot"><img src="patterns/p-card-pill.png" alt="Fields pill card: fields 86; factors list of seven kinds each with a count and a plain meaning; rows for optional, foreign keys, unique, across; the plain line last"></div><figcaption>A count pill's card: the factors add back up to the pill's number.</figcaption></figure>
+    </div>
+    <div class="panel">
+      <h3>Mirror cards — a card for a drawn thing</h3>
+      <ul class="rules">
+        <li><b>It mirrors the thing's look.</b><span>Same glyph colour as the block title, the name in ink, the entity in its colour, the channel as the block's own chip, the count in the block's own pill, then the composition in the marks already chosen — no words. Looks are read live from the settings.</span></li>
+        <li><b>A legend card leads with the mark as drawn.</b><span>Switch the encoding to characters and the time card leads with "T".</span></li>
+        <li><b>One hover per drawn element.</b><span>The whole block opens one card: no dead corners, and no child with a competing card of its own.</span><span class="why">the hover helper swallows the click on anything that carries a card, so per-mark cards also made the marks unclickable</span></li>
+        <li><b>Explanations move to an info icon.</b><span>"The Python class that maps to this table" left the model row for an info icon at the row's end.</span></li>
+        <li><b>The footer is quiet.</b><span>An info glyph and one line in the edge grey: "click to open its whole record in the portrait".</span></li>
+      </ul>
+    </div>
+    <div class="cols">
+      <figure><div class="shot"><img src="patterns/p-card-block.png" alt="Block card: table glyph and name, entity, class, file; a separator; the reads + writes chip; the fields pill with key, doc and time marks and their counts; an info footer"></div><figcaption>The block card mirrors the block.</figcaption></figure>
+      <figure><div class="shot"><img src="patterns/p-card-kind.png" alt="Time kind card led by the time symbol in violet, with its count of fields"></div><figcaption>A legend card leads with the mark exactly as drawn, in its kind's colour.</figcaption></figure>
+      <figure><div class="shot"><img src="patterns/p-card-model.png" alt="Model card opened from the info icon on the record's model row"></div><figcaption>The explanation that left the model row.</figcaption></figure>
+    </div>
+    <p class="code">hcard({ title, value, icon | iconHtml, color, factors, factorLabel, rows, plain | plainKey }) · hoverBind(el, html | fn) · blockCard(t, S)</p>
+  </section>
+
+  <!-- 3 · SECTIONS -->
+  <section class="sec" data-sec="3">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/></svg>Sections and fit</h2><span class="n">how parts are placed</span></div>
+    <div class="cols">
+      <div class="panel">
+        <h3>Showing and hiding</h3>
+        <ul class="rules">
+          <li><b>Every section can be put away.</b><span>Hiding is display:none on a drawn element. It stays in the page and one click brings it back.</span></li>
+          <li><b>Unused dials are drawn dashed.</b><span>A section the open layout does not draw keeps its button, dashed, and its card says why it does nothing now.</span></li>
+          <li><b>The title is a section too.</b><span>Title and note boot hidden at the operator's default; the counts stay.</span></li>
+          <li><b>Filters are appendable.</b><span>Channels are three switches, not four exclusive buttons. All on is every table; none draws the measurement instead of a blank.</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Ordering</h3>
+        <ul class="rules">
+          <li><b>A title is ordered lines.</b><span>Each line has a left column (pushed left) and a right column (pushed right). An empty line is not drawn.</span></li>
+          <li><b>Parts are dragged, and dragging is one call.</b><span>The hand and the probe use the same function, so the proof drives the path a person does.</span></li>
+          <li><b>The same shape everywhere.</b><span>Head bar piles, block title lines and the footer row are all drag zones with two columns.</span></li>
+          <li><b>Every sort breaks ties by name.</b><span>The same settings always draw the same picture.</span></li>
+        </ul>
+      </div>
+    </div>
+    <figure><div class="shot"><img src="patterns/p-rail-lines.png" alt="Title lines group: three lines of draggable icon chips split by a dotted divider into left and right columns, with a size slider"></div><figcaption>Title lines: drag a part along a line, across the divider, or onto another line.</figcaption></figure>
+    <div class="panel">
+      <h3>Fitting text and tables</h3>
+      <ul class="rules">
+        <li><b>A name is never cut.</b><span>Beside a foreign-key target, the target shrinks first; the name keeps its natural width.</span><span class="why">86.3px of text in an 86px box still ellipsised, and a 1px tolerance let it pass</span></li>
+        <li><b>Blocks never overlap.</b><span>Title lines do not wrap (a long name ellipsises inside its block) and blocks stretch to their grid row.</span></li>
+        <li><b>A table with named columns is one grid.</b><span>Rows borrow the table's columns (subgrid), so every row lines up under its head.</span><span class="why">rows sizing their own columns put the keys at a different x on every row</span></li>
+        <li><b>A column head never wraps.</b><span>The column never goes narrower than its own head.</span></li>
+        <li><b>The 12px floor is measured.</b><span>Rendered size, not authored size. An exception is named per part, at exactly the size the operator set (the count and channel chips at 11px).</span></li>
+      </ul>
+    </div>
+    <figure><div class="shot"><img src="patterns/p-record.png" alt="Record portrait: table glyph and name; entity, model with an info icon, file, channel chip; a table with FIELDS 7, FOREIGN KEYS and DATA TYPE columns"></div><figcaption>The record: icon · label · value rows, then a field table with named columns.</figcaption></figure>
+  </section>
+
+  <!-- 4 · CONTROLS -->
+  <section class="sec" data-sec="4">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/></svg>Controls</h2><span class="n">the rail</span></div>
+    <div class="cols">
+      <div class="panel">
+        <h3>How the rail is organised</h3>
+        <ul class="rules">
+          <li><b>One named fold per thing on the panel.</b><span>Layout · sections · channels · sort · count pills · pill colour · block title · block edge · title lines · field marks · footer row · grounds.</span></li>
+          <li><b>Only the group being tuned is open.</b><span>"I want all the controls minimized except for the one that we are working on." Open state survives a rebuild.</span></li>
+          <li><b>A closed header is a summary.</b><span>It names what its dials are set to, so the folded rail still reads.</span></li>
+          <li><b>A dial lives with its part.</b><span>The chip's box, fill and size sit under the Channel row of Block title, not in a group of their own.</span></li>
+          <li><b>Every block copies one line.</b><span>The hover on the copy button shows the line before you click.</span></li>
+        </ul>
+      </div>
+      <figure><div class="shot"><img src="patterns/p-rail-folded.png" alt="The data rail with twelve folded groups, each header summarising its settings"></div><figcaption>The rail at rest: twelve folds, each header a summary.</figcaption></figure>
+    </div>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Control</th><th>Use it for</th><th>Rules</th><th>Seen in</th></tr></thead>
+        <tbody>
+          <tr><td class="nw"><b>Pick</b></td><td>one of a few named looks</td><td>Icon buttons; each draws what it sets; the word is on its card; a click redraws the panel.</td><td>shape · encode · edge side</td></tr>
+          <tr><td class="nw"><b>Switch set</b></td><td>pieces that combine</td><td>Any combination. The last one on stays on — unless zero is itself a result, which then draws the measurement.</td><td>channels · footer icon/label/count</td></tr>
+          <tr><td class="nw"><b>Slider</b></td><td>a range</td><td>Drag, click or arrow keys. The current value opens about a third along. Crossing the floor shows "&lt;12" instead of stopping. Moves CSS variables only, so the panel never redraws mid-drag.</td><td>fill % · sizes · arm length</td></tr>
+          <tr><td class="nw"><b>Multi-stop bar</b></td><td>several values on one scale</td><td>Anything shaped like a slider must drag. Each stop moves its own slider. Two stops on one spot: the first move decides.</td><td>field-mark opacity</td></tr>
+          <tr><td class="nw"><b>Drag zones</b></td><td>order and placement</td><td>Lines × left/right columns. Click a part to select it; a size bar appears for it.</td><td>head bar · title lines · footer row</td></tr>
+          <tr><td class="nw"><b>Dependent dials</b></td><td>settings that exist for one choice</td><td>Shown only while that choice is picked.</td><td>corner dials under UNIQUE MARK</td></tr>
+          <tr><td class="nw"><b>Measured readout</b></td><td>a choice with a legibility cost</td><td>Computed from what the browser paints. The faintest case sets the verdict; one decision drives both its colour and its words.</td><td>pill contrast (WCAG)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="cols">
+      <figure><div class="shot"><img src="patterns/p-rail-block.png" alt="Block title group: icon picks for form, table, glyph colour, channel, chip box; sliders for chip fill and size showing 11px <12; picks for name, entity, count, model"></div><figcaption>Picks and sliders. A dial sits under the row of the part it changes.</figcaption></figure>
+      <figure><div class="shot"><img src="patterns/p-rail-marks.png" alt="Field marks group: picks, dependent corner dials, arm sliders, standard and optional sliders and the draggable opacity bar"></div><figcaption>Dependent dials (corners) and the multi-stop bar.</figcaption></figure>
+    </div>
+    <div class="cols">
+      <figure><div class="shot"><img src="patterns/p-rail-foot.png" alt="Footer row group: two drag zones of part chips and three icon switches for icon, label and count"></div><figcaption>Drag zones and a switch set.</figcaption></figure>
+      <figure><div class="shot"><img src="patterns/p-rail-pills.png" alt="Pill colour group: text, ground and opacity dials with a contrast readout"></div><figcaption>Three colour dials and the measured readout.</figcaption></figure>
+    </div>
+  </section>
+
+  <!-- 5 · DENSITY -->
+  <section class="sec" data-sec="5">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>Density</h2><span class="n">what earns a place</span></div>
+    <div class="panel">
+      <ul class="rules">
+        <li><b>Icons are the labels.</b><span>Verbosity has three levels: icon (glyphs alone), value (glyph + value, the default), label (glyph + name + value, for learning the icons).</span></li>
+        <li><b>A fact appears once.</b><span>The totals live in the title pills, so the footer hint dropped them. "What is inside" left the block card because the marks show it. The fields table replaced the foreign-key and unique rows in the record.</span></li>
+        <li><b>Counts are pills with cards.</b><span>Each pill's card lists the factors that add up to its number.</span></li>
+        <li><b>Composition is drawn, not written.</b><span>A block card shows 🔑 1 · 📄 5 · ⌁ 2 as marks with numbers, not "1 id, 5 text, 2 time".</span></li>
+        <li><b>Hints are one grey phrase</b><span>behind an info glyph, with no bold lead-in and no white half.</span></li>
+        <li><b>Settled things fold or hide.</b><span>Title and note boot hidden; settled dial groups fold; lab controls never sit on the panel.</span></li>
+        <li><b>An honest floor is said where it matters.</b><span>"The channel is the table's — the feed never records which column was written" is said once, on the fields view.</span></li>
+      </ul>
+    </div>
+    <div class="cols">
+      <figure><div class="shot"><img src="patterns/p-footer-all.png" alt="Footer with icon, label and count"></div><figcaption>Footer with icon · label · count.</figcaption></figure>
+      <figure><div class="shot"><img src="patterns/p-footer-icon-count.png" alt="Footer with icons and counts only, and a bare info glyph for the hint"></div><figcaption>The operator's default: icon · count. The hint shrinks to its glyph.</figcaption></figure>
+    </div>
+  </section>
+
+  <!-- 6 · FIELDS -->
+  <section class="sec" data-sec="6">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>Fields</h2><span class="n">the pieces inside a thing</span></div>
+    <p class="intro">A field's kind is read from its declared type, never guessed from its name. Anything unmatched is called "other" out loud.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Kind</th><th>Declared as</th><th>Character</th><th>Shape</th><th>Colour</th></tr></thead>
+        <tbody>
+          <tr><td class="nw"><b>id</b></td><td>uuid.UUID</td><td><span class="ch">#</span></td><td class="nw"><i class="mk circle" style="--c:#14b8a6"></i>circle</td><td class="nw"><i class="sw" style="background:#14b8a6"></i>model #14b8a6</td></tr>
+          <tr><td class="nw"><b>text</b></td><td>str · Text · EmailStr</td><td><span class="ch">A</span></td><td class="nw"><i class="mk square" style="--c:#38bdf8"></i>square</td><td class="nw"><i class="sw" style="background:#38bdf8"></i>route #38bdf8</td></tr>
+          <tr><td class="nw"><b>number</b></td><td>int · float · Decimal</td><td><span class="ch">1</span></td><td class="nw"><i class="mk diamond" style="--c:#f59f00"></i>diamond</td><td class="nw"><i class="sw" style="background:#f59f00"></i>schema op #f59f00</td></tr>
+          <tr><td class="nw"><b>flag</b></td><td>bool</td><td><span class="ch">Y</span></td><td class="nw"><i class="mk triangle" style="--c:#84cc16"></i>triangle</td><td class="nw"><i class="sw" style="background:#84cc16"></i>entity #84cc16</td></tr>
+          <tr><td class="nw"><b>time</b></td><td>datetime · date</td><td><span class="ch">T</span></td><td class="nw"><i class="mk ring" style="--c:#a855f7"></i>ring</td><td class="nw"><i class="sw" style="background:#a855f7"></i>screen #a855f7</td></tr>
+          <tr><td class="nw"><b>list</b></td><td>list · dict · JSON</td><td><span class="ch">≡</span></td><td class="nw"><i class="mk bars" style="--c:#ec4899"></i>bars</td><td class="nw"><i class="sw" style="background:#ec4899"></i>store #ec4899</td></tr>
+          <tr><td class="nw"><b>other</b></td><td>anything else</td><td><span class="ch">?</span></td><td class="nw"><i class="mk cross" style="--c:#64748b"></i>cross</td><td class="nw"><i class="sw" style="background:#64748b"></i>type #64748b</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="cols">
+      <div class="panel">
+        <h3>Drawing a field</h3>
+        <ul class="rules">
+          <li><b>Four encodings, one dial.</b><span>Colour, character, shape or the station's symbol (the default).</span></li>
+          <li><b>The colour rule is its own dial.</b><span>By kind, by channel, by entity or mono. Shape, character and symbol still carry the kind in mono, which is the only encoding a reader with no colour vision can follow.</span></li>
+          <li><b>One mark function draws a field everywhere.</b><span>Blocks, lists, the record, the cards and the footer, so an encoding cannot land in one view and miss another.</span></li>
+          <li><b>Size and gap are sliders.</b><span>Default 14px, gap 4px, rounded.</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Marking a field</h3>
+        <ul class="rules">
+          <li><b>Opacity has two stops.</b><span>Optional 50%, standard 100%. Unique does not use opacity.</span></li>
+          <li><b>Unique is marked by its corners, or not at all.</b><span>Which corners (top-right · bottom-left · both), mirror, arm length, arm width at the corner, arm tip. Default: both, 40%, 1.5px, tip 10%.</span></li>
+          <li><b>Foreign keys read both ways.</b><span>"→ table.column" where it points (the feed's key) and "⇤ N" for how many point at it (derived from the tables this door touches, and the card says so).</span></li>
+          <li><b>A field table has three named columns:</b><span>fields (with the count) · foreign keys · data type.</span></li>
+          <li><b>Never tint a name to mark it.</b><span>Use a shape or a column instead.</span><span class="why">the external grey made a foreign key's name read dimmer than a plain field</span></li>
+        </ul>
+      </div>
+    </div>
+    <figure><div class="shot"><img src="patterns/p-marks-taper.png" alt="A block whose unique fields carry tapered corner marks"></div><figcaption>Unique corners with a long, tapering arm (length 70%, width 2px, tip 0%).</figcaption></figure>
+  </section>
+
+  <!-- 7 · ICONS -->
+  <section class="sec" data-sec="7">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.3 10a.7.7 0 0 1-.626-1.079L11.4 3a.7.7 0 0 1 1.198-.043L16.3 8.9a.7.7 0 0 1-.572 1.1Z"/><rect x="3" y="14" width="7" height="7" rx="1"/><circle cx="17.5" cy="17.5" r="3.5"/></svg>Icons</h2><span class="n">what a glyph promises</span></div>
+    <div class="panel">
+      <ul class="rules">
+        <li><b>Lifted, never retyped.</b><span>gen-station-tokens.py copies the station's glyphs, palettes and card chrome, so a station recolour reaches the lab on the next run.</span></li>
+        <li><b>A glyph names the thing.</b><span>A table is the graph's model drum, not the Data button's grid icon.</span><span class="why">the grid was the part's icon, so a table read as "the Data tab"</span></li>
+        <li><b>One kind, one colour.</b><span>The table glyph's colour is a setting (default: the model colour), so one kind of thing does not look like six.</span></li>
+        <li><b>The info glyph means "an explanation is here".</b><span>On hints, at the end of a record row, in a card's footer.</span></li>
+        <li><b>A control button draws what it sets.</b><span>Line patterns draw their line, box presets draw their shape to scale, corner buttons draw their L's.</span></li>
+        <li><b>On a selected button the icon takes the button's ink.</b><span class="why">accent strokes on an accent-filled button vanished, leaving only a square</span></li>
+        <li><b>Dots have one language.</b><span><i class="dot" style="background:var(--critical)"></i>filled = the one that fires or is declared · <i class="dot hollow" style="color:var(--muted)"></i>hollow = the rest, still readable.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 8 · COLOUR -->
+  <section class="sec" data-sec="8">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>Colour</h2><span class="n">one meaning per colour</span></div>
+    <p class="intro">Each colour carries one kind of information. When a new panel needs a colour, it takes a free channel instead of reusing one that already means something.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Colour</th><th>Carries</th><th>Where</th><th>Rule</th></tr></thead>
+        <tbody>
+          <tr><td class="nw"><i class="sw" style="background:linear-gradient(90deg,#f97316,#a855f7,#84cc16)"></i>entity colour</td><td>which entity claims it</td><td>block edge · entity glyph and word</td><td>The edge is a setting: one side, a pattern, 1–8px.</td></tr>
+          <tr><td class="nw"><span class="chip" style="background:#22c55e">R</span> <span class="chip" style="background:#f97316">W</span> <span class="chip" style="background:#eab308">RW</span></td><td>read · write · both</td><td>channel chips · filter switches</td><td>Dark letters on the chip; under 50% fill the letters take the chip colour.</td></tr>
+          <tr><td class="nw"><i class="sw" style="background:#14b8a6"></i>kind colours</td><td>what a field holds</td><td>field marks · footer · fields card</td><td>Its own dial; mono must still read.</td></tr>
+          <tr><td class="nw"><i class="sw" style="background:#8b83f5"></i>accent</td><td>selection and focus</td><td>selected block · active sort ring · open part · unique corners</td><td>Never data.</td></tr>
+          <tr><td class="nw"><i class="sw" style="background:#79839a"></i>muted grey</td><td>secondary words</td><td>hints · labels · rail summaries · card footers</td><td>A hint is one grey phrase.</td></tr>
+          <tr><td class="nw"><i class="dot" style="background:var(--critical)"></i>red</td><td>a rule that fires</td><td>risk glyph and card</td><td>A filled dot on the firing factor only.</td></tr>
+          <tr><td class="nw"><i class="dot" style="background:var(--good)"></i>green</td><td>the declared case</td><td>status card</td><td>A filled dot and the word SUCCESS.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="cols">
+      <div class="panel">
+        <h3>How sure the map is</h3>
+        <ul class="rules">
+          <li><span><i class="lg" style="border:2px dashed var(--muted)"></i><b>dashed</b> — inferred</span></li>
+          <li><span><i class="lg" style="background:repeating-linear-gradient(45deg,var(--muted) 0 2px,transparent 2px 5px)"></i><b>hatched</b> — unmeasured</span></li>
+          <li><span><i class="lg" style="border:2px solid var(--muted)"></i><b>hollow</b> — measured zero, a result rather than a gap</span></li>
+          <li><span class="why">optional's pale mark is not one of these three, so it never borrows dashed, hatched or hollow</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Colour you can dial</h3>
+        <ul class="rules">
+          <li><b>Text, ground and opacity are three dials.</b><span>One rule that only moved the text made accent on accent: 1.00:1, blank pills.</span></li>
+          <li><b>Contrast is measured, then shown.</b><span>The station's own default chip, white on accent, measures 3.15:1, below the 4.5 reading floor.</span></li>
+          <li><b>An inline colour cannot be dialled.</b><span>Colours arrive as CSS variables (--rwc, --k) so a stylesheet rule can reach them.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · HOW WE BUILD -->
+  <section class="sec" data-sec="9">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>Carry it over</h2><span class="n">schemas · functions · tests · widening · security</span></div>
+    <div class="cols">
+      <div class="panel">
+        <h3>One region, one loop</h3>
+        <ol class="steps">
+          <li>The operator names a region; its rail group opens and the rest fold.</li>
+          <li>Build the dials. Every value a dial moves is a CSS variable, and a dragged bar never rebuilds the rail.</li>
+          <li>The operator tunes and pastes the copy line back. That line becomes the boot state, and the probe pins it word for word.</li>
+          <li>Measure the drawn result: computed styles, natural text width with no slack, pixels diffed against a baseline.</li>
+          <li>Prove each new check can fail: force the old look back and require the check to fire.</li>
+          <li>Commit the step with its probe count; check the git head before and after.</li>
+        </ol>
+      </div>
+      <div class="panel">
+        <h3>Traps we paid for</h3>
+        <ul class="rules">
+          <li><b>Lifted CSS brings its class names.</b><span>A new .cpfr inherited the station's display:flex; renamed to .fct.</span></li>
+          <li><b>A redraw allow-list silently kills new dials.</b><span>Every dial that changes the picture redraws it.</span></li>
+          <li><b>A flex gap leaks into a subgrid</b><span>as a constant 3px shift.</span></li>
+          <li><b>Two handles on one spot are one target.</b></li>
+          <li><b>Boot state is pinned before the first click,</b><span>and old tests set their own baseline instead of trusting the defaults.</span></li>
+          <li><b>A shared closing line fools text surgery.</b><span>Search from the start marker; refuse to write while an old reference survives.</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Checklist for the next panel, in order</h3>
+      <ol class="steps">
+        <li><b>Inventory.</b> List what the station card shows today for this part: nothing on it may be lost, and a hover card counts.</li>
+        <li><b>Name the things and their pieces.</b> For Data, the thing was a table and the piece was a field. Decide both before drawing.</li>
+        <li><b>Title row.</b> Count pills with factor cards on the left; appendable filters, a divider and a sort on the right.</li>
+        <li><b>Blocks.</b> One block per thing: a title as ordered lines of parts, then its pieces as marks read from declared facts.</li>
+        <li><b>Cards.</b> One hover per drawn thing, on the card law; the thing's card mirrors its block.</li>
+        <li><b>Footer row.</b> The hint as an info glyph and one grey phrase; the legend as icon · count switches.</li>
+        <li><b>Portrait.</b> A record for the selected thing: icon · label · value rows, then a pieces table with named columns.</li>
+        <li><b>Rail.</b> A named fold per region, one open, summaries on the headers, a copy line.</li>
+        <li><b>Colour map.</b> Say which channel each colour carries before using it; accent stays for selection.</li>
+        <li><b>Probe.</b> The boot line word for word, the card order, no cut names, no wrapped heads, the 12px floor, and a forced failure for each new check.</li>
+      </ol>
+    </div>
+    <p class="note">Proposal, not yet ruled: how the thing and its pieces could map for each part. The operator confirms each row when that panel opens.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Part</th><th>The thing (a block)</th><th>Its pieces (marks)</th><th>Count pills</th><th>Filter like channels</th></tr></thead>
+        <tbody>
+          <tr><td class="nw"><b>Schemas</b></td><td>a request or response shape</td><td>fields, with nested shapes as a kind</td><td>shapes · fields · nested</td><td>in · out</td></tr>
+          <tr><td class="nw"><b>Functions</b></td><td>a function on the walk</td><td>the tables it touches, the calls it makes</td><td>functions · hops · commits</td><td>role: accessor · caller · gate · pure</td></tr>
+          <tr><td class="nw"><b>Tests</b></td><td>a test case</td><td>the status codes it asserts</td><td>tests · codes · journeys</td><td>by asserted code</td></tr>
+          <tr><td class="nw"><b>Widening</b></td><td>a rung: hook, screen, route</td><td>the pieces on that rung</td><td>screens · hooks · routes</td><td>by frontend kind</td></tr>
+          <tr><td class="nw"><b>Security</b></td><td>a gate or dependency</td><td>the checks it runs</td><td>deps · walls · lanes</td><td>by layer</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <h3>Not generalised yet</h3>
+      <ul class="rules">
+        <li><b>The portrait's Shape, Wheel and Keys views</b><span>have not taken the record's table or the new marks.</span></li>
+        <li><b>The middle panel's field lists</b><span>(Fields view, an opened block) still use the older row, not the three-column table.</span></li>
+        <li><b>The head bar and part buttons</b><span>predate the fold rail; their dials follow the older block layout.</span></li>
+      </ul>
+    </div>
+    <div class="src">
+      <span>Source: docs/design/workflow-panel/ — endpoint-lab.html · _lab-ep-panels.js · _lab-ep.css · probe-eplab.mjs (582 checks) · ep-brief.md</span>
+      <span>Rulings: the commit messages 388a460 → c9e84a0 on docs/design/workflow-panel/</span>
+    </div>
+  </section>
+</div>
+
+<div class="af-chrome">
+  <button class="af-cog" id="af-cog" type="button" aria-expanded="false" aria-controls="af-panel" aria-label="Display options">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.2"></circle>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.830l-.06-.06a1.65 1.65 0 0 0-1.820-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    </svg>
+  </button>
+
+  <div class="af-panel" id="af-panel" data-open="false">
+    <div class="af-group" role="radiogroup" aria-label="Font family" id="af-fonts"><p class="af-legend">Font family</p></div>
+    <div class="af-divider"></div>
+    <div class="af-group" role="radiogroup" aria-label="Theme" id="af-skins"><p class="af-legend">Theme</p></div>
+    <div class="af-divider"></div>
+    <div class="af-group" role="radiogroup" aria-label="Motion" id="af-motion"><p class="af-legend">Motion</p></div>
+    <p class="af-foot" id="af-foot">—</p>
+  </div>
+</div>
+
+<script>
+var MOTION = { on: true };
+
+/* label every table cell with its column head, so the phone layout can name each value */
+document.querySelectorAll(".tbl table").forEach(function (t) {
+  var heads = [].map.call(t.querySelectorAll("thead th"), function (h) { return h.textContent.trim(); });
+  t.querySelectorAll("tbody tr").forEach(function (r) {
+    [].forEach.call(r.children, function (td, i) { if (heads[i]) td.setAttribute("data-l", heads[i]); });
+  });
+});
+
+(function () {
+  "use strict";
+  var FONTS = [
+    { id: "mono",  label: "Mono",     stack: 'ui-monospace, monospace', size: 15, track: -0.025 },
+    { id: "segoe", label: "Segoe UI", stack: '"Segoe UI", sans-serif',  size: 16, track: -0.015 }
+  ];
+  var SKINS = [
+    { id: "catalog",   label: "Catalog",         note: "center · indigo" },
+    { id: "blueprint", label: "Blueprint",       note: "skin F · blue" },
+    { id: "mission",   label: "Mission Console", note: "skin B · teal" }
+  ];
+  var FKEY = "gabe:artifact:font", SKEY = "gabe:artifact:skin";
+
+  var root = document.documentElement;
+  var cog = document.getElementById("af-cog"), panel = document.getElementById("af-panel");
+  var fhost = document.getElementById("af-fonts"), shost = document.getElementById("af-skins");
+  var mhost = document.getElementById("af-motion"), foot = document.getElementById("af-foot");
+
+  function read(key, list, dflt) {
+    try {
+      var v = window.localStorage.getItem(key);
+      return list.some(function (x) { return x.id === v; }) ? v : dflt;
+    } catch (e) { return dflt; }
+  }
+  function write(key, v) { try { window.localStorage.setItem(key, v); } catch (e) {} }
+
+  function opt(host, item, spec, onPick) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "af-opt";
+    b.setAttribute("role", "radio"); b.setAttribute("data-id", item.id); b.setAttribute("aria-checked", "false");
+    var n = document.createElement("span");
+    n.className = "af-name"; n.textContent = item.label;
+    if (item.stack) n.style.fontFamily = item.stack;
+    var s = document.createElement("span");
+    s.className = "af-spec"; s.textContent = spec;
+    b.appendChild(n); b.appendChild(s);
+    b.addEventListener("click", function () { onPick(item.id); });
+    host.appendChild(b);
+  }
+  function mark(host, id) {
+    host.querySelectorAll(".af-opt").forEach(function (o) {
+      o.setAttribute("aria-checked", String(o.getAttribute("data-id") === id));
+    });
+  }
+
+  function applyFont(id) {
+    var f = FONTS.filter(function (x) { return x.id === id; })[0] || FONTS[0];
+    root.style.setProperty("--af-stack", f.stack);
+    root.style.setProperty("--af-size", f.size + "px");
+    root.style.setProperty("--af-track", f.track + "em");
+    write(FKEY, f.id); mark(fhost, f.id);
+    foot.textContent = f.size + "px · " + f.track + "em";
+  }
+  function applySkin(id) {
+    root.setAttribute("data-skin", id);
+    write(SKEY, id); mark(shost, id);
+  }
+  function setMotion(on) {
+    MOTION.on = on;
+    root.setAttribute("data-motion", on ? "on" : "off");
+    if (window.__rebuildMotion) window.__rebuildMotion();
+    document.querySelectorAll("svg").forEach(function (s) {
+      if (s.pauseAnimations && s.unpauseAnimations) { on ? s.unpauseAnimations() : s.pauseAnimations(); }
+    });
+    mark(mhost, on ? "on" : "off");
+  }
+
+  FONTS.forEach(function (f) { opt(fhost, f, f.size + " / " + f.track, applyFont); });
+  SKINS.forEach(function (s) { opt(shost, s, s.note, applySkin); });
+  [{ id: "on", label: "Playing" }, { id: "off", label: "Paused" }].forEach(function (m) {
+    opt(mhost, m, m.id === "on" ? "loops + replays" : "frozen", function (id) { setMotion(id === "on"); });
+  });
+
+  function open(next) { panel.setAttribute("data-open", String(next)); cog.setAttribute("aria-expanded", String(next)); }
+  cog.addEventListener("click", function (e) { e.stopPropagation(); open(panel.getAttribute("data-open") !== "true"); });
+  panel.addEventListener("click", function (e) { e.stopPropagation(); });
+  document.addEventListener("click", function () { if (panel.getAttribute("data-open") === "true") open(false); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && panel.getAttribute("data-open") === "true") { open(false); cog.focus(); }
+  });
+
+  applyFont(read(FKEY, FONTS, "mono"));
+  applySkin(read(SKEY, SKINS, "catalog"));
+  setMotion(!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  window.__setSkin = applySkin;
+  window.__setMotion = setMotion;
+})();
+</script>
