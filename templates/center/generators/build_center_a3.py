@@ -49,6 +49,7 @@ import _a3_sim  # noqa: E402  (the live change-simulation projection — window.
 import _a3_commits  # noqa: E402  (recent git commits → the elements they touched — window.GABE_COMMITS)
 import _a3_web  # noqa: E402  (the web→API bridge extractor — the fetch arm)
 import _a3_fe  # noqa: E402  (the frontend STRUCTURE arm — compiler-proven pieces + edges)
+import _a3_paths  # noqa: E402  (element FORMS — what each endpoint decides: refusals · declared vs produced exits · guards)
 import _a3_guard
 import _a3_ledger  # noqa: E402  (the case ledger, rulings 2026-07-24)
 import _a3_tests  # noqa: E402  (model_insight serialization into archmap)
@@ -2189,6 +2190,27 @@ def main() -> int:
     n_models = sum(len(v["models"]) for v in amap["entities"].values() if v)
     print(f"    wrote docs/site/center/archmap.json — {len(amap['entities'])} "
           f"entity(ies) · {n_eps} endpoints · {n_models} models")
+
+    # ELEMENT FORMS (docs/design/element-forms/plan.md) — what each FastAPI endpoint DECIDES: every refusal it can
+    # produce, what it declares against what it produces, the guards in its body. A SEPARATE feed, written after the
+    # archmap and reading it without mutating it, so archmap · c4 · levels stay byte-identical whether the pass is
+    # off, on, failing or absent. Opt-in until an operator accepts a twin's output (plan D4): center.config.json
+    # `"forms": true`, or GABE_FORMS=1 for one run.
+    if os.environ.get("GABE_FORMS") == "1" or CFG.get("forms") is True:
+        try:
+            _forms = _a3_paths.build(amap, REPO_ROOT)
+            if _forms.get("present"):
+                (CENTER_OUT / "forms.json").write_text(
+                    json.dumps(_forms, indent=1, ensure_ascii=False, sort_keys=True) + "\n")
+                wrote.append(("forms.json", 0))
+                _fst = _forms["stats"]
+                print(f"    wrote docs/site/center/forms.json — {_fst['endpoints']} endpoint form(s) · {_fst['rows']} exit(s) · "
+                      f"{_fst['unknown_rows']} unknown · findings "
+                      + (", ".join(f"{k} {v}" for k, v in sorted(_fst["findings"].items())) or "none"))
+            else:
+                print(f"    forms — not written: {_forms.get('reason')}")
+        except Exception as _fe:  # noqa: BLE001
+            print(f"    ⚠ forms SKIPPED (the map is unaffected): {_fe}")
 
     # The C4 codebase graph — a LIBRARY-NEUTRAL {nodes,edges} view derived from
     # the in-memory archmap (zero new source read), emitted as committed JSON +

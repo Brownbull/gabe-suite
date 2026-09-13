@@ -56,6 +56,7 @@ tool exists to kill, applied to its own config.
 | `_a3_fe.py` + `_a3_fe_extract.mjs` | the frontend STRUCTURE arm — the TypeScript extractor (needs a `typescript` package: the project's, a sibling's, or the spike's — `GABE_TS_DIR`) → `GABE_C4.fe` pieces/edges/homes + feClass · hrole · fed2w · store shapes |
 | `_a3_homing.py` | membership EVIDENCE — file · users · data witnesses per piece → agree · stay · move-candidate · shared; `c4.stats.homing` + `levels.homing` |
 | `_a3_models.py` | the four ENTITY MODELS — claim (the registry) · seeded · derived · proposed as per-piece home DELTAS on `c4.models` + `levels.models` |
+| `_a3_forms.py` + `_a3_paths.py` | element FORMS — `_a3_forms` is the slot REGISTRY (data only: slots per kind, framework rules with their package cites, findings), `_a3_paths` the endpoint pass that fills it: every refusal a FastAPI endpoint can produce (U7) · declared vs produced exits (K1) · the guards that end in a refusal (U3), reading the handler + one call level + the dependency chain + middleware by path prefix → `forms.json`; opt-in (`forms` / `GABE_FORMS=1`), honest-empty `present:false` + reason. Battery: `tests/element-forms` · plan: `docs/design/element-forms/plan.md` |
 | `_a3_naming.py` | every name a cluster could wear (`c4.models.naming`) — strategies × conventions; the universe labels from the feed's own defaults |
 | `_a3_sim.py` | `sim.data.js` — the change-simulation projection from inflight + archmap + git + junit (`window.GABE_SIM = null` at rest); `archive_upsert` stays pure, `emit_archive` retired with the archive station (2026-09-10) |
 | `_a3_commits.py` | `commits.js` — the twin's last 30 commits as journeys (`touched` ids) |
@@ -70,14 +71,15 @@ tool exists to kill, applied to its own config.
 `GABE_REPO_ROOT` (the tree to scan) · `GABE_CONFIG` (center.config.json) · `GABE_CENTER_OUT` (write root; twin-read-only
 builds point it at a temp dir) · `GABE_SHELL_SRC` (the shell skeletons) · `GABE_GRAFT_BUILD` (`0` = read the index as found;
 never build) · `GABE_GRAFT_INDEX` (an index built out of tree) · `GABE_TS_DIR` (a `typescript` package for the fe extractor)
-· `ECC_ROOT` (the install root the refresh rail reads the drafter from, default `~/.claude`). Config keys beyond `entities`:
+· `GABE_FORMS` (`1` = write `forms.json` for this run) · `ECC_ROOT` (the install root the refresh rail reads the drafter from, default `~/.claude`). Config keys beyond `entities`:
 `naming` (words · entities for the naming strategies) · `url_domain_map` (the URL-domain second lens) · `homing`
-(`usage-first`, opt-in, off) · `code.*` globs (recursive `**` accepted).
+(`usage-first`, opt-in, off) · `forms` (`true` = write the element-forms feed, opt-in, off) · `code.*` globs (recursive `**` accepted).
 
 ## Emit order (what `build_center_a3.py main` writes, in sequence)
 
 assets/ → every shell `*.html` (architecture · board and `RETIRED_PAGES` skipped) → `feature-<slug>.html` → `archmap.json`
-(entities · insights · censuses · flags · middleware · dispatch · tasks · boot roots) → the arms: graft → web → the three
+(entities · insights · censuses · flags · middleware · dispatch · tasks · boot roots) → `forms.json` (opt-in, reads the
+archmap, never writes it) → the arms: graft → web → the three
 PRESENCE-FLIP tripwires (against the COMMITTED `c4-graph.json`) → fe → `build_c4_graph` → `build_levels` → homing →
 models → `levels.json` + `levels.js` → `c4-graph.json` + `c4-graph.js` → `sim.data.js` → `commits.js` → `workflows.js` /
 `workflows.draft.js` (ensure-exists) → `board.html` → `inflight.{json,js}` (stub) → the `test-*` / `arch-*` estate pages →

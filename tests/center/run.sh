@@ -354,6 +354,27 @@ assert "models" not in g, "a half-attached models block survived the error"
 assert l["models"]["present"] is False and "boom" in l["models"]["reason"], l.get("models")
 assert l.get("homing") is not None, "the homing block still rides levels.json"
 PY
+# FORMS (element-forms plan §3.3): an OPT-IN feed written after the archmap and reading it without writing it. Off by
+# default → no forms.json; a raising pass still exits 0, SAYS it skipped, writes no forms.json, and the archmap is unchanged.
+[ ! -f "$FIX/docs/site/center/forms.json" ] && ok || bad "FORMS: the switch is off by default — the happy build wrote forms.json"
+FB="$T/fboom"; rm -rf "$FB"; cp -r "$FIX" "$FB"; rm -f "$FB/docs/site/center/forms.json"
+_fb=$(cd "$T" && GABE_FORMS=1 GABE_REPO_ROOT="$FB" GABE_SHELL_SRC="$SHELL_SRC" python3 - "$GEN" >"$T/build-fboom.out" 2>&1 <<'PY'
+import sys, runpy; gen = sys.argv[1]; sys.path.insert(0, gen)
+import _a3_paths
+def boom(*a, **k): raise RuntimeError("boom")
+_a3_paths.build = boom                        # the pass blows up — the wiring must not
+sys.argv = [gen + "/build_center_a3.py"]; runpy.run_path(gen + "/build_center_a3.py", run_name="__main__")
+PY
+echo $?)
+[ "$_fb" = 0 ] && grep -q "forms SKIPPED (the map is unaffected): boom" "$T/build-fboom.out" && [ ! -f "$FB/docs/site/center/forms.json" ] \
+  && ok || { bad "FORMS SILENT: a raising _a3_paths.build still exits 0, SAYS it skipped, writes no forms.json (exit $_fb)"; grep -i "forms\|Traceback" "$T/build-fboom.out" | head; }
+python3 - "$FIX/docs/site/center/archmap.json" "$FB/docs/site/center/archmap.json" <<'PY' && ok || bad "FORMS SILENT: the archmap is the switch-off archmap (generated stamp aside)"
+import json, sys
+a, b = (json.load(open(x)) for x in sys.argv[1:3])
+for d in (a, b):
+    d.pop("generated", None)
+assert json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True), "a raising forms pass changed the archmap"
+PY
 MN="$T/mnaming"; rm -rf "$MN"; cp -r "$FIX" "$MN"; rm -f "$MN/docs/site/center/c4-graph.json"
 _mn=$(cd "$T" && GABE_REPO_ROOT="$MN" GABE_SHELL_SRC="$SHELL_SRC" python3 - "$GEN" >"$T/build-mnaming.out" 2>&1 <<'PY'
 import sys, runpy; gen = sys.argv[1]; sys.path.insert(0, gen)
