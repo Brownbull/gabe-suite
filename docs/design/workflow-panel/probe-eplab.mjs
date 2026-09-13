@@ -706,9 +706,22 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
     ok(m.out === outN, 'the FIELDS list marks every foreign key with what it points at', JSON.stringify(m));
     ok(inCols > 0 && m.inn === inCols, 'and every column another table points at, with how many do', JSON.stringify({ inn: m.inn, want: inCols }));
     // in a narrow card the TARGET gives way first — the field's own name is never cut to make room for it
+    // measured against the name's NATURAL width, with no tolerance — a 1px slack hid an 86.3px name in an 86px box
     const cut = await p.$$eval('#panel .fcard .fld', rows => rows.filter(r => r.querySelector('.fkx.out')).map(r => { const n = r.querySelector('.fn');
-      return { name: n.textContent, cut: n.scrollWidth > n.clientWidth + 1 }; }));
-    ok(cut.length > 0 && cut.every(x => !x.cut), 'a foreign-key row keeps its field name whole — the target is what shortens', JSON.stringify(cut.filter(x => x.cut).slice(0, 3))); }
+      const m = document.createElement('span'); m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap';
+      m.style.font = getComputedStyle(n).font; m.style.letterSpacing = getComputedStyle(n).letterSpacing; m.textContent = n.textContent;
+      document.body.append(m); const natural = m.getBoundingClientRect().width; m.remove();
+      return { name: n.textContent, natural: +natural.toFixed(2), box: +n.getBoundingClientRect().width.toFixed(2), cut: natural > n.getBoundingClientRect().width + 0.05 }; }));
+    ok(cut.length > 0 && cut.every(x => !x.cut), 'a foreign-key row keeps its field name whole — the target is what shortens', JSON.stringify(cut.filter(x => x.cut).slice(0, 3)));
+    // the check can FAIL: force the old shrink back and it must see the cut
+    await p.addStyleTag({ content: '.fld:has(.fkx) .fn{ flex:0 1 auto !important; max-width:none !important; } .fld .fkx.out{ flex:0 0 auto !important; }' });
+    await p.waitForTimeout(150);
+    const cut2 = await p.$$eval('#panel .fcard .fld', rows => rows.filter(r => r.querySelector('.fkx.out')).map(r => { const n = r.querySelector('.fn');
+      const m = document.createElement('span'); m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap';
+      m.style.font = getComputedStyle(n).font; m.textContent = n.textContent; document.body.append(m); const natural = m.getBoundingClientRect().width; m.remove();
+      return natural > n.getBoundingClientRect().width + 0.05; }));
+    ok(cut2.some(Boolean), 'and the same measure DOES catch a cut name when the old shrink is forced back — it is not vacuous', JSON.stringify(cut2));
+    await p.evaluate(() => { const t = [...document.querySelectorAll('style')].pop(); if (t && /!important/.test(t.textContent)) t.remove(); }); await p.waitForTimeout(150); }
   await p.evaluate(() => { window.showVariant('data', 'blocks'); window.selectIn('data', 'households'); }); await p.waitForTimeout(320);
   { const id = await p.evaluate(() => { const r = [...document.querySelectorAll('#portbody .flds .fld')].find(x => x.querySelector('.fn').textContent === 'id');
       return r ? (r.querySelector('.fkx.in span') || {}).textContent || null : null; });

@@ -1026,3 +1026,6 @@ html, body{ height:100%; }
 .fld .fkx.out{ flex:0 100 auto; min-width:1.4em; overflow:hidden; }
 .fld .fkx.out svg{ flex:none; }
 .fld .fkx.out span{ min-width:0; }
+/* the NAME does not shrink at all beside a key target until it would take more than 60% of the row — a
+   subpixel shrink was enough to cut "household_id" to "household_…" (86.3px of text in an 86px box) */
+.fld:has(.fkx) .fn{ flex:0 0 auto; max-width:60%; }
