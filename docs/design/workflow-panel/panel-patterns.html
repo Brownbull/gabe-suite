@@ -430,6 +430,7 @@
         <li><b>Blocks never overlap.</b><span>Title lines do not wrap (a long name ellipsises inside its block) and blocks stretch to their grid row.</span></li>
         <li><b>A table with named columns is one grid.</b><span>Rows borrow the table's columns (subgrid), so every row lines up under its head.</span><span class="why">rows sizing their own columns put the keys at a different x on every row</span></li>
         <li><b>A column head never wraps.</b><span>The column never goes narrower than its own head.</span></li>
+        <li><b>A long type breaks at its word boundaries.</b><span>A 28-letter class name wraps between its words onto a second line — never cut, never mid-word.</span><span class="why">SetupCompleteRequest's record ran 38px past the portrait</span></li>
         <li><b>The 12px floor is measured.</b><span>Rendered size, not authored size. An exception is named per part, at exactly the size the operator set (the count and channel chips at 11px).</span></li>
       </ul>
     </div>
@@ -448,6 +449,7 @@
           <li><b>A closed header is a summary.</b><span>It names what its dials are set to, so the folded rail still reads.</span></li>
           <li><b>A dial lives with its part.</b><span>The chip's box, fill and size sit under the Channel row of Block title, not in a group of their own.</span></li>
           <li><b>Every block copies one line.</b><span>The hover on the copy button shows the line before you click.</span></li>
+          <li><b>Shared looks are read, not copied.</b><span>Schemas reads Data's pill colour, chip box/fill/size, field marks and edge, and its rail says where they are set.</span></li>
         </ul>
       </div>
       <figure><div class="shot"><img src="patterns/p-rail-folded.png" alt="The data rail with twelve folded groups, each header summarising its settings"></div><figcaption>The rail at rest: twelve folds, each header a summary.</figcaption></figure>
@@ -615,6 +617,8 @@
           <li><b>A redraw allow-list silently kills new dials.</b><span>Every dial that changes the picture redraws it.</span></li>
           <li><b>A flex gap leaks into a subgrid</b><span>as a constant 3px shift.</span></li>
           <li><b>Two handles on one spot are one target.</b></li>
+          <li><b>A probe section picks its own layout.</b><span>Earlier sections leave a part on whatever they clicked last.</span></li>
+          <li><b>A rail's CSS fenced to one id</b><span>leaves the next rail unstyled — widen the selector instead of copying the rules.</span></li>
           <li><b>Boot state is pinned before the first click,</b><span>and old tests set their own baseline instead of trusting the defaults.</span></li>
           <li><b>A shared closing line fools text surgery.</b><span>Search from the start marker; refuse to write while an old reference survives.</span></li>
         </ul>
@@ -640,7 +644,7 @@
       <table>
         <thead><tr><th>Part</th><th>The thing (a block)</th><th>Its pieces (marks)</th><th>Count pills</th><th>Filter like channels</th></tr></thead>
         <tbody>
-          <tr><td class="nw"><b>Schemas</b></td><td>a request or response shape</td><td>fields, with nested shapes as a kind</td><td>shapes · fields · nested</td><td>in · out</td></tr>
+          <tr><td class="nw"><b>Schemas</b> · built 13 Sep</td><td>a shape — each body and every shape nested in it (13)</td><td>fields; a field typed as another shape wears the shape mark</td><td>shapes · fields · nested</td><td>IN · OUT (request green · response orange)</td></tr>
           <tr><td class="nw"><b>Functions</b></td><td>a function on the walk</td><td>the tables it touches, the calls it makes</td><td>functions · hops · commits</td><td>role: accessor · caller · gate · pure</td></tr>
           <tr><td class="nw"><b>Tests</b></td><td>a test case</td><td>the status codes it asserts</td><td>tests · codes · journeys</td><td>by asserted code</td></tr>
           <tr><td class="nw"><b>Widening</b></td><td>a rung: hook, screen, route</td><td>the pieces on that rung</td><td>screens · hooks · routes</td><td>by frontend kind</td></tr>
@@ -654,6 +658,7 @@
         <li><b>The portrait's Shape, Wheel and Keys views</b><span>have not taken the record's table or the new marks.</span></li>
         <li><b>The middle panel's field lists</b><span>(Fields view, an opened block) still use the older row, not the three-column table.</span></li>
         <li><b>The head bar and part buttons</b><span>predate the fold rail; their dials follow the older block layout.</span></li>
+        <li><b>Schemas took the pattern on 13 Sep</b><span>— blocks, cards, footer, record and rail folds — and wears Data's looks until the operator tunes it.</span></li>
       </ul>
     </div>
     <div class="src">
