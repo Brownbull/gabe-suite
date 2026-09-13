@@ -462,5 +462,24 @@ r=$(repo s19e); mkarchmap "$r" '{not json'
 run "$r" | grep -q "arms census" && bad "S19 fired on an unparseable archmap" || ok "S19 silent (never a crash) on an unparseable archmap"
 run "$r" >/dev/null 2>&1 && ok "angles.py exits clean with a broken archmap on disk" || bad "angles.py crashed on a broken archmap"
 
+# ── S20 · element forms — the committed forms.json (the opt-in _a3_paths pass). The NAG class (a refusal a client cannot
+# handle correctly) fires at ≥ form_nag; the COUNT class (text-only · undeclared) rides the line and never fires it.
+mkforms() { mkdir -p "$1/docs/site/center"; printf '{}' > "$1/docs/site/center/center.config.json"
+  printf '%s' "$2" > "$1/docs/site/center/forms.json"; cd "$1" && git add -A && git commit -qm "forms" && cd - >/dev/null; }
+r=$(repo s20a); mkforms "$r" '{"version":1,"present":true,"stats":{"unknown_rows":1},"endpoints":{"endpoint:POST /a":{"file":"api/a.py","findings":[{"id":"shared-status","status":409},{"id":"text-only","n":2},{"id":"undeclared","statuses":[409]}]},"endpoint:POST /b":{"variants":[{"file":"api/b.py","findings":[{"id":"reason-lost","status":409},{"id":"escape-500","cls":"X"}]}]}}}'
+run "$r" | grep -q "element forms — 3 refusal finding(s) a client cannot handle correctly: escape-500 1 · reason-lost 1 · shared-status 1" && ok "S20 fires on 3 NAG findings, colliding-id variants flattened" || bad "S20 did not fire: $(run "$r")"
+run "$r" | grep -q "text-only on 1 · undeclared on 1" && ok "S20 carries the COUNT class on the line" || bad "S20 lost the count class: $(run "$r")"
+run "$r" | grep -q "1 exit(s) the source could not tell" && ok "S20 names the exits the source could not tell" || bad "S20 hid the unknown count"
+run "$r" | grep -q "map_census kind=forms" && ok "S20 moves to map_census kind=forms" || bad "S20 lost its move"
+r=$(repo s20b); mkforms "$r" '{"version":1,"present":true,"stats":{},"endpoints":{"endpoint:GET /a":{"findings":[{"id":"text-only","n":3},{"id":"undeclared","statuses":[401]}]},"endpoint:GET /b":{"findings":[{"id":"text-only","n":1}]},"endpoint:GET /c":{"findings":[{"id":"shared-status","status":409},{"id":"reason-lost"}]}}}'
+run "$r" | grep -q "element forms" && bad "S20 fired on COUNT findings / below the NAG bar: $(run "$r")" || ok "S20 SILENT on text-only + undeclared everywhere and 2 NAG (< form_nag) — a convention is not debt"
+r=$(repo s20c); mkforms "$r" '{"version":1,"present":false,"reason":"no FastAPI endpoints in the archmap"}'
+run "$r" --why | grep -q "S20  UNAVAILABLE — element forms not emitted — no FastAPI endpoints in the archmap" && ok "S20 UNAVAILABLE with the pass's own reason when present:false" || bad "S20 hid a not-emitted pass: $(run "$r" --why)"
+r=$(repo s20d); mkc4 "$r" '{"stats":{}}'
+run "$r" --why | grep -q "S20  UNAVAILABLE\|element forms —" && bad "S20 spoke with no forms.json (the arm is opt-in): $(run "$r" --why | grep S20)" || ok "S20 silent with no forms.json — an opt-in arm is not a gap"
+r=$(repo s20e); mkforms "$r" '{not json'
+run "$r" | grep -q "element forms" && bad "S20 fired on an unparseable forms.json" || ok "S20 silent (never a crash) on an unparseable forms.json"
+run "$r" >/dev/null 2>&1 && ok "angles.py exits clean with a broken forms.json on disk" || bad "angles.py crashed on a broken forms.json"
+
 echo "pulse-angles: $pass passed, $fail failed"
 [ "$fail" -eq 0 ] || exit 1

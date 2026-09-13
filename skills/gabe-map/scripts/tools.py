@@ -408,6 +408,9 @@ def t_touches(args: dict, roots) -> dict:
                     "tests": {"cases": cases[:mq.CAP], "covered_by_test_files": files[:mq.CAP]}})
         if (_hev := _home_ev(center, nid)):
             out["home_evidence"] = _hev
+        _fb, _fst, _ = center.forms_block()                   # element forms: only when a form exists — the answer's shape is unchanged otherwise
+        if _fst == "present" and (_f := (_fb.get("endpoints") or {}).get(nid)):
+            out["form"] = mq.form_summary(_f)
         web = ((center.c4.get("stats") or {}).get("web") or {})
         unm = web.get("unmatched") if isinstance(web.get("unmatched"), list) else []
         out["web_unmatched_fetches"] = [u for u in unm if isinstance(u, dict) and norm_path(str(u.get("p") or u.get("path") or "")) == want
@@ -842,6 +845,7 @@ When a project has a command center (docs/site/center/), ask the map BEFORE grep
 - the center's actionable list → mcp__gabe-map__center_status · a review's drift subjects vs a base → mcp__gabe-map__review_drift
 - which endpoints a gate / Permission.X guards; what ASGI middleware applies to every request → mcp__gabe-map__gates
 - the ordered path from an endpoint or TASK to the models and providers it reaches (conf per hop) → mcp__gabe-map__trace
+- what an endpoint DECIDES (every refusal · declared vs produced exits · its guards) → touches carries `form` · map_census kind=forms
 - a celery/background TASK root, a streaming endpoint, a provider (litellm · redis · …) → find / touches take "TASK <name>", stream=true, kind=provider
 - where the map is PARTIAL (unparseable files · unresolved mounts · blocked twin pass · unscanned frontend roots) → mcp__gabe-map__map_census (map_status carries the one-line map_health)
 - which entity does this piece belong to under each model (claim · seeded · derived · proposed) → mcp__gabe-map__entity_models (claim IS the registry; the other three are VIEWS — nothing joins on their names)

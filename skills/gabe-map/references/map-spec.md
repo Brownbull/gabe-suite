@@ -62,7 +62,7 @@ generated from; the tools sit on top and add entities · ownership · cases · c
 Injected in full every session even when every schema is deferred. Routes one line per tool (grouped two per line for
 wave 2), states the floor law once, names `map_status` as the first call when unsure. Text: `tools.INSTRUCTIONS`
 (≈ 2,360 chars with the eighteen tools — the four repo-study lines route gates · trace · TASK/stream/provider · map PARTIAL, the entity-models
-line routes "which entity does this piece belong to under each model" and states the join-key law, and the floor law names the `inferred` trace hop). Any change to a tool name changes this block in the same commit.
+line routes "which entity does this piece belong to under each model" and states the join-key law, and the floor law names the `inferred` trace hop; the element-forms line routes what an endpoint DECIDES to `touches` · `map_census kind=forms`). Any change to a tool name changes this block in the same commit.
 
 ## 5 · Tools — inputs · process · output · caps
 
@@ -262,6 +262,17 @@ MERGE · ASPECT · LAYER — plus candidates, as if accepted).
   doctor relays it as INFO (there is no WARN level; registration is the operator's consent, never DRIFT).
 - `install.sh --uninstall` PRINTS `claude mcp remove -s user gabe-map` and never runs it.
 
+### 5.11 Element forms — fields, not a tool (docs/design/element-forms/plan.md Phase 2, 2026-09-13) — read-only
+`forms.json` is the opt-in `_a3_paths` feed: per FastAPI endpoint, keyed by the c4 id `endpoint:METHOD /path`, the slot states
+(U3 preconditions · U7 refusal reasons · K1 status contract), declared vs produced exits, preconditions and findings. It is
+read lazily (`Center.forms`, `forms_block()` → state ∈ `FORMS_STATES`: present · not_emitted (no file — opt-in) · absent (the
+pass wrote why)) and ONLY by: **`touches`** on an endpoint → `form` (`mq.form_summary`: slots · declared · refusals capped with
+the uncaught 500 folded into `uncaught{causes, unknown_causes}` · preconditions · findings), absent when the endpoint has no
+form so the answer's shape never changes · **`trace`** from an endpoint → `from_form` (slots · findings · preconditions) ·
+**`map_census`** section `forms` (the pass's stats + `nag_named` — the first 12 refusals a client cannot handle correctly,
+classes from `form_drift.NAG`) or `{state, reason}` · **`review_drift`** subject `form` (`form_drift.diff_new_raises` +
+`classify_new_raises` over the diff, the standing line; `ran:false` + reason with no forms.json). The tool count stays 18.
+
 ## 7 · Battery (tests/gabe-map/run.sh)
 
 Hermetic: a synthetic center (archmap · c4 · config · adoption · levels) in a temp git repo with commits past the map head, a
@@ -273,5 +284,5 @@ freshness (stale after a mapped edit; fresh after a mapped-file-free commit; unk
 (two owners · fk_in · r/w fns · ambiguous · endpoint normalization · case) · `entity_context` raw byte-parity with
 `entity-context.py --json` · `who_calls` (code hit emitted with `cmd:mcp`; prose-only not emitted; def site never;
 repeat → 0 new lines; `matches: []` → 0 emits + `absent`; `GABE_MAP_NO_EMIT=1` → 0; un-ignored accumulator → skipped +
-named; no `graft/` → grep arm still answers) · `cases_for` split · `owner_of` two owners + unclaimed · the wave-2 equivalents (`find` ranking, kind filter and a 1-char stop; `outline` with and without a graft index; `center_overview` per-entity coverage + census gaps; `blast_radius` contained vs unmapped; `map_census` unclaimed + an absent block's reason + a bad-kind stop; `map_diff` same-head and a ref with no committed map; `center_status` runs the suite generator — no script path built under the target root, `-I` + `GABE_REPO_ROOT` pinned; `review_drift` ran vs not_run) · `who_calls` `direction=out` (callees, never an emit) + `map_confidence` from the tally ledger · a harness e2e that calls `mcp__gabe-map__map_status` through the real client. Mutation hooks:
+named; no `graft/` → grep arm still answers) · `cases_for` split · `owner_of` two owners + unclaimed · the wave-2 equivalents (`find` ranking, kind filter and a 1-char stop; `outline` with and without a graft index; `center_overview` per-entity coverage + census gaps; `blast_radius` contained vs unmapped; `map_census` unclaimed + an absent block's reason + a bad-kind stop; `map_diff` same-head and a ref with no committed map; `center_status` runs the suite generator — no script path built under the target root, `-I` + `GABE_REPO_ROOT` pinned; `review_drift` ran vs not_run) · element forms (`map_census kind=forms` counts + the nag endpoints named · `touches` endpoint `form` · `trace` `from_form` · SILENT: an endpoint with no form carries no field, no forms.json → `not_emitted` · no field · `review_drift` form NOT RUN) · `who_calls` `direction=out` (callees, never an emit) + `map_confidence` from the tally ledger · a harness e2e that calls `mcp__gabe-map__map_status` through the real client. Mutation hooks:
 `SERVER_OVERRIDE` · `MQ_OVERRIDE` (mutants are SAME-DIR temp copies so sibling imports resolve).

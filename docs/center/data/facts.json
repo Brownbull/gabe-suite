@@ -1,8 +1,8 @@
 {
   "generated": "2026-09-13",
-  "head": "75df3ab",
+  "head": "d9fbb48",
   "dirty": true,
-  "method": "batteries: PARTIAL refresh — 1 of 52 re-run (pulse-angles); the other 45 carried from their own run_at/run_head stamps by docs/center/generators/write_facts.py with the doctor's G3 exclusions honoured; assertions + failures parsed from each battery's own summary line (failures > 0 is RED even at exit 0), `protects` from its header comment, FIRE/SILENT from the battery's own text (run.sh + the siblings it delegates to). hooks: probed by hand 2026-07-26 (each hook executed in a hermetic temp repo against realistic stdin payloads) — a different instrument, carried as recorded.",
+  "method": "batteries: PARTIAL refresh — 1 of 53 re-run (element-forms); the other 46 carried from their own run_at/run_head stamps by docs/center/generators/write_facts.py with the doctor's G3 exclusions honoured; assertions + failures parsed from each battery's own summary line (failures > 0 is RED even at exit 0), `protects` from its header comment, FIRE/SILENT from the battery's own text (run.sh + the siblings it delegates to). hooks: probed by hand 2026-07-26 (each hook executed in a hermetic temp repo against realistic stdin payloads) — a different instrument, carried as recorded.",
   "hooks": [
     {
       "name": "plan-proof-guard",
@@ -171,16 +171,16 @@
     {
       "name": "center",
       "beat": "red",
-      "assertions": 169,
+      "assertions": 172,
       "failures": 0,
       "status": "GREEN",
       "protects": "Center-generator fixture battery — the executable contract of the center's guard layer (2026-07-22 alignment review M01/M02/M04/M05/M09/M12).",
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 14.6,
-      "run_at": "2026-09-11",
-      "run_head": "3e24583"
+      "seconds": 16.8,
+      "run_at": "2026-09-13",
+      "run_head": "d9fbb48"
     },
     {
       "name": "center-status",
@@ -293,6 +293,20 @@
       "seconds": 0.9
     },
     {
+      "name": "element-forms",
+      "beat": "satellites",
+      "assertions": 15,
+      "failures": 0,
+      "status": "GREEN",
+      "protects": "Element forms battery — _a3_paths.py's executable contract (docs/design/element-forms/plan.md §3.4).",
+      "proves_fire": true,
+      "proves_silent": true,
+      "rc": 0,
+      "seconds": 0.5,
+      "run_at": "2026-09-13",
+      "run_head": "d9fbb48"
+    },
+    {
       "name": "entity-drift",
       "beat": "satellites",
       "assertions": 20,
@@ -357,14 +371,16 @@
     {
       "name": "gabe-map",
       "beat": "suite-maintenance",
-      "assertions": 199,
+      "assertions": 210,
       "failures": 0,
       "status": "GREEN",
       "protects": "gabe-map battery — the MCP server's executable contract (tests/gabe-map/checks.py does the work).",
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 2.8
+      "seconds": 3.0,
+      "run_at": "2026-09-13",
+      "run_head": "d9fbb48"
     },
     {
       "name": "gabe-universe",
@@ -515,16 +531,16 @@
     {
       "name": "pulse-angles",
       "beat": "satellites",
-      "assertions": 100,
+      "assertions": 109,
       "failures": 0,
       "status": "GREEN",
       "protects": "ANGLE-signal battery — the executable contract of skills/gabe-pulse/scripts/angles.py.",
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 8.1,
+      "seconds": 8.3,
       "run_at": "2026-09-13",
-      "run_head": "75df3ab"
+      "run_head": "d9fbb48"
     },
     {
       "name": "pulse-scripts",

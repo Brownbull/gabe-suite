@@ -118,6 +118,11 @@ def t_trace(args: dict, roots) -> dict:
         out.update(head)
         return out
     out["from"] = head
+    if head.get("kind") == "endpoint":                                # element forms: the start endpoint's decisions, when a form exists
+        _fb, _fst, _ = center.forms_block()
+        _f = (_fb.get("endpoints") or {}).get("endpoint:" + head["label"]) if _fst == "present" else None
+        if _f:
+            out["from_form"] = {k: v for k, v in mq.form_summary(_f).items() if k in ("slots", "findings", "preconditions", "variants")}
     if head.get("kind") == "task":
         out["app_middleware"], out["app_middleware_note"] = [], "ASGI middleware wraps HTTP requests — a worker task runs outside it"
     else:

@@ -155,6 +155,8 @@ class Center:
     def adoption(self) -> dict: return _load_json(self.dir / "adoption.json")
     @property
     def levels(self) -> dict: return _load_json(self.dir / "levels.json")   # P0: lazy — trace · blast_radius · touches(task) read it; map_status never does
+    @property
+    def forms(self) -> dict: return _load_json(self.dir / "forms.json")     # element forms: lazy — touches(endpoint) · trace · map_census · review_drift read it
 
     def entity_models(self) -> tuple:
         """The c4 half of the ENTITY MODELS block (Phase 3, 2026-09-06) → (block, state, reason) with state ∈ MODELS_STATES: present ·
@@ -168,6 +170,16 @@ class Center:
         if isinstance(st, dict) and st.get("present") is False:
             return None, "absent", st.get("reason") or "the emitter recorded no reason"
         return None, "not_emitted", "no models block on c4-graph.json — an older map; regen with the current generators (entity models, 2026-09-06)"
+
+    def forms_block(self) -> tuple:
+        """The ELEMENT FORMS feed (docs/design/element-forms/plan.md) → (block, state, reason) with state ∈ FORMS_STATES:
+        present · not_emitted (no forms.json — the pass is opt-in) · absent (the pass ran and wrote why)."""
+        if not (self.dir / "forms.json").is_file():
+            return None, "not_emitted", "no forms.json — the element-forms pass is opt-in (center.config.json `forms: true`)"
+        f = self.forms
+        if f.get("present"):
+            return f, "present", None
+        return None, "absent", f.get("reason") or "forms.json holds no forms"
 
     def entity_models_levels(self) -> dict:
         """The levels half — the per-view homes of FUNCTION keys (`file#fn`); read lazily, only by entity_models on a function piece / a view roster."""
@@ -276,6 +288,8 @@ class Center:
 
 MODELS_STATES = ("present = the entity-models block is on c4-graph.json · not_emitted = no block (an older map — regen with the current generators) · "
                  "absent = the emitter ran and says why (stats.models.reason); claim is always the registry")
+FORMS_STATES = ("present = forms.json carries the endpoint forms · not_emitted = no forms.json (the pass is opt-in) · "
+                "absent = the pass ran and says why (no FastAPI endpoints, a pass error)")
 HEALTH_STATES = ("present = the pass ran and found something · clean = the pass ran (the repo-study sentinel route_mounts is on the map) "
                  "and found nothing · not_emitted = an older map that never ran the pass — regen to know")
 
@@ -640,6 +654,23 @@ def entity_context_module():
 
 def pulse_module(name: str):
     return load_module(PULSE_SCRIPTS / (name + ".py"), "gabe_pulse_" + name)
+
+
+def form_summary(f: dict) -> dict:
+    """One endpoint's element form, compacted for a tool answer: slot states, declared vs produced, the refusals (the
+    uncaught 500 folded into its causes), preconditions and findings — every list capped, the cap named."""
+    if f.get("variants"):
+        return {"variants": [form_summary(v) for v in f["variants"][:4]]}
+    if f.get("state") == "unknown":
+        return {"state": "unknown", "reason": f.get("reason")}
+    keep = ("phase", "status", "state", "detail", "code", "at", "via", "source", "raised_at", "pred", "scope", "reason")
+    produced = f.get("produced") or []
+    ref, note = cap_list([{k: r[k] for k in keep if r.get(k) not in (None, "", [])} for r in produced if r.get("phase") != "uncaught"])
+    unc = next((r for r in produced if r.get("phase") == "uncaught"), {})
+    pre, pnote = cap_list(f.get("preconditions") or [])
+    return {"slots": f.get("slots"), "declared": f.get("declared"), "refusals": ref, "refusals_note": note,
+            "uncaught": {k: unc[k] for k in ("causes", "unknown_causes") if unc.get(k)} or None,
+            "preconditions": pre, "preconditions_note": pnote, "findings": f.get("findings") or []}
 
 
 def cap_list(items, n: int = CAP) -> tuple[list, str | None]:

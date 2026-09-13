@@ -1,6 +1,12 @@
 # Plan — element forms: from a drawn form to a generator pass (2026-09-13)
 
-**Status:** PLAN — nothing built. The operator accepted the approach on the [Element Forms page](../logic-map/element-forms.html)
+**Status:** LANDING (operator "land it", 2026-09-13). Phases 0–2 built; Phase 3 (switch on + propagate) waits on the
+operator accepting gustify's `forms.json`. Landed: 0a `41f8a61` (pulse-angles counts S19: 91 → 100) · 0b `d9fbb48`
+(DI/pydi at column 0; tier3 byte-identical) · 0c twin catch-ups gustify `3ce6aae0` · gastify `0641a2d5` · Phases 1–2 in
+the commits after them. Measured with the switch on: gustify 80 endpoints · gastify 49 · tier3 512 (collisions 2) ·
+keypro none (no FastAPI) — tier3 byte-identical with it off, and on it adds only `forms.json`.
+
+**Was:** PLAN — nothing built. The operator accepted the approach on the [Element Forms page](../logic-map/element-forms.html)
 (`df62e8c`) and asked for an implementation plan with the recommended decisions taken. Produced by three read-only
 planning agents (pipeline wiring · consumer surfaces · extraction algorithm prototyped with `ast` on gustify), with
 the load-bearing claims re-read by hand. Per the iterate-before-implement rule, no generator file is written until the

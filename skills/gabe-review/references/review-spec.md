@@ -212,8 +212,8 @@ standard Fix Cost × Defer Risk × Maturity Gate fields and rides the normal Ste
 
 **One call opens the machine-derived subjects.** Ask `mcp__gabe-map__review_drift` with `base` = the
 review's RESOLVED target from Step 0.3 (and `phase` when PLAN.json's `current_phase` is not the phase
-under review) BEFORE working WORKFLOW DRIFT, REACH DRIFT, ENTITY DRIFT, ENTITY-SHAPE DRIFT and
-WEB-BRIDGE DRIFT: it runs all five in one read — each subject stamped, each carrying `ran: false` with
+under review) BEFORE working WORKFLOW DRIFT, REACH DRIFT, ENTITY DRIFT, ENTITY-SHAPE DRIFT,
+WEB-BRIDGE DRIFT and FORM DRIFT: it runs all six in one read — each subject stamped, each carrying `ran: false` with
 a `reason` when it could not run and `not_run` listing them, which is exactly the `<SUBJECT> NOT RUN`
 line each shape below owes. It READS only: the map-delta emit stays this beat's own append, and every
 price, cap and triage outcome stays judgment (D6). Each subject's procedure below remains binding — it
@@ -357,6 +357,20 @@ into a hook block, never into silence.
   model decision) or to nothing (a genuinely dynamic path the bridge cannot resolve — then it is a
   named limitation, not drift). Skip silently when the project has no center config; NEVER report zero
   when the check could not run.
+- **FORM DRIFT** — the diff ADDS a `raise HTTPException(...)` whose refusal a client will handle badly: its detail is
+  text only (no stable code to branch on), or its status is already carried by a DIFFERENT text-only refusal of an
+  endpoint in the same file (the client must compare strings — the setup endpoint's two 409s), or the endpoint does not
+  declare that status (the generated clients never learn it exists). Machine-derived (report-never-gate, D1) by
+  `mcp__gabe-map__review_drift`'s `form` subject — `form_drift.py` called in-process against the committed `forms.json`
+  (hand form: `python3 ~/.claude/skills/gabe-pulse/scripts/form_drift.py . --diff <base>`); a multi-line raise is joined
+  until its parentheses close, and it compares (status, detail), never line numbers. Prints `FORM DRIFT NOT RUN` with
+  the reason when the project has no `forms.json` (the element-forms pass is opt-in) — never a false clean. **Detection
+  lives HERE because the refusal is new**; the STANDING findings (shared status · lost reason · escape to 500 · swallowed)
+  are carried afterwards by `/gabe-pulse`'s S20 element-forms angle, the same review-detects / pulse-nags split S9 and
+  S10 use. Priced like any finding — a text-only refusal on a codebase that never codes one is a LOW convention finding,
+  a second text-only refusal on an existing status is MEDIUM (a client is now guessing); the fix is a stable reason
+  code, a declared response, or a translation that keeps the service's reason. No map-delta emit: a new refusal is not
+  a map miss. Skip silently when the project has no center config; NEVER report zero when the check could not run.
 - **GROWTH: <feature>/<angle>** — an absent-angle GROWTH OPPORTUNITY from the center enters
   triage priced like any finding: its "what adding tests would buy" IS Defer Risk; its "at what
   cost" IS Fix Cost. **Cap: at most 7 GROWTH findings per review** (highest Defer Risk first;

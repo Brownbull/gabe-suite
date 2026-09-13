@@ -410,9 +410,29 @@ def t_map_census(args: dict, roots) -> dict:
             sections["homing"] = {"state": "absent", "reason": hom.get("reason") or "no levels graph"}
         else:
             sections["homing"] = {"state": "not_emitted", "text": "no homing block on levels.json — regen with the current generators (Part C 2026-09-06)"}
+    if want in ("", "forms"):                                        # element forms: forms.json read lazily — only here, touches, trace, review_drift
+        fb, fst, fr = center.forms_block()
+        if fst == "present":
+            fsx = fb.get("stats") or {}
+            nag = []
+            try:
+                fd = mq.pulse_module("form_drift")
+                for key, f in fd.endpoint_forms(fb):
+                    nag += ["%s %s%s" % (key.removeprefix("endpoint:"), x["id"], (" %s" % x["status"]) if x.get("status") else "")
+                            for x in (f.get("findings") or []) if x.get("id") in fd.NAG]
+            except Exception:  # noqa: BLE001 — the named list is a courtesy; the counts below stand without it
+                nag = []
+            sections["forms"] = {"state": "present", "framework": fb.get("framework"),
+                                 **{k: fsx.get(k) for k in ("endpoints", "rows", "unknown_rows", "unknown_reasons", "findings",
+                                                            "unresolved_calls", "collisions", "unformed", "unknown_middleware")},
+                                 "nag_named": nag[:12], "nag_note": ("first 12 of %d" % len(nag)) if len(nag) > 12 else None,
+                                 "text": "what each endpoint DECIDES — its refusals, declared vs produced exits, guards; nag = a refusal a client "
+                                         "cannot handle correctly (touches <endpoint> carries the form)"}
+        else:
+            sections["forms"] = {"state": fst, "reason": fr}
     if want:
         if want not in sections:
-            raise mq.MapStop("kind must be one of file | model | route | schema | unparseable | mounts | twins | web | homing | arms")
+            raise mq.MapStop("kind must be one of file | model | route | schema | unparseable | mounts | twins | web | homing | arms | forms")
         out["census"] = {want: sections[want]}
     else:
         out["census"] = sections
@@ -640,6 +660,18 @@ def t_review_drift(args: dict, roots) -> dict:
             subj["web_bridge"] = {"ran": True, "new_fetches": new_f[:mq.CAP], "classified": cls, "standing_unmatched": len(unmatched), "web_arm": present or why}
         except Exception as exc:
             subj["web_bridge"] = {"ran": False, "reason": "%s: %s" % (type(exc).__name__, exc)}
+    if run("form"):
+        try:
+            fd = mq.pulse_module("form_drift")
+            fst, fb, fwhy = fd.load_forms(Path(center.root))
+            if fst != "present":
+                subj["form"] = {"ran": False, "reason": fwhy}
+            else:
+                new_r = fd.diff_new_raises(_strip_center_hunks(diff))
+                subj["form"] = {"ran": True, "new_refusals": new_r[:mq.CAP], "classified": fd.classify_new_raises(new_r, fb)[:mq.CAP],
+                                "standing": fd.one_line(fd.summary(fb)) or "below the nag bar"}
+        except Exception as exc:
+            subj["form"] = {"ran": False, "reason": "%s: %s" % (type(exc).__name__, exc)}
     if run("reach"):
         reach, sha, why = _phase_reach(root, phase or None)
         if why:
@@ -716,8 +748,8 @@ TOOLS = [
      "description": "What a change touches: worktree diff (or given files) → entities, functions, models, endpoints reached, tasks dispatched (levels.json, conf per edge), tests, FE pieces, a reading (a FLOOR).",
      "inputSchema": T._schema({"files": {"type": "array", "items": {"type": "string"}, "description": "Changed files; default = worktree vs HEAD + untracked."}, **T.ROOT_PROP})},
     {"name": "map_census", "fn": t_map_census, "annotations": RO,
-     "description": "Where the map is blind: unclaimed files/models/routes, unwired schemas, unparseable files, unresolved mounts, blocked twins, unscanned frontends; homing evidence; arms — why a zero is a zero.",
-     "inputSchema": T._schema({"kind": {"type": "string", "enum": ["file", "model", "route", "schema", "unparseable", "mounts", "twins", "web", "homing", "arms"], "description": "One section only."}, **T.ROOT_PROP})},
+     "description": "Where the map is blind: unclaimed files/models/routes, unwired schemas, unparseable files, unresolved mounts, blocked twins, unscanned frontends; homing; arms (why a zero is 0); element forms.",
+     "inputSchema": T._schema({"kind": {"type": "string", "enum": ["file", "model", "route", "schema", "unparseable", "mounts", "twins", "web", "homing", "arms", "forms"], "description": "One section only."}, **T.ROOT_PROP})},
     {"name": "map_diff", "fn": t_map_diff, "annotations": RO,
      "description": "How the committed map changed between two refs: per entity, endpoints/models/schemas/files added or removed; task roots; census, health and function deltas; says so when not regenerated.",
      "inputSchema": T._schema({"base": {"type": "string", "description": "A sha/branch/tag."}, "head": {"type": "string", "description": "Default: the worktree's archmap."}, **T.ROOT_PROP}, ["base"])},
@@ -725,7 +757,7 @@ TOOLS = [
      "description": "The command center's actionable list (scripts/center_status.py, relayed verbatim with its links and → next steps); never triggers a regen.",
      "inputSchema": T._schema({**T.ROOT_PROP})},
     {"name": "review_drift", "fn": t_review_drift, "annotations": RO,
-     "description": "A review's deterministic drift subjects in one call vs a base ref: entity_shape, web_bridge, reach (vs the Reach record), entity (declared vs touched), workflow_census; NOT RUN is first-class.",
+     "description": "A review's drift subjects in one call vs a base ref: entity_shape, web_bridge, form (new refusals), reach (vs the Reach record), entity (declared vs touched), workflow_census; NOT RUN first-class.",
      "inputSchema": T._schema({"base": {"type": "string", "description": "The diff base (sha/branch)."}, "phase": {"type": "string", "description": "Phase id (default: PLAN.json current_phase)."},
-                               "subjects": {"type": "array", "items": {"type": "string", "enum": ["entity_shape", "web_bridge", "reach", "entity", "workflow_census"]}}, **T.ROOT_PROP}, ["base"])},
+                               "subjects": {"type": "array", "items": {"type": "string", "enum": ["entity_shape", "web_bridge", "form", "reach", "entity", "workflow_census"]}}, **T.ROOT_PROP}, ["base"])},
 ]

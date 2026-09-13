@@ -55,6 +55,10 @@ THRESHOLDS = {
     # several at once means the map is describing a stack it cannot read, and every empty column on
     # the station is a sentence the reader will take as fact.
     "arms_not_present": 2,
+    # S20 — refusals a client cannot handle correctly (shared status · lost reason · escape to 500 ·
+    # swallowed), summed across endpoints; mirrors form_drift.FORM_NAG_MIN. Text-only and undeclared
+    # refusals never count toward it: on a codebase that never codes a refusal every endpoint carries them.
+    "form_nag": 3,
     "workflow_uncovered": 3,
     "workflow_cluster_min": 1,
     # S18 — candidate entities in entities.draft.json worth a ruling; one candidate is a curiosity,
@@ -207,6 +211,7 @@ _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))  # so `import 
 import work_scope  # noqa: E402  (same dir; installed alongside under ~/.claude/skills/gabe-pulse/scripts)
 import entity_shape  # noqa: E402  (same dir; the URL-domain ↔ entity-model cross-tab, computed fresh)
 import fetch_bridge  # noqa: E402  (same dir; the web→API bridge drift, read from the committed c4-graph)
+import form_drift  # noqa: E402  (same dir; the element-forms drift, read from the committed forms.json)
 
 
 def _current_phase(plan: dict) -> dict | None:
@@ -790,6 +795,31 @@ def s19_arms_census(root: Path, plan: dict | None, cfg: dict | None):
             "mcp__gabe-map__map_census kind=arms  (then decide: write the detector, or say the floor on the page)")
 
 
+def s20_element_forms(root: Path, plan: dict | None, cfg: dict | None):
+    """Element forms — what each FastAPI endpoint DECIDES, read from the committed ``forms.json`` (the opt-in
+    `_a3_paths` pass; docs/design/element-forms/plan.md). Fires on the NAG class — one status carrying
+    different text-only refusals, a service reason replaced on the way out, a project error escaping as a
+    500, a refusal swallowed by a broad except — at ≥ ``form_nag`` across endpoints. The COUNT class
+    (text-only, undeclared) rides the line and never fires it: a convention to set once, not per-endpoint
+    debt. No forms.json → silent (the arm is opt-in); ``present: false`` → Unavailable with the pass's
+    reason; unreadable → silent. Read-only, report-never-gate."""
+    if cfg is None:
+        return Unavailable("no center config — the element forms live on docs/site/center/forms.json")
+    state, forms, reason = form_drift.load_forms(root)
+    if state in ("absent", "unreadable"):
+        return None
+    if state == "not_emitted":
+        return Unavailable(f"element forms not emitted — {reason}")
+    s = form_drift.summary(forms)
+    if s["nag_total"] < THRESHOLDS["form_nag"]:
+        return None
+    line = form_drift.one_line(s)
+    if not line:
+        return None
+    return (line, "mcp__gabe-map__map_census kind=forms  (then per finding: a stable reason code, a declared "
+                  "response, or a translation that keeps the service's reason)")
+
+
 SIGNALS = [
     ("S1", "adversarial", s1_roast),
     ("S8", "evidence debt", s8_evidence),
@@ -810,6 +840,7 @@ SIGNALS = [
     ("S16", "workflow coverage", s16_workflow_coverage),
     ("S17", "homing evidence", s17_homing_evidence),
     ("S18", "entity proposals", s18_entity_proposals),
+    ("S20", "element forms", s20_element_forms),
 ]
 
 

@@ -257,7 +257,21 @@ def center(root: str, head: str):
            "url_domain_map": {}}
     adoption = {"sections": [{"entity": "thing", "display_name": "Thing", "rank": "critical", "status": "approved",
                               "checklist": {"a": True, "b": False}, "signals": {}, "notes": ""}]}
-    for name, data in (("archmap.json", archmap), ("c4-graph.json", c4), ("center.config.json", cfg), ("adoption.json", adoption), ("levels.json", levels)):
+    # element forms (Phase 2d): one endpoint's form with a shared status — the census section, the touches field, the trace from_form
+    forms = {"version": 1, "present": True, "kind": "endpoint", "framework": {"name": "fastapi", "locks": {"uv.lock": "0.136.3"}},
+             "stats": {"endpoints": 1, "rows": 3, "unknown_rows": 0, "unknown_reasons": {}, "findings": {"shared-status": 1, "text-only": 1, "undeclared": 1},
+                       "unresolved_calls": 0, "collisions": 0, "unformed": 0, "unknown_middleware": []},
+             "endpoints": {"endpoint:GET /things/{item_id}": {
+                 "entity": "thing", "handler": "apps/api/api/things.py::get_thing", "file": "apps/api/api/things.py", "method": "GET", "path": "/things/{item_id}",
+                 "declared": {"success": {"status": 200, "state": "default"}, "response_model": {"name": "ThingOut", "state": "defined"}, "refusals": []},
+                 "produced": [{"phase": "handler", "status": 404, "state": "defined", "detail": "thing not found", "form": "text", "at": "apps/api/api/things.py:9", "pred": "thing is None"},
+                              {"phase": "handler", "status": 404, "state": "defined", "detail": "gone", "form": "text", "at": "apps/api/api/things.py:11"},
+                              {"phase": "uncaught", "status": 500, "state": "default", "unknown_causes": ["pass-through raise apps/api/services/thing.py:4"]}],
+                 "preconditions": [{"pred": "thing is None", "status": 404, "at": "apps/api/api/things.py:9", "depth": 0}],
+                 "findings": [{"id": "text-only", "n": 2, "slot": "U7"}, {"id": "shared-status", "status": 404, "details": ["gone", "thing not found"], "slot": "U7"},
+                              {"id": "undeclared", "statuses": [404], "slot": "K1"}],
+                 "slots": {"U3": {"state": "defined", "rows": 1}, "U7": {"state": "missing", "rows": 2, "unknown": 0}, "K1": {"state": "missing", "declared": [], "produced": [404]}}}}}
+    for name, data in (("archmap.json", archmap), ("c4-graph.json", c4), ("center.config.json", cfg), ("adoption.json", adoption), ("levels.json", levels), ("forms.json", forms)):
         write(root, "docs/site/center/" + name, json.dumps(data, indent=1, sort_keys=True))
 
 
@@ -640,6 +654,28 @@ def run(T):
     ok(d and "home_evidence" not in d, "Part C SILENT: an agreeing endpoint carries no evidence field (the answer's shape is unchanged)", d and sorted(d.keys()))
     d, _, _, _ = call_json(c, "touches", {"target": "apps/api/other.py::Helper.run"})
     ok(d and d["function"]["home_evidence"]["verdict"] == "shared", "Part C: a shared aspect says so on the function", d and d["function"].get("home_evidence"))
+    # element forms (Phase 2d) — FIRE: the census section, the touches field, the trace from_form; SILENT: no form, no forms.json
+    d, _, _, _ = call_json(c, "map_census", {"kind": "forms"})
+    fm = d and d["census"]["forms"]
+    ok(fm and fm["state"] == "present" and fm["endpoints"] == 1 and fm["findings"]["shared-status"] == 1 and fm["nag_named"] == ["GET /things/{item_id} shared-status 404"]
+       and "cannot handle correctly" in fm["text"], "forms FIRE: map_census(forms) — counts, findings, the nag endpoints named", fm)
+    d, _, _, _ = call_json(c, "touches", {"target": "GET /things/{item_id}"})
+    fo = d and d.get("form")
+    ok(fo and fo["slots"]["U7"]["state"] == "missing" and [r["detail"] for r in fo["refusals"]] == ["thing not found", "gone"]
+       and fo["uncaught"] == {"unknown_causes": ["pass-through raise apps/api/services/thing.py:4"]} and fo["preconditions"][0]["pred"] == "thing is None",
+       "forms FIRE: touches(endpoint) carries the form — refusals, the uncaught 500's causes folded, the guard", fo)
+    d, _, _, _ = call_json(c, "trace", {"start": "GET /things/{item_id}"})
+    ok(d and d.get("from_form", {}).get("slots", {}).get("K1", {}).get("state") == "missing", "forms FIRE: trace carries the start endpoint's form", d and d.get("from_form"))
+    d, _, _, _ = call_json(c, "touches", {"target": "DELETE /things/{item_id}"})
+    ok(d and d.get("matched") and "form" not in d, "forms SILENT: an endpoint with no form carries no form field (the answer's shape is unchanged)", d and sorted(d.keys()))
+    os.rename(os.path.join(root, "docs/site/center/forms.json"), os.path.join(root, "docs/site/center/forms.json.off"))
+    d, _, _, _ = call_json(c, "map_census", {"kind": "forms"})
+    ok(d and d["census"]["forms"]["state"] == "not_emitted" and "opt-in" in d["census"]["forms"]["reason"], "forms SILENT: no forms.json → not_emitted, the pass named opt-in", d and d.get("census"))
+    d, _, _, _ = call_json(c, "touches", {"target": "GET /things/{item_id}"})
+    ok(d and "form" not in d, "forms SILENT: no forms.json → no form field, never a crash", d and sorted(d.keys()))
+    d, _, _, _ = call_json(c, "review_drift", {"base": "HEAD~1", "subjects": ["form"]})
+    ok(d and d["subjects"]["form"]["ran"] is False and "no forms.json" in d["subjects"]["form"]["reason"], "forms SILENT: review_drift form NOT RUN names the missing feed", d and d.get("subjects"))
+    os.rename(os.path.join(root, "docs/site/center/forms.json.off"), os.path.join(root, "docs/site/center/forms.json"))
     d, is_err, _, _ = call_json(c, "map_census", {"kind": "bogus"})
     ok(is_err, "map_census: bad kind is a stop")
     # ── wave 3: trace + gates (N1/N2) ──
@@ -872,6 +908,8 @@ def run(T):
     d, _, _, _ = call_json(c, "review_drift", {"base": "HEAD~1"})
     ok(d and d["subjects"]["entity_shape"]["ran"] and d["subjects"]["web_bridge"]["ran"] and not d["subjects"]["reach"]["ran"] and not d["subjects"]["entity"]["ran"] and set(d["not_run"]) == {"reach", "entity", "workflow_census"},
        "review_drift: script-backed subjects run, record-backed ones NOT RUN with reasons", d and {k: v.get("ran") for k, v in (d or {}).get("subjects", {}).items()})
+    ok(d and d["subjects"]["form"]["ran"] is True and isinstance(d["subjects"]["form"]["classified"], list) and "shared-status" not in d["subjects"]["form"]["standing"],
+       "review_drift: the form subject runs on a committed forms.json (standing line below the nag bar: 1 < 3)", d and d["subjects"].get("form"))
     # ── S2 (review batch 2): a `no index` Reach record is a real record — the reason must say so, not "no Reach: record".
     write(root, ".kdbp/PLAN.md", "# Plan\n\n## Phases\n\n| Phase | Exec | Review |\n|---|---|---|\n| P1 | ✅ | ⬜ |\n\n### Phase P1 — Noindex\n\n- **Reach:** no index\n")
     d, _, _, _ = call_json(c, "review_drift", {"base": "HEAD~1", "subjects": ["reach"]})
