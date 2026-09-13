@@ -1083,17 +1083,62 @@
     var cfg = window.DATACFG || {}, split = cfg.countPills === "each";
     var live = DCOUNT.filter(function(c){ return countMode(c.key) !== "off"; });
     if (!live.length) return null;
-    function body(c){ var m = countMode(c.key), n = c.get(ts);
-      return '<span class="dcn" data-count="' + c.key + '" style="--k:' + kindColOf(c, S) + '">'
-        + (m === "icon" ? ico(c.icon, 13, "currentColor") + '<b>' + n + '</b>' : c.word(n)) + '</span>'; }
+    /* a count is a NODE now, so each one can carry its own card; a word sits in .dct so it can be trimmed
+       to its cap height like a number is (the pill text sat ~2px high: the line box added descender space) */
+    function span(c){ var m = countMode(c.key), n = c.get(ts);
+      var sp = E("span", { class: "dcn", "data-count": c.key });
+      sp.style.setProperty("--k", kindColOf(c, S));
+      sp.innerHTML = m === "icon" ? ico(c.icon, 13, "currentColor") + "<b>" + n + "</b>" : '<span class="dct">' + esc(c.word(n)) + "</span>";
+      return sp; }
     var wrap = E("div", { class: "dcnts" + (split ? " each" : " one") });
     if (split) { live.forEach(function(c){
-        var pill = E("span", { class: "cnt dcp" }); pill.style.setProperty("--k", kindColOf(c, S));
-        pill.innerHTML = body(c); bind(pill, opsCard(D, ts, S)); wrap.append(pill); }); }
-    else { var pill = E("span", { class: "cnt dcp" });
-      pill.innerHTML = live.map(body).join('<i class="dcsep">·</i>');
-      bind(pill, opsCard(D, ts, S)); wrap.append(pill); }
+        var pill = E("span", { class: "cnt dcp", "data-pill": c.key }); pill.style.setProperty("--k", kindColOf(c, S));
+        pill.append(span(c)); bind(pill, function(){ return pillCard(c.key, ts, D, S); }); wrap.append(pill); }); }
+    else { var pill = E("span", { class: "cnt dcp", "data-pill": "all" });
+      live.forEach(function(c, i){ if (i) pill.insertAdjacentHTML("beforeend", '<i class="dcsep">·</i>');
+        var sp = span(c); bind(sp, function(){ return pillCard(c.key, ts, D, S); }); pill.append(sp); });
+      wrap.append(pill); }
     return wrap; }
+  /* THE PILL CARDS (operator 2026-09-13) — the head bar's hover law, the one the Conflict and Declares cards
+     follow: the thing and its value · the factors that make it, as a list · this pill's own facts · the
+     plain line, said once, at the end. Certainties only; every number counts what is SHOWN. */
+  function pillCard(key, ts, D, S){ var H = window.hcard; if (!H) return opsCard(D, ts, S);
+    var ents = {}; ts.forEach(function(t){ var e = t.entity || "—"; ents[e] = (ents[e] || 0) + 1; });
+    var entLine = Object.keys(ents).sort(function(a, b){ return ents[b] - ents[a] || a.localeCompare(b); })
+      .map(function(k){ return k + " " + ents[k]; }).join(" · ");
+    if (key === "tables") {
+      var big = ts.slice().sort(function(a, b){ return b.cols.length - a.cols.length; })[0];
+      return H({ title: "tables", value: ts.length + " of " + D.tables.length, icon: "model", color: S.KINDCOL.model,
+        factors: CHAN.map(function(c){ var n = D.tables.filter(function(t){ return t.rw === c.key; }).length, on = chanOn(c.key);
+          return { state: on && n ? "ok" : "quiet", name: c.word, value: n + " table" + (n === 1 ? "" : "s") + (on ? "" : " · switched off"),
+                   rule: c.plain, note: n === 0 ? "a measured zero — the feed records no table on this channel" : null }; }),
+        factorLabel: "the three channels · a filled dot is switched on and holds tables",
+        rows: [["by entity", entLine || "—"], big ? ["largest", big.table + " · " + big.cols.length + " fields"] : null].filter(Boolean),
+        plain: "the tables this door reads or writes — each one a place its data lives" }); }
+    if (key === "fields") {
+      var mix = {}, opt = 0, fk = 0, uq = 0;
+      ts.forEach(function(t){
+        t.cols.forEach(function(c){ var k = typeOf(c[1]).key; mix[k] = (mix[k] || 0) + 1; if (isOpt(c[1])) opt++; });
+        fk += (t.fks || []).length;
+        (t.uqs || []).forEach(function(u){ uq += Array.isArray(u) ? u.length : 1; }); });
+      return H({ title: "fields", value: String(colsOf(ts)), icon: "table", color: S.KINDCOL.schema,
+        factors: TYPEC.filter(function(x){ return mix[x.key]; }).map(function(x){
+          return { state: "info", name: x.word, value: mix[x.key] + " field" + (mix[x.key] === 1 ? "" : "s"), rule: x.plain }; }),
+        factorLabel: "what the fields are made of · read from each column's declared type",
+        rows: [["optional", opt + " accept None"], ["foreign keys", fk + " point at another table"],
+               ["unique", uq + " column" + (uq === 1 ? "" : "s") + " latched unique"],
+               ["across", ts.length + " table" + (ts.length === 1 ? "" : "s")]],
+        plain: "the columns inside those tables — the pieces of data each row carries" }); }
+    var rd = ts.filter(function(t){ return t.rw !== "w"; }).length, wr = ts.filter(function(t){ return t.rw !== "r"; }).length,
+        both = ts.filter(function(t){ return t.rw === "rw"; }).length;
+    return H({ title: "ops", value: String(rd + wr), icon: "role", color: S.OPC.call,
+      factors: [{ state: "info", name: "read ops", value: String(rd), rule: "one for every table the door reads" },
+                { state: "info", name: "write ops", value: String(wr), rule: "one for every table the door writes" }],
+      factorLabel: "what adds up to " + (rd + wr),
+      rows: [["both channels", both + " table" + (both === 1 ? "" : "s") + " — two ops each"],
+             ["commit", D.commits ? "one transaction makes the " + wr + " write" + (wr === 1 ? "" : "s") + " permanent" : "none — this door only reads"]],
+      plain: "one op is one table on one channel — a read or a write the door performs" }); }
+  window.PILLCARD = pillCard;
   function dhead(box, F, D, ts, icon, note){
     var h = head(box, icon || "table", "Data", "—", note);
     var sh = h.querySelector(".sechd");

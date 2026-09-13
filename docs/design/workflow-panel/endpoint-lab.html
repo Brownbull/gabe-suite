@@ -269,6 +269,7 @@
     behind: "every function the door reaches — how much code one change touches",
     tests: "the cases that name this door — what proves it works",
     workflow: "a real user's path, named by a human — the order these doors are called in" });
+  window.hcard = function(o){ return hcard(o); };
   function hcard(o){
     var h = '<div class="cphd">' + (o.icon ? S.icon(o.icon, 15, o.color) : "")
       + '<b' + (o.color ? ' style="color:' + o.color + '"' : "") + '>' + o.title + '</b>'
@@ -654,13 +655,15 @@
   /* ══ THE DATA PANEL (operator 2026-09-12) — which of its sections are drawn, and how the grounds lay
      out. Hiding is a CHOICE, never a loss: the element stays in the page, one click brings it back, and
      a section that the open distribution does not draw says so instead of pretending to work. ══ */
+  var PILLOPEN = false;                                       /* the pill-colour fold, closed at boot */
+  window.pillFold = function(open){ PILLOPEN = !!open; var f = document.querySelector("#datacfg .cffold"); if (f) f.classList.toggle("open", PILLOPEN); };
   var DATACFG = window.DATACFG = {
-    show: { title: 1, note: 0, counts: 1, shapes: 1, rw: 1, commit: 1, ev: 1, mdl: 1, ents: 1, legend: 1 },
+    show: { title: 0, note: 0, counts: 1, shapes: 1, rw: 1, commit: 1, ev: 1, mdl: 1, ents: 1, legend: 1 },
     width: "flex", tiles: "stack", order: "size",
     chan: { w: 1, r: 1, rw: 1 },     /* APPENDABLE channels — all three on IS "every table" */
     counts: { tables: "icon", fields: "icon", ops: "icon" },  /* what the title counts, and how */
-    countPills: "one",                                        /* one pill or a pill each */
-    pillInk: "white", pillBg: "accent", pillAlpha: 100,       /* the pill's text · its ground · how opaque the ground is */
+    countPills: "each", pillShape: "pill",                    /* one pill or a pill each · its outline */
+    pillInk: "ink", pillBg: "kind", pillAlpha: 15,            /* the pill's text · its ground · how opaque the ground is */
     bk: { form: "block", icon: 1, rw: 1, name: 1, ent: "word", count: "words", model: "word",
           iconCol: "model", sel: "icon",              /* the glyph's colour is a SETTING, not the entity's */
           rows: [{ l: ["icon", "rw", "name", "ent", "count", "model"], r: [] }, { l: [], r: [] }, { l: [], r: [] }],
@@ -701,6 +704,7 @@
     ["white", "ink", "kind", "accent", "muted"].forEach(function(k){ pn.classList.toggle("pink-" + k, DATACFG.pillInk === k); });
     ["accent", "kind", "chip", "panel", "ink", "none"].forEach(function(k){ pn.classList.toggle("pbg-" + k, DATACFG.pillBg === k); });
     pn.style.setProperty("--pill-a", String(DATACFG.pillAlpha));
+    ["pill", "round", "rect", "square"].forEach(function(k){ pn.classList.toggle("pshape-" + k, DATACFG.pillShape === k); });
     if (window.refreshPillRead) requestAnimationFrame(window.refreshPillRead); }
   /* THE PILL'S CONTRAST, MEASURED (operator 2026-09-13: "barely visible or too contrasting"). Every count's
      text colour against the ground it actually sits on — its own tint, over the pill, over whatever is
@@ -836,6 +840,15 @@
     cpick("fields", "fields", "table", "how many columns those tables hold, added up");
     cpick("ops", "ops", "role", "one op is one table on one channel — a table on both is two");
 
+    /* THE PILL'S SHAPE — the dial being tuned now, so it stays in view (operator 2026-09-13) */
+    pick("pill shape", "pillShape", [
+      ["pill", "fully rounded ends", "a pill"],
+      ["round", "softly rounded corners", "rounded"],
+      ["rect", "barely rounded — a tag", "a tag"],
+      ["square", "sharp corners", "square"]],
+      function(o){ return labIco(o[0] === "pill" ? "sh-pill" : o[0] === "round" ? "sh-round" : o[0] === "rect" ? "sh-rect" : "sh-square", 15); });
+    /* the settled colour dials FOLD away — the operator set them and asked to keep them out of sight */
+    var pillFoldAt = box.children.length;
     pick("pills", "countPills", [
       ["one", "the counts share a single pill, separated by a dot", "one pill"],
       ["each", "every count gets a pill of its own", "a pill each"]],
@@ -872,6 +885,18 @@
         on: function(v){ DATACFG.pillAlpha = v; applyData(); } }));
     box.append(el("div", { class: "cfl sub" }, "contrast"), el("div", { id: "pillread", class: "pillread" }, "—"));
     requestAnimationFrame(window.refreshPillRead);
+    { var moved = [].slice.call(box.children, pillFoldAt);
+      var fold = el("div", { class: "cffold" + (PILLOPEN ? " open" : "") }), body = el("div", { class: "cffoldbody" });
+      moved.forEach(function(n){ body.append(n); });
+      var hd = el("button", { class: "cffoldhd" }); hd.dataset.fold = "pills";
+      hd.innerHTML = labIco("fold", 12) + "<b>pill colour</b><span class=\"sum\">" + DATACFG.countPills + " · " + DATACFG.pillInk + " on "
+        + DATACFG.pillBg + " " + DATACFG.pillAlpha + "%</span>";
+      hoverBind(hd, function(){ return hcard({ title: "pill colour", value: PILLOPEN ? "open" : "folded", icon: "shape",
+        rows: [["holds", "one pill or a pill each · the text · the ground · its opacity · the measured contrast"],
+               ["folded", "settled by the operator — every setting keeps working while it is out of sight"]],
+        plain: "the colour dials for the three count pills, put away" }); });
+      hd.onclick = function(ev){ ev.stopPropagation(); PILLOPEN = !PILLOPEN; fold.classList.toggle("open", PILLOPEN); };
+      fold.append(hd, body); box.append(fold); }
 
     sub("the block title", "which parts of a table's title line are drawn");
     function bpick(label, key, opts, iconFor){
@@ -1178,7 +1203,7 @@
       var C = DATACFG.counts;
       return "data · shown as " + dataVar() + " · tables " + (ch.length === 3 ? "all" : ch.join("+") || "none")
         + " · title counts tables " + C.tables + ", fields " + C.fields + ", ops " + C.ops
-        + " · pills " + DATACFG.countPills + ", text " + DATACFG.pillInk + ", ground " + DATACFG.pillBg + " " + DATACFG.pillAlpha + "%"
+        + " · pills " + DATACFG.countPills + ", shape " + DATACFG.pillShape + ", text " + DATACFG.pillInk + ", ground " + DATACFG.pillBg + " " + DATACFG.pillAlpha + "%"
         + " · block " + B.form + " (icon " + (B.icon ? "on" : "off") + " " + B.iconCol + ", chip " + (B.rw ? "on" : "off") + ", name " + (B.name ? "on" : "off")
         + ", entity " + B.ent + ", count " + B.count + ", model " + B.model + ")"
         + " · lines " + B.rows.map(function(r){ return (r.l.join(" ") || "—") + " | " + (r.r.join(" ") || "—"); }).join(" / ")

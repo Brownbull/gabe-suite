@@ -50,11 +50,11 @@ ok(tabs.join(',') === 'data,schemas,functions,tests,widening,security', 'SIX tab
 
 // the DATA panel boots on the operator's own default line (2026-09-12)
 ok(await p.evaluate(() => window.COPYTXT.data()) ===
-   'data · shown as blocks · tables all · title counts tables icon, fields icon, ops icon · pills one, text white, ground accent 100%'
+   'data · shown as blocks · tables all · title counts tables icon, fields icon, ops icon · pills each, shape pill, text ink, ground kind 15%'
    + ' · block block (icon on model, chip on, name on, entity word, count words, model word)'
    + ' · lines icon rw name ent count model | — / — | — / — | — · sizes icon 13 rw 12 name 13 ent 12 count 12 model 12'
    + ' · squares 11px gap 2 round as colour by type, optional marked · grounds by size, width flex, tiles stack'
-   + ' · drawn title counts shapes rw commit ev mdl ents legend · hidden note',
+   + ' · drawn counts shapes rw commit ev mdl ents legend · hidden title note',
    'the data panel boots on the operator\'s default line', await p.evaluate(() => window.COPYTXT.data()));
 
 // the head strip carries the station card's head
@@ -377,6 +377,81 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
     tabsRow: 52, tabsH: 43, tabsBw: 0, tabsBs: 'solid', tabsDivW: 1, tabsDivS: 'none', tabsGap: 0 });
     window.applyFrame(); window.drawFrameCfg(); }); await p.waitForTimeout(120);
   ok(await p.evaluate(() => window.COPYTXT.frame()) === boot, 'the bench returns to exactly the frame it booted with', boot); }
+// ══ THE THREE PILLS (operator 2026-09-13): centred on the cap height, a shape dial, the settled colour dials
+//    folded away, and a card per pill on the head bar's hover law ══
+{ await p.evaluate(() => { window.showTab('data'); window.showVariant('data', 'blocks'); }); await p.waitForTimeout(320);
+  ok(await p.$eval('#datacfg .cffold', e => !e.classList.contains('open') && getComputedStyle(e.querySelector('.cffoldbody')).display === 'none'),
+     'the settled pill-colour dials boot FOLDED away');
+  ok(await p.$$eval('#datacfg .ib[data-pill-shape]', els => els.length === 4 && els.every(e => e.getClientRects().length > 0)),
+     'and the shape dial — the one being tuned — stays in view');
+  ok(await p.$$eval('#datacfg .cffold .ib[data-pill-ink]', els => els.length === 5), 'the folded dials are all still in the page');
+  // CENTRED: the number and its glyph on the pill's centre, measured on the cap-height box
+  const centring = () => p.evaluate(() => [...document.querySelectorAll('#panel .sechd .dcp')].map(d => {
+      const mid = r => r.top + r.height / 2, pr = d.getBoundingClientRect();
+      const t = d.querySelector('.dcn > b, .dcn > .dct'), g = d.querySelector('.dcn > svg');
+      return { pill: d.dataset.pill, text: t ? +(mid(t.getBoundingClientRect()) - mid(pr)).toFixed(2) : null,
+               glyph: g ? +(mid(g.getBoundingClientRect()) - mid(pr)).toFixed(2) : null }; }));
+  { const cz = await centring();
+    ok(cz.length === 3 && cz.every(x => Math.abs(x.text) <= 0.6 && (x.glyph == null || Math.abs(x.glyph) <= 0.6)),
+       'every number and glyph sits within 0.6px of its pill\'s centre (it sat 1.6px high)', JSON.stringify(cz));
+    ok(await p.$eval('#panel .sechd .dcp .dcn > b', e => /cap/.test(getComputedStyle(e).textBoxEdge || '')),
+       'the number is trimmed to its cap height, so the box being centred IS the ink',
+       await p.$eval('#panel .sechd .dcp .dcn > b', e => String(getComputedStyle(e).textBoxEdge))); }
+  await p.evaluate(() => { window.DATACFG.counts.tables = 'word'; window.showTab('data'); }); await p.waitForTimeout(260);
+  { const cz = await centring(); const w = cz.find(x => x.pill === 'tables');
+    ok(w && Math.abs(w.text) <= 0.6, 'a count in WORDS is centred the same way', JSON.stringify(w)); }
+  await p.evaluate(() => { window.DATACFG.counts.tables = 'icon'; window.showTab('data'); }); await p.waitForTimeout(260);
+  // SHAPE
+  for (const [k, want] of [['square', '0px'], ['rect', '3px'], ['round', '7px'], ['pill', null]]) {
+    await p.click(`#datacfg .ib[data-pill-shape="${k}"]`); await p.waitForTimeout(240);
+    const r = await p.$eval('#panel .sechd .dcp', e => getComputedStyle(e).borderTopLeftRadius);
+    ok(want ? r === want : parseFloat(r) >= 11, `the ${k} shape gives the pill ${want || 'fully rounded ends'}`, r); }
+  // THE FOLD opens and closes without losing anything
+  await p.click('#datacfg .cffoldhd[data-fold="pills"]'); await p.waitForTimeout(160);
+  ok(await p.$eval('#datacfg .cffold', e => e.classList.contains('open') && getComputedStyle(e.querySelector('.cffoldbody')).display === 'grid'),
+     'one click opens the folded dials');
+  await p.click('#datacfg .cffoldhd[data-fold="pills"]'); await p.waitForTimeout(160);
+  ok(await p.$eval('#datacfg .cffold', e => !e.classList.contains('open')), 'and one click folds them again');
+  // THE CARDS — each pill states its own facts on the head bar's law: title + value · factors · facts · the plain line LAST
+  const cardOf = async sel => { await p.mouse.move(5, 1030); await p.waitForTimeout(140); await p.hover(sel); await p.waitForTimeout(240);
+    return p.evaluate(() => { const h = document.getElementById('hover');
+      return { hidden: h.hidden, title: (h.querySelector('.cphd b') || {}).textContent, value: (h.querySelector('.cphv') || {}).textContent,
+        factors: [...h.querySelectorAll('.fct')].map(f => ({ state: f.className.replace(/\bfct\b/, '').trim(), name: f.querySelector('.fctn').textContent.trim(),
+          value: (f.querySelector('.fctv') || {}).textContent })),
+        last: h.lastElementChild ? h.lastElementChild.className : null, plain: (h.querySelector('.cpend .cpplain') || {}).textContent || '' }; }); };
+  const TB0 = F.data.tables, cols0 = TB0.reduce((n, t) => n + t.cols.length, 0);
+  { const c = await cardOf('#panel .sechd .dcp[data-pill="tables"]');
+    ok(!c.hidden && c.title === 'tables' && c.value === TB0.length + ' of ' + TB0.length, 'the TABLES pill opens its own card', JSON.stringify({ t: c.title, v: c.value }));
+    ok(c.factors.map(f => f.name).join(',') === 'written only,read only,both', 'its factors are the three channels', c.factors.map(f => f.name).join(','));
+    ok(c.factors.every(f => (f.name === 'written only' ? TB0.filter(t => t.rw === 'w') : f.name === 'read only' ? TB0.filter(t => t.rw === 'r') : TB0.filter(t => t.rw === 'rw')).length + ' table' === f.value.replace(/s$/, '').replace(/s ·.*$/, '')),
+       'each channel factor states its own measured count', JSON.stringify(c.factors));
+    ok(c.factors.filter(f => /written only/.test(f.name)).every(f => f.state === 'quiet'), 'a measured-zero channel is a hollow dot, not a filled one');
+    ok(/cpend/.test(c.last) && /tables this door reads or writes/.test(c.plain), 'and the plain line comes LAST, said once', c.last); }
+  { const c = await cardOf('#panel .sechd .dcp[data-pill="fields"]');
+    ok(c.title === 'fields' && c.value === String(cols0), 'the FIELDS pill opens its own card', JSON.stringify({ t: c.title, v: c.value }));
+    ok(c.factors.length >= 4 && c.factors.every(f => /field/.test(f.value)), 'its factors are what the fields are made of — the kinds', JSON.stringify(c.factors.map(f => f.name)));
+    ok(c.factors.reduce((n, f) => n + parseInt(f.value, 10), 0) === cols0, 'and the kinds add back up to the pill\'s number');
+    ok(/cpend/.test(c.last) && /columns inside those tables/.test(c.plain), 'with the plain line last'); }
+  { const c = await cardOf('#panel .sechd .dcp[data-pill="ops"]');
+    const rd = TB0.filter(t => t.rw !== 'w').length, wr = TB0.filter(t => t.rw !== 'r').length;
+    ok(c.title === 'ops' && c.value === String(rd + wr), 'the OPS pill opens its own card', JSON.stringify({ t: c.title, v: c.value }));
+    ok(c.factors.map(f => f.name + '=' + f.value).join(',') === 'read ops=' + rd + ',write ops=' + wr, 'its factors are the reads and the writes that add up to it',
+       c.factors.map(f => f.name + '=' + f.value).join(','));
+    ok(/cpend/.test(c.last) && /one op is one table on one channel/.test(c.plain), 'with the plain line last'); }
+  // the cards count what is SHOWN — switch a channel off and the card follows
+  await p.click('#panel .chbar .chb[data-chan="rw"]'); await p.waitForTimeout(300);
+  { const c = await cardOf('#panel .sechd .dcp[data-pill="tables"]');
+    const keep = TB0.filter(t => t.rw !== 'rw').length;
+    ok(c.value === keep + ' of ' + TB0.length && c.factors.some(f => f.name === 'both' && /switched off/.test(f.value)),
+       'switching a channel off moves the card\'s number and marks that factor off', JSON.stringify({ v: c.value, f: c.factors })); }
+  await p.click('#panel .chbar .chb[data-chan="rw"]'); await p.waitForTimeout(300);
+  await p.mouse.move(5, 1030); }
+
+// the tests below were written against the station chip's look — give them that baseline explicitly
+await p.evaluate(() => { Object.assign(window.DATACFG, { countPills: 'one', pillInk: 'white', pillBg: 'accent', pillAlpha: 100 });
+  window.DATACFG.show.title = 1; window.applyData(); window.showTab('data'); window.pillFold(true); window.drawDataCfg(); });
+await p.waitForTimeout(320);
+
 // ══ THE DATA PANEL's own block (operator 2026-09-12): show or hide each section, and lay the grounds
 //    out. Hiding must be REVERSIBLE and must not delete anything — the no-loss law as a measurement. ══
 { await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(80);
@@ -538,9 +613,9 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
     await p.click('#datacfg .ib[data-cntops="off"]'); await p.waitForTimeout(320);
     const cnt = await readCnt();
     ok(cnt === TB.length + ' tables · ' + allCols + ' fields', 'the title counts tables AND fields', cnt);
-    await p.hover('#panel .sechd .cnt'); await p.waitForTimeout(200);
-    ok(/one op = one table on one channel/i.test(await p.evaluate(() => document.getElementById('hover').innerText)),
-       'and the card still says what an op is, for whoever wants it');
+    await p.hover('#panel .sechd .dcn[data-count="tables"]'); await p.waitForTimeout(200);
+    ok(/tables this door reads or writes/i.test(await p.evaluate(() => document.getElementById('hover').innerText)),
+       'and a count in the shared pill carries its OWN card');
     // the counts MOVE with the channel — they count what is shown, not what exists
     await p.click('#panel .chbar .chb[data-chan="rw"]'); await p.waitForTimeout(300);
     const keep = TB.filter(t => t.rw !== 'rw');
