@@ -53,7 +53,7 @@ ok(await p.evaluate(() => window.COPYTXT.data()) ===
    'data · shown as blocks · tables all · title counts tables icon, fields icon, ops icon'
    + ' · block block (icon on model, chip on, name on, entity word, count words, model word)'
    + ' · lines icon rw name ent count model | — / — | — / — | — · sizes icon 13 rw 12 name 13 ent 12 count 12 model 12'
-   + ' · squares 11px gap 2 round by type, optional marked · grounds by size, width flex, tiles stack'
+   + ' · squares 11px gap 2 round as colour by type, optional marked · grounds by size, width flex, tiles stack'
    + ' · drawn title counts shapes rw commit ev mdl ents legend · hidden note',
    'the data panel boots on the operator\'s default line', await p.evaluate(() => window.COPYTXT.data()));
 
@@ -603,6 +603,38 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
     ok(Object.values(byKind).every(s => s.size === 1), 'a kind is ONE colour everywhere');
     ok(new Set(Object.values(byKind).map(s => [...s][0])).size === Object.keys(byKind).length, 'and no two kinds share one');
     ok(await p.$$eval('#panel .sq.opt', els => els.length > 0 && els.every(e => +getComputedStyle(e).opacity < 1)), 'an optional column is drawn paler');
+    // ══ A KIND CAN BE DRAWN FOUR WAYS (operator 2026-09-13) ══
+    { const kinds = await p.evaluate(() => [...new Set([...document.querySelectorAll('#panel .bkhd .sq')].map(e => (e.className.match(/t-(\w+)/) || [])[1]))]);
+      ok(kinds.length >= 4, 'the panel draws at least four kinds of field', kinds.join(','));
+      // CHARACTER — one letter per kind, and no two kinds share a letter
+      await p.click('#datacfg .ib[data-sq-enc="char"]'); await p.waitForTimeout(300);
+      const chars = await p.evaluate(() => { const m = {};
+        document.querySelectorAll('#panel .bkhd .sq').forEach(e => { const k = (e.className.match(/t-(\w+)/) || [])[1]; (m[k] = m[k] || new Set()).add(e.textContent.trim()); });
+        return Object.keys(m).map(k => k + '=' + [...m[k]].join('')); });
+      ok(chars.every(x => x.split('=')[1].length === 1), 'CHARACTER gives every kind exactly one letter', chars.join(' '));
+      ok(new Set(chars.map(x => x.split('=')[1])).size === chars.length, 'and no two kinds share it', chars.join(' '));
+      // SHAPE — the form carries the kind, so the marks differ with colour taken away
+      await p.click('#datacfg .ib[data-sq-enc="shape"]'); await p.click('#datacfg .ib[data-sq-pal="mono"]'); await p.waitForTimeout(320);
+      const forms = await p.evaluate(() => { const m = {};
+        document.querySelectorAll('#panel .bkhd .sq').forEach(e => { const k = (e.className.match(/t-(\w+)/) || [])[1], c = getComputedStyle(e);
+          m[k] = [c.borderRadius, c.transform, c.clipPath, c.borderWidth, c.backgroundImage].join('|'); });
+        return m; });
+      ok(new Set(Object.values(forms)).size === Object.keys(forms).length,
+         'SHAPE draws every kind differently even with no colour at all', JSON.stringify(Object.keys(forms)));
+      ok(await p.$$eval('#panel .bkhd .sq', els => new Set(els.map(e => getComputedStyle(e).color)).size === 1),
+         'with one colour for all of them — the kind survives without hue');
+      // SYMBOL — the station's own glyph per kind
+      await p.click('#datacfg .ib[data-sq-enc="symbol"]'); await p.waitForTimeout(300);
+      ok(await p.$$eval('#panel .bkhd .sq', els => els.length > 0 && els.every(e => !!e.querySelector('svg'))), 'SYMBOL draws a glyph per field');
+      ok(await p.evaluate(() => { const m = {};
+        document.querySelectorAll('#panel .bkhd .sq svg').forEach(e => { const k = (e.parentElement.className.match(/t-(\w+)/) || [])[1];
+          m[k] = e.innerHTML.replace(/\s+/g, ''); });
+        return new Set(Object.values(m)).size === Object.keys(m).length; }), 'and no two kinds share one');
+      // the LEGEND draws the mark as the panel draws it, whatever the encoding
+      ok(await p.$$eval('#panel .plgd .lg .sq.lgm', els => els.length >= 4 && els.every(e => !!e.querySelector('svg'))),
+         'the legend draws the MARK it names, in the encoding that is on');
+      await p.click('#datacfg .ib[data-sq-enc="colour"]'); await p.click('#datacfg .ib[data-sq-pal="type"]'); await p.waitForTimeout(320);
+      ok(await p.$$eval('#panel .plgd .lg .sq.lgm', els => els.every(e => !e.querySelector('svg'))), 'and follows it back to colour'); }
     await p.click('#datacfg .ib[data-sq-opt="0"]'); await p.waitForTimeout(160);
     ok(await p.$$eval('#panel .sq.opt', els => els.every(e => +getComputedStyle(e).opacity === 1)), 'and that mark can be switched off');
     await p.click('#datacfg .ib[data-sq-opt="1"]'); await p.waitForTimeout(160); }

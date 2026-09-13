@@ -664,7 +664,7 @@
           iconCol: "model", sel: "icon",              /* the glyph's colour is a SETTING, not the entity's */
           rows: [{ l: ["icon", "rw", "name", "ent", "count", "model"], r: [] }, { l: [], r: [] }, { l: [], r: [] }],
           size: { icon: 13, rw: 12, name: 13, ent: 12, count: 12, model: 12 } },
-    sqSize: 11, sqGap: 2, sqShape: "round", sqPal: "type", sqOpt: 1 };
+    sqSize: 11, sqGap: 2, sqShape: "round", sqPal: "type", sqOpt: 1, sqEnc: "colour" };
   var DSEC = [
     { key: "title",  word: "the title",   icon: "layers", on: ["grounds", "flow", "ledger", "fields", "blocks"],
       what: "the part's own name and glyph, left of the counts", lost: "which part you are looking at; the counts and the switches stay" },
@@ -900,6 +900,14 @@
           rows: [["range", "0 — 6px"], ["at 0", "the squares touch and the row reads as one bar"]],
           plain: "how far apart the fields sit" }),
         on: function(v){ DATACFG.sqGap = v; applyData(); } }));
+    pick("encode", "sqEnc", [
+      ["colour", "the mark is a filled square and its HUE is the kind", "colour"],
+      ["char", "the mark is a letter — # a key, A words, 1 a number, Y yes-or-no, T a moment, \u2261 many, ? unnamed", "a character"],
+      ["shape", "the mark's FORM is the kind — a circle, a square, a diamond, a triangle, a ring, bars, a cross", "a shape"],
+      ["symbol", "the mark is the station's own glyph for that kind", "a symbol"]],
+      function(o){ return o[0] === "colour" ? labIco("patflat", 15)
+        : o[0] === "char" ? labIco("ton", 15)
+        : o[0] === "shape" ? labIco("sh-circle", 15) : S.icon("key", 15); });
     pick("shape", "sqShape", [
       ["square", "sharp corners — the field is a cell", "square"],
       ["round", "softened corners", "rounded"],
@@ -909,7 +917,7 @@
       ["type", "each square takes the colour of the KIND of value it holds — id · text · number · flag · time · list", "by kind"],
       ["channel", "every square takes its table's channel — read green, write orange, both amber", "by channel"],
       ["entity", "every square takes its entity's colour — the row reads as one place", "by entity"],
-      ["mono", "no colour at all; only the count and the shape carry", "mono"]],
+      ["mono", "no colour at all — with a shape, a character or a symbol the kind still reads, which is the only encoding a reader with no colour vision can follow", "mono"]],
       function(o){ return o[0] === "type" ? labIco("pathatch", 15)
         : o[0] === "channel" ? '<i class="chsw" style="background:' + S.RW.rw + '"></i>'
         : o[0] === "entity" ? '<i class="chsw" style="background:' + S.KINDCOL.entity + '"></i>'
@@ -1087,7 +1095,7 @@
         + ", entity " + B.ent + ", count " + B.count + ", model " + B.model + ")"
         + " · lines " + B.rows.map(function(r){ return (r.l.join(" ") || "—") + " | " + (r.r.join(" ") || "—"); }).join(" / ")
         + " · sizes " + Object.keys(B.size).map(function(k){ return k + " " + B.size[k]; }).join(" ")
-        + " · squares " + DATACFG.sqSize + "px gap " + DATACFG.sqGap + " " + DATACFG.sqShape + " by " + DATACFG.sqPal + (DATACFG.sqOpt ? ", optional marked" : "")
+        + " · squares " + DATACFG.sqSize + "px gap " + DATACFG.sqGap + " " + DATACFG.sqShape + " as " + DATACFG.sqEnc + " by " + DATACFG.sqPal + (DATACFG.sqOpt ? ", optional marked" : "")
         + " · grounds by " + DATACFG.order + ", width " + DATACFG.width + ", tiles " + DATACFG.tiles
         + " · drawn " + shown.join(" ") + (hidden.length ? " · hidden " + hidden.join(" ") : " · nothing hidden"); },
     frame: function(){ function ln(w, st){ return w === 0 || st === "none" ? "none" : w + "px " + st; }

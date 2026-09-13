@@ -684,10 +684,11 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 .bkhd .bkn{ color:var(--muted); }
 .bkhd .bkm{ color:var(--muted); opacity:.72; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .sqs{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--sqg, 2px); margin-left:auto; padding-left:10px; }
-.sq{ display:block; flex:none; width:var(--sq, 11px); height:var(--sq, 11px); border-radius:2px; cursor:help; }
-#panel.sqs-square .sq{ border-radius:0; }
-#panel.sqs-round .sq{ border-radius:calc(var(--sq, 11px) * .28); }
-#panel.sqs-circle .sq{ border-radius:50%; }
+.sq{ display:block; flex:none; width:var(--sq, 11px); height:var(--sq, 11px); border-radius:2px; cursor:help;
+  background:var(--fc, var(--muted)); }
+
+
+
 .sq.opt{ opacity:.45; }
 #panel.sq-noopt .sq.opt{ opacity:1; }
 .sq.fk{ box-shadow:inset 0 0 0 1px var(--panel); }
@@ -845,3 +846,32 @@ html, body{ height:100%; }
 #row{ flex:1 1 auto; min-height:0; align-items:stretch; }
 #notes{ height:auto; max-height:100%; overflow-y:auto; align-self:stretch; }
 #bench, #port{ align-self:flex-start; }
+
+/* ══ FOUR WAYS TO ENCODE A FIELD'S KIND (operator 2026-09-13) — colour · a character · a shape · a
+   symbol. The colour rule is a separate dial, so the other three still read when every mark is one
+   colour: form and letter survive where hue does not. ══ */
+/* a CHARACTER: the letter carries the kind, the box goes */
+.sq.e-char{ background:none; color:var(--fc, var(--muted)); width:auto; min-width:var(--sq, 11px);
+  height:auto; line-height:1; border-radius:0;
+  font:800 calc(var(--sq, 11px) * 1.05)/1 var(--font-mono); text-align:center; }
+/* a SYMBOL: the station's own glyph for that kind */
+.sq.e-symbol{ background:none; color:var(--fc, var(--muted)); border-radius:0; display:inline-flex;
+  align-items:center; justify-content:center; }
+.sq.e-symbol svg{ width:var(--sq, 11px); height:var(--sq, 11px); display:block; }
+/* a SHAPE: the form carries the kind, and the shape dial no longer applies (the kind owns it) */
+.sq.e-shape{ border-radius:0; }
+.sq.e-shape.t-id{ border-radius:50%; }
+.sq.e-shape.t-text{ border-radius:1px; }
+.sq.e-shape.t-num{ transform:rotate(45deg); border-radius:1px; }
+.sq.e-shape.t-flag{ background:none; clip-path:polygon(50% 0, 100% 100%, 0 100%);
+  background-color:var(--fc, var(--muted)); }
+.sq.e-shape.t-time{ background:none; border:2px solid var(--fc, var(--muted)); border-radius:50%; box-sizing:border-box; }
+.sq.e-shape.t-list{ background:none; background-image:repeating-linear-gradient(var(--fc, var(--muted)) 0 2px, transparent 2px 4px); }
+.sq.e-shape.t-other{ background:none; background-color:var(--fc, var(--muted));
+  clip-path:polygon(38% 0, 62% 0, 62% 38%, 100% 38%, 100% 62%, 62% 62%, 62% 100%, 38% 100%, 38% 62%, 0 62%, 0 38%, 38% 38%); }
+/* the SHAPE dial only governs the colour encoding — a kind's own form wins over it */
+#panel.sqs-square .sq.e-colour{ border-radius:0; }
+#panel.sqs-round .sq.e-colour{ border-radius:calc(var(--sq, 11px) * .28); }
+#panel.sqs-circle .sq.e-colour{ border-radius:50%; }
+/* the legend draws the mark exactly as the panel draws it */
+.plgd .lg .sq.lgm{ --sq:11px; margin-right:2px; }

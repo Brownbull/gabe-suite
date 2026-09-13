@@ -36,7 +36,11 @@
   function head(box, icon, label, count, note, col){ var h = E("div", { class: "phd" }, sechd(icon, label, count, false, col));
     if (note) h.append(E("div", { class: "phdnote", html: note })); box.append(h); return h; }
   function legend(items){ var l = E("div", { class: "plgd" });
-    items.forEach(function(it){ var s = E("span", { class: "lg" }, (it.swatch ? '<i class="sw" style="' + it.swatch + '"></i>' : it.icon ? ico(it.icon, 12, it.col) : ""), esc(it.t));
+    items.forEach(function(it){ var s = E("span", { class: "lg" });
+      if (it.node) s.append(it.node);                       /* the legend draws the MARK as drawn */
+      else if (it.swatch) s.insertAdjacentHTML("beforeend", '<i class="sw" style="' + it.swatch + '"></i>');
+      else if (it.icon) s.insertAdjacentHTML("beforeend", ico(it.icon, 12, it.col));
+      s.insertAdjacentHTML("beforeend", esc(it.t));
       if (it.tip) bind(s, it.tip); l.append(s); }); return l; }
   /* a SHAPE drawn as lines — the operator's ask: abstractions, never the data. Height answers E. */
   function shapeStack(name, cols, opt){ opt = opt || {};
@@ -669,14 +673,45 @@
      `int`/`float`/`Decimal` → number, `bool` → flag, `datetime`/`date` → time, `list[…]`/`dict` → list,
      anything else → other, said as "other" rather than filed under a guess. A ` | None` suffix makes
      the square paler — the column accepts nothing, which is not one of law G's three certainties. ── */
+  /* A KIND CAN BE DRAWN FOUR WAYS (operator 2026-09-13): as colour, as a character, as a shape, or as a
+     symbol. The colour rule stays its own dial, so shape · character · symbol still work when every
+     square is one colour — which is the only encoding a reader with no colour vision can follow. */
   var TYPEC = [
-    { key: "id",    word: "id",      col: function(S){ return S.KINDCOL.model; },  rx: /^uuid|UUID/,                  plain: "a key — the row's own name, or another row's" },
-    { key: "text",  word: "text",    col: function(S){ return S.KINDCOL.route; },  rx: /^str\b|^Text|^EmailStr/,      plain: "words — anything the user or the system typed" },
-    { key: "num",   word: "number",  col: function(S){ return S.OPC.schema; },     rx: /^int\b|^float|^Decimal/,      plain: "a number you can count or add up" },
-    { key: "flag",  word: "flag",    col: function(S){ return S.KINDCOL.entity; }, rx: /^bool/,                       plain: "yes or no — one bit, nothing in between" },
-    { key: "time",  word: "time",    col: function(S){ return S.KINDCOL.screen; }, rx: /^datetime|^date\b|^time/,     plain: "a moment — when it happened" },
-    { key: "list",  word: "list",    col: function(S){ return S.KINDCOL.store; },  rx: /^list|^dict|^Json|^JSON/,     plain: "many values in one column, not one" },
-    { key: "other", word: "other",   col: function(S){ return S.KINDCOL.type; },   rx: null,                          plain: "a type this rule does not name — said out loud instead of filed under a guess" } ];
+    { key: "id",    word: "id",      col: function(S){ return S.KINDCOL.model; },  rx: /^uuid|UUID/,
+      ch: "#", sym: "key",    shape: "circle",   plain: "a key — the row's own name, or another row's" },
+    { key: "text",  word: "text",    col: function(S){ return S.KINDCOL.route; },  rx: /^str\b|^Text|^EmailStr/,
+      ch: "A", sym: "doc",    shape: "square",   plain: "words — anything the user or the system typed" },
+    { key: "num",   word: "number",  col: function(S){ return S.OPC.schema; },     rx: /^int\b|^float|^Decimal/,
+      ch: "1", sym: "angle",  shape: "diamond",  plain: "a number you can count or add up" },
+    { key: "flag",  word: "flag",    col: function(S){ return S.KINDCOL.entity; }, rx: /^bool/,
+      ch: "Y", sym: "test",   shape: "triangle", plain: "yes or no — one bit, nothing in between" },
+    { key: "time",  word: "time",    col: function(S){ return S.KINDCOL.screen; }, rx: /^datetime|^date\b|^time/,
+      ch: "T", sym: "journey", shape: "ring",    plain: "a moment — when it happened" },
+    { key: "list",  word: "list",    col: function(S){ return S.KINDCOL.store; },  rx: /^list|^dict|^Json|^JSON/,
+      ch: "\u2261", sym: "layers", shape: "bars", plain: "many values in one column, not one" },
+    { key: "other", word: "other",   col: function(S){ return S.KINDCOL.type; },   rx: null,
+      ch: "?", sym: "alert",  shape: "cross",    plain: "a type this rule does not name — said out loud instead of filed under a guess" } ];
+  var SQENC = {
+    colour: { word: "colour", plain: "the mark is a filled square and its HUE is the kind" },
+    char:   { word: "a character", plain: "the mark is a letter — # a key, A words, 1 a number, Y yes-or-no, T a moment, \u2261 many, ? unnamed" },
+    shape:  { word: "a shape", plain: "the mark's FORM is the kind — a circle, a square, a diamond, a triangle, a ring, bars, a cross" },
+    symbol: { word: "a symbol", plain: "the mark is the station's own glyph for that kind" } };
+  function sqEnc(){ return ((window.DATACFG || {}).sqEnc) || "colour"; }
+  /* ONE field mark, everywhere a field is drawn — the blocks, the opened list, the portrait's cells */
+  function sqNode(c, t, S, cls){
+    var tc = typeOf(c[1]), col = sqCol(t, c, S), enc = sqEnc();
+    var q = E("i", { class: "sq e-" + enc + " t-" + tc.key + (isOpt(c[1]) ? " opt" : "") + (cls ? " " + cls : "") });
+    q.style.setProperty("--fc", col);
+    if (enc === "char") q.textContent = tc.ch;
+    else if (enc === "symbol") q.innerHTML = ico(tc.sym, null, "currentColor");
+    return q; }
+  window.SQNODE = sqNode;
+  function kindMark(tc, S, col){ var enc = sqEnc();
+    var q = E("i", { class: "sq e-" + enc + " t-" + tc.key + " lgm" });
+    q.style.setProperty("--fc", col || tc.col(S));
+    if (enc === "char") q.textContent = tc.ch;
+    else if (enc === "symbol") q.innerHTML = ico(tc.sym, null, "currentColor");
+    return q; }
   function typeOf(t){ var base = String(t || "").replace(/\s*\|\s*None\s*$/, "").trim();
     for (var i = 0; i < TYPEC.length - 1; i++) if (TYPEC[i].rx.test(base)) return TYPEC[i];
     return TYPEC[TYPEC.length - 1]; }
@@ -767,8 +802,7 @@
       hd.append(ti);
       var sqs = E("div", { class: "sqs" });
       t.cols.forEach(function(c){ var tc = typeOf(c[1]), opt = isOpt(c[1]), isFk = fkSet[c[0]], isUq = uqSet[c[0]];
-        var q = E("i", { class: "sq t-" + tc.key + (opt ? " opt" : "") + (isFk ? " fk" : "") + (isUq ? " uq" : ""),
-          style: "background:" + sqCol(t, c, S) });
+        var q = sqNode(c, t, S, (isFk ? "fk" : "") + (isUq ? " uq" : ""));
         bind(q, card({ title: c[0], sub: String(c[1] || "—"), icon: isFk ? "key" : "table", color: sqCol(t, c, S),
           rows: [["kind", tc.word + " — " + tc.plain],
                  ["in", t.table + " · " + t.entity],
@@ -791,8 +825,7 @@
       var list = E("div", { class: "flds bkfl" });
       t.cols.forEach(function(c){ var tc = typeOf(c[1]), isFk = fkSet[c[0]], isUq = uqSet[c[0]];
         list.append(E("div", { class: "fld" + (isFk ? " fk" : "") + (isUq ? " uq" : "") },
-          E("i", { class: "sq t-" + tc.key + (isOpt(c[1]) ? " opt" : ""), style: "background:" + sqCol(t, c, S) }),
-          E("span", { class: "fn" }, esc(c[0])), E("span", { class: "ft" }, esc(c[1] || "—")))); });
+          sqNode(c, t, S), E("span", { class: "fn" }, esc(c[0])), E("span", { class: "ft" }, esc(c[1] || "—")))); });
       blk.append(list);
       hd.addEventListener("click", function(){
         if (portOn) { window.selectIn("data", t.table); }
@@ -804,8 +837,11 @@
     foot.append(E("div", { class: "kv" }, ico("layers", 13), E("span", { class: "k" }, "click a table"),
       E("span", { class: "v" }, (portOn ? "opens its whole record in the portrait" : "names every field of it here") + " — " + colsOf(TS) + " fields across " + TS.length + " tables")));
     foot.append(legend(TYPEC.filter(function(x){ return mixAll[x.key]; }).map(function(x){
-      return { t: x.word + " " + mixAll[x.key], swatch: "background:" + x.col(S),
-        tip: card({ title: x.word, sub: mixAll[x.key] + " of " + colsOf(TS) + " fields", body: x.plain + "<br><br>read from the declared type, never from the column's name." }) }; })
+      var pal = (window.DATACFG || {}).sqPal || "type", carries = pal === "type";
+      return { t: x.word + " " + mixAll[x.key], node: kindMark(x, S, carries ? null : "var(--muted)"),
+        tip: card({ title: x.word, sub: mixAll[x.key] + " of " + colsOf(TS) + " fields",
+          rows: [["drawn as", SQENC[sqEnc()].word], ["colour here", carries ? "carries the kind" : "carries the " + pal + ", so the kind is carried by the " + SQENC[sqEnc()].word + " alone"]],
+          body: x.plain + "<br><br>read from the declared type, never from the column's name." }) }; })
       .concat([{ t: "optional", swatch: "background:var(--muted);opacity:.45", tip: card({ title: "optional", sub: "the column accepts None", body: "drawn paler. Not one of law G's three marks — dashed means inferred, hatched unmeasured, hollow a measured zero." }) }])));
     box.append(foot);
     COV.mark("ACCESSES", "data"); COV.mark("PAYLOAD", "data"); COV.mark("CONNECTIONS", "data");
@@ -839,8 +875,7 @@
     var list = E("div", { class: "flds" });
     t.cols.forEach(function(c){ var tc = typeOf(c[1]), isFk = fkSet[c[0]], isUq = uqSet[c[0]];
       var f = E("div", { class: "fld" + (isFk ? " fk" : "") + (isUq ? " uq" : "") },
-        E("i", { class: "sq t-" + tc.key + (isOpt(c[1]) ? " opt" : ""), style: "background:" + tc.col(S) }),
-        E("span", { class: "fn" }, esc(c[0])), E("span", { class: "ft" }, esc(c[1] || "—")));
+        sqNode(c, t, S), E("span", { class: "fn" }, esc(c[0])), E("span", { class: "ft" }, esc(c[1] || "—")));
       bind(f, card({ title: c[0], sub: String(c[1] || "—"), icon: isFk ? "key" : "table", color: tc.col(S),
         rows: [["kind", tc.word + " — " + tc.plain], ["in", t.table],
                isFk ? ["foreign key", "→ " + (isFk === true ? "another table" : isFk)] : null,
