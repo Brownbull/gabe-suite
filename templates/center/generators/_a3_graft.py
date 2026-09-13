@@ -45,6 +45,13 @@ from pathlib import Path
 from typing import Any
 
 import os as _os
+
+# the port-seam arms, imported at column 0 so propagate.sh lands them on a twin (an indented import
+# never matched its `^(import|from) mod` rule, so no twin ever ran them); both are stdlib-only at top level,
+# and each CALL below keeps its own try/except, so a parser bug still degrades to honest-empty
+import _a3_stacks_di as _dimod
+import _a3_stacks_pydi as _pdimod
+
 _INDEX_REL = Path(_os.environ.get("GABE_GRAFT_INDEX") or (Path("graft") / ".graph" / "wiring.json"))   # an ABSOLUTE GABE_GRAFT_INDEX reads an index built out of tree (`graft --dir <out> build <repo>`; review 2026-09-06) — unset keeps byte-identical behaviour
 _NOISE_SUFFIXES = (".js", ".mjs", ".jsx")
 _NOISE_PARTS = ("node_modules", "dist", "build", "storybook-static", "__pycache__")
@@ -977,7 +984,6 @@ def graft_arm(root: Path, entities: dict[str, Any],
         # degrades it to honest-empty and never touches the call topology it folds into
         _di: dict = {"present": False, "reason": "not attempted", "edges": [], "stats": {}}
         try:
-            import _a3_stacks_di as _dimod
             _di = _dimod.parse(root, wiring)
         except Exception as _de:  # noqa: BLE001
             _di = {"present": False, "reason": f"di arm error: {_de}", "edges": [], "stats": {}}
@@ -986,7 +992,6 @@ def graft_arm(root: Path, entities: dict[str, Any],
         # returning FirebaseTokenVerifier under its predicate). Separate arm, separate try/except.
         _pdi: dict = {"present": False, "reason": "not attempted", "edges": [], "stats": {}}
         try:
-            import _a3_stacks_pydi as _pdimod
             _pdi = _pdimod.parse(root, wiring)
         except Exception as _pe:  # noqa: BLE001
             _pdi = {"present": False, "reason": f"pydi arm error: {_pe}", "edges": [], "stats": {}}
