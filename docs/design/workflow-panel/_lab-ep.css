@@ -988,3 +988,21 @@ html, body{ height:100%; }
 #panel.cntbox-square .bkhd .bkn.badge{ border-radius:0; }
 #panel.cntbox-outline .bkhd .bkn.badge{ background:transparent; border-color:var(--muted); }
 #panel.cntbox-bare .bkhd .bkn.badge{ background:transparent; border-color:transparent; padding:0; }
+
+/* ══ THE BLOCK CARD (operator 2026-09-13) — the hover mirrors the block: name, entity, class, file, then the
+   channel chip, the fields pill with what the fields are made of, and a quiet footer ══ */
+#hover .bchd{ display:flex; align-items:center; gap:8px; }
+#hover .bchd b{ font:800 13.5px/1.25 var(--font-mono); color:var(--ink); word-break:break-all; }
+#hover .bcln, #hover .bcrow{ display:flex; align-items:center; gap:8px; margin-top:6px; font:600 12px/1.35 var(--font-mono); color:var(--ink); }
+#hover .bci{ display:inline-flex; align-items:center; justify-content:center; width:16px; flex:none; }
+#hover .bci svg{ display:block; }
+#hover .bcmodel{ color:var(--muted); }
+#hover .bcfile{ color:var(--muted); word-break:break-all; }
+#hover .bcsep{ border-top:1px solid var(--line); margin:9px 0 2px; }
+#hover .bcchip{ display:inline-flex; align-items:center; font:700 12px/1 var(--font-mono); font-style:normal; padding:3px 8px; border:1px solid transparent; }
+#hover .bcfp{ display:inline-flex; align-items:center; font:700 12px/1 var(--font-mono); padding:3px 9px; border:1px solid; }
+#hover .bcmix{ display:inline-flex; align-items:center; flex-wrap:wrap; gap:4px 10px; margin-left:4px; }
+#hover .bcmix .mx{ display:inline-flex; align-items:center; gap:4px; color:var(--ink); font:700 12px/1 var(--font-mono); }
+#hover .bcmix .sq{ --sq:13px; }
+#hover .bcfoot{ display:flex; align-items:center; gap:6px; margin-top:10px; padding-top:7px; border-top:1px solid var(--line);
+  font:500 12px/1.4 var(--font-ui); color:var(--edge, var(--muted)); }

@@ -51,9 +51,9 @@ ok(tabs.join(',') === 'data,schemas,functions,tests,widening,security', 'SIX tab
 // the DATA panel boots on the operator's own default line (2026-09-12)
 ok(await p.evaluate(() => window.COPYTXT.data()) ===
    'data · shown as blocks · tables all · title counts tables icon, fields icon, ops icon · sort channel, icon, accent on panel 45% · pills each, shape pill, text ink, ground kind 15%'
-   + ' · block block (icon on model, chip on, name on, entity both, count badge, model both) · edge left solid 2px · chips count pill 100%, channel tag 100%'
-   + ' · lines icon name | — / ent | count rw / model | — · sizes icon 13 rw 12 name 13 ent 12 count 12 model 12'
-   + ' · squares 11px gap 2 round as colour by type, optional marked · grounds by size, width flex, tiles stack'
+   + ' · block block (icon on model, chip on, name on, entity both, count badge, model both) · edge left solid 2px · chips count pill 100%, channel pill 90%'
+   + ' · lines icon name | — / ent | count rw / model | — · sizes icon 13 rw 11 name 13 ent 12 count 11 model 12'
+   + ' · squares 14px gap 4 round as symbol by type, optional marked · grounds by size, width flex, tiles stack'
    + ' · drawn counts shapes rw commit ev mdl ents legend · hidden title note',
    'the data panel boots on the operator\'s default line', await p.evaluate(() => window.COPYTXT.data()));
 
@@ -103,7 +103,19 @@ await p.evaluate(() => { window.HEADCFG.mode = 'value'; window.drawHead(); }); a
 await p.hover('#headstrip #mbadge'); await p.waitForTimeout(120);
 ok(await p.evaluate(() => { const h = document.getElementById('hover'); return !h.hidden && h.innerText.length > 10; }), 'the hover card opens on the method badge');
 // every tab renders, in both boxes; nothing under 12px inside #bench; shots
-const floor = async () => p.evaluate(() => { let n = 0, worst = 99; document.querySelectorAll('#bench *').forEach(el => { if (!el.offsetParent && el.tagName !== 'BODY') return; const t = el.childNodes && [...el.childNodes].some(c => c.nodeType === 3 && c.textContent.trim()); if (!t) return; const fs = parseFloat(getComputedStyle(el).fontSize); if (fs < 12) { n++; worst = Math.min(worst, fs); } }); return { under: n, worst }; });
+const floor = async () => p.evaluate(() => { let n = 0, worst = 99, chosen = 0; const B = (window.DATACFG || {}).bk || { size: {} };
+  document.querySelectorAll('#bench *').forEach(el => { if (!el.offsetParent && el.tagName !== 'BODY') return;
+    const t = el.childNodes && [...el.childNodes].some(c => c.nodeType === 3 && c.textContent.trim()); if (!t) return;
+    const fs = parseFloat(getComputedStyle(el).fontSize);
+    if (fs < 12) {
+      // the OPERATOR sized the two title chips under the floor on purpose (2026-09-13) — counted apart, never hidden
+      const part = el.closest('.bkhd .bkrw') ? 'rw' : el.closest('.bkhd .bkn') ? 'count' : null;
+      if (part && (B.size[part] || 12) < 12 && Math.round(fs) === B.size[part]) { chosen++; return; }
+      n++; worst = Math.min(worst, fs); } });
+  return { under: n, worst, chosen }; });
+{ const fl = await floor();
+  ok(fl.under === 0 && fl.chosen > 0 && await p.evaluate(() => window.DATACFG.bk.size.rw < 12 && window.DATACFG.bk.size.count < 12),
+     'the only text under 12px is the two title chips the operator sized there on purpose — named, not hidden', JSON.stringify(fl)); }
 for (const box of ['work', 'dock']) {
   await p.evaluate(() => window.railTab('controls')); await p.click(`#boxes .ib[data-box="${box}"]`);
   for (const t of tabs) {
@@ -576,16 +588,16 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   { const k = await p.$$eval('#datacfg .sldt[aria-label="channel character size"], #datacfg .sldt[aria-label="count character size"]',
       els => els.map(e => ({ min: +e.getAttribute('aria-valuemin'), max: +e.getAttribute('aria-valuemax'), now: +e.getAttribute('aria-valuenow'),
         knob: parseFloat(e.querySelector('.sldk').style.left) })));
-    ok(k.length === 2 && k.every(x => x.now === 12 && Math.abs(x.knob - 100 / 3) < 0.5 && x.min === 8 && x.max === 20),
-       'both size bars open with 12px a third of the way along (8 — 20px)', JSON.stringify(k)); }
+    ok(k.length === 2 && k.every(x => x.now === 11 && Math.abs(x.knob - 25) < 0.5 && x.min === 8 && x.max === 20),
+       'both size bars open at the operator\'s 11px — a quarter of the way along 8 — 20px, never at an end', JSON.stringify(k)); }
   const chips = () => p.$eval('#panel .blk', b => { const n = b.querySelector('.bkn.badge'), r = b.querySelector('.bkrw .jdrw');
     const st = e => { const c = getComputedStyle(e), bg = window.CONTRAST.parse(c.backgroundColor);
       return { radius: c.borderTopLeftRadius, fs: parseFloat(c.fontSize), a: bg ? Math.round(bg.a * 100) : null,
                fg: c.color, border: c.borderTopColor, rwc: e.style.getPropertyValue('--rwc').trim(), pad: c.paddingLeft }; };
     return { count: st(n), chip: st(r) }; });
   { const c = await chips();
-    ok(parseFloat(c.count.radius) >= 11 && c.count.a === 100 && c.count.fs === 12, 'the count badge boots as a solid 12px pill', JSON.stringify(c.count));
-    ok(c.chip.radius === '3px' && c.chip.a === 100 && c.chip.fs === 12, 'the channel chip boots as a solid 12px tag — the look it always had', JSON.stringify(c.chip)); }
+    ok(parseFloat(c.count.radius) >= 9 && c.count.a === 100 && c.count.fs === 11, 'the count badge boots as a solid 11px pill', JSON.stringify(c.count));
+    ok(parseFloat(c.chip.radius) >= 9 && c.chip.a === 90 && c.chip.fs === 11, 'the channel chip boots as an 11px pill at 90%', JSON.stringify(c.chip)); }
   // CONTAINERS, both chips
   for (const [k, want] of [['square', '0px'], ['tag', '3px'], ['pill', null]]) {
     await p.click(`#datacfg .ib[data-rw-box="${k}"]`); await p.click(`#datacfg .ib[data-cnt-box="${k}"]`); await p.waitForTimeout(260);
@@ -603,7 +615,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   for (let i = 0; i < 12; i++) await p.keyboard.press('ArrowLeft');
   await p.waitForTimeout(260);
   { const c = await chips();
-    ok(c.chip.a === 40, 'twelve steps down leave the channel chip 40% opaque', JSON.stringify(c.chip));
+    ok(c.chip.a === 30, 'twelve steps down take the channel chip from 90% to 30% opaque', JSON.stringify(c.chip));
     ok(await p.evaluate(() => !!([...document.querySelectorAll('#datacfg .sldt')].find(x => x.getAttribute('aria-label') === 'channel chip fill') || {}).__mark),
        'and the bar being dragged is the same element — no rebuild');
     const want = await p.evaluate(c => { const d = document.createElement('i'); d.style.color = c; document.body.append(d); const v = getComputedStyle(d).color; d.remove(); return v; }, c.chip.rwc);
@@ -620,19 +632,55 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   await p.focus('#datacfg .sldt[aria-label="count character size"]');
   for (let i = 0; i < 6; i++) await p.keyboard.press('ArrowRight');
   await p.waitForTimeout(260);
-  { const c = await chips(); ok(c.chip.fs === 16 && c.count.fs === 18, 'each chip has its own character size', JSON.stringify({ chip: c.chip.fs, count: c.count.fs })); }
+  { const c = await chips(); ok(c.chip.fs === 15 && c.count.fs === 17, 'each chip has its own character size', JSON.stringify({ chip: c.chip.fs, count: c.count.fs })); }
   for (let i = 0; i < 20; i++) await p.keyboard.press('ArrowLeft');
   await p.waitForTimeout(240);
   ok((await chips()).count.fs === 8, 'the size bar now reaches below the old floor — down to 8px', String((await chips()).count.fs));
   ok(/<12/.test(await p.$eval('#datacfg .sldt[aria-label="count character size"]', e => e.parentElement.querySelector('.sldv').textContent)),
      'and says so on the bar the moment it drops under the 12px reading floor');
-  ok(await p.evaluate(() => window.DATACFG.bk.size.count === 8 && window.DATACFG.bk.size.rw === 16), 'the size is the same value TITLE LINES drives — one number, two places to set it');
-  await p.evaluate(() => { Object.assign(window.DATACFG.bk, { cntBox: 'pill', cntA: 100, rwBox: 'tag', rwA: 100 }); window.DATACFG.bk.size.rw = 12; window.DATACFG.bk.size.count = 12;
+  ok(await p.evaluate(() => window.DATACFG.bk.size.count === 8 && window.DATACFG.bk.size.rw === 15), 'the size is the same value TITLE LINES drives — one number, two places to set it');
+  await p.evaluate(() => { Object.assign(window.DATACFG.bk, { cntBox: 'pill', cntA: 100, rwBox: 'pill', rwA: 90 }); window.DATACFG.bk.size.rw = 11; window.DATACFG.bk.size.count = 11;
     window.applyData(); window.showTab('data'); window.drawDataCfg(); }); await p.waitForTimeout(280);
-  ok(/chips count pill 100%, channel tag 100%/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line names both chips'); }
+  ok(/chips count pill 100%, channel pill 90%/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line names both chips'); }
+
+// ══ THE BLOCK CARD (operator 2026-09-13): the hover mirrors the block — the table in ink behind its glyph, then the
+//    entity, the class and the file in that order, the channel as the block's own chip, the fields pill with what the
+//    fields are made of in the chosen marks, and a quiet footer ══
+{ await p.evaluate(() => { window.showTab('data'); window.showVariant('data', 'blocks'); }); await p.waitForTimeout(300);
+  await p.mouse.move(5, 1030); await p.waitForTimeout(150);
+  const first = await p.$eval('#panel .blk', e => e.dataset.table), T = F.data.tables.find(x => x.table === first);
+  await p.hover('#panel .blk .bkhd'); await p.waitForTimeout(280);
+  const c = await p.evaluate(() => { const h = document.getElementById('hover'), blk = document.querySelector('#panel .blk'), q = sel => h.querySelector(sel);
+    const col = v => { const d = document.createElement('i'); d.style.color = v; document.body.append(d); const r = getComputedStyle(d).color; d.remove(); return r; };
+    const chip = q('.bcchip'), bg = chip ? window.CONTRAST.parse(getComputedStyle(chip).backgroundColor) : null;
+    return { hidden: h.hidden, name: q('.bchd b') && q('.bchd b').textContent, nameCol: q('.bchd b') && getComputedStyle(q('.bchd b')).color, ink: col('var(--ink)'),
+      glyph: q('.bchd svg') && q('.bchd svg').getAttribute('stroke'), blockGlyph: blk.querySelector('.bki svg').getAttribute('stroke'),
+      lines: [...h.querySelectorAll('.bcln')].map(e => e.dataset.ln),
+      entSvg: !!q('[data-ln="entity"] svg'), entCol: q('.bcent') && getComputedStyle(q('.bcent')).color, blockEntCol: getComputedStyle(blk.querySelector('.bke')).color,
+      modelSvg: !!q('[data-ln="model"] svg'), model: (q('[data-ln="model"]') || {}).textContent, fileSvg: !!q('[data-ln="file"] svg'), file: (q('[data-ln="file"]') || {}).textContent,
+      text: h.innerText, opsSvg: !!q('[data-row="channel"] .bci svg'),
+      chip: chip && { t: chip.textContent, r: getComputedStyle(chip).borderTopLeftRadius, a: bg ? Math.round(bg.a * 100) : null },
+      fieldsSvg: !!q('[data-row="fields"] .bci svg'), fp: (q('.bcfp') || {}).textContent,
+      mix: [...h.querySelectorAll('.bcmix .mx')].map(e => ({ k: e.dataset.kind, n: +e.querySelector('b').textContent, sym: !!e.querySelector('.sq.e-symbol svg') })),
+      foot: q('.bcfoot') && { svg: !!q('.bcfoot svg'), t: q('.bcfoot').textContent, col: getComputedStyle(q('.bcfoot')).color } }; });
+  ok(!c.hidden && c.name === first, 'hovering a block opens ITS card, named for the table', JSON.stringify({ n: c.name }));
+  ok(c.nameCol === c.ink, 'the table name is drawn in ink, as in the cards', JSON.stringify({ name: c.nameCol, ink: c.ink }));
+  ok(c.glyph && c.glyph === c.blockGlyph, 'its glyph wears the colour it has in the block title', JSON.stringify({ card: c.glyph, block: c.blockGlyph }));
+  ok(c.lines.join(',') === 'entity,model,file', 'then the entity, the class and the file — in that order, one line each', c.lines.join(','));
+  ok(c.entSvg && c.entCol === c.blockEntCol, 'the entity carries its glyph and its own colour, as in the block', JSON.stringify({ card: c.entCol, block: c.blockEntCol }));
+  ok(c.modelSvg && c.model.indexOf(T.model) >= 0 && c.fileSvg && c.file.indexOf(T.file) >= 0, 'the class and the file each lead with their glyph');
+  ok(!/what is inside|python class|in the station/i.test(c.text), 'the rows that said it twice are gone — no "what is inside", no class explanation, no station id');
+  const words = T.rw === 'rw' ? 'reads + writes' : T.rw === 'w' ? 'writes' : 'reads';
+  ok(c.opsSvg && c.chip && c.chip.t === words && parseFloat(c.chip.r) >= 9 && c.chip.a === 90,
+     'the channel is the block\'s own chip — pill at 90%, with the words inside, led by the ops glyph', JSON.stringify(c.chip));
+  ok(c.fieldsSvg && c.fp === String(T.cols.length), 'the field count sits in the fields pill, led by the fields glyph', JSON.stringify({ fp: c.fp }));
+  ok(c.mix.length > 0 && c.mix.reduce((n, x) => n + x.n, 0) === T.cols.length && c.mix.every(x => x.sym),
+     'then what the fields are made of, in the chosen marks alone — and they add back up', JSON.stringify(c.mix));
+  ok(c.foot && c.foot.svg && /click to/.test(c.foot.t) && c.foot.col !== c.ink, 'the footer leads with an info glyph, in a quieter grey', JSON.stringify(c.foot));
+  await p.mouse.move(5, 1030); }
 
 // the tests below were written against the station chip's look with every dial in reach — give them that baseline
-await p.evaluate(() => { Object.assign(window.DATACFG, { countPills: 'one', pillInk: 'white', pillBg: 'accent', pillAlpha: 100 });
+await p.evaluate(() => { Object.assign(window.DATACFG, { countPills: 'one', pillInk: 'white', pillBg: 'accent', pillAlpha: 100, sqEnc: 'colour', sqSize: 11, sqGap: 2 });
   Object.assign(window.DATACFG.bk, { count: 'words', model: 'word',
     rows: [{ l: ['icon', 'rw', 'name', 'ent', 'count', 'model'], r: [] }, { l: [], r: [] }, { l: [], r: [] }] });
   window.DATACFG.show.title = 1; window.applyData(); window.showTab('data'); window.foldAll(true); window.drawDataCfg(); });

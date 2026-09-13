@@ -780,6 +780,40 @@
       ((row && row.r) || []).forEach(function(k){ var n = bkPart(k, t, S, B); if (n) R.push(n); });
       if (L.length || R.length) out.push({ l: L, r: R }); });
     return out; }
+  /* ══ THE BLOCK CARD (operator 2026-09-13) — the hover mirrors the block it came from, in the block's own colours:
+     the table name in ink behind the table glyph · the entity with its glyph and colour · the class · the file ·
+     then the channel as the block's own chip with the words inside · the field count in the fields pill, followed by
+     what the fields are made of in the marks already chosen · and a quiet footer. Every look is READ from the live
+     settings, so changing a pill, a chip or an encoding changes the card too. ══ */
+  function pillLook(key, S){ var c = window.DATACFG || {}, col = kindColOf({ key: key }, S), a = c.pillAlpha == null ? 100 : c.pillAlpha;
+    var ink = { white: "#fff", ink: "var(--ink)", kind: col, accent: "var(--accent)", muted: "var(--muted)" }[c.pillInk || "white"];
+    var ground = { accent: "var(--accent)", kind: col, chip: "var(--chip-bg)", panel: "var(--panel)", ink: "var(--ink)", none: "transparent" }[c.pillBg || "accent"];
+    var radius = { pill: "999px", round: "7px", rect: "3px", square: "0" }[c.pillShape || "pill"];
+    return "color:" + ink + ";background:color-mix(in srgb, " + ground + " " + a + "%, transparent);border-color:color-mix(in srgb, " + ground + " 55%, transparent);border-radius:" + radius; }
+  function chipLook(rw, S){ var B = (window.DATACFG || {}).bk || {}, col = RWC[rw], a = B.rwA == null ? 100 : B.rwA, box = B.rwBox || "tag";
+    var clear = box === "outline" || box === "bare";
+    var radius = { pill: "999px", tag: "3px", square: "0", outline: "3px", bare: "0" }[box];
+    return "--rwc:" + col + ";color:" + (clear || a < 50 ? col : "#0b0e13") + ";background:" + (clear ? "transparent" : "color-mix(in srgb, " + col + " " + a + "%, transparent)")
+      + ";border-color:" + (box === "outline" ? col : "transparent") + ";border-radius:" + radius + (box === "bare" ? ";padding:0" : ""); }
+  function blockCard(t, S){
+    var ec = t.entity_color || "#888", portOn = (window.FRAME || {}).portW > 0, pal = (window.DATACFG || {}).sqPal || "type";
+    var mix = {}; t.cols.forEach(function(c){ var k = typeOf(c[1]).key; mix[k] = (mix[k] || 0) + 1; });
+    var h = '<div class="bchd"><span class="bci">' + ico("model", 16, bkIconCol(t, S)) + "</span><b>" + esc(t.table) + "</b></div>";
+    h += '<div class="bcln" data-ln="entity"><span class="bci">' + ico("entity", 14, ec) + '</span><span class="bcent" style="color:' + ec + '">' + esc(t.entity || "—") + "</span></div>";
+    h += '<div class="bcln" data-ln="model"><span class="bci">' + ico("doc", 14, S.KINDCOL.schema) + '</span><span class="bcmodel">' + esc(t.model) + "</span></div>";
+    h += '<div class="bcln" data-ln="file"><span class="bci">' + ico("file", 14, "var(--muted)") + '</span><span class="bcfile">' + esc(t.file || "—") + "</span></div>";
+    h += '<div class="bcsep"></div>';
+    h += '<div class="bcrow" data-row="channel"><span class="bci">' + ico("role", 14, S.OPC.call) + '</span><i class="bcchip" style="' + chipLook(t.rw, S) + '">'
+      + (t.rw === "rw" ? "reads + writes" : t.rw === "w" ? "writes" : "reads") + "</i></div>";
+    var marks = TYPEC.filter(function(x){ return mix[x.key]; }).map(function(x){
+      return '<span class="mx" data-kind="' + x.key + '">' + kindMark(x, S, pal === "type" ? null : "var(--muted)").outerHTML + "<b>" + mix[x.key] + "</b></span>"; }).join("");
+    h += '<div class="bcrow" data-row="fields"><span class="bci">' + ico("table", 14, S.KINDCOL.schema) + '</span><span class="bcfp" style="' + pillLook("fields", S) + '">'
+      + t.cols.length + '</span><span class="bcmix">' + marks + "</span></div>";
+    h += '<div class="bcfoot"><span class="bci">' + ico("info", 13, "currentColor") + "</span><span>"
+      + (portOn ? "click to open its whole record in the portrait" : "click to name every field here") + "</span></div>";
+    return h; }
+  window.BLOCKCARD = blockCard;
+
   function renderDataBlocks(box, F, S){
     var D = F.data, TS = dtables(D), DC = window.DATACFG || {}, B = bkcfg();
     var sel = (window.SEL || {}).data, portOn = (window.FRAME || {}).portW > 0;
@@ -813,14 +847,7 @@
           body: "the kind is read from the DECLARED type, never guessed from the name." }));
         sqs.append(q); });
       hd.append(sqs);
-      bind(hd, card({ title: t.table, icon: "model", color: t.entity_color, sub: "entity " + t.entity + " · model " + t.model,
-        rows: [["here", t.rw === "rw" ? "reads + writes" : t.rw === "w" ? "writes" : "reads", RWC[t.rw]],
-               ["fields", String(t.cols.length) + (t.cols_more ? " (+" + t.cols_more + " the feed did not carry)" : "")],
-               ["what is inside", TYPEC.filter(function(x){ return mix[x.key]; }).map(function(x){ return mix[x.key] + " " + x.word; }).join(" · ")],
-               ["model", t.model + " — the Python class that maps to this table"],
-               (t.fks || []).length ? ["foreign keys", String(t.fks.length)] : null,
-               ["file", String(t.file || "—")]],
-        body: portOn ? "click to open its whole record in the portrait." : "click to name every field here.", station: t.id }));
+      bind(hd, function(){ return blockCard(t, S); });   /* the card MIRRORS the block (operator 2026-09-13) */
       blk.append(hd);
       var list = E("div", { class: "flds bkfl" });
       t.cols.forEach(function(c){ var tc = typeOf(c[1]), isFk = fkSet[c[0]], isUq = uqSet[c[0]];

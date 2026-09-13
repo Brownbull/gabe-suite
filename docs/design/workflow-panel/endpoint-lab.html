@@ -674,11 +674,11 @@
     sortShow: "icon", sortInk: "accent", sortBg: "panel", sortAlpha: 45,  /* how the sort buttons in the title row look */
     bk: { form: "block", icon: 1, rw: 1, name: 1, ent: "both", count: "badge", model: "both",
           railSide: "left", railStyle: "solid", railW: 2,     /* the entity's colour on the block: side · pattern · thickness */
-          cntBox: "pill", cntA: 100, rwBox: "tag", rwA: 100,  /* the count badge and the channel chip: container · how opaque */
+          cntBox: "pill", cntA: 100, rwBox: "pill", rwA: 90,  /* the count badge and the channel chip: container · how opaque */
           iconCol: "model", sel: "icon",              /* the glyph's colour is a SETTING, not the entity's */
           rows: [{ l: ["icon", "name"], r: [] }, { l: ["ent"], r: ["count", "rw"] }, { l: ["model"], r: [] }],
-          size: { icon: 13, rw: 12, name: 13, ent: 12, count: 12, model: 12 } },
-    sqSize: 11, sqGap: 2, sqShape: "round", sqPal: "type", sqOpt: 1, sqEnc: "colour" };
+          size: { icon: 13, rw: 11, name: 13, ent: 12, count: 11, model: 12 } },   /* rw + count under the 12px floor — the operator's choice */
+    sqSize: 14, sqGap: 4, sqShape: "round", sqPal: "type", sqOpt: 1, sqEnc: "symbol" };
   var DSEC = [
     { key: "title",  word: "the title",   icon: "layers", on: ["grounds", "flow", "ledger", "fields", "blocks"],
       what: "the part's own name and glyph, left of the counts", lost: "which part you are looking at; the counts and the switches stay" },
