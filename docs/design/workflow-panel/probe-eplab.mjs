@@ -50,7 +50,7 @@ ok(tabs.join(',') === 'data,schemas,functions,tests,widening,security', 'SIX tab
 
 // the DATA panel boots on the operator's own default line (2026-09-12)
 ok(await p.evaluate(() => window.COPYTXT.data()) ===
-   'data · shown as blocks · tables all · title counts tables icon, fields icon, ops icon · pills each, shape pill, text ink, ground kind 15%'
+   'data · shown as blocks · tables all · title counts tables icon, fields icon, ops icon · sort channel, icon, muted on chip 100% · pills each, shape pill, text ink, ground kind 15%'
    + ' · block block (icon on model, chip on, name on, entity word, count words, model word)'
    + ' · lines icon rw name ent count model | — / — | — / — | — · sizes icon 13 rw 12 name 13 ent 12 count 12 model 12'
    + ' · squares 11px gap 2 round as colour by type, optional marked · grounds by size, width flex, tiles stack'
@@ -380,10 +380,20 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
 // ══ THE THREE PILLS (operator 2026-09-13): centred on the cap height, a shape dial, the settled colour dials
 //    folded away, and a card per pill on the head bar's hover law ══
 { await p.evaluate(() => { window.showTab('data'); window.showVariant('data', 'blocks'); }); await p.waitForTimeout(320);
-  ok(await p.$eval('#datacfg .cffold', e => !e.classList.contains('open') && getComputedStyle(e.querySelector('.cffoldbody')).display === 'none'),
+  // THE RAIL IS A STACK OF FOLDS (operator 2026-09-13) — every group closed at boot except the one being tuned
+  { const g = await p.$$eval('#datacfg > .cffold', els => els.map(e => ({ k: e.dataset.group, open: e.classList.contains('open'),
+      body: getComputedStyle(e.querySelector('.cffoldbody')).display, sum: (e.querySelector('.cffoldhd .sum') || {}).textContent })));
+    ok(g.map(x => x.k).join(',') === 'layout,sections,channels,sort,counts,pills,block,lines,marks,grounds',
+       'the data rail is ten named groups', g.map(x => x.k).join(','));
+    ok(g.every(x => x.open === (x.k === 'sort') && x.body === (x.k === 'sort' ? 'grid' : 'none')),
+       'every group boots folded except SORT, the one being tuned', JSON.stringify(g.map(x => x.k + (x.open ? '+' : '-'))));
+    ok(g.every(x => x.sum && x.sum.trim().length > 2), 'and every folded header names what its dials are set to', JSON.stringify(g.map(x => x.sum))); }
+  ok(await p.$$eval('#datacfg > :not(.cffold):not(.cfread)', els => els.length === 0), 'no dial is left loose outside a group');
+  ok(await p.$eval('#datacfg .cffold[data-group="pills"]', e => !e.classList.contains('open') && getComputedStyle(e.querySelector('.cffoldbody')).display === 'none'),
      'the settled pill-colour dials boot FOLDED away');
+  await p.click('#datacfg .cffoldhd[data-fold="counts"]'); await p.waitForTimeout(160);
   ok(await p.$$eval('#datacfg .ib[data-pill-shape]', els => els.length === 4 && els.every(e => e.getClientRects().length > 0)),
-     'and the shape dial — the one being tuned — stays in view');
+     'opening COUNT PILLS brings the shape dial into view');
   ok(await p.$$eval('#datacfg .cffold .ib[data-pill-ink]', els => els.length === 5), 'the folded dials are all still in the page');
   // CENTRED: the number and its glyph on the pill's centre, measured on the cap-height box
   const centring = () => p.evaluate(() => [...document.querySelectorAll('#panel .sechd .dcp')].map(d => {
@@ -408,10 +418,13 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
     ok(want ? r === want : parseFloat(r) >= 11, `the ${k} shape gives the pill ${want || 'fully rounded ends'}`, r); }
   // THE FOLD opens and closes without losing anything
   await p.click('#datacfg .cffoldhd[data-fold="pills"]'); await p.waitForTimeout(160);
-  ok(await p.$eval('#datacfg .cffold', e => e.classList.contains('open') && getComputedStyle(e.querySelector('.cffoldbody')).display === 'grid'),
+  ok(await p.$eval('#datacfg .cffold[data-group="pills"]', e => e.classList.contains('open') && getComputedStyle(e.querySelector('.cffoldbody')).display === 'grid'),
      'one click opens the folded dials');
+  // a dial click REBUILDS the rail — an opened group must stay open through it
+  await p.click('#datacfg .ib[data-pill-shape="pill"]'); await p.waitForTimeout(240);
+  ok(await p.$eval('#datacfg .cffold[data-group="pills"]', e => e.classList.contains('open')), 'and stays open when a dial rebuilds the rail');
   await p.click('#datacfg .cffoldhd[data-fold="pills"]'); await p.waitForTimeout(160);
-  ok(await p.$eval('#datacfg .cffold', e => !e.classList.contains('open')), 'and one click folds them again');
+  ok(await p.$eval('#datacfg .cffold[data-group="pills"]', e => !e.classList.contains('open')), 'and one click folds them again');
   // THE CARDS — each pill states its own facts on the head bar's law: title + value · factors · facts · the plain line LAST
   const cardOf = async sel => { await p.mouse.move(5, 1030); await p.waitForTimeout(140); await p.hover(sel); await p.waitForTimeout(240);
     return p.evaluate(() => { const h = document.getElementById('hover');
@@ -448,8 +461,74 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   await p.mouse.move(5, 1030); }
 
 // the tests below were written against the station chip's look — give them that baseline explicitly
+// ══ THE SORT (operator 2026-09-13): a divider after the channels, four orders and a turn-around, and how the
+//    buttons look — measured on the order the tables are actually drawn in ══
+{ await p.evaluate(() => { window.showTab('data'); window.showVariant('data', 'blocks'); }); await p.waitForTimeout(300);
+  const row = await p.evaluate(() => { const sh = document.querySelector('#panel .sechd');
+    const kids = [...sh.children].map(e => e.classList.contains('chbar') ? 'chbar' : e.classList.contains('chdiv') ? 'div' : e.classList.contains('sortbar') ? 'sort' : null).filter(Boolean);
+    const d = sh.querySelector('.chdiv'), r = d && d.getBoundingClientRect();
+    return { kids, div: r ? { w: Math.round(r.width), h: Math.round(r.height) } : null }; });
+  ok(row.kids.join(',') === 'chbar,div,sort', 'the title row runs channels · a divider · the sort', JSON.stringify(row));
+  ok(row.div && row.div.w === 1 && row.div.h >= 12, 'and the divider is a real drawn line', JSON.stringify(row.div));
+  ok(await p.$$eval('#panel .sechd .sortbar .srb[data-sort]', els => els.map(e => e.dataset.sort).join(',')) === 'channel,size,name,entity',
+     'four orders to choose from');
+  ok(await p.$eval('#panel .sechd .sortbar .srb.on', e => e.dataset.sort) === 'channel', 'by CHANNEL is the default — the order the blocks always had');
+  const order = () => p.$$eval('#panel .blk', els => els.map(e => e.dataset.table));
+  const cols = Object.fromEntries(F.data.tables.map(t => [t.table, t.cols.length]));
+  const ent = Object.fromEntries(F.data.tables.map(t => [t.table, t.entity || '']));
+  const rw = Object.fromEntries(F.data.tables.map(t => [t.table, t.rw]));
+  { const o = await order();
+    ok(o.every((t, i) => !i || ((rw[o[i - 1]] === 'r') - (rw[t] === 'r') <= 0)) && o.length === F.data.tables.length,
+       'by channel: every written table comes before every read-only one', o.map(t => rw[t]).join(',')); }
+  await p.click('#panel .sechd .sortbar .srb[data-sort="name"]'); await p.waitForTimeout(300);
+  { const o = await order(); const want = await p.evaluate(x => [...x].sort((a, b) => a.localeCompare(b)), o);
+    ok(o.join(',') === want.join(','), 'by NAME: the tables read A to Z', o.slice(0, 4).join(',')); }
+  await p.click('#panel .sechd .sortbar .srb[data-sort="size"]'); await p.waitForTimeout(300);
+  { const o = await order(); ok(o.every((t, i) => !i || cols[o[i - 1]] >= cols[t]), 'by SIZE: never a smaller table before a larger one', o.map(t => cols[t]).join(',')); }
+  const bySize = await order();
+  await p.click('#panel .sechd .sortbar .srb[data-sort-rev]'); await p.waitForTimeout(300);
+  ok((await order()).join(',') === [...bySize].reverse().join(','), 'the turn-around gives exactly the same list backwards');
+  await p.click('#panel .sechd .sortbar .srb[data-sort-rev]'); await p.waitForTimeout(300);
+  await p.click('#panel .sechd .sortbar .srb[data-sort="entity"]'); await p.waitForTimeout(300);
+  { const o = await order(); const ents = o.map(t => ent[t]);
+    const sorted = await p.evaluate(x => x.every((e, i) => !i || x[i - 1].localeCompare(e) <= 0), ents);
+    ok(sorted, 'by ENTITY: the tables group by the entity that claims them', ents.join(',')); }
+  // FIELDS reads the same sort; GROUNDS keeps its own order and draws no sort bar
+  await p.click('#panel .sechd .sortbar .srb[data-sort="name"]'); await p.waitForTimeout(300);
+  await p.evaluate(() => window.showVariant('data', 'fields')); await p.waitForTimeout(300);
+  { const o = await p.$$eval('#panel .fcard .fhd b', els => els.map(e => e.textContent)); const want = await p.evaluate(x => [...x].sort((a, b) => a.localeCompare(b)), o);
+    ok(o.length === F.data.tables.length && o.join(',') === want.join(','), 'FIELDS follows the same sort', o.slice(0, 3).join(',')); }
+  await p.evaluate(() => window.showVariant('data', 'grounds')); await p.waitForTimeout(300);
+  ok(await p.$$eval('#panel .sechd .sortbar, #panel .sechd .chdiv', els => els.length === 0), 'GROUNDS keeps its own order and draws no sort bar');
+  await p.evaluate(() => window.showVariant('data', 'blocks')); await p.waitForTimeout(300);
+  // how the buttons LOOK: text · icon · both, their text colour and their ground
+  const face = () => p.$eval('#panel .sechd .sortbar .srb[data-sort="size"]', e => ({ icon: getComputedStyle(e.querySelector('.sri')).display !== 'none',
+    word: getComputedStyle(e.querySelector('.srw')).display !== 'none', fg: getComputedStyle(e).color, bg: getComputedStyle(e).backgroundColor }));
+  { const f = await face(); ok(f.icon && !f.word, 'the sort buttons open as ICONS — the word on the card', JSON.stringify(f)); }
+  await p.click('#datacfg .ib[data-sort-show="text"]'); await p.waitForTimeout(260);
+  { const f = await face(); ok(!f.icon && f.word, 'TEXT shows the word alone', JSON.stringify(f)); }
+  await p.click('#datacfg .ib[data-sort-show="both"]'); await p.waitForTimeout(260);
+  { const f = await face(); ok(f.icon && f.word, 'BOTH shows the glyph and the word', JSON.stringify(f)); }
+  const f0 = await face();
+  await p.click('#datacfg .ib[data-sort-ink="accent"]'); await p.waitForTimeout(260);
+  const f1 = await face(); ok(f1.fg !== f0.fg && f1.bg === f0.bg, 'the SORT TEXT dial moves the text and leaves the ground', JSON.stringify({ f0, f1 }));
+  await p.click('#datacfg .ib[data-sort-bg="accent"]'); await p.waitForTimeout(260);
+  const f2 = await face(); ok(f2.bg !== f1.bg && f2.fg === f1.fg, 'the SORT GROUND dial moves the ground and leaves the text', JSON.stringify({ f1, f2 }));
+  ok(await p.$eval('#panel .sechd .sortbar .srb.on', e => /inset/.test(getComputedStyle(e).boxShadow)), 'the active order keeps its ring whatever the colours');
+  await p.focus('#datacfg .sldt[aria-label="sort ground opacity"]');
+  for (let i = 0; i < 10; i++) await p.keyboard.press('ArrowLeft');
+  await p.waitForTimeout(240);
+  ok(await p.evaluate(() => { const c = window.CONTRAST.parse(getComputedStyle(document.querySelector('#panel .sechd .srb[data-sort="size"]')).backgroundColor); return c && Math.round(c.a * 100) === 50; }),
+     'the opacity bar leaves the sort ground at half');
+  // the copy line names the sort, and the rail's sort group summarises it
+  ok(/sort name, both, accent on accent 50%/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line carries the sort and its look',
+     await p.evaluate(() => window.COPYTXT.data()).then(t => t.slice(90, 190)));
+  await p.evaluate(() => { Object.assign(window.DATACFG, { sort: 'channel', sortRev: 0, sortShow: 'icon', sortInk: 'muted', sortBg: 'chip', sortAlpha: 100 });
+    window.applyData(); window.showTab('data'); window.drawDataCfg(); }); await p.waitForTimeout(300); }
+
+// the tests below were written against the station chip's look with every dial in reach — give them that baseline
 await p.evaluate(() => { Object.assign(window.DATACFG, { countPills: 'one', pillInk: 'white', pillBg: 'accent', pillAlpha: 100 });
-  window.DATACFG.show.title = 1; window.applyData(); window.showTab('data'); window.pillFold(true); window.drawDataCfg(); });
+  window.DATACFG.show.title = 1; window.applyData(); window.showTab('data'); window.foldAll(true); window.drawDataCfg(); });
 await p.waitForTimeout(320);
 
 // ══ THE DATA PANEL's own block (operator 2026-09-12): show or hide each section, and lay the grounds

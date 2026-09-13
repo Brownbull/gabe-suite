@@ -624,7 +624,7 @@
     if (!keep.length) { chanEmpty(box, D, S); COV.mark("ACCESSES", "data"); return; }
     var body = E("div", { class: "fbody" });
     var grid = E("div", { class: "fgrid" });
-    keep.slice().sort(function(a, b){ return (a.rw === "r") - (b.rw === "r") || b.cols.length - a.cols.length; }).forEach(function(t){
+    sortTables(keep).forEach(function(t){
       var fkSet = {}; (t.fks || []).forEach(function(f){ fkSet[Array.isArray(f) ? f[0] : f] = (Array.isArray(f) && f[1]) ? f[1] : true; });
       var uqSet = {}; (t.uqs || []).forEach(function(u){ (Array.isArray(u) ? u : [u]).forEach(function(c){ uqSet[c] = 1; }); });
       var fc = E("div", { class: "fcard rw-" + t.rw, style: "--ec:" + (t.entity_color || "#888") });
@@ -788,7 +788,7 @@
       + (portOn ? "a table and its whole record opens in the portrait beside this panel." : "a table to name every field at once (the portrait is off, so it opens in place)."));
     if (!TS.length) { chanEmpty(box, D, S); COV.mark("ACCESSES", "data"); return; }
     var body = E("div", { class: "bkbody form-" + B.form });
-    TS.slice().sort(function(a, b){ return (a.rw === "r") - (b.rw === "r") || b.cols.length - a.cols.length; }).forEach(function(t){
+    sortTables(TS).forEach(function(t){
       var fkSet = {}; (t.fks || []).forEach(function(f){ fkSet[Array.isArray(f) ? f[0] : f] = (Array.isArray(f) && f[1]) ? f[1] : true; });
       var uqSet = {}; (t.uqs || []).forEach(function(u){ (Array.isArray(u) ? u : [u]).forEach(function(c){ uqSet[c] = 1; }); });
       var mix = {}; t.cols.forEach(function(c){ var k = typeOf(c[1]).key; mix[k] = (mix[k] || 0) + 1; });
@@ -1059,6 +1059,48 @@
         window.showTab("data"); if (window.drawDataCfg) window.drawDataCfg(); };
       w.append(b); });
     return w; }
+  /* ══ SORT (operator 2026-09-13) — how the tables are laid out, chosen from the title row after a divider.
+     Four orders plus a turn-around; every order breaks its ties by name, so the same settings always give
+     the same picture. Blocks and Fields read it; the other distributions keep their own order. ══ */
+  function SVGI(d, z){ return '<svg viewBox="0 0 24 24" width="' + (z || 13) + '" height="' + (z || 13) + '" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + d + "</svg>"; }
+  var SORTS = [
+    { key: "channel", word: "channel", d: '<path d="M4 8h14M14 4l4 4-4 4M20 16H6M10 12l-4 4 4 4"/>',
+      plain: "tables the door writes come first, then the ones it only reads — ties by size",
+      cmp: function(a, b){ return (a.rw === "r") - (b.rw === "r") || b.cols.length - a.cols.length || a.table.localeCompare(b.table); } },
+    { key: "size", word: "size", d: '<path d="M4 6h16M4 12h11M4 18h6"/>', plain: "the table with the most fields first",
+      cmp: function(a, b){ return b.cols.length - a.cols.length || a.table.localeCompare(b.table); } },
+    { key: "name", word: "name", d: '<path d="M3 18 7 6l4 12M4.5 14h5"/><path d="M14 6h6l-6 12h6"/>', plain: "alphabetical by table name",
+      cmp: function(a, b){ return a.table.localeCompare(b.table); } },
+    { key: "entity", word: "entity", d: null, plain: "grouped by the entity that claims each table, then by size",
+      cmp: function(a, b){ return (a.entity || "").localeCompare(b.entity || "") || b.cols.length - a.cols.length || a.table.localeCompare(b.table); } } ];
+  window.SORTICON = function(k, z){
+    if (k === "rev-off") return SVGI('<path d="M12 5v14M6 13l6 6 6-6"/>', z);
+    if (k === "rev-on") return SVGI('<path d="M12 19V5M6 11l6-6 6 6"/>', z);
+    var o = SORTS.filter(function(x){ return x.key === k; })[0]; if (!o) return "";
+    return o.d ? SVGI(o.d, z) : ico("entity", z || 13, "currentColor"); };
+  function sortCfg(){ var c = window.DATACFG || {}; return { key: c.sort || "channel", rev: !!c.sortRev }; }
+  function sortTables(ts){ var c = sortCfg(), o = SORTS.filter(function(x){ return x.key === c.key; })[0] || SORTS[0];
+    var out = ts.slice().sort(o.cmp); return c.rev ? out.reverse() : out; }
+  window.SORTTABLES = sortTables;
+  function sortBar(){ var c = sortCfg(), w = E("div", { class: "sortbar" });
+    SORTS.forEach(function(o){ var on = c.key === o.key;
+      var b = E("button", { class: "srb" + (on ? " on" : ""), "data-sort": o.key });
+      b.innerHTML = '<span class="sri">' + window.SORTICON(o.key, 13) + '</span><span class="srw">' + o.word + "</span>";
+      bind(b, function(){ return window.hcard({ title: "sort by " + o.word, value: on ? (c.rev ? "on · reversed" : "on") : "off", icon: "layers",
+        rows: [["order", o.plain], ["applies to", "the Blocks and Fields distributions"],
+               ["click", on ? "already the order — the arrow beside it turns it around" : "lays the tables out this way"]],
+        plain: "the order the tables are laid out in" }); });
+      b.onclick = function(ev){ ev.stopPropagation(); window.DATACFG.sort = o.key; window.showTab("data"); if (window.drawDataCfg) window.drawDataCfg(); };
+      w.append(b); });
+    var r = E("button", { class: "srb rev" + (c.rev ? " on" : ""), "data-sort-rev": c.rev ? "1" : "0" });
+    r.innerHTML = '<span class="sri">' + window.SORTICON(c.rev ? "rev-on" : "rev-off", 13) + '</span><span class="srw">' + (c.rev ? "reversed" : "as named") + "</span>";
+    bind(r, function(){ return window.hcard({ title: c.rev ? "reversed" : "as named", value: "direction", icon: "layers",
+      rows: [["now", c.rev ? "the order is turned around" : "the order reads as its name says"], ["click", "turns it around"]],
+      plain: "which end of the order comes first" }); });
+    r.onclick = function(ev){ ev.stopPropagation(); window.DATACFG.sortRev = window.DATACFG.sortRev ? 0 : 1; window.showTab("data"); if (window.drawDataCfg) window.drawDataCfg(); };
+    w.append(r);
+    return w; }
+
   /* ONE head for every DATA distribution: the title, the ops count (hoverable — it finally says what an
      op is), and the channel bar on the right of that same row. */
   /* THE TITLE COUNTS WHAT IS SHOWN (operator 2026-09-12): how many tables and how many FIELDS, both
@@ -1144,7 +1186,10 @@
     var sh = h.querySelector(".sechd");
     if (sh) { var cnt = sh.querySelector(".cnt"); if (cnt) cnt.remove();
       var pills = dcountPills(ts, S, D); if (pills) sh.append(pills);
-      sh.append(chanBar(D, S)); }
+      sh.append(chanBar(D, S));
+      /* a divider, then the sort — only where the tables are one flat list the sort can order */
+      var lv = window.PANELVAR ? window.PANELVAR("data") : null;
+      if (lv === "blocks" || lv === "fields") { sh.append(E("i", { class: "chdiv", "aria-hidden": "true" })); sh.append(sortBar()); } }
     return h; }
   /* an empty result is a RESULT — say what was measured instead of drawing nothing */
   function chanEmpty(box, D, S){

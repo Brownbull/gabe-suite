@@ -655,8 +655,14 @@
   /* ══ THE DATA PANEL (operator 2026-09-12) — which of its sections are drawn, and how the grounds lay
      out. Hiding is a CHOICE, never a loss: the element stays in the page, one click brings it back, and
      a section that the open distribution does not draw says so instead of pretending to work. ══ */
-  var PILLOPEN = false;                                       /* the pill-colour fold, closed at boot */
-  window.pillFold = function(open){ PILLOPEN = !!open; var f = document.querySelector("#datacfg .cffold"); if (f) f.classList.toggle("open", PILLOPEN); };
+  /* THE DATA RAIL IS A STACK OF FOLDS (operator 2026-09-13: "the pill colour section is perfect — group all the
+     other sections this way"). Every group boots closed except the one being tuned; the state lives here so a
+     dial click, which rebuilds the rail, never re-folds what the operator opened. */
+  var FOLDS = window.FOLDS = { layout: 0, sections: 0, channels: 0, sort: 1, counts: 0, pills: 0, block: 0, lines: 0, marks: 0, grounds: 0 };
+  function foldSet(key, open){ FOLDS[key] = open ? 1 : 0;
+    var f = document.querySelector('#datacfg .cffold[data-group="' + key + '"]'); if (f) f.classList.toggle("open", !!open); }
+  window.pillFold = function(open){ foldSet("pills", open); };
+  window.foldAll = function(open){ Object.keys(FOLDS).forEach(function(k){ foldSet(k, open); }); };
   var DATACFG = window.DATACFG = {
     show: { title: 0, note: 0, counts: 1, shapes: 1, rw: 1, commit: 1, ev: 1, mdl: 1, ents: 1, legend: 1 },
     width: "flex", tiles: "stack", order: "size",
@@ -664,6 +670,8 @@
     counts: { tables: "icon", fields: "icon", ops: "icon" },  /* what the title counts, and how */
     countPills: "each", pillShape: "pill",                    /* one pill or a pill each · its outline */
     pillInk: "ink", pillBg: "kind", pillAlpha: 15,            /* the pill's text · its ground · how opaque the ground is */
+    sort: "channel", sortRev: 0,                              /* how the tables are ordered, and whether it is turned around */
+    sortShow: "icon", sortInk: "muted", sortBg: "chip", sortAlpha: 100,   /* how the sort buttons in the title row look */
     bk: { form: "block", icon: 1, rw: 1, name: 1, ent: "word", count: "words", model: "word",
           iconCol: "model", sel: "icon",              /* the glyph's colour is a SETTING, not the entity's */
           rows: [{ l: ["icon", "rw", "name", "ent", "count", "model"], r: [] }, { l: [], r: [] }, { l: [], r: [] }],
@@ -705,6 +713,10 @@
     ["accent", "kind", "chip", "panel", "ink", "none"].forEach(function(k){ pn.classList.toggle("pbg-" + k, DATACFG.pillBg === k); });
     pn.style.setProperty("--pill-a", String(DATACFG.pillAlpha));
     ["pill", "round", "rect", "square"].forEach(function(k){ pn.classList.toggle("pshape-" + k, DATACFG.pillShape === k); });
+    ["icon", "text", "both"].forEach(function(k){ pn.classList.toggle("sshow-" + k, DATACFG.sortShow === k); });
+    ["muted", "ink", "accent", "white"].forEach(function(k){ pn.classList.toggle("sink-" + k, DATACFG.sortInk === k); });
+    ["chip", "panel", "accent", "none"].forEach(function(k){ pn.classList.toggle("sbg-" + k, DATACFG.sortBg === k); });
+    pn.style.setProperty("--sort-a", String(DATACFG.sortAlpha));
     if (window.refreshPillRead) requestAnimationFrame(window.refreshPillRead); }
   /* THE PILL'S CONTRAST, MEASURED (operator 2026-09-13: "barely visible or too contrasting"). Every count's
      text colour against the ground it actually sits on — its own tint, over the pill, over whatever is
@@ -767,6 +779,21 @@
   function drawDataCfg(){ var box = document.getElementById("datacfg"); box.innerHTML = "";
     var live = dataVar();
     function sub(t, why){ var d = el("div", { class: "cfsub" }, t); if (why) d.append(el("i", {}, why)); box.append(d); }
+    /* a GROUP: build its dials into the rail, then lift them into a fold whose header names what they are set to */
+    function group(key, title, summary, why, build){
+      var at = box.children.length; build();
+      var moved = [].slice.call(box.children, at);
+      var fold = el("div", { class: "cffold" + (FOLDS[key] ? " open" : "") }), body = el("div", { class: "cffoldbody" });
+      fold.dataset.group = key; moved.forEach(function(n){ body.append(n); });
+      var hd = el("button", { class: "cffoldhd" }); hd.dataset.fold = key;
+      var ic = el("span", { class: "fi" }); ic.innerHTML = labIco("fold", 12);
+      hd.append(ic, el("b", {}, title), el("span", { class: "sum" }, summary));
+      hoverBind(hd, function(){ return hcard({ title: title, value: FOLDS[key] ? "open" : "folded", icon: "shape",
+        rows: [["set to", summary], ["folded", "every setting keeps working while it is out of sight"]], plain: why }); });
+      hd.onclick = function(ev){ ev.stopPropagation(); foldSet(key, !FOLDS[key]); };
+      fold.append(hd, body); box.append(fold); }
+    var CH = ["w", "r", "rw"].filter(function(k){ return DATACFG.chan[k]; });
+    var HID = DSEC.filter(function(x){ return !DATACFG.show[x.key]; }).map(function(x){ return x.key; });
     function pick(label, key, opts, iconFor, onlyIn){
       var na = onlyIn && onlyIn !== live;
       var w = el("div", { class: "ibwrap" });
@@ -780,7 +807,7 @@
           applyData(); window.showTab("data"); drawDataCfg(); }; w.append(b); });
       box.append(el("div", { class: "cfl" }, label), w); }
 
-    sub("layout", "the same facts, distributed differently");
+    group("layout", "layout", "shown as " + live, "the same facts, distributed differently", function(){
     { var w = el("div", { class: "ibwrap" }), P = window.PANELS.data;
       P.variants.forEach(function(v){ var b = el("button", { class: "ib" + (live === v.key ? " on" : "") });
         b.dataset.dlayout = v.key; b.innerHTML = S.icon(VARICO[v.key] || "shape", 15);
@@ -791,7 +818,9 @@
         w.append(b); });
       box.append(el("div", { class: "cfl" }, "shown as"), w); }
 
-    sub("sections", "one click hides a row — nothing leaves the page");
+    });
+    group("sections", "sections", (DSEC.length - HID.length) + " drawn" + (HID.length ? " · hidden " + HID.join(" ") : ""),
+      "one click hides a row — nothing leaves the page", function(){
     { var w = el("div", { class: "ibwrap dsec" });
       DSEC.forEach(function(sec){ var here = sec.on.indexOf(live) >= 0, shown = !!DATACFG.show[sec.key];
         var b = el("button", { class: "ib" + (shown ? " on" : "") + (here ? "" : " na") });
@@ -806,7 +835,9 @@
         w.append(b); });
       box.append(el("div", { class: "cfl" }, "drawn"), w); }
 
-    sub("the channel", "three independent switches — the same three sit in the panel's own title row");
+    });
+    group("channels", "channels", "tables " + (CH.length === 3 ? "all" : CH.join("+") || "none"),
+      "three independent switches — the same three sit in the panel's own title row", function(){
     { var w = el("div", { class: "ibwrap" });
       [["w", S.RW.w, "written only", "tables it writes and never reads — it puts data there and never looks"],
        ["r", S.RW.r, "read only", "tables it reads and never writes — it needs them to answer, never changes them"],
@@ -820,6 +851,45 @@
         b.onclick = function(ev){ ev.stopPropagation(); DATACFG.chan[o[0]] = on ? 0 : 1;
           window.showTab("data"); drawDataCfg(); }; w.append(b); });
       box.append(el("div", { class: "cfl" }, "tables"), w); }
+    });
+    /* SORT — the group being tuned now, so it boots OPEN (operator 2026-09-13) */
+    group("sort", "sort", DATACFG.sort + (DATACFG.sortRev ? " reversed" : "") + " · " + DATACFG.sortShow + " · " + DATACFG.sortInk + " on " + DATACFG.sortBg + " " + DATACFG.sortAlpha + "%",
+      "how the tables are ordered — the same buttons sit in the panel's title row, after the channels", function(){
+      pick("by", "sort", [
+        ["channel", "tables the door writes come first, then the ones it only reads — ties by size", "by channel"],
+        ["size", "the table with the most fields first", "by size"],
+        ["name", "alphabetical by table name", "by name"],
+        ["entity", "grouped by the entity that claims each table, then by size", "by entity"]],
+        function(o){ return window.SORTICON(o[0], 15); });
+      pick("direction", "sortRev", [
+        [0, "the order as named — writes first, largest first, A to Z", "as named"],
+        [1, "the same order, turned around", "reversed"]],
+        function(o){ return window.SORTICON(o[0] ? "rev-on" : "rev-off", 15); });
+      pick("shown as", "sortShow", [
+        ["icon", "the glyph alone — the word lives on its hover card", "icon"],
+        ["text", "the word alone", "text"],
+        ["both", "the glyph and the word together", "both"]],
+        function(o){ return o[0] === "icon" ? S.icon("layers", 15) : labIco(o[0] === "text" ? "ton" : "tauto", 15); });
+      pick("sort text", "sortInk", [
+        ["muted", "quiet text that recedes", "quiet"], ["ink", "the page's own text colour", "ink"],
+        ["accent", "the page's accent", "accent"], ["white", "white", "white"]],
+        function(o){ var c = o[0] === "muted" ? "var(--muted)" : o[0] === "ink" ? "var(--ink)" : o[0] === "accent" ? "var(--accent)" : "#fff";
+          return '<svg class="inksw" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="' + c + '" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">'
+            + '<path d="M7 17 12 5l5 12M8.8 13h6.4"/><rect x="4" y="19.5" width="16" height="3" rx="1" fill="' + c + '" stroke="none"/></svg>'; });
+      pick("sort ground", "sortBg", [
+        ["chip", "the row's own ground — the button is its outline", "outline"], ["panel", "the panel's lighter ground — a raised button", "raised"],
+        ["accent", "the accent", "accent"], ["none", "no ground and no fill — only the ring on the active one", "none"]],
+        function(o){ var c = o[0] === "chip" ? "var(--chip-bg)" : o[0] === "panel" ? "var(--panel)" : o[0] === "accent" ? "var(--accent)" : null;
+          return c ? '<i class="chsw" style="background:' + c + ';box-shadow:inset 0 0 0 1px var(--line)"></i>' : labIco("sh-none", 15); });
+      box.append(el("div", { class: "cfl sub" }, "opacity"),
+        slider({ min: 0, max: 100, step: 5, value: DATACFG.sortAlpha, label: "sort ground opacity",
+          fmt: function(v){ return v === 0 ? "clear" : v + "%"; },
+          card: function(){ return hcard({ title: "sort ground opacity", value: DATACFG.sortAlpha + "%", icon: "shape",
+            rows: [["at 100", "the ground is solid"], ["at 0", "the ground is clear"]], plain: "how much of the sort buttons' ground colour shows" }); },
+          on: function(v){ DATACFG.sortAlpha = v; applyData(); } }));
+    });
+    group("counts", "count pills", "tables " + DATACFG.counts.tables + " · fields " + DATACFG.counts.fields + " · ops " + DATACFG.counts.ops + " · " + DATACFG.pillShape,
+      "what the title's count pills carry, and their shape", function(){
     /* what the TITLE counts — each count its own row, each a word or an icon (operator 2026-09-12) */
     function cpick(label, key, iconName, plain){
       var w = el("div", { class: "ibwrap" });
@@ -847,8 +917,9 @@
       ["rect", "barely rounded — a tag", "a tag"],
       ["square", "sharp corners", "square"]],
       function(o){ return labIco(o[0] === "pill" ? "sh-pill" : o[0] === "round" ? "sh-round" : o[0] === "rect" ? "sh-rect" : "sh-square", 15); });
-    /* the settled colour dials FOLD away — the operator set them and asked to keep them out of sight */
-    var pillFoldAt = box.children.length;
+    });
+    group("pills", "pill colour", DATACFG.countPills + " · " + DATACFG.pillInk + " on " + DATACFG.pillBg + " " + DATACFG.pillAlpha + "%",
+      "the colour dials for the three count pills", function(){
     pick("pills", "countPills", [
       ["one", "the counts share a single pill, separated by a dot", "one pill"],
       ["each", "every count gets a pill of its own", "a pill each"]],
@@ -885,20 +956,10 @@
         on: function(v){ DATACFG.pillAlpha = v; applyData(); } }));
     box.append(el("div", { class: "cfl sub" }, "contrast"), el("div", { id: "pillread", class: "pillread" }, "—"));
     requestAnimationFrame(window.refreshPillRead);
-    { var moved = [].slice.call(box.children, pillFoldAt);
-      var fold = el("div", { class: "cffold" + (PILLOPEN ? " open" : "") }), body = el("div", { class: "cffoldbody" });
-      moved.forEach(function(n){ body.append(n); });
-      var hd = el("button", { class: "cffoldhd" }); hd.dataset.fold = "pills";
-      hd.innerHTML = labIco("fold", 12) + "<b>pill colour</b><span class=\"sum\">" + DATACFG.countPills + " · " + DATACFG.pillInk + " on "
-        + DATACFG.pillBg + " " + DATACFG.pillAlpha + "%</span>";
-      hoverBind(hd, function(){ return hcard({ title: "pill colour", value: PILLOPEN ? "open" : "folded", icon: "shape",
-        rows: [["holds", "one pill or a pill each · the text · the ground · its opacity · the measured contrast"],
-               ["folded", "settled by the operator — every setting keeps working while it is out of sight"]],
-        plain: "the colour dials for the three count pills, put away" }); });
-      hd.onclick = function(ev){ ev.stopPropagation(); PILLOPEN = !PILLOPEN; fold.classList.toggle("open", PILLOPEN); };
-      fold.append(hd, body); box.append(fold); }
+    });
 
-    sub("the block title", "which parts of a table's title line are drawn");
+    group("block", "block title", DATACFG.bk.form + " · glyph " + DATACFG.bk.iconCol + " · entity " + DATACFG.bk.ent + " · count " + DATACFG.bk.count,
+      "which parts of a table's title line are drawn", function(){
     function bpick(label, key, opts, iconFor){
       var w = el("div", { class: "ibwrap" });
       opts.forEach(function(o){ var b = el("button", { class: "ib" + (DATACFG.bk[key] === o[0] ? " on" : "") + (live === "blocks" ? "" : " na") });
@@ -953,7 +1014,9 @@
 
     /* THE ORDER, THE LINE AND THE SIZE — the head bar's registry, applied to a table's title
        (operator 2026-09-12). Drag a part between lines; click it to size it. */
-    sub("the title lines", "drag a part to another line · click it to size it");
+    });
+    group("lines", "title lines", DATACFG.bk.rows.filter(function(r){ return r.l.length || r.r.length; }).length + " line(s) in use",
+      "drag a part to another line · click it to size it", function(){
     { var B = DATACFG.bk, PARTS = window.BKPART || [];
       var byKey = {}; PARTS.forEach(function(x){ byKey[x.key] = x; });
       function lineZone(i, side){
@@ -997,7 +1060,9 @@
           on: function(v){ B.size[selKey] = v; window.showTab("data"); } }));
       box.append(el("div", { class: "cfread" }, "the selected part is outlined. Each line has TWO columns: what you drop on the left is pushed left, what you drop on the right is pushed right. Drag onto line 2 or 3 and the title stacks.")); }
 
-    sub("the squares", "only the Blocks distribution reads these");
+    });
+    group("marks", "field marks", DATACFG.sqEnc + " · " + DATACFG.sqSize + "px · by " + DATACFG.sqPal,
+      "how a field is drawn inside a table — only the Blocks distribution reads these", function(){
     box.append(el("div", { class: "cfl sub" }, "size"),
       slider({ min: 6, max: 24, step: 1, value: DATACFG.sqSize, label: "square size",
         fmt: function(v){ return v + "px"; },
@@ -1039,7 +1104,9 @@
       [0, "every square at full strength, optional or not", "not marked"]],
       function(o){ return labIco(o[0] ? "eye" : "eyeoff", 15); }, "blocks");
 
-    sub("the grounds", "only the Grounds distribution reads these");
+    });
+    group("grounds", "grounds", "by " + DATACFG.order + " · " + DATACFG.width + " · " + DATACFG.tiles,
+      "only the Grounds distribution reads these", function(){
     pick("order", "order", [
       ["size", "the ground holding the most tables leads", "by size"],
       ["home", "the door's own entity leads, whatever its size", "home first"],
@@ -1053,6 +1120,7 @@
       ["stack", "one table under the next, each full width of its ground", "stacked"],
       ["grid", "tables side by side, wrapping — more of them on screen at once", "grid"]],
       function(o){ return labIco(o[0] === "stack" ? "normal" : "wauto", 15); }, "grounds");
+    });
     box.append(el("div", { class: "cfread" }, "a hidden section is still in the page and one click brings it back. The no-loss checklist records what each part has DRAWN since the page opened and never un-ticks — so read it as what the design can show, not as what is on screen right now.")); }
   window.drawDataCfg = drawDataCfg;
   /* move a title part to a line, at an index — one call, so the probe drives the same path a drag does */
@@ -1203,6 +1271,7 @@
       var C = DATACFG.counts;
       return "data · shown as " + dataVar() + " · tables " + (ch.length === 3 ? "all" : ch.join("+") || "none")
         + " · title counts tables " + C.tables + ", fields " + C.fields + ", ops " + C.ops
+        + " · sort " + DATACFG.sort + (DATACFG.sortRev ? " reversed" : "") + ", " + DATACFG.sortShow + ", " + DATACFG.sortInk + " on " + DATACFG.sortBg + " " + DATACFG.sortAlpha + "%"
         + " · pills " + DATACFG.countPills + ", shape " + DATACFG.pillShape + ", text " + DATACFG.pillInk + ", ground " + DATACFG.pillBg + " " + DATACFG.pillAlpha + "%"
         + " · block " + B.form + " (icon " + (B.icon ? "on" : "off") + " " + B.iconCol + ", chip " + (B.rw ? "on" : "off") + ", name " + (B.name ? "on" : "off")
         + ", entity " + B.ent + ", count " + B.count + ", model " + B.model + ")"
