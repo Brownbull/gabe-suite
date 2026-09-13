@@ -659,7 +659,8 @@
     width: "flex", tiles: "stack", order: "size",
     chan: { w: 1, r: 1, rw: 1 },     /* APPENDABLE channels — all three on IS "every table" */
     counts: { tables: "icon", fields: "icon", ops: "icon" },  /* what the title counts, and how */
-    countPills: "one", countCol: "plain",                     /* one pill or a pill each, and its colour */
+    countPills: "one",                                        /* one pill or a pill each */
+    pillInk: "white", pillBg: "accent", pillAlpha: 100,       /* the pill's text · its ground · how opaque the ground is */
     bk: { form: "block", icon: 1, rw: 1, name: 1, ent: "word", count: "words", model: "word",
           iconCol: "model", sel: "icon",              /* the glyph's colour is a SETTING, not the entity's */
           rows: [{ l: ["icon", "rw", "name", "ent", "count", "model"], r: [] }, { l: [], r: [] }, { l: [], r: [] }],
@@ -695,7 +696,69 @@
     pn.style.setProperty("--sq", DATACFG.sqSize + "px");
     pn.style.setProperty("--sqg", DATACFG.sqGap + "px");
     ["square", "round", "circle"].forEach(function(k){ pn.classList.toggle("sqs-" + k, DATACFG.sqShape === k); });
-    pn.classList.toggle("sq-noopt", !DATACFG.sqOpt); }
+    pn.classList.toggle("sq-noopt", !DATACFG.sqOpt);
+    /* the pills' colour is CSS all the way down, so a dragged opacity bar never redraws the panel */
+    ["white", "ink", "kind", "accent", "muted"].forEach(function(k){ pn.classList.toggle("pink-" + k, DATACFG.pillInk === k); });
+    ["accent", "kind", "chip", "panel", "ink", "none"].forEach(function(k){ pn.classList.toggle("pbg-" + k, DATACFG.pillBg === k); });
+    pn.style.setProperty("--pill-a", String(DATACFG.pillAlpha));
+    if (window.refreshPillRead) requestAnimationFrame(window.refreshPillRead); }
+  /* THE PILL'S CONTRAST, MEASURED (operator 2026-09-13: "barely visible or too contrasting"). Every count's
+     text colour against the ground it actually sits on — its own tint, over the pill, over whatever is
+     behind the pill — composited the way the browser paints it, then the WCAG ratio. The worst count is
+     the one that matters: a pill is only as legible as its faintest number. */
+  function parseCol(str){ var m;
+    if ((m = /^rgba?\(\s*([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)(?:\s*[,/]\s*([\d.]+%?))?\s*\)/.exec(str)))
+      return { r: +m[1], g: +m[2], b: +m[3], a: m[4] == null ? 1 : (/%$/.test(m[4]) ? parseFloat(m[4]) / 100 : +m[4]) };
+    if ((m = /^color\(srgb\s+([\d.e-]+)\s+([\d.e-]+)\s+([\d.e-]+)(?:\s*\/\s*([\d.]+%?))?\s*\)/.exec(str)))
+      return { r: +m[1] * 255, g: +m[2] * 255, b: +m[3] * 255, a: m[4] == null ? 1 : (/%$/.test(m[4]) ? parseFloat(m[4]) / 100 : +m[4]) };
+    if (str === "transparent") return { r: 0, g: 0, b: 0, a: 0 };
+    return null; }
+  function over(top, under){ var a = top.a + under.a * (1 - top.a); if (a === 0) return { r: 0, g: 0, b: 0, a: 0 };
+    return { r: (top.r * top.a + under.r * under.a * (1 - top.a)) / a, g: (top.g * top.a + under.g * under.a * (1 - top.a)) / a,
+             b: (top.b * top.a + under.b * under.a * (1 - top.a)) / a, a: a }; }
+  function groundOf(el){ var stack = [], e = el;
+    while (e && e.nodeType === 1) { var c = parseCol(getComputedStyle(e).backgroundColor);
+      if (c && c.a > 0) { stack.push(c); if (c.a >= 1) break; } e = e.parentElement; }
+    var g = { r: 255, g: 255, b: 255, a: 1 };            /* the canvas, if nothing opaque was found */
+    if (stack.length && stack[stack.length - 1].a >= 1) g = stack.pop();
+    for (var i = stack.length - 1; i >= 0; i--) g = over(stack[i], g);
+    return g; }
+  function lum(c){ function ch(v){ v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+    return 0.2126 * ch(c.r) + 0.7152 * ch(c.g) + 0.0722 * ch(c.b); }
+  function ratio(a, b){ var x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+  window.CONTRAST = { parse: parseCol, over: over, ground: groundOf, ratio: ratio };
+  window.pillContrast = function(){
+    /* only spans that are actually DRAWN — a hidden "counts" section keeps its spans in the page (review F3) */
+    var spans = [].slice.call(document.querySelectorAll("#panel .sechd .dcnts .dcn")).filter(function(sp){ return sp.getClientRects().length; });
+    if (!spans.length) return null;
+    var rs = spans.map(function(sp){ var g = groundOf(sp), t = parseCol(getComputedStyle(sp).color) || { r: 0, g: 0, b: 0, a: 1 };
+      return { key: sp.dataset.count, ratio: Math.round(ratio(over(t, g), g) * 100) / 100 }; });
+    var min = rs.reduce(function(m, r){ return r.ratio < m.ratio ? r : m; }, rs[0]);
+    var max = rs.reduce(function(m, r){ return r.ratio > m.ratio ? r : m; }, rs[0]);
+    return { min: min.ratio, max: max.ratio, worst: min.key, each: rs }; };
+  /* ONE decision drives the readout's colour AND its words (review F1: the class looked at the loudest
+     count while the words looked at the faintest, so a glare-yellow readout said "reads"). */
+  function pillBand(c){ return c.min < 3 ? "bad" : c.min < 4.5 ? "weak" : c.max > 12 ? "loud" : "good"; }
+  var PILLWORDS = { bad: function(){ return "barely visible"; }, weak: function(){ return "below the reading floor"; },
+    good: function(){ return "reads"; },
+    loud: function(c){ return c.min > 12 ? "very high — it may glare" : "reads — but the loudest may glare"; } };
+  window.pillBand = pillBand;
+  window.refreshPillRead = function(){ var el = document.getElementById("pillread"); if (!el) return;
+    var c = window.pillContrast();
+    if (!c) { el.className = "pillread"; el.dataset.ratio = "";
+      /* say WHY nothing is measured (review F7) — the part is closed, every count is off, or the section is hidden */
+      var pn = document.getElementById("panel"), counts = DATACFG.counts || {};
+      el.textContent = pn.dataset.tab !== "data" ? "the Data part is not open — nothing to measure"
+        : ["tables", "fields", "ops"].every(function(k){ return counts[k] === "off"; }) ? "no pill is drawn — every count is off"
+        : !DATACFG.show.counts ? "the counts section is hidden — nothing on screen to measure"
+        : "no pill is on screen";
+      return; }
+    var band = pillBand(c);
+    el.dataset.ratio = String(c.min); el.dataset.band = band;
+    el.className = "pillread " + band;
+    /* printed at the precision it was JUDGED at (review F2: 2.99 used to print as "3.0:1 · barely visible") */
+    el.textContent = "contrast " + c.min.toFixed(2) + ":1" + (c.max !== c.min ? " – " + c.max.toFixed(2) + ":1" : "")
+      + " · " + PILLWORDS[band](c) + (c.each.length > 1 ? " (faintest: " + c.worst + ")" : ""); };
   window.applyData = applyData;
   function drawDataCfg(){ var box = document.getElementById("datacfg"); box.innerHTML = "";
     var live = dataVar();
@@ -777,14 +840,38 @@
       ["one", "the counts share a single pill, separated by a dot", "one pill"],
       ["each", "every count gets a pill of its own", "a pill each"]],
       function(o){ return labIco(o[0] === "one" ? "wauto" : "laycfill", 15); });
-    pick("pill col", "countCol", [
-      ["plain", "every pill in the panel's own chip colour", "the chip's own"],
-      ["kind", "each pill takes the station colour of the thing it counts — tables teal, fields cyan, ops blue", "by what it counts"],
-      ["accent", "every pill in the page's accent", "the accent"],
-      ["muted", "every pill quiet enough to recede", "quiet"]],
-      function(o){ return o[0] === "plain" ? labIco("patflat", 15)
-        : o[0] === "kind" ? labIco("pathatch", 15)
-        : '<i class="chsw" style="background:' + (o[0] === "accent" ? "var(--accent)" : "var(--muted)") + '"></i>'; });
+    /* THE PILL'S COLOUR is three dials, not one (operator 2026-09-13) */
+    pick("pill text", "pillInk", [
+      ["white", "white text — what the station's own chip uses", "white"],
+      ["ink", "the page's own text colour", "ink"],
+      ["kind", "each count in the colour of the thing it counts — tables teal, fields cyan, ops blue", "by what it counts"],
+      ["accent", "the page's accent", "the accent"],
+      ["muted", "quiet text that recedes", "quiet"]],
+      function(o){ var c = o[0] === "white" ? "#fff" : o[0] === "ink" ? "var(--ink)" : o[0] === "accent" ? "var(--accent)" : o[0] === "muted" ? "var(--muted)" : null;
+        /* the text-colour GLYPH — a drawn letterform over its colour bar, the editor convention; an icon, not a word */
+        return c ? '<svg class="inksw" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="' + c + '" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">'
+            + '<path d="M7 17 12 5l5 12M8.8 13h6.4"/><rect x="4" y="19.5" width="16" height="3" rx="1" fill="' + c + '" stroke="none"/></svg>'
+          : labIco("pathatch", 15); });
+    pick("pill ground", "pillBg", [
+      ["accent", "the accent — what the station's own chip uses", "the accent"],
+      ["kind", "each count's ground in the colour of the thing it counts", "by what it counts"],
+      ["chip", "the row's own ground — the fill vanishes into the row, so the pill is just its outline", "outline"],
+      ["panel", "the panel's lighter ground — a quiet raised pill", "raised"],
+      ["ink", "the page's text colour as the ground — an inverted pill", "ink"],
+      ["none", "no ground at all — the text stands on the title row", "none"]],
+      function(o){ var c = o[0] === "accent" ? "var(--accent)" : o[0] === "chip" ? "var(--chip-bg)" : o[0] === "panel" ? "var(--panel)" : o[0] === "ink" ? "var(--ink)" : null;
+        return c ? '<i class="chsw" style="background:' + c + ';box-shadow:inset 0 0 0 1px var(--line)"></i>'
+          : o[0] === "kind" ? labIco("pathatch", 15) : labIco("sh-none", 15); });
+    box.append(el("div", { class: "cfl sub" }, "opacity"),
+      slider({ min: 0, max: 100, step: 5, value: DATACFG.pillAlpha, label: "pill ground opacity",
+        fmt: function(v){ return v === 0 ? "clear" : v + "%"; },
+        card: function(){ return hcard({ title: "ground opacity", value: DATACFG.pillAlpha + "%", icon: "shape",
+          rows: [["at 100", "the ground is solid"], ["at 0", "the ground is clear and only its outline is left"],
+                 ["the readout", "the contrast below is re-measured while you drag"]],
+          plain: "how much of the pill's ground colour shows" }); },
+        on: function(v){ DATACFG.pillAlpha = v; applyData(); } }));
+    box.append(el("div", { class: "cfl sub" }, "contrast"), el("div", { id: "pillread", class: "pillread" }, "—"));
+    requestAnimationFrame(window.refreshPillRead);
 
     sub("the block title", "which parts of a table's title line are drawn");
     function bpick(label, key, opts, iconFor){
@@ -1091,6 +1178,7 @@
       var C = DATACFG.counts;
       return "data · shown as " + dataVar() + " · tables " + (ch.length === 3 ? "all" : ch.join("+") || "none")
         + " · title counts tables " + C.tables + ", fields " + C.fields + ", ops " + C.ops
+        + " · pills " + DATACFG.countPills + ", text " + DATACFG.pillInk + ", ground " + DATACFG.pillBg + " " + DATACFG.pillAlpha + "%"
         + " · block " + B.form + " (icon " + (B.icon ? "on" : "off") + " " + B.iconCol + ", chip " + (B.rw ? "on" : "off") + ", name " + (B.name ? "on" : "off")
         + ", entity " + B.ent + ", count " + B.count + ", model " + B.model + ")"
         + " · lines " + B.rows.map(function(r){ return (r.l.join(" ") || "—") + " | " + (r.r.join(" ") || "—"); }).join(" / ")

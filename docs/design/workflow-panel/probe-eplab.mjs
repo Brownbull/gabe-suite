@@ -50,7 +50,7 @@ ok(tabs.join(',') === 'data,schemas,functions,tests,widening,security', 'SIX tab
 
 // the DATA panel boots on the operator's own default line (2026-09-12)
 ok(await p.evaluate(() => window.COPYTXT.data()) ===
-   'data · shown as blocks · tables all · title counts tables icon, fields icon, ops icon'
+   'data · shown as blocks · tables all · title counts tables icon, fields icon, ops icon · pills one, text white, ground accent 100%'
    + ' · block block (icon on model, chip on, name on, entity word, count words, model word)'
    + ' · lines icon rw name ent count model | — / — | — / — | — · sizes icon 13 rw 12 name 13 ent 12 count 12 model 12'
    + ' · squares 11px gap 2 round as colour by type, optional marked · grounds by size, width flex, tiles stack'
@@ -563,10 +563,93 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
     ok(await p.$$eval('#panel .sechd .dcnts .dcp', els => els.length === 1), 'the counts share ONE pill by default');
     await p.click('#datacfg .ib[data-count-pills="each"]'); await p.waitForTimeout(300);
     ok(await p.$$eval('#panel .sechd .dcnts .dcp', els => els.length === 3), 'and can split into a pill EACH');
-    await p.click('#datacfg .ib[data-count-col="kind"]'); await p.waitForTimeout(300);
-    ok(await p.$$eval('#panel .sechd .dcnts .dcp', els => new Set(els.map(e => getComputedStyle(e).color)).size === 3),
-       'BY WHAT IT COUNTS gives each pill the colour of the thing it counts');
-    await p.click('#datacfg .ib[data-count-col="plain"]'); await p.click('#datacfg .ib[data-count-pills="one"]'); await p.waitForTimeout(320); }
+    await p.click('#datacfg .ib[data-pill-ink="kind"]'); await p.waitForTimeout(260);
+    ok(await p.$$eval('#panel .sechd .dcnts .dcn', els => new Set(els.map(e => getComputedStyle(e).color)).size === 3),
+       'BY WHAT IT COUNTS gives each count the colour of the thing it counts');
+    await p.click('#datacfg .ib[data-pill-bg="kind"]'); await p.waitForTimeout(260);
+    ok(await p.$$eval('#panel .sechd .dcnts .dcp', els => new Set(els.map(e => getComputedStyle(e).backgroundColor)).size === 3),
+       'and each pill its ground');
+    await p.click('#datacfg .ib[data-pill-ink="white"]'); await p.click('#datacfg .ib[data-pill-bg="accent"]');
+    await p.click('#datacfg .ib[data-count-pills="one"]'); await p.waitForTimeout(320);
+
+    // ══ THE PILL'S COLOUR IS THREE DIALS (operator 2026-09-13): text · ground · ground opacity — and the
+    //    contrast is MEASURED, because the complaint was "barely visible or too contrasting" ══
+    const pillStyle = () => p.$eval('#panel .sechd .dcp', e => { const c = getComputedStyle(e); return { fg: c.color, bg: c.backgroundColor }; });
+    const base = await pillStyle();
+    await p.click('#datacfg .ib[data-pill-ink="ink"]'); await p.waitForTimeout(220);
+    const inked = await pillStyle();
+    ok(inked.fg !== base.fg && inked.bg === base.bg, 'the TEXT dial moves the text and leaves the ground', JSON.stringify({ base, inked }));
+    await p.click('#datacfg .ib[data-pill-bg="chip"]'); await p.waitForTimeout(220);
+    const grounded = await pillStyle();
+    ok(grounded.bg !== inked.bg && grounded.fg === inked.fg, 'the GROUND dial moves the ground and leaves the text', JSON.stringify({ inked, grounded }));
+    // opacity is a dragged bar that re-paints WITHOUT rebuilding the rail — the drag must survive
+    await p.click('#datacfg .ib[data-pill-bg="accent"]'); await p.click('#datacfg .ib[data-pill-ink="white"]'); await p.waitForTimeout(260);
+    const alphaOf = () => p.evaluate(() => { const c = window.CONTRAST.parse(getComputedStyle(document.querySelector('#panel .sechd .dcp')).backgroundColor); return c ? Math.round(c.a * 100) : null; });
+    ok(await alphaOf() === 100, 'the ground starts solid', String(await alphaOf()));
+    await p.evaluate(() => { const t = [...document.querySelectorAll('#datacfg .sldt')].find(x => x.getAttribute('aria-label') === 'pill ground opacity'); t.__mark = 1; });
+    await p.focus('#datacfg .sldt[aria-label="pill ground opacity"]');
+    for (let i = 0; i < 10; i++) await p.keyboard.press('ArrowLeft');
+    await p.waitForTimeout(260);
+    ok(await alphaOf() === 50, 'ten steps down the bar leave the ground at half opacity', String(await alphaOf()));
+    ok(await p.evaluate(() => { const t = [...document.querySelectorAll('#datacfg .sldt')].find(x => x.getAttribute('aria-label') === 'pill ground opacity'); return !!(t && t.__mark); }),
+       'and the bar being dragged is the SAME element — the rail did not rebuild under the hand');
+    // the METER: independently recomputed, and it catches exactly the combination the operator saw
+    const meter = async () => { await p.waitForTimeout(120); return p.evaluate(() => ({ read: +document.getElementById('pillread').dataset.ratio, pc: window.pillContrast() })); };
+    { const m = await meter();
+      // INDEPENDENT: back to a solid ground, read the two raw computed colours, and do WCAG here in node — none of the
+      // page's own contrast functions are used (review F10: the old check called the very code it claimed to check)
+      await p.focus('#datacfg .sldt[aria-label="pill ground opacity"]');
+      for (let i = 0; i < 10; i++) await p.keyboard.press('ArrowRight');
+      const m2 = await meter();
+      const raw = await p.evaluate(() => ({ fg: getComputedStyle(document.querySelector('#panel .sechd .dcn')).color,
+                                            bg: getComputedStyle(document.querySelector('#panel .sechd .dcp')).backgroundColor }));
+      // both formats Chrome returns: rgb(0-255) and color(srgb 0-1) — the latter is what color-mix computes to
+      const rgb = str => { const n = (str.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+        return /^color\(srgb/.test(str) ? n.map(v => v * 255) : n; };
+      const lin = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+      const L = c => 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+      const a = L(rgb(raw.fg)), bb = L(rgb(raw.bg)), wcag = (Math.max(a, bb) + 0.05) / (Math.min(a, bb) + 0.05);
+      ok(/^(rgb|color)\(/.test(raw.bg) && Math.abs(wcag - m2.pc.min) < 0.02 && m2.read === m2.pc.min,
+         'the readout equals WCAG computed in node from the raw colours — no page code involved', JSON.stringify({ raw, wcag: +wcag.toFixed(3), read: m2.read }));
+      for (let i = 0; i < 10; i++) await p.keyboard.press('ArrowLeft');
+      await p.waitForTimeout(200); }
+    await p.focus('#datacfg .sldt[aria-label="pill ground opacity"]');
+    for (let i = 0; i < 10; i++) await p.keyboard.press('ArrowRight');
+    await p.waitForTimeout(160);
+    // F2 — printed at the precision it was judged at, so a failing ratio never prints as the threshold
+    ok(/contrast \d+\.\d\d:1/.test(await p.$eval('#pillread', e => e.textContent)), 'the readout prints two decimals — the precision it judges at',
+       await p.$eval('#pillread', e => e.textContent));
+    await p.click('#datacfg .ib[data-pill-ink="accent"]'); await p.waitForTimeout(300);
+    { const m = await meter();
+      ok(m.read < 1.5 && await p.$eval('#pillread', e => e.classList.contains('bad')),
+         'accent text on the accent ground reads as BARELY VISIBLE — the meter flags what the operator saw', JSON.stringify(m.pc)); }
+    await p.click('#datacfg .ib[data-pill-ink="white"]'); await p.waitForTimeout(300);
+    { const m = await meter(); ok(m.read > 1.5, 'and clears when the text changes', String(m.read)); }
+    await p.click('#datacfg .ib[data-pill-bg="none"]'); await p.waitForTimeout(260);
+    ok(await alphaOf() === 0, 'a ground of NONE is clear', String(await alphaOf()));
+    // F1 — the colour and the words come from ONE decision: a loud readout never says plainly "reads"
+    await p.click('#datacfg .ib[data-pill-bg="kind"]'); await p.waitForTimeout(260);
+    await p.focus('#datacfg .sldt[aria-label="pill ground opacity"]');
+    for (let i = 0; i < 15; i++) await p.keyboard.press('ArrowLeft');
+    await p.waitForTimeout(260);
+    { const r = await p.evaluate(() => { const e = document.getElementById('pillread'), c = window.pillContrast();
+        return { cls: e.className, band: e.dataset.band, text: e.textContent, min: c.min, max: c.max }; });
+      ok(r.max > 12 && r.cls.indexOf('loud') >= 0 && /glare/.test(r.text),
+         'white on a 25% kind ground is LOUD, and its words say so — the colour and the words agree', JSON.stringify(r)); }
+    for (let i = 0; i < 15; i++) await p.keyboard.press('ArrowRight');
+    await p.click('#datacfg .ib[data-pill-bg="accent"]'); await p.waitForTimeout(300);
+    // F4 — "outline" (the chip ground) matches the row, so the pill must keep a visible EDGE
+    await p.click('#datacfg .ib[data-pill-bg="chip"]'); await p.waitForTimeout(260);
+    { const e = await p.evaluate(() => { const d = document.querySelector('#panel .sechd .dcp'), c = getComputedStyle(d);
+        return { border: c.borderTopColor, row: getComputedStyle(document.getElementById('panel')).backgroundColor, fill: c.backgroundColor }; });
+      ok(e.border !== e.row && e.border !== e.fill, 'the OUTLINE ground keeps an edge the row does not share', JSON.stringify(e)); }
+    await p.click('#datacfg .ib[data-pill-bg="accent"]'); await p.waitForTimeout(260);
+    // F3 + F7 — nothing on screen, nothing measured, and the readout says WHY
+    await p.click('#datacfg .ib[data-sec="counts"]'); await p.waitForTimeout(300);
+    ok(await p.$eval('#pillread', e => /hidden/.test(e.textContent) && !e.dataset.ratio), 'with the counts hidden the meter measures nothing and says they are hidden',
+       await p.$eval('#pillread', e => e.textContent));
+    await p.click('#datacfg .ib[data-sec="counts"]'); await p.waitForTimeout(300);
+    ok(await p.$eval('#pillread', e => !!e.dataset.ratio), 'and measures again once they are back'); }
   // ── the TITLE itself can go (operator 2026-09-12) ──
   { ok(await p.$eval('#panel .phd .sechd', e => /data/i.test(e.innerText)), 'the part names itself in the title');
     await p.click('#datacfg .ib[data-sec="title"]'); await p.waitForTimeout(280);

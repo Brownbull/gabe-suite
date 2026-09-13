@@ -875,3 +875,32 @@ html, body{ height:100%; }
 #panel.sqs-circle .sq.e-colour{ border-radius:50%; }
 /* the legend draws the mark exactly as the panel draws it */
 .plgd .lg .sq.lgm{ --sq:11px; margin-right:2px; }
+
+/* ══ THE COUNT PILL'S COLOUR — text · ground · ground opacity, three dials (operator 2026-09-13). The
+   station paints `.sechd .cnt` solid accent with white text; these rules outrank it on specificity and
+   express every choice as a variable, so "by what it counts" and a dragged opacity are pure CSS. ══ */
+#panel .sechd .dcp{ --pi:#fff; --pb:var(--accent);
+  color:var(--pi); background:color-mix(in srgb, var(--pb) calc(var(--pill-a, 100) * 1%), transparent);
+  border:1px solid color-mix(in srgb, var(--pb) 55%, transparent); }
+#panel.pink-white .sechd .dcp{ --pi:#fff; }
+#panel.pink-ink .sechd .dcp{ --pi:var(--ink); }
+#panel.pink-accent .sechd .dcp{ --pi:var(--accent); }
+#panel.pink-muted .sechd .dcp{ --pi:var(--muted); }
+#panel.pink-kind .sechd .dcp .dcn{ color:var(--k); }
+#panel.pbg-accent .sechd .dcp{ --pb:var(--accent); }
+#panel.pbg-chip .sechd .dcp{ --pb:var(--chip-bg); border-color:var(--line); }   /* the fill matches the row, so the EDGE is the pill (review F4) */
+#panel.pbg-panel .sechd .dcp{ --pb:var(--panel); border-color:var(--line); }
+#panel.pbg-ink .sechd .dcp{ --pb:var(--ink); }
+#panel.pbg-none .sechd .dcp{ --pb:transparent; border-color:var(--line); }
+/* by what it counts: a pill EACH takes its count's colour; ONE pill tints each count's own segment */
+#panel.pbg-kind .sechd .dcnts.each .dcp{ --pb:var(--k); }
+#panel.pbg-kind .sechd .dcnts.one .dcp{ --pb:transparent; border-color:var(--line); }
+#panel.pbg-kind .sechd .dcnts.one .dcn{ background:color-mix(in srgb, var(--k) calc(var(--pill-a, 100) * 1%), transparent);
+  padding:0 5px; border-radius:7px; }
+/* the rail's swatches for text, and the measured contrast readout */
+.inksw{ display:block; border-radius:3px; background:color-mix(in srgb, var(--accent) 55%, transparent); }
+.pillread{ font:700 12px/1.5 var(--font-mono); padding:3px 7px; border-radius:6px; border:1px solid var(--line); }
+.pillread.good{ color:var(--ok, #22c55e); border-color:color-mix(in srgb, var(--ok, #22c55e) 45%, transparent); }
+.pillread.weak{ color:#d9821f; border-color:color-mix(in srgb, #d9821f 45%, transparent); }
+.pillread.bad{ color:var(--red, #ff6b6b); border-color:color-mix(in srgb, var(--red, #ff6b6b) 45%, transparent); }
+.pillread.loud{ color:#eab308; border-color:color-mix(in srgb, #eab308 45%, transparent); }

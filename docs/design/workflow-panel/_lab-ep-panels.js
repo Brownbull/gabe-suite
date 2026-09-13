@@ -1073,28 +1073,24 @@
   function countMode(k){ var c = (window.DATACFG || {}).counts;
     if (typeof c === "string") return k === "tables" ? "word" : k === "ops" && c === "ops" ? "word" : "off";  /* the old string form */
     return (c || {})[k] || "off"; }
-  /* the counts sit in ONE pill or in a pill EACH, and a pill can take its own colour (operator
-     2026-09-12). "kind" gives each count the station colour of the thing it counts. */
-  var DCCOL = {
-    plain: { word: "the chip's own", get: function(){ return null; }, plain: "every pill in the panel's own chip colour" },
-    accent: { word: "the accent", get: function(){ return "var(--accent)"; }, plain: "every pill in the page's accent" },
-    kind: { word: "by what it counts", get: function(c, S){ return c.key === "tables" ? S.KINDCOL.model : c.key === "fields" ? S.KINDCOL.schema : S.OPC.call; },
-      plain: "each pill takes the station colour of the thing it counts — tables teal, fields cyan, ops blue" },
-    muted: { word: "quiet", get: function(){ return "var(--muted)"; }, plain: "every pill quiet enough to recede" } };
+  /* THE COUNT PILLS (operator 2026-09-12/13): one pill or a pill each. Their COLOUR is three separate
+     dials — the text, the ground, and how opaque the ground is — because the old single rule only moved
+     the TEXT, and the station paints the chip's ground solid accent: accent text on an accent chip
+     vanished, quiet text on it barely showed. Every pill carries its count's kind colour as `--k`, so
+     "by what it counts" is pure CSS and a dragged opacity bar never has to redraw the panel. */
+  function kindColOf(c, S){ return c.key === "tables" ? S.KINDCOL.model : c.key === "fields" ? S.KINDCOL.schema : S.OPC.call; }
   function dcountPills(ts, S, D){
-    var cfg = window.DATACFG || {}, split = cfg.countPills === "each", colDef = DCCOL[cfg.countCol] || DCCOL.plain;
+    var cfg = window.DATACFG || {}, split = cfg.countPills === "each";
     var live = DCOUNT.filter(function(c){ return countMode(c.key) !== "off"; });
     if (!live.length) return null;
-    function body(c){ var m = countMode(c.key), n = c.get(ts), col = colDef.get(c, S);
-      return '<span class="dcn" data-count="' + c.key + '"' + (col && split ? '' : col ? ' style="color:' + col + '"' : '') + '>'
+    function body(c){ var m = countMode(c.key), n = c.get(ts);
+      return '<span class="dcn" data-count="' + c.key + '" style="--k:' + kindColOf(c, S) + '">'
         + (m === "icon" ? ico(c.icon, 13, "currentColor") + '<b>' + n + '</b>' : c.word(n)) + '</span>'; }
     var wrap = E("div", { class: "dcnts" + (split ? " each" : " one") });
-    if (split) { live.forEach(function(c){ var col = colDef.get(c, S);
-        var pill = E("span", { class: "cnt dcp", style: col ? "color:" + col + ";border-color:color-mix(in srgb," + col + " 45%, var(--line))" : null });
+    if (split) { live.forEach(function(c){
+        var pill = E("span", { class: "cnt dcp" }); pill.style.setProperty("--k", kindColOf(c, S));
         pill.innerHTML = body(c); bind(pill, opsCard(D, ts, S)); wrap.append(pill); }); }
     else { var pill = E("span", { class: "cnt dcp" });
-      var col = colDef.get(live[0], S);
-      if (col && cfg.countCol !== "kind") pill.style.color = col;
       pill.innerHTML = live.map(body).join('<i class="dcsep">·</i>');
       bind(pill, opsCard(D, ts, S)); wrap.append(pill); }
     return wrap; }
