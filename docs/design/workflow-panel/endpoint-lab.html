@@ -658,7 +658,7 @@
   /* THE DATA RAIL IS A STACK OF FOLDS (operator 2026-09-13: "the pill colour section is perfect — group all the
      other sections this way"). Every group boots closed except the one being tuned; the state lives here so a
      dial click, which rebuilds the rail, never re-folds what the operator opened. */
-  var FOLDS = window.FOLDS = { layout: 0, sections: 0, channels: 0, sort: 1, counts: 0, pills: 0, block: 0, lines: 0, marks: 0, grounds: 0 };
+  var FOLDS = window.FOLDS = { layout: 0, sections: 0, channels: 0, sort: 0, counts: 0, pills: 0, block: 0, edge: 1, lines: 0, marks: 0, grounds: 0 };
   function foldSet(key, open){ FOLDS[key] = open ? 1 : 0;
     var f = document.querySelector('#datacfg .cffold[data-group="' + key + '"]'); if (f) f.classList.toggle("open", !!open); }
   window.pillFold = function(open){ foldSet("pills", open); };
@@ -671,10 +671,11 @@
     countPills: "each", pillShape: "pill",                    /* one pill or a pill each · its outline */
     pillInk: "ink", pillBg: "kind", pillAlpha: 15,            /* the pill's text · its ground · how opaque the ground is */
     sort: "channel", sortRev: 0,                              /* how the tables are ordered, and whether it is turned around */
-    sortShow: "icon", sortInk: "muted", sortBg: "chip", sortAlpha: 100,   /* how the sort buttons in the title row look */
-    bk: { form: "block", icon: 1, rw: 1, name: 1, ent: "word", count: "words", model: "word",
+    sortShow: "icon", sortInk: "accent", sortBg: "panel", sortAlpha: 45,  /* how the sort buttons in the title row look */
+    bk: { form: "block", icon: 1, rw: 1, name: 1, ent: "word", count: "badge", model: "both",
+          railSide: "left", railStyle: "solid", railW: 3,     /* the entity's colour on the block: side · pattern · thickness */
           iconCol: "model", sel: "icon",              /* the glyph's colour is a SETTING, not the entity's */
-          rows: [{ l: ["icon", "rw", "name", "ent", "count", "model"], r: [] }, { l: [], r: [] }, { l: [], r: [] }],
+          rows: [{ l: ["icon", "name"], r: [] }, { l: ["rw", "count"], r: ["ent"] }, { l: ["model"], r: [] }],
           size: { icon: 13, rw: 12, name: 13, ent: 12, count: 12, model: 12 } },
     sqSize: 11, sqGap: 2, sqShape: "round", sqPal: "type", sqOpt: 1, sqEnc: "colour" };
   var DSEC = [
@@ -717,6 +718,10 @@
     ["muted", "ink", "accent", "white"].forEach(function(k){ pn.classList.toggle("sink-" + k, DATACFG.sortInk === k); });
     ["chip", "panel", "accent", "none"].forEach(function(k){ pn.classList.toggle("sbg-" + k, DATACFG.sortBg === k); });
     pn.style.setProperty("--sort-a", String(DATACFG.sortAlpha));
+    /* THE BLOCK EDGE (operator 2026-09-13): which side carries the entity's colour, its pattern, its thickness */
+    ["left", "right", "top", "bottom", "none"].forEach(function(k){ pn.classList.toggle("rail-" + k, DATACFG.bk.railSide === k); });
+    pn.style.setProperty("--rail-w", DATACFG.bk.railW + "px");
+    pn.style.setProperty("--rail-s", DATACFG.bk.railStyle);
     if (window.refreshPillRead) requestAnimationFrame(window.refreshPillRead); }
   /* THE PILL'S CONTRAST, MEASURED (operator 2026-09-13: "barely visible or too contrasting"). Every count's
      text colour against the ground it actually sits on — its own tint, over the pill, over whatever is
@@ -1015,6 +1020,42 @@
     /* THE ORDER, THE LINE AND THE SIZE — the head bar's registry, applied to a table's title
        (operator 2026-09-12). Drag a part between lines; click it to size it. */
     });
+    /* THE BLOCK EDGE — the group being tuned now, so it boots OPEN (operator 2026-09-13) */
+    group("edge", "block edge", DATACFG.bk.railSide + (DATACFG.bk.railSide === "none" ? "" : " · " + DATACFG.bk.railStyle + " · " + DATACFG.bk.railW + "px"),
+      "the entity's colour on each block — which side it sits on, its pattern and its thickness", function(){
+      function epick(label, key, opts, iconFor){
+        var w = el("div", { class: "ibwrap" });
+        opts.forEach(function(o){ var b = el("button", { class: "ib" + (DATACFG.bk[key] === o[0] ? " on" : "") + (live === "blocks" ? "" : " na") });
+          b.dataset[key] = String(o[0]); b.innerHTML = iconFor(o);
+          hoverBind(b, hcard({ title: o[2], value: label, icon: "shape",
+            rows: live === "blocks" ? null : [["drawn in", "blocks — not in " + live + ", so this does nothing right now"]], plain: o[1] }));
+          b.onclick = function(ev){ ev.stopPropagation(); DATACFG.bk[key] = o[0]; applyData(); window.showTab("data"); drawDataCfg(); };
+          w.append(b); });
+        box.append(el("div", { class: "cfl sub" }, label), w); }
+      function edgeIco(side){ var bar = { left: "M4 5v14", right: "M20 5v14", top: "M4 5h16", bottom: "M4 19h16" }[side];
+        return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">'
+          + '<rect x="4" y="5" width="16" height="14" rx="2" opacity="' + (bar ? ".45" : ".7") + '"' + (bar ? "" : ' stroke-dasharray="2.5 2.5"') + '/>'
+          + (bar ? '<path d="' + bar + '" stroke-width="3.6"/>' : "") + "</svg>"; }
+      epick("side", "railSide", [
+        ["left", "the entity's colour runs down the left edge — the way the blocks always read", "left"],
+        ["right", "down the right edge", "right"],
+        ["top", "across the top, like a tab", "top"],
+        ["bottom", "across the bottom, like an underline", "bottom"],
+        ["none", "no entity colour on the edge — the entity still reads in the title", "none"]],
+        function(o){ return edgeIco(o[0]); });
+      epick("pattern", "railStyle", [
+        ["solid", "a continuous line", "solid"], ["dashed", "a line in dashes", "dashed"],
+        ["dotted", "a line in dots", "dotted"], ["double", "two thin lines — it needs 3px or more to show as two", "double"]],
+        function(o){ return o[0] === "double"
+          ? '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 10h18M3 14h18"/></svg>'
+          : lineIco(o[0]); });
+      box.append(el("div", { class: "cfl sub" }, "thickness"),
+        slider({ min: 1, max: 8, step: 1, value: DATACFG.bk.railW, label: "block edge thickness",
+          fmt: function(v){ return v + "px"; },
+          card: function(){ return hcard({ title: "edge thickness", value: DATACFG.bk.railW + "px", icon: "shape",
+            rows: [["range", "1 — 8px"], ["double", "needs 3px or more to draw as two lines"]], plain: "how thick the entity's colour is drawn" }); },
+          on: function(v){ DATACFG.bk.railW = v; applyData(); } }));
+    });
     group("lines", "title lines", DATACFG.bk.rows.filter(function(r){ return r.l.length || r.r.length; }).length + " line(s) in use",
       "drag a part to another line · click it to size it", function(){
     { var B = DATACFG.bk, PARTS = window.BKPART || [];
@@ -1275,6 +1316,7 @@
         + " · pills " + DATACFG.countPills + ", shape " + DATACFG.pillShape + ", text " + DATACFG.pillInk + ", ground " + DATACFG.pillBg + " " + DATACFG.pillAlpha + "%"
         + " · block " + B.form + " (icon " + (B.icon ? "on" : "off") + " " + B.iconCol + ", chip " + (B.rw ? "on" : "off") + ", name " + (B.name ? "on" : "off")
         + ", entity " + B.ent + ", count " + B.count + ", model " + B.model + ")"
+        + " · edge " + B.railSide + (B.railSide === "none" ? "" : " " + B.railStyle + " " + B.railW + "px")
         + " · lines " + B.rows.map(function(r){ return (r.l.join(" ") || "—") + " | " + (r.r.join(" ") || "—"); }).join(" / ")
         + " · sizes " + Object.keys(B.size).map(function(k){ return k + " " + B.size[k]; }).join(" ")
         + " · squares " + DATACFG.sqSize + "px gap " + DATACFG.sqGap + " " + DATACFG.sqShape + " as " + DATACFG.sqEnc + " by " + DATACFG.sqPal + (DATACFG.sqOpt ? ", optional marked" : "")

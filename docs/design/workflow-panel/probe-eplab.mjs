@@ -50,9 +50,9 @@ ok(tabs.join(',') === 'data,schemas,functions,tests,widening,security', 'SIX tab
 
 // the DATA panel boots on the operator's own default line (2026-09-12)
 ok(await p.evaluate(() => window.COPYTXT.data()) ===
-   'data · shown as blocks · tables all · title counts tables icon, fields icon, ops icon · sort channel, icon, muted on chip 100% · pills each, shape pill, text ink, ground kind 15%'
-   + ' · block block (icon on model, chip on, name on, entity word, count words, model word)'
-   + ' · lines icon rw name ent count model | — / — | — / — | — · sizes icon 13 rw 12 name 13 ent 12 count 12 model 12'
+   'data · shown as blocks · tables all · title counts tables icon, fields icon, ops icon · sort channel, icon, accent on panel 45% · pills each, shape pill, text ink, ground kind 15%'
+   + ' · block block (icon on model, chip on, name on, entity word, count badge, model both) · edge left solid 3px'
+   + ' · lines icon name | — / rw count | ent / model | — · sizes icon 13 rw 12 name 13 ent 12 count 12 model 12'
    + ' · squares 11px gap 2 round as colour by type, optional marked · grounds by size, width flex, tiles stack'
    + ' · drawn counts shapes rw commit ev mdl ents legend · hidden title note',
    'the data panel boots on the operator\'s default line', await p.evaluate(() => window.COPYTXT.data()));
@@ -383,10 +383,10 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   // THE RAIL IS A STACK OF FOLDS (operator 2026-09-13) — every group closed at boot except the one being tuned
   { const g = await p.$$eval('#datacfg > .cffold', els => els.map(e => ({ k: e.dataset.group, open: e.classList.contains('open'),
       body: getComputedStyle(e.querySelector('.cffoldbody')).display, sum: (e.querySelector('.cffoldhd .sum') || {}).textContent })));
-    ok(g.map(x => x.k).join(',') === 'layout,sections,channels,sort,counts,pills,block,lines,marks,grounds',
-       'the data rail is ten named groups', g.map(x => x.k).join(','));
-    ok(g.every(x => x.open === (x.k === 'sort') && x.body === (x.k === 'sort' ? 'grid' : 'none')),
-       'every group boots folded except SORT, the one being tuned', JSON.stringify(g.map(x => x.k + (x.open ? '+' : '-'))));
+    ok(g.map(x => x.k).join(',') === 'layout,sections,channels,sort,counts,pills,block,edge,lines,marks,grounds',
+       'the data rail is eleven named groups', g.map(x => x.k).join(','));
+    ok(g.every(x => x.open === (x.k === 'edge') && x.body === (x.k === 'edge' ? 'grid' : 'none')),
+       'every group boots folded except EDGE, the one being tuned', JSON.stringify(g.map(x => x.k + (x.open ? '+' : '-'))));
     ok(g.every(x => x.sum && x.sum.trim().length > 2), 'and every folded header names what its dials are set to', JSON.stringify(g.map(x => x.sum))); }
   ok(await p.$$eval('#datacfg > :not(.cffold):not(.cfread)', els => els.length === 0), 'no dial is left loose outside a group');
   ok(await p.$eval('#datacfg .cffold[data-group="pills"]', e => !e.classList.contains('open') && getComputedStyle(e.querySelector('.cffoldbody')).display === 'none'),
@@ -463,7 +463,8 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
 // the tests below were written against the station chip's look — give them that baseline explicitly
 // ══ THE SORT (operator 2026-09-13): a divider after the channels, four orders and a turn-around, and how the
 //    buttons look — measured on the order the tables are actually drawn in ══
-{ await p.evaluate(() => { window.showTab('data'); window.showVariant('data', 'blocks'); }); await p.waitForTimeout(300);
+{ await p.evaluate(() => { Object.assign(window.DATACFG, { sortInk: 'muted', sortBg: 'chip', sortAlpha: 100 }); window.foldSet && 0;
+    window.FOLDS.sort = 1; window.applyData(); window.showTab('data'); window.showVariant('data', 'blocks'); window.drawDataCfg(); }); await p.waitForTimeout(320);
   const row = await p.evaluate(() => { const sh = document.querySelector('#panel .sechd');
     const kids = [...sh.children].map(e => e.classList.contains('chbar') ? 'chbar' : e.classList.contains('chdiv') ? 'div' : e.classList.contains('sortbar') ? 'sort' : null).filter(Boolean);
     const d = sh.querySelector('.chdiv'), r = d && d.getBoundingClientRect();
@@ -523,11 +524,47 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   // the copy line names the sort, and the rail's sort group summarises it
   ok(/sort name, both, accent on accent 50%/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line carries the sort and its look',
      await p.evaluate(() => window.COPYTXT.data()).then(t => t.slice(90, 190)));
-  await p.evaluate(() => { Object.assign(window.DATACFG, { sort: 'channel', sortRev: 0, sortShow: 'icon', sortInk: 'muted', sortBg: 'chip', sortAlpha: 100 });
+  await p.evaluate(() => { Object.assign(window.DATACFG, { sort: 'channel', sortRev: 0, sortShow: 'icon', sortInk: 'accent', sortBg: 'panel', sortAlpha: 45 });
     window.applyData(); window.showTab('data'); window.drawDataCfg(); }); await p.waitForTimeout(300); }
+
+// ══ THE BLOCK EDGE (operator 2026-09-13): the entity's colour on any side or none, its pattern, its thickness —
+//    measured on the block's computed borders ══
+{ await p.evaluate(() => { window.showTab('data'); window.showVariant('data', 'blocks'); }); await p.waitForTimeout(300);
+  const edge = () => p.$eval('#panel .blk', e => { const c = getComputedStyle(e);
+    const side = k => ({ w: parseFloat(c['border' + k + 'Width']), st: c['border' + k + 'Style'], col: c['border' + k + 'Color'] });
+    return { Left: side('Left'), Right: side('Right'), Top: side('Top'), Bottom: side('Bottom') }; });
+  { const e = await edge(); const o = ['Right', 'Top', 'Bottom'];
+    ok(e.Left.w === 3 && e.Left.st === 'solid' && o.every(k => e[k].w === 1 && e[k].col !== e.Left.col),
+       'the entity colour boots down the LEFT edge, 3px solid, and nowhere else', JSON.stringify(e)); }
+  for (const side of ['right', 'top', 'bottom']) {
+    await p.click(`#datacfg .ib[data-rail-side="${side}"]`); await p.waitForTimeout(260);
+    const e = await edge(), K = side[0].toUpperCase() + side.slice(1), rest = ['Left', 'Right', 'Top', 'Bottom'].filter(k => k !== K);
+    ok(e[K].w === 3 && rest.every(k => e[k].w === 1 && e[k].col !== e[K].col), `it moves to the ${side.toUpperCase()}`, JSON.stringify(e)); }
+  await p.click('#datacfg .ib[data-rail-side="none"]'); await p.waitForTimeout(260);
+  { const e = await edge(); ok(Object.values(e).every(x => x.w === 1) && new Set(Object.values(e).map(x => x.col)).size === 1,
+      'NONE takes the entity colour off every edge', JSON.stringify(e)); }
+  await p.click('#datacfg .ib[data-rail-side="left"]'); await p.waitForTimeout(260);
+  for (const st of ['dashed', 'dotted', 'double']) {
+    await p.click(`#datacfg .ib[data-rail-style="${st}"]`); await p.waitForTimeout(240);
+    ok((await edge()).Left.st === st, `the edge takes the ${st.toUpperCase()} pattern`, (await edge()).Left.st); }
+  await p.focus('#datacfg .sldt[aria-label="block edge thickness"]');
+  for (let i = 0; i < 3; i++) await p.keyboard.press('ArrowRight');
+  await p.waitForTimeout(240);
+  ok((await edge()).Left.w === 6, 'the thickness bar sets the edge to 6px', String((await edge()).Left.w));
+  ok(/edge left double 6px/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line names the edge');
+  // the blocks still never overlap with a thick edge on top
+  await p.click('#datacfg .ib[data-rail-side="top"]'); await p.waitForTimeout(280);
+  { const hits = await p.evaluate(() => { const bs = [...document.querySelectorAll('#panel .blk')].map(e => e.getBoundingClientRect()); let n = 0;
+      for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) { const a = bs[i], c = bs[j];
+        if (a.left < c.right - 1 && c.left < a.right - 1 && a.top < c.bottom - 1 && c.top < a.bottom - 1) n++; } return n; });
+    ok(hits === 0, 'a thick edge on top never makes the blocks overlap', String(hits)); }
+  await p.evaluate(() => { Object.assign(window.DATACFG.bk, { railSide: 'left', railStyle: 'solid', railW: 3 }); window.applyData(); window.showTab('data'); window.drawDataCfg(); });
+  await p.waitForTimeout(300); }
 
 // the tests below were written against the station chip's look with every dial in reach — give them that baseline
 await p.evaluate(() => { Object.assign(window.DATACFG, { countPills: 'one', pillInk: 'white', pillBg: 'accent', pillAlpha: 100 });
+  Object.assign(window.DATACFG.bk, { count: 'words', model: 'word',
+    rows: [{ l: ['icon', 'rw', 'name', 'ent', 'count', 'model'], r: [] }, { l: [], r: [] }, { l: [], r: [] }] });
   window.DATACFG.show.title = 1; window.applyData(); window.showTab('data'); window.foldAll(true); window.drawDataCfg(); });
 await p.waitForTimeout(320);
 

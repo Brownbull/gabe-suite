@@ -960,3 +960,11 @@ html, body{ height:100%; }
 /* a fold's NAME never wraps; its summary takes the rest of the line and wraps on the right if it must */
 #datacfg .cffoldhd b{ white-space:nowrap; flex:none; }
 #datacfg .cffoldhd .sum{ min-width:0; text-align:right; }
+
+/* ══ THE BLOCK EDGE (operator 2026-09-13) — the entity's colour moves to any side, or goes, with its own
+   pattern and thickness. The old fixed 3px left rail is reset first; one side then takes the colour. ══ */
+#panel[class*="rail-"] .blk{ border-left:1px solid var(--line); }
+#panel.rail-left .blk{ border-left:var(--rail-w, 3px) var(--rail-s, solid) var(--ec, var(--line)); }
+#panel.rail-right .blk{ border-right:var(--rail-w, 3px) var(--rail-s, solid) var(--ec, var(--line)); }
+#panel.rail-top .blk{ border-top:var(--rail-w, 3px) var(--rail-s, solid) var(--ec, var(--line)); }
+#panel.rail-bottom .blk{ border-bottom:var(--rail-w, 3px) var(--rail-s, solid) var(--ec, var(--line)); }
