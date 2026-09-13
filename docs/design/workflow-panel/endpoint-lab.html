@@ -658,7 +658,7 @@
   /* THE DATA RAIL IS A STACK OF FOLDS (operator 2026-09-13: "the pill colour section is perfect — group all the
      other sections this way"). Every group boots closed except the one being tuned; the state lives here so a
      dial click, which rebuilds the rail, never re-folds what the operator opened. */
-  var FOLDS = window.FOLDS = { layout: 0, sections: 0, channels: 0, sort: 0, counts: 0, pills: 0, block: 0, edge: 1, lines: 0, marks: 0, grounds: 0 };
+  var FOLDS = window.FOLDS = { layout: 0, sections: 0, channels: 0, sort: 0, counts: 0, pills: 0, block: 0, chips: 1, edge: 0, lines: 0, marks: 0, grounds: 0 };
   function foldSet(key, open){ FOLDS[key] = open ? 1 : 0;
     var f = document.querySelector('#datacfg .cffold[data-group="' + key + '"]'); if (f) f.classList.toggle("open", !!open); }
   window.pillFold = function(open){ foldSet("pills", open); };
@@ -672,10 +672,11 @@
     pillInk: "ink", pillBg: "kind", pillAlpha: 15,            /* the pill's text · its ground · how opaque the ground is */
     sort: "channel", sortRev: 0,                              /* how the tables are ordered, and whether it is turned around */
     sortShow: "icon", sortInk: "accent", sortBg: "panel", sortAlpha: 45,  /* how the sort buttons in the title row look */
-    bk: { form: "block", icon: 1, rw: 1, name: 1, ent: "word", count: "badge", model: "both",
-          railSide: "left", railStyle: "solid", railW: 3,     /* the entity's colour on the block: side · pattern · thickness */
+    bk: { form: "block", icon: 1, rw: 1, name: 1, ent: "both", count: "badge", model: "both",
+          railSide: "left", railStyle: "solid", railW: 2,     /* the entity's colour on the block: side · pattern · thickness */
+          cntBox: "pill", cntA: 100, rwBox: "tag", rwA: 100,  /* the count badge and the channel chip: container · how opaque */
           iconCol: "model", sel: "icon",              /* the glyph's colour is a SETTING, not the entity's */
-          rows: [{ l: ["icon", "name"], r: [] }, { l: ["rw", "count"], r: ["ent"] }, { l: ["model"], r: [] }],
+          rows: [{ l: ["icon", "name"], r: [] }, { l: ["ent"], r: ["count", "rw"] }, { l: ["model"], r: [] }],
           size: { icon: 13, rw: 12, name: 13, ent: 12, count: 12, model: 12 } },
     sqSize: 11, sqGap: 2, sqShape: "round", sqPal: "type", sqOpt: 1, sqEnc: "colour" };
   var DSEC = [
@@ -722,6 +723,15 @@
     ["left", "right", "top", "bottom", "none"].forEach(function(k){ pn.classList.toggle("rail-" + k, DATACFG.bk.railSide === k); });
     pn.style.setProperty("--rail-w", DATACFG.bk.railW + "px");
     pn.style.setProperty("--rail-s", DATACFG.bk.railStyle);
+    /* THE TWO CHIPS (operator 2026-09-13): container · see-through · character size, for the count and the channel */
+    ["pill", "tag", "square", "outline", "bare"].forEach(function(k){
+      pn.classList.toggle("cntbox-" + k, DATACFG.bk.cntBox === k); pn.classList.toggle("rwbox-" + k, DATACFG.bk.rwBox === k); });
+    pn.style.setProperty("--cnt-a", String(DATACFG.bk.cntA));
+    pn.style.setProperty("--rw-a", String(DATACFG.bk.rwA));
+    pn.style.setProperty("--cnt-fs", (DATACFG.bk.size.count || 12) + "px");
+    pn.style.setProperty("--rw-fs", (DATACFG.bk.size.rw || 12) + "px");
+    /* a see-through channel chip keeps dark text on nothing — below half, the letters take the chip's own colour */
+    pn.classList.toggle("rw-thin", DATACFG.bk.rwA < 50);
     if (window.refreshPillRead) requestAnimationFrame(window.refreshPillRead); }
   /* THE PILL'S CONTRAST, MEASURED (operator 2026-09-13: "barely visible or too contrasting"). Every count's
      text colour against the ground it actually sits on — its own tint, over the pill, over whatever is
@@ -1020,7 +1030,45 @@
     /* THE ORDER, THE LINE AND THE SIZE — the head bar's registry, applied to a table's title
        (operator 2026-09-12). Drag a part between lines; click it to size it. */
     });
-    /* THE BLOCK EDGE — the group being tuned now, so it boots OPEN (operator 2026-09-13) */
+    /* THE TWO CHIPS — the field-count badge and the channel chip, the group being tuned now (operator 2026-09-13) */
+    group("chips", "count & channel chips",
+      "count " + DATACFG.bk.cntBox + " " + DATACFG.bk.cntA + "% " + (DATACFG.bk.size.count || 12) + "px · channel " + DATACFG.bk.rwBox + " " + DATACFG.bk.rwA + "% " + (DATACFG.bk.size.rw || 12) + "px",
+      "the field-count badge and the channel chip in each block's title — their container, how see-through, and the size of the character inside", function(){
+      function boxIco(k){ var r = { pill: "5.5", tag: "2", square: "0" }[k];
+        return '<svg viewBox="0 0 24 24" width="15" height="15" fill="' + (k === "outline" || k === "bare" ? "none" : "currentColor") + '" stroke="currentColor" stroke-width="1.6"'
+          + (k === "bare" ? ' stroke-dasharray="2 2.5" opacity=".7"' : "") + '>'
+          + '<rect x="3.5" y="6.5" width="17" height="11" rx="' + (r || "3") + '"' + (k === "outline" || k === "bare" ? "" : ' fill-opacity=".55"') + '/></svg>'; }
+      var BOXES = [["pill", "fully rounded ends", "a pill"], ["tag", "barely rounded — a tag", "a tag"], ["square", "sharp corners", "square"],
+                   ["outline", "no fill — only its edge, in its own colour", "outline"], ["bare", "no fill and no edge — the character alone", "bare"]];
+      function cbox(label, key, what){
+        var w = el("div", { class: "ibwrap" });
+        BOXES.forEach(function(o){ var b = el("button", { class: "ib" + (DATACFG.bk[key] === o[0] ? " on" : "") + (live === "blocks" ? "" : " na") });
+          b.dataset[key] = o[0]; b.innerHTML = boxIco(o[0]);
+          hoverBind(b, hcard({ title: o[2], value: label, icon: "shape", rows: [["what", what]], plain: o[1] }));
+          b.onclick = function(ev){ ev.stopPropagation(); DATACFG.bk[key] = o[0]; applyData(); window.showTab("data"); drawDataCfg(); };
+          w.append(b); });
+        box.append(el("div", { class: "cfl sub" }, label), w); }
+      function see(label, key, aria, what){
+        box.append(el("div", { class: "cfl sub" }, label),
+          slider({ min: 0, max: 100, step: 5, value: DATACFG.bk[key], label: aria,
+            fmt: function(v){ return v === 0 ? "clear" : v + "%"; },
+            card: function(){ return hcard({ title: aria, value: DATACFG.bk[key] + "%", icon: "shape",
+              rows: [["what", what], ["at 0", "the fill is clear; the edge and the character stay"]], plain: "how see-through the chip's fill is" }); },
+            on: function(v){ DATACFG.bk[key] = v; applyData(); } })); }
+      function csize(label, part, aria, what){
+        box.append(el("div", { class: "cfl sub" }, label),
+          slider({ min: 12, max: 20, step: 1, value: DATACFG.bk.size[part] || 12, label: aria,
+            fmt: function(v){ return v + "px"; },
+            card: function(){ return hcard({ title: aria, value: (DATACFG.bk.size[part] || 12) + "px", icon: "shape",
+              rows: [["what", what], ["floor", "12px — text never goes under it"], ["same value as", "this part's size in TITLE LINES"]],
+              plain: "how big the character inside the chip is drawn" }); },
+            on: function(v){ DATACFG.bk.size[part] = v; applyData(); } })); }
+      var CNTW = "the number of fields, when the count is shown as a badge";
+      var RWW = "the R · W · RW chip — which way the data moves through this table";
+      cbox("count box", "cntBox", CNTW); see("count fill", "cntA", "count badge fill", CNTW); csize("count size", "count", "count character size", CNTW);
+      cbox("chip box", "rwBox", RWW); see("chip fill", "rwA", "channel chip fill", RWW); csize("chip size", "rw", "channel character size", RWW);
+    });
+    /* THE BLOCK EDGE (operator 2026-09-13) */
     group("edge", "block edge", DATACFG.bk.railSide + (DATACFG.bk.railSide === "none" ? "" : " · " + DATACFG.bk.railStyle + " · " + DATACFG.bk.railW + "px"),
       "the entity's colour on each block — which side it sits on, its pattern and its thickness", function(){
       function epick(label, key, opts, iconFor){
@@ -1317,6 +1365,7 @@
         + " · block " + B.form + " (icon " + (B.icon ? "on" : "off") + " " + B.iconCol + ", chip " + (B.rw ? "on" : "off") + ", name " + (B.name ? "on" : "off")
         + ", entity " + B.ent + ", count " + B.count + ", model " + B.model + ")"
         + " · edge " + B.railSide + (B.railSide === "none" ? "" : " " + B.railStyle + " " + B.railW + "px")
+        + " · chips count " + B.cntBox + " " + B.cntA + "%, channel " + B.rwBox + " " + B.rwA + "%"
         + " · lines " + B.rows.map(function(r){ return (r.l.join(" ") || "—") + " | " + (r.r.join(" ") || "—"); }).join(" / ")
         + " · sizes " + Object.keys(B.size).map(function(k){ return k + " " + B.size[k]; }).join(" ")
         + " · squares " + DATACFG.sqSize + "px gap " + DATACFG.sqGap + " " + DATACFG.sqShape + " as " + DATACFG.sqEnc + " by " + DATACFG.sqPal + (DATACFG.sqOpt ? ", optional marked" : "")

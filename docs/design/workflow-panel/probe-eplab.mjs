@@ -51,8 +51,8 @@ ok(tabs.join(',') === 'data,schemas,functions,tests,widening,security', 'SIX tab
 // the DATA panel boots on the operator's own default line (2026-09-12)
 ok(await p.evaluate(() => window.COPYTXT.data()) ===
    'data · shown as blocks · tables all · title counts tables icon, fields icon, ops icon · sort channel, icon, accent on panel 45% · pills each, shape pill, text ink, ground kind 15%'
-   + ' · block block (icon on model, chip on, name on, entity word, count badge, model both) · edge left solid 3px'
-   + ' · lines icon name | — / rw count | ent / model | — · sizes icon 13 rw 12 name 13 ent 12 count 12 model 12'
+   + ' · block block (icon on model, chip on, name on, entity both, count badge, model both) · edge left solid 2px · chips count pill 100%, channel tag 100%'
+   + ' · lines icon name | — / ent | count rw / model | — · sizes icon 13 rw 12 name 13 ent 12 count 12 model 12'
    + ' · squares 11px gap 2 round as colour by type, optional marked · grounds by size, width flex, tiles stack'
    + ' · drawn counts shapes rw commit ev mdl ents legend · hidden title note',
    'the data panel boots on the operator\'s default line', await p.evaluate(() => window.COPYTXT.data()));
@@ -383,10 +383,10 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   // THE RAIL IS A STACK OF FOLDS (operator 2026-09-13) — every group closed at boot except the one being tuned
   { const g = await p.$$eval('#datacfg > .cffold', els => els.map(e => ({ k: e.dataset.group, open: e.classList.contains('open'),
       body: getComputedStyle(e.querySelector('.cffoldbody')).display, sum: (e.querySelector('.cffoldhd .sum') || {}).textContent })));
-    ok(g.map(x => x.k).join(',') === 'layout,sections,channels,sort,counts,pills,block,edge,lines,marks,grounds',
-       'the data rail is eleven named groups', g.map(x => x.k).join(','));
-    ok(g.every(x => x.open === (x.k === 'edge') && x.body === (x.k === 'edge' ? 'grid' : 'none')),
-       'every group boots folded except EDGE, the one being tuned', JSON.stringify(g.map(x => x.k + (x.open ? '+' : '-'))));
+    ok(g.map(x => x.k).join(',') === 'layout,sections,channels,sort,counts,pills,block,chips,edge,lines,marks,grounds',
+       'the data rail is twelve named groups', g.map(x => x.k).join(','));
+    ok(g.every(x => x.open === (x.k === 'chips') && x.body === (x.k === 'chips' ? 'grid' : 'none')),
+       'every group boots folded except CHIPS, the one being tuned', JSON.stringify(g.map(x => x.k + (x.open ? '+' : '-'))));
     ok(g.every(x => x.sum && x.sum.trim().length > 2), 'and every folded header names what its dials are set to', JSON.stringify(g.map(x => x.sum))); }
   ok(await p.$$eval('#datacfg > :not(.cffold):not(.cfread)', els => els.length === 0), 'no dial is left loose outside a group');
   ok(await p.$eval('#datacfg .cffold[data-group="pills"]', e => !e.classList.contains('open') && getComputedStyle(e.querySelector('.cffoldbody')).display === 'none'),
@@ -529,17 +529,17 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
 
 // ══ THE BLOCK EDGE (operator 2026-09-13): the entity's colour on any side or none, its pattern, its thickness —
 //    measured on the block's computed borders ══
-{ await p.evaluate(() => { window.showTab('data'); window.showVariant('data', 'blocks'); }); await p.waitForTimeout(300);
+{ await p.evaluate(() => { window.FOLDS.edge = 1; window.showTab('data'); window.showVariant('data', 'blocks'); window.drawDataCfg(); }); await p.waitForTimeout(300);
   const edge = () => p.$eval('#panel .blk', e => { const c = getComputedStyle(e);
     const side = k => ({ w: parseFloat(c['border' + k + 'Width']), st: c['border' + k + 'Style'], col: c['border' + k + 'Color'] });
     return { Left: side('Left'), Right: side('Right'), Top: side('Top'), Bottom: side('Bottom') }; });
   { const e = await edge(); const o = ['Right', 'Top', 'Bottom'];
-    ok(e.Left.w === 3 && e.Left.st === 'solid' && o.every(k => e[k].w === 1 && e[k].col !== e.Left.col),
-       'the entity colour boots down the LEFT edge, 3px solid, and nowhere else', JSON.stringify(e)); }
+    ok(e.Left.w === 2 && e.Left.st === 'solid' && o.every(k => e[k].w === 1 && e[k].col !== e.Left.col),
+       'the entity colour boots down the LEFT edge, 2px solid, and nowhere else', JSON.stringify(e)); }
   for (const side of ['right', 'top', 'bottom']) {
     await p.click(`#datacfg .ib[data-rail-side="${side}"]`); await p.waitForTimeout(260);
     const e = await edge(), K = side[0].toUpperCase() + side.slice(1), rest = ['Left', 'Right', 'Top', 'Bottom'].filter(k => k !== K);
-    ok(e[K].w === 3 && rest.every(k => e[k].w === 1 && e[k].col !== e[K].col), `it moves to the ${side.toUpperCase()}`, JSON.stringify(e)); }
+    ok(e[K].w === 2 && rest.every(k => e[k].w === 1 && e[k].col !== e[K].col), `it moves to the ${side.toUpperCase()}`, JSON.stringify(e)); }
   await p.click('#datacfg .ib[data-rail-side="none"]'); await p.waitForTimeout(260);
   { const e = await edge(); ok(Object.values(e).every(x => x.w === 1) && new Set(Object.values(e).map(x => x.col)).size === 1,
       'NONE takes the entity colour off every edge', JSON.stringify(e)); }
@@ -550,16 +550,70 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   await p.focus('#datacfg .sldt[aria-label="block edge thickness"]');
   for (let i = 0; i < 3; i++) await p.keyboard.press('ArrowRight');
   await p.waitForTimeout(240);
-  ok((await edge()).Left.w === 6, 'the thickness bar sets the edge to 6px', String((await edge()).Left.w));
-  ok(/edge left double 6px/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line names the edge');
+  ok((await edge()).Left.w === 5, 'three steps up the thickness bar take the edge from 2px to 5px', String((await edge()).Left.w));
+  ok(/edge left double 5px/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line names the edge');
   // the blocks still never overlap with a thick edge on top
   await p.click('#datacfg .ib[data-rail-side="top"]'); await p.waitForTimeout(280);
   { const hits = await p.evaluate(() => { const bs = [...document.querySelectorAll('#panel .blk')].map(e => e.getBoundingClientRect()); let n = 0;
       for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) { const a = bs[i], c = bs[j];
         if (a.left < c.right - 1 && c.left < a.right - 1 && a.top < c.bottom - 1 && c.top < a.bottom - 1) n++; } return n; });
     ok(hits === 0, 'a thick edge on top never makes the blocks overlap', String(hits)); }
-  await p.evaluate(() => { Object.assign(window.DATACFG.bk, { railSide: 'left', railStyle: 'solid', railW: 3 }); window.applyData(); window.showTab('data'); window.drawDataCfg(); });
+  await p.evaluate(() => { Object.assign(window.DATACFG.bk, { railSide: 'left', railStyle: 'solid', railW: 2 }); window.FOLDS.edge = 0; window.applyData(); window.showTab('data'); window.drawDataCfg(); });
   await p.waitForTimeout(300); }
+
+// ══ THE TWO CHIPS (operator 2026-09-13): the field-count badge and the channel chip — container, see-through
+//    fill, character size — measured on the drawn chips ══
+{ await p.evaluate(() => { window.FOLDS.chips = 1; window.showTab('data'); window.showVariant('data', 'blocks'); window.drawDataCfg(); }); await p.waitForTimeout(300);
+  const chips = () => p.$eval('#panel .blk', b => { const n = b.querySelector('.bkn.badge'), r = b.querySelector('.bkrw .jdrw');
+    const st = e => { const c = getComputedStyle(e), bg = window.CONTRAST.parse(c.backgroundColor);
+      return { radius: c.borderTopLeftRadius, fs: parseFloat(c.fontSize), a: bg ? Math.round(bg.a * 100) : null,
+               fg: c.color, border: c.borderTopColor, rwc: e.style.getPropertyValue('--rwc').trim(), pad: c.paddingLeft }; };
+    return { count: st(n), chip: st(r) }; });
+  { const c = await chips();
+    ok(parseFloat(c.count.radius) >= 11 && c.count.a === 100 && c.count.fs === 12, 'the count badge boots as a solid 12px pill', JSON.stringify(c.count));
+    ok(c.chip.radius === '3px' && c.chip.a === 100 && c.chip.fs === 12, 'the channel chip boots as a solid 12px tag — the look it always had', JSON.stringify(c.chip)); }
+  // CONTAINERS, both chips
+  for (const [k, want] of [['square', '0px'], ['tag', '3px'], ['pill', null]]) {
+    await p.click(`#datacfg .ib[data-rw-box="${k}"]`); await p.click(`#datacfg .ib[data-cnt-box="${k}"]`); await p.waitForTimeout(260);
+    const c = await chips();
+    ok(want ? (c.chip.radius === want && c.count.radius === want) : (parseFloat(c.chip.radius) >= 9 && parseFloat(c.count.radius) >= 9),
+       `the ${k.toUpperCase()} container shapes both chips`, JSON.stringify({ chip: c.chip.radius, count: c.count.radius })); }
+  await p.click('#datacfg .ib[data-rw-box="outline"]'); await p.waitForTimeout(240);
+  { const c = await chips(); ok(c.chip.a === 0 && c.chip.border !== 'rgba(0, 0, 0, 0)', 'OUTLINE clears the fill and keeps an edge', JSON.stringify(c.chip)); }
+  await p.click('#datacfg .ib[data-rw-box="bare"]'); await p.waitForTimeout(240);
+  { const c = await chips(); ok(c.chip.a === 0 && c.chip.border === 'rgba(0, 0, 0, 0)' && c.chip.pad === '0px', 'BARE leaves the characters alone — no fill, no edge', JSON.stringify(c.chip)); }
+  await p.click('#datacfg .ib[data-rw-box="tag"]'); await p.click('#datacfg .ib[data-cnt-box="pill"]'); await p.waitForTimeout(260);
+  // SEE-THROUGH: a dragged bar, and the rail must not rebuild under the hand
+  await p.evaluate(() => { const t = [...document.querySelectorAll('#datacfg .sldt')].find(x => x.getAttribute('aria-label') === 'channel chip fill'); t.__mark = 1; });
+  await p.focus('#datacfg .sldt[aria-label="channel chip fill"]');
+  for (let i = 0; i < 12; i++) await p.keyboard.press('ArrowLeft');
+  await p.waitForTimeout(260);
+  { const c = await chips();
+    ok(c.chip.a === 40, 'twelve steps down leave the channel chip 40% opaque', JSON.stringify(c.chip));
+    ok(await p.evaluate(() => !!([...document.querySelectorAll('#datacfg .sldt')].find(x => x.getAttribute('aria-label') === 'channel chip fill') || {}).__mark),
+       'and the bar being dragged is the same element — no rebuild');
+    const want = await p.evaluate(c => { const d = document.createElement('i'); d.style.color = c; document.body.append(d); const v = getComputedStyle(d).color; d.remove(); return v; }, c.chip.rwc);
+    ok(c.chip.fg === want, 'below half, the letters take the chip\'s own colour so they stay readable on a see-through fill', JSON.stringify({ fg: c.chip.fg, want })); }
+  for (let i = 0; i < 12; i++) await p.keyboard.press('ArrowRight');
+  await p.focus('#datacfg .sldt[aria-label="count badge fill"]');
+  for (let i = 0; i < 10; i++) await p.keyboard.press('ArrowLeft');
+  await p.waitForTimeout(240);
+  ok((await chips()).count.a === 50, 'the count badge has its own fill bar', JSON.stringify((await chips()).count));
+  for (let i = 0; i < 10; i++) await p.keyboard.press('ArrowRight');
+  // CHARACTER SIZE, with the 12px floor held
+  await p.focus('#datacfg .sldt[aria-label="channel character size"]');
+  for (let i = 0; i < 4; i++) await p.keyboard.press('ArrowRight');
+  await p.focus('#datacfg .sldt[aria-label="count character size"]');
+  for (let i = 0; i < 6; i++) await p.keyboard.press('ArrowRight');
+  await p.waitForTimeout(260);
+  { const c = await chips(); ok(c.chip.fs === 16 && c.count.fs === 18, 'each chip has its own character size', JSON.stringify({ chip: c.chip.fs, count: c.count.fs })); }
+  for (let i = 0; i < 20; i++) await p.keyboard.press('ArrowLeft');
+  await p.waitForTimeout(240);
+  ok((await chips()).count.fs === 12, 'and the size bar stops at the 12px floor', String((await chips()).count.fs));
+  ok(await p.evaluate(() => window.DATACFG.bk.size.count === 12 && window.DATACFG.bk.size.rw === 16), 'the size is the same value TITLE LINES drives — one number, two places to set it');
+  await p.evaluate(() => { Object.assign(window.DATACFG.bk, { cntBox: 'pill', cntA: 100, rwBox: 'tag', rwA: 100 }); window.DATACFG.bk.size.rw = 12; window.DATACFG.bk.size.count = 12;
+    window.applyData(); window.showTab('data'); window.drawDataCfg(); }); await p.waitForTimeout(280);
+  ok(/chips count pill 100%, channel tag 100%/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line names both chips'); }
 
 // the tests below were written against the station chip's look with every dial in reach — give them that baseline
 await p.evaluate(() => { Object.assign(window.DATACFG, { countPills: 'one', pillInk: 'white', pillBg: 'accent', pillAlpha: 100 });

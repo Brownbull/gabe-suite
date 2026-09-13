@@ -968,3 +968,23 @@ html, body{ height:100%; }
 #panel.rail-right .blk{ border-right:var(--rail-w, 3px) var(--rail-s, solid) var(--ec, var(--line)); }
 #panel.rail-top .blk{ border-top:var(--rail-w, 3px) var(--rail-s, solid) var(--ec, var(--line)); }
 #panel.rail-bottom .blk{ border-bottom:var(--rail-w, 3px) var(--rail-s, solid) var(--ec, var(--line)); }
+
+/* ══ THE TWO CHIPS in a block's title (operator 2026-09-13) — the field-count badge and the channel chip each
+   get a container, a see-through fill and a character size. The channel chip's colour now arrives as `--rwc`
+   instead of an inline background, which no stylesheet could have dialled. ══ */
+.jdrw{ background:var(--rwc, transparent); }
+#panel .bkhd .bkrw .jdrw{ font-size:var(--rw-fs, 12px); line-height:1.35; border:1px solid transparent;
+  background:color-mix(in srgb, var(--rwc) calc(var(--rw-a, 100) * 1%), transparent); }
+#panel.rwbox-pill .bkhd .bkrw .jdrw{ border-radius:999px; padding:0 6px; }
+#panel.rwbox-tag .bkhd .bkrw .jdrw{ border-radius:3px; }
+#panel.rwbox-square .bkhd .bkrw .jdrw{ border-radius:0; }
+#panel.rwbox-outline .bkhd .bkrw .jdrw{ background:transparent; border-color:var(--rwc); color:var(--rwc); }
+#panel.rwbox-bare .bkhd .bkrw .jdrw{ background:transparent; border-color:transparent; color:var(--rwc); padding:0; }
+#panel.rw-thin .bkhd .bkrw .jdrw{ color:var(--rwc); }
+#panel .bkhd .bkn{ font-size:var(--cnt-fs, 12px); }
+#panel .bkhd .bkn.badge{ font-size:var(--cnt-fs, 12px); background:color-mix(in srgb, var(--panel) calc(var(--cnt-a, 100) * 1%), transparent); }
+#panel.cntbox-pill .bkhd .bkn.badge{ border-radius:999px; }
+#panel.cntbox-tag .bkhd .bkn.badge{ border-radius:3px; }
+#panel.cntbox-square .bkhd .bkn.badge{ border-radius:0; }
+#panel.cntbox-outline .bkhd .bkn.badge{ background:transparent; border-color:var(--muted); }
+#panel.cntbox-bare .bkhd .bkn.badge{ background:transparent; border-color:transparent; padding:0; }

@@ -21,7 +21,7 @@
   function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function ico(n, size, col, cls){ return S.icon(n, size || 13, col, cls); }
   var RWC = { r: S.RW.r, w: S.RW.w, rw: S.RW.rw };
-  function rwChip(rw){ return '<i class="jdrw jdrw-' + rw + '" style="background:' + RWC[rw] + '">' + (rw === "rw" ? "RW" : rw.toUpperCase()) + '</i>'; }
+  function rwChip(rw){ return '<i class="jdrw jdrw-' + rw + '" style="--rwc:' + RWC[rw] + '">' + (rw === "rw" ? "RW" : rw.toUpperCase()) + '</i>'; }
   function trust(tr){ return tr === "inferred" ? '<span class="ttag inferred" title="inferred — a graft-call / web-bridge floor (kind-level, not per-edge proof)">inferred</span>' : '<span class="ttag structural" title="structural — an exact archmap / FK join">structural</span>'; }
   function sechd(icon, label, count, ok, col){ return '<div class="sechd">' + ico(icon, 13, col) + '<span>' + esc(label) + '</span>' + (count != null ? '<span class="cnt' + (ok ? " ok" : "") + '">' + esc(count) + '</span>' : "") + '</div>'; }
   /* the hover card in the station's _jdCellPop shape: header · kind/entity · rows · fields · "in the station" */
@@ -755,7 +755,7 @@
   window.BKPART = BKPART;
   function bkPart(key, t, S, B){ var ec = t.entity_color || "#888", z = (B.size || {})[key] || 12;
     if (key === "icon") return B.icon ? '<span class="bki">' + ico("model", z, bkIconCol(t, S)) + '</span>' : null;
-    if (key === "rw") return B.rw ? '<span class="bkrw" style="font-size:' + z + 'px">' + rwChip(t.rw) + '</span>' : null;
+    if (key === "rw") return B.rw ? '<span class="bkrw">' + rwChip(t.rw) + '</span>' : null;   /* size: --rw-fs */
     if (key === "name") return B.name ? E("b", { style: "font-size:" + z + "px" }, esc(t.table)) : null;
     if (key === "ent") { if (B.ent === "off") return null;
       var e = E("span", { class: "bke", style: "color:" + ec + ";font-size:" + z + "px" });
@@ -763,7 +763,7 @@
       if (B.ent === "word" || B.ent === "both") e.append(E("span", null, esc(t.entity || "—")));
       return e; }
     if (key === "count") { if (B.count === "off") return null;
-      return E("span", { class: "bkn" + (B.count === "badge" ? " badge" : ""), style: "font-size:" + z + "px" },
+      return E("span", { class: "bkn" + (B.count === "badge" ? " badge" : "") },   /* size: --cnt-fs */
         B.count === "badge" ? String(t.cols.length) : t.cols.length + " fields"); }
     if (key === "model") { if (B.model === "off") return null;
       var m = E("span", { class: "bkm", style: "font-size:" + z + "px" });
