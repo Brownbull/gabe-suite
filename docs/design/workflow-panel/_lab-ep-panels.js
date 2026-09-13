@@ -697,7 +697,11 @@
     char:   { word: "a character", plain: "the mark is a letter — # a key, A words, 1 a number, Y yes-or-no, T a moment, \u2261 many, ? unnamed" },
     shape:  { word: "a shape", plain: "the mark's FORM is the kind — a circle, a square, a diamond, a triangle, a ring, bars, a cross" },
     symbol: { word: "a symbol", plain: "the mark is the station's own glyph for that kind" } };
-  function sqEnc(){ return ((window.DATACFG || {}).sqEnc) || "colour"; }
+  /* THE LOOK a renderer reads (operator 2026-09-13): Data's, unless the open part keeps its own copy (Schemas, looks own) */
+  function lookCfg(){ var pn = document.getElementById("panel"), C = window.SCHCFG || {};
+    return pn && pn.dataset.tab === "schemas" && C.map && C.map.looks === "own" && C.look ? C.look : (window.DATACFG || {}); }
+  window.LOOKCFG = lookCfg;
+  function sqEnc(){ return (lookCfg().sqEnc) || "colour"; }
   /* ONE field mark, everywhere a field is drawn — the blocks, the opened list, the portrait's cells */
   function sqNode(c, t, S, cls){
     var tc = typeOf(c[1]), col = sqCol(t, c, S), enc = sqEnc();
@@ -717,7 +721,7 @@
     for (var i = 0; i < TYPEC.length - 1; i++) if (TYPEC[i].rx.test(base)) return TYPEC[i];
     return TYPEC[TYPEC.length - 1]; }
   function isOpt(t){ return /\|\s*None\s*$/.test(String(t || "")); }
-  function sqCol(t, c, S){ var DC = window.DATACFG || {}, pal = DC.sqPal || "type";
+  function sqCol(t, c, S){ var DC = lookCfg(), pal = DC.sqPal || "type";
     return pal === "channel" ? RWC[t.rw] : pal === "entity" ? (t.entity_color || "#888")
       : pal === "mono" ? "var(--muted)" : typeOf(c[1]).col(S); }
   /* THE BLOCK TITLE is configurable part by part (operator 2026-09-12): an icon can stand in for a word,
@@ -805,20 +809,20 @@
      then the channel as the block's own chip with the words inside · the field count in the fields pill, followed by
      what the fields are made of in the marks already chosen · and a quiet footer. Every look is READ from the live
      settings, so changing a pill, a chip or an encoding changes the card too. ══ */
-  function pillLook(key, S){ var c = window.DATACFG || {}, col = kindColOf({ key: key }, S), a = c.pillAlpha == null ? 100 : c.pillAlpha;
+  function pillLook(key, S){ var c = lookCfg(), col = kindColOf({ key: key }, S), a = c.pillAlpha == null ? 100 : c.pillAlpha;
     var ink = { white: "#fff", ink: "var(--ink)", kind: col, accent: "var(--accent)", muted: "var(--muted)" }[c.pillInk || "white"];
     var ground = { accent: "var(--accent)", kind: col, chip: "var(--chip-bg)", panel: "var(--panel)", ink: "var(--ink)", none: "transparent" }[c.pillBg || "accent"];
     var radius = { pill: "999px", round: "7px", rect: "3px", square: "0" }[c.pillShape || "pill"];
     return "color:" + ink + ";background:color-mix(in srgb, " + ground + " " + a + "%, transparent);border-color:color-mix(in srgb, " + ground + " 55%, transparent);border-radius:" + radius; }
   function chipLook(rw, S){ return chipLookOf(RWC[rw]); }
   /* the chip's look for ANY colour — Schemas' IN · OUT chip wears the same box, fill and size as Data's channel chip */
-  function chipLookOf(col){ var B = (window.DATACFG || {}).bk || {}, a = B.rwA == null ? 100 : B.rwA, box = B.rwBox || "tag";
+  function chipLookOf(col){ var B = lookCfg().bk || {}, a = B.rwA == null ? 100 : B.rwA, box = B.rwBox || "tag";
     var clear = box === "outline" || box === "bare";
     var radius = { pill: "999px", tag: "3px", square: "0", outline: "3px", bare: "0" }[box];
     return "--rwc:" + col + ";color:" + (clear || a < 50 ? col : "#0b0e13") + ";background:" + (clear ? "transparent" : "color-mix(in srgb, " + col + " " + a + "%, transparent)")
       + ";border-color:" + (box === "outline" ? col : "transparent") + ";border-radius:" + radius + (box === "bare" ? ";padding:0" : ""); }
   function blockCard(t, S){
-    var ec = t.entity_color || "#888", portOn = (window.FRAME || {}).portW > 0, pal = (window.DATACFG || {}).sqPal || "type";
+    var ec = t.entity_color || "#888", portOn = (window.FRAME || {}).portW > 0, pal = lookCfg().sqPal || "type";
     var mix = {}; t.cols.forEach(function(c){ var k = typeOf(c[1]).key; mix[k] = (mix[k] || 0) + 1; });
     var h = '<div class="bchd"><span class="bci">' + ico("model", 16, bkIconCol(t, S)) + "</span><b>" + esc(t.table) + "</b></div>";
     h += '<div class="bcln" data-ln="entity"><span class="bci">' + ico("entity", 14, ec) + '</span><span class="bcent" style="color:' + ec + '">' + esc(t.entity || "—") + "</span></div>";
@@ -847,9 +851,9 @@
       + (countText === "" ? "" : '<span class="ftn">' + countText + "</span>");
     bind(p, cardFn); return p; }
   /* the mark exactly as the blocks draw it right now — encoding AND colour rule */
-  function kindMarkShown(x, S){ var pal = (window.DATACFG || {}).sqPal || "type"; return kindMark(x, S, pal === "type" ? null : "var(--muted)"); }
+  function kindMarkShown(x, S){ var pal = lookCfg().sqPal || "type"; return kindMark(x, S, pal === "type" ? null : "var(--muted)"); }
   function footKindCard(x, n, total, S){
-    var pal = (window.DATACFG || {}).sqPal || "type", carries = pal === "type", enc = sqEnc(), m = kindMarkShown(x, S);
+    var pal = lookCfg().sqPal || "type", carries = pal === "type", enc = sqEnc(), m = kindMarkShown(x, S);
     m.style.setProperty("--sq", "15px");
     var how = enc === "char" ? "a character — “" + x.ch + "”" : enc === "shape" ? "a shape — a " + x.shape : enc === "symbol" ? "the station's own " + x.word + " glyph" : "a filled mark";
     return window.hcard({ title: x.word, value: n + " of " + total + " fields", iconHtml: '<span class="cpmark">' + m.outerHTML + "</span>",
@@ -1502,9 +1506,14 @@
   function schBase(t){ var b = String(t || "").replace(/\s*\|\s*None\s*$/, "").trim(), m;
     while ((m = /^(list|List|Optional|Sequence|set|Set|tuple|Tuple)\[(.*)\]$/.exec(b))) b = m[2].trim();
     return b; }
-  function schKind(c){ var b = schBase(c[1]);
-    if (/^[A-Z][A-Za-z0-9_]*$/.test(b) && !NOTSHAPE.test(b) && !TYPEC.slice(0, -1).some(function(x){ return x.rx.test(b); })) return SHAPEK;
-    return typeOf(c[1]); }
+  function schIsShape(c){ var b = schBase(c[1]);
+    return /^[A-Z][A-Za-z0-9_]*$/.test(b) && !NOTSHAPE.test(b) && !TYPEC.slice(0, -1).some(function(x){ return x.rx.test(b); }); }
+  /* THE SCHEMA MAP (operator 2026-09-13: "build them all and have them as options to choose in the left panel") — every
+     choice made when Schemas was carried over is a setting: blocks all|bodies · nested kind shape|other · direction colour
+     rw|schema|neutral · looks shared|own. Detecting a nested field never changes; only how it is DRAWN does. */
+  function schMap(){ var m = schCfg().map || {};
+    return { blocks: m.blocks || "all", nestKind: m.nestKind || "shape", dirCol: m.dirCol || "rw", looks: m.looks || "shared" }; }
+  function schKind(c){ return schIsShape(c) && schMap().nestKind === "shape" ? SHAPEK : typeOf(c[1]); }
   var SCHKINDS = TYPEC.slice(0, -1).concat([SHAPEK, TYPEC[TYPEC.length - 1]]);
   /* the two directions take the channel slot: the request travels IN (the door reads it — read green), the response
      travels OUT (the door writes it — write orange) */
@@ -1530,18 +1539,18 @@
   function schByName(F, n){ return schShapes(F).filter(function(s){ return s.name === n; })[0] || null; }
   function schShown(F){ return schShapes(F).filter(function(s){ return schDirOn(s.dir); }); }
   function schFields(list){ return list.reduce(function(n, s){ return n + s.cols.length; }, 0); }
-  function schNestN(list){ return list.reduce(function(n, s){ return n + s.cols.filter(function(c){ return schKind(c) === SHAPEK; }).length; }, 0); }
+  function schNestN(list){ return list.reduce(function(n, s){ return n + s.cols.filter(function(c){ return schIsShape(c); }).length; }, 0); }
   window.SCHSHAPES = function(){ return schShapes(window.LABEP); };
   window.SCHKIND = function(t){ return schKind(["", t]).key; };
   /* ONE field mark, the table's own — only the colour rule's CHANNEL reads the direction here */
-  function schNode(c, s, S, cls){ var tc = schKind(c), enc = sqEnc(), pal = (window.DATACFG || {}).sqPal || "type";
-    var col = pal === "channel" ? SCHDIR[s.dir].col(S) : pal === "entity" ? s.entity_color : pal === "mono" ? "var(--muted)" : tc.col(S);
+  function schNode(c, s, S, cls){ var tc = schKind(c), enc = sqEnc(), pal = lookCfg().sqPal || "type";
+    var col = pal === "channel" ? dirCol(s.dir, S) : pal === "entity" ? s.entity_color : pal === "mono" ? "var(--muted)" : tc.col(S);
     var q = E("i", { class: "sq e-" + enc + " t-" + tc.key + (isOpt(c[1]) ? " opt" : "") + (cls ? " " + cls : "") });
     q.style.setProperty("--fc", col);
     if (enc === "char") q.textContent = tc.ch; else if (enc === "symbol") q.innerHTML = ico(tc.sym, null, "currentColor");
     return q; }
   /* where a field's shape goes — the TYPE already names it, so this says what is behind the name, never the name twice */
-  function schNest(F, c){ if (schKind(c) !== SHAPEK) return ""; var n = schByName(F, schBase(c[1]));
+  function schNest(F, c){ if (!schIsShape(c)) return ""; var n = schByName(F, schBase(c[1]));
     return n ? '<span class="fkx out" data-nest="in-feed">' + ico("schema", 12, S.KINDCOL.schema) + "<span>→ " + n.cols.length + " field" + (n.cols.length === 1 ? "" : "s") + "</span></span>"
       : '<span class="fkx out nest-nf" data-nest="not-in-feed">' + ico("schema", 12, "var(--muted)") + "<span>—</span></span>"; }   /* the row's card says the feed does not carry it */
 
@@ -1558,13 +1567,15 @@
     { key: "count", word: "the field count", ico: "info", note: "how many fields the shape holds — in words or as a badge" },
     { key: "via", word: "where it sits", ico: "link", note: "a body, or the parent shape and the field that carries it" } ];
   window.SCHPART = SCHPART;
-  function schIconCol(s, S){ var ic = ((window.DATACFG || {}).bk || {}).iconCol || "model";
-    return ic === "ink" ? "var(--ink)" : ic === "muted" ? "var(--muted)" : ic === "entity" ? s.entity_color : ic === "channel" ? SCHDIR[s.dir].col(S) : S.KINDCOL.schema; }
-  function dirLook(dir, S){ return chipLookOf(SCHDIR[dir].col(S)); }
+  function schIconCol(s, S){ var ic = (lookCfg().bk || {}).iconCol || "model";
+    return ic === "ink" ? "var(--ink)" : ic === "muted" ? "var(--muted)" : ic === "entity" ? s.entity_color : ic === "channel" ? dirCol(s.dir, S) : S.KINDCOL.schema; }
+  /* the direction's colour is a map choice: read/write (IN green · OUT orange) · the schema colour for both · a quiet grey */
+  function dirCol(d, S){ var m = schMap().dirCol; return m === "schema" ? S.KINDCOL.schema : m === "neutral" ? "#8794ab" : SCHDIR[d].col(S); }
+  function dirLook(dir, S){ return chipLookOf(dirCol(dir, S)); }
   function viaWords(s){ return s.top ? (s.dir === "in" ? "request body" : "response body") : s.parent + (s.via.length ? " · " + s.via.join(", ") : ""); }
   function schPart(key, s, S, B){ var z = (B.size || {})[key] || 12;
     if (key === "icon") return B.icon ? '<span class="bki">' + ico("schema", z, schIconCol(s, S)) + "</span>" : null;
-    if (key === "dir") return B.dir ? '<span class="bkrw"><i class="jdrw sdir" style="--rwc:' + SCHDIR[s.dir].col(S) + '">' + SCHDIR[s.dir].chip + "</i></span>" : null;   /* size: --rw-fs, Data's */
+    if (key === "dir") return B.dir ? '<span class="bkrw"><i class="jdrw sdir" style="--rwc:' + dirCol(s.dir, S) + '">' + SCHDIR[s.dir].chip + "</i></span>" : null;   /* size: --rw-fs, Data's */
     if (key === "name") return B.name ? E("b", { style: "font-size:" + z + "px" }, esc(s.name)) : null;
     if (key === "ent") { if (B.ent === "off") return null;
       var e = E("span", { class: "bke", style: "color:" + s.entity_color + ";font-size:" + z + "px" });
@@ -1593,7 +1604,7 @@
     { key: "fields", icon: "table", col: function(S){ return S.KINDCOL.route; }, word: function(n){ return n + " field" + (n === 1 ? "" : "s"); }, get: schFields },
     { key: "nested", icon: "link", col: function(S){ return S.KINDCOL.component; }, word: function(n){ return n + " nested"; }, get: schNestN } ];
   function schCountMode(k){ return ((schCfg().counts || {})[k]) || "off"; }
-  function schPills(list, F, S){ var split = (window.DATACFG || {}).countPills === "each";
+  function schPills(list, F, S){ var split = lookCfg().countPills === "each";
     var live = SCHCOUNT.filter(function(c){ return schCountMode(c.key) !== "off"; }); if (!live.length) return null;
     function span(c){ var m = schCountMode(c.key), n = c.get(list), sp = E("span", { class: "dcn", "data-count": c.key });
       sp.style.setProperty("--k", c.col(S));
@@ -1623,20 +1634,20 @@
         rows: [["optional", opt + " accept None"], ["across", pl(list.length, "shape")]],
         plain: "the fields inside those shapes — the values that travel in and out" }); }
     var res = 0, nf = 0;
-    list.forEach(function(s){ s.cols.forEach(function(c){ if (schKind(c) !== SHAPEK) return; if (schByName(F, schBase(c[1]))) res++; else nf++; }); });
+    list.forEach(function(s){ s.cols.forEach(function(c){ if (!schIsShape(c)) return; if (schByName(F, schBase(c[1]))) res++; else nf++; }); });
     return H({ title: "nested", value: String(res + nf), icon: "link", color: S.KINDCOL.component,
       factors: [{ state: res ? "ok" : "quiet", name: "drawn here", value: String(res), rule: "the shape it names is in the feed, with a block of its own" },
                 { state: "quiet", name: "not in the feed", value: String(nf), rule: "the shape is named, but the feed does not carry its fields" }],
       factorLabel: "what adds up to " + (res + nf),
-      rows: [["carried by", pl(list.filter(function(s){ return s.cols.some(function(c){ return schKind(c) === SHAPEK; }); }).length, "shape")]],
+      rows: [["carried by", pl(list.filter(function(s){ return s.cols.some(function(c){ return schIsShape(c); }); }).length, "shape")]],
       plain: "a field whose value is a whole shape of its own" }); }
   window.SCHPILLCARD = schPillCard;
   function schDirBar(F, S){ var w = E("div", { class: "chbar" }), all = schShapes(F);
     ["in", "out"].forEach(function(d){ var D = SCHDIR[d], mine = all.filter(function(s){ return s.dir === d; }), on = schDirOn(d);
       var b = E("button", { class: "chb" + (on ? " on" : "") + (mine.length ? "" : " zero") });
       b.dataset.schDir = d; b.dataset.on = on ? "1" : "0";
-      b.innerHTML = ico(D.icon, 13, D.col(S)) + '<span class="chn">' + mine.length + "</span>";
-      bind(b, function(){ return window.hcard({ title: D.long, value: mine.length + " shape" + (mine.length === 1 ? "" : "s") + " · " + (on ? "on" : "off"), icon: D.icon, color: D.col(S),
+      b.innerHTML = ico(D.icon, 13, dirCol(d, S)) + '<span class="chn">' + mine.length + "</span>";
+      bind(b, function(){ return window.hcard({ title: D.long, value: mine.length + " shape" + (mine.length === 1 ? "" : "s") + " · " + (on ? "on" : "off"), icon: D.icon, color: dirCol(d, S),
         rows: [["fields", String(schFields(mine))], ["click", on ? "switches it off, leaving the other as it is" : "adds it to what is shown"]],
         plain: D.plain }); });
       b.onclick = function(ev){ ev.stopPropagation(); var st = window.SCHCFG.dir; st[d] = st[d] ? 0 : 1; window.showTab("schemas"); if (window.drawSchCfg) window.drawSchCfg(); };
@@ -1682,7 +1693,7 @@
 
   /* the shape's card mirrors its block: glyph + name · entity · where it sits · file (· who else returns it) · the
      direction as the block's own chip · the fields pill with what they are made of · a quiet footer */
-  function schCard(s, F, S){ var mix = {}, pal = (window.DATACFG || {}).sqPal || "type", portOn = (window.FRAME || {}).portW > 0;
+  function schCard(s, F, S){ var mix = {}, pal = lookCfg().sqPal || "type", portOn = (window.FRAME || {}).portW > 0;
     s.cols.forEach(function(c){ var k = schKind(c).key; mix[k] = (mix[k] || 0) + 1; });
     var h = '<div class="bchd"><span class="bci">' + ico("schema", 16, schIconCol(s, S)) + "</span><b>" + esc(s.name) + "</b></div>";
     h += '<div class="bcln" data-ln="entity"><span class="bci">' + ico("entity", 14, s.entity_color) + '</span><span class="bcent" style="color:' + s.entity_color + '">' + esc(s.entity) + "</span></div>";
@@ -1709,7 +1720,8 @@
         E("span", null, "there is nothing to draw — switch IN or OUT back on in the title row, or in the rail.")));
       COV.mark("PAYLOAD", "schemas"); return; }
     var body = E("div", { class: "bkbody form-" + B.form });
-    schSorted(list).forEach(function(s){
+    var bodiesOnly = schMap().blocks === "bodies";
+    schSorted(bodiesOnly ? list.filter(function(x){ return x.top; }) : list).forEach(function(s){
       var blk = E("div", { class: "blk sch dir-" + s.dir + (sel === s.name ? " sel" : ""), style: "--ec:" + s.entity_color });
       blk.dataset.table = s.name;
       var hd = E("div", { class: "bkhd" }), ti = E("div", { class: "bkti" });
@@ -1718,8 +1730,18 @@
         put(L, line.l); put(R, line.r); ln.append(L, R); ti.append(ln); });
       hd.append(ti);
       var sqs = E("div", { class: "sqs" });
-      s.cols.forEach(function(c){ sqs.append(schNode(c, s, S, schKind(c) === SHAPEK ? "nest" : "")); });
+      s.cols.forEach(function(c){ sqs.append(schNode(c, s, S, schIsShape(c) ? "nest" : "")); });
       hd.append(sqs); blk.append(hd);
+      /* BODIES ONLY: each nested shape is a chip inside its body — a drawn shape of its own, so it keeps its own card
+         and its own click into the record */
+      if (bodiesOnly && s.top) { var kids = list.filter(function(x){ return x.parent === s.name; }).sort(function(a, b){ return a.seq - b.seq; });
+        if (kids.length) { var nr = E("div", { class: "snest" });
+          kids.forEach(function(k){ var ch = E("span", { class: "snc" + (sel === k.name ? " sel" : "") }, ico("schema", 12, schIconCol(k, S)), E("b", null, esc(k.name)), E("span", { class: "n" }, String(k.cols.length)));
+            ch.dataset.table = k.name;
+            bind(ch, function(){ return schCard(k, F, S); });
+            ch.addEventListener("click", function(ev){ ev.stopPropagation(); if (portOn) window.selectIn("schemas", k.name); });
+            nr.append(ch); });
+          blk.append(nr); } }
       var fl = E("div", { class: "flds bkfl" });
       s.cols.forEach(function(c){ fl.append(E("div", { class: "fld" }, schNode(c, s, S), E("span", { class: "fn" }, esc(c[0])), schNest(F, c), E("span", { class: "ft" }, esc(c[1] || "—")))); });
       blk.append(fl);
@@ -1777,14 +1799,14 @@
     tab.append(E("div", { class: "rcth" },
       E("span", { class: "c-f" }, "fields", E("i", { class: "rcfp", style: pillLook("fields", S) }, String(s.cols.length))),
       E("span", { class: "c-k" }, "nested shape"), E("span", { class: "c-t" }, "data type")));
-    s.cols.forEach(function(c){ var tc = schKind(c), nb = tc === SHAPEK ? schByName(F, schBase(c[1])) : null;
-      var f = E("div", { class: "fld" + (tc === SHAPEK ? " nest" : "") },
+    s.cols.forEach(function(c){ var tc = schKind(c), isS = schIsShape(c), nb = isS ? schByName(F, schBase(c[1])) : null;
+      var f = E("div", { class: "fld" + (isS ? " nest" : "") },
         E("span", { class: "c-f" }, schNode(c, s, S), E("span", { class: "fn" }, esc(c[0]))),
         E("span", { class: "c-k" }, schNest(F, c)),
         E("span", { class: "c-t ft" }, typeWbr(c[1])));
-      bind(f, card({ title: c[0], sub: String(c[1] || "—"), icon: tc === SHAPEK ? "schema" : "table", color: tc.col(S),
+      bind(f, card({ title: c[0], sub: String(c[1] || "—"), icon: isS ? "schema" : "table", color: tc.col(S),
         rows: [["kind", tc.word + " — " + tc.plain], ["in", s.name], isOpt(c[1]) ? ["optional", "accepts None"] : null,
-               tc === SHAPEK ? ["the shape", nb ? nb.name + " · " + nb.cols.length + " fields, with a block of its own" : schBase(c[1]) + " — named, but the feed does not carry its fields"] : null] }));
+               isS ? ["the shape", nb ? nb.name + " · " + nb.cols.length + " fields, with a block of its own" : schBase(c[1]) + " — named, but the feed does not carry its fields"] : null] }));
       tab.append(f); });
     b.append(tab);
     if (s.cols_more) b.append(E("div", { class: "ptsec" }, "+" + s.cols_more + " more the feed did not carry"));

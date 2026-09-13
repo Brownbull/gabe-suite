@@ -1130,6 +1130,14 @@ html, body{ height:100%; }
 #panel[data-tab="schemas"].sh-title .phd .sechd > span:not(.cnt):not(.dcnts){ display:none; }
 #panel[data-tab="schemas"].sh-legend .bkfoot .ftp:not([data-part="hint"]){ display:none; }
 .fkx.nest-nf{ color:var(--muted); font-style:italic; }
+/* the schema map's BODIES ONLY: each nested shape a chip inside its body, with its own card and its own click */
+.snest{ display:flex; flex-wrap:wrap; gap:4px 6px; padding:0 9px 7px; }
+.snc{ display:inline-flex; align-items:center; gap:4px; max-width:100%; padding:1px 7px; border:1px solid var(--line); border-radius:6px;
+  background:var(--panel); font:600 12px/1.35 var(--font-mono); color:var(--ink); cursor:pointer; min-width:0; }
+.snc svg{ flex:none; }
+.snc b{ font-weight:600; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.snc .n{ color:var(--muted); font-variant-numeric:tabular-nums; }
+.snc:hover, .snc.sel{ border-color:var(--accent); }
 .bkhd .bkv svg, .bkhd .bke svg, .bkhd .bkm svg{ flex:none; }   /* a long "where" line shrinks its words, never its glyph */
 /* the schema record's type column takes its full width when there is room and wraps at word boundaries when there is not */
 .ptrec .rctab.sch{ grid-template-columns:max-content minmax(min-content, 1fr) minmax(min-content, max-content); }

@@ -1082,10 +1082,10 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   // the rail and the copy line
   ok(await p.evaluate(() => window.COPYTXT.schemas()) === 'schemas · shown as blocks · directions in+out · title counts shapes icon, fields icon, nested icon · sort tree'
      + ' · block block (glyph on, chip on, name on, entity both, count badge, where both) · lines icon name | — / ent | count dir / via | — · sizes icon 13 name 13 ent 12 via 12'
-     + ' · footer icon count · drawn legend · hidden title note · looks from data', 'the schemas copy line names every setting and says where the shared looks come from', await p.evaluate(() => window.COPYTXT.schemas()));
+     + ' · footer icon count · drawn legend · hidden title note · map blocks all, nested shape, colour rw, looks shared', 'the schemas copy line names every setting, the schema map among them', await p.evaluate(() => window.COPYTXT.schemas()));
   { const g = await p.$$eval('#schcfg .cffold', els => els.map(e => ({ k: e.dataset.group, open: e.classList.contains('open'), body: getComputedStyle(e.querySelector('.cffoldbody')).display })));
-    ok(g.length === 8 && g.filter(x => x.open).map(x => x.k).join() === 'title' && g.filter(x => !x.open).every(x => x.body === 'none'),
-       'the schemas rail is eight folds, only BLOCK TITLE open — and a closed fold really hides its body', JSON.stringify(g)); }
+    ok(g.length === 9 && g.filter(x => x.open).map(x => x.k).join() === 'map' && g.filter(x => !x.open).every(x => x.body === 'none'),
+       'the schemas rail is nine folds, only THE SCHEMA MAP open — and a closed fold really hides its body', JSON.stringify(g)); }
   await p.evaluate(() => window.moveSchPart('via', 0, 'r', 0)); await p.waitForTimeout(260);
   { const l = await p.$$eval('#panel .blk:first-child .bkln', els => els.map(e => [...e.querySelector('.bkcol.r').children].map(c => c.className)));
     ok(l.length === 2 && l[0].some(c => /bkv/.test(c)), 'a title part drags to another line — WHERE moves up beside the name and the empty third line goes', JSON.stringify(l)); }
@@ -1094,6 +1094,42 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   await p.evaluate(() => { window.DATACFG.bk.rwBox = 'square'; window.applyData(); }); await p.waitForTimeout(150);
   ok(await p.$eval('#panel .blk .bkhd .bkrw .jdrw', e => parseFloat(getComputedStyle(e).borderTopLeftRadius) === 0), 'a chip box set in Data\'s rail reaches the IN · OUT chip — shared, not copied');
   await p.evaluate(() => { window.DATACFG.bk.rwBox = 'pill'; window.applyData(); window.showTab('data'); }); await p.waitForTimeout(250); }
+
+// ══ THE SCHEMA MAP AS OPTIONS (operator 2026-09-13: "build them all and have them as options to choose in the left panel") —
+//    blocks all|bodies · nested kind shape|other · direction colour rw|schema|neutral · looks shared|own ══
+{ const SC = F.data.schemas, bodies = [SC.request.name, SC.response.name];
+  await p.evaluate(() => { window.showVariant('schemas', 'blocks'); window.drawSchCfg(); }); await p.waitForTimeout(280);
+  ok(await p.$$eval('#schcfg .cffold[data-group="map"] .ib', els => ['sch-map-blocks', 'sch-map-kind', 'sch-map-col', 'sch-map-looks'].every(a => els.some(e => e.hasAttribute('data-' + a)))),
+     'the schema map offers four choices as buttons: blocks · nested kind · direction colour · looks');
+  await p.click('#schcfg .ib[data-sch-map-blocks="bodies"]'); await p.waitForTimeout(280);
+  { const b = await p.$$eval('#panel .blk', els => els.map(e => ({ n: e.dataset.table, chips: [...e.querySelectorAll('.snc')].map(c => c.dataset.table) })));
+    const want = [SC.request, SC.response].map(s => (s.nested || []).length);
+    ok(b.map(x => x.n).join() === bodies.join() && b.every((x, i) => x.chips.length === want[i]), 'BODIES ONLY draws the two bodies, each nested shape a chip inside its body', JSON.stringify(b)); }
+  { const s = await p.evaluate(() => { const c = document.querySelector('#panel .snc'); c.click(); return c.dataset.table; }); await p.waitForTimeout(260);
+    ok(await p.$eval('#portt', e => e.textContent) === s, 'and a nested chip still opens its own record', s); }
+  await p.evaluate(() => window.selectIn('schemas', null));
+  await p.click('#schcfg .ib[data-sch-map-blocks="all"]'); await p.waitForTimeout(260);
+  await p.click('#schcfg .ib[data-sch-map-kind="other"]'); await p.waitForTimeout(260);
+  { const k = await p.evaluate(() => ({ shape: document.querySelectorAll('#panel .blk .bkhd .sq.t-shape').length,
+      other: +((document.querySelector('#panel .bkfoot .ftp[data-part="other"] .ftn') || {}).textContent || 0), nested: +document.querySelector('#panel .sechd .dcn[data-count="nested"]').textContent }));
+    ok(k.shape === 0 && k.nested > 0 && k.other >= k.nested, 'NESTED KIND other files those fields under OTHER — no shape marks, and the nested count stands', JSON.stringify(k)); }
+  await p.click('#schcfg .ib[data-sch-map-kind="shape"]'); await p.waitForTimeout(220);
+  const chipCol = () => p.$eval('#panel .blk .bkhd .bkrw .jdrw', e => e.style.getPropertyValue('--rwc').trim().toLowerCase());
+  await p.click('#schcfg .ib[data-sch-map-col="schema"]'); await p.waitForTimeout(260);
+  ok(await chipCol() === (await p.evaluate(() => window.STATION.KINDCOL.schema)).toLowerCase(), 'DIRECTION COLOUR schema paints the IN chip in the schema colour', await chipCol());
+  await p.click('#schcfg .ib[data-sch-map-col="rw"]'); await p.waitForTimeout(220);
+  ok(await chipCol() === (await p.evaluate(() => window.STATION.OPC.read)).toLowerCase(), 'and read/write gives IN its read green back', await chipCol());
+  await p.click('#schcfg .ib[data-sch-map-looks="own"]'); await p.waitForTimeout(260);
+  ok(await p.evaluate(() => !!window.SCHCFG.look && window.SCHCFG.look.sqEnc === window.DATACFG.sqEnc && window.SCHCFG.look.pillBg === window.DATACFG.pillBg), 'LOOKS own starts as a copy of Data\'s look');
+  await p.click('#schcfg .ib[data-sch-lk-enc="char"]'); await p.waitForTimeout(260);
+  { const sch = await p.$$eval('#panel .blk .bkhd .sq', els => els.length > 0 && els.every(e => e.classList.contains('e-char')));
+    await p.evaluate(() => window.showVariant('data', 'blocks')); await p.waitForTimeout(260);
+    const dat = await p.$$eval('#panel .blk .bkhd .sq', els => els.length > 0 && els.every(e => e.classList.contains('e-' + window.DATACFG.sqEnc)));
+    ok(sch && dat && await p.evaluate(() => window.DATACFG.sqEnc !== 'char'), 'a mark set in Schemas\' own look draws characters in Schemas while Data keeps its own', JSON.stringify({ sch, dat })); }
+  await p.evaluate(() => { window.showTab('schemas'); }); await p.waitForTimeout(220);
+  ok(/looks own \(char /.test(await p.evaluate(() => window.COPYTXT.schemas())), 'the copy line carries Schemas\' own look while it has one');
+  await p.evaluate(() => { Object.assign(window.SCHCFG.map, { blocks: 'all', nestKind: 'shape', dirCol: 'rw', looks: 'shared' }); window.SCHCFG.look = null; window.applyData(); window.drawSchCfg(); window.showTab('data'); });
+  await p.waitForTimeout(260); }
 
 // the tests below were written against the station chip's look with every dial in reach — give them that baseline
 await p.evaluate(() => { Object.assign(window.DATACFG, { countPills: 'one', pillInk: 'white', pillBg: 'accent', pillAlpha: 100, sqEnc: 'colour', sqSize: 11, sqGap: 2, sqBase: 100, sqOptA: 45, sqUqMark: 'none' });
