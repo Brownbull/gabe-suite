@@ -639,10 +639,11 @@
       var list = E("div", { class: "flds" });
       t.cols.forEach(function(c){ var isFk = fkSet[c[0]], isUq = uqSet[c[0]];
         var f = E("div", { class: "fld" + (isFk ? " fk" : "") + (isUq ? " uq" : "") },
-          E("span", { class: "fn" }, esc(c[0])), E("span", { class: "ft" }, esc(c[1] || "—")));
+          E("span", { class: "fn" }, esc(c[0])), fkMarks(t, c[0]), E("span", { class: "ft" }, esc(c[1] || "—")));
         bind(f, card({ title: c[0], sub: String(c[1] || "—"), icon: isFk ? "key" : "table", color: t.entity_color,
           rows: [["in", t.table], ["the door", t.rw === "rw" ? "reads and writes this table" : t.rw === "w" ? "writes this table" : "reads this table", RWC[t.rw]],
-                 isFk ? ["foreign key", "→ " + (isFk === true ? "another table" : isFk)] : null,
+                 isFk ? ["points at", "→ " + (isFk === true ? "another table" : isFk)] : null,
+                 fkIn(t, c[0]).length ? ["pointed at by", fkIn(t, c[0]).join(" · ") + " — among the tables this door touches"] : null,
                  isUq ? ["unique", "the DB refuses a second row with this value"] : null],
           body: "per-COLUMN direction is not in the feed — this field carries its table's channel, said out loud rather than guessed." }));
         list.append(f); });
@@ -780,6 +781,25 @@
       ((row && row.r) || []).forEach(function(k){ var n = bkPart(k, t, S, B); if (n) R.push(n); });
       if (L.length || R.length) out.push({ l: L, r: R }); });
     return out; }
+  /* ══ FOREIGN KEYS ON EVERY LIST OF FIELDS (operator 2026-09-13) — a field row says what it POINTS AT (→ the
+     referenced table.column, from the feed's own keys) and, when another table's key points at it, HOW MANY do. The
+     inbound side is derived from the keys of the tables this door touches, so it is exact for those and silent about
+     the rest of the database, which the feed does not carry — the card says so. ══ */
+  var FKIN = null;
+  function fkIn(t, col){
+    if (!FKIN) { FKIN = {};
+      (((window.LABEP || {}).data || {}).tables || []).forEach(function(o){
+        (o.fks || []).forEach(function(f){ if (Array.isArray(f) && f[1]) (FKIN[String(f[1])] = FKIN[String(f[1])] || []).push(o.table + "." + f[0]); }); }); }
+    return FKIN[t.table + "." + col] || []; }
+  function fkOut(t, col){ var out = null;
+    (t.fks || []).forEach(function(f){ var c = Array.isArray(f) ? f[0] : f; if (c === col) out = Array.isArray(f) && f[1] ? String(f[1]) : "another table"; });
+    return out; }
+  function fkMarks(t, col){ var out = fkOut(t, col), inb = fkIn(t, col), h = "";
+    if (out) h += '<span class="fkx out" data-fk="out">' + ico("key", 12, S.KINDCOL.external) + "<span>→ " + esc(out) + "</span></span>";
+    if (inb.length) h += '<span class="fkx in" data-fk="in">' + SVGI('<path d="M21 12H8M12 8l-4 4 4 4"/><path d="M4 5v14"/>', 12) + "<span>" + inb.length + "</span></span>";
+    return h; }
+  window.FKMARKS = fkMarks;
+
   /* ══ THE BLOCK CARD (operator 2026-09-13) — the hover mirrors the block it came from, in the block's own colours:
      the table name in ink behind the table glyph · the entity with its glyph and colour · the class · the file ·
      then the channel as the block's own chip with the words inside · the field count in the fields pill, followed by
@@ -837,24 +857,20 @@
       var sqs = E("div", { class: "sqs" });
       t.cols.forEach(function(c){ var tc = typeOf(c[1]), opt = isOpt(c[1]), isFk = fkSet[c[0]], isUq = uqSet[c[0]];
         var q = sqNode(c, t, S, (isFk ? "fk" : "") + (isUq ? " uq" : ""));
-        bind(q, card({ title: c[0], sub: String(c[1] || "—"), icon: isFk ? "key" : "table", color: sqCol(t, c, S),
-          rows: [["kind", tc.word + " — " + tc.plain],
-                 ["in", t.table + " · " + t.entity],
-                 ["the door", t.rw === "rw" ? "reads and writes this table" : t.rw === "w" ? "writes this table" : "reads this table", RWC[t.rw]],
-                 opt ? ["optional", "the column accepts None — the square is drawn paler"] : null,
-                 isFk ? ["foreign key", "→ " + (isFk === true ? "another table" : isFk)] : null,
-                 isUq ? ["unique", "the DB refuses a second row with this value"] : null],
-          body: "the kind is read from the DECLARED type, never guessed from the name." }));
+        /* no card of its own — the whole block carries ONE card (operator 2026-09-13) */
         sqs.append(q); });
       hd.append(sqs);
-      bind(hd, function(){ return blockCard(t, S); });   /* the card MIRRORS the block (operator 2026-09-13) */
+
       blk.append(hd);
       var list = E("div", { class: "flds bkfl" });
       t.cols.forEach(function(c){ var tc = typeOf(c[1]), isFk = fkSet[c[0]], isUq = uqSet[c[0]];
         list.append(E("div", { class: "fld" + (isFk ? " fk" : "") + (isUq ? " uq" : "") },
-          sqNode(c, t, S), E("span", { class: "fn" }, esc(c[0])), E("span", { class: "ft" }, esc(c[1] || "—")))); });
+          sqNode(c, t, S), E("span", { class: "fn" }, esc(c[0])), fkMarks(t, c[0]), E("span", { class: "ft" }, esc(c[1] || "—")))); });
       blk.append(list);
-      hd.addEventListener("click", function(){
+      /* ONE hover and ONE click for the WHOLE block (operator 2026-09-13): no dead corners, and no field mark with a
+         card of its own competing with the table's */
+      bind(blk, function(){ return blockCard(t, S); });
+      blk.addEventListener("click", function(){
         if (portOn) { window.selectIn("data", t.table); }
         else blk.classList.toggle("open"); });
       body.append(blk); });
@@ -902,10 +918,11 @@
     var list = E("div", { class: "flds" });
     t.cols.forEach(function(c){ var tc = typeOf(c[1]), isFk = fkSet[c[0]], isUq = uqSet[c[0]];
       var f = E("div", { class: "fld" + (isFk ? " fk" : "") + (isUq ? " uq" : "") },
-        sqNode(c, t, S), E("span", { class: "fn" }, esc(c[0])), E("span", { class: "ft" }, esc(c[1] || "—")));
+        sqNode(c, t, S), E("span", { class: "fn" }, esc(c[0])), fkMarks(t, c[0]), E("span", { class: "ft" }, esc(c[1] || "—")));
       bind(f, card({ title: c[0], sub: String(c[1] || "—"), icon: isFk ? "key" : "table", color: tc.col(S),
         rows: [["kind", tc.word + " — " + tc.plain], ["in", t.table],
-               isFk ? ["foreign key", "→ " + (isFk === true ? "another table" : isFk)] : null,
+               isFk ? ["points at", "→ " + (isFk === true ? "another table" : isFk)] : null,
+               fkIn(t, c[0]).length ? ["pointed at by", fkIn(t, c[0]).join(" · ") + " — among the tables this door touches"] : null,
                isUq ? ["unique", "the DB refuses a second row with this value"] : null] }));
       list.append(f); });
     b.append(list);
@@ -932,10 +949,11 @@
     t.cols.forEach(function(c){ var tc = typeOf(c[1]), isFk = fkSet[c[0]], isUq = uqSet[c[0]];
       var cell = E("div", { class: "shcell" + (isOpt(c[1]) ? " opt" : "") + (isFk ? " fk" : "") + (isUq ? " uq" : ""),
         style: "--fc:" + tc.col(S) },
-        E("i", { class: "shsw" }), E("span", { class: "fn" }, esc(c[0])), E("span", { class: "ft" }, esc(c[1] || "—")));
+        E("i", { class: "shsw" }), E("span", { class: "fn" }, esc(c[0])), fkMarks(t, c[0]), E("span", { class: "ft" }, esc(c[1] || "—")));
       bind(cell, card({ title: c[0], sub: String(c[1] || "—"), icon: isFk ? "key" : "table", color: tc.col(S),
         rows: [["kind", tc.word + " — " + tc.plain], ["in", t.table],
-               isFk ? ["foreign key", "→ " + (isFk === true ? "another table" : isFk)] : null,
+               isFk ? ["points at", "→ " + (isFk === true ? "another table" : isFk)] : null,
+               fkIn(t, c[0]).length ? ["pointed at by", fkIn(t, c[0]).join(" · ") + " — among the tables this door touches"] : null,
                isUq ? ["unique", "the DB refuses a second row with this value"] : null] }));
       grid.append(cell); });
     b.append(grid);

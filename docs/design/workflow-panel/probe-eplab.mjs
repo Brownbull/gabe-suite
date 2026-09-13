@@ -679,6 +679,55 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   ok(c.foot && c.foot.svg && /click to/.test(c.foot.t) && c.foot.col !== c.ink, 'the footer leads with an info glyph, in a quieter grey', JSON.stringify(c.foot));
   await p.mouse.move(5, 1030); }
 
+// ══ ONE HOVER, ONE CLICK FOR THE WHOLE BLOCK, and FOREIGN KEYS ON EVERY FIELD LIST (operator 2026-09-13) ══
+{ await p.evaluate(() => { window.showTab('data'); window.showVariant('data', 'blocks'); window.selectIn('data', null); }); await p.waitForTimeout(300);
+  const at = async (sel, fx, fy) => { await p.mouse.move(5, 1030); await p.waitForTimeout(130);
+    const r = await p.$eval(sel, e => { const b = e.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; });
+    await p.mouse.move(r.x + r.w * fx, r.y + r.h * fy); await p.waitForTimeout(250);
+    return p.evaluate(() => { const h = document.getElementById('hover');
+      return h.hidden ? null : (h.querySelector('.bchd b') ? h.querySelector('.bchd b').textContent : 'OTHER: ' + h.innerText.slice(0, 40)); }); };
+  const name = await p.$eval('#panel .blk', e => e.dataset.table);
+  const seen = [];
+  for (const [sel, fx, fy] of [['#panel .blk', 0.02, 0.5], ['#panel .blk', 0.97, 0.94], ['#panel .blk .bkhd .sqs .sq', 0.5, 0.5],
+                               ['#panel .blk .bkm', 0.5, 0.5], ['#panel .blk .bkn', 0.5, 0.5]]) seen.push(await at(sel, fx, fy));
+  ok(seen.every(x => x === name), 'hovering ANYWHERE in a block — its edge, a far corner, a field mark, the class, the count — opens that table\'s card', JSON.stringify(seen));
+  ok(await p.$$eval('#panel .blk .sq', els => els.length > 0), 'the field marks are still drawn, only without cards of their own');
+  { const r = await p.$eval('#panel .blk:nth-child(2) .sqs', e => { const b = e.getBoundingClientRect(); return { x: b.left + 4, y: b.top + b.height / 2 }; });
+    const second = await p.$eval('#panel .blk:nth-child(2)', e => e.dataset.table);
+    await p.mouse.click(r.x, r.y); await p.waitForTimeout(280);
+    ok(await p.evaluate(() => (window.SEL || {}).data) === second, 'a click on a field mark selects its table, like a click on its title', second); }
+  // FOREIGN KEYS, both ways — expected numbers computed here from the feed, not from the page
+  const TB = F.data.tables, inIdx = {};
+  TB.forEach(o => (o.fks || []).forEach(f => { if (Array.isArray(f) && f[1]) (inIdx[f[1]] = inIdx[f[1]] || []).push(o.table + '.' + f[0]); }));
+  const outN = TB.reduce((n, t) => n + (t.fks || []).length, 0), inCols = TB.reduce((n, t) => n + t.cols.filter(c => inIdx[t.table + '.' + c[0]]).length, 0);
+  await p.evaluate(() => window.showVariant('data', 'fields')); await p.waitForTimeout(300);
+  { const m = await p.evaluate(() => ({ out: document.querySelectorAll('#panel .fcard .fkx.out').length, inn: document.querySelectorAll('#panel .fcard .fkx.in').length,
+      sample: [...document.querySelectorAll('#panel .fcard .fld')].filter(r => r.querySelector('.fkx')).slice(0, 3).map(r => r.innerText.replace(/\s+/g, ' ')) }));
+    ok(m.out === outN, 'the FIELDS list marks every foreign key with what it points at', JSON.stringify(m));
+    ok(inCols > 0 && m.inn === inCols, 'and every column another table points at, with how many do', JSON.stringify({ inn: m.inn, want: inCols }));
+    // in a narrow card the TARGET gives way first — the field's own name is never cut to make room for it
+    const cut = await p.$$eval('#panel .fcard .fld', rows => rows.filter(r => r.querySelector('.fkx.out')).map(r => { const n = r.querySelector('.fn');
+      return { name: n.textContent, cut: n.scrollWidth > n.clientWidth + 1 }; }));
+    ok(cut.length > 0 && cut.every(x => !x.cut), 'a foreign-key row keeps its field name whole — the target is what shortens', JSON.stringify(cut.filter(x => x.cut).slice(0, 3))); }
+  await p.evaluate(() => { window.showVariant('data', 'blocks'); window.selectIn('data', 'households'); }); await p.waitForTimeout(320);
+  { const id = await p.evaluate(() => { const r = [...document.querySelectorAll('#portbody .flds .fld')].find(x => x.querySelector('.fn').textContent === 'id');
+      return r ? (r.querySelector('.fkx.in span') || {}).textContent || null : null; });
+    ok(id !== null && +id === (inIdx['households.id'] || []).length, 'the portrait record says how many tables point at households.id', JSON.stringify({ id, want: (inIdx['households.id'] || []).length })); }
+  { const c = await p.evaluate(() => { const r = [...document.querySelectorAll('#portbody .flds .fld')].find(x => x.querySelector('.fn').textContent === 'id');
+      const b = r.getBoundingClientRect(); return { x: b.left + b.width / 3, y: b.top + b.height / 2 }; });
+    await p.mouse.move(5, 1030); await p.waitForTimeout(120); await p.mouse.move(c.x, c.y); await p.waitForTimeout(260);
+    const txt = await p.evaluate(() => document.getElementById('hover').innerText);
+    ok(/pointed at by/i.test(txt) && /locations\.household_id/.test(txt), 'and that field\'s own card names who points at it', txt.slice(0, 120)); }
+  await p.evaluate(() => window.selectIn('data', 'locations')); await p.waitForTimeout(300);
+  { const out = await p.evaluate(() => { const r = [...document.querySelectorAll('#portbody .flds .fld')].find(x => x.querySelector('.fn').textContent === 'household_id');
+      return r ? (r.querySelector('.fkx.out') || {}).textContent || null : null; });
+    ok(out && /households\.id/.test(out), 'and locations.household_id says it points at households.id', String(out)); }
+  await p.evaluate(() => window.selectIn('data', 'households')); await p.waitForTimeout(280);
+  await p.click('#portvars .ptv[data-pvar="shape"]'); await p.waitForTimeout(260);
+  ok(await p.$$eval('#portbody .shcell .fkx.in', els => els.length) === 1, 'the SHAPE representation marks the referenced column too');
+  await p.click('#portvars .ptv[data-pvar="record"]'); await p.waitForTimeout(200);
+  await p.evaluate(() => window.selectIn('data', null)); await p.mouse.move(5, 1030); await p.waitForTimeout(220); }
+
 // the tests below were written against the station chip's look with every dial in reach — give them that baseline
 await p.evaluate(() => { Object.assign(window.DATACFG, { countPills: 'one', pillInk: 'white', pillBg: 'accent', pillAlpha: 100, sqEnc: 'colour', sqSize: 11, sqGap: 2 });
   Object.assign(window.DATACFG.bk, { count: 'words', model: 'word',

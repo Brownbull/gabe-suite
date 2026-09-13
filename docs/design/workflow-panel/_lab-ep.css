@@ -1006,3 +1006,23 @@ html, body{ height:100%; }
 #hover .bcmix .sq{ --sq:13px; }
 #hover .bcfoot{ display:flex; align-items:center; gap:6px; margin-top:10px; padding-top:7px; border-top:1px solid var(--line);
   font:500 12px/1.4 var(--font-ui); color:var(--edge, var(--muted)); }
+
+/* ══ FOREIGN KEYS ON EVERY FIELD ROW (operator 2026-09-13) — "→ table.column" where the field points out, and a
+   counted in-arrow where other tables point at it ══ */
+.fkx{ display:inline-flex; align-items:center; gap:3px; flex:none; min-width:0; font:600 12px/1 var(--font-mono); white-space:nowrap; }
+.fkx svg{ display:block; flex:none; }
+.fkx.out{ color:var(--muted); max-width:13em; }
+.fkx.out span{ overflow:hidden; text-overflow:ellipsis; }
+.fkx.in{ color:var(--c-external, #94a3b8); padding:1px 5px; border-radius:999px;
+  border:1px solid color-mix(in srgb, var(--c-external, #94a3b8) 45%, transparent); }
+.fld .fkx{ margin-left:8px; }
+.shcell .fkx{ margin-left:4px; }
+.shcell .fkx.out span{ display:none; }         /* a cell is narrow: the key glyph says it, the card names the target */
+/* ONE hover and ONE click for the whole block */
+.blk{ cursor:pointer; }
+.blk .sq, .blk .bkhd{ cursor:inherit; }
+/* in a narrow row the TARGET gives way before the field's own NAME does — the name is what the row is */
+.fld .fn{ flex:0 1 auto; min-width:0; }
+.fld .fkx.out{ flex:0 100 auto; min-width:1.4em; overflow:hidden; }
+.fld .fkx.out svg{ flex:none; }
+.fld .fkx.out span{ min-width:0; }
