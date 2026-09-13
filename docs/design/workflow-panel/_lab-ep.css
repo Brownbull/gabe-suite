@@ -1070,3 +1070,23 @@ html, body{ height:100%; }
 #datacfg .sqscale i.edge-r b{ left:auto; right:-2px; transform:none; }
 #datacfg .sqscale i.edge-l b{ left:-2px; transform:none; }
 #datacfg .sqscale{ margin-bottom:6px; }
+
+/* ══ THE UNIQUE ACCENT'S SHAPE (operator 2026-09-13) — drawn as pseudo-elements so it never changes the mark's own
+   shape: box · round · circle frame the mark 3px out; corners draws an L top-right and bottom-left, each arm 40% of the
+   frame's side; none draws nothing. ══ */
+#panel .blk .sq.uq{ position:relative; box-shadow:none; }
+#panel .blk .sq.uq::before, #panel .blk .sq.uq::after{ content:none; position:absolute; box-sizing:border-box; pointer-events:none; }
+#panel.uqm-box .blk .sq.uq::after, #panel.uqm-round .blk .sq.uq::after, #panel.uqm-circle .blk .sq.uq::after{
+  content:""; inset:-3px; border:1.5px solid var(--accent); }
+#panel.uqm-box .blk .sq.uq::after{ border-radius:1px; }
+#panel.uqm-round .blk .sq.uq::after{ border-radius:5px; }
+#panel.uqm-circle .blk .sq.uq::after{ border-radius:50%; }
+#panel.uqm-corners .blk .sq.uq::before{ content:""; top:-3px; right:-3px; width:calc((100% + 6px) * .4); height:calc((100% + 6px) * .4);
+  border-top:1.5px solid var(--accent); border-right:1.5px solid var(--accent); }
+#panel.uqm-corners .blk .sq.uq::after{ content:""; bottom:-3px; left:-3px; width:calc((100% + 6px) * .4); height:calc((100% + 6px) * .4);
+  border-bottom:1.5px solid var(--accent); border-left:1.5px solid var(--accent); }
+#panel.sq-nouq .blk .sq.uq::before, #panel.sq-nouq .blk .sq.uq::after{ content:none; }
+/* the bar's stops are handles now */
+#datacfg .sqscale i[data-stop]{ width:14px; height:14px; margin-left:-7px; top:4px; cursor:grab; touch-action:none; }
+#datacfg .sqscale i[data-stop].drag{ cursor:grabbing; outline:1.5px solid var(--accent); outline-offset:2px; }
+#datacfg .sqscale i[data-stop] b{ top:18px; pointer-events:none; }

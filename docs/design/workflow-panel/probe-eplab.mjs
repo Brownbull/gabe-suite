@@ -53,7 +53,7 @@ ok(await p.evaluate(() => window.COPYTXT.data()) ===
    'data · shown as blocks · tables all · title counts tables icon, fields icon, ops icon · sort channel, icon, accent on panel 45% · pills each, shape pill, text ink, ground kind 15%'
    + ' · block block (icon on model, chip on, name on, entity both, count badge, model both) · edge left solid 2px · chips count pill 100%, channel pill 90%'
    + ' · lines icon name | — / ent | count rw / model | — · sizes icon 13 rw 11 name 13 ent 12 count 11 model 12'
-   + ' · squares 14px gap 4 round as symbol by type, optional marked, unique marked, emphasis 75% ±30 · footer hint | id text num flag time list other opt, both · grounds by size, width flex, tiles stack'
+   + ' · squares 14px gap 4 round as symbol by type, optional marked, unique box, emphasis 75% ±30 · footer hint | id text num flag time list other opt, both · grounds by size, width flex, tiles stack'
    + ' · drawn counts shapes rw commit ev mdl ents legend · hidden title note',
    'the data panel boots on the operator\'s default line', await p.evaluate(() => window.COPYTXT.data()));
 
@@ -791,7 +791,8 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
 //    with an accent ring — measured on the drawn marks ══
 { await p.evaluate(() => { window.FOLDS.marks = 1; window.showTab('data'); window.showVariant('data', 'blocks'); window.drawDataCfg(); }); await p.waitForTimeout(320);
   const ops = () => p.evaluate(() => { const a = sel => [...document.querySelectorAll('#panel .blk .bkhd .sq' + sel)].map(e => +(+getComputedStyle(e).opacity).toFixed(2));
-    return { std: a(':not(.opt):not(.uq)'), opt: a('.opt:not(.uq)'), uq: a('.uq'), ring: [...document.querySelectorAll('#panel .blk .bkhd .sq.uq')].map(e => getComputedStyle(e).boxShadow) }; });
+    return { std: a(':not(.opt):not(.uq)'), opt: a('.opt:not(.uq)'), uq: a('.uq'), ring: [...document.querySelectorAll('#panel .blk .bkhd .sq.uq')].map(e => { const a = getComputedStyle(e, '::after');
+      return a.display === 'none' || a.content === 'none' ? 'none' : a.borderTopColor; }) }; });
   { const o = await ops();
     ok(o.std.length > 0 && o.std.every(v => v === 0.75), 'a standard field mark sits at 75% on the bar', JSON.stringify(o.std.slice(0, 4)));
     ok(o.opt.length > 0 && o.opt.every(v => v === 0.45), 'an optional one sits further DOWN, at 45% — today\'s value', JSON.stringify(o.opt.slice(0, 4)));
@@ -805,9 +806,44 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
     ok(sc.map(x => x.k).join(',') === 'opt,std,uq' && sc[0].left === 40 && sc[1].left === 60 && sc[2].left === 80, 'the rail draws the three stops where they sit on one bar', JSON.stringify(sc)); }
   await p.click('#datacfg .ib[data-sq-uq="0"]'); await p.waitForTimeout(260);
   { const o = await ops(); ok(o.uq.every(v => v === 0.6) && o.ring.every(r => r === 'none'), 'switching unique off returns those marks to the standard stop', JSON.stringify({ u: o.uq[0], r: o.ring[0] })); }
-  await p.evaluate(() => { Object.assign(window.DATACFG, { sqBase: 75, sqStep: 30, sqUq: 1 }); window.FOLDS.marks = 0; window.applyData(); window.showTab('data'); window.drawDataCfg(); });
+  // ── THE UNIQUE ACCENT'S SHAPE (operator 2026-09-13) — read off the pseudo-elements that draw it ──
+  await p.evaluate(() => { Object.assign(window.DATACFG, { sqBase: 75, sqStep: 30, sqUq: 1, sqUqMark: 'box' }); window.applyData(); window.showTab('data'); window.drawDataCfg(); });
+  await p.waitForTimeout(280);
+  const acc = () => p.$eval('#panel .blk .bkhd .sq.uq', e => { const a = getComputedStyle(e, '::after'), b = getComputedStyle(e, '::before');
+    const side = x => ({ c: x.content, r: x.borderTopLeftRadius, bt: x.borderTopStyle, br: x.borderRightStyle, bb: x.borderBottomStyle, bl: x.borderLeftStyle, w: parseFloat(x.width) });
+    return { a: side(a), b: side(b), sq: e.getBoundingClientRect().width }; });
+  { const x = await acc(); ok(x.a.c !== 'none' && x.a.bt === 'solid' && x.a.bb === 'solid' && parseFloat(x.a.r) <= 2, 'the unique accent boots as a BOX frame', JSON.stringify(x.a)); }
+  await p.click('#datacfg .ib[data-sq-uq-mark="round"]'); await p.waitForTimeout(240);
+  { const x = await acc(); ok(parseFloat(x.a.r) >= 4 && parseFloat(x.a.r) < 9, 'ROUND softens the frame\'s corners', x.a.r); }
+  await p.click('#datacfg .ib[data-sq-uq-mark="circle"]'); await p.waitForTimeout(240);
+  { const x = await acc(); ok(/50%/.test(x.a.r) || parseFloat(x.a.r) >= 9, 'CIRCLE rings the field', x.a.r); }
+  await p.click('#datacfg .ib[data-sq-uq-mark="corners"]'); await p.waitForTimeout(240);
+  { const x = await acc(), frame = x.sq + 6;
+    ok(x.b.c !== 'none' && x.b.bt === 'solid' && x.b.br === 'solid' && x.b.bb === 'none' && x.b.bl === 'none', 'CORNERS draws an L at the top-right', JSON.stringify(x.b));
+    ok(x.a.c !== 'none' && x.a.bb === 'solid' && x.a.bl === 'solid' && x.a.bt === 'none' && x.a.br === 'none', 'and an L at the bottom-left', JSON.stringify(x.a));
+    ok(Math.abs(x.b.w - 0.4 * frame) < 0.6 && Math.abs(x.a.w - 0.4 * frame) < 0.6, 'each arm runs 40% of its side — a focus sign, not a whole frame', JSON.stringify({ arms: [x.b.w, x.a.w], frame })); }
+  await p.click('#datacfg .ib[data-sq-uq-mark="none"]'); await p.waitForTimeout(240);
+  { const x = await acc(); ok(x.a.c === 'none' && x.b.c === 'none', 'NONE draws no shape at all — the bar alone marks it', JSON.stringify({ a: x.a.c, b: x.b.c }));
+    const o = await ops(); ok(o.uq.every(v => v === 1), 'while the unique field still sits at the top of the bar', JSON.stringify(o.uq.slice(0, 3))); }
+  await p.click('#datacfg .ib[data-sq-uq-mark="box"]'); await p.waitForTimeout(240);
+  // ── THE BAR ITSELF IS A CONTROL (operator 2026-09-13: "I cannot move the sliders there") — drag its stops with the mouse ──
+  const dragStop = async (stop, pct) => {
+    const r = await p.$eval('#datacfg .sqscale', e => { const b = e.getBoundingClientRect(); return { x: b.left, w: b.width }; });
+    const m = await p.$eval(`#datacfg .sqscale i[data-stop="${stop}"]`, e => { e.scrollIntoView({ block: 'center' }); const b = e.getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 2 }; });
+    const r2 = await p.$eval('#datacfg .sqscale', e => { const b = e.getBoundingClientRect(); return { x: b.left, w: b.width }; });
+    await p.mouse.move(m.x, m.y); await p.mouse.down(); await p.mouse.move(r2.x + r2.w * pct / 100, m.y, { steps: 8 }); await p.mouse.up(); await p.waitForTimeout(240); };
+  await dragStop('std', 50);
+  { const c = await p.evaluate(() => ({ base: window.DATACFG.sqBase, slider: +document.querySelector('#datacfg .sldt[aria-label="standard field mark opacity"]').getAttribute('aria-valuenow') }));
+    ok(c.base === 50 && c.slider === 50, 'dragging the STANDARD stop moves it — and the standard slider follows', JSON.stringify(c)); }
+  await dragStop('uq', 90);
+  { const c = await p.evaluate(() => ({ base: window.DATACFG.sqBase, step: window.DATACFG.sqStep })); ok(c.base === 50 && c.step === 40, 'dragging the UNIQUE stop widens the spread', JSON.stringify(c)); }
+  await dragStop('opt', 30);
+  { const c = await p.evaluate(() => ({ step: window.DATACFG.sqStep, slider: +document.querySelector('#datacfg .sldt[aria-label="emphasis spread"]').getAttribute('aria-valuenow') }));
+    ok(c.step === 20 && c.slider === 20, 'dragging the OPTIONAL stop narrows it — and the spread slider follows', JSON.stringify(c)); }
+  { const o = await ops(); ok(o.std.every(v => v === 0.5) && o.opt.every(v => v === 0.3) && o.uq.every(v => v === 0.7), 'and the marks follow the dragged stops — 30% · 50% · 70%', JSON.stringify({ s: o.std[0], o: o.opt[0], u: o.uq[0] })); }
+  await p.evaluate(() => { Object.assign(window.DATACFG, { sqBase: 75, sqStep: 30, sqUq: 1, sqUqMark: 'box' }); window.FOLDS.marks = 0; window.applyData(); window.showTab('data'); window.drawDataCfg(); });
   await p.waitForTimeout(260);
-  ok(/unique marked, emphasis 75% ±30/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line names the emphasis'); }
+  ok(/unique box, emphasis 75% ±30/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line names the emphasis and its accent'); }
 
 // the tests below were written against the station chip's look with every dial in reach — give them that baseline
 await p.evaluate(() => { Object.assign(window.DATACFG, { countPills: 'one', pillInk: 'white', pillBg: 'accent', pillAlpha: 100, sqEnc: 'colour', sqSize: 11, sqGap: 2, sqBase: 100, sqStep: 55, sqUq: 0 });
