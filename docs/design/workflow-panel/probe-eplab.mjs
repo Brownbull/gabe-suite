@@ -13,6 +13,21 @@
 import path from 'node:path';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
+import zlib from 'node:zlib';
+// a screenshot's pixels, for asserts that must read what was DRAWN (8-bit RGB/RGBA, non-interlaced — what Chrome writes)
+function decodePng(buf) {
+  let o = 8, w = 0, h = 0, ct = 6; const idat = [];
+  while (o < buf.length) { const len = buf.readUInt32BE(o), type = buf.toString('ascii', o + 4, o + 8), d = buf.subarray(o + 8, o + 8 + len);
+    if (type === 'IHDR') { w = d.readUInt32BE(0); h = d.readUInt32BE(4); ct = d[9]; } else if (type === 'IDAT') idat.push(d); else if (type === 'IEND') break;
+    o += 12 + len; }
+  const bpp = ct === 6 ? 4 : 3, st = w * bpp, raw = zlib.inflateSync(Buffer.concat(idat)), px = Buffer.alloc(w * h * bpp);
+  for (let y = 0; y < h; y++) { const f = raw[y * (st + 1)], ln = y * (st + 1) + 1;
+    for (let x = 0; x < st; x++) { const a = x >= bpp ? px[y * st + x - bpp] : 0, b = y ? px[(y - 1) * st + x] : 0, c = x >= bpp && y ? px[(y - 1) * st + x - bpp] : 0;
+      let v = raw[ln + x];
+      if (f === 1) v += a; else if (f === 2) v += b; else if (f === 3) v += (a + b) >> 1;
+      else if (f === 4) { const q = a + b - c, pa = Math.abs(q - a), pb = Math.abs(q - b), pc = Math.abs(q - c); v += pa <= pb && pa <= pc ? a : pb <= pc ? b : c; }
+      px[y * st + x] = v & 255; } }
+  return { w, h, at: (x, y) => { const i = (y * w + x) * bpp; return [px[i], px[i + 1], px[i + 2]]; } }; }
 const require = createRequire(import.meta.url);
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const REPO = path.resolve(HERE, '../../..');
@@ -53,7 +68,7 @@ ok(await p.evaluate(() => window.COPYTXT.data()) ===
    'data · shown as blocks · tables all · title counts tables icon, fields icon, ops icon · sort channel, icon, accent on panel 45% · pills each, shape pill, text ink, ground kind 15%'
    + ' · block block (icon on model, chip on, name on, entity both, count badge, model both) · edge left solid 2px · chips count pill 100%, channel pill 90%'
    + ' · lines icon name | — / ent | count rw / model | — · sizes icon 13 rw 11 name 13 ent 12 count 11 model 12'
-   + ' · squares 14px gap 4 round as symbol by type, optional marked, unique box, emphasis 75% ±30 · footer hint | id text num flag time list other opt, both · grounds by size, width flex, tiles stack'
+   + ' · squares 14px gap 4 round as symbol by type, optional marked, unique corners both, arms 40% 1.5px tip 100%, standard 100% optional 50% · footer hint | id text num flag time list other opt, both · grounds by size, width flex, tiles stack'
    + ' · drawn counts shapes rw commit ev mdl ents legend · hidden title note',
    'the data panel boots on the operator\'s default line', await p.evaluate(() => window.COPYTXT.data()));
 
@@ -787,45 +802,93 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   ok(/footer hint \| id text num flag time list other opt, both/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line names the footer row');
   await p.evaluate(() => { window.FOLDS.foot = 0; window.drawDataCfg(); }); await p.mouse.move(5, 1030); await p.waitForTimeout(200); }
 
-// ══ FIELD-MARK EMPHASIS (operator 2026-09-13): ONE opacity bar — optional below the standard stop, unique above it
-//    with an accent ring — measured on the drawn marks ══
+// ══ FIELD-MARK OPACITY + THE UNIQUE CORNERS (operator 2026-09-13): two opacity stops — optional, and standard, which a
+//    unique field shares; a unique field is marked by its CORNERS or not at all. Opacity is read off the marks, the
+//    corners off the PIXELS: each shot with corners is diffed against the same spot drawn with none ══
 { await p.evaluate(() => { window.FOLDS.marks = 1; window.showTab('data'); window.showVariant('data', 'blocks'); window.drawDataCfg(); }); await p.waitForTimeout(320);
   const ops = () => p.evaluate(() => { const a = sel => [...document.querySelectorAll('#panel .blk .bkhd .sq' + sel)].map(e => +(+getComputedStyle(e).opacity).toFixed(2));
-    return { std: a(':not(.opt):not(.uq)'), opt: a('.opt:not(.uq)'), uq: a('.uq'), ring: [...document.querySelectorAll('#panel .blk .bkhd .sq.uq')].map(e => { const a = getComputedStyle(e, '::after');
-      return a.display === 'none' || a.content === 'none' ? 'none' : a.borderTopColor; }) }; });
+    return { std: a(':not(.opt):not(.uq)'), opt: a('.opt:not(.uq)'), uq: a('.uq:not(.opt)') }; });
   { const o = await ops();
-    ok(o.std.length > 0 && o.std.every(v => v === 0.75), 'a standard field mark sits at 75% on the bar', JSON.stringify(o.std.slice(0, 4)));
-    ok(o.opt.length > 0 && o.opt.every(v => v === 0.45), 'an optional one sits further DOWN, at 45% — today\'s value', JSON.stringify(o.opt.slice(0, 4)));
-    ok(o.uq.length > 0 && o.uq.every(v => v === 1) && o.ring.every(r => r && r !== 'none'), 'a unique one sits further UP, at 100%, with an accent ring', JSON.stringify({ uq: o.uq.slice(0, 4), ring: o.ring[0] })); }
-  await p.focus('#datacfg .sldt[aria-label="standard field mark opacity"]'); for (let i = 0; i < 3; i++) await p.keyboard.press('ArrowLeft');
-  await p.focus('#datacfg .sldt[aria-label="emphasis spread"]'); for (let i = 0; i < 2; i++) await p.keyboard.press('ArrowLeft');
+    ok(o.std.length > 0 && o.std.every(v => v === 1), 'a standard field mark boots solid, at 100%', JSON.stringify(o.std.slice(0, 4)));
+    ok(o.opt.length > 0 && o.opt.every(v => v === 0.5), 'an optional one sits at 50%', JSON.stringify(o.opt.slice(0, 4)));
+    ok(o.uq.length > 0 && o.uq.every(v => v === 1), 'a unique one sits WITH the standard ones — opacity no longer marks it', JSON.stringify(o.uq.slice(0, 4))); }
+  await p.focus('#datacfg .sldt[aria-label="standard field mark opacity"]'); for (let i = 0; i < 8; i++) await p.keyboard.press('ArrowLeft');
+  await p.focus('#datacfg .sldt[aria-label="optional field mark opacity"]'); for (let i = 0; i < 2; i++) await p.keyboard.press('ArrowLeft');
   await p.waitForTimeout(260);
   { const o = await ops();
-    ok(o.std.every(v => v === 0.6) && o.opt.every(v => v === 0.4) && o.uq.every(v => v === 0.8), 'the two bars move all three stops together — 40% · 60% · 80%', JSON.stringify({ s: o.std[0], o: o.opt[0], u: o.uq[0] })); }
+    ok(o.std.every(v => v === 0.6) && o.opt.every(v => v === 0.4) && o.uq.every(v => v === 0.6), 'each bar moves its own stop, and unique follows the standard one — 40% · 60% · 60%', JSON.stringify({ s: o.std[0], o: o.opt[0], u: o.uq[0] })); }
   { const sc = await p.$$eval('#datacfg .sqscale i[data-stop]', els => els.map(e => ({ k: e.dataset.stop, left: parseFloat(e.style.left) })));
-    ok(sc.map(x => x.k).join(',') === 'opt,std,uq' && sc[0].left === 40 && sc[1].left === 60 && sc[2].left === 80, 'the rail draws the three stops where they sit on one bar', JSON.stringify(sc)); }
-  await p.click('#datacfg .ib[data-sq-uq="0"]'); await p.waitForTimeout(260);
-  { const o = await ops(); ok(o.uq.every(v => v === 0.6) && o.ring.every(r => r === 'none'), 'switching unique off returns those marks to the standard stop', JSON.stringify({ u: o.uq[0], r: o.ring[0] })); }
-  // ── THE UNIQUE ACCENT'S SHAPE (operator 2026-09-13) — read off the pseudo-elements that draw it ──
-  await p.evaluate(() => { Object.assign(window.DATACFG, { sqBase: 75, sqStep: 30, sqUq: 1, sqUqMark: 'box' }); window.applyData(); window.showTab('data'); window.drawDataCfg(); });
-  await p.waitForTimeout(280);
-  const acc = () => p.$eval('#panel .blk .bkhd .sq.uq', e => { const a = getComputedStyle(e, '::after'), b = getComputedStyle(e, '::before');
-    const side = x => ({ c: x.content, r: x.borderTopLeftRadius, bt: x.borderTopStyle, br: x.borderRightStyle, bb: x.borderBottomStyle, bl: x.borderLeftStyle, w: parseFloat(x.width) });
-    return { a: side(a), b: side(b), sq: e.getBoundingClientRect().width }; });
-  { const x = await acc(); ok(x.a.c !== 'none' && x.a.bt === 'solid' && x.a.bb === 'solid' && parseFloat(x.a.r) <= 2, 'the unique accent boots as a BOX frame', JSON.stringify(x.a)); }
-  await p.click('#datacfg .ib[data-sq-uq-mark="round"]'); await p.waitForTimeout(240);
-  { const x = await acc(); ok(parseFloat(x.a.r) >= 4 && parseFloat(x.a.r) < 9, 'ROUND softens the frame\'s corners', x.a.r); }
-  await p.click('#datacfg .ib[data-sq-uq-mark="circle"]'); await p.waitForTimeout(240);
-  { const x = await acc(); ok(/50%/.test(x.a.r) || parseFloat(x.a.r) >= 9, 'CIRCLE rings the field', x.a.r); }
-  await p.click('#datacfg .ib[data-sq-uq-mark="corners"]'); await p.waitForTimeout(240);
-  { const x = await acc(), frame = x.sq + 6;
-    ok(x.b.c !== 'none' && x.b.bt === 'solid' && x.b.br === 'solid' && x.b.bb === 'none' && x.b.bl === 'none', 'CORNERS draws an L at the top-right', JSON.stringify(x.b));
-    ok(x.a.c !== 'none' && x.a.bb === 'solid' && x.a.bl === 'solid' && x.a.bt === 'none' && x.a.br === 'none', 'and an L at the bottom-left', JSON.stringify(x.a));
-    ok(Math.abs(x.b.w - 0.4 * frame) < 0.6 && Math.abs(x.a.w - 0.4 * frame) < 0.6, 'each arm runs 40% of its side — a focus sign, not a whole frame', JSON.stringify({ arms: [x.b.w, x.a.w], frame })); }
-  await p.click('#datacfg .ib[data-sq-uq-mark="none"]'); await p.waitForTimeout(240);
-  { const x = await acc(); ok(x.a.c === 'none' && x.b.c === 'none', 'NONE draws no shape at all — the bar alone marks it', JSON.stringify({ a: x.a.c, b: x.b.c }));
-    const o = await ops(); ok(o.uq.every(v => v === 1), 'while the unique field still sits at the top of the bar', JSON.stringify(o.uq.slice(0, 3))); }
-  await p.click('#datacfg .ib[data-sq-uq-mark="box"]'); await p.waitForTimeout(240);
+    ok(sc.map(x => x.k).join(',') === 'opt,std' && sc[0].left === 40 && sc[1].left === 60, 'the rail\'s bar draws TWO stops — unique has none of its own', JSON.stringify(sc)); }
+  await p.evaluate(() => { Object.assign(window.DATACFG, { sqBase: 100, sqOptA: 50 }); window.applyData(); window.drawDataCfg(); }); await p.waitForTimeout(220);
+  // ── the rail: corners or none, and the corner dials only while corners is picked ──
+  const rail = () => p.evaluate(() => ({ marks: [...document.querySelectorAll('#datacfg .ib[data-sq-uq-mark]')].map(b => b.dataset.sqUqMark),
+    at: document.querySelectorAll('#datacfg .ib[data-sq-uq-at]').length, flip: document.querySelectorAll('#datacfg .ib[data-sq-uq-flip]').length,
+    arms: ['length', 'width', 'tip'].filter(k => document.querySelector('#datacfg .sldt[aria-label="corner arm ' + k + '"]')).length }));
+  { const r = await rail(); ok(r.marks.join(',') === 'corners,none', 'the unique mark offers two choices: corners or none', JSON.stringify(r.marks));
+    ok(r.at === 3 && r.flip === 2 && r.arms === 3, 'with corners picked: which corners (3) · mirror (2) · arm length, width and tip', JSON.stringify(r)); }
+  { const ic = await p.$$eval('#datacfg .ib.on .uqL', els => els.map(e => ({ s: getComputedStyle(e).stroke, bg: getComputedStyle(e.closest('.ib')).backgroundColor })));
+    ok(ic.length >= 3 && ic.every(x => x.s !== x.bg), 'a SELECTED corner button still shows its L\'s — never accent on the accent ground', JSON.stringify(ic)); }
+  await p.click('#datacfg .ib[data-sq-uq-mark="none"]'); await p.waitForTimeout(260);
+  { const r = await rail(); ok(r.at === 0 && r.flip === 0 && r.arms === 0, 'NONE folds the corner dials away — they would set nothing', JSON.stringify(r));
+    const pe = await p.$eval('#panel .blk .bkhd .sq.uq', e => [getComputedStyle(e, '::before').content, getComputedStyle(e, '::after').content]);
+    ok(pe.every(c => c === 'none'), 'and draws nothing around a unique field', JSON.stringify(pe));
+    const o = await ops(); ok(o.uq.every(v => v === 1), 'which still sits at the standard stop', JSON.stringify(o.uq.slice(0, 3))); }
+  await p.click('#datacfg .ib[data-sq-uq-mark="corners"]'); await p.waitForTimeout(260);
+  // ── pixels: a unique mark with no unique neighbour (a neighbour's arm would reach into the gap) ──
+  const target = await p.evaluate(() => [...document.querySelectorAll('#panel .blk .bkhd .sq.uq')].findIndex(e =>
+    !(e.previousElementSibling && e.previousElementSibling.classList.contains('uq')) && !(e.nextElementSibling && e.nextElementSibling.classList.contains('uq'))));
+  ok(target >= 0, 'a unique mark with no unique neighbour exists to measure', String(target));
+  const accent = await p.evaluate(i => { const c = getComputedStyle(document.querySelectorAll('#panel .blk .bkhd .sq.uq')[i], '::before').backgroundColor, n = c.match(/[\d.]+/g).map(Number);
+    return /^color\(/.test(c) ? n.slice(0, 3).map(v => v * 255) : n.slice(0, 3); }, Math.max(0, target));
+  const setUq = cfg => p.evaluate(c => { Object.assign(window.DATACFG, c); window.applyData(); }, cfg);
+  const shot = async () => { await p.mouse.move(5, 1030); await p.evaluate(() => window.hoverHide && window.hoverHide()); await p.waitForTimeout(120);
+    const r = await p.evaluate(i => { const e = document.querySelectorAll('#panel .blk .bkhd .sq.uq')[i]; e.scrollIntoView({ block: 'center', inline: 'nearest' });
+      const b = e.getBoundingClientRect(); return { l: b.left, t: b.top, r: b.right, b: b.bottom, w: b.width }; }, Math.max(0, target));
+    const clip = { x: Math.floor(r.l) - 10, y: Math.floor(r.t) - 10, width: Math.ceil(r.w) + 20, height: Math.ceil(r.b - r.t) + 20 };
+    return { r, clip, img: decodePng(await p.screenshot({ clip })) }; };
+  const pair = async () => { const cur = await shot(); await setUq({ sqUqMark: 'none' }); const base = await shot(); await setUq({ sqUqMark: 'corners' });
+    return { cur, base, same: JSON.stringify(cur.clip) === JSON.stringify(base.clip) }; };
+  // how much of the accent a page pixel took on, 0..1, against the same pixel drawn with no corners
+  const cov = (pr, X, Y) => { const x = Math.floor(X) - pr.cur.clip.x, y = Math.floor(Y) - pr.cur.clip.y;
+    if (x < 0 || y < 0 || x >= pr.cur.img.w || y >= pr.cur.img.h) return 0;
+    const b0 = pr.base.img.at(x, y), c0 = pr.cur.img.at(x, y); let k = 0;
+    for (let c = 1; c < 3; c++) if (Math.abs(accent[c] - b0[c]) > Math.abs(accent[k] - b0[k])) k = c;
+    const d = accent[k] - b0[k]; return Math.abs(d) < 24 ? 0 : Math.max(0, Math.min(1, (c0[k] - b0[k]) / d)); };
+  const patch = (pr, x0, y0) => { let s = 0; for (let dx = 0; dx < 3; dx++) for (let dy = 0; dy < 3; dy++) s += cov(pr, x0 + dx, y0 + dy); return +s.toFixed(2); };
+  const corners = pr => { const r = pr.cur.r, fL = r.l - 3, fT = r.t - 3, fR = r.r + 3, fB = r.b + 3;
+    return { same: pr.same, tr: patch(pr, fR - 3, fT), tl: patch(pr, fL, fT), bl: patch(pr, fL, fB - 3), br: patch(pr, fR - 3, fB - 3) }; };
+  // an arm's drawn width at a fraction of the frame from the top-right corner: the top arm over the rows above the mark,
+  // the right arm over the columns beside it
+  const thick = (pr, f) => { const r = pr.cur.r, x = r.r + 3 - f * (r.w + 6); let s = 0;
+    for (let y = Math.floor(r.t - 3) - 1; y < Math.floor(r.t); y++) s += cov(pr, x, y); return +s.toFixed(2); };
+  const thickV = (pr, f) => { const r = pr.cur.r, y = r.t - 3 + f * (r.w + 6); let s = 0;
+    for (let x = Math.ceil(r.r); x <= Math.floor(r.r + 3) + 1; x++) s += cov(pr, x, y); return +s.toFixed(2); };
+  const off = c => c < 0.5, on = c => c > 1.5;
+  { const c = corners(await pair()); ok(c.same && on(c.tr) && on(c.bl) && off(c.tl) && off(c.br), 'corners boot as an L at the TOP-RIGHT and one at the BOTTOM-LEFT — read off the pixels', JSON.stringify(c)); }
+  await p.click('#datacfg .ib[data-sq-uq-at="top-right"]'); await p.waitForTimeout(260);
+  { const c = corners(await pair()); ok(c.same && on(c.tr) && off(c.bl) && off(c.tl) && off(c.br), 'TOP-RIGHT keeps that corner alone', JSON.stringify(c)); }
+  await p.click('#datacfg .ib[data-sq-uq-at="bottom-left"]'); await p.waitForTimeout(260);
+  { const c = corners(await pair()); ok(c.same && on(c.bl) && off(c.tr) && off(c.tl) && off(c.br), 'BOTTOM-LEFT keeps that corner alone', JSON.stringify(c)); }
+  await p.click('#datacfg .ib[data-sq-uq-at="both"]'); await p.waitForTimeout(260);
+  await p.click('#datacfg .ib[data-sq-uq-flip="1"]'); await p.waitForTimeout(260);
+  { const c = corners(await pair()); ok(c.same && on(c.tl) && on(c.br) && off(c.tr) && off(c.bl), 'MIRROR inverts the pair — top-left and bottom-right', JSON.stringify(c)); }
+  await p.click('#datacfg .ib[data-sq-uq-at="top-right"]'); await p.waitForTimeout(260);
+  { const c = corners(await pair()); ok(c.same && on(c.tl) && off(c.tr) && off(c.bl) && off(c.br), 'and a single mirrored corner moves too — top-right becomes top-left', JSON.stringify(c)); }
+  await p.click('#datacfg .ib[data-sq-uq-at="both"]'); await p.waitForTimeout(260);
+  await p.click('#datacfg .ib[data-sq-uq-flip="0"]'); await p.waitForTimeout(260);
+  // ── the arms: length, width at the corner, width at the tip ──
+  { const pr = await pair(), t = thick(pr, 0.7); ok(pr.same && t < 0.3, 'at 40% an arm stops short — nothing drawn 70% along the side', String(t)); }
+  await p.focus('#datacfg .sldt[aria-label="corner arm length"]'); for (let i = 0; i < 12; i++) await p.keyboard.press('ArrowRight');
+  { const pr = await pair(), t = thick(pr, 0.7), len = await p.evaluate(() => window.DATACFG.sqUqLen);
+    ok(len === 100 && t > 0.8, 'ARM LENGTH runs it out to 100% — now drawn 70% along the side', JSON.stringify({ len, t })); }
+  await p.focus('#datacfg .sldt[aria-label="corner arm width"]'); for (let i = 0; i < 8; i++) await p.keyboard.press('ArrowRight');
+  { const pr = await pair(), n = thick(pr, 0.15), f = thick(pr, 0.85), w = await p.evaluate(() => window.DATACFG.sqUqW);
+    ok(w === 3.5 && n > 2.4 && Math.abs(n - f) < 0.6, 'ARM WIDTH thickens it to 3.5px — as wide at its tip as at its corner', JSON.stringify({ w, n, f })); }
+  await p.focus('#datacfg .sldt[aria-label="corner arm tip"]'); for (let i = 0; i < 10; i++) await p.keyboard.press('ArrowLeft');
+  { const pr = await pair(), n = thick(pr, 0.15), f = thick(pr, 0.85), nv = thickV(pr, 0.15), fv = thickV(pr, 0.85), tip = await p.evaluate(() => window.DATACFG.sqUqTip);
+    ok(tip === 0 && n - f > 1.6 && f < 1.1, 'ARM TIP at 0% tapers the arm — thick at the corner, thinning to nothing at its end', JSON.stringify({ tip, n, f }));
+    ok(nv - fv > 1.6 && fv < 1.1, 'and the other arm of the L tapers the same way', JSON.stringify({ nv, fv })); }
+  await setUq({ sqUqLen: 40, sqUqW: 1.5, sqUqTip: 100 }); await p.evaluate(() => window.drawDataCfg()); await p.waitForTimeout(200);
   // ── THE BAR ITSELF IS A CONTROL (operator 2026-09-13: "I cannot move the sliders there") — drag its stops with the mouse ──
   const dragStop = async (stop, pct) => {
     const r = await p.$eval('#datacfg .sqscale', e => { const b = e.getBoundingClientRect(); return { x: b.left, w: b.width }; });
@@ -835,18 +898,20 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   await dragStop('std', 50);
   { const c = await p.evaluate(() => ({ base: window.DATACFG.sqBase, slider: +document.querySelector('#datacfg .sldt[aria-label="standard field mark opacity"]').getAttribute('aria-valuenow') }));
     ok(c.base === 50 && c.slider === 50, 'dragging the STANDARD stop moves it — and the standard slider follows', JSON.stringify(c)); }
-  await dragStop('uq', 90);
-  { const c = await p.evaluate(() => ({ base: window.DATACFG.sqBase, step: window.DATACFG.sqStep })); ok(c.base === 50 && c.step === 40, 'dragging the UNIQUE stop widens the spread', JSON.stringify(c)); }
   await dragStop('opt', 30);
-  { const c = await p.evaluate(() => ({ step: window.DATACFG.sqStep, slider: +document.querySelector('#datacfg .sldt[aria-label="emphasis spread"]').getAttribute('aria-valuenow') }));
-    ok(c.step === 20 && c.slider === 20, 'dragging the OPTIONAL stop narrows it — and the spread slider follows', JSON.stringify(c)); }
-  { const o = await ops(); ok(o.std.every(v => v === 0.5) && o.opt.every(v => v === 0.3) && o.uq.every(v => v === 0.7), 'and the marks follow the dragged stops — 30% · 50% · 70%', JSON.stringify({ s: o.std[0], o: o.opt[0], u: o.uq[0] })); }
-  await p.evaluate(() => { Object.assign(window.DATACFG, { sqBase: 75, sqStep: 30, sqUq: 1, sqUqMark: 'box' }); window.FOLDS.marks = 0; window.applyData(); window.showTab('data'); window.drawDataCfg(); });
-  await p.waitForTimeout(260);
-  ok(/unique box, emphasis 75% ±30/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line names the emphasis and its accent'); }
+  { const c = await p.evaluate(() => ({ opt: window.DATACFG.sqOptA, base: window.DATACFG.sqBase, slider: +document.querySelector('#datacfg .sldt[aria-label="optional field mark opacity"]').getAttribute('aria-valuenow') }));
+    ok(c.opt === 30 && c.base === 50 && c.slider === 30, 'the OPTIONAL stop drags out from under the standard one sitting on it (the first move left decides) — and its slider follows', JSON.stringify(c)); }
+  { const o = await ops(); ok(o.std.every(v => v === 0.5) && o.opt.every(v => v === 0.3) && o.uq.every(v => v === 0.5), 'and the marks follow the dragged stops — 30% · 50%, unique with standard', JSON.stringify({ s: o.std[0], o: o.opt[0], u: o.uq[0] })); }
+  const DEF = { sqBase: 100, sqOptA: 50, sqUqMark: 'corners', sqUqAt: 'both', sqUqFlip: 0, sqUqLen: 40, sqUqW: 1.5, sqUqTip: 100 };
+  await p.evaluate(d => { Object.assign(window.DATACFG, d); window.applyData(); }, DEF);
+  ok(/unique corners both, arms 40% 1\.5px tip 100%, standard 100% optional 50%/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line names the corners, their arms and both stops');
+  await setUq({ sqUqFlip: 1 }); ok(/unique corners both mirrored, arms/.test(await p.evaluate(() => window.COPYTXT.data())), 'and says when they are mirrored');
+  await setUq({ sqUqMark: 'none' }); ok(/unique none, standard 100%/.test(await p.evaluate(() => window.COPYTXT.data())), 'and says when there are none');
+  await p.evaluate(d => { Object.assign(window.DATACFG, d); window.FOLDS.marks = 0; window.applyData(); window.showTab('data'); window.drawDataCfg(); }, DEF);
+  await p.waitForTimeout(260); }
 
 // the tests below were written against the station chip's look with every dial in reach — give them that baseline
-await p.evaluate(() => { Object.assign(window.DATACFG, { countPills: 'one', pillInk: 'white', pillBg: 'accent', pillAlpha: 100, sqEnc: 'colour', sqSize: 11, sqGap: 2, sqBase: 100, sqStep: 55, sqUq: 0 });
+await p.evaluate(() => { Object.assign(window.DATACFG, { countPills: 'one', pillInk: 'white', pillBg: 'accent', pillAlpha: 100, sqEnc: 'colour', sqSize: 11, sqGap: 2, sqBase: 100, sqOptA: 45, sqUqMark: 'none' });
   Object.assign(window.DATACFG.bk, { count: 'words', model: 'word',
     rows: [{ l: ['icon', 'rw', 'name', 'ent', 'count', 'model'], r: [] }, { l: [], r: [] }, { l: [], r: [] }] });
   window.DATACFG.show.title = 1; window.applyData(); window.showTab('data'); window.foldAll(true); window.drawDataCfg(); });

@@ -1050,19 +1050,17 @@ html, body{ height:100%; }
 #hover .cphd .cpmark{ display:inline-flex; align-items:center; }
 #hover .cphd .cpmark .sq{ --sq:15px; }
 
-/* ══ FIELD-MARK EMPHASIS (operator 2026-09-13) — one opacity bar with three stops: optional below the standard stop,
-   unique above it with an accent ring. Scoped to the blocks' own marks; legends and cards draw kinds at full strength. ══ */
+/* ══ FIELD-MARK OPACITY (operator 2026-09-13) — one opacity bar with two stops: optional, and standard, which a unique
+   field shares (its corners mark it, not its opacity). Scoped to the blocks' own marks; legends and cards draw kinds at
+   full strength. ══ */
 #panel .blk .sq{ opacity:var(--sq-base, 1); }
-#panel .blk .sq.opt{ opacity:var(--sq-opt-a, .45); }
+#panel .blk .sq.opt{ opacity:var(--sq-opt-a, .5); }
 #panel.sq-noopt .blk .sq.opt{ opacity:var(--sq-base, 1); }
-#panel .blk .sq.uq{ opacity:var(--sq-uq-a, 1); box-shadow:0 0 0 1.5px var(--accent); }
-#panel.sq-nouq .blk .sq.uq{ opacity:var(--sq-base, 1); box-shadow:none; }
-/* the rail's bar: the three stops drawn where they sit */
+/* the rail's bar: the two stops drawn where they sit */
 #datacfg .sqscale{ position:relative; height:30px; margin:4px 6px 0; cursor:help;
   background:linear-gradient(90deg, color-mix(in srgb, var(--accent) 8%, transparent), var(--accent)) center 9px / 100% 4px no-repeat; }
 #datacfg .sqscale i{ position:absolute; top:5px; width:12px; height:12px; margin-left:-6px; border-radius:3px; background:var(--ink); }
 #datacfg .sqscale i.st-opt{ opacity:.45; }
-#datacfg .sqscale i.st-uq{ box-shadow:0 0 0 1.5px var(--accent); }
 #datacfg .sqscale i b{ position:absolute; top:15px; left:50%; transform:translateX(-50%); font:600 12px/1 var(--font-mono); color:var(--muted); white-space:nowrap; }
 /* the optional stop is drawn paler through its FILL, not its opacity — so its label stays readable */
 #datacfg .sqscale i.st-opt{ opacity:1; background:color-mix(in srgb, var(--ink) 45%, transparent); }
@@ -1071,21 +1069,24 @@ html, body{ height:100%; }
 #datacfg .sqscale i.edge-l b{ left:-2px; transform:none; }
 #datacfg .sqscale{ margin-bottom:6px; }
 
-/* ══ THE UNIQUE ACCENT'S SHAPE (operator 2026-09-13) — drawn as pseudo-elements so it never changes the mark's own
-   shape: box · round · circle frame the mark 3px out; corners draws an L top-right and bottom-left, each arm 40% of the
-   frame's side; none draws nothing. ══ */
+/* ══ THE UNIQUE CORNERS (operator 2026-09-13) — pseudo-elements, so the mark keeps its own shape. Each is ONE L drawn as a
+   clip-path polygon, its corner at the top-right of its box: both arms run the box's side (--uq-len of the frame, 3px
+   out), --uq-w wide at the corner narrowing to --uq-tip at the ends — equal widths give a straight line, a zero tip a
+   triangle. A transform turns that one L into each corner: ::before is top-right (mirrored: top-left), ::after is
+   bottom-left (mirrored: bottom-right). ══ */
 #panel .blk .sq.uq{ position:relative; box-shadow:none; }
-#panel .blk .sq.uq::before, #panel .blk .sq.uq::after{ content:none; position:absolute; box-sizing:border-box; pointer-events:none; }
-#panel.uqm-box .blk .sq.uq::after, #panel.uqm-round .blk .sq.uq::after, #panel.uqm-circle .blk .sq.uq::after{
-  content:""; inset:-3px; border:1.5px solid var(--accent); }
-#panel.uqm-box .blk .sq.uq::after{ border-radius:1px; }
-#panel.uqm-round .blk .sq.uq::after{ border-radius:5px; }
-#panel.uqm-circle .blk .sq.uq::after{ border-radius:50%; }
-#panel.uqm-corners .blk .sq.uq::before{ content:""; top:-3px; right:-3px; width:calc((100% + 6px) * .4); height:calc((100% + 6px) * .4);
-  border-top:1.5px solid var(--accent); border-right:1.5px solid var(--accent); }
-#panel.uqm-corners .blk .sq.uq::after{ content:""; bottom:-3px; left:-3px; width:calc((100% + 6px) * .4); height:calc((100% + 6px) * .4);
-  border-bottom:1.5px solid var(--accent); border-left:1.5px solid var(--accent); }
-#panel.sq-nouq .blk .sq.uq::before, #panel.sq-nouq .blk .sq.uq::after{ content:none; }
+#panel .blk .sq.uq::before, #panel .blk .sq.uq::after{ content:none; position:absolute; pointer-events:none; background:var(--accent);
+  width:calc((100% + 6px) * var(--uq-len, .4)); height:calc((100% + 6px) * var(--uq-len, .4));
+  clip-path:polygon(0 0, 100% 0, 100% 100%, calc(100% - var(--uq-tip, 1.5px)) 100%, calc(100% - var(--uq-w, 1.5px)) var(--uq-w, 1.5px), 0 var(--uq-tip, 1.5px)); }
+#panel .blk .sq.uq::before{ top:-3px; right:-3px; }
+#panel .blk .sq.uq::after{ bottom:-3px; left:-3px; transform:scale(-1, -1); }
+#panel.uqc-flip .blk .sq.uq::before{ right:auto; left:-3px; transform:scaleX(-1); }
+#panel.uqc-flip .blk .sq.uq::after{ left:auto; right:-3px; transform:scaleY(-1); }
+#panel.uqm-corners.uqc-top-right .blk .sq.uq::before, #panel.uqm-corners.uqc-both .blk .sq.uq::before,
+#panel.uqm-corners.uqc-bottom-left .blk .sq.uq::after, #panel.uqm-corners.uqc-both .blk .sq.uq::after{ content:""; }
+/* the rail's corner icons: accent L's — but an ON button is filled with the accent, so there they take its ink */
+#datacfg .ib .uqL{ stroke:var(--accent); }
+#datacfg .ib.on .uqL{ stroke:currentColor; }
 /* the bar's stops are handles now */
 #datacfg .sqscale i[data-stop]{ width:14px; height:14px; margin-left:-7px; top:4px; cursor:grab; touch-action:none; }
 #datacfg .sqscale i[data-stop].drag{ cursor:grabbing; outline:1.5px solid var(--accent); outline-offset:2px; }

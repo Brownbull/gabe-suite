@@ -679,7 +679,10 @@
           rows: [{ l: ["icon", "name"], r: [] }, { l: ["ent"], r: ["count", "rw"] }, { l: ["model"], r: [] }],
           size: { icon: 13, rw: 11, name: 13, ent: 12, count: 11, model: 12 } },   /* rw + count under the 12px floor — the operator's choice */
     sqSize: 14, sqGap: 4, sqShape: "round", sqPal: "type", sqOpt: 1, sqEnc: "symbol",
-    sqUq: 1, sqBase: 75, sqStep: 30, sqUqMark: "box",   /* the unique accent: box · round · circle · corners · none */     /* ONE emphasis bar: optional = base − step · standard = base · unique = base + step, accented */
+    sqBase: 100, sqOptA: 50,                            /* ONE opacity bar, TWO stops: standard (unique shares it) · optional */
+    sqUqMark: "corners",                                /* a unique field is marked by its corners, or not at all */
+    sqUqAt: "both", sqUqFlip: 0,                        /* which corners: top-right · bottom-left · both; mirrored = top-left / bottom-right */
+    sqUqLen: 40, sqUqW: 1.5, sqUqTip: 100,              /* an arm's length (% of the side) · width at the corner (px) · width at its tip (% of the corner's) */
     foot: { l: ["hint"], r: ["id", "text", "num", "flag", "time", "list", "other", "opt"] },   /* the row under the blocks */
     footShow: "both" };
   var DSEC = [
@@ -713,15 +716,19 @@
     pn.style.setProperty("--sqg", DATACFG.sqGap + "px");
     ["square", "round", "circle"].forEach(function(k){ pn.classList.toggle("sqs-" + k, DATACFG.sqShape === k); });
     pn.classList.toggle("sq-noopt", !DATACFG.sqOpt);
-    /* THE EMPHASIS BAR (operator 2026-09-13): three stops on one opacity scale */
-    var sqStd = DATACFG.sqBase, sqLo = Math.max(0, DATACFG.sqBase - DATACFG.sqStep), sqHi = Math.min(100, DATACFG.sqBase + DATACFG.sqStep);
+    /* THE OPACITY BAR (operator 2026-09-13): two stops — optional, and standard, which unique shares */
+    var sqStd = DATACFG.sqBase, sqLo = DATACFG.sqOptA;
     pn.style.setProperty("--sq-base", String(sqStd / 100));
     pn.style.setProperty("--sq-opt-a", String(sqLo / 100));
-    pn.style.setProperty("--sq-uq-a", String(sqHi / 100));
-    pn.classList.toggle("sq-nouq", !DATACFG.sqUq);
-    ["box", "round", "circle", "corners", "none"].forEach(function(k){ pn.classList.toggle("uqm-" + k, DATACFG.sqUqMark === k); });
+    /* THE UNIQUE CORNERS: which corners, mirrored or not, and each arm's length, width and taper */
+    pn.classList.toggle("uqm-corners", DATACFG.sqUqMark === "corners");
+    ["top-right", "bottom-left", "both"].forEach(function(k){ pn.classList.toggle("uqc-" + k, DATACFG.sqUqAt === k); });
+    pn.classList.toggle("uqc-flip", !!DATACFG.sqUqFlip);
+    pn.style.setProperty("--uq-len", String(DATACFG.sqUqLen / 100));
+    pn.style.setProperty("--uq-w", DATACFG.sqUqW + "px");
+    pn.style.setProperty("--uq-tip", (DATACFG.sqUqW * DATACFG.sqUqTip / 100) + "px");
     [].forEach.call(document.querySelectorAll("#sqscale i[data-stop]"), function(m){
-      var v = m.dataset.stop === "opt" ? sqLo : m.dataset.stop === "uq" ? sqHi : sqStd; m.style.left = v + "%"; m.title = v + "%";
+      var v = m.dataset.stop === "opt" ? sqLo : sqStd; m.style.left = v + "%"; m.title = v + "%";
       m.classList.toggle("edge-l", v <= 12); m.classList.toggle("edge-r", v >= 88); });
     /* the pills' colour is CSS all the way down, so a dragged opacity bar never redraws the panel */
     ["white", "ink", "kind", "accent", "muted"].forEach(function(k){ pn.classList.toggle("pink-" + k, DATACFG.pillInk === k); });
@@ -1205,62 +1212,86 @@
       [1, "a column that accepts None is drawn paler", "marked"],
       [0, "every square at full strength, optional or not", "not marked"]],
       function(o){ return labIco(o[0] ? "eye" : "eyeoff", 15); }, "blocks");
-    /* EMPHASIS (operator 2026-09-13): unique fields join optional ones on ONE opacity bar — optional sits below the standard
-       stop, unique above it with an accent ring */
-    pick("unique", "sqUq", [
-      [1, "a unique column sits at the TOP of the bar, with an accent ring", "marked"],
-      [0, "unique columns look like any other field", "not marked"]],
-      function(o){ return o[0] ? '<svg viewBox="0 0 24 24" width="15" height="15" fill="none"><rect x="6" y="6" width="12" height="12" rx="3" fill="currentColor"/><rect x="3.5" y="3.5" width="17" height="17" rx="5" stroke="var(--accent)" stroke-width="1.6"/></svg>'
-        : labIco("eyeoff", 15); }, "blocks");
-    /* THE UNIQUE ACCENT'S SHAPE (operator 2026-09-13) — the box was never asked for, so it is a choice now */
+    /* THE UNIQUE MARK (operator 2026-09-13): corners or nothing — opacity no longer marks a unique field */
+    function uqIco(at, flip){ var a = 'class="uqL" stroke-width="1.8" fill="none" stroke-linecap="round"';   /* stroke from CSS: accent, or the button's ink once it is ON */
+      var tr = flip ? "M10.5 4.5h-6v6" : "M13.5 4.5h6v6", bl = flip ? "M13.5 19.5h6v-6" : "M10.5 19.5h-6v-6";
+      var d = at === "none" ? "" : at === "top-right" ? tr : at === "bottom-left" ? bl : tr + bl;
+      return '<svg viewBox="0 0 24 24" width="15" height="15"><rect x="8" y="8" width="8" height="8" rx="1.5" fill="currentColor"/>' + (d ? '<path d="' + d + '" ' + a + "/>" : "") + "</svg>"; }
     pick("unique mark", "sqUqMark", [
-      ["box", "a square frame around the field", "box"],
-      ["round", "a frame with softened corners", "rounded"],
-      ["circle", "a ring around the field", "circle"],
-      ["corners", "an L at the top-right and one at the bottom-left, each arm 40% of its side — a focus sign", "corners"],
-      ["none", "no shape — the unique field is marked by its place on the bar alone", "none"]],
-      function(o){ var a = 'stroke="var(--accent)" stroke-width="1.8" fill="none" stroke-linecap="round"';
-        var ring = o[0] === "box" ? '<rect x="4.5" y="4.5" width="15" height="15" rx="1.5" ' + a + '/>'
-          : o[0] === "round" ? '<rect x="4.5" y="4.5" width="15" height="15" rx="5" ' + a + '/>'
-          : o[0] === "circle" ? '<circle cx="12" cy="12" r="8" ' + a + '/>'
-          : o[0] === "corners" ? '<path d="M13.5 4.5h6v6M10.5 19.5h-6v-6" ' + a + '/>' : "";
-        return '<svg viewBox="0 0 24 24" width="15" height="15"><rect x="8" y="8" width="8" height="8" rx="1.5" fill="currentColor"/>' + ring + "</svg>"; }, "blocks");
+      ["corners", "L marks at the field's corners — a focus sign", "corners"],
+      ["none", "nothing — a unique field looks like any other", "none"]],
+      function(o){ return uqIco(o[0] === "none" ? "none" : "both", DATACFG.sqUqFlip); }, "blocks");
+    if (DATACFG.sqUqMark === "corners") {
+      pick("corners", "sqUqAt", [
+        ["top-right", "one L, at the top-right corner (top-left when mirrored)", "top-right"],
+        ["bottom-left", "one L, at the bottom-left corner (bottom-right when mirrored)", "bottom-left"],
+        ["both", "an L at each of the two opposite corners", "both"]],
+        function(o){ return uqIco(o[0], DATACFG.sqUqFlip); }, "blocks");
+      pick("mirror", "sqUqFlip", [
+        [0, "top-right and bottom-left", "as set"],
+        [1, "flipped side to side — top-left and bottom-right", "mirrored"]],
+        function(o){ return uqIco(DATACFG.sqUqAt, o[0]); }, "blocks");
+      box.append(el("div", { class: "cfl sub" }, "arm length"),
+        slider({ min: 10, max: 100, step: 5, value: DATACFG.sqUqLen, label: "corner arm length",
+          fmt: function(v){ return v + "%"; },
+          card: function(){ return hcard({ title: "arm length", value: DATACFG.sqUqLen + "%", icon: "shape",
+            rows: [["range", "10 — 100% of the side"], ["at 100%", "the two arms meet the next corner — a half frame"]],
+            plain: "how far each arm of an L runs along its side" }); },
+          on: function(v){ DATACFG.sqUqLen = v; applyData(); } }));
+      box.append(el("div", { class: "cfl sub" }, "arm width"),
+        slider({ min: 0.5, max: 3.5, step: 0.25, value: DATACFG.sqUqW, label: "corner arm width",
+          fmt: function(v){ return v + "px"; },
+          card: function(){ return hcard({ title: "arm width", value: DATACFG.sqUqW + "px", icon: "shape",
+            rows: [["range", "0.5 — 3.5px"], ["measured at", "the corner, where the two arms meet"]],
+            plain: "how thick an L is at its corner" }); },
+          on: function(v){ DATACFG.sqUqW = v; applyData(); } }));
+      box.append(el("div", { class: "cfl sub" }, "arm tip"),
+        slider({ min: 0, max: 100, step: 10, value: DATACFG.sqUqTip, label: "corner arm tip",
+          fmt: function(v){ return v + "%"; },
+          card: function(){ return hcard({ title: "arm tip", value: DATACFG.sqUqTip + "% of the corner's width", icon: "shape",
+            rows: [["at 100%", "a straight line, as wide at the tip as at the corner"],
+                   ["below", "the arm narrows from the corner outward — a triangle"],
+                   ["at 0%", "it thins to nothing at its tip"]],
+            plain: "how wide an arm still is where it ends" }); },
+          on: function(v){ DATACFG.sqUqTip = v; applyData(); } })); }
+    /* THE OPACITY BAR (operator 2026-09-13): optional sits on its own stop; unique shares the standard one */
     box.append(el("div", { class: "cfl sub" }, "standard"),
       slider({ min: 20, max: 100, step: 5, value: DATACFG.sqBase, label: "standard field mark opacity",
         fmt: function(v){ return v + "%"; },
         card: function(){ return hcard({ title: "standard opacity", value: DATACFG.sqBase + "%", icon: "shape",
-          rows: [["what", "where an ordinary field mark sits on the bar"], ["optional", "sits the spread BELOW it"], ["unique", "sits the spread ABOVE it, with an accent ring"]],
+          rows: [["what", "how solid an ordinary field mark is"], ["unique", "shares this stop — its corners mark it, not its opacity"]],
           plain: "how solid an ordinary field mark is drawn" }); },
         on: function(v){ DATACFG.sqBase = v; applyData(); } }));
-    box.append(el("div", { class: "cfl sub" }, "spread"),
-      slider({ min: 0, max: 50, step: 5, value: DATACFG.sqStep, label: "emphasis spread",
-        fmt: function(v){ return "±" + v; },
-        card: function(){ return hcard({ title: "emphasis spread", value: "±" + DATACFG.sqStep, icon: "shape",
-          rows: [["what", "how far optional and unique sit from the standard stop"], ["at 0", "all three look the same"]],
-          plain: "how different optional and unique fields look from the rest" }); },
-        on: function(v){ DATACFG.sqStep = v; applyData(); } }));
-    { var lo = Math.max(0, DATACFG.sqBase - DATACFG.sqStep), hi = Math.min(100, DATACFG.sqBase + DATACFG.sqStep);
-      var scale = el("div", { class: "sqscale", id: "sqscale" });
-      [["opt", lo, "optional"], ["std", DATACFG.sqBase, "standard"], ["uq", hi, "unique"]].forEach(function(x){
+    box.append(el("div", { class: "cfl sub" }, "optional"),
+      slider({ min: 0, max: 100, step: 5, value: DATACFG.sqOptA, label: "optional field mark opacity",
+        fmt: function(v){ return v + "%"; },
+        card: function(){ return hcard({ title: "optional opacity", value: DATACFG.sqOptA + "%", icon: "shape",
+          rows: [["what", "how solid a field that accepts None is"], ["when", "only while OPTIONAL is marked"]],
+          plain: "how pale an optional field mark is drawn" }); },
+        on: function(v){ DATACFG.sqOptA = v; applyData(); } }));
+    { var scale = el("div", { class: "sqscale", id: "sqscale" });
+      [["opt", DATACFG.sqOptA, "optional"], ["std", DATACFG.sqBase, "standard"]].forEach(function(x){
         var m = el("i", { class: "st-" + x[0] + (x[1] <= 12 ? " edge-l" : x[1] >= 88 ? " edge-r" : "") }); m.dataset.stop = x[0]; m.style.left = x[1] + "%"; m.title = x[1] + "%";
         m.append(el("b", {}, x[2]));
-        /* drag a stop: STANDARD moves the middle; OPTIONAL or UNIQUE change the spread. The two sliders follow. */
-        m.addEventListener("pointerdown", function(ev){ ev.preventDefault(); ev.stopPropagation(); m.setPointerCapture(ev.pointerId); m.classList.add("drag"); window.hoverHide(); });
+        /* drag a stop: each stop sets its own opacity, and its slider follows. Two stops on the same spot are one target
+           under the pointer, so there the FIRST move decides: left takes optional, right takes standard. */
+        var who = x[0], x0 = 0, amb = false;
+        m.addEventListener("pointerdown", function(ev){ ev.preventDefault(); ev.stopPropagation(); m.setPointerCapture(ev.pointerId); m.classList.add("drag"); window.hoverHide();
+          who = m.dataset.stop; x0 = ev.clientX; amb = Math.abs(DATACFG.sqOptA - DATACFG.sqBase) <= 2; });
         m.addEventListener("pointermove", function(ev){ if (!m.hasPointerCapture(ev.pointerId)) return;
+          if (amb) { if (Math.abs(ev.clientX - x0) < 3) return; who = ev.clientX < x0 ? "opt" : "std"; amb = false; }
           var r = scale.getBoundingClientRect(), v = Math.round(Math.min(100, Math.max(0, (ev.clientX - r.left) / r.width * 100)) / 5) * 5;
-          if (m.dataset.stop === "std") DATACFG.sqBase = Math.min(100, Math.max(20, v));
-          else if (m.dataset.stop === "opt") DATACFG.sqStep = Math.min(50, Math.max(0, DATACFG.sqBase - v));
-          else DATACFG.sqStep = Math.min(50, Math.max(0, v - DATACFG.sqBase));
+          var std = who === "std";
+          if (std) DATACFG.sqBase = Math.max(20, v); else DATACFG.sqOptA = v;
           applyData();
-          var bs = box.querySelector('.sldt[aria-label="standard field mark opacity"]'), ss = box.querySelector('.sldt[aria-label="emphasis spread"]');
-          if (bs && bs.parentElement.__set) bs.parentElement.__set(DATACFG.sqBase);
-          if (ss && ss.parentElement.__set) ss.parentElement.__set(DATACFG.sqStep); });
+          var t = box.querySelector('.sldt[aria-label="' + (std ? "standard" : "optional") + ' field mark opacity"]');
+          if (t && t.parentElement.__set) t.parentElement.__set(std ? DATACFG.sqBase : DATACFG.sqOptA); });
         m.addEventListener("pointerup", function(ev){ m.classList.remove("drag"); try { m.releasePointerCapture(ev.pointerId); } catch (e) {} });
         scale.append(m); });
-      hoverBind(scale, function(){ return hcard({ title: "the emphasis bar", value: "0 — 100% opacity", icon: "shape",
-        rows: [["drag", "any stop — standard moves the middle; optional or unique change the spread"],
-               ["optional", Math.max(0, DATACFG.sqBase - DATACFG.sqStep) + "%"], ["standard", DATACFG.sqBase + "%"],
-               ["unique", Math.min(100, DATACFG.sqBase + DATACFG.sqStep) + "% + its " + DATACFG.sqUqMark + " accent"]],
+      hoverBind(scale, function(){ return hcard({ title: "the opacity bar", value: "0 — 100% opacity", icon: "shape",
+        rows: [["drag", "either stop — each sets its own opacity"],
+               ["optional", DATACFG.sqOptA + "%"], ["standard", DATACFG.sqBase + "%"],
+               ["unique", "at the standard stop — " + (DATACFG.sqUqMark === "corners" ? "marked by its corners" : "unmarked")]],
         plain: "where each kind of field mark sits between clear and solid" }); });
       box.append(el("div", { class: "cfl sub" }, "the bar"), scale); }
 
@@ -1477,7 +1508,9 @@
         + " · chips count " + B.cntBox + " " + B.cntA + "%, channel " + B.rwBox + " " + B.rwA + "%"
         + " · lines " + B.rows.map(function(r){ return (r.l.join(" ") || "—") + " | " + (r.r.join(" ") || "—"); }).join(" / ")
         + " · sizes " + Object.keys(B.size).map(function(k){ return k + " " + B.size[k]; }).join(" ")
-        + " · squares " + DATACFG.sqSize + "px gap " + DATACFG.sqGap + " " + DATACFG.sqShape + " as " + DATACFG.sqEnc + " by " + DATACFG.sqPal + (DATACFG.sqOpt ? ", optional marked" : "") + (DATACFG.sqUq ? ", unique " + DATACFG.sqUqMark : "") + ", emphasis " + DATACFG.sqBase + "% ±" + DATACFG.sqStep
+        + " · squares " + DATACFG.sqSize + "px gap " + DATACFG.sqGap + " " + DATACFG.sqShape + " as " + DATACFG.sqEnc + " by " + DATACFG.sqPal + (DATACFG.sqOpt ? ", optional marked" : "")
+          + (DATACFG.sqUqMark === "corners" ? ", unique corners " + DATACFG.sqUqAt + (DATACFG.sqUqFlip ? " mirrored" : "") + ", arms " + DATACFG.sqUqLen + "% " + DATACFG.sqUqW + "px tip " + DATACFG.sqUqTip + "%" : ", unique none")
+          + ", standard " + DATACFG.sqBase + "% optional " + DATACFG.sqOptA + "%"
         + " · footer " + (DATACFG.foot.l.join(" ") || "—") + " | " + (DATACFG.foot.r.join(" ") || "—") + ", " + DATACFG.footShow
         + " · grounds by " + DATACFG.order + ", width " + DATACFG.width + ", tiles " + DATACFG.tiles
         + " · drawn " + shown.join(" ") + (hidden.length ? " · hidden " + hidden.join(" ") : " · nothing hidden"); },
