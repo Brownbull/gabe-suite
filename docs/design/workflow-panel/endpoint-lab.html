@@ -45,6 +45,10 @@
           <div class="bhl"><span class="bhi"></span><b>data panel</b><span class="bhn">sections · layout</span></div>
           <div class="blkbody"><div id="datacfg"></div></div>
         </div>
+        <div class="barblk" id="blk-schemas">
+          <div class="bhl"><span class="bhi"></span><b>schemas panel</b><span class="bhn">sections · layout</span></div>
+          <div class="blkbody"><div id="schcfg"></div></div>
+        </div>
         <div class="barblk" id="blk-parts">
           <div class="bhl"><span class="bhi"></span><b>part bars</b><span class="bhn">one distribution each</span></div>
           <div class="blkbody"><div id="partcfg"></div></div>
@@ -685,6 +689,16 @@
     sqUqLen: 40, sqUqW: 1.5, sqUqTip: 10,              /* an arm's length (% of the side) · width at the corner (px) · width at its tip (% of the corner's) */
     foot: { l: ["hint"], r: ["id", "text", "num", "flag", "time", "list", "other", "opt"] },   /* the row under the blocks */
     footShow: ["icon", "count"] };   /* each part's pieces — icon · text · count, any combination, never none */
+  /* SCHEMAS' OWN SETTINGS (operator 2026-09-13: "redo the schemas section" with the pattern book). The looks it shares
+     with Data — pill colour, chip box/fill/size, field marks, block edge — are read from DATACFG, not copied. */
+  var SCHCFG = window.SCHCFG = { dir: { in: 1, out: 1 }, sort: "tree", sortRev: 0,
+    counts: { shapes: "icon", fields: "icon", nested: "icon" },
+    show: { title: 0, note: 0, legend: 1 },
+    bk: { form: "block", icon: 1, dir: 1, name: 1, ent: "both", count: "badge", via: "both",
+          rows: [{ l: ["icon", "name"], r: [] }, { l: ["ent"], r: ["count", "dir"] }, { l: ["via"], r: [] }],
+          size: { icon: 13, name: 13, ent: 12, via: 12 }, sel: "icon" },
+    footShow: ["icon", "count"] };
+  var SFOLDS = window.SFOLDS = { layout: 0, sections: 0, dirs: 0, sort: 0, counts: 0, title: 1, lines: 0, foot: 0 };
   var DSEC = [
     { key: "title",  word: "the title",   icon: "layers", on: ["grounds", "flow", "ledger", "fields", "blocks"],
       what: "the part's own name and glyph, left of the counts", lost: "which part you are looking at; the counts and the switches stay" },
@@ -710,6 +724,7 @@
   function dataVar(){ return (window.PANELVAR && window.PANELVAR("data")) || "grounds"; }
   function applyData(){ var pn = document.getElementById("panel");
     Object.keys(DATACFG.show).forEach(function(k){ pn.classList.toggle("dh-" + k, !DATACFG.show[k]); });
+    ["title", "note", "legend"].forEach(function(k){ pn.classList.toggle("sh-" + k, !SCHCFG.show[k]); });
     pn.classList.toggle("dgw-equal", DATACFG.width === "equal");
     pn.classList.toggle("dtl-grid", DATACFG.tiles === "grid");
     pn.style.setProperty("--sq", DATACFG.sqSize + "px");
@@ -1364,6 +1379,150 @@
     box.append(el("div", { class: "cfread" }, "a hidden section is still in the page and one click brings it back. The no-loss checklist records what each part has DRAWN since the page opened and never un-ticks — so read it as what the design can show, not as what is on screen right now.")); }
   window.drawDataCfg = drawDataCfg;
   /* move a title part to a line, at an index — one call, so the probe drives the same path a drag does */
+  /* ══ THE SCHEMAS RAIL (operator 2026-09-13) — the pattern book's rail: one named fold per thing on the panel, only the
+     one being tuned open, each header a summary. The looks shared with Data are set in Data's block, and said so. ══ */
+  function drawSchCfg(){ var box = document.getElementById("schcfg"); if (!box) return; box.innerHTML = "";
+    var C = SCHCFG, B = C.bk, live = (window.PANELVAR && window.PANELVAR("schemas")) || "blocks";
+    function redraw(){ applyData(); window.showTab("schemas"); drawSchCfg(); }
+    function group(key, title, summary, why, build){
+      var at = box.children.length; build();
+      var moved = [].slice.call(box.children, at);
+      var fold = el("div", { class: "cffold" + (SFOLDS[key] ? " open" : "") }), body = el("div", { class: "cffoldbody" });
+      fold.dataset.group = key; moved.forEach(function(n){ body.append(n); });
+      var hd = el("button", { class: "cffoldhd" }); hd.dataset.fold = key;
+      var ic = el("span", { class: "fi" }); ic.innerHTML = labIco("fold", 12);
+      hd.append(ic, el("b", {}, title), el("span", { class: "sum" }, summary));
+      hoverBind(hd, function(){ return hcard({ title: title, value: SFOLDS[key] ? "open" : "folded", icon: "shape",
+        rows: [["set to", summary], ["folded", "every setting keeps working while it is out of sight"]], plain: why }); });
+      hd.onclick = function(ev){ ev.stopPropagation(); SFOLDS[key] = SFOLDS[key] ? 0 : 1; fold.classList.toggle("open", !!SFOLDS[key]); };
+      fold.append(hd, body); box.append(fold); }
+    function pick(label, ds, get, set, opts, iconFor, onlyIn){
+      var na = onlyIn && onlyIn !== live, w = el("div", { class: "ibwrap" });
+      opts.forEach(function(o){ var b = el("button", { class: "ib" + (get() === o[0] ? " on" : "") + (na ? " na" : "") });
+        b.setAttribute("data-" + ds, String(o[0])); b.innerHTML = iconFor(o);
+        hoverBind(b, hcard({ title: o[2] || String(o[0]), value: label, icon: "shape",
+          rows: na ? [["drawn in", onlyIn + " — not in " + live + ", so this does nothing right now"]] : null, plain: o[1] }));
+        b.onclick = function(ev){ ev.stopPropagation(); set(o[0]); redraw(); }; w.append(b); });
+      box.append(el("div", { class: "cfl" }, label), w); }
+    function toggles(label, ds, items, isOn, flip){
+      var w = el("div", { class: "ibwrap" });
+      items.forEach(function(o){ var on = isOn(o[0]), b = el("button", { class: "ib" + (on ? " on" : "") });
+        b.setAttribute("data-" + ds, o[0]); b.innerHTML = o[2];
+        hoverBind(b, hcard({ title: o[0], value: on ? "on" : "off", icon: "shape", rows: [["click", on ? "switches it off" : "switches it on"]], plain: o[1] }));
+        b.onclick = function(ev){ ev.stopPropagation(); flip(o[0], on); redraw(); }; w.append(b); });
+      box.append(el("div", { class: "cfl" }, label), w); }
+
+    group("layout", "layout", "shown as " + live + " · " + B.form, "the same shapes, distributed differently", function(){
+      var w = el("div", { class: "ibwrap" }), P = window.PANELS.schemas;
+      P.variants.forEach(function(v){ var b = el("button", { class: "ib" + (live === v.key ? " on" : "") });
+        b.dataset.slayout = v.key; b.innerHTML = S.icon(VARICO[v.key] || "shape", 15);
+        hoverBind(b, hcard({ title: v.label, value: "a distribution of Schemas", icon: VARICO[v.key] || "shape", color: P.col, plain: v.hint }));
+        b.onclick = function(ev){ ev.stopPropagation(); window.showVariant("schemas", v.key); drawSchCfg(); }; w.append(b); });
+      box.append(el("div", { class: "cfl" }, "shown as"), w);
+      pick("form", "sch-form", function(){ return B.form; }, function(v){ B.form = v; },
+        [["row", "one shape per full-width row", "rows"], ["block", "the shapes as blocks that wrap", "blocks"]],
+        function(o){ return labIco(o[0] === "row" ? "normal" : "wauto", 15); }, "blocks"); });
+    group("sections", "sections", ["title", "note", "legend"].filter(function(k){ return C.show[k]; }).length + " of 3 drawn",
+      "what the panel draws besides the blocks — a hidden section stays in the page", function(){
+      toggles("drawn", "sch-sec", [["title", "the part's own name and glyph, left of the counts", S.icon("layers", 15)],
+                                   ["note", "the sentence under the title", S.icon("doc", 15)],
+                                   ["legend", "the footer's kinds, with their counts", S.icon("info", 15)]],
+        function(k){ return !!C.show[k]; }, function(k, on){ C.show[k] = on ? 0 : 1; }); });
+    group("dirs", "directions", ["in", "out"].filter(function(d){ return C.dir[d]; }).join(" + ") || "none",
+      "which shapes are drawn — the request's, the response's, or both; none draws the measurement", function(){
+      toggles("shown", "sch-dir-sw", [["in", "the request and every shape nested in it — what the caller sends in", S.icon("down", 15, S.OPC.read)],
+                                      ["out", "the response and every shape nested in it — what the door sends back", S.icon("up", 15, S.OPC.write)]],
+        function(k){ return !!C.dir[k]; }, function(k, on){ C.dir[k] = on ? 0 : 1; }); });
+    group("sort", "sort", C.sort + (C.sortRev ? " reversed" : ""), "how the shapes are laid out — the buttons' look is Data's", function(){
+      pick("order", "sch-sort-k", function(){ return C.sort; }, function(v){ C.sort = v; },
+        (window.SCHSORTS || []).map(function(o){ return [o.key, o.plain, o.word]; }), function(o){ return window.SCHSORTICON(o[0], 15); });
+      pick("direction", "sch-sort-rev", function(){ return C.sortRev; }, function(v){ C.sortRev = v; },
+        [[0, "the order as its name reads", "as named"], [1, "turned around", "reversed"]],
+        function(o){ return window.SORTICON(o[0] ? "rev-on" : "rev-off", 15); }); });
+    group("counts", "count pills", ["shapes", "fields", "nested"].map(function(k){ return k + " " + C.counts[k]; }).join(" · "),
+      "what the title counts, and how — the pills' colour is Data's", function(){
+      [["shapes", "schema"], ["fields", "table"], ["nested", "link"]].forEach(function(o){
+        pick(o[0], "sch-count-" + o[0], function(){ return C.counts[o[0]]; }, function(v){ C.counts[o[0]] = v; },
+          [["icon", "the glyph and the number", "icon"], ["word", "the number and what it counts, in words", "words"], ["off", "not counted in the title", "off"]],
+          function(x){ return x[0] === "icon" ? S.icon(o[1], 15) : x[0] === "word" ? labIco("ton", 15) : labIco("toff", 15); }); }); });
+    group("title", "block title", "glyph " + (B.icon ? "on" : "off") + " · entity " + B.ent + " · count " + B.count + " · where " + B.via,
+      "what a shape's title carries — the chips' box, fill and size are Data's", function(){
+      pick("glyph", "sch-bk-icon", function(){ return B.icon; }, function(v){ B.icon = v; },
+        [[1, "the schema glyph opens the line", "on"], [0, "no glyph", "off"]], function(o){ return o[0] ? S.icon("schema", 15) : labIco("eyeoff", 15); }, "blocks");
+      pick("direction", "sch-bk-dir", function(){ return B.dir; }, function(v){ B.dir = v; },
+        [[1, "the IN · OUT chip stays", "on"], [0, "no chip — the colour rule can still carry it", "off"]], function(o){ return o[0] ? labIco("eye", 15) : labIco("eyeoff", 15); }, "blocks");
+      pick("name", "sch-bk-name", function(){ return B.name; }, function(v){ B.name = v; },
+        [[1, "the shape's class name", "on"], [0, "no name", "off"]], function(o){ return o[0] ? labIco("ton", 15) : labIco("toff", 15); }, "blocks");
+      pick("entity", "sch-bk-ent", function(){ return B.ent; }, function(v){ B.ent = v; },
+        [["word", "spelled out, in its colour", "the word"], ["icon", "the entity glyph", "the glyph"], ["both", "glyph and word", "both"], ["off", "no entity on the line", "off"]],
+        function(o){ return o[0] === "icon" ? S.icon("entity", 15) : o[0] === "word" ? labIco("ton", 15) : o[0] === "both" ? labIco("tauto", 15) : labIco("toff", 15); }, "blocks");
+      pick("count", "sch-bk-count", function(){ return B.count; }, function(v){ B.count = v; },
+        [["words", "\"4 fields\" — the number and what it counts", "in words"], ["badge", "the number in a badge", "a badge"], ["off", "no count — the marks still show how many", "off"]],
+        function(o){ return o[0] === "words" ? labIco("ton", 15) : o[0] === "badge" ? labIco("sh-pill", 15) : labIco("toff", 15); }, "blocks");
+      pick("where", "sch-bk-via", function(){ return B.via; }, function(v){ B.via = v; },
+        [["word", "\"request body\", or the parent shape and the field that carries it", "the words"], ["icon", "the glyph alone", "the glyph"], ["both", "glyph and words", "both"], ["off", "not on the line", "off"]],
+        function(o){ return o[0] === "icon" ? S.icon("link", 15) : o[0] === "word" ? labIco("ton", 15) : o[0] === "both" ? labIco("tauto", 15) : labIco("toff", 15); }, "blocks");
+      box.append(el("div", { class: "cfread" }, "shared with Data and set in its block: the chip box, fill and size · the pill colour · the field marks · the block edge.")); });
+    group("lines", "title lines", B.rows.filter(function(r){ return r.l.length || r.r.length; }).length + " line(s) in use",
+      "drag a part to another line · click it to size it", function(){
+      var PARTS = window.SCHPART || [], byKey = {}; PARTS.forEach(function(x){ byKey[x.key] = x; });
+      function shown(k){ return k === "icon" ? B.icon : k === "dir" ? B.dir : k === "name" ? B.name : B[k] !== "off"; }
+      function zone(i, side){ var z = el("div", { class: "dzone", "data-sline": String(i), "data-side": side });
+        (((B.rows[i] || {})[side]) || []).forEach(function(k){ var d = byKey[k]; if (!d) return;
+          var b = el("button", { class: "ib dg" + (shown(k) ? " on" : "") + (B.sel === k ? " sel" : ""), draggable: "true" });
+          b.dataset.schpart = k; b.innerHTML = S.icon(d.ico, 14);
+          hoverBind(b, hcard({ title: d.word, value: (shown(k) ? "drawn" : "hidden") + " · line " + (i + 1) + " " + (side === "l" ? "left" : "right"), icon: d.ico,
+            rows: [["what it is", d.note], ["click", "select it, and the bar below sizes it"], ["drag", "along this column to reorder, or into another column to move it"]],
+            plain: "one part of a shape's title" }));
+          b.onclick = function(ev){ ev.stopPropagation(); B.sel = k; drawSchCfg(); };
+          b.addEventListener("dragstart", function(ev){ ev.dataTransfer.setData("text/plain", k); ev.dataTransfer.effectAllowed = "move"; window.hoverHide(); });
+          z.append(b); });
+        z.addEventListener("dragover", function(ev){ ev.preventDefault(); z.classList.add("over"); });
+        z.addEventListener("dragleave", function(){ z.classList.remove("over"); });
+        z.addEventListener("drop", function(ev){ ev.preventDefault(); z.classList.remove("over"); var key = ev.dataTransfer.getData("text/plain"); if (!byKey[key]) return;
+          var kids = [].slice.call(z.querySelectorAll(".ib")).filter(function(x){ return x.dataset.schpart !== key; }), idx = kids.length;
+          for (var j = 0; j < kids.length; j++) { var r = kids[j].getBoundingClientRect(); if (ev.clientX < r.left + r.width / 2) { idx = j; break; } }
+          window.moveSchPart(key, i, side, idx); });
+        return z; }
+      var zs = el("div", { class: "zones lines" });
+      [0, 1, 2].forEach(function(i){ zs.append(el("div", { class: "lnrow" }, el("div", { class: "dzl" }, "line " + (i + 1)),
+        el("div", { class: "lnsides" }, zone(i, "l"), el("i", { class: "lnmid" }), zone(i, "r")))); });
+      box.append(el("div", { class: "cfl" }, "lines"), zs);
+      var k = B.sel, d = byKey[k] || PARTS[0], chip = k === "dir" || k === "count", dk = k === "dir" ? "rw" : "count";
+      var cur = chip ? (DATACFG.bk.size[dk] || 12) : (B.size[k] || 12);
+      box.append(el("div", { class: "cfl sub" }, "size"),
+        slider({ min: k === "icon" ? 9 : chip ? 8 : 12, max: 26, step: 1, value: cur, label: "schema " + d.word + " size",
+          fmt: function(v){ return v + "px" + (v < 12 ? " <12" : ""); },
+          card: hcard({ title: d.word, value: cur + "px", icon: d.ico,
+            rows: [["what it sizes", d.note], chip ? ["shared", "the same size as Data's chip — one value, two places to set it"] : ["the floor", "12px — text never goes under it"]],
+            plain: "how big this part of the title is drawn" }),
+          on: function(v){ if (chip) { DATACFG.bk.size[dk] = v; applyData(); } else { B.size[k] = v; window.showTab("schemas"); } } }));
+      box.append(el("div", { class: "cfread" }, "each line has TWO columns: what you drop on the left is pushed left, what you drop on the right is pushed right.")); });
+    group("foot", "footer row", "hint | kinds opt · " + C.footShow.join(" "),
+      "the row under the blocks — which of icon · label · count each part shows", function(){
+      var HASH = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 4 8 20M16 4l-2 16M5 9h15M4 15h15"/></svg>';
+      var w = el("div", { class: "ibwrap" });
+      [["icon", "icon", "the part's icon — a kind's mark as the blocks draw it", window.KINDICON("id", 15)],
+       ["text", "label", "the part's name — the kind's word, or the hint's sentence", labIco("ton", 15)],
+       ["count", "count", "how many fields each kind holds", HASH]].forEach(function(o){
+        var on = C.footShow.indexOf(o[0]) >= 0, last = on && C.footShow.length === 1;
+        var b = el("button", { class: "ib" + (on ? " on" : "") }); b.dataset.schFootShow = o[0]; b.innerHTML = o[3];
+        hoverBind(b, hcard({ title: o[1], value: on ? (last ? "on — the last one, so it stays on" : "on") : "off", icon: "shape",
+          rows: [["combine", "any of icon · label · count — at least one stays on"]], plain: o[2] }));
+        b.onclick = function(ev){ ev.stopPropagation(); var s = C.footShow, i = s.indexOf(o[0]); if (i >= 0 && s.length === 1) return;
+          var next = i >= 0 ? s.filter(function(x){ return x !== o[0]; }) : s.concat([o[0]]);
+          C.footShow = ["icon", "text", "count"].filter(function(x){ return next.indexOf(x) >= 0; }); redraw(); };
+        w.append(b); });
+      box.append(el("div", { class: "cfl" }, "shown as"), w); });
+  }
+  window.drawSchCfg = drawSchCfg;
+  /* move a schema title part to a line and column, at an index — the one call both a drag and the probe use */
+  window.moveSchPart = function(key, line, side, idx){ var B = SCHCFG.bk;
+    B.rows = B.rows.map(function(r){ return { l: r.l.filter(function(k){ return k !== key; }), r: r.r.filter(function(k){ return k !== key; }) }; });
+    while (B.rows.length <= line) B.rows.push({ l: [], r: [] });
+    var col = B.rows[line][side === "r" ? "r" : "l"];
+    col.splice(Math.max(0, Math.min(idx == null ? col.length : idx, col.length)), 0, key);
+    B.sel = key; window.showTab("schemas"); drawSchCfg(); };
   window.moveBkPart = function(key, line, side, idx){ var B = DATACFG.bk;
     B.rows = B.rows.map(function(r){ return { l: r.l.filter(function(k){ return k !== key; }), r: r.r.filter(function(k){ return k !== key; }) }; });
     while (B.rows.length <= line) B.rows.push({ l: [], r: [] });
@@ -1530,6 +1689,19 @@
         + " · footer " + (DATACFG.foot.l.join(" ") || "—") + " | " + (DATACFG.foot.r.join(" ") || "—") + ", " + DATACFG.footShow.join(" ")
         + " · grounds by " + DATACFG.order + ", width " + DATACFG.width + ", tiles " + DATACFG.tiles
         + " · drawn " + shown.join(" ") + (hidden.length ? " · hidden " + hidden.join(" ") : " · nothing hidden"); },
+    schemas: function(){ var C = SCHCFG, B = C.bk, SEC = ["title", "note", "legend"];
+      var drawn = SEC.filter(function(k){ return C.show[k]; }), hidden = SEC.filter(function(k){ return !C.show[k]; });
+      return "schemas · shown as " + ((window.PANELVAR && window.PANELVAR("schemas")) || "blocks")
+        + " · directions " + (["in", "out"].filter(function(d){ return C.dir[d]; }).join("+") || "none")
+        + " · title counts shapes " + C.counts.shapes + ", fields " + C.counts.fields + ", nested " + C.counts.nested
+        + " · sort " + C.sort + (C.sortRev ? " reversed" : "")
+        + " · block " + B.form + " (glyph " + (B.icon ? "on" : "off") + ", chip " + (B.dir ? "on" : "off") + ", name " + (B.name ? "on" : "off")
+        + ", entity " + B.ent + ", count " + B.count + ", where " + B.via + ")"
+        + " · lines " + B.rows.map(function(r){ return (r.l.join(" ") || "—") + " | " + (r.r.join(" ") || "—"); }).join(" / ")
+        + " · sizes " + Object.keys(B.size).map(function(k){ return k + " " + B.size[k]; }).join(" ")
+        + " · footer " + C.footShow.join(" ")
+        + " · drawn " + (drawn.join(" ") || "nothing") + (hidden.length ? " · hidden " + hidden.join(" ") : "")
+        + " · looks from data"; },
     frame: function(){ function ln(w, st){ return w === 0 || st === "none" ? "none" : w + "px " + st; }
       return "frame · bench outline " + ln(FRAME.benchW, FRAME.benchS)
         + " · head bar " + FRAME.headH + "px, outline " + ln(FRAME.headBw, FRAME.headBs) + ", divider " + ln(FRAME.headDivW, FRAME.headDivS) + ", gap " + FRAME.headGap + "px"
@@ -1554,17 +1726,19 @@
   document.getElementById("blk-frame").querySelector(".bhl").append(copyBtn("frame", "the rows' heights, lines and spacing"));
   document.getElementById("blk-data").querySelector(".bhi").innerHTML = S.icon("table", 13, "var(--accent)");
   document.getElementById("blk-data").querySelector(".bhl").append(copyBtn("data", "which sections the Data panel draws, and how"));
+  document.getElementById("blk-schemas").querySelector(".bhi").innerHTML = S.icon("schema", 13, "var(--accent)");
+  document.getElementById("blk-schemas").querySelector(".bhl").append(copyBtn("schemas", "which sections the Schemas panel draws, and how"));
   /* THE RAIL OPENS ON ONE REGION (operator 2026-09-12): every block folds away except the one being
      worked on. Moving to the next region is this one line. */
-  var OPENBLK = window.OPENBLK = "blk-data";
-  ["blk-bench", "blk-head", "blk-tabs", "blk-frame", "blk-data", "blk-parts"].forEach(function(id){
+  var OPENBLK = window.OPENBLK = "blk-schemas";   /* the region being worked on (operator 2026-09-13: Schemas, next) */
+  ["blk-bench", "blk-head", "blk-tabs", "blk-frame", "blk-data", "blk-schemas", "blk-parts"].forEach(function(id){
     foldable(id); if (id !== OPENBLK) document.getElementById(id).classList.add("min"); });
   document.getElementById("blk-head").querySelector(".bhi").innerHTML = labIco("bars", 13, "var(--accent)");
   document.getElementById("blk-head").querySelector(".bhl").append(copyBtn("head", "the head bar's verbosity, piles and order"));
   document.getElementById("blk-parts").querySelector(".bhi").innerHTML = S.icon("layers", 13, "var(--accent)");
 
   /* ── the variant bar: one panel, several DISTRIBUTIONS — proposals to compare, not settings ── */
-  var VARICO = { grounds: "entity", flow: "drill", ledger: "table", fields: "schema", blocks: "layers", levels: "layers", chain: "merge", status: "info", ladder: "up", band: "shield", gauntlet: "drill" };
+  var VARICO = { shapes: "drill", grounds: "entity", flow: "drill", ledger: "table", fields: "schema", blocks: "layers", levels: "layers", chain: "merge", status: "info", ladder: "up", band: "shield", gauntlet: "drill" };
   function drawVars(){ var PC = document.getElementById("partcfg"); PC.innerHTML = "";
     order.forEach(function(k){ var P = window.PANELS[k];
       var row = E("div", { class: "prow" + (cur === k ? " on" : "") });
@@ -1593,6 +1767,7 @@
     try { v.render(PANEL, F, S); } catch (e) { PANEL.innerHTML = '<div class="perr">render error: ' + e.message + '</div>'; console.error(e); }
     if (window.applyData) window.applyData();
     if (window.drawDataCfg && k === "data") window.drawDataCfg();   /* which sections THIS distribution draws */
+    if (window.drawSchCfg && k === "schemas") window.drawSchCfg();
     drawPortrait();
     readBox(); }
   /* THE PORTRAIT (operator 2026-09-12): a panel publishes `portrait(box, F, S)` and the stage draws it
@@ -1610,7 +1785,7 @@
     /* the header names the SUBJECT — what is drawn — not the part it came from */
     var subj = P.portraitSubject ? P.portraitSubject(F) : null;
     document.getElementById("portt").textContent = subj || P.word.toLowerCase();
-    document.getElementById("porthd").querySelector(".pti").innerHTML = S.icon(subj ? "model" : P.icon, 14, subj ? "var(--accent)" : P.col);
+    document.getElementById("porthd").querySelector(".pti").innerHTML = S.icon(subj ? (P.portraitIcon || "model") : P.icon, 14, subj ? "var(--accent)" : P.col);
     vs.forEach(function(v){ var b = el("button", { class: "ptv" + (portVar[cur] === v.key ? " on" : "") });
       b.dataset.pvar = v.key; b.innerHTML = S.icon(v.icon, 14);
       hoverBind(b, hcard({ title: v.label, value: "a way of drawing it", icon: v.icon, plain: v.hint }));
@@ -1669,7 +1844,7 @@
       try { v.render(ghost, F, S); } catch (e) { console.warn("prewalk " + k + "/" + v.key, e); } }); });
     ghost.remove(); })();
 
-  drawTabs(); drawTabCfg(); applyFrame(); drawFrameCfg(); applyData(); drawDataCfg();
+  drawTabs(); drawTabCfg(); applyFrame(); drawFrameCfg(); applyData(); drawDataCfg(); drawSchCfg();
   var first = (location.hash || "#data").slice(1); show(order.indexOf(first) >= 0 ? first : "data");
   window.__eplabReady = true;
 })();

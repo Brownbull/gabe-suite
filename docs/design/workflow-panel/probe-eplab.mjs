@@ -247,7 +247,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   ok(dup.length === 0, 'the definition appears once, at the end — never repeated above it', dup.join(' | ').slice(0, 140)); }
 // ── every control block FOLDS AWAY without losing its settings (operator 2026-09-11) ──
 { const blks = await p.$$eval('.barblk', els => els.map(e => e.id));
-  ok(blks.length === 6, 'six control blocks', blks.join(','));
+  ok(blks.length === 7, 'seven control blocks — schemas has its own since 2026-09-13', blks.join(','));
   const before = await p.evaluate(() => window.COPYTXT.tabs());
   await p.click('#blk-tabs .mnb'); await p.waitForTimeout(120);
   ok(await p.$eval('#blk-tabs', e => e.classList.contains('min')), 'a block folds when its chevron is clicked');
@@ -993,6 +993,108 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   await p.evaluate(d => { Object.assign(window.DATACFG, d); window.FOLDS.marks = 0; window.applyData(); window.showTab('data'); window.drawDataCfg(); }, DEF);
   await p.waitForTimeout(260); }
 
+// ══ SCHEMAS · BLOCKS (operator 2026-09-13: "redo the schemas section" with the pattern book) — the thing is a shape, its
+//    pieces are fields; the looks it shares with Data are read from DATACFG. Counts are computed here from the feed. ══
+{ // earlier sections walk every distribution and leave Schemas on its last one, so the boot default is read off the registry
+  ok(await p.evaluate(() => window.PANELS.schemas.defaultVariant) === 'blocks', 'Schemas boots on BLOCKS — the pattern book carried to a second part');
+  await p.evaluate(() => { window.showVariant('schemas', 'blocks'); }); await p.waitForTimeout(320);
+  const SC = F.data.schemas, shapesF = [SC.request, ...(SC.request.nested || []), SC.response, ...(SC.response.nested || [])];
+  const fieldsF = shapesF.reduce((n, s) => n + s.cols.length, 0);
+  const base = t => { let b = String(t).replace(/\s*\|\s*None\s*$/, '').trim(), m; while ((m = /^(list|List|Optional|Sequence|set|Set|tuple|Tuple)\[(.*)\]$/.exec(b))) b = m[2].trim(); return b; };
+  const isShape = t => /^[A-Z][A-Za-z0-9_]*$/.test(base(t)) && !/^(Any|Literal|Enum|Dict|List|Optional|Union|Annotated|Sequence|Mapping|Set|Tuple|UUID|EmailStr|Text|Decimal|Json|JSON)$/.test(base(t));
+  const names = new Set(shapesF.map(s => s.name));
+  const nestF = shapesF.reduce((n, s) => n + s.cols.filter(c => isShape(c[1])).length, 0);
+  const nfF = shapesF.reduce((n, s) => n + s.cols.filter(c => isShape(c[1]) && !names.has(base(c[1]))).length, 0);
+  const tree = []; for (const sc of [SC.request, SC.response]) { tree.push(sc.name); const fi = n => sc.cols.findIndex(c => base(c[1]) === n);
+    [...(sc.nested || [])].sort((a, b) => fi(a.name) - fi(b.name)).forEach(n => tree.push(n.name)); }
+  const st = await p.evaluate(() => ({ variant: document.getElementById('panel').dataset.variant,
+    blocks: [...document.querySelectorAll('#panel .blk')].map(e => ({ n: e.dataset.table, marks: e.querySelectorAll('.bkhd .sq').length, shape: e.querySelectorAll('.bkhd .sq.t-shape').length })),
+    pills: Object.fromEntries([...document.querySelectorAll('#panel .sechd .dcn')].map(e => [e.dataset.count, +e.textContent])),
+    dirs: Object.fromEntries([...document.querySelectorAll('#panel .chb[data-sch-dir]')].map(e => [e.dataset.schDir, +e.textContent])) }));
+  ok(st.variant === 'blocks', 'and the Blocks distribution draws', st.variant);
+  ok(st.blocks.map(b => b.n).join(',') === tree.join(','), 'one block per shape — each body, then the shapes it carries in the order its fields name them', st.blocks.map(b => b.n).join(','));
+  ok(st.blocks.every(b => b.marks === shapesF.find(s => s.name === b.n).cols.length), 'one mark per field', JSON.stringify(st.blocks.map(b => b.marks)));
+  ok(nestF > 0 && st.blocks.reduce((n, b) => n + b.shape, 0) === nestF, 'a field whose type names another shape wears the SHAPE mark', String(nestF));
+  ok(st.pills.shapes === shapesF.length && st.pills.fields === fieldsF && st.pills.nested === nestF, 'the title counts shapes · fields · nested, and each equals the feed', JSON.stringify(st.pills));
+  ok(st.dirs.in + st.dirs.out === shapesF.length && st.dirs.in === 1 + (SC.request.nested || []).length, 'IN and OUT partition the shapes — the request tree and the response tree', JSON.stringify(st.dirs));
+  await p.click('#panel .chb[data-sch-dir="out"]'); await p.waitForTimeout(260);
+  { const b = await p.$$eval('#panel .blk', els => els.map(e => e.classList.contains('dir-in'))), s = await p.$eval('#panel .sechd .dcn[data-count="shapes"]', e => +e.textContent);
+    ok(b.length === st.dirs.in && b.every(Boolean) && s === st.dirs.in, 'switching OUT off leaves the request tree, and the count follows', JSON.stringify({ n: b.length, s })); }
+  await p.click('#panel .chb[data-sch-dir="out"]'); await p.waitForTimeout(260);
+  await p.click('#panel .srb[data-sch-sort="name"]'); await p.waitForTimeout(260);
+  { const n = await p.$$eval('#panel .blk', els => els.map(e => e.dataset.table)); ok(n.join() === [...n].sort((a, b) => a.localeCompare(b)).join(), 'sort by NAME reads A to Z', n.slice(0, 4).join(',')); }
+  await p.click('#panel .srb[data-sch-sort="tree"]'); await p.waitForTimeout(260);
+  { const lk = await p.evaluate(() => { const chip = document.querySelector('#panel .blk .bkhd .bkrw .jdrw'), cs = getComputedStyle(chip), sq = document.querySelector('#panel .blk .bkhd .sq'), blk = document.querySelector('#panel .blk');
+      return { words: chip.textContent, radius: parseFloat(cs.borderTopLeftRadius), fs: parseFloat(cs.fontSize), sq: Math.round(sq.getBoundingClientRect().height), sqCfg: window.DATACFG.sqSize, edge: parseFloat(getComputedStyle(blk).borderLeftWidth) }; });
+    ok(lk.words === 'IN' && lk.radius >= 9 && lk.fs === 11, 'the IN · OUT chip wears Data\'s chip look — a pill at 11px', JSON.stringify(lk));
+    ok(lk.sq === lk.sqCfg && lk.edge === 2, 'the field marks and the edge are Data\'s too — one look, set once', JSON.stringify(lk)); }
+  { const v = await p.$$eval('#panel .blk', els => els.slice(0, 2).map(e => (e.querySelector('.bkv') || {}).textContent));
+    ok(/body/.test(v[0]) && v[1].startsWith(SC.request.cols.find(c => base(c[1]) === tree[1])[0]), 'a body says so; a nested block leads with the FIELD that carries it', JSON.stringify(v)); }
+  // the card mirrors the block
+  { await p.mouse.move(5, 1030); await p.waitForTimeout(120); await p.hover('#panel .blk:nth-child(2) .bkhd'); await p.waitForTimeout(280);
+    const c = await p.evaluate(() => { const h = document.getElementById('hover'), blk = document.querySelector('#panel .blk:nth-child(2)'), at = (e, a) => e ? e.getAttribute(a) : null;
+      return { name: (h.querySelector('.bchd b') || {}).textContent, g: at(h.querySelector('.bchd svg'), 'stroke'), bg: at(blk.querySelector('.bkhd .bki svg'), 'stroke'), blk: blk.dataset.table,
+        via: (h.querySelector('[data-ln="via"]') || {}).textContent || '', chip: (h.querySelector('[data-row="direction"] .bcchip') || {}).textContent, fp: +(h.querySelector('.bcfp') || {}).textContent,
+        mix: [...h.querySelectorAll('.bcmix .mx b')].reduce((n, b) => n + +b.textContent, 0), foot: (h.querySelector('.bcfoot') || {}).textContent || '' }; });
+    const sh = shapesF.find(s => s.name === c.blk);
+    ok(c.name === c.blk && c.g && c.g === c.bg, 'a shape\'s card mirrors its block — the same glyph colour, then its name', JSON.stringify(c));
+    ok(sh && c.via.includes(SC.request.name) && c.chip === 'in — the request' && c.fp === sh.cols.length && c.mix === sh.cols.length && /record/.test(c.foot),
+       'then where it sits, the direction as the block\'s chip with words, the fields pill, and marks that add back up', JSON.stringify(c)); }
+  { const pillCard = async k => { await p.mouse.move(5, 1030); await p.waitForTimeout(120); await p.hover(`#panel .sechd .dcp[data-pill="${k}"]`); await p.waitForTimeout(260);
+      return p.evaluate(() => { const h = document.getElementById('hover'); return { title: (h.querySelector('.cphd b') || {}).textContent, value: (h.querySelector('.cphv') || {}).textContent,
+        factors: [...h.querySelectorAll('.fct')].map(f => f.textContent) }; }); };
+    const f = await pillCard('fields');
+    ok(f.title === 'fields' && +f.value === fieldsF && f.factors.reduce((n, t) => n + +((t.match(/(\d+) fields?/) || [0, 0])[1]), 0) === fieldsF, 'the FIELDS pill\'s card lists the kinds, and they add back up', JSON.stringify(f).slice(0, 220));
+    const n = await pillCard('nested'), num = s => +((n.factors.find(t => t.includes(s)) || '').match(/(\d+)/) || [0, -1])[1];
+    ok(+n.value === nestF && num('drawn here') === nestF - nfF && num('not in the feed') === nfF, 'the NESTED pill splits into shapes drawn here and shapes the feed does not carry', JSON.stringify({ n, nestF, nfF })); }
+  await p.mouse.move(5, 1030); await p.waitForTimeout(120);
+  { const ft = await p.$$eval('#panel .bkfoot .ftp', els => els.map(e => ({ k: e.dataset.part, n: (e.querySelector('.ftn') || {}).textContent })));
+    const kinds = ft.filter(x => x.k !== 'hint' && x.k !== 'opt');
+    ok(kinds.reduce((s, x) => s + +x.n, 0) === fieldsF && +(kinds.find(x => x.k === 'shape') || {}).n === nestF, 'the footer\'s kinds add back up to the fields, SHAPE among them', JSON.stringify(ft)); }
+  // the record
+  await p.evaluate(() => window.selectIn('schemas', window.LABEP.data.schemas.response.name)); await p.waitForTimeout(300);
+  { const r = await p.evaluate(() => { const b = document.querySelector('#portbody .ptrec'); if (!b) return null;
+      return { name: (b.querySelector('.rchd b') || {}).textContent, head: document.getElementById('portt').textContent, rows: [...b.querySelectorAll('.rcrow')].map(x => x.dataset.row),
+        heads: [...b.querySelectorAll('.rctab .rcth > span')].map(s => s.firstChild ? s.firstChild.textContent.trim() : ''), fp: +(b.querySelector('.rctab .rcfp') || {}).textContent,
+        rowsN: b.querySelectorAll('.rctab .fld').length, nest: [...b.querySelectorAll('.rctab .fld .c-k [data-nest]')].map(x => x.dataset.nest + ':' + x.textContent),
+        sel: [...document.querySelectorAll('#panel .blk.sel')].map(x => x.dataset.table), shared: (b.querySelector('.rcrow[data-row="shared"] .v') || {}).textContent || '' }; });
+    ok(r && r.name === SC.response.name && r.head === SC.response.name && r.sel.join() === SC.response.name, 'clicking a shape opens ITS record in the portrait, and its block wears the mark', JSON.stringify(r));
+    ok(r && r.rows.join(',') === 'channel,entity,body,file,shared' && r.shared.includes(F.widening.response_consumers[0]), 'rows: channel · entity · body · file · and who else returns it', JSON.stringify(r && r.rows));
+    ok(r && r.heads.join(',') === 'fields,nested shape,data type' && r.fp === SC.response.cols.length && r.rowsN === SC.response.cols.length, 'the fields as a table — fields · nested shape · data type', JSON.stringify(r && r.heads));
+    ok(r && r.nest.length === SC.response.cols.filter(c => isShape(c[1])).length && r.nest.every(x => /^in-feed:→ \d+ fields?$/.test(x)),
+       'each nested field says how many fields its shape holds — the type column already names it', JSON.stringify(r && r.nest)); }
+  { const r = await p.evaluate(() => { const nf = window.SCHSHAPES().find(s => s.cols.some(c => window.SCHKIND(c[1]) === 'shape' && !window.SCHSHAPES().some(x => x.name === String(c[1]).replace(/\s*\|\s*None\s*$/, ''))));
+      if (!nf) return null; window.selectIn('schemas', nf.name);
+      return { name: nf.name, rows: [...document.querySelectorAll('#portbody .rcrow')].map(x => x.dataset.row), nf: document.querySelectorAll('#portbody .rctab [data-nest="not-in-feed"]').length }; });
+    ok(r && r.rows[2] === 'parent' && r.nf > 0, 'a nested shape names its parent, and a field whose shape the feed lacks is marked, not drawn as empty', JSON.stringify(r)); }
+  { const cuts = await p.evaluate(() => { const out = [];
+      for (const s of window.SCHSHAPES()) { window.selectIn('schemas', s.name); const b = document.querySelector('#portbody .ptrec'); if (!b) { out.push(s.name + ' no record'); continue; }
+        if (b.scrollWidth > b.clientWidth + 1) out.push(s.name + ' overflows ' + b.scrollWidth + '>' + b.clientWidth);
+        b.querySelectorAll('.rctab .fld .fn, .rctab .fld .ft').forEach(n => {
+          // a wrapping cell may take two lines, but no piece of it may spill; a one-line cell must show its whole text
+          if (getComputedStyle(n).whiteSpace !== 'nowrap') { if (n.scrollWidth > n.clientWidth + 1) out.push(s.name + '.' + n.textContent + ' spills'); return; }
+          const m = document.createElement('span'); m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap';
+          m.style.font = getComputedStyle(n).font; m.textContent = n.textContent; document.body.append(m); const w = m.getBoundingClientRect().width; m.remove();
+          if (w > n.getBoundingClientRect().width + 0.05) out.push(s.name + '.' + n.textContent); }); }
+      return out; });
+    ok(cuts.length === 0, 'across every shape, no field name or type is cut and nothing runs past the portrait', JSON.stringify(cuts.slice(0, 5))); }
+  await p.evaluate(() => window.selectIn('schemas', null)); await p.waitForTimeout(200);
+  // the rail and the copy line
+  ok(await p.evaluate(() => window.COPYTXT.schemas()) === 'schemas · shown as blocks · directions in+out · title counts shapes icon, fields icon, nested icon · sort tree'
+     + ' · block block (glyph on, chip on, name on, entity both, count badge, where both) · lines icon name | — / ent | count dir / via | — · sizes icon 13 name 13 ent 12 via 12'
+     + ' · footer icon count · drawn legend · hidden title note · looks from data', 'the schemas copy line names every setting and says where the shared looks come from', await p.evaluate(() => window.COPYTXT.schemas()));
+  { const g = await p.$$eval('#schcfg .cffold', els => els.map(e => ({ k: e.dataset.group, open: e.classList.contains('open'), body: getComputedStyle(e.querySelector('.cffoldbody')).display })));
+    ok(g.length === 8 && g.filter(x => x.open).map(x => x.k).join() === 'title' && g.filter(x => !x.open).every(x => x.body === 'none'),
+       'the schemas rail is eight folds, only BLOCK TITLE open — and a closed fold really hides its body', JSON.stringify(g)); }
+  await p.evaluate(() => window.moveSchPart('via', 0, 'r', 0)); await p.waitForTimeout(260);
+  { const l = await p.$$eval('#panel .blk:first-child .bkln', els => els.map(e => [...e.querySelector('.bkcol.r').children].map(c => c.className)));
+    ok(l.length === 2 && l[0].some(c => /bkv/.test(c)), 'a title part drags to another line — WHERE moves up beside the name and the empty third line goes', JSON.stringify(l)); }
+  await p.evaluate(() => { window.SCHCFG.bk.rows = [{ l: ['icon', 'name'], r: [] }, { l: ['ent'], r: ['count', 'dir'] }, { l: ['via'], r: [] }]; window.SCHCFG.bk.sel = 'icon'; window.showTab('schemas'); window.drawSchCfg(); });
+  await p.waitForTimeout(200);
+  await p.evaluate(() => { window.DATACFG.bk.rwBox = 'square'; window.applyData(); }); await p.waitForTimeout(150);
+  ok(await p.$eval('#panel .blk .bkhd .bkrw .jdrw', e => parseFloat(getComputedStyle(e).borderTopLeftRadius) === 0), 'a chip box set in Data\'s rail reaches the IN · OUT chip — shared, not copied');
+  await p.evaluate(() => { window.DATACFG.bk.rwBox = 'pill'; window.applyData(); window.showTab('data'); }); await p.waitForTimeout(250); }
+
 // the tests below were written against the station chip's look with every dial in reach — give them that baseline
 await p.evaluate(() => { Object.assign(window.DATACFG, { countPills: 'one', pillInk: 'white', pillBg: 'accent', pillAlpha: 100, sqEnc: 'colour', sqSize: 11, sqGap: 2, sqBase: 100, sqOptA: 45, sqUqMark: 'none' });
   Object.assign(window.DATACFG.bk, { count: 'words', model: 'word',
@@ -1470,11 +1572,11 @@ for (const t of rtabs) { await p.click(`#railtabs .rtb[data-rt="${t}"]`); await 
   ok(shown.length === 1 && shown[0] === 'rt-' + t, `rail toggle ${t} shows one section, never both`, shown.join(',')); }
 await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(90);
 const blocks = await p.$$eval('#rt-controls .barblk .bhl b', els => els.map(e => e.textContent));
-ok(blocks.join(',') === 'bench,head bar,part buttons,frame,data panel,part bars', 'the controls tab gives every region its own block', blocks.join(','));
+ok(blocks.join(',') === 'bench,head bar,part buttons,frame,data panel,schemas panel,part bars', 'the controls tab gives every region its own block', blocks.join(','));
 const prows = await p.$$eval('#partcfg .prow', els => els.length);
 ok(prows === 6, 'the BARS tab separates the controls per part — one row each', String(prows));
 const varBtns = await p.$$eval('#partcfg .ib', els => els.length);
-ok(varBtns === 16, 'every distribution is an icon button in its part row', String(varBtns));
+ok(varBtns === 17, 'every distribution is an icon button in its part row', String(varBtns));
 const iconOnlyCtl = await p.$$eval('#partcfg .ib, #barcfg .ib, #boxes .ib, #dens .ib, #motionwrap .ib', els => els.every(e => !e.innerText.trim() && !!e.querySelector('svg')));
 ok(iconOnlyCtl, 'every control in the rail is an ICON — its word lives on the hover card');
 const ctl = (await p.$$('#partcfg .ib'))[0]; await ctl.hover(); await p.waitForTimeout(120);
@@ -1503,9 +1605,9 @@ const zones = await p.$$eval('#barcfg .dzone', els => els.map(e => e.dataset.sid
 ok(zones.join(',') === 'left,right', 'the rail shows one drop zone per pile, divided', zones.join(','));
 // a copy button per control block, each producing a readable line
 const cpb = await p.$$('.barblk .cpb');
-ok(cpb.length === 6, 'every control block has a COPY button', String(cpb.length));
+ok(cpb.length === 7, 'every control block has a COPY button', String(cpb.length));
 const lines = await p.evaluate(() => Object.keys(window.COPYTXT).map(k => window.COPYTXT[k]()));
-ok(lines.length === 6 && lines.every(l => l.length > 20), 'each copy line names that section\'s selections', lines.join(' // ').slice(0, 160));
+ok(lines.length === 7 && lines.every(l => l.length > 20), 'each copy line names that section\'s selections', lines.join(' // ').slice(0, 160));
 ok(/head bar · verbosity .* LEFT .* RIGHT .* off .* styles /.test(lines[1]), 'the head-bar copy line carries verbosity, both piles, what is off, and the per-element styles', lines[1]);
 // ── per-element options: shown · text · container (operator 2026-09-11) ──
 await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(80);
