@@ -383,10 +383,10 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   // THE RAIL IS A STACK OF FOLDS (operator 2026-09-13) — every group closed at boot except the one being tuned
   { const g = await p.$$eval('#datacfg > .cffold', els => els.map(e => ({ k: e.dataset.group, open: e.classList.contains('open'),
       body: getComputedStyle(e.querySelector('.cffoldbody')).display, sum: (e.querySelector('.cffoldhd .sum') || {}).textContent })));
-    ok(g.map(x => x.k).join(',') === 'layout,sections,channels,sort,counts,pills,block,chips,edge,lines,marks,grounds',
-       'the data rail is twelve named groups', g.map(x => x.k).join(','));
-    ok(g.every(x => x.open === (x.k === 'chips') && x.body === (x.k === 'chips' ? 'grid' : 'none')),
-       'every group boots folded except CHIPS, the one being tuned', JSON.stringify(g.map(x => x.k + (x.open ? '+' : '-'))));
+    ok(g.map(x => x.k).join(',') === 'layout,sections,channels,sort,counts,pills,block,edge,lines,marks,grounds',
+       'the data rail is eleven named groups — the chips live inside BLOCK TITLE', g.map(x => x.k).join(','));
+    ok(g.every(x => x.open === (x.k === 'block') && x.body === (x.k === 'block' ? 'grid' : 'none')),
+       'every group boots folded except BLOCK TITLE, the one being tuned', JSON.stringify(g.map(x => x.k + (x.open ? '+' : '-'))));
     ok(g.every(x => x.sum && x.sum.trim().length > 2), 'and every folded header names what its dials are set to', JSON.stringify(g.map(x => x.sum))); }
   ok(await p.$$eval('#datacfg > :not(.cffold):not(.cfread)', els => els.length === 0), 'no dial is left loose outside a group');
   ok(await p.$eval('#datacfg .cffold[data-group="pills"]', e => !e.classList.contains('open') && getComputedStyle(e.querySelector('.cffoldbody')).display === 'none'),
@@ -563,7 +563,21 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
 
 // ══ THE TWO CHIPS (operator 2026-09-13): the field-count badge and the channel chip — container, see-through
 //    fill, character size — measured on the drawn chips ══
-{ await p.evaluate(() => { window.FOLDS.chips = 1; window.showTab('data'); window.showVariant('data', 'blocks'); window.drawDataCfg(); }); await p.waitForTimeout(300);
+{ await p.evaluate(() => { window.FOLDS.block = 1; window.showTab('data'); window.showVariant('data', 'blocks'); window.drawDataCfg(); }); await p.waitForTimeout(300);
+  // EMBEDDED (operator 2026-09-13): each chip's dials sit inside BLOCK TITLE, directly under that chip's own show/hide row
+  { const order = await p.$$eval('#datacfg .cffold[data-group="block"] .cffoldbody > .cfl', els => els.map(e => e.textContent));
+    const at = k => order.indexOf(k);
+    ok(at('channel') >= 0 && at('chip box') === at('channel') + 1 && at('chip fill') === at('channel') + 2 && at('chip size') === at('channel') + 3,
+       'the channel chip\'s box, fill and size sit right under its own row', order.join(','));
+    ok(at('count') >= 0 && at('count box') === at('count') + 1 && at('count fill') === at('count') + 2 && at('count size') === at('count') + 3,
+       'and the count badge\'s under the count row', order.join(','));
+    ok(await p.$$eval('#datacfg > .cffold[data-group="chips"]', els => els.length === 0), 'no separate chips group is left behind'); }
+  // today's 12px sits a THIRD of the way along the size bar, not at its end
+  { const k = await p.$$eval('#datacfg .sldt[aria-label="channel character size"], #datacfg .sldt[aria-label="count character size"]',
+      els => els.map(e => ({ min: +e.getAttribute('aria-valuemin'), max: +e.getAttribute('aria-valuemax'), now: +e.getAttribute('aria-valuenow'),
+        knob: parseFloat(e.querySelector('.sldk').style.left) })));
+    ok(k.length === 2 && k.every(x => x.now === 12 && Math.abs(x.knob - 100 / 3) < 0.5 && x.min === 8 && x.max === 20),
+       'both size bars open with 12px a third of the way along (8 — 20px)', JSON.stringify(k)); }
   const chips = () => p.$eval('#panel .blk', b => { const n = b.querySelector('.bkn.badge'), r = b.querySelector('.bkrw .jdrw');
     const st = e => { const c = getComputedStyle(e), bg = window.CONTRAST.parse(c.backgroundColor);
       return { radius: c.borderTopLeftRadius, fs: parseFloat(c.fontSize), a: bg ? Math.round(bg.a * 100) : null,
@@ -609,8 +623,10 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   { const c = await chips(); ok(c.chip.fs === 16 && c.count.fs === 18, 'each chip has its own character size', JSON.stringify({ chip: c.chip.fs, count: c.count.fs })); }
   for (let i = 0; i < 20; i++) await p.keyboard.press('ArrowLeft');
   await p.waitForTimeout(240);
-  ok((await chips()).count.fs === 12, 'and the size bar stops at the 12px floor', String((await chips()).count.fs));
-  ok(await p.evaluate(() => window.DATACFG.bk.size.count === 12 && window.DATACFG.bk.size.rw === 16), 'the size is the same value TITLE LINES drives — one number, two places to set it');
+  ok((await chips()).count.fs === 8, 'the size bar now reaches below the old floor — down to 8px', String((await chips()).count.fs));
+  ok(/<12/.test(await p.$eval('#datacfg .sldt[aria-label="count character size"]', e => e.parentElement.querySelector('.sldv').textContent)),
+     'and says so on the bar the moment it drops under the 12px reading floor');
+  ok(await p.evaluate(() => window.DATACFG.bk.size.count === 8 && window.DATACFG.bk.size.rw === 16), 'the size is the same value TITLE LINES drives — one number, two places to set it');
   await p.evaluate(() => { Object.assign(window.DATACFG.bk, { cntBox: 'pill', cntA: 100, rwBox: 'tag', rwA: 100 }); window.DATACFG.bk.size.rw = 12; window.DATACFG.bk.size.count = 12;
     window.applyData(); window.showTab('data'); window.drawDataCfg(); }); await p.waitForTimeout(280);
   ok(/chips count pill 100%, channel tag 100%/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line names both chips'); }

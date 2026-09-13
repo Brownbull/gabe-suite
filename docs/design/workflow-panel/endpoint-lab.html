@@ -658,7 +658,7 @@
   /* THE DATA RAIL IS A STACK OF FOLDS (operator 2026-09-13: "the pill colour section is perfect — group all the
      other sections this way"). Every group boots closed except the one being tuned; the state lives here so a
      dial click, which rebuilds the rail, never re-folds what the operator opened. */
-  var FOLDS = window.FOLDS = { layout: 0, sections: 0, channels: 0, sort: 0, counts: 0, pills: 0, block: 0, chips: 1, edge: 0, lines: 0, marks: 0, grounds: 0 };
+  var FOLDS = window.FOLDS = { layout: 0, sections: 0, channels: 0, sort: 0, counts: 0, pills: 0, block: 1, edge: 0, lines: 0, marks: 0, grounds: 0 };
   function foldSet(key, open){ FOLDS[key] = open ? 1 : 0;
     var f = document.querySelector('#datacfg .cffold[data-group="' + key + '"]'); if (f) f.classList.toggle("open", !!open); }
   window.pillFold = function(open){ foldSet("pills", open); };
@@ -975,6 +975,42 @@
 
     group("block", "block title", DATACFG.bk.form + " · glyph " + DATACFG.bk.iconCol + " · entity " + DATACFG.bk.ent + " · count " + DATACFG.bk.count,
       "which parts of a table's title line are drawn", function(){
+    /* the count badge and the channel chip are PARTS of this title, so their container · fill · character size live
+       here, each under its own show/hide row (operator 2026-09-13) */
+    function boxIco(k){ var r = { pill: "5.5", tag: "2", square: "0" }[k];
+      return '<svg viewBox="0 0 24 24" width="15" height="15" fill="' + (k === "outline" || k === "bare" ? "none" : "currentColor") + '" stroke="currentColor" stroke-width="1.6"'
+        + (k === "bare" ? ' stroke-dasharray="2 2.5" opacity=".7"' : "") + '>'
+        + '<rect x="3.5" y="6.5" width="17" height="11" rx="' + (r || "3") + '"' + (k === "outline" || k === "bare" ? "" : ' fill-opacity=".55"') + '/></svg>'; }
+    var BOXES = [["pill", "fully rounded ends", "a pill"], ["tag", "barely rounded — a tag", "a tag"], ["square", "sharp corners", "square"],
+                 ["outline", "no fill — only its edge, in its own colour", "outline"], ["bare", "no fill and no edge — the character alone", "bare"]];
+    function cbox(label, key, what){
+      var w = el("div", { class: "ibwrap" });
+      BOXES.forEach(function(o){ var b = el("button", { class: "ib" + (DATACFG.bk[key] === o[0] ? " on" : "") + (live === "blocks" ? "" : " na") });
+        b.dataset[key] = o[0]; b.innerHTML = boxIco(o[0]);
+        hoverBind(b, hcard({ title: o[2], value: label, icon: "shape", rows: [["what", what]], plain: o[1] }));
+        b.onclick = function(ev){ ev.stopPropagation(); DATACFG.bk[key] = o[0]; applyData(); window.showTab("data"); drawDataCfg(); };
+        w.append(b); });
+      box.append(el("div", { class: "cfl sub" }, label), w); }
+    function see(label, key, aria, what){
+      box.append(el("div", { class: "cfl sub" }, label),
+        slider({ min: 0, max: 100, step: 5, value: DATACFG.bk[key], label: aria,
+          fmt: function(v){ return v === 0 ? "clear" : v + "%"; },
+          card: function(){ return hcard({ title: aria, value: DATACFG.bk[key] + "%", icon: "shape",
+            rows: [["what", what], ["at 0", "the fill is clear; the edge and the character stay"]], plain: "how see-through the chip's fill is" }); },
+          on: function(v){ DATACFG.bk[key] = v; applyData(); } })); }
+    function csize(label, part, aria, what){
+      box.append(el("div", { class: "cfl sub" }, label),
+        slider({ min: 8, max: 20, step: 1, value: DATACFG.bk.size[part] || 12, label: aria,
+          fmt: function(v){ return v + "px" + (v < 12 ? " <12" : ""); },
+          card: function(){ return hcard({ title: aria, value: (DATACFG.bk.size[part] || 12) + "px", icon: "shape",
+            rows: [["what", what], ["range", "8 — 20px · today's 12px sits a third of the way along"],
+                   ["the floor", "12px is the reading floor — below it the bar still moves, and says <12"],
+                   ["same value as", "this part's size in TITLE LINES"]],
+            plain: "how big the character inside the chip is drawn" }); },
+          on: function(v){ DATACFG.bk.size[part] = v; applyData(); } })); }
+    var CNTW = "the number of fields, when the count is shown as a badge";
+    var RWW = "the R · W · RW chip — which way the data moves through this table";
+
     function bpick(label, key, opts, iconFor){
       var w = el("div", { class: "ibwrap" });
       opts.forEach(function(o){ var b = el("button", { class: "ib" + (DATACFG.bk[key] === o[0] ? " on" : "") + (live === "blocks" ? "" : " na") });
@@ -1004,6 +1040,7 @@
     bpick("channel", "rw", [
       [1, "the R · W · RW chip stays", "chip on"], [0, "no chip — the row's left rail still carries the entity", "chip off"]],
       function(o){ return o[0] ? labIco("eye", 15) : labIco("eyeoff", 15); });
+    cbox("chip box", "rwBox", RWW); see("chip fill", "rwA", "channel chip fill", RWW); csize("chip size", "rw", "channel character size", RWW);
     bpick("name", "name", [
       [1, "the table's name, in words", "name on"], [0, "no name — only the glyph and what is inside", "name off"]],
       function(o){ return o[0] ? labIco("ton", 15) : labIco("toff", 15); });
@@ -1019,6 +1056,7 @@
       ["badge", "just the number, in a badge", "a badge"],
       ["off", "no count on the line; the squares still show how many", "off"]],
       function(o){ return o[0] === "words" ? labIco("ton", 15) : o[0] === "badge" ? labIco("sh-pill", 15) : labIco("toff", 15); });
+    cbox("count box", "cntBox", CNTW); see("count fill", "cntA", "count badge fill", CNTW); csize("count size", "count", "count character size", CNTW);
     bpick("model", "model", [
       ["word", "the class name, in words — the Python class that maps to this table", "the word"],
       ["icon", "the class as a glyph", "the glyph"],
@@ -1029,44 +1067,6 @@
 
     /* THE ORDER, THE LINE AND THE SIZE — the head bar's registry, applied to a table's title
        (operator 2026-09-12). Drag a part between lines; click it to size it. */
-    });
-    /* THE TWO CHIPS — the field-count badge and the channel chip, the group being tuned now (operator 2026-09-13) */
-    group("chips", "count & channel chips",
-      "count " + DATACFG.bk.cntBox + " " + DATACFG.bk.cntA + "% " + (DATACFG.bk.size.count || 12) + "px · channel " + DATACFG.bk.rwBox + " " + DATACFG.bk.rwA + "% " + (DATACFG.bk.size.rw || 12) + "px",
-      "the field-count badge and the channel chip in each block's title — their container, how see-through, and the size of the character inside", function(){
-      function boxIco(k){ var r = { pill: "5.5", tag: "2", square: "0" }[k];
-        return '<svg viewBox="0 0 24 24" width="15" height="15" fill="' + (k === "outline" || k === "bare" ? "none" : "currentColor") + '" stroke="currentColor" stroke-width="1.6"'
-          + (k === "bare" ? ' stroke-dasharray="2 2.5" opacity=".7"' : "") + '>'
-          + '<rect x="3.5" y="6.5" width="17" height="11" rx="' + (r || "3") + '"' + (k === "outline" || k === "bare" ? "" : ' fill-opacity=".55"') + '/></svg>'; }
-      var BOXES = [["pill", "fully rounded ends", "a pill"], ["tag", "barely rounded — a tag", "a tag"], ["square", "sharp corners", "square"],
-                   ["outline", "no fill — only its edge, in its own colour", "outline"], ["bare", "no fill and no edge — the character alone", "bare"]];
-      function cbox(label, key, what){
-        var w = el("div", { class: "ibwrap" });
-        BOXES.forEach(function(o){ var b = el("button", { class: "ib" + (DATACFG.bk[key] === o[0] ? " on" : "") + (live === "blocks" ? "" : " na") });
-          b.dataset[key] = o[0]; b.innerHTML = boxIco(o[0]);
-          hoverBind(b, hcard({ title: o[2], value: label, icon: "shape", rows: [["what", what]], plain: o[1] }));
-          b.onclick = function(ev){ ev.stopPropagation(); DATACFG.bk[key] = o[0]; applyData(); window.showTab("data"); drawDataCfg(); };
-          w.append(b); });
-        box.append(el("div", { class: "cfl sub" }, label), w); }
-      function see(label, key, aria, what){
-        box.append(el("div", { class: "cfl sub" }, label),
-          slider({ min: 0, max: 100, step: 5, value: DATACFG.bk[key], label: aria,
-            fmt: function(v){ return v === 0 ? "clear" : v + "%"; },
-            card: function(){ return hcard({ title: aria, value: DATACFG.bk[key] + "%", icon: "shape",
-              rows: [["what", what], ["at 0", "the fill is clear; the edge and the character stay"]], plain: "how see-through the chip's fill is" }); },
-            on: function(v){ DATACFG.bk[key] = v; applyData(); } })); }
-      function csize(label, part, aria, what){
-        box.append(el("div", { class: "cfl sub" }, label),
-          slider({ min: 12, max: 20, step: 1, value: DATACFG.bk.size[part] || 12, label: aria,
-            fmt: function(v){ return v + "px"; },
-            card: function(){ return hcard({ title: aria, value: (DATACFG.bk.size[part] || 12) + "px", icon: "shape",
-              rows: [["what", what], ["floor", "12px — text never goes under it"], ["same value as", "this part's size in TITLE LINES"]],
-              plain: "how big the character inside the chip is drawn" }); },
-            on: function(v){ DATACFG.bk.size[part] = v; applyData(); } })); }
-      var CNTW = "the number of fields, when the count is shown as a badge";
-      var RWW = "the R · W · RW chip — which way the data moves through this table";
-      cbox("count box", "cntBox", CNTW); see("count fill", "cntA", "count badge fill", CNTW); csize("count size", "count", "count character size", CNTW);
-      cbox("chip box", "rwBox", RWW); see("chip fill", "rwA", "channel chip fill", RWW); csize("chip size", "rw", "channel character size", RWW);
     });
     /* THE BLOCK EDGE (operator 2026-09-13) */
     group("edge", "block edge", DATACFG.bk.railSide + (DATACFG.bk.railSide === "none" ? "" : " · " + DATACFG.bk.railStyle + " · " + DATACFG.bk.railW + "px"),
@@ -1139,7 +1139,7 @@
       box.append(el("div", { class: "cfl" }, "lines"), zs);
       var selKey = B.sel, selDef = byKey[selKey] || PARTS[0];
       box.append(el("div", { class: "cfl sub" }, "size"),
-        slider({ min: selKey === "icon" ? 9 : 12, max: 26, step: 1, value: B.size[selKey] || 12,
+        slider({ min: selKey === "icon" ? 9 : (selKey === "count" || selKey === "rw") ? 8 : 12, max: 26, step: 1, value: B.size[selKey] || 12,
           label: selDef.word + " size", fmt: function(v){ return v + "px"; },
           card: hcard({ title: selDef.word, value: (B.size[selKey] || 12) + "px", icon: selDef.ico,
             rows: [["range", (selKey === "icon" ? 9 : 12) + " — 26px"],
