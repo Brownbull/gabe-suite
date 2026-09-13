@@ -698,8 +698,9 @@
     shape:  { word: "a shape", plain: "the mark's FORM is the kind — a circle, a square, a diamond, a triangle, a ring, bars, a cross" },
     symbol: { word: "a symbol", plain: "the mark is the station's own glyph for that kind" } };
   /* THE LOOK a renderer reads (operator 2026-09-13): Data's, unless the open part keeps its own copy (Schemas, looks own) */
-  function lookCfg(){ var pn = document.getElementById("panel"), C = window.SCHCFG || {};
-    return pn && pn.dataset.tab === "schemas" && C.map && C.map.looks === "own" && C.look ? C.look : (window.DATACFG || {}); }
+  function lookCfg(){ var pn = document.getElementById("panel"), tab = pn && pn.dataset.tab;
+    var C = tab === "schemas" ? window.SCHCFG : tab === "functions" ? window.FNCFG : null;
+    return C && C.map && C.map.looks === "own" && C.look ? C.look : (window.DATACFG || {}); }
   window.LOOKCFG = lookCfg;
   function sqEnc(){ return (lookCfg().sqEnc) || "colour"; }
   /* ONE field mark, everywhere a field is drawn — the blocks, the opened list, the portrait's cells */
@@ -1813,6 +1814,311 @@
     box.append(b);
     COV.mark("PAYLOAD", "schemas"); }
 
+  /* ── PART KIT (2026-09-13) — the title-row pieces every carried-over part shares: count pills, a sort bar, a sorted list ── */
+  function countPillsOf(list, S, defs, modeOf, cardOf){ var split = lookCfg().countPills === "each";
+    var live = defs.filter(function(c){ return modeOf(c.key) !== "off"; }); if (!live.length) return null;
+    function span(c){ var m = modeOf(c.key), n = c.get(list), sp = E("span", { class: "dcn", "data-count": c.key });
+      sp.style.setProperty("--k", c.col(S));
+      sp.innerHTML = m === "icon" ? ico(c.icon, 13, "currentColor") + "<b>" + n + "</b>" : '<span class="dct">' + esc(c.word(n)) + "</span>";
+      return sp; }
+    var wrap = E("div", { class: "dcnts" + (split ? " each" : " one") });
+    if (split) live.forEach(function(c){ var pill = E("span", { class: "cnt dcp", "data-pill": c.key }); pill.style.setProperty("--k", c.col(S));
+      pill.append(span(c)); bind(pill, function(){ return cardOf(c.key); }); wrap.append(pill); });
+    else { var one = E("span", { class: "cnt dcp", "data-pill": "all" });
+      live.forEach(function(c, i){ if (i) one.insertAdjacentHTML("beforeend", '<i class="dcsep">·</i>');
+        var sp = span(c); bind(sp, function(){ return cardOf(c.key); }); one.append(sp); });
+      wrap.append(one); }
+    return wrap; }
+  function sortedOf(list, SORTS, key, rev){ var o = SORTS.filter(function(x){ return x.key === key; })[0] || SORTS[0];
+    var out = list.slice().sort(o.cmp); return rev ? out.reverse() : out; }
+  function sortBarOf(SORTS, key, rev, attr, what, setKey, flipRev){ var w = E("div", { class: "sortbar" });
+    SORTS.forEach(function(o){ var on = key === o.key, b = E("button", { class: "srb" + (on ? " on" : "") });
+      b.setAttribute("data-" + attr, o.key);
+      b.innerHTML = '<span class="sri">' + (o.d ? SVGI(o.d, 13) : ico("entity", 13, "currentColor")) + '</span><span class="srw">' + o.word + "</span>";
+      bind(b, function(){ return window.hcard({ title: "sort by " + o.word, value: on ? (rev ? "on · reversed" : "on") : "off", icon: "layers",
+        rows: [["order", o.plain], ["click", on ? "already the order — the arrow beside it turns it around" : "lays the " + what + " out this way"]], plain: "the order the " + what + " are laid out in" }); });
+      b.onclick = function(ev){ ev.stopPropagation(); setKey(o.key); }; w.append(b); });
+    var r = E("button", { class: "srb rev" + (rev ? " on" : "") }); r.setAttribute("data-" + attr + "-rev", rev ? "1" : "0");
+    r.innerHTML = '<span class="sri">' + window.SORTICON(rev ? "rev-on" : "rev-off", 13) + '</span><span class="srw">' + (rev ? "reversed" : "as named") + "</span>";
+    bind(r, function(){ return window.hcard({ title: rev ? "reversed" : "as named", value: "direction", icon: "layers", rows: [["click", "turns the order around"]], plain: "which end of the order comes first" }); });
+    r.onclick = function(ev){ ev.stopPropagation(); flipRev(); }; w.append(r); return w; }
+  function camelWbr(t){ return esc(t == null ? "—" : t).replace(/([a-z0-9])([A-Z])/g, "$1<wbr>$2").replace(/, /g, ", <wbr>").replace(/ \| /g, " | <wbr>"); }
+
+  /* ══════════════════════════════════════════════════════════════════════════════════════
+     FUNCTIONS · BLOCKS (operator 2026-09-13: "let's do another section following the conventions — next one is
+     functions") — the Panel Pattern Book's second carry-over. The THING is a function: the handler at L0 and every
+     function the walk reaches. Its PIECES are what it touches (the tables it reads and writes) or what it calls.
+     Every choice made here is a rail option from the start — the operator's rule from the schema map.
+     ══════════════════════════════════════════════════════════════════════════════════════ */
+  var FNROLES = ["accessor", "caller", "gate", "pure"];
+  var ROLECHIP = { accessor: "ACC", caller: "CALL", gate: "GATE", pure: "PURE" };
+  var ROLEICO = { accessor: "model", caller: "merge", gate: "shield", pure: "target" };
+  window.ROLEICO = ROLEICO;
+  function fnCfg(){ return window.FNCFG || {}; }
+  function fnMap(){ var m = fnCfg().map || {};
+    return { pieces: m.pieces || "tables", handler: m.handler || "block", roleCol: m.roleCol || "station", inferred: m.inferred || "dashed", looks: m.looks || "shared" }; }
+  function roleCol(r, S){ var m = fnMap().roleCol; return m === "function" ? S.KINDCOL["function"] : m === "mono" ? "#8794ab" : ((S.BADGE_COL.role || {})[r] || "#8794ab"); }
+  var ENTCOL = null;
+  function entColOf(F, e){ if (!ENTCOL) { ENTCOL = {};
+      (F.data.tables || []).forEach(function(t){ if (t.entity && t.entity_color) ENTCOL[t.entity] = t.entity_color; });
+      var sc = F.data.schemas || {}; [sc.request, sc.response].forEach(function(s){ [s].concat((s && s.nested) || []).forEach(function(x){ if (x && x.entity && x.entity_color && !ENTCOL[x.entity]) ENTCOL[x.entity] = x.entity_color; }); }); }
+    return ENTCOL[e] || "#888"; }
+  var FNS = null;
+  function fnAll(F){ if (FNS) return FNS; var FN = F.functions, out = [], seq = 0;
+    function rec(f, lv, handler){ return { id: f.id, name: f.name, file: f.file, role: f.role || "pure", entity: f.entity || "—", entity_color: entColOf(F, f.entity),
+      level: lv, via: handler ? null : f.via, seq: seq++, handler: handler, lines: f.lines, async: !!f.async, returns: f.returns || "—", god: !!f.god,
+      commits: !!f.commits, conf: handler ? "extracted" : (f.conf || "extracted"), ops: f.ops || [], calls: [] }; }
+    out.push(rec(FN.handler, 0, true));
+    FN.walk.forEach(function(level, i){ level.forEach(function(f){ out.push(rec(f, i + 1, false)); }); });
+    out.forEach(function(x){ x.calls = out.filter(function(y){ return !y.handler && y.via === x.name; }); });
+    FNS = out; return out; }
+  function fnByName(F, n){ return fnAll(F).filter(function(x){ return x.name === n; })[0] || null; }
+  function fnRoleOn(r){ var c = fnCfg().role || {}; return c[r] == null ? true : !!c[r]; }
+  function fnPool(F){ var off = fnMap().handler === "off"; return fnAll(F).filter(function(x){ return !(x.handler && off); }); }
+  function fnShown(F){ return fnPool(F).filter(function(x){ return fnRoleOn(x.role); }); }
+  window.FNALL = function(){ return fnAll(window.LABEP); };
+  /* the pieces: a table touch is a READ or a WRITE; a call takes its callee's ROLE */
+  function opKind(rw, S){ return rw === "w" ? { key: "write", word: "write", col: S.OPC.write, ch: "W", sym: "model", plain: "a table this function writes" }
+                                             : { key: "read", word: "read", col: S.OPC.read, ch: "R", sym: "model", plain: "a table this function reads" }; }
+  function callKind(r, S){ return { key: r, word: r, col: roleCol(r, S), ch: r.charAt(0).toUpperCase(), sym: "function", plain: (S.LRDEF || {})["role:" + r] || r }; }
+  function pieceNode(k, x, S, cls){ var enc = sqEnc(), pal = lookCfg().sqPal || "type";
+    var col = pal === "mono" ? "var(--muted)" : pal === "entity" ? x.entity_color : pal === "channel" ? roleCol(x.role, S) : k.col;
+    var q = E("i", { class: "sq e-" + enc + " t-" + k.key + (cls ? " " + cls : "") }); q.style.setProperty("--fc", col);
+    if (enc === "char") q.textContent = k.ch; else if (enc === "symbol") q.innerHTML = ico(k.sym, null, "currentColor");
+    return q; }
+  function fnPieces(x, S){ var m = fnMap().pieces, out = [];
+    if (m !== "calls") x.ops.forEach(function(o){ out.push({ k: opKind(o.rw, S), op: o }); });
+    if (m !== "tables") x.calls.forEach(function(c){ out.push({ k: callKind(c.role, S), call: c }); });
+    return out; }
+
+  /* the title, part by part */
+  var FNBKDEF = { form: "block", icon: 1, role: 1, name: 1, file: "both", count: "badge", via: "both",
+    rows: [{ l: ["icon", "name"], r: ["commit"] }, { l: ["file"], r: ["count", "role"] }, { l: ["via"], r: [] }],
+    size: { icon: 13, name: 13, file: 12, via: 12 }, sel: "icon" };
+  function fnBk(){ var c = fnCfg().bk || {}, o = {}; Object.keys(FNBKDEF).forEach(function(k){ o[k] = c[k] == null ? FNBKDEF[k] : c[k]; }); return o; }
+  var FNPART = [
+    { key: "icon", word: "the function glyph", ico: "function", note: "the station's function glyph — the same one the graph draws" },
+    { key: "role", word: "the role chip", ico: "role", note: "ACC · CALL · GATE · PURE — what the function does with the store" },
+    { key: "name", word: "the function name", ico: "doc", note: "the function as its file names it" },
+    { key: "commit", word: "the commit pulse", ico: "key", note: "a pulsing dot when the function ends a DB transaction" },
+    { key: "file", word: "the file", ico: "file", note: "the file it lives in — its last two folders" },
+    { key: "count", word: "its size", ico: "info", note: "how many lines its body runs — ringed red over the 50-line flag" },
+    { key: "via", word: "where it sits", ico: "link", note: "the handler, or its hop on the walk and the function that calls it" } ];
+  window.FNPART = FNPART;
+  function fnIconCol(x, S){ var ic = (lookCfg().bk || {}).iconCol || "model";
+    return ic === "ink" ? "var(--ink)" : ic === "muted" ? "var(--muted)" : ic === "entity" ? x.entity_color : ic === "channel" ? roleCol(x.role, S) : S.KINDCOL["function"]; }
+  function shortFile(f){ return String(f || "—").split("/").slice(-2).join("/"); }
+  function fnViaWords(x){ return x.handler ? "the handler" : "L" + x.level + " · " + x.via; }
+  function fnPart(key, x, S, B){ var z = (B.size || {})[key] || 12;
+    if (key === "icon") return B.icon ? '<span class="bki">' + ico("function", z, fnIconCol(x, S)) + "</span>" : null;
+    if (key === "role") return B.role ? '<span class="bkrw"><i class="jdrw frole" style="--rwc:' + roleCol(x.role, S) + '">' + ROLECHIP[x.role] + "</i></span>" : null;   /* size: --rw-fs */
+    if (key === "name") return B.name ? E("b", { style: "font-size:" + z + "px" }, esc(x.name)) : null;
+    if (key === "commit") return x.commits ? '<i class="cdot" aria-label="commits"></i>' : null;
+    if (key === "file") { if (B.file === "off") return null;
+      var e = E("span", { class: "bkm bkf", style: "font-size:" + z + "px" });
+      if (B.file === "icon" || B.file === "both") e.insertAdjacentHTML("beforeend", ico("file", z, "var(--muted)"));
+      if (B.file === "word" || B.file === "both") e.append(E("span", null, esc(shortFile(x.file))));
+      return e; }
+    if (key === "count") { if (B.count === "off") return null; var n = x.lines == null ? "?" : String(x.lines);
+      return E("span", { class: "bkn" + (B.count === "badge" ? " badge" : "") + (x.god ? " god" : "") }, B.count === "badge" ? n : n + " lines"); }
+    if (key === "via") { if (B.via === "off") return null;
+      var v = E("span", { class: "bkm bkv", style: "font-size:" + z + "px" });
+      if (B.via === "icon" || B.via === "both") v.insertAdjacentHTML("beforeend", ico(x.handler ? "target" : "link", z, "var(--muted)"));
+      if (B.via === "word" || B.via === "both") v.append(E("span", null, esc(fnViaWords(x))));
+      return v; }
+    return null; }
+  function fnLines(x, S){ var B = fnBk(), out = [];
+    (B.rows || []).forEach(function(row){ var L = [], R = [];
+      ((row && row.l) || []).forEach(function(k){ var n = fnPart(k, x, S, B); if (n) L.push(n); });
+      ((row && row.r) || []).forEach(function(k){ var n = fnPart(k, x, S, B); if (n) R.push(n); });
+      if (L.length || R.length) out.push({ l: L, r: R }); });
+    if (fnMap().inferred === "tag" && x.conf === "inferred" && out.length) out[0].r.push('<i class="ftag" data-conf="inferred">⌁ inferred</i>');
+    return out; }
+
+  /* the title row */
+  var FNCOUNT = [
+    { key: "functions", icon: "function", col: function(S){ return S.KINDCOL["function"]; }, word: function(n){ return n + " function" + (n === 1 ? "" : "s"); }, get: function(l){ return l.length; } },
+    { key: "levels", icon: "layers", col: function(S){ return S.KINDCOL.route; }, word: function(n){ return n + " level" + (n === 1 ? "" : "s"); },
+      get: function(l){ return l.reduce(function(m, x){ return Math.max(m, x.level); }, 0); } },
+    { key: "commits", icon: "key", col: function(S){ return S.OPC.write; }, word: function(n){ return n + " commit" + (n === 1 ? "" : "s"); },
+      get: function(l){ return l.filter(function(x){ return x.commits; }).length; } } ];
+  function fnCountMode(k){ return ((fnCfg().counts || {})[k]) || "off"; }
+  function fnPillCard(key, list, F, S){ var H = window.hcard, FN = F.functions, pool = fnPool(F);
+    function pl(n, w){ return n + " " + w + (n === 1 ? "" : "s"); }
+    var inf = list.filter(function(x){ return x.conf === "inferred"; }).length;
+    if (key === "functions") return H({ title: "functions", value: list.length + " of " + pool.length, icon: "function", color: S.KINDCOL["function"],
+      factors: FNROLES.map(function(r){ var n = pool.filter(function(x){ return x.role === r; }).length, on = fnRoleOn(r);
+        return { state: on && n ? "ok" : "quiet", name: r, value: pl(n, "function") + (on ? "" : " · switched off"), rule: (S.LRDEF || {})["role:" + r] || r }; }),
+      factorLabel: "the four roles · a filled dot is switched on and holds functions",
+      rows: [["code behind", FN.behind.fns + " functions · reach " + FN.behind.depth + " — graft sees " + (FN.behind.fns - FN.walk_total) + " the walk cannot"],
+             ["inferred hops", String(inf)]],
+      plain: "the handler and every function the walk reaches — the code behind this door" });
+    if (key === "levels") { var byL = {}; list.forEach(function(x){ byL[x.level] = (byL[x.level] || 0) + 1; });
+      return H({ title: "levels", value: String(FNCOUNT[1].get(list)), icon: "layers", color: S.KINDCOL.route,
+        factors: Object.keys(byL).sort(function(a, b){ return a - b; }).map(function(l){ return { state: "info", name: +l === 0 ? "L0 · the handler" : "L" + l, value: pl(byL[l], "function"), rule: +l === 0 ? "the door's own function" : "reached in " + l + " hop" + (+l === 1 ? "" : "s") }; }),
+        factorLabel: "how many functions each hop reaches", rows: [["the walk", FN.walk_levels.join(" · ") + " = " + FN.walk_total]],
+        plain: "how many hops deep the walk goes from the handler" }); }
+    var cm = list.filter(function(x){ return x.commits; }), wr = list.reduce(function(n, x){ return n + x.ops.filter(function(o){ return o.rw === "w"; }).length; }, 0);
+    return H({ title: "commits", value: String(cm.length), icon: "key", color: S.OPC.write,
+      factors: FNROLES.map(function(r){ var n = cm.filter(function(x){ return x.role === r; }).length; return { state: n ? "ok" : "quiet", name: r, value: pl(n, "function"), rule: (S.LRDEF || {})["role:" + r] || r }; }),
+      factorLabel: "who commits, by role", rows: [["writes", pl(wr, "table write")]],
+      plain: "the functions that end a DB transaction — where the writes become permanent" }); }
+  window.FNPILLCARD = fnPillCard;
+  function fnRoleBar(F, S){ var w = E("div", { class: "chbar" }), pool = fnPool(F);
+    FNROLES.forEach(function(r){ var mine = pool.filter(function(x){ return x.role === r; }), on = fnRoleOn(r);
+      var b = E("button", { class: "chb" + (on ? " on" : "") + (mine.length ? "" : " zero") }); b.dataset.fnRole = r; b.dataset.on = on ? "1" : "0";
+      b.innerHTML = ico(ROLEICO[r], 13, roleCol(r, S)) + '<span class="chn">' + mine.length + "</span>";
+      bind(b, function(){ return window.hcard({ title: r, value: mine.length + " function" + (mine.length === 1 ? "" : "s") + " · " + (on ? "on" : "off"), icon: ROLEICO[r], color: roleCol(r, S),
+        rows: [["click", on ? "switches this role off, leaving the others as they are" : "adds this role to what is shown"]], plain: (S.LRDEF || {})["role:" + r] || r }); });
+      b.onclick = function(ev){ ev.stopPropagation(); var st = window.FNCFG.role; st[r] = st[r] ? 0 : 1; window.showTab("functions"); if (window.drawFnCfg) window.drawFnCfg(); };
+      w.append(b); });
+    return w; }
+  var FNSORTS = [
+    { key: "walk", word: "walk", d: '<path d="M4 6h6l3 6h7M13 12l-3 6H4"/>', plain: "the handler first, then each hop in the order the walk reaches it",
+      cmp: function(a, b){ return a.seq - b.seq; } },
+    { key: "size", word: "size", d: '<path d="M4 6h16M4 12h11M4 18h6"/>', plain: "the longest body first",
+      cmp: function(a, b){ return (b.lines || 0) - (a.lines || 0) || a.seq - b.seq; } },
+    { key: "name", word: "name", d: '<path d="M3 18 7 6l4 12M4.5 14h5"/><path d="M14 6h6l-6 12h6"/>', plain: "alphabetical by function name",
+      cmp: function(a, b){ return a.name.localeCompare(b.name); } },
+    { key: "file", word: "file", d: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/>', plain: "grouped by the file each function lives in, then by the walk",
+      cmp: function(a, b){ return String(a.file).localeCompare(String(b.file)) || a.seq - b.seq; } } ];
+  window.FNSORTS = FNSORTS;
+  window.FNSORTICON = function(k, z){ var o = FNSORTS.filter(function(x){ return x.key === k; })[0]; return o && o.d ? SVGI(o.d, z) : ico("entity", z || 13, "currentColor"); };
+  function fnHead(box, F, S, list){ var FN = F.functions;
+    var h = head(box, "function", "Functions", "—", "one block per function — the handler and every function the walk reaches, hop by hop (" + FN.walk_levels.join(" · ") + "). Each mark is a table the function reads or writes, or a function it calls.");
+    var sh = h.querySelector(".sechd"), C = fnCfg();
+    if (sh) { var cnt = sh.querySelector(".cnt"); if (cnt) cnt.remove();
+      var pills = countPillsOf(list, S, FNCOUNT, fnCountMode, function(k){ return fnPillCard(k, list, F, S); }); if (pills) sh.append(pills);
+      sh.append(fnRoleBar(F, S)); sh.append(E("i", { class: "chdiv", "aria-hidden": "true" }));
+      sh.append(sortBarOf(FNSORTS, C.sort || "walk", !!C.sortRev, "fn-sort", "functions",
+        function(k){ window.FNCFG.sort = k; window.showTab("functions"); if (window.drawFnCfg) window.drawFnCfg(); },
+        function(){ window.FNCFG.sortRev = window.FNCFG.sortRev ? 0 : 1; window.showTab("functions"); if (window.drawFnCfg) window.drawFnCfg(); })); }
+    return h; }
+
+  /* the card mirrors the block */
+  function fnCard(x, F, S){ var portOn = (window.FRAME || {}).portW > 0, I = F.identity, ps = fnPieces(x, S), ops = ps.filter(function(p){ return p.op; }), calls = ps.filter(function(p){ return p.call; });
+    function mixRow(row, icon, items){ var mix = {}, kinds = {};
+      items.forEach(function(p){ mix[p.k.key] = (mix[p.k.key] || 0) + 1; kinds[p.k.key] = p.k; });
+      var marks = Object.keys(mix).map(function(k){ return '<span class="mx" data-kind="' + k + '">' + pieceNode(kinds[k], x, S).outerHTML + "<b>" + mix[k] + "</b></span>"; }).join("");
+      return '<div class="bcrow" data-row="' + row + '"><span class="bci">' + ico(icon, 14, S.KINDCOL["function"]) + '</span><span class="bcfp" style="' + pillLook("fields", S) + '">'
+        + items.length + '</span><span class="bcmix">' + marks + "</span></div>"; }
+    var h = '<div class="bchd"><span class="bci">' + ico("function", 16, fnIconCol(x, S)) + "</span><b>" + esc(x.name) + "</b>" + (x.commits ? '<i class="cdot"></i>' : "") + "</div>";
+    h += '<div class="bcln" data-ln="entity"><span class="bci">' + ico("entity", 14, x.entity_color) + '</span><span class="bcent" style="color:' + x.entity_color + '">' + esc(x.entity) + "</span></div>";
+    h += '<div class="bcln" data-ln="via"><span class="bci">' + ico(x.handler ? "target" : "link", 14, "var(--muted)") + '</span><span class="bcmodel">' + esc(fnViaWords(x)) + (x.conf === "inferred" ? " · an inferred hop" : "") + "</span></div>";
+    h += '<div class="bcln" data-ln="file"><span class="bci">' + ico("file", 14, "var(--muted)") + '</span><span class="bcfile">' + esc(x.file + (x.handler && I.flines ? ":" + I.flines : "")) + "</span></div>";
+    h += '<div class="bcln" data-ln="size"><span class="bci">' + ico("info", 14, "var(--muted)") + '</span><span class="bcmodel">' + (x.lines == null ? "?" : x.lines) + " lines" + (x.async ? " · async" : "") + " · → " + camelWbr(x.returns) + "</span></div>";
+    if (x.handler) h += '<div class="bcln" data-ln="signature"><span class="bci">' + ico("doc", 14, "var(--muted)") + '</span><span class="bcfile">' + esc(String(I.gsig || "—").slice(0, 70)) + "…</span></div>"
+      + '<div class="bcln" data-ln="doc"><span class="bci">' + ico("doc", 14, "var(--muted)") + '</span><span class="bcmodel">' + (I.doc ? esc(I.doc.slice(0, 70)) : "no docstring in the feed") + "</span></div>";
+    h += '<div class="bcsep"></div>';
+    h += '<div class="bcrow" data-row="role"><span class="bci">' + ico(ROLEICO[x.role], 14, roleCol(x.role, S)) + '</span><i class="bcchip" style="' + chipLookOf(roleCol(x.role, S)) + '">' + x.role + "</i></div>";
+    if (fnMap().pieces !== "calls") h += mixRow("tables", "model", ops);
+    if (fnMap().pieces !== "tables") h += mixRow("calls", "merge", calls);
+    h += '<div class="bcfoot"><span class="bci">' + ico("info", 13, "currentColor") + "</span><span>" + (portOn ? "click to open its record in the portrait" : "click to name every piece here") + "</span></div>";
+    return h; }
+
+  function renderFnBlocks(box, F, S){
+    var list = fnShown(F), B = fnBk(), C = fnCfg(), M = fnMap(), sel = (window.SEL || {}).functions, portOn = (window.FRAME || {}).portW > 0;
+    fnHead(box, F, S, list);
+    if (!list.length) { box.append(E("div", { class: "pempty" }, ico("function", 15, "var(--muted)"), E("b", null, "every role is switched off"),
+        E("span", null, "there is nothing to draw — switch a role back on in the title row, or in the rail.")));
+      COV.mark("CODE BEHIND", "functions"); COV.mark("SIGNATURE", "functions"); COV.mark("DOCSTRING", "functions"); return; }
+    var body = E("div", { class: "bkbody form-" + B.form });
+    sortedOf(list, FNSORTS, C.sort || "walk", !!C.sortRev).forEach(function(x){
+      var blk = E("div", { class: "blk fn role-" + x.role + (x.conf === "inferred" && M.inferred === "dashed" ? " dashed" : "") + (sel === x.name ? " sel" : ""), style: "--ec:" + x.entity_color });
+      blk.dataset.table = x.name; blk.dataset.conf = x.conf;
+      var hd = E("div", { class: "bkhd" }), ti = E("div", { class: "bkti" });
+      fnLines(x, S).forEach(function(line){ var ln = E("div", { class: "bkln" }), L = E("div", { class: "bkcol l" }), R = E("div", { class: "bkcol r" });
+        function put(into, ns){ ns.forEach(function(n){ if (typeof n === "string") into.insertAdjacentHTML("beforeend", n); else into.append(n); }); }
+        put(L, line.l); put(R, line.r); ln.append(L, R); ti.append(ln); });
+      hd.append(ti);
+      var ps = fnPieces(x, S), sqs = E("div", { class: "sqs" });
+      ps.forEach(function(p){ sqs.append(pieceNode(p.k, x, S, p.call ? "call" : "op")); });
+      hd.append(sqs); blk.append(hd);
+      var fl = E("div", { class: "flds bkfl" });
+      ps.forEach(function(p){ fl.append(E("div", { class: "fld" }, pieceNode(p.k, x, S), E("span", { class: "fn" }, esc(p.op ? p.op.table : p.call.name)),
+        E("span", { class: "ft" }, esc(p.op ? (p.op.rw === "w" ? "writes " : "reads ") + p.op.model : p.call.role)))); });
+      blk.append(fl);
+      bind(blk, function(){ return fnCard(x, F, S); });
+      blk.addEventListener("click", function(){ if (portOn) window.selectIn("functions", x.name); else blk.classList.toggle("open"); });
+      body.append(blk); });
+    box.append(body);
+    /* the footer: the hint, then what the marks are and how many, the commits and the inferred hops */
+    var FS = C.footShow || ["icon", "count"], mix = {}, kinds = {}, order = [];
+    list.forEach(function(x){ fnPieces(x, S).forEach(function(p){ if (!mix[p.k.key]) { order.push(p.k.key); kinds[p.k.key] = p.k; } mix[p.k.key] = (mix[p.k.key] || 0) + 1; }); });
+    var RANK = ["read", "write", "accessor", "caller", "gate", "pure"]; order.sort(function(a, b){ return RANK.indexOf(a) - RANK.indexOf(b); });
+    var foot = E("div", { class: "pfoot bkfoot" + FS.map(function(k){ return " fs-" + k; }).join("") });
+    var FL = E("div", { class: "ftcol l" }), FR = E("div", { class: "ftcol r" }), total = list.length;
+    FL.append(footPart("hint", ico("info", 13, "currentColor"), portOn ? "click a function to open its record in the portrait" : "click a function to list its pieces here", "",
+      function(){ return window.hcard({ title: "click a function", icon: "info", color: "var(--muted)",
+        rows: [["opens", portOn ? "its record, in the portrait beside this panel" : "every piece of it, here"], ["counts", total + " functions over " + FNCOUNT[1].get(list) + " levels"]],
+        plain: "a block is a function — click one to read all of it" }); }));
+    order.forEach(function(k){ var kd = kinds[k], hx = list[0];
+      FR.append(footPart(k, pieceNode(kd, hx, S).outerHTML, kd.word, String(mix[k]), function(){
+        return window.hcard({ title: kd.word, value: mix[k] + (k === "read" || k === "write" ? " table touch" : " call") + (mix[k] === 1 ? "" : "es"),
+          iconHtml: '<span class="cpmark">' + pieceNode(kd, hx, S).outerHTML + "</span>", color: kd.col, plain: kd.plain }); })); });
+    var cmN = list.filter(function(x){ return x.commits; }).length, infN = list.filter(function(x){ return x.conf === "inferred"; }).length;
+    FR.append(footPart("commit", '<i class="cdot"></i>', "commits", String(cmN), function(){ return window.hcard({ title: "commits", value: cmN + " of " + total + " functions", icon: "key", color: S.OPC.write,
+      plain: "the function ends a DB transaction — its writes become permanent there" }); }));
+    FR.append(footPart("inferred", '<i class="infsw"></i>', "inferred", String(infN), function(){ return window.hcard({ title: "inferred hops", value: infN + " of " + total, icon: "layers",
+      rows: [["drawn as", M.inferred === "dashed" ? "a dashed block" : M.inferred === "tag" ? "a tag on the title" : "not marked on the block"]],
+      plain: "a hop graft resolved and the scanner did not prove — a floor, never a census" }); }));
+    foot.append(FL, FR); box.append(foot);
+    COV.mark("CODE BEHIND", "functions"); COV.mark("SIGNATURE", "functions"); COV.mark("DOCSTRING", "functions"); }
+
+  /* THE FUNCTION RECORD — rows, then two tables: the tables it touches, the functions it calls (a call row walks the record on) */
+  function fnSel(F){ var n = (window.SEL || {}).functions; return n ? fnByName(F, n) : null; }
+  function fnRecord(box, F, S){ var x = fnSel(F), I = F.identity, FN = F.functions;
+    if (!x) { ptIdle(box, "its record opens here: what it does with the store, where it sits on the walk, its size, every table it touches and every function it calls."); return; }
+    var b = E("div", { class: "ptbody ptrec" });
+    var hd = E("div", { class: "rchd" }, E("span", { class: "rci" }, ico("function", 18, fnIconCol(x, S))), E("b", null, esc(x.name)));
+    if (x.commits) hd.append(E("i", { class: "cdot" }));
+    b.append(hd);
+    function row(key, icon, value, info){
+      var r = E("div", { class: "rcrow", "data-row": key }, E("span", { class: "rci" }, icon), E("span", { class: "k" }, key), value);
+      if (info) { var i = E("span", { class: "rcinfo" }, ico("info", 13, "currentColor")); bind(i, info); r.append(i); }
+      b.append(r); }
+    row("role", ico(ROLEICO[x.role], 14, roleCol(x.role, S)), E("span", { class: "v" }, E("i", { class: "rcchip", style: chipLookOf(roleCol(x.role, S)) }, x.role)),
+      card({ title: x.role, icon: ROLEICO[x.role], color: roleCol(x.role, S), sub: "its role", body: esc((S.LRDEF || {})["role:" + x.role] || "") }));
+    row("entity", ico("entity", 14, x.entity_color), E("span", { class: "v", style: "color:" + x.entity_color }, esc(x.entity)));
+    row("level", ico(x.handler ? "target" : "link", 14, "var(--muted)"), E("span", { class: "v" }, esc(x.handler ? "L0 · the door's own function" : "L" + x.level + " · called by " + x.via)),
+      x.handler ? null : card({ title: "hop " + x.level, icon: "layers", sub: x.conf === "inferred" ? "an inferred hop" : "an extracted hop",
+        body: x.conf === "inferred" ? "graft resolved this call; the scanner did not prove it — a floor, never a census." : "proven by the suite's own AST pass." }));
+    row("file", ico("file", 14, "var(--muted)"), E("span", { class: "v" }, esc(x.file + (x.handler && I.flines ? ":" + I.flines : ""))));
+    row("size", ico("info", 14, "var(--muted)"), E("span", { class: "v" }, (x.lines == null ? "?" : x.lines) + " lines" + (x.async ? " · async" : "") + " · → " + camelWbr(x.returns)),
+      x.god ? card({ title: "over the size flag", icon: "alert", sub: "god-object", body: "its body runs past 50 lines — the station's size flag." }) : null);
+    if (x.commits) row("commits", ico("key", 14, S.OPC.write), E("span", { class: "v" }, "ends a DB transaction"));
+    if (x.handler) {
+      row("signature", ico("doc", 14, "var(--muted)"), E("span", { class: "v" }, esc(String(I.gsig || "—").replace(/^async def /, "").slice(0, 34)) + "…"),
+        card({ title: "signature", icon: "doc", sub: (I.sig || {}).async ? "async" : "sync", body: "<code>" + esc(I.gsig || "") + "</code>" }));
+      row("doc", ico("doc", 14, "var(--muted)"), E("span", { class: "v" }, I.doc ? esc(I.doc.slice(0, 60)) : "— none in the feed"));
+      row("behind", ico("layers", 14, "var(--muted)"), E("span", { class: "v" }, FN.behind.fns + " functions · reach " + FN.behind.depth),
+        card({ title: "code behind", icon: "layers", sub: "every function the door reaches",
+          rows: [["the walk", FN.walk_levels.join(" · ") + " = " + FN.walk_total], ["graft sees", (FN.behind.fns - FN.walk_total) + " more the walk cannot"]],
+          fields: FN.behind.names, body: esc(FN.walk_note) })); }
+    if (x.ops.length) { var tt = E("div", { class: "flds rctab wrapt", style: "--ec:" + x.entity_color });
+      tt.append(E("div", { class: "rcth" }, E("span", { class: "c-f" }, "tables", E("i", { class: "rcfp", style: pillLook("fields", S) }, String(x.ops.length))),
+        E("span", { class: "c-k" }, "channel"), E("span", { class: "c-t" }, "model")));
+      x.ops.forEach(function(o){ var k = opKind(o.rw, S);
+        var f = E("div", { class: "fld", "data-op": o.rw }, E("span", { class: "c-f" }, pieceNode(k, x, S), E("span", { class: "fn" }, esc(o.table))),
+          E("span", { class: "c-k" }, '<i class="jdrw" style="--rwc:' + RWC[o.rw === "w" ? "w" : "r"] + '">' + (o.rw === "w" ? "W" : "R") + "</i>"),
+          E("span", { class: "c-t ft" }, camelWbr(o.model)));
+        bind(f, card({ title: o.table, icon: "model", color: k.col, sub: (o.rw === "w" ? "written" : "read") + " by " + x.name, rows: [["model", o.model]] }));
+        tt.append(f); });
+      b.append(tt); }
+    if (x.calls.length) { var ct = E("div", { class: "flds rctab wrapt", style: "--ec:" + x.entity_color });
+      ct.append(E("div", { class: "rcth" }, E("span", { class: "c-f" }, "calls", E("i", { class: "rcfp", style: pillLook("fields", S) }, String(x.calls.length))),
+        E("span", { class: "c-k" }, "role"), E("span", { class: "c-t" }, "lines")));
+      x.calls.forEach(function(c){ var k = callKind(c.role, S);
+        var f = E("div", { class: "fld fcall", "data-call": c.name }, E("span", { class: "c-f" }, pieceNode(k, x, S), E("span", { class: "fn" }, esc(c.name))),
+          E("span", { class: "c-k" }, '<i class="jdrw" style="--rwc:' + roleCol(c.role, S) + '">' + ROLECHIP[c.role] + "</i>"),
+          E("span", { class: "c-t ft" }, c.lines == null ? "?" : String(c.lines)));
+        bind(f, card({ title: c.name, icon: "function", color: roleCol(c.role, S), sub: c.role + " · L" + c.level, rows: [["file", c.file]], body: "click to open its record" }));
+        f.addEventListener("click", function(){ window.selectIn("functions", c.name); });
+        ct.append(f); });
+      b.append(ct); }
+    box.append(b);
+    COV.mark("CODE BEHIND", "functions"); COV.mark("SIGNATURE", "functions"); COV.mark("DOCSTRING", "functions"); }
+
   /* ── the registry — icons are STATION icons (words on hover), counts answer A ─────────── */
   window.PANELS = {
     data: { icon: "table", word: "Data", col: S.KINDCOL.model,
@@ -1838,9 +2144,13 @@
                   { key: "blocks", label: "Blocks", hint: "one block per shape — the bodies and every nested shape — each field a mark, its kind read from the declared type. Click a block for its record.", render: renderSchemaBlocks } ] },
     functions: { icon: "function", word: "Functions", col: S.KINDCOL["function"], hint: "the handler and the call tree behind it — reach 5 · 29 behind; the levels walk 3·16·5·1 with the confidence of each hop; ONE bead walks it",
       count: function(F){ return F.functions.behind.fns; },
+      defaultVariant: "blocks",      /* the pattern book's second carry-over, 2026-09-13 */
+      portraitSubject: function(F){ var x = fnSel(F); return x ? x.name : null; }, portraitIcon: "function",
+      portraits: [ { key: "record", label: "Record", icon: "doc", hint: "what it does with the store and where it sits, then the tables it touches and the functions it calls", render: fnRecord } ],
       variants: [ { key: "levels", label: "Levels", hint: "one column per hop, every callee visible at once; the bead crosses the strip.", render: renderFunctions },
                   { key: "chain", label: "Chain", hint: "the walk as one horizontal spine; a hop opens below when you click it. Fits a short box.", render: renderFnChain },
-                  { key: "ledger", label: "Ledger", hint: "one row per function — hop · role · size · confidence · commit · tables touched.", render: renderFnLedger } ] },
+                  { key: "ledger", label: "Ledger", hint: "one row per function — hop · role · size · confidence · commit · tables touched.", render: renderFnLedger },
+                  { key: "blocks", label: "Blocks", hint: "one block per function — the handler and the walk — each mark a table it touches or a function it calls. Click a block for its record.", render: renderFnBlocks } ] },
     tests: { icon: "test", word: "Tests", col: "#4cbe83", hint: "the cases that reach this door stacked by the status they assert (26 api, all passing · 15 web as file coverage) and the 6+21 cross-entity journeys",
       count: function(F){ return F.tests.cases.length + F.tests.case_files.length; },
       variants: [ { key: "status", label: "Status", hint: "a column per HTTP status the case names assert; the declared one is bordered.", render: renderTests },

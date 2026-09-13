@@ -247,7 +247,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   ok(dup.length === 0, 'the definition appears once, at the end — never repeated above it', dup.join(' | ').slice(0, 140)); }
 // ── every control block FOLDS AWAY without losing its settings (operator 2026-09-11) ──
 { const blks = await p.$$eval('.barblk', els => els.map(e => e.id));
-  ok(blks.length === 7, 'seven control blocks — schemas has its own since 2026-09-13', blks.join(','));
+  ok(blks.length === 8, 'eight control blocks — schemas and functions have their own since 2026-09-13', blks.join(','));
   const before = await p.evaluate(() => window.COPYTXT.tabs());
   await p.click('#blk-tabs .mnb'); await p.waitForTimeout(120);
   ok(await p.$eval('#blk-tabs', e => e.classList.contains('min')), 'a block folds when its chevron is clicked');
@@ -1131,6 +1131,107 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   await p.evaluate(() => { Object.assign(window.SCHCFG.map, { blocks: 'all', nestKind: 'shape', dirCol: 'rw', looks: 'shared' }); window.SCHCFG.look = null; window.applyData(); window.drawSchCfg(); window.showTab('data'); });
   await p.waitForTimeout(260); }
 
+// ══ FUNCTIONS · BLOCKS (operator 2026-09-13: "another section following the conventions — next one is functions") — the
+//    thing is a function (the handler at L0 and the walk), its pieces the tables it touches or the functions it calls ══
+{ ok(await p.evaluate(() => window.PANELS.functions.defaultVariant) === 'blocks', 'Functions boots on BLOCKS — the pattern book\'s second carry-over');
+  await p.evaluate(() => window.showVariant('functions', 'blocks')); await p.waitForTimeout(320);
+  const FN = F.functions, all = [FN.handler, ...FN.walk.flat()], ops = all.reduce((n, f) => n + (f.ops || []).length, 0);
+  const reads = all.reduce((n, f) => n + (f.ops || []).filter(o => o.rw !== 'w').length, 0), writes = ops - reads;
+  const commits = all.filter(f => f.commits).length, infN = FN.walk.flat().filter(f => f.conf === 'inferred').length, roles = r => all.filter(f => (f.role || 'pure') === r).length;
+  const st = await p.evaluate(() => ({ blocks: [...document.querySelectorAll('#panel .blk')].map(e => ({ n: e.dataset.table, marks: e.querySelectorAll('.bkhd .sq').length, dashed: getComputedStyle(e).borderTopStyle === 'dashed', dot: !!e.querySelector('.bkhd .cdot') })),
+    pills: Object.fromEntries([...document.querySelectorAll('#panel .sechd .dcn')].map(e => [e.dataset.count, +e.textContent])),
+    roles: Object.fromEntries([...document.querySelectorAll('#panel .chb[data-fn-role]')].map(e => [e.dataset.fnRole, +e.textContent])) }));
+  ok(st.blocks.map(b => b.n).join(',') === all.map(f => f.name).join(','), 'one block per function — the handler, then the walk hop by hop', st.blocks.map(b => b.n).slice(0, 5).join(','));
+  ok(st.blocks.every((b, i) => b.marks === (all[i].ops || []).length), 'each mark is a table the function reads or writes', JSON.stringify(st.blocks.map(b => b.marks)));
+  // 26 blocks in the work box: a row may never be squeezed shorter than its block — the body scrolls instead
+  { const clip = await p.$$eval('#panel .blk', els => els.map(e => ({ n: e.dataset.table, over: e.scrollHeight - e.clientHeight, lastLine: (() => { const ln = [...e.querySelectorAll('.bkhd .bkln')].pop(), r = ln && ln.getBoundingClientRect(), b = e.getBoundingClientRect(); return r ? Math.round(b.bottom - r.bottom) : 99; })() })).filter(x => x.over > 1 || x.lastLine < 0));
+    ok(clip.length === 0, 'no function block clips its own title or marks — the body scrolls instead of squeezing the rows', JSON.stringify(clip.slice(0, 4))); }
+  ok(st.pills.functions === all.length && st.pills.levels === FN.walk.length && st.pills.commits === commits, 'the title counts functions · levels · commits, each equal to the feed', JSON.stringify(st.pills));
+  ok(['accessor', 'caller', 'gate', 'pure'].every(r => st.roles[r] === roles(r)) && Object.values(st.roles).reduce((a, b) => a + b, 0) === all.length, 'the four role switches partition the functions', JSON.stringify(st.roles));
+  ok(st.blocks.filter(b => b.dashed).length === infN && st.blocks.filter(b => b.dot).length === commits, 'an inferred hop is drawn dashed (law G), and a function that commits carries the pulse (law I)', JSON.stringify({ dashed: st.blocks.filter(b => b.dashed).length, infN, dots: st.blocks.filter(b => b.dot).length, commits }));
+  await p.click('#panel .chb[data-fn-role="accessor"]'); await p.waitForTimeout(260);
+  { const n = await p.$$eval('#panel .blk', els => els.length), s = await p.$eval('#panel .sechd .dcn[data-count="functions"]', e => +e.textContent);
+    ok(n === all.length - roles('accessor') && s === n, 'switching ACCESSOR off leaves the other roles, and the count follows', JSON.stringify({ n, s })); }
+  await p.click('#panel .chb[data-fn-role="accessor"]'); await p.waitForTimeout(260);
+  await p.click('#panel .srb[data-fn-sort="size"]'); await p.waitForTimeout(260);
+  { const ls = await p.$$eval('#panel .blk', els => els.map(e => e.dataset.table)), lines = ls.map(n => all.find(f => f.name === n).lines || 0);
+    ok(lines.every((v, i) => !i || lines[i - 1] >= v), 'sort by SIZE puts the longest body first', lines.slice(0, 5).join(',')); }
+  await p.click('#panel .srb[data-fn-sort="walk"]'); await p.waitForTimeout(260);
+  { const big = all.reduce((a, f) => ((f.ops || []).length > (a.ops || []).length ? f : a), all[0]);
+    await p.mouse.move(5, 1030); await p.waitForTimeout(120); await p.hover(`#panel .blk[data-table="${big.name}"] .bkhd`); await p.waitForTimeout(280);
+    const c = await p.evaluate(n => { const h = document.getElementById('hover'), blk = document.querySelector(`#panel .blk[data-table="${n}"]`), at = (e, a) => e ? e.getAttribute(a) : null;
+      return { name: (h.querySelector('.bchd b') || {}).textContent, g: at(h.querySelector('.bchd svg'), 'stroke'), bg: at(blk.querySelector('.bkhd .bki svg'), 'stroke'),
+        chip: (h.querySelector('[data-row="role"] .bcchip') || {}).textContent, fp: +(h.querySelector('[data-row="tables"] .bcfp') || {}).textContent,
+        mix: [...h.querySelectorAll('[data-row="tables"] .bcmix .mx b')].reduce((s, b) => s + +b.textContent, 0), foot: (h.querySelector('.bcfoot') || {}).textContent || '' }; }, big.name);
+    ok(c.name === big.name && c.g && c.g === c.bg, 'a function\'s card mirrors its block — the same glyph colour, then its name', JSON.stringify(c));
+    ok(c.chip === big.role && c.fp === big.ops.length && c.mix === big.ops.length && /record/.test(c.foot), 'then its role as the block\'s chip, the tables pill, and read/write marks that add back up', JSON.stringify(c)); }
+  { await p.mouse.move(5, 1030); await p.waitForTimeout(120); await p.hover('#panel .sechd .dcp[data-pill="functions"]'); await p.waitForTimeout(260);
+    const fc = await p.evaluate(() => { const h = document.getElementById('hover'); return { factors: [...h.querySelectorAll('.fct')].map(f => f.textContent), text: h.innerText }; });
+    ok(fc.factors.reduce((n, t) => n + +((t.match(/(\d+) functions?/) || [0, 0])[1]), 0) === all.length && fc.text.includes(FN.behind.fns + ' functions'), 'the FUNCTIONS pill lists the roles that add up to it, and names the code behind', JSON.stringify(fc).slice(0, 220)); }
+  await p.mouse.move(5, 1030); await p.waitForTimeout(120);
+  { const ft = Object.fromEntries(await p.$$eval('#panel .bkfoot .ftp', els => els.map(e => [e.dataset.part, +((e.querySelector('.ftn') || {}).textContent || 0)])));
+    ok(ft.read === reads && ft.write === writes && ft.commit === commits && ft.inferred === infN, 'the footer counts reads, writes, commits and inferred hops — each equal to the feed', JSON.stringify(ft)); }
+  // the function map, every choice an option
+  const setMap = m => p.evaluate(m => { Object.assign(window.FNCFG.map, m); window.applyData(); window.showVariant('functions', 'blocks'); window.drawFnCfg(); }, m);
+  await setMap({ pieces: 'calls' }); await p.waitForTimeout(260);
+  { const m = await p.$$eval('#panel .blk', els => els.map(e => ({ n: e.dataset.table, k: e.querySelectorAll('.bkhd .sq').length })));
+    const callees = n => FN.walk.flat().filter(f => f.via === n).length;
+    ok(m.every(x => x.k === callees(x.n)) && m.some(x => x.k > 0), 'PIECES calls: each mark is a function it calls', JSON.stringify(m.filter(x => x.k).slice(0, 4))); }
+  await setMap({ pieces: 'both' }); await p.waitForTimeout(260);
+  ok(await p.$$eval('#panel .blk .bkhd .sq', els => els.length) === ops + FN.walk.flat().length, 'PIECES both: every table touch and every call', String(ops + FN.walk.flat().length));
+  await setMap({ pieces: 'tables', handler: 'off' }); await p.waitForTimeout(260);
+  ok(await p.$$eval('#panel .blk', els => els.length) === all.length - 1, 'HANDLER walk only drops the handler\'s block');
+  await setMap({ handler: 'block', roleCol: 'mono' }); await p.waitForTimeout(260);
+  ok(await p.$$eval('#panel .blk .bkhd .bkrw .jdrw', els => els.length > 0 && els.every(e => e.style.getPropertyValue('--rwc').trim() === '#8794ab')), 'ROLE COLOUR mono paints every role chip grey');
+  await setMap({ roleCol: 'station', inferred: 'tag' }); await p.waitForTimeout(260);
+  { const t = await p.evaluate(() => ({ tags: document.querySelectorAll('#panel .blk .ftag').length, dashed: [...document.querySelectorAll('#panel .blk')].filter(e => getComputedStyle(e).borderTopStyle === 'dashed').length }));
+    ok(t.tags === infN && t.dashed === 0, 'INFERRED tag trades the dashed edge for a tag on the title', JSON.stringify(t)); }
+  await setMap({ inferred: 'dashed' }); await p.waitForTimeout(220);
+  // the record
+  const cs = FN.walk.flat().find(f => FN.walk.flat().filter(g => g.via === f.name).length > 2 && (f.ops || []).length) || FN.walk[0][0];
+  await p.evaluate(n => window.selectIn('functions', n), cs.name); await p.waitForTimeout(300);
+  { const r = await p.evaluate(() => { const b = document.querySelector('#portbody .ptrec'); if (!b) return null;
+      return { name: (b.querySelector('.rchd b') || {}).textContent, head: document.getElementById('portt').textContent, rows: [...b.querySelectorAll('.rcrow')].map(x => x.dataset.row),
+        tabs: [...b.querySelectorAll('.rctab')].map(t => ({ heads: [...t.querySelectorAll('.rcth > span')].map(s => s.firstChild ? s.firstChild.textContent.trim() : ''), rows: t.querySelectorAll('.fld').length })) }; });
+    ok(r && r.name === cs.name && r.head === cs.name, 'clicking a function opens ITS record', JSON.stringify(r && r.name));
+    ok(r && ['role', 'entity', 'level', 'file', 'size'].every(k => r.rows.includes(k)), 'rows: role · entity · level · file · size', JSON.stringify(r && r.rows));
+    ok(r && r.tabs.length === 2 && r.tabs[0].heads.join() === 'tables,channel,model' && r.tabs[0].rows === cs.ops.length && r.tabs[1].heads.join() === 'calls,role,lines'
+       && r.tabs[1].rows === FN.walk.flat().filter(g => g.via === cs.name).length, 'two tables with named columns — the tables it touches, the functions it calls', JSON.stringify(r && r.tabs)); }
+  { const first = FN.walk.flat().find(g => g.via === cs.name).name;
+    await p.evaluate(() => document.querySelector('#portbody .rctab .fld.fcall').click()); await p.waitForTimeout(280);
+    ok(await p.$eval('#portt', e => e.textContent) === first, 'clicking a call walks the record on to that function', first); }
+  await p.evaluate(n => window.selectIn('functions', n), FN.handler.name); await p.waitForTimeout(280);
+  { const r = await p.evaluate(() => ({ rows: [...document.querySelectorAll('#portbody .rcrow')].map(x => x.dataset.row), behind: (document.querySelector('#portbody .rcrow[data-row="behind"] .v') || {}).textContent || '',
+      doc: (document.querySelector('#portbody .rcrow[data-row="doc"] .v') || {}).textContent || '' }));
+    ok(r.rows.includes('signature') && r.behind.includes(String(FN.behind.fns)) && (F.identity.doc ? r.doc.length > 0 : /none in the feed/.test(r.doc)),
+       'the handler\'s record carries its signature, the code behind it, and — honestly — its docstring', JSON.stringify(r)); }
+  { const cuts = await p.evaluate(() => { const out = [];
+      for (const f of window.FNALL()) { window.selectIn('functions', f.name); const b = document.querySelector('#portbody .ptrec'); if (!b) { out.push(f.name + ' no record'); continue; }
+        if (b.scrollWidth > b.clientWidth + 1) out.push(f.name + ' overflows ' + b.scrollWidth + '>' + b.clientWidth);
+        b.querySelectorAll('.rctab .fld .fn, .rctab .fld .ft').forEach(n => {
+          if (getComputedStyle(n).whiteSpace !== 'nowrap') { if (n.scrollWidth > n.clientWidth + 1) out.push(f.name + '.' + n.textContent + ' spills'); return; }
+          const m = document.createElement('span'); m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap'; m.style.font = getComputedStyle(n).font; m.textContent = n.textContent;
+          document.body.append(m); const w = m.getBoundingClientRect().width; m.remove(); if (w > n.getBoundingClientRect().width + 0.05) out.push(f.name + '.' + n.textContent); }); }
+      return out; });
+    ok(cuts.length === 0, 'across every function, no name is cut and nothing runs past the portrait', JSON.stringify(cuts.slice(0, 5))); }
+  await p.evaluate(() => window.selectIn('functions', null)); await p.waitForTimeout(200);
+  // the rail
+  ok(await p.evaluate(() => window.COPYTXT.functions()) === 'functions · shown as blocks · roles accessor+caller+gate+pure · title counts functions icon, levels icon, commits icon · sort walk'
+     + ' · block block (glyph on, chip on, name on, file both, count badge, where both) · lines icon name | commit / file | count role / via | — · sizes icon 13 name 13 file 12 via 12'
+     + ' · footer icon count · drawn legend · hidden title note · map pieces tables, handler block, roles station, inferred dashed, looks shared',
+     'the functions copy line names every setting, the function map among them', await p.evaluate(() => window.COPYTXT.functions()));
+  { const g = await p.$$eval('#fncfg .cffold', els => els.map(e => ({ k: e.dataset.group, open: e.classList.contains('open'), body: getComputedStyle(e.querySelector('.cffoldbody')).display })));
+    ok(g.length === 9 && g.filter(x => x.open).map(x => x.k).join() === 'map' && g.filter(x => !x.open).every(x => x.body === 'none'), 'the functions rail is nine folds, only THE FUNCTION MAP open', JSON.stringify(g)); }
+  ok(await p.$$eval('#fncfg .cffold[data-group="map"] .ib', els => ['fn-map-pieces', 'fn-map-handler', 'fn-map-rolecol', 'fn-map-inferred', 'fn-map-looks'].every(a => els.some(e => e.hasAttribute('data-' + a)))),
+     'the function map offers five choices: pieces · handler · role colour · inferred hop · looks');
+  await p.click('#fncfg .ib[data-fn-map-looks="own"]'); await p.waitForTimeout(260);
+  ok(await p.evaluate(() => !!window.FNCFG.look && !!document.querySelector('#fncfg .ib[data-fn-lk-enc]')), 'LOOKS own gives Functions its own copy of the look, and its own dials');
+  await p.evaluate(() => { window.FNCFG.map.looks = 'shared'; window.FNCFG.look = null; window.applyData(); window.showVariant('functions', 'blocks'); window.drawFnCfg(); }); await p.waitForTimeout(220);
+  await p.evaluate(() => window.moveFnPart('via', 0, 'r', 0)); await p.waitForTimeout(260);
+  ok(await p.$$eval('#panel .blk:first-child .bkln', els => els.length) === 2, 'a title part drags to another line — WHERE moves up and the empty third line goes');
+  await p.evaluate(() => { window.FNCFG.bk.rows = [{ l: ['icon', 'name'], r: ['commit'] }, { l: ['file'], r: ['count', 'role'] }, { l: ['via'], r: [] }]; window.FNCFG.bk.sel = 'icon'; window.drawFnCfg(); window.showTab('data'); });
+  await p.waitForTimeout(260); }
+
 // the tests below were written against the station chip's look with every dial in reach — give them that baseline
 await p.evaluate(() => { Object.assign(window.DATACFG, { countPills: 'one', pillInk: 'white', pillBg: 'accent', pillAlpha: 100, sqEnc: 'colour', sqSize: 11, sqGap: 2, sqBase: 100, sqOptA: 45, sqUqMark: 'none' });
   Object.assign(window.DATACFG.bk, { count: 'words', model: 'word',
@@ -1608,11 +1709,11 @@ for (const t of rtabs) { await p.click(`#railtabs .rtb[data-rt="${t}"]`); await 
   ok(shown.length === 1 && shown[0] === 'rt-' + t, `rail toggle ${t} shows one section, never both`, shown.join(',')); }
 await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(90);
 const blocks = await p.$$eval('#rt-controls .barblk .bhl b', els => els.map(e => e.textContent));
-ok(blocks.join(',') === 'bench,head bar,part buttons,frame,data panel,schemas panel,part bars', 'the controls tab gives every region its own block', blocks.join(','));
+ok(blocks.join(',') === 'bench,head bar,part buttons,frame,data panel,schemas panel,functions panel,part bars', 'the controls tab gives every region its own block', blocks.join(','));
 const prows = await p.$$eval('#partcfg .prow', els => els.length);
 ok(prows === 6, 'the BARS tab separates the controls per part — one row each', String(prows));
 const varBtns = await p.$$eval('#partcfg .ib', els => els.length);
-ok(varBtns === 17, 'every distribution is an icon button in its part row', String(varBtns));
+ok(varBtns === 18, 'every distribution is an icon button in its part row', String(varBtns));
 const iconOnlyCtl = await p.$$eval('#partcfg .ib, #barcfg .ib, #boxes .ib, #dens .ib, #motionwrap .ib', els => els.every(e => !e.innerText.trim() && !!e.querySelector('svg')));
 ok(iconOnlyCtl, 'every control in the rail is an ICON — its word lives on the hover card');
 const ctl = (await p.$$('#partcfg .ib'))[0]; await ctl.hover(); await p.waitForTimeout(120);
@@ -1641,9 +1742,9 @@ const zones = await p.$$eval('#barcfg .dzone', els => els.map(e => e.dataset.sid
 ok(zones.join(',') === 'left,right', 'the rail shows one drop zone per pile, divided', zones.join(','));
 // a copy button per control block, each producing a readable line
 const cpb = await p.$$('.barblk .cpb');
-ok(cpb.length === 7, 'every control block has a COPY button', String(cpb.length));
+ok(cpb.length === 8, 'every control block has a COPY button', String(cpb.length));
 const lines = await p.evaluate(() => Object.keys(window.COPYTXT).map(k => window.COPYTXT[k]()));
-ok(lines.length === 7 && lines.every(l => l.length > 20), 'each copy line names that section\'s selections', lines.join(' // ').slice(0, 160));
+ok(lines.length === 8 && lines.every(l => l.length > 20), 'each copy line names that section\'s selections', lines.join(' // ').slice(0, 160));
 ok(/head bar · verbosity .* LEFT .* RIGHT .* off .* styles /.test(lines[1]), 'the head-bar copy line carries verbosity, both piles, what is off, and the per-element styles', lines[1]);
 // ── per-element options: shown · text · container (operator 2026-09-11) ──
 await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(80);

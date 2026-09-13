@@ -616,14 +616,14 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 #panel[data-tab="data"].dgw-equal .ground{ flex-grow:1 !important; flex-basis:0; }
 #panel[data-tab="data"].dtl-grid .tiles{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); align-content:start; }
 /* a control the OPEN distribution does not draw says so — it stays clickable, it just cannot show here */
-:is(#datacfg, #schcfg){ display:grid; grid-template-columns:88px 1fr; gap:7px 8px; align-items:center; margin-top:7px; }
-:is(#datacfg, #schcfg) .cfl{ line-height:1.9; }
-:is(#datacfg, #schcfg) .cfsub{ grid-column:1 / -1; }
-:is(#datacfg, #schcfg) .cfread{ grid-column:1 / -1; margin-top:4px; font-size:12px; line-height:1.45; }
-:is(#datacfg, #schcfg) .ib:not(.on){ opacity:.5; }
-:is(#datacfg, #schcfg) .ib.on{ opacity:1; }
-:is(#datacfg, #schcfg) .dsec .ib.na{ opacity:.22; border-style:dashed; }
-:is(#datacfg, #schcfg) .dsec .ib.na.on{ opacity:.34; }
+:is(#datacfg, #schcfg, #fncfg){ display:grid; grid-template-columns:88px 1fr; gap:7px 8px; align-items:center; margin-top:7px; }
+:is(#datacfg, #schcfg, #fncfg) .cfl{ line-height:1.9; }
+:is(#datacfg, #schcfg, #fncfg) .cfsub{ grid-column:1 / -1; }
+:is(#datacfg, #schcfg, #fncfg) .cfread{ grid-column:1 / -1; margin-top:4px; font-size:12px; line-height:1.45; }
+:is(#datacfg, #schcfg, #fncfg) .ib:not(.on){ opacity:.5; }
+:is(#datacfg, #schcfg, #fncfg) .ib.on{ opacity:1; }
+:is(#datacfg, #schcfg, #fncfg) .dsec .ib.na{ opacity:.22; border-style:dashed; }
+:is(#datacfg, #schcfg, #fncfg) .dsec .ib.na.on{ opacity:.34; }
 
 /* ══ DATA · FIELDS (operator 2026-09-12) — the columns named, not abstracted. One card per table, its
    fields listed under it; the card's left rail is the entity colour, the name's tint the channel. ══ */
@@ -769,7 +769,9 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 
 /* BLOCKS as BLOCKS (operator 2026-09-12) — the same rows, wrapped into tiles */
 .bkbody.form-block{ display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:6px;
-  align-content:start; }
+  align-content:start; grid-auto-rows:max-content; }
+/* max-content rows: a block is overflow:hidden, so its automatic minimum height is 0 and "auto" rows SHRINK to fit the
+   body — 26 function blocks were squeezed to 51px of their 68 (measured). A row now keeps its block's height; the body scrolls. */
 .form-block .bkhd{ flex-wrap:wrap; align-items:baseline; row-gap:3px; }
 .form-block .sqs{ margin-left:0; padding-left:0; width:100%; }
 /* NO align-self:start here. A grid row is sized by its tallest item, and an item that opts out of
@@ -920,16 +922,16 @@ html, body{ height:100%; }
 #panel.pshape-rect .sechd .dcp{ border-radius:3px; }
 #panel.pshape-square .sechd .dcp{ border-radius:0; }
 /* THE FOLD — settled dials put away inside a block, one click brings them back */
-:is(#datacfg, #schcfg) .cffold{ grid-column:1 / -1; border:1px dashed var(--line); border-radius:8px; }
-:is(#datacfg, #schcfg) .cffoldhd{ width:100%; display:flex; align-items:center; gap:7px; padding:5px 9px; background:none; border:0; cursor:pointer;
+:is(#datacfg, #schcfg, #fncfg) .cffold{ grid-column:1 / -1; border:1px dashed var(--line); border-radius:8px; }
+:is(#datacfg, #schcfg, #fncfg) .cffoldhd{ width:100%; display:flex; align-items:center; gap:7px; padding:5px 9px; background:none; border:0; cursor:pointer;
   color:var(--muted); font:700 12px/1.5 var(--font-mono); text-transform:uppercase; letter-spacing:.05em; }
-:is(#datacfg, #schcfg) .cffoldhd b{ color:var(--ink); font-weight:700; }
-:is(#datacfg, #schcfg) .cffoldhd .sum{ margin-left:auto; text-transform:none; letter-spacing:0; font-weight:600; }
-:is(#datacfg, #schcfg) .cffoldhd svg{ transition:transform .15s; }
-:is(#datacfg, #schcfg) .cffold.open .cffoldhd svg{ transform:rotate(180deg); }
-:is(#datacfg, #schcfg) .cffoldhd:hover{ color:var(--ink); }
-:is(#datacfg, #schcfg) .cffoldbody{ display:none; grid-template-columns:88px 1fr; gap:7px 8px; align-items:center; padding:4px 9px 9px; }
-:is(#datacfg, #schcfg) .cffold.open .cffoldbody{ display:grid; }
+:is(#datacfg, #schcfg, #fncfg) .cffoldhd b{ color:var(--ink); font-weight:700; }
+:is(#datacfg, #schcfg, #fncfg) .cffoldhd .sum{ margin-left:auto; text-transform:none; letter-spacing:0; font-weight:600; }
+:is(#datacfg, #schcfg, #fncfg) .cffoldhd svg{ transition:transform .15s; }
+:is(#datacfg, #schcfg, #fncfg) .cffold.open .cffoldhd svg{ transform:rotate(180deg); }
+:is(#datacfg, #schcfg, #fncfg) .cffoldhd:hover{ color:var(--ink); }
+:is(#datacfg, #schcfg, #fncfg) .cffoldbody{ display:none; grid-template-columns:88px 1fr; gap:7px 8px; align-items:center; padding:4px 9px 9px; }
+:is(#datacfg, #schcfg, #fncfg) .cffold.open .cffoldbody{ display:grid; }
 
 /* ══ THE SORT, in the title row after a divider (operator 2026-09-13). Text, ground and opacity are variables
    set by classes on #panel, like the pills; the active order wears the accent ring whatever its colours. ══ */
@@ -955,11 +957,11 @@ html, body{ height:100%; }
 #panel.sshow-icon .sechd .srb .srw{ display:none; }
 #panel.sshow-text .sechd .srb .sri{ display:none; }
 /* ten folds stacked in the data rail: a little air between them */
-:is(#datacfg, #schcfg) .cffold + .cffold{ margin-top:1px; }
-:is(#datacfg, #schcfg) .cffoldhd .fi{ display:inline-flex; }
+:is(#datacfg, #schcfg, #fncfg) .cffold + .cffold{ margin-top:1px; }
+:is(#datacfg, #schcfg, #fncfg) .cffoldhd .fi{ display:inline-flex; }
 /* a fold's NAME never wraps; its summary takes the rest of the line and wraps on the right if it must */
-:is(#datacfg, #schcfg) .cffoldhd b{ white-space:nowrap; flex:none; }
-:is(#datacfg, #schcfg) .cffoldhd .sum{ min-width:0; text-align:right; }
+:is(#datacfg, #schcfg, #fncfg) .cffoldhd b{ white-space:nowrap; flex:none; }
+:is(#datacfg, #schcfg, #fncfg) .cffoldhd .sum{ min-width:0; text-align:right; }
 
 /* ══ THE BLOCK EDGE (operator 2026-09-13) — the entity's colour moves to any side, or goes, with its own
    pattern and thickness. The old fixed 3px left rail is reset first; one side then takes the colour. ══ */
@@ -1057,17 +1059,17 @@ html, body{ height:100%; }
 :is(#panel .blk, #port .rctab) .sq.opt{ opacity:var(--sq-opt-a, .5); }
 :is(#panel.sq-noopt .blk, #port.sq-noopt .rctab) .sq.opt{ opacity:var(--sq-base, 1); }
 /* the rail's bar: the two stops drawn where they sit */
-:is(#datacfg, #schcfg) .sqscale{ position:relative; height:30px; margin:4px 6px 0; cursor:help;
+:is(#datacfg, #schcfg, #fncfg) .sqscale{ position:relative; height:30px; margin:4px 6px 0; cursor:help;
   background:linear-gradient(90deg, color-mix(in srgb, var(--accent) 8%, transparent), var(--accent)) center 9px / 100% 4px no-repeat; }
-:is(#datacfg, #schcfg) .sqscale i{ position:absolute; top:5px; width:12px; height:12px; margin-left:-6px; border-radius:3px; background:var(--ink); }
-:is(#datacfg, #schcfg) .sqscale i.st-opt{ opacity:.45; }
-:is(#datacfg, #schcfg) .sqscale i b{ position:absolute; top:15px; left:50%; transform:translateX(-50%); font:600 12px/1 var(--font-mono); color:var(--muted); white-space:nowrap; }
+:is(#datacfg, #schcfg, #fncfg) .sqscale i{ position:absolute; top:5px; width:12px; height:12px; margin-left:-6px; border-radius:3px; background:var(--ink); }
+:is(#datacfg, #schcfg, #fncfg) .sqscale i.st-opt{ opacity:.45; }
+:is(#datacfg, #schcfg, #fncfg) .sqscale i b{ position:absolute; top:15px; left:50%; transform:translateX(-50%); font:600 12px/1 var(--font-mono); color:var(--muted); white-space:nowrap; }
 /* the optional stop is drawn paler through its FILL, not its opacity — so its label stays readable */
-:is(#datacfg, #schcfg) .sqscale i.st-opt{ opacity:1; background:color-mix(in srgb, var(--ink) 45%, transparent); }
+:is(#datacfg, #schcfg, #fncfg) .sqscale i.st-opt{ opacity:1; background:color-mix(in srgb, var(--ink) 45%, transparent); }
 /* a stop at either end anchors its label inward instead of centring it off the edge */
-:is(#datacfg, #schcfg) .sqscale i.edge-r b{ left:auto; right:-2px; transform:none; }
-:is(#datacfg, #schcfg) .sqscale i.edge-l b{ left:-2px; transform:none; }
-:is(#datacfg, #schcfg) .sqscale{ margin-bottom:6px; }
+:is(#datacfg, #schcfg, #fncfg) .sqscale i.edge-r b{ left:auto; right:-2px; transform:none; }
+:is(#datacfg, #schcfg, #fncfg) .sqscale i.edge-l b{ left:-2px; transform:none; }
+:is(#datacfg, #schcfg, #fncfg) .sqscale{ margin-bottom:6px; }
 
 /* ══ THE UNIQUE CORNERS (operator 2026-09-13) — pseudo-elements, so the mark keeps its own shape. Each is ONE L drawn as a
    clip-path polygon, its corner at the top-right of its box: both arms run the box's side (--uq-len of the frame, 3px
@@ -1085,12 +1087,12 @@ html, body{ height:100%; }
 :is(#panel.uqm-corners.uqc-top-right .blk, #panel.uqm-corners.uqc-both .blk, #port.uqm-corners.uqc-top-right .rctab, #port.uqm-corners.uqc-both .rctab) .sq.uq::before,
 :is(#panel.uqm-corners.uqc-bottom-left .blk, #panel.uqm-corners.uqc-both .blk, #port.uqm-corners.uqc-bottom-left .rctab, #port.uqm-corners.uqc-both .rctab) .sq.uq::after{ content:""; }
 /* the rail's corner icons: accent L's — but an ON button is filled with the accent, so there they take its ink */
-:is(#datacfg, #schcfg) .ib .uqL{ stroke:var(--accent); }
-:is(#datacfg, #schcfg) .ib.on .uqL{ stroke:currentColor; }
+:is(#datacfg, #schcfg, #fncfg) .ib .uqL{ stroke:var(--accent); }
+:is(#datacfg, #schcfg, #fncfg) .ib.on .uqL{ stroke:currentColor; }
 /* the bar's stops are handles now */
-:is(#datacfg, #schcfg) .sqscale i[data-stop]{ width:14px; height:14px; margin-left:-7px; top:4px; cursor:grab; touch-action:none; }
-:is(#datacfg, #schcfg) .sqscale i[data-stop].drag{ cursor:grabbing; outline:1.5px solid var(--accent); outline-offset:2px; }
-:is(#datacfg, #schcfg) .sqscale i[data-stop] b{ top:18px; pointer-events:none; }
+:is(#datacfg, #schcfg, #fncfg) .sqscale i[data-stop]{ width:14px; height:14px; margin-left:-7px; top:4px; cursor:grab; touch-action:none; }
+:is(#datacfg, #schcfg, #fncfg) .sqscale i[data-stop].drag{ cursor:grabbing; outline:1.5px solid var(--accent); outline-offset:2px; }
+:is(#datacfg, #schcfg, #fncfg) .sqscale i[data-stop] b{ top:18px; pointer-events:none; }
 
 /* ══ THE RECORD (operator 2026-09-13) — the portrait's record mirrors the block card: the table glyph and name, then
    icon · label · value rows (an info icon at the end where a value needs explaining), then the fields as a table with
@@ -1130,6 +1132,31 @@ html, body{ height:100%; }
 #panel[data-tab="schemas"].sh-title .phd .sechd > span:not(.cnt):not(.dcnts){ display:none; }
 #panel[data-tab="schemas"].sh-legend .bkfoot .ftp:not([data-part="hint"]){ display:none; }
 .fkx.nest-nf{ color:var(--muted); font-style:italic; }
+/* ══ FUNCTIONS (operator 2026-09-13) — the second carry-over; only what differs lives here ══ */
+#panel[data-tab="functions"].fh-note .phdnote{ display:none; }
+#panel[data-tab="functions"].fh-title .phd .sechd > svg,
+#panel[data-tab="functions"].fh-title .phd .sechd > span:not(.cnt):not(.dcnts){ display:none; }
+#panel[data-tab="functions"].fh-legend .bkfoot .ftp:not([data-part="hint"]){ display:none; }
+/* I — the commit pulse, wherever a function that commits is drawn */
+.bkhd .cdot, #hover .bchd .cdot, .bkfoot .fti .cdot, .ptrec .rchd .cdot{ display:inline-block; width:8px; height:8px; border-radius:50%; background:#f97316; flex:none;
+  animation:epPulse 1.9s ease-in-out infinite; }
+/* G — an inferred hop: a dashed block, or a tag on its title */
+#panel .blk.fn.dashed{ border-style:dashed; }
+.ftag{ display:inline-flex; align-items:center; font:600 12px/1.3 var(--font-mono); font-style:normal; color:var(--muted); border:1px dashed var(--muted); border-radius:4px; padding:0 5px; white-space:nowrap; }
+.infsw{ display:inline-block; width:13px; height:9px; border:1.5px dashed var(--muted); border-radius:2px; box-sizing:border-box; }
+/* over the 50-line size flag — the count badge is ringed in the red that means a rule fires */
+#panel .bkhd .bkn.god{ box-shadow:0 0 0 1.5px var(--red, #ef4444); }
+/* the pieces as shapes: a read is a circle, a write a square; a call takes its callee's role */
+.sq.e-shape.t-read{ border-radius:50%; }
+.sq.e-shape.t-write{ border-radius:1px; }
+.sq.e-shape.t-accessor{ transform:rotate(45deg) scale(.8); border-radius:1px; }
+.sq.e-shape.t-caller{ border-radius:50%; background:none; border:2px solid var(--fc, var(--muted)); box-sizing:border-box; }
+.sq.e-shape.t-gate{ border-radius:0; clip-path:polygon(50% 0, 100% 100%, 0 100%); }
+.sq.e-shape.t-pure{ border-radius:0; background:none; background-image:repeating-linear-gradient(var(--fc, var(--muted)) 0 2px, transparent 2px 4px); }
+/* a function record's tables wrap their long model names at word boundaries, like the schema record's types */
+.ptrec .rctab.wrapt{ grid-template-columns:max-content minmax(min-content, 1fr) minmax(min-content, max-content); }
+.rctab.wrapt .fld .ft{ white-space:normal; text-align:right; }
+.rctab .fld.fcall{ cursor:pointer; }
 /* the schema map's BODIES ONLY: each nested shape a chip inside its body, with its own card and its own click */
 .snest{ display:flex; flex-wrap:wrap; gap:4px 6px; padding:0 9px 7px; }
 .snc{ display:inline-flex; align-items:center; gap:4px; max-width:100%; padding:1px 7px; border:1px solid var(--line); border-radius:6px;

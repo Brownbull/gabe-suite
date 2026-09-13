@@ -49,6 +49,10 @@
           <div class="bhl"><span class="bhi"></span><b>schemas panel</b><span class="bhn">sections · layout</span></div>
           <div class="blkbody"><div id="schcfg"></div></div>
         </div>
+        <div class="barblk" id="blk-functions">
+          <div class="bhl"><span class="bhi"></span><b>functions panel</b><span class="bhn">sections · layout</span></div>
+          <div class="blkbody"><div id="fncfg"></div></div>
+        </div>
         <div class="barblk" id="blk-parts">
           <div class="bhl"><span class="bhi"></span><b>part bars</b><span class="bhn">one distribution each</span></div>
           <div class="blkbody"><div id="partcfg"></div></div>
@@ -702,6 +706,17 @@
           size: { icon: 13, name: 13, ent: 12, via: 12 }, sel: "icon" },
     footShow: ["icon", "count"] };
   var SFOLDS = window.SFOLDS = { layout: 0, map: 1, sections: 0, dirs: 0, sort: 0, counts: 0, title: 0, lines: 0, foot: 0 };
+  /* FUNCTIONS' OWN SETTINGS (operator 2026-09-13: "another section following the conventions — functions"). Every choice is
+     an option from the start: what a mark is, whether the handler is a block, the role colour, how an inferred hop reads, the look. */
+  var FNCFG = window.FNCFG = { role: { accessor: 1, caller: 1, gate: 1, pure: 1 }, sort: "walk", sortRev: 0,
+    counts: { functions: "icon", levels: "icon", commits: "icon" },
+    show: { title: 0, note: 0, legend: 1 },
+    map: { pieces: "tables", handler: "block", roleCol: "station", inferred: "dashed", looks: "shared" }, look: null,
+    bk: { form: "block", icon: 1, role: 1, name: 1, file: "both", count: "badge", via: "both",
+          rows: [{ l: ["icon", "name"], r: ["commit"] }, { l: ["file"], r: ["count", "role"] }, { l: ["via"], r: [] }],
+          size: { icon: 13, name: 13, file: 12, via: 12 }, sel: "icon" },
+    footShow: ["icon", "count"] };
+  var FFOLDS = window.FFOLDS = { layout: 0, map: 1, sections: 0, roles: 0, sort: 0, counts: 0, title: 0, lines: 0, foot: 0 };
   var DSEC = [
     { key: "title",  word: "the title",   icon: "layers", on: ["grounds", "flow", "ledger", "fields", "blocks"],
       what: "the part's own name and glyph, left of the counts", lost: "which part you are looking at; the counts and the switches stay" },
@@ -725,8 +740,10 @@
     { key: "legend", word: "the legend",  icon: "layers", on: ["grounds", "flow", "ledger", "fields", "blocks"],
       what: "the strip of swatches at the foot", lost: "what a colour and a line mean, drawn as they are drawn" } ];
   /* THE LOOK applyData paints (operator 2026-09-13): Data's, unless Schemas is open and keeps its own copy */
-  function lookOf(){ var pn = document.getElementById("panel");
-    return pn && pn.dataset.tab === "schemas" && SCHCFG.map.looks === "own" && SCHCFG.look ? SCHCFG.look : DATACFG; }
+  function lookOf(){ var pn = document.getElementById("panel"), tab = pn && pn.dataset.tab;
+    var C = tab === "schemas" ? SCHCFG : tab === "functions" ? FNCFG : null;
+    return C && C.map.looks === "own" && C.look ? C.look : DATACFG; }
+  function fnLook(){ return FNCFG.map.looks === "own" && FNCFG.look ? FNCFG.look : DATACFG; }
   function schLook(){ return SCHCFG.map.looks === "own" && SCHCFG.look ? SCHCFG.look : DATACFG; }
   var LOOKKEYS = ["sqSize", "sqGap", "sqShape", "sqPal", "sqOpt", "sqEnc", "sqBase", "sqOptA", "sqUqMark", "sqUqAt", "sqUqFlip", "sqUqLen", "sqUqW", "sqUqTip",
                   "countPills", "pillShape", "pillInk", "pillBg", "pillAlpha", "sortShow", "sortInk", "sortBg", "sortAlpha"];
@@ -738,7 +755,7 @@
   function dataVar(){ return (window.PANELVAR && window.PANELVAR("data")) || "grounds"; }
   function applyData(){ var pn = document.getElementById("panel");
     Object.keys(DATACFG.show).forEach(function(k){ pn.classList.toggle("dh-" + k, !DATACFG.show[k]); });
-    ["title", "note", "legend"].forEach(function(k){ pn.classList.toggle("sh-" + k, !SCHCFG.show[k]); });
+    ["title", "note", "legend"].forEach(function(k){ pn.classList.toggle("sh-" + k, !SCHCFG.show[k]); pn.classList.toggle("fh-" + k, !FNCFG.show[k]); });
     pn.classList.toggle("dgw-equal", DATACFG.width === "equal");
     pn.classList.toggle("dtl-grid", DATACFG.tiles === "grid");
     /* THE LOOK (operator 2026-09-13): Data's, unless Schemas is open and keeps its own copy */
@@ -1397,6 +1414,216 @@
   /* move a title part to a line, at an index — one call, so the probe drives the same path a drag does */
   /* ══ THE SCHEMAS RAIL (operator 2026-09-13) — the pattern book's rail: one named fold per thing on the panel, only the
      one being tuned open, each header a summary. The looks shared with Data are set in Data's block, and said so. ══ */
+  /* ══ RAIL KIT (2026-09-13) — the pattern book's rail parts as one kit, so a carried-over part builds its block from
+     them: a named fold, a pick, a set of switches, a slider, the title-lines zones, the footer switches, a part's own look ══ */
+  function railKit(box, folds, live, redraw){
+    function group(key, title, summary, why, build){
+      var at = box.children.length; build();
+      var moved = [].slice.call(box.children, at);
+      var fold = el("div", { class: "cffold" + (folds[key] ? " open" : "") }), body = el("div", { class: "cffoldbody" });
+      fold.dataset.group = key; moved.forEach(function(n){ body.append(n); });
+      var hd = el("button", { class: "cffoldhd" }); hd.dataset.fold = key;
+      var ic = el("span", { class: "fi" }); ic.innerHTML = labIco("fold", 12);
+      hd.append(ic, el("b", {}, title), el("span", { class: "sum" }, summary));
+      hoverBind(hd, function(){ return hcard({ title: title, value: folds[key] ? "open" : "folded", icon: "shape",
+        rows: [["set to", summary], ["folded", "every setting keeps working while it is out of sight"]], plain: why }); });
+      hd.onclick = function(ev){ ev.stopPropagation(); folds[key] = folds[key] ? 0 : 1; fold.classList.toggle("open", !!folds[key]); };
+      fold.append(hd, body); box.append(fold); }
+    function pick(label, ds, get, set, opts, iconFor, onlyIn){
+      var na = onlyIn && onlyIn !== live, w = el("div", { class: "ibwrap" });
+      opts.forEach(function(o){ var b = el("button", { class: "ib" + (get() === o[0] ? " on" : "") + (na ? " na" : "") });
+        b.setAttribute("data-" + ds, String(o[0])); b.innerHTML = iconFor(o);
+        hoverBind(b, hcard({ title: o[2] || String(o[0]), value: label, icon: "shape",
+          rows: na ? [["drawn in", onlyIn + " — not in " + live + ", so this does nothing right now"]] : null, plain: o[1] }));
+        b.onclick = function(ev){ ev.stopPropagation(); set(o[0]); redraw(); }; w.append(b); });
+      box.append(el("div", { class: "cfl" }, label), w); }
+    function toggles(label, ds, items, isOn, flip){
+      var w = el("div", { class: "ibwrap" });
+      items.forEach(function(o){ var on = isOn(o[0]), b = el("button", { class: "ib" + (on ? " on" : "") });
+        b.setAttribute("data-" + ds, o[0]); b.innerHTML = o[2];
+        hoverBind(b, hcard({ title: o[0], value: on ? "on" : "off", icon: "shape", rows: [["click", on ? "switches it off" : "switches it on"]], plain: o[1] }));
+        b.onclick = function(ev){ ev.stopPropagation(); flip(o[0], on); redraw(); }; w.append(b); });
+      box.append(el("div", { class: "cfl" }, label), w); }
+    function lslider(label, aria, min, max, step, get, set, fmt, plain){
+      box.append(el("div", { class: "cfl sub" }, label), slider({ min: min, max: max, step: step, value: get(), label: aria, fmt: fmt,
+        card: function(){ return hcard({ title: aria, value: fmt(get()), icon: "shape", plain: plain || aria }); },
+        on: function(v){ set(v); applyData(); } })); }
+    return { box: box, group: group, pick: pick, toggles: toggles, lslider: lslider }; }
+  function sw(bg){ return '<i class="chsw" style="background:' + bg + '"></i>'; }
+  /* a part's OWN look — the first switch to own copies Data's; these dials then set it alone */
+  function ownLookDials(K, C, ds, chanSwatch, who){ var LK = C.look, pick = K.pick, own = who + "' own look — Data keeps its own";
+    pick("mark", ds + "-enc", function(){ return LK.sqEnc; }, function(v){ LK.sqEnc = v; },
+      [["colour", "a filled mark whose hue is the kind", "colour"], ["char", "a character per kind", "a character"], ["shape", "a shape per kind", "a shape"], ["symbol", "the station's glyph per kind", "a symbol"]],
+      function(o){ return o[0] === "colour" ? labIco("patflat", 15) : o[0] === "char" ? labIco("ton", 15) : o[0] === "shape" ? labIco("sh-circle", 15) : S.icon("key", 15); });
+    K.lslider("mark size", who.toLowerCase() + " own mark size", 6, 24, 1, function(){ return LK.sqSize; }, function(v){ LK.sqSize = v; }, function(v){ return v + "px"; }, own);
+    pick("mark colour", ds + "-pal", function(){ return LK.sqPal; }, function(v){ LK.sqPal = v; },
+      [["type", "each mark in its kind's colour", "by kind"], ["channel", "each mark in the part's own channel colour", "by channel"], ["entity", "each mark in its entity's colour", "by entity"], ["mono", "no colour — the mark's form carries the kind", "mono"]],
+      function(o){ return o[0] === "type" ? labIco("pathatch", 15) : o[0] === "channel" ? sw(chanSwatch) : o[0] === "entity" ? sw(S.KINDCOL.entity) : labIco("patflat", 15); });
+    pick("pill text", ds + "-pink", function(){ return LK.pillInk; }, function(v){ LK.pillInk = v; },
+      [["white", "white", "white"], ["ink", "the page's ink", "ink"], ["kind", "what it counts", "by what it counts"], ["accent", "the accent", "accent"], ["muted", "quiet", "quiet"]],
+      function(o){ return sw({ white: "#fff", ink: "var(--ink)", kind: S.KINDCOL.route, accent: "var(--accent)", muted: "var(--muted)" }[o[0]]); });
+    pick("pill ground", ds + "-pbg", function(){ return LK.pillBg; }, function(v){ LK.pillBg = v; },
+      [["accent", "the accent", "accent"], ["kind", "what it counts", "by what it counts"], ["chip", "an outline", "outline"], ["panel", "raised", "raised"], ["ink", "ink", "ink"], ["none", "nothing", "none"]],
+      function(o){ return sw({ accent: "var(--accent)", kind: S.KINDCOL.route, chip: "var(--chip-bg)", panel: "var(--panel)", ink: "var(--ink)", none: "transparent" }[o[0]]); });
+    K.lslider("pill opacity", who.toLowerCase() + " own pill opacity", 0, 100, 5, function(){ return LK.pillAlpha; }, function(v){ LK.pillAlpha = v; }, function(v){ return v + "%"; }, own);
+    pick("chip box", ds + "-box", function(){ return LK.bk.rwBox; }, function(v){ LK.bk.rwBox = v; LK.bk.cntBox = v; },
+      [["pill", "fully rounded — both chips", "pill"], ["tag", "barely rounded", "tag"], ["square", "sharp corners", "square"], ["outline", "no fill, its own edge", "outline"], ["bare", "the characters alone", "bare"]],
+      function(o){ return labIco(o[0] === "pill" ? "sh-pill" : o[0] === "square" ? "sh-square" : o[0] === "bare" ? "toff" : "sh-rect", 15); });
+    K.lslider("chip fill", who.toLowerCase() + " own chip fill", 0, 100, 5, function(){ return LK.bk.rwA; }, function(v){ LK.bk.rwA = v; }, function(v){ return v + "%"; }, own);
+    pick("edge", ds + "-rail", function(){ return LK.bk.railSide; }, function(v){ LK.bk.railSide = v; },
+      [["left", "down the left edge", "left"], ["right", "down the right edge", "right"], ["top", "across the top", "top"], ["bottom", "across the bottom", "bottom"], ["none", "no entity colour on the edge", "none"]],
+      function(o){ return labIco(o[0] === "none" ? "toff" : o[0] === "top" || o[0] === "bottom" ? "normal" : "layleft", 15); });
+    K.lslider("edge width", who.toLowerCase() + " own edge width", 1, 8, 1, function(){ return LK.bk.railW; }, function(v){ LK.bk.railW = v; }, function(v){ return v + "px"; }, own);
+    K.box.append(el("div", { class: "cfread" }, own + ". Set looks back to shared to read Data's again; this copy is kept.")); }
+  /* the title-lines zones for any part: drag a part between lines and columns, click it to size it */
+  function titleLines(K, B, PARTS, attr, move, chipMap, look, redrawTab, redrawRail, what){ var box = K.box, byKey = {};
+    PARTS.forEach(function(x){ byKey[x.key] = x; });
+    function shown(k){ var v = B[k]; return v == null ? true : typeof v === "number" ? !!v : v !== "off"; }
+    function zone(i, side){ var z = el("div", { class: "dzone", "data-line": String(i), "data-side": side });
+      (((B.rows[i] || {})[side]) || []).forEach(function(k){ var d = byKey[k]; if (!d) return;
+        var b = el("button", { class: "ib dg" + (shown(k) ? " on" : "") + (B.sel === k ? " sel" : ""), draggable: "true" });
+        b.setAttribute("data-" + attr, k); b.innerHTML = S.icon(d.ico, 14);
+        hoverBind(b, hcard({ title: d.word, value: (shown(k) ? "drawn" : "hidden") + " · line " + (i + 1) + " " + (side === "l" ? "left" : "right"), icon: d.ico,
+          rows: [["what it is", d.note], ["click", "select it, and the bar below sizes it"], ["drag", "along this column to reorder, or into another column to move it"]],
+          plain: "one part of " + what + "'s title" }));
+        b.onclick = function(ev){ ev.stopPropagation(); B.sel = k; redrawRail(); };
+        b.addEventListener("dragstart", function(ev){ ev.dataTransfer.setData("text/plain", k); ev.dataTransfer.effectAllowed = "move"; window.hoverHide(); });
+        z.append(b); });
+      z.addEventListener("dragover", function(ev){ ev.preventDefault(); z.classList.add("over"); });
+      z.addEventListener("dragleave", function(){ z.classList.remove("over"); });
+      z.addEventListener("drop", function(ev){ ev.preventDefault(); z.classList.remove("over"); var key = ev.dataTransfer.getData("text/plain"); if (!byKey[key]) return;
+        var kids = [].slice.call(z.querySelectorAll(".ib")).filter(function(x){ return x.getAttribute("data-" + attr) !== key; }), idx = kids.length;
+        for (var j = 0; j < kids.length; j++) { var r = kids[j].getBoundingClientRect(); if (ev.clientX < r.left + r.width / 2) { idx = j; break; } }
+        move(key, i, side, idx); });
+      return z; }
+    var zs = el("div", { class: "zones lines" });
+    [0, 1, 2].forEach(function(i){ zs.append(el("div", { class: "lnrow" }, el("div", { class: "dzl" }, "line " + (i + 1)),
+      el("div", { class: "lnsides" }, zone(i, "l"), el("i", { class: "lnmid" }), zone(i, "r")))); });
+    box.append(el("div", { class: "cfl" }, "lines"), zs);
+    var k = B.sel, d = byKey[k] || PARTS[0], dk = chipMap[k], cur = dk ? (look().bk.size[dk] || 12) : (B.size[k] || 12);
+    box.append(el("div", { class: "cfl sub" }, "size"),
+      slider({ min: k === "icon" ? 9 : dk ? 8 : 12, max: 26, step: 1, value: cur, label: what + " " + d.word + " size",
+        fmt: function(v){ return v + "px" + (v < 12 ? " <12" : ""); },
+        card: hcard({ title: d.word, value: cur + "px", icon: d.ico,
+          rows: [["what it sizes", d.note], dk ? ["shared", "the same size as the look's chip — one value, two places to set it"] : ["the floor", "12px — text never goes under it"]],
+          plain: "how big this part of the title is drawn" }),
+        on: function(v){ if (dk) { look().bk.size[dk] = v; applyData(); } else { B.size[k] = v; redrawTab(); } } }));
+    box.append(el("div", { class: "cfread" }, "each line has TWO columns: what you drop on the left is pushed left, what you drop on the right is pushed right.")); }
+  /* the footer switches for any part: icon · label · count, combined, the last one on stays on */
+  function footSwitches(K, C, attr, redraw){
+    var HASH = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 4 8 20M16 4l-2 16M5 9h15M4 15h15"/></svg>';
+    var w = el("div", { class: "ibwrap" });
+    [["icon", "icon", "the part's icon — its mark as the blocks draw it", window.KINDICON("id", 15)],
+     ["text", "label", "the part's name — the kind's word, or the hint's sentence", labIco("ton", 15)],
+     ["count", "count", "how many of each", HASH]].forEach(function(o){
+      var on = C.footShow.indexOf(o[0]) >= 0, last = on && C.footShow.length === 1;
+      var b = el("button", { class: "ib" + (on ? " on" : "") }); b.setAttribute("data-" + attr, o[0]); b.innerHTML = o[3];
+      hoverBind(b, hcard({ title: o[1], value: on ? (last ? "on — the last one, so it stays on" : "on") : "off", icon: "shape",
+        rows: [["combine", "any of icon · label · count — at least one stays on"]], plain: o[2] }));
+      b.onclick = function(ev){ ev.stopPropagation(); var s = C.footShow, i = s.indexOf(o[0]); if (i >= 0 && s.length === 1) return;
+        var next = i >= 0 ? s.filter(function(x){ return x !== o[0]; }) : s.concat([o[0]]);
+        C.footShow = ["icon", "text", "count"].filter(function(x){ return next.indexOf(x) >= 0; }); redraw(); };
+      w.append(b); });
+    K.box.append(el("div", { class: "cfl" }, "shown as"), w); }
+
+  /* ══ THE FUNCTIONS RAIL (operator 2026-09-13) — built from the rail kit ══ */
+  function roleColOf(r){ var m = FNCFG.map.roleCol; return m === "function" ? S.KINDCOL["function"] : m === "mono" ? "#8794ab" : ((S.BADGE_COL.role || {})[r] || "#8794ab"); }
+  var FNROLEWORDS = ["accessor", "caller", "gate", "pure"];
+  function drawFnCfg(){ var box = document.getElementById("fncfg"); if (!box) return; box.innerHTML = "";
+    var C = FNCFG, B = C.bk, M = C.map, live = (window.PANELVAR && window.PANELVAR("functions")) || "blocks", RI = window.ROLEICO || {};
+    function redraw(){ applyData(); window.showTab("functions"); drawFnCfg(); }
+    var K = railKit(box, FFOLDS, live, redraw), group = K.group, pick = K.pick, toggles = K.toggles;
+    var LRD = S.LRDEF || {};
+    group("layout", "layout", "shown as " + live + " · " + B.form, "the same functions, distributed differently", function(){
+      var w = el("div", { class: "ibwrap" }), P = window.PANELS.functions;
+      P.variants.forEach(function(v){ var b = el("button", { class: "ib" + (live === v.key ? " on" : "") });
+        b.dataset.flayout = v.key; b.innerHTML = S.icon(VARICO[v.key] || "shape", 15);
+        hoverBind(b, hcard({ title: v.label, value: "a distribution of Functions", icon: VARICO[v.key] || "shape", color: P.col, plain: v.hint }));
+        b.onclick = function(ev){ ev.stopPropagation(); window.showVariant("functions", v.key); drawFnCfg(); }; w.append(b); });
+      box.append(el("div", { class: "cfl" }, "shown as"), w);
+      pick("form", "fn-form", function(){ return B.form; }, function(v){ B.form = v; },
+        [["row", "one function per full-width row", "rows"], ["block", "the functions as blocks that wrap", "blocks"]],
+        function(o){ return labIco(o[0] === "row" ? "normal" : "wauto", 15); }, "blocks"); });
+    group("map", "the function map", "pieces " + M.pieces + " · handler " + M.handler + " · roles " + M.roleCol + " · inferred " + M.inferred + " · looks " + M.looks,
+      "every choice made when Functions was carried over — each one an option, so they can be compared", function(){
+      pick("pieces", "fn-map-pieces", function(){ return M.pieces; }, function(v){ M.pieces = v; },
+        [["tables", "each mark is a table the function reads (green) or writes (orange)", "tables it touches"],
+         ["calls", "each mark is a function it calls, in that function's role colour", "functions it calls"],
+         ["both", "the tables first, then the calls", "both"]],
+        function(o){ return S.icon(o[0] === "tables" ? "model" : o[0] === "calls" ? "merge" : "layers", 15); }, "blocks");
+      pick("handler", "fn-map-handler", function(){ return M.handler; }, function(v){ M.handler = v; },
+        [["block", "the handler opens the walk as a block of its own, at L0", "a block"],
+         ["off", "only the functions the walk reaches — the handler stays in the head bar and the pill cards", "walk only"]],
+        function(o){ return o[0] === "block" ? S.icon("target", 15) : labIco("eyeoff", 15); }, "blocks");
+      pick("role colour", "fn-map-rolecol", function(){ return M.roleCol; }, function(v){ M.roleCol = v; },
+        [["station", "the station's role colours — accessor red, caller blue, gate yellow, pure grey", "station"],
+         ["function", "every role in the function colour — the chip's words tell them apart", "function"],
+         ["mono", "a quiet grey for every role", "mono"]],
+        function(o){ var R = S.BADGE_COL.role || {}; return o[0] === "station" ? sw("linear-gradient(90deg," + R.accessor + " 25%," + R.caller + " 25% 50%," + R.gate + " 50% 75%," + R.pure + " 75%)")
+          : o[0] === "function" ? sw(S.KINDCOL["function"]) : sw("#8794ab"); });
+      pick("inferred hop", "fn-map-inferred", function(){ return M.inferred; }, function(v){ M.inferred = v; },
+        [["dashed", "an inferred hop's block is drawn dashed — law G, how sure", "dashed edge"],
+         ["tag", "a small ⌁ inferred tag on its title", "a tag"],
+         ["off", "not marked on the block — its card still says so", "off"]],
+        function(o){ return o[0] === "dashed" ? lineIco("dashed", 15) : o[0] === "tag" ? labIco("ton", 15) : labIco("toff", 15); }, "blocks");
+      pick("looks", "fn-map-looks", function(){ return M.looks; }, function(v){ M.looks = v; if (v === "own" && !C.look) C.look = copyLook(DATACFG); },
+        [["shared", "read from Data — the pill colour, chips, marks and edge are set once, in its block", "shared with Data"],
+         ["own", "Functions keeps its own copy of those looks, tuned below", "its own"]],
+        function(o){ return o[0] === "shared" ? S.icon("link", 15) : labIco("copy", 15); });
+      if (M.looks !== "own") { box.append(el("div", { class: "cfread" }, "shared: the pill colour, chips, marks and edge are set in the data panel block.")); return; }
+      ownLookDials(K, C, "fn-lk", roleColOf("accessor"), "Functions"); });
+    group("sections", "sections", ["title", "note", "legend"].filter(function(k){ return C.show[k]; }).length + " of 3 drawn",
+      "what the panel draws besides the blocks — a hidden section stays in the page", function(){
+      toggles("drawn", "fn-sec", [["title", "the part's own name and glyph, left of the counts", S.icon("layers", 15)],
+                                  ["note", "the sentence under the title", S.icon("doc", 15)],
+                                  ["legend", "the footer's marks, commits and inferred hops, with their counts", S.icon("info", 15)]],
+        function(k){ return !!C.show[k]; }, function(k, on){ C.show[k] = on ? 0 : 1; }); });
+    group("roles", "roles", FNROLEWORDS.filter(function(r){ return C.role[r]; }).join(" + ") || "none",
+      "which functions are drawn, by what they do with the store — any combination", function(){
+      toggles("shown", "fn-role-sw", FNROLEWORDS.map(function(r){ return [r, LRD["role:" + r] || r, S.icon(RI[r] || "function", 15, roleColOf(r))]; }),
+        function(k){ return !!C.role[k]; }, function(k, on){ C.role[k] = on ? 0 : 1; }); });
+    group("sort", "sort", C.sort + (C.sortRev ? " reversed" : ""), "how the functions are laid out — the buttons' look is Data's", function(){
+      pick("order", "fn-sort-k", function(){ return C.sort; }, function(v){ C.sort = v; },
+        (window.FNSORTS || []).map(function(o){ return [o.key, o.plain, o.word]; }), function(o){ return window.FNSORTICON(o[0], 15); });
+      pick("direction", "fn-sort-rev", function(){ return C.sortRev; }, function(v){ C.sortRev = v; },
+        [[0, "the order as its name reads", "as named"], [1, "turned around", "reversed"]], function(o){ return window.SORTICON(o[0] ? "rev-on" : "rev-off", 15); }); });
+    group("counts", "count pills", ["functions", "levels", "commits"].map(function(k){ return k + " " + C.counts[k]; }).join(" · "),
+      "what the title counts, and how — the pills' colour is the look's", function(){
+      [["functions", "function"], ["levels", "layers"], ["commits", "key"]].forEach(function(o){
+        pick(o[0], "fn-count-" + o[0], function(){ return C.counts[o[0]]; }, function(v){ C.counts[o[0]] = v; },
+          [["icon", "the glyph and the number", "icon"], ["word", "the number and what it counts, in words", "words"], ["off", "not counted in the title", "off"]],
+          function(x){ return x[0] === "icon" ? S.icon(o[1], 15) : x[0] === "word" ? labIco("ton", 15) : labIco("toff", 15); }); }); });
+    group("title", "block title", "glyph " + (B.icon ? "on" : "off") + " · file " + B.file + " · count " + B.count + " · where " + B.via,
+      "what a function's title carries — the chips' box, fill and size are the look's", function(){
+      pick("glyph", "fn-bk-icon", function(){ return B.icon; }, function(v){ B.icon = v; },
+        [[1, "the function glyph opens the line", "on"], [0, "no glyph", "off"]], function(o){ return o[0] ? S.icon("function", 15) : labIco("eyeoff", 15); }, "blocks");
+      pick("role", "fn-bk-role", function(){ return B.role; }, function(v){ B.role = v; },
+        [[1, "the ACC · CALL · GATE · PURE chip stays", "on"], [0, "no chip — the marks and the card still carry it", "off"]], function(o){ return o[0] ? labIco("eye", 15) : labIco("eyeoff", 15); }, "blocks");
+      pick("name", "fn-bk-name", function(){ return B.name; }, function(v){ B.name = v; },
+        [[1, "the function's name", "on"], [0, "no name", "off"]], function(o){ return o[0] ? labIco("ton", 15) : labIco("toff", 15); }, "blocks");
+      pick("file", "fn-bk-file", function(){ return B.file; }, function(v){ B.file = v; },
+        [["word", "its last two folders, in words", "the words"], ["icon", "the file glyph alone", "the glyph"], ["both", "glyph and words", "both"], ["off", "not on the line", "off"]],
+        function(o){ return o[0] === "icon" ? S.icon("file", 15) : o[0] === "word" ? labIco("ton", 15) : o[0] === "both" ? labIco("tauto", 15) : labIco("toff", 15); }, "blocks");
+      pick("size", "fn-bk-count", function(){ return B.count; }, function(v){ B.count = v; },
+        [["words", "\"71 lines\"", "in words"], ["badge", "the number in a badge, ringed red over 50", "a badge"], ["off", "not on the line", "off"]],
+        function(o){ return o[0] === "words" ? labIco("ton", 15) : o[0] === "badge" ? labIco("sh-pill", 15) : labIco("toff", 15); }, "blocks");
+      pick("where", "fn-bk-via", function(){ return B.via; }, function(v){ B.via = v; },
+        [["word", "\"the handler\", or its hop and who calls it", "the words"], ["icon", "the glyph alone", "the glyph"], ["both", "glyph and words", "both"], ["off", "not on the line", "off"]],
+        function(o){ return o[0] === "icon" ? S.icon("link", 15) : o[0] === "word" ? labIco("ton", 15) : o[0] === "both" ? labIco("tauto", 15) : labIco("toff", 15); }, "blocks");
+      box.append(el("div", { class: "cfread" }, "the chip box, fill and size · the pill colour · the marks · the block edge come from the look — Data's, unless looks is own.")); });
+    group("lines", "title lines", B.rows.filter(function(r){ return r.l.length || r.r.length; }).length + " line(s) in use",
+      "drag a part to another line · click it to size it", function(){
+      titleLines(K, B, window.FNPART || [], "fnpart", window.moveFnPart, { role: "rw", count: "count" }, fnLook, function(){ window.showTab("functions"); }, drawFnCfg, "a function"); });
+    group("foot", "footer row", "hint | marks commit inferred · " + C.footShow.join(" "),
+      "the row under the blocks — which of icon · label · count each part shows", function(){ footSwitches(K, C, "fn-foot-show", redraw); });
+  }
+  window.drawFnCfg = drawFnCfg;
+  window.moveFnPart = function(key, line, side, idx){ var B = FNCFG.bk;
+    B.rows = B.rows.map(function(r){ return { l: r.l.filter(function(k){ return k !== key; }), r: r.r.filter(function(k){ return k !== key; }) }; });
+    while (B.rows.length <= line) B.rows.push({ l: [], r: [] });
+    var col = B.rows[line][side === "r" ? "r" : "l"];
+    col.splice(Math.max(0, Math.min(idx == null ? col.length : idx, col.length)), 0, key);
+    B.sel = key; window.showTab("functions"); drawFnCfg(); };
   function dirColOf(d){ var m = SCHCFG.map.dirCol; return m === "schema" ? S.KINDCOL.schema : m === "neutral" ? "#8794ab" : (d === "in" ? S.OPC.read : S.OPC.write); }
   function drawSchCfg(){ var box = document.getElementById("schcfg"); if (!box) return; box.innerHTML = "";
     var C = SCHCFG, B = C.bk, live = (window.PANELVAR && window.PANELVAR("schemas")) || "blocks";
@@ -1772,6 +1999,21 @@
         + " · map blocks " + C.map.blocks + ", nested " + C.map.nestKind + ", colour " + C.map.dirCol + ", looks " + C.map.looks
         + (C.map.looks === "own" && C.look ? " (" + C.look.sqEnc + " " + C.look.sqSize + "px by " + C.look.sqPal + ", pills " + C.look.pillInk + " on " + C.look.pillBg + " " + C.look.pillAlpha
           + "%, chips " + C.look.bk.rwBox + " " + C.look.bk.rwA + "%, edge " + C.look.bk.railSide + " " + C.look.bk.railW + "px)" : ""); },
+    functions: function(){ var C = FNCFG, B = C.bk, M = C.map, SEC = ["title", "note", "legend"];
+      var drawn = SEC.filter(function(k){ return C.show[k]; }), hidden = SEC.filter(function(k){ return !C.show[k]; });
+      return "functions · shown as " + ((window.PANELVAR && window.PANELVAR("functions")) || "blocks")
+        + " · roles " + (FNROLEWORDS.filter(function(r){ return C.role[r]; }).join("+") || "none")
+        + " · title counts functions " + C.counts.functions + ", levels " + C.counts.levels + ", commits " + C.counts.commits
+        + " · sort " + C.sort + (C.sortRev ? " reversed" : "")
+        + " · block " + B.form + " (glyph " + (B.icon ? "on" : "off") + ", chip " + (B.role ? "on" : "off") + ", name " + (B.name ? "on" : "off")
+        + ", file " + B.file + ", count " + B.count + ", where " + B.via + ")"
+        + " · lines " + B.rows.map(function(r){ return (r.l.join(" ") || "—") + " | " + (r.r.join(" ") || "—"); }).join(" / ")
+        + " · sizes " + Object.keys(B.size).map(function(k){ return k + " " + B.size[k]; }).join(" ")
+        + " · footer " + C.footShow.join(" ")
+        + " · drawn " + (drawn.join(" ") || "nothing") + (hidden.length ? " · hidden " + hidden.join(" ") : "")
+        + " · map pieces " + M.pieces + ", handler " + M.handler + ", roles " + M.roleCol + ", inferred " + M.inferred + ", looks " + M.looks
+        + (M.looks === "own" && C.look ? " (" + C.look.sqEnc + " " + C.look.sqSize + "px by " + C.look.sqPal + ", pills " + C.look.pillInk + " on " + C.look.pillBg + " " + C.look.pillAlpha
+          + "%, chips " + C.look.bk.rwBox + " " + C.look.bk.rwA + "%, edge " + C.look.bk.railSide + " " + C.look.bk.railW + "px)" : ""); },
     frame: function(){ function ln(w, st){ return w === 0 || st === "none" ? "none" : w + "px " + st; }
       return "frame · bench outline " + ln(FRAME.benchW, FRAME.benchS)
         + " · head bar " + FRAME.headH + "px, outline " + ln(FRAME.headBw, FRAME.headBs) + ", divider " + ln(FRAME.headDivW, FRAME.headDivS) + ", gap " + FRAME.headGap + "px"
@@ -1798,10 +2040,12 @@
   document.getElementById("blk-data").querySelector(".bhl").append(copyBtn("data", "which sections the Data panel draws, and how"));
   document.getElementById("blk-schemas").querySelector(".bhi").innerHTML = S.icon("schema", 13, "var(--accent)");
   document.getElementById("blk-schemas").querySelector(".bhl").append(copyBtn("schemas", "which sections the Schemas panel draws, and how"));
+  document.getElementById("blk-functions").querySelector(".bhi").innerHTML = S.icon("function", 13, "var(--accent)");
+  document.getElementById("blk-functions").querySelector(".bhl").append(copyBtn("functions", "which sections the Functions panel draws, and how"));
   /* THE RAIL OPENS ON ONE REGION (operator 2026-09-12): every block folds away except the one being
      worked on. Moving to the next region is this one line. */
-  var OPENBLK = window.OPENBLK = "blk-schemas";   /* the region being worked on (operator 2026-09-13: Schemas, next) */
-  ["blk-bench", "blk-head", "blk-tabs", "blk-frame", "blk-data", "blk-schemas", "blk-parts"].forEach(function(id){
+  var OPENBLK = window.OPENBLK = "blk-functions";   /* the region being worked on (operator 2026-09-13: Functions, next) */
+  ["blk-bench", "blk-head", "blk-tabs", "blk-frame", "blk-data", "blk-schemas", "blk-functions", "blk-parts"].forEach(function(id){
     foldable(id); if (id !== OPENBLK) document.getElementById(id).classList.add("min"); });
   document.getElementById("blk-head").querySelector(".bhi").innerHTML = labIco("bars", 13, "var(--accent)");
   document.getElementById("blk-head").querySelector(".bhl").append(copyBtn("head", "the head bar's verbosity, piles and order"));
@@ -1838,6 +2082,7 @@
     if (window.applyData) window.applyData();
     if (window.drawDataCfg && k === "data") window.drawDataCfg();   /* which sections THIS distribution draws */
     if (window.drawSchCfg && k === "schemas") window.drawSchCfg();
+    if (window.drawFnCfg && k === "functions") window.drawFnCfg();
     drawPortrait();
     readBox(); }
   /* THE PORTRAIT (operator 2026-09-12): a panel publishes `portrait(box, F, S)` and the stage draws it
@@ -1914,7 +2159,7 @@
       try { v.render(ghost, F, S); } catch (e) { console.warn("prewalk " + k + "/" + v.key, e); } }); });
     ghost.remove(); })();
 
-  drawTabs(); drawTabCfg(); applyFrame(); drawFrameCfg(); applyData(); drawDataCfg(); drawSchCfg();
+  drawTabs(); drawTabCfg(); applyFrame(); drawFrameCfg(); applyData(); drawDataCfg(); drawSchCfg(); drawFnCfg();
   var first = (location.hash || "#data").slice(1); show(order.indexOf(first) >= 0 ? first : "data");
   window.__eplabReady = true;
 })();
