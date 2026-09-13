@@ -68,7 +68,7 @@ ok(await p.evaluate(() => window.COPYTXT.data()) ===
    'data · shown as blocks · tables all · title counts tables icon, fields icon, ops icon · sort channel, icon, accent on panel 45% · pills each, shape pill, text ink, ground kind 15%'
    + ' · block block (icon on model, chip on, name on, entity both, count badge, model both) · edge left solid 2px · chips count pill 100%, channel pill 90%'
    + ' · lines icon name | — / ent | count rw / model | — · sizes icon 13 rw 11 name 13 ent 12 count 11 model 12'
-   + ' · squares 14px gap 4 round as symbol by type, optional marked, unique corners both, arms 40% 1.5px tip 10%, standard 100% optional 50% · footer hint | id text num flag time list other opt, icon text count · grounds by size, width flex, tiles stack'
+   + ' · squares 14px gap 4 round as symbol by type, optional marked, unique corners both, arms 40% 1.5px tip 10%, standard 100% optional 50% · footer hint | id text num flag time list other opt, icon count · grounds by size, width flex, tiles stack'
    + ' · drawn counts shapes rw commit ev mdl ents legend · hidden title note',
    'the data panel boots on the operator\'s default line', await p.evaluate(() => window.COPYTXT.data()));
 
@@ -756,6 +756,60 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   await p.click('#portvars .ptv[data-pvar="record"]'); await p.waitForTimeout(200);
   await p.evaluate(() => window.selectIn('data', null)); await p.mouse.move(5, 1030); await p.waitForTimeout(220); }
 
+// ══ THE RECORD (operator 2026-09-13): the portrait's record mirrors the block card — the table glyph and its name, then
+//    icon · label · value rows (the class explains itself on an info icon), then the fields as a table with named
+//    columns — fields · foreign keys · data type — drawn in the blocks' own field marks ══
+{ await p.evaluate(() => { window.showTab('data'); window.showVariant('data', 'blocks'); }); await p.waitForTimeout(260);
+  const TBL = F.data.tables, pk = TBL.find(t => (t.uqs || []).length && (t.fks || []).length) || TBL[0];
+  await p.evaluate(n => window.selectIn('data', n), pk.table); await p.waitForTimeout(320);
+  await p.click('#portvars .ptv[data-pvar="record"]'); await p.waitForTimeout(240);
+  const rec = await p.evaluate(name => { const b = document.querySelector('#portbody .ptrec'); if (!b) return null;
+    const tmp = document.createElement('div'); tmp.innerHTML = window.BLOCKCARD(window.LABEP.data.tables.find(t => t.table === name), window.STATION);
+    const g = b.querySelector('.rchd svg'), cg = tmp.querySelector('.bchd svg');
+    return { name: (b.querySelector('.rchd b') || {}).textContent, glyph: g ? g.getAttribute('stroke') : null, cardGlyph: cg ? cg.getAttribute('stroke') : null, text: b.innerText,
+      rows: [...b.querySelectorAll('.rcrow')].map(r => ({ k: r.dataset.row, label: (r.querySelector('.k') || {}).textContent, icon: !!r.querySelector('.rci svg'), v: (r.querySelector('.v') || {}).textContent, info: !!r.querySelector('.rcinfo svg') })),
+      heads: [...b.querySelectorAll('.rctab .rcth > span')].map(s => s.firstChild ? s.firstChild.textContent.trim() : ''), fp: (b.querySelector('.rctab .rcth .rcfp') || {}).textContent }; }, pk.table);
+  ok(rec && rec.name === pk.table && rec.glyph && rec.glyph === rec.cardGlyph, 'the record opens like the block card — the table glyph in the same colour, then its name', JSON.stringify(rec && { n: rec.name, g: rec.glyph, c: rec.cardGlyph }));
+  ok(rec && rec.rows.map(r => r.k).join(',') === 'entity,model,file,channel' && rec.rows.every(r => r.icon && r.label === r.k), 'then one row per fact, each led by its icon and its label — entity · model · file · channel', JSON.stringify(rec && rec.rows));
+  { const m = rec && rec.rows.find(r => r.k === 'model');
+    ok(m && m.v === pk.model && m.info && !/python class/i.test(rec.text), 'the model row is just the class — the explanation waits on an info icon at its end', JSON.stringify(m)); }
+  ok(rec && !/\binside\b/i.test(rec.text) && !/foreign keys\s*\n?\s*\w+\s*→/i.test(rec.text.split('FIELDS')[0] || ''), 'no INSIDE row and no FOREIGN KEYS row above the fields — the table carries both', JSON.stringify(rec && rec.rows.map(r => r.k)));
+  await p.mouse.move(5, 1030); await p.waitForTimeout(120); await p.hover('#portbody .rcrow[data-row="model"] .rcinfo'); await p.waitForTimeout(260);
+  ok(/python class/i.test(await p.evaluate(() => document.getElementById('hover').innerText)), 'hovering that info icon says what the class is');
+  await p.mouse.move(5, 1030); await p.waitForTimeout(120);
+  ok(rec && rec.heads.join(',') === 'fields,foreign keys,data type' && +rec.fp === pk.cols.length, 'the fields sit in a table with named columns — fields (with the count) · foreign keys · data type', JSON.stringify(rec && { h: rec.heads, fp: rec.fp }));
+  { const al = await p.evaluate(() => { const hd = document.querySelector('#portbody .rctab .rcth'), hk = hd.querySelector('.c-k').getBoundingClientRect().left, ht = hd.querySelector('.c-t').getBoundingClientRect().right;
+      return [...document.querySelectorAll('#portbody .rctab .fld')].map(r => ({ k: Math.round(r.querySelector('.c-k').getBoundingClientRect().left - hk), t: Math.round(r.querySelector('.c-t').getBoundingClientRect().right - ht), key: !!r.querySelector('.c-k .fkx'), stray: !!r.querySelector('.c-f .fkx') })); });
+    ok(al.length === pk.cols.length && al.every(x => Math.abs(x.k) <= 1 && Math.abs(x.t) <= 1), 'every row keeps to those columns — keys under their head, data types under theirs', JSON.stringify(al.slice(0, 4)));
+    ok(al.some(x => x.key) && al.every(x => !x.stray), 'and a key sits in the FOREIGN KEYS column, never beside the name', JSON.stringify(al.filter(x => x.key).length)); }
+  // the marks: the blocks' size, the optional stop, the unique corners — and they follow the dials
+  const marks = () => p.evaluate(() => { const a = [...document.querySelectorAll('#portbody .rctab .sq')], op = e => +(+getComputedStyle(e).opacity).toFixed(2);
+    return { size: [...new Set(a.map(e => Math.round(e.getBoundingClientRect().height)))], std: [...new Set(a.filter(e => !e.classList.contains('opt')).map(op))],
+      opt: [...new Set(a.filter(e => e.classList.contains('opt')).map(op))], uq: a.filter(e => e.classList.contains('uq')).map(e => [getComputedStyle(e, '::before').content, getComputedStyle(e, '::after').content]) }; });
+  { const m = await marks(), sz = await p.evaluate(() => window.DATACFG.sqSize);
+    ok(m.size.length === 1 && m.size[0] === sz, 'the field marks are drawn at the blocks\' size', JSON.stringify({ size: m.size, sz }));
+    ok(m.std.join() === '1' && m.uq.length > 0 && m.uq.every(c => c[0] === '""' && c[1] === '""'), 'standard marks solid, and every unique field wears the corners', JSON.stringify(m)); }
+  const optT = await p.evaluate(() => { for (const t of window.LABEP.data.tables) { window.selectIn('data', t.table); if (document.querySelector('#portbody .rctab .sq.opt')) return t.table; } return null; });
+  { const m = await marks(); ok(optT && m.opt.join() === '0.5', 'an optional field sits at the optional stop — 50%', JSON.stringify({ optT, opt: m.opt })); }
+  await p.evaluate(() => { Object.assign(window.DATACFG, { sqOptA: 30, sqSize: 18 }); window.applyData(); }); await p.waitForTimeout(200);
+  { const m = await marks(); ok(m.opt.join() === '0.3' && m.size.join() === '18', 'and the record follows the dials live — optional to 30%, size to 18px', JSON.stringify(m)); }
+  await p.evaluate(n => { window.selectIn('data', n); Object.assign(window.DATACFG, { sqUqMark: 'none' }); window.applyData(); }, pk.table); await p.waitForTimeout(220);
+  { const m = await marks(); ok(m.uq.length > 0 && m.uq.every(c => c[0] === 'none' && c[1] === 'none'), 'UNIQUE MARK none clears the corners here too', JSON.stringify(m.uq)); }
+  await p.evaluate(() => { Object.assign(window.DATACFG, { sqOptA: 50, sqSize: 14, sqUqMark: 'corners' }); window.applyData(); }); await p.waitForTimeout(200);
+  // nothing cut, nothing past the edge — on every table
+  const cuts = await p.evaluate(() => { const out = [];
+    for (const t of window.LABEP.data.tables) { window.selectIn('data', t.table); const b = document.querySelector('#portbody .ptrec');
+      if (!b) { out.push(t.table + ' no record'); continue; }
+      if (b.scrollWidth > b.clientWidth + 1) out.push(t.table + ' overflows ' + b.scrollWidth + '>' + b.clientWidth);
+      b.querySelectorAll('.rctab .rcth > span').forEach(s => { const r = document.createRange(); r.selectNodeContents(s.firstChild || s);
+        const tops = new Set([...r.getClientRects()].map(x => Math.round(x.top))); if (tops.size > 1) out.push(t.table + ' head "' + s.firstChild.textContent.trim() + '" wraps'); });
+      b.querySelectorAll('.rctab .fld .fn, .rctab .fld .ft').forEach(n => { const m = document.createElement('span'); m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap';
+        m.style.font = getComputedStyle(n).font; m.textContent = n.textContent; document.body.append(m); const w = m.getBoundingClientRect().width; m.remove();
+        if (w > n.getBoundingClientRect().width + 0.05) out.push(t.table + '.' + n.textContent); }); }
+    return out; });
+  ok(cuts.length === 0, 'across every table, no field name or type is cut, no column head wraps, and nothing runs past the portrait', JSON.stringify(cuts.slice(0, 6)));
+  await p.evaluate(() => window.selectIn('data', null)); await p.mouse.move(5, 1030); await p.waitForTimeout(220); }
+
 // ══ THE FOOTER ROW (operator 2026-09-13): ordered like the title lines — one row, a left and a right column — each part
 //    shown as icon · text · both, and each kind's card leading with the mark ACTUALLY drawn, in its colour ══
 { await p.evaluate(() => { window.FOLDS.foot = 1; window.showTab('data'); window.showVariant('data', 'blocks'); window.drawDataCfg(); }); await p.waitForTimeout(320);
@@ -788,10 +842,12 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   const face = () => p.$eval('#panel .bkfoot .ftp[data-part="id"]', e => { const v = s => { const n = e.querySelector(s); return !!n && getComputedStyle(n).display !== 'none'; };
     return { icon: v('.fti'), word: v('.ftw'), count: v('.ftn'), w: (e.querySelector('.ftw') || {}).textContent, n: (e.querySelector('.ftn') || {}).textContent }; });
   const showCfg = () => p.evaluate(() => window.DATACFG.footShow.join(','));
-  { const f = await face(); ok(f.icon && f.word && f.count, 'the parts boot as icon, label AND count', JSON.stringify(f));
+  { const f = await face(); ok(f.icon && !f.word && f.count, 'the parts boot as icon + count — the operator\'s default', JSON.stringify(f));
     ok(f.w === 'id' && +f.n === ids, 'the label and the count are separate pieces — "id" and how many ids', JSON.stringify({ f, ids })); }
-  ok(await p.$$eval('#datacfg .ib[data-foot-show]', els => els.map(e => e.dataset.footShow).join(',') === 'icon,text,count' && els.every(e => e.classList.contains('on') && !!e.querySelector('svg'))),
-     'the rail offers three icon switches — icon · label · count — all on');
+  ok(await p.$$eval('#datacfg .ib[data-foot-show]', els => els.map(e => e.dataset.footShow + (e.classList.contains('on') ? '+' : '-')).join(',') === 'icon+,text-,count+' && els.every(e => !!e.querySelector('svg'))),
+     'the rail offers three icon switches — icon · label · count — with icon and count on');
+  await p.click('#datacfg .ib[data-foot-show="text"]'); await p.waitForTimeout(260);
+  { const f = await face(); ok(f.icon && f.word && f.count, 'LABEL on brings the words back between icon and count', JSON.stringify(f)); }
   await p.click('#datacfg .ib[data-foot-show="text"]'); await p.waitForTimeout(260);
   { const f = await face(); ok(f.icon && !f.word && f.count, 'LABEL off leaves each icon with its count', JSON.stringify(f)); }
   { const o = await p.$eval('#panel .bkfoot .ftp[data-part="opt"]', e => ({ n: (e.querySelector('.ftn') || {}).textContent, shown: !!e.querySelector('.ftn') && getComputedStyle(e.querySelector('.ftn')).display !== 'none' }));
@@ -807,6 +863,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   await p.click('#datacfg .ib[data-foot-show="icon"]'); await p.waitForTimeout(260);
   { const f = await face(); ok(!f.icon && f.word && f.count, 'and the icon can go too — label and count alone', JSON.stringify(f)); }
   await p.click('#datacfg .ib[data-foot-show="icon"]'); await p.waitForTimeout(260);
+  await p.click('#datacfg .ib[data-foot-show="text"]'); await p.waitForTimeout(260);   // back to the default: icon + count
   // THE CARD shows the mark actually drawn, in its kind's colour
   const cardFor = async kind => { await p.mouse.move(5, 1030); await p.waitForTimeout(130); await p.hover(`#panel .bkfoot .ftp[data-part="${kind}"]`); await p.waitForTimeout(260);
     return p.evaluate(k => { const h = document.getElementById('hover'), mk = h.querySelector('.cphd .cpmark .sq'), foot = document.querySelector(`#panel .bkfoot .ftp[data-part="${k}"] .fti .sq`);
@@ -824,7 +881,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   { const c = await cardFor('time');
     ok(/e-char/.test(c.markCls || '') && c.markText === c.footText && c.markText === 'T', 'with the encoding switched to characters, the card follows — the time card leads with "T"', JSON.stringify(c)); }
   await p.evaluate(() => { window.DATACFG.sqEnc = 'symbol'; window.applyData(); window.showTab('data'); }); await p.waitForTimeout(300);
-  ok(/footer hint \| id text num flag time list other opt, icon text count/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line names the footer row');
+  ok(/footer hint \| id text num flag time list other opt, icon count/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line names the footer row');
   await p.evaluate(() => { window.FOLDS.foot = 0; window.drawDataCfg(); }); await p.mouse.move(5, 1030); await p.waitForTimeout(200); }
 
 // ══ FIELD-MARK OPACITY + THE UNIQUE CORNERS (operator 2026-09-13): two opacity stops — optional, and standard, which a

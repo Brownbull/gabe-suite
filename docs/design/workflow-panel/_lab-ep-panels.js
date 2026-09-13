@@ -938,23 +938,34 @@
     var ec = t.entity_color || "#888";
     var fkSet = {}; (t.fks || []).forEach(function(f){ fkSet[Array.isArray(f) ? f[0] : f] = (Array.isArray(f) && f[1]) ? f[1] : true; });
     var uqSet = {}; (t.uqs || []).forEach(function(u){ (Array.isArray(u) ? u : [u]).forEach(function(c){ uqSet[c] = 1; }); });
-    var mix = {}; t.cols.forEach(function(c){ var k = typeOf(c[1]).key; mix[k] = (mix[k] || 0) + 1; });
-    var b = E("div", { class: "ptbody" });
-    function row(k, v, col){ b.append(E("div", { class: "ptrow" }, E("span", { class: "k" }, k),
-      E("span", { class: "v", style: col ? "color:" + col : null }, v))); }
-    row("table", t.table, ec);
-    row("entity", t.entity || "—", ec);
-    row("channel", t.rw === "rw" ? "read + write" : t.rw === "w" ? "write" : "read", RWC[t.rw]);
-    row("model", t.model + " — the Python class that maps to this table");
-    row("file", t.file || "—");
-    row("inside", TYPEC.filter(function(x){ return mix[x.key]; }).map(function(x){ return mix[x.key] + " " + x.word; }).join(" · "));
-    if ((t.fks || []).length) row("foreign keys", t.fks.map(function(f){ return Array.isArray(f) ? f[0] + " → " + f[1] : f; }).join(" · "));
-    if ((t.uqs || []).length) row("unique", t.uqs.map(function(u){ return Array.isArray(u) ? u.join(" + ") : u; }).join(" · "));
-    b.append(E("div", { class: "ptsec" }, "every field"));
-    var list = E("div", { class: "flds" });
+    /* THE RECORD (operator 2026-09-13) — the block card with room for more: the table glyph and its name; then one row
+       per fact, each led by its icon and its label (the class explains itself on an info icon, not in words); then every
+       field in a table with named columns — fields · foreign keys · data type — drawn in the field marks set for the
+       blocks: their size, the optional stop, the unique corners. What the table is made of is not repeated above it,
+       and neither are its keys or its unique columns: the table below carries all three. */
+    var b = E("div", { class: "ptbody ptrec" });
+    b.append(E("div", { class: "rchd" }, E("span", { class: "rci" }, ico("model", 18, bkIconCol(t, S))), E("b", null, esc(t.table))));
+    function row(key, icon, value, info){
+      var r = E("div", { class: "rcrow", "data-row": key }, E("span", { class: "rci" }, icon), E("span", { class: "k" }, key), value);
+      if (info) { var i = E("span", { class: "rcinfo" }, ico("info", 13, "currentColor")); bind(i, info); r.append(i); }
+      b.append(r); }
+    row("entity", ico("entity", 14, ec), E("span", { class: "v", style: "color:" + ec }, esc(t.entity || "—")));
+    row("model", ico("doc", 14, S.KINDCOL.schema), E("span", { class: "v" }, esc(t.model)),
+      card({ title: t.model, icon: "doc", color: S.KINDCOL.schema, sub: "the model",
+        rows: [["maps", "the table " + t.table], ["lives in", String(t.file || "—")]],
+        body: "the Python class that maps to this table — each row of the table is one instance of it." }));
+    row("file", ico("file", 14, "var(--muted)"), E("span", { class: "v" }, esc(t.file || "—")));
+    row("channel", ico("role", 14, S.OPC.call),
+      E("span", { class: "v" }, E("i", { class: "rcchip", style: chipLook(t.rw, S) }, t.rw === "rw" ? "reads + writes" : t.rw === "w" ? "writes" : "reads")));
+    var list = E("div", { class: "flds rctab", style: "--ec:" + ec });
+    list.append(E("div", { class: "rcth" },
+      E("span", { class: "c-f" }, "fields", E("i", { class: "rcfp", style: pillLook("fields", S) }, String(t.cols.length))),
+      E("span", { class: "c-k" }, "foreign keys"), E("span", { class: "c-t" }, "data type")));
     t.cols.forEach(function(c){ var tc = typeOf(c[1]), isFk = fkSet[c[0]], isUq = uqSet[c[0]];
       var f = E("div", { class: "fld" + (isFk ? " fk" : "") + (isUq ? " uq" : "") },
-        sqNode(c, t, S), E("span", { class: "fn" }, esc(c[0])), fkMarks(t, c[0]), E("span", { class: "ft" }, esc(c[1] || "—")));
+        E("span", { class: "c-f" }, sqNode(c, t, S, (isFk ? "fk" : "") + (isUq ? " uq" : "")), E("span", { class: "fn" }, esc(c[0]))),
+        E("span", { class: "c-k" }, fkMarks(t, c[0])),
+        E("span", { class: "c-t ft" }, esc(c[1] || "—")));
       bind(f, card({ title: c[0], sub: String(c[1] || "—"), icon: isFk ? "key" : "table", color: tc.col(S),
         rows: [["kind", tc.word + " — " + tc.plain], ["in", t.table],
                isFk ? ["points at", "→ " + (isFk === true ? "another table" : isFk)] : null,

@@ -684,7 +684,7 @@
     sqUqAt: "both", sqUqFlip: 0,                        /* which corners: top-right · bottom-left · both; mirrored = top-left / bottom-right */
     sqUqLen: 40, sqUqW: 1.5, sqUqTip: 10,              /* an arm's length (% of the side) · width at the corner (px) · width at its tip (% of the corner's) */
     foot: { l: ["hint"], r: ["id", "text", "num", "flag", "time", "list", "other", "opt"] },   /* the row under the blocks */
-    footShow: ["icon", "text", "count"] };   /* each part's pieces, any combination, never none */
+    footShow: ["icon", "count"] };   /* each part's pieces — icon · text · count, any combination, never none */
   var DSEC = [
     { key: "title",  word: "the title",   icon: "layers", on: ["grounds", "flow", "ledger", "fields", "blocks"],
       what: "the part's own name and glyph, left of the counts", lost: "which part you are looking at; the counts and the switches stay" },
@@ -727,6 +727,11 @@
     pn.style.setProperty("--uq-len", String(DATACFG.sqUqLen / 100));
     pn.style.setProperty("--uq-w", DATACFG.sqUqW + "px");
     pn.style.setProperty("--uq-tip", (DATACFG.sqUqW * DATACFG.sqUqTip / 100) + "px");
+    /* the portrait's RECORD draws its fields in the same marks (operator 2026-09-13) — mirror the classes and variables */
+    var po = document.getElementById("port");
+    if (po) {
+      ["sq-noopt", "uqm-corners", "uqc-top-right", "uqc-bottom-left", "uqc-both", "uqc-flip"].forEach(function(k){ po.classList.toggle(k, pn.classList.contains(k)); });
+      ["--sq", "--sq-base", "--sq-opt-a", "--uq-len", "--uq-w", "--uq-tip"].forEach(function(v){ po.style.setProperty(v, pn.style.getPropertyValue(v)); }); }
     [].forEach.call(document.querySelectorAll("#sqscale i[data-stop]"), function(m){
       var v = m.dataset.stop === "opt" ? sqLo : sqStd; m.style.left = v + "%"; m.title = v + "%";
       m.classList.toggle("edge-l", v <= 12); m.classList.toggle("edge-r", v >= 88); });

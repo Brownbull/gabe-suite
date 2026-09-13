@@ -1053,9 +1053,9 @@ html, body{ height:100%; }
 /* ══ FIELD-MARK OPACITY (operator 2026-09-13) — one opacity bar with two stops: optional, and standard, which a unique
    field shares (its corners mark it, not its opacity). Scoped to the blocks' own marks; legends and cards draw kinds at
    full strength. ══ */
-#panel .blk .sq{ opacity:var(--sq-base, 1); }
-#panel .blk .sq.opt{ opacity:var(--sq-opt-a, .5); }
-#panel.sq-noopt .blk .sq.opt{ opacity:var(--sq-base, 1); }
+:is(#panel .blk, #port .rctab) .sq{ opacity:var(--sq-base, 1); }
+:is(#panel .blk, #port .rctab) .sq.opt{ opacity:var(--sq-opt-a, .5); }
+:is(#panel.sq-noopt .blk, #port.sq-noopt .rctab) .sq.opt{ opacity:var(--sq-base, 1); }
 /* the rail's bar: the two stops drawn where they sit */
 #datacfg .sqscale{ position:relative; height:30px; margin:4px 6px 0; cursor:help;
   background:linear-gradient(90deg, color-mix(in srgb, var(--accent) 8%, transparent), var(--accent)) center 9px / 100% 4px no-repeat; }
@@ -1074,16 +1074,16 @@ html, body{ height:100%; }
    out), --uq-w wide at the corner narrowing to --uq-tip at the ends — equal widths give a straight line, a zero tip a
    triangle. A transform turns that one L into each corner: ::before is top-right (mirrored: top-left), ::after is
    bottom-left (mirrored: bottom-right). ══ */
-#panel .blk .sq.uq{ position:relative; box-shadow:none; }
-#panel .blk .sq.uq::before, #panel .blk .sq.uq::after{ content:none; position:absolute; pointer-events:none; background:var(--accent);
+:is(#panel .blk, #port .rctab) .sq.uq{ position:relative; box-shadow:none; }
+:is(#panel .blk, #port .rctab) .sq.uq::before, :is(#panel .blk, #port .rctab) .sq.uq::after{ content:none; position:absolute; pointer-events:none; background:var(--accent);
   width:calc((100% + 6px) * var(--uq-len, .4)); height:calc((100% + 6px) * var(--uq-len, .4));
   clip-path:polygon(0 0, 100% 0, 100% 100%, calc(100% - var(--uq-tip, 1.5px)) 100%, calc(100% - var(--uq-w, 1.5px)) var(--uq-w, 1.5px), 0 var(--uq-tip, 1.5px)); }
-#panel .blk .sq.uq::before{ top:-3px; right:-3px; }
-#panel .blk .sq.uq::after{ bottom:-3px; left:-3px; transform:scale(-1, -1); }
-#panel.uqc-flip .blk .sq.uq::before{ right:auto; left:-3px; transform:scaleX(-1); }
-#panel.uqc-flip .blk .sq.uq::after{ left:auto; right:-3px; transform:scaleY(-1); }
-#panel.uqm-corners.uqc-top-right .blk .sq.uq::before, #panel.uqm-corners.uqc-both .blk .sq.uq::before,
-#panel.uqm-corners.uqc-bottom-left .blk .sq.uq::after, #panel.uqm-corners.uqc-both .blk .sq.uq::after{ content:""; }
+:is(#panel .blk, #port .rctab) .sq.uq::before{ top:-3px; right:-3px; }
+:is(#panel .blk, #port .rctab) .sq.uq::after{ bottom:-3px; left:-3px; transform:scale(-1, -1); }
+:is(#panel.uqc-flip .blk, #port.uqc-flip .rctab) .sq.uq::before{ right:auto; left:-3px; transform:scaleX(-1); }
+:is(#panel.uqc-flip .blk, #port.uqc-flip .rctab) .sq.uq::after{ left:auto; right:-3px; transform:scaleY(-1); }
+:is(#panel.uqm-corners.uqc-top-right .blk, #panel.uqm-corners.uqc-both .blk, #port.uqm-corners.uqc-top-right .rctab, #port.uqm-corners.uqc-both .rctab) .sq.uq::before,
+:is(#panel.uqm-corners.uqc-bottom-left .blk, #panel.uqm-corners.uqc-both .blk, #port.uqm-corners.uqc-bottom-left .rctab, #port.uqm-corners.uqc-both .rctab) .sq.uq::after{ content:""; }
 /* the rail's corner icons: accent L's — but an ON button is filled with the accent, so there they take its ink */
 #datacfg .ib .uqL{ stroke:var(--accent); }
 #datacfg .ib.on .uqL{ stroke:currentColor; }
@@ -1091,3 +1091,38 @@ html, body{ height:100%; }
 #datacfg .sqscale i[data-stop]{ width:14px; height:14px; margin-left:-7px; top:4px; cursor:grab; touch-action:none; }
 #datacfg .sqscale i[data-stop].drag{ cursor:grabbing; outline:1.5px solid var(--accent); outline-offset:2px; }
 #datacfg .sqscale i[data-stop] b{ top:18px; pointer-events:none; }
+
+/* ══ THE RECORD (operator 2026-09-13) — the portrait's record mirrors the block card: the table glyph and name, then
+   icon · label · value rows (an info icon at the end where a value needs explaining), then the fields as a table with
+   named columns. Its marks take the blocks' field-mark settings, which applyData mirrors onto #port. ══ */
+.ptrec .rchd{ display:flex; align-items:center; gap:9px; padding:2px 0 9px; }
+.ptrec .rchd b{ font:800 15px/1.25 var(--font-mono); color:var(--ink); word-break:break-all; }
+.ptrec .rci{ display:inline-flex; align-items:center; justify-content:center; width:18px; flex:none; }
+.ptrec .rci svg{ display:block; }
+.ptrec .rcrow{ display:flex; align-items:center; gap:8px; padding:5px 0; border-top:1px solid color-mix(in srgb, var(--line) 50%, transparent);
+  font:600 12px/1.4 var(--font-mono); }
+.ptrec .rcrow .k{ flex:none; width:62px; font-weight:700; color:var(--muted); }
+.ptrec .rcrow .v{ flex:1; min-width:0; color:var(--ink); word-break:break-word; }
+.ptrec .rcrow[data-row="file"] .v{ color:var(--muted); word-break:break-all; }
+.ptrec .rcinfo{ flex:none; display:inline-flex; margin-left:auto; color:var(--edge, var(--muted)); cursor:help; }
+.ptrec .rcinfo:hover{ color:var(--ink); }
+.ptrec .rcchip{ display:inline-flex; align-items:center; font:700 12px/1 var(--font-mono); font-style:normal; padding:3px 8px; border:1px solid transparent; }
+.ptrec .rctab{ margin-top:12px; border-bottom:1px solid color-mix(in srgb, var(--line) 55%, transparent); }
+/* ONE grid for the whole table, and every row borrows its columns (subgrid) — a row sizing its own columns put each
+   row's keys at a different x, measured by the probe */
+/* the keys column never goes narrower than its own head, so FOREIGN KEYS stays one line (it wrapped beside a 26-letter name) */
+.ptrec .rctab{ display:grid; grid-template-columns:max-content minmax(min-content, 1fr) max-content; column-gap:10px; }
+.rctab .rcth, .rctab .fld{ grid-column:1 / -1; display:grid; grid-template-columns:subgrid; align-items:center; gap:normal; }   /* normal = the table's gap; .fld's own flex gap would shift every row 3px */
+.rctab .rcth{ padding:0 8px 6px; font:700 12px/1.3 var(--font-mono); text-transform:uppercase; letter-spacing:0; color:var(--muted); white-space:nowrap; }
+.rctab .rcth .c-f{ display:inline-flex; align-items:center; gap:7px; }
+.rctab .rcfp{ display:inline-flex; align-items:center; font:700 12px/1 var(--font-mono); font-style:normal; letter-spacing:0; padding:2px 8px; border:1px solid; }
+.rctab .c-t{ justify-self:end; }
+.rctab .fld{ padding:5px 8px; }
+.rctab .fld .c-f{ display:flex; align-items:center; gap:9px; min-width:0; }
+.rctab .fld .c-k{ display:flex; align-items:center; gap:6px; min-width:0; }
+.rctab .fld .fn{ flex:0 0 auto; max-width:none; }
+.rctab .fld .fkx{ margin-left:0; }
+.rctab .fld .ft{ margin-left:0; }
+/* a key has its own column now, and unique its own corners — the row's old side bar and dashed underline would say it twice */
+.rctab .fld.fk{ box-shadow:none; }
+.rctab .fld.uq .fn{ border-bottom:0; }
