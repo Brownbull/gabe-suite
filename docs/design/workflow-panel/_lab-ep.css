@@ -1040,11 +1040,11 @@ html, body{ height:100%; }
 .bkfoot .ftp .fti{ display:inline-flex; align-items:center; }
 .bkfoot .ftp .fti svg{ display:block; }
 .bkfoot .ftp .fti .sq{ --sq:11px; }
-.bkfoot .ftp .ftk{ font-weight:600; color:var(--muted); margin-right:6px; }
-.bkfoot .ftp .ftv{ color:var(--ink); }
-.bkfoot .ftopt{ opacity:.45; border-radius:2px; }
-.bkfoot.fshow-icon .ftp .ftw{ display:none; }
-.bkfoot.fshow-text .ftp .fti{ display:none; }
+.bkfoot .ftp .ftn{ font-variant-numeric:tabular-nums; }
+/* the optional mark sits at the optional stop, as the blocks draw it */
+.bkfoot .ftopt{ opacity:var(--sq-opt-a, .5); border-radius:2px; }
+/* icon · label · count: each piece shows only while its switch is on */
+.bkfoot:not(.fs-icon) .ftp .fti, .bkfoot:not(.fs-text) .ftp .ftw, .bkfoot:not(.fs-count) .ftp .ftn{ display:none; }
 #panel[data-tab="data"].dh-legend .bkfoot .ftp:not([data-part="hint"]){ display:none; }
 /* a card header can lead with the mark actually drawn */
 #hover .cphd .cpmark{ display:inline-flex; align-items:center; }

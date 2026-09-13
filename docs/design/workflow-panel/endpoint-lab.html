@@ -682,9 +682,9 @@
     sqBase: 100, sqOptA: 50,                            /* ONE opacity bar, TWO stops: standard (unique shares it) · optional */
     sqUqMark: "corners",                                /* a unique field is marked by its corners, or not at all */
     sqUqAt: "both", sqUqFlip: 0,                        /* which corners: top-right · bottom-left · both; mirrored = top-left / bottom-right */
-    sqUqLen: 40, sqUqW: 1.5, sqUqTip: 100,              /* an arm's length (% of the side) · width at the corner (px) · width at its tip (% of the corner's) */
+    sqUqLen: 40, sqUqW: 1.5, sqUqTip: 10,              /* an arm's length (% of the side) · width at the corner (px) · width at its tip (% of the corner's) */
     foot: { l: ["hint"], r: ["id", "text", "num", "flag", "time", "list", "other", "opt"] },   /* the row under the blocks */
-    footShow: "both" };
+    footShow: ["icon", "text", "count"] };   /* each part's pieces, any combination, never none */
   var DSEC = [
     { key: "title",  word: "the title",   icon: "layers", on: ["grounds", "flow", "ledger", "fields", "blocks"],
       what: "the part's own name and glyph, left of the counts", lost: "which part you are looking at; the counts and the switches stay" },
@@ -1297,9 +1297,9 @@
 
     });
     /* THE FOOTER ROW — the group being tuned now, so it boots OPEN (operator 2026-09-13) */
-    group("foot", "footer row", (DATACFG.foot.l.join(" ") || "—") + " | " + (DATACFG.foot.r.join(" ") || "—") + " · " + DATACFG.footShow,
-      "the row under the blocks — its parts, their order, and whether each shows its icon, its words or both", function(){
-      var FP = [["hint", "the click-a-table hint", function(z){ return S.icon("layers", z); }]]
+    group("foot", "footer row", (DATACFG.foot.l.join(" ") || "—") + " | " + (DATACFG.foot.r.join(" ") || "—") + " · " + DATACFG.footShow.join(" "),
+      "the row under the blocks — its parts, their order, and which of icon · label · count each shows", function(){
+      var FP = [["hint", "the click-a-table hint", function(z){ return S.icon("info", z); }]]
         .concat(["id", "text", "num", "flag", "time", "list", "other"].map(function(k){ return [k, k === "num" ? "number" : k, function(z){ return window.KINDICON(k, z); }]; }))
         .concat([["opt", "optional", function(z){ return '<svg viewBox="0 0 24 24" width="' + z + '" height="' + z + '"><rect x="6" y="6" width="12" height="12" rx="3" fill="currentColor" opacity=".45"/></svg>'; }]]);
       var byKey = {}; FP.forEach(function(x){ byKey[x[0]] = x; });
@@ -1323,11 +1323,22 @@
         return z; }
       box.append(el("div", { class: "cfl" }, "row"),
         el("div", { class: "lnrow" }, el("div", { class: "lnsides" }, zone("l"), el("i", { class: "lnmid" }), zone("r"))));
-      pick("shown as", "footShow", [
-        ["both", "the icon and the words together", "both"],
-        ["icon", "the icon alone — the words live on its card", "icon"],
-        ["text", "the words alone", "text"]],
-        function(o){ return o[0] === "icon" ? S.icon("layers", 15) : labIco(o[0] === "text" ? "ton" : "tauto", 15); });
+      /* SHOWN AS (operator 2026-09-13): three switches that COMBINE — icon · label · count — and the last one on stays on */
+      { var sw = el("div", { class: "ibwrap" }), HASH = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 4 8 20M16 4l-2 16M5 9h15M4 15h15"/></svg>';
+        [["icon", "icon", "the part's icon — a kind's mark exactly as the blocks draw it", window.KINDICON("id", 15)],
+         ["text", "label", "the part's name — the kind's word, or the hint's sentence", labIco("ton", 15)],
+         ["count", "count", "how many fields each kind holds, and how many are optional", HASH]].forEach(function(o){
+          var on = DATACFG.footShow.indexOf(o[0]) >= 0, last = on && DATACFG.footShow.length === 1;
+          var b = el("button", { class: "ib" + (on ? " on" : "") }); b.dataset.footShow = o[0]; b.innerHTML = o[3];
+          hoverBind(b, hcard({ title: o[1], value: on ? (last ? "on — the last one, so it stays on" : "on") : "off", icon: "shape",
+            rows: [["combine", "any of icon · label · count together — at least one stays on"]], plain: o[2] }));
+          b.onclick = function(ev){ ev.stopPropagation(); var s = DATACFG.footShow, i = s.indexOf(o[0]);
+            if (i >= 0 && s.length === 1) return;
+            var next = i >= 0 ? s.filter(function(k){ return k !== o[0]; }) : s.concat([o[0]]);
+            DATACFG.footShow = ["icon", "text", "count"].filter(function(k){ return next.indexOf(k) >= 0; });
+            applyData(); window.showTab("data"); drawDataCfg(); };
+          sw.append(b); });
+        box.append(el("div", { class: "cfl" }, "shown as"), sw); }
     });
     group("grounds", "grounds", "by " + DATACFG.order + " · " + DATACFG.width + " · " + DATACFG.tiles,
       "only the Grounds distribution reads these", function(){
@@ -1511,7 +1522,7 @@
         + " · squares " + DATACFG.sqSize + "px gap " + DATACFG.sqGap + " " + DATACFG.sqShape + " as " + DATACFG.sqEnc + " by " + DATACFG.sqPal + (DATACFG.sqOpt ? ", optional marked" : "")
           + (DATACFG.sqUqMark === "corners" ? ", unique corners " + DATACFG.sqUqAt + (DATACFG.sqUqFlip ? " mirrored" : "") + ", arms " + DATACFG.sqUqLen + "% " + DATACFG.sqUqW + "px tip " + DATACFG.sqUqTip + "%" : ", unique none")
           + ", standard " + DATACFG.sqBase + "% optional " + DATACFG.sqOptA + "%"
-        + " · footer " + (DATACFG.foot.l.join(" ") || "—") + " | " + (DATACFG.foot.r.join(" ") || "—") + ", " + DATACFG.footShow
+        + " · footer " + (DATACFG.foot.l.join(" ") || "—") + " | " + (DATACFG.foot.r.join(" ") || "—") + ", " + DATACFG.footShow.join(" ")
         + " · grounds by " + DATACFG.order + ", width " + DATACFG.width + ", tiles " + DATACFG.tiles
         + " · drawn " + shown.join(" ") + (hidden.length ? " · hidden " + hidden.join(" ") : " · nothing hidden"); },
     frame: function(){ function ln(w, st){ return w === 0 || st === "none" ? "none" : w + "px " + st; }

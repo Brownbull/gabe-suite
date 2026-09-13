@@ -837,10 +837,12 @@
   /* ══ THE FOOTER ROW'S PARTS (operator 2026-09-13) ══ */
   var FOOTDEF = { l: ["hint"], r: ["id", "text", "num", "flag", "time", "list", "other", "opt"] };
   function footCfg(){ var c = window.DATACFG || {}, f = c.foot || FOOTDEF;
-    return { l: (f.l || []).slice(), r: (f.r || []).slice(), show: c.footShow || "both" }; }
-  function footPart(key, iconHtml, wordsHtml, cardFn){
+    return { l: (f.l || []).slice(), r: (f.r || []).slice(), show: Array.isArray(c.footShow) ? c.footShow : ["icon", "text", "count"] }; }
+  /* a part is up to three pieces — icon · label · count — each switched on its own by the row's fs-* classes */
+  function footPart(key, iconHtml, wordsHtml, countText, cardFn){
     var p = E("span", { class: "ftp", "data-part": key });
-    p.innerHTML = '<span class="fti">' + iconHtml + '</span><span class="ftw">' + wordsHtml + "</span>";
+    p.innerHTML = '<span class="fti">' + iconHtml + '</span><span class="ftw">' + wordsHtml + "</span>"
+      + (countText === "" ? "" : '<span class="ftn">' + countText + "</span>");
     bind(p, cardFn); return p; }
   /* the mark exactly as the blocks draw it right now — encoding AND colour rule */
   function kindMarkShown(x, S){ var pal = (window.DATACFG || {}).sqPal || "type"; return kindMark(x, S, pal === "type" ? null : "var(--muted)"); }
@@ -902,20 +904,20 @@
     /* THE FOOTER ROW (operator 2026-09-13) — one row of parts with a LEFT and a RIGHT column, ordered by drag like the
        title lines; each part drawn as its icon, its words, or both; and every kind's card shows the mark ACTUALLY drawn */
     var FT = footCfg(), total = colsOf(TS), parts = {};
-    parts.hint = footPart("hint", ico("layers", 13, "currentColor"),
-      '<b class="ftk">click a table</b> <span class="ftv">' + (portOn ? "opens its whole record in the portrait" : "names every field of it here")
-        + " — " + total + " fields across " + TS.length + " tables</span>",
-      function(){ return window.hcard({ title: "click a table", icon: "layers", color: S.KINDCOL.model,
+    /* the hint is ONE grey phrase behind the info glyph (operator 2026-09-13) — the totals already sit in the title's pills */
+    parts.hint = footPart("hint", ico("info", 13, "currentColor"),
+      portOn ? "click a table to open its record in the portrait" : "click a table to list its fields here", "",
+      function(){ return window.hcard({ title: "click a table", icon: "info", color: "var(--muted)",
         rows: [["opens", portOn ? "its whole record, in the portrait beside this panel" : "every field of it, here"], ["counts", total + " fields across " + TS.length + " tables"]],
         plain: "a block is a table — click one to read all of it" }); });
     TYPEC.forEach(function(x){ if (!mixAll[x.key]) return;
-      parts[x.key] = footPart(x.key, kindMarkShown(x, S).outerHTML, x.word + " " + mixAll[x.key], function(){ return footKindCard(x, mixAll[x.key], total, S); }); });
+      parts[x.key] = footPart(x.key, kindMarkShown(x, S).outerHTML, x.word, String(mixAll[x.key]), function(){ return footKindCard(x, mixAll[x.key], total, S); }); });
     var optN = TS.reduce(function(n, t){ return n + t.cols.filter(function(c){ return isOpt(c[1]); }).length; }, 0);
-    parts.opt = footPart("opt", '<i class="sq e-colour lgm ftopt" style="--fc:var(--muted)"></i>', "optional",
+    parts.opt = footPart("opt", '<i class="sq e-colour lgm ftopt" style="--fc:var(--muted)"></i>', "optional", String(optN),
       function(){ return window.hcard({ title: "optional", value: optN + " of " + total + " fields", iconHtml: '<span class="cpmark"><i class="sq e-colour ftopt" style="--fc:var(--muted);--sq:14px"></i></span>',
         color: "var(--muted)", rows: [["means", "the column accepts None"], ["drawn", "paler — not one of law G's three marks (dashed inferred · hatched unmeasured · hollow measured-zero)"]],
         plain: "a column that is allowed to be empty" }); });
-    var foot = E("div", { class: "pfoot bkfoot fshow-" + FT.show });
+    var foot = E("div", { class: "pfoot bkfoot" + FT.show.map(function(k){ return " fs-" + k; }).join("") });
     var FL = E("div", { class: "ftcol l" }), FR = E("div", { class: "ftcol r" });
     FT.l.forEach(function(k){ if (parts[k]) FL.append(parts[k]); });
     FT.r.forEach(function(k){ if (parts[k]) FR.append(parts[k]); });
