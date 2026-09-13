@@ -53,7 +53,7 @@ ok(await p.evaluate(() => window.COPYTXT.data()) ===
    'data · shown as blocks · tables all · title counts tables icon, fields icon, ops icon · sort channel, icon, accent on panel 45% · pills each, shape pill, text ink, ground kind 15%'
    + ' · block block (icon on model, chip on, name on, entity both, count badge, model both) · edge left solid 2px · chips count pill 100%, channel pill 90%'
    + ' · lines icon name | — / ent | count rw / model | — · sizes icon 13 rw 11 name 13 ent 12 count 11 model 12'
-   + ' · squares 14px gap 4 round as symbol by type, optional marked · grounds by size, width flex, tiles stack'
+   + ' · squares 14px gap 4 round as symbol by type, optional marked, unique marked, emphasis 75% ±30 · footer hint | id text num flag time list other opt, both · grounds by size, width flex, tiles stack'
    + ' · drawn counts shapes rw commit ev mdl ents legend · hidden title note',
    'the data panel boots on the operator\'s default line', await p.evaluate(() => window.COPYTXT.data()));
 
@@ -395,10 +395,10 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   // THE RAIL IS A STACK OF FOLDS (operator 2026-09-13) — every group closed at boot except the one being tuned
   { const g = await p.$$eval('#datacfg > .cffold', els => els.map(e => ({ k: e.dataset.group, open: e.classList.contains('open'),
       body: getComputedStyle(e.querySelector('.cffoldbody')).display, sum: (e.querySelector('.cffoldhd .sum') || {}).textContent })));
-    ok(g.map(x => x.k).join(',') === 'layout,sections,channels,sort,counts,pills,block,edge,lines,marks,grounds',
-       'the data rail is eleven named groups — the chips live inside BLOCK TITLE', g.map(x => x.k).join(','));
-    ok(g.every(x => x.open === (x.k === 'block') && x.body === (x.k === 'block' ? 'grid' : 'none')),
-       'every group boots folded except BLOCK TITLE, the one being tuned', JSON.stringify(g.map(x => x.k + (x.open ? '+' : '-'))));
+    ok(g.map(x => x.k).join(',') === 'layout,sections,channels,sort,counts,pills,block,edge,lines,marks,foot,grounds',
+       'the data rail is twelve named groups — the chips inside BLOCK TITLE, the new FOOTER ROW before grounds', g.map(x => x.k).join(','));
+    ok(g.every(x => x.open === (x.k === 'foot') && x.body === (x.k === 'foot' ? 'grid' : 'none')),
+       'every group boots folded except FOOTER ROW, the one being tuned', JSON.stringify(g.map(x => x.k + (x.open ? '+' : '-'))));
     ok(g.every(x => x.sum && x.sum.trim().length > 2), 'and every folded header names what its dials are set to', JSON.stringify(g.map(x => x.sum))); }
   ok(await p.$$eval('#datacfg > :not(.cffold):not(.cfread)', els => els.length === 0), 'no dial is left loose outside a group');
   ok(await p.$eval('#datacfg .cffold[data-group="pills"]', e => !e.classList.contains('open') && getComputedStyle(e.querySelector('.cffoldbody')).display === 'none'),
@@ -741,8 +741,76 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   await p.click('#portvars .ptv[data-pvar="record"]'); await p.waitForTimeout(200);
   await p.evaluate(() => window.selectIn('data', null)); await p.mouse.move(5, 1030); await p.waitForTimeout(220); }
 
+// ══ THE FOOTER ROW (operator 2026-09-13): ordered like the title lines — one row, a left and a right column — each part
+//    shown as icon · text · both, and each kind's card leading with the mark ACTUALLY drawn, in its colour ══
+{ await p.evaluate(() => { window.FOLDS.foot = 1; window.showTab('data'); window.showVariant('data', 'blocks'); window.drawDataCfg(); }); await p.waitForTimeout(320);
+  const TB = F.data.tables, kindsPresent = ['id', 'text', 'num', 'flag', 'time', 'list', 'other'];
+  const order = () => p.evaluate(() => ({ l: [...document.querySelectorAll('#panel .bkfoot .ftcol.l .ftp')].map(e => e.dataset.part),
+                                          r: [...document.querySelectorAll('#panel .bkfoot .ftcol.r .ftp')].map(e => e.dataset.part) }));
+  { const o = await order();
+    ok(o.l.join(',') === 'hint' && o.r[o.r.length - 1] === 'opt' && o.r.slice(0, -1).every((k, i, a) => !i || kindsPresent.indexOf(a[i - 1]) < kindsPresent.indexOf(k)),
+       'the footer boots as the hint on the left and the kinds then optional on the right', JSON.stringify(o)); }
+  ok(await p.$$eval('#datacfg .cffold[data-group="foot"] .dzone', els => els.map(e => e.dataset.fside).join(',')) === 'l,r', 'one row in the rail, with a left and a right column');
+  ok(await p.$$eval('#datacfg .cffold[data-group="foot"] .dzone .ib[data-fpart]', els => els.length === 9 && els.every(e => e.getAttribute('draggable') === 'true' && !!e.querySelector('svg'))),
+     'every footer part is a draggable icon');
+  // ORDER — move parts across and along the columns
+  await p.evaluate(() => { window.moveFootPart('opt', 'l', 0); window.moveFootPart('id', 'r', 99); }); await p.waitForTimeout(300);
+  { const o = await order();
+    ok(o.l.join(',') === 'opt,hint' && o.r[o.r.length - 1] === 'id', 'a part moves across columns and along one — optional to the far left, id to the far right', JSON.stringify(o)); }
+  ok(await p.$$eval('#datacfg .cffold[data-group="foot"] .dzone[data-fside="l"] .ib', els => els.map(e => e.dataset.fpart).join(',')) === 'opt,hint', 'the rail shows the new order too');
+  await p.evaluate(() => { window.DATACFG.foot = { l: ['hint'], r: ['id', 'text', 'num', 'flag', 'time', 'list', 'other', 'opt'] }; window.showTab('data'); window.drawDataCfg(); }); await p.waitForTimeout(300);
+  // SHOWN AS
+  const face = () => p.$eval('#panel .bkfoot .ftp[data-part="id"]', e => ({ icon: getComputedStyle(e.querySelector('.fti')).display !== 'none', word: getComputedStyle(e.querySelector('.ftw')).display !== 'none' }));
+  { const f = await face(); ok(f.icon && f.word, 'the parts boot as icon AND words', JSON.stringify(f)); }
+  await p.click('#datacfg .ib[data-foot-show="icon"]'); await p.waitForTimeout(260);
+  { const f = await face(); ok(f.icon && !f.word, 'ICON shows the mark alone', JSON.stringify(f)); }
+  await p.click('#datacfg .ib[data-foot-show="text"]'); await p.waitForTimeout(260);
+  { const f = await face(); ok(!f.icon && f.word, 'TEXT shows the words alone', JSON.stringify(f)); }
+  await p.click('#datacfg .ib[data-foot-show="both"]'); await p.waitForTimeout(260);
+  // THE CARD shows the mark actually drawn, in its kind's colour
+  const cardFor = async kind => { await p.mouse.move(5, 1030); await p.waitForTimeout(130); await p.hover(`#panel .bkfoot .ftp[data-part="${kind}"]`); await p.waitForTimeout(260);
+    return p.evaluate(k => { const h = document.getElementById('hover'), mk = h.querySelector('.cphd .cpmark .sq'), foot = document.querySelector(`#panel .bkfoot .ftp[data-part="${k}"] .fti .sq`);
+      const svg = e => e && e.querySelector('svg') ? e.querySelector('svg').innerHTML.replace(/\s+/g, '') : null;
+      return { title: (h.querySelector('.cphd b') || {}).textContent, titleCol: h.querySelector('.cphd b') ? getComputedStyle(h.querySelector('.cphd b')).color : null,
+        value: (h.querySelector('.cphv') || {}).textContent, markCls: mk ? mk.className : null, footCls: foot ? foot.className : null,
+        markSvg: svg(mk), footSvg: svg(foot), markText: mk ? mk.textContent : null, footText: foot ? foot.textContent : null,
+        fc: foot ? getComputedStyle(foot).color : null }; }, kind); };
+  { const c = await cardFor('id');
+    const ids = TB.reduce((n, t) => n + t.cols.filter(col => /^uuid|UUID/.test(String(col[1]).replace(/\s*\|\s*None\s*$/, ''))).length, 0), all = TB.reduce((n, t) => n + t.cols.length, 0);
+    ok(c.title === 'id' && c.value === ids + ' of ' + all + ' fields', 'hovering a kind opens ITS card with its count', JSON.stringify({ t: c.title, v: c.value }));
+    ok(c.markCls && /e-symbol/.test(c.markCls) && c.markSvg && c.markSvg === c.footSvg, 'the card leads with the SAME mark the footer draws — the id symbol', JSON.stringify({ card: c.markCls, foot: c.footCls }));
+    ok(c.titleCol === c.fc, 'and its title wears that kind\'s colour', JSON.stringify({ title: c.titleCol, mark: c.fc })); }
+  await p.evaluate(() => { window.DATACFG.sqEnc = 'char'; window.applyData(); window.showTab('data'); }); await p.waitForTimeout(300);
+  { const c = await cardFor('time');
+    ok(/e-char/.test(c.markCls || '') && c.markText === c.footText && c.markText === 'T', 'with the encoding switched to characters, the card follows — the time card leads with "T"', JSON.stringify(c)); }
+  await p.evaluate(() => { window.DATACFG.sqEnc = 'symbol'; window.applyData(); window.showTab('data'); }); await p.waitForTimeout(300);
+  ok(/footer hint \| id text num flag time list other opt, both/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line names the footer row');
+  await p.evaluate(() => { window.FOLDS.foot = 0; window.drawDataCfg(); }); await p.mouse.move(5, 1030); await p.waitForTimeout(200); }
+
+// ══ FIELD-MARK EMPHASIS (operator 2026-09-13): ONE opacity bar — optional below the standard stop, unique above it
+//    with an accent ring — measured on the drawn marks ══
+{ await p.evaluate(() => { window.FOLDS.marks = 1; window.showTab('data'); window.showVariant('data', 'blocks'); window.drawDataCfg(); }); await p.waitForTimeout(320);
+  const ops = () => p.evaluate(() => { const a = sel => [...document.querySelectorAll('#panel .blk .bkhd .sq' + sel)].map(e => +(+getComputedStyle(e).opacity).toFixed(2));
+    return { std: a(':not(.opt):not(.uq)'), opt: a('.opt:not(.uq)'), uq: a('.uq'), ring: [...document.querySelectorAll('#panel .blk .bkhd .sq.uq')].map(e => getComputedStyle(e).boxShadow) }; });
+  { const o = await ops();
+    ok(o.std.length > 0 && o.std.every(v => v === 0.75), 'a standard field mark sits at 75% on the bar', JSON.stringify(o.std.slice(0, 4)));
+    ok(o.opt.length > 0 && o.opt.every(v => v === 0.45), 'an optional one sits further DOWN, at 45% — today\'s value', JSON.stringify(o.opt.slice(0, 4)));
+    ok(o.uq.length > 0 && o.uq.every(v => v === 1) && o.ring.every(r => r && r !== 'none'), 'a unique one sits further UP, at 100%, with an accent ring', JSON.stringify({ uq: o.uq.slice(0, 4), ring: o.ring[0] })); }
+  await p.focus('#datacfg .sldt[aria-label="standard field mark opacity"]'); for (let i = 0; i < 3; i++) await p.keyboard.press('ArrowLeft');
+  await p.focus('#datacfg .sldt[aria-label="emphasis spread"]'); for (let i = 0; i < 2; i++) await p.keyboard.press('ArrowLeft');
+  await p.waitForTimeout(260);
+  { const o = await ops();
+    ok(o.std.every(v => v === 0.6) && o.opt.every(v => v === 0.4) && o.uq.every(v => v === 0.8), 'the two bars move all three stops together — 40% · 60% · 80%', JSON.stringify({ s: o.std[0], o: o.opt[0], u: o.uq[0] })); }
+  { const sc = await p.$$eval('#datacfg .sqscale i[data-stop]', els => els.map(e => ({ k: e.dataset.stop, left: parseFloat(e.style.left) })));
+    ok(sc.map(x => x.k).join(',') === 'opt,std,uq' && sc[0].left === 40 && sc[1].left === 60 && sc[2].left === 80, 'the rail draws the three stops where they sit on one bar', JSON.stringify(sc)); }
+  await p.click('#datacfg .ib[data-sq-uq="0"]'); await p.waitForTimeout(260);
+  { const o = await ops(); ok(o.uq.every(v => v === 0.6) && o.ring.every(r => r === 'none'), 'switching unique off returns those marks to the standard stop', JSON.stringify({ u: o.uq[0], r: o.ring[0] })); }
+  await p.evaluate(() => { Object.assign(window.DATACFG, { sqBase: 75, sqStep: 30, sqUq: 1 }); window.FOLDS.marks = 0; window.applyData(); window.showTab('data'); window.drawDataCfg(); });
+  await p.waitForTimeout(260);
+  ok(/unique marked, emphasis 75% ±30/.test(await p.evaluate(() => window.COPYTXT.data())), 'the copy line names the emphasis'); }
+
 // the tests below were written against the station chip's look with every dial in reach — give them that baseline
-await p.evaluate(() => { Object.assign(window.DATACFG, { countPills: 'one', pillInk: 'white', pillBg: 'accent', pillAlpha: 100, sqEnc: 'colour', sqSize: 11, sqGap: 2 });
+await p.evaluate(() => { Object.assign(window.DATACFG, { countPills: 'one', pillInk: 'white', pillBg: 'accent', pillAlpha: 100, sqEnc: 'colour', sqSize: 11, sqGap: 2, sqBase: 100, sqStep: 55, sqUq: 0 });
   Object.assign(window.DATACFG.bk, { count: 'words', model: 'word',
     rows: [{ l: ['icon', 'rw', 'name', 'ent', 'count', 'model'], r: [] }, { l: [], r: [] }, { l: [], r: [] }] });
   window.DATACFG.show.title = 1; window.applyData(); window.showTab('data'); window.foldAll(true); window.drawDataCfg(); });
@@ -1085,10 +1153,10 @@ await p.waitForTimeout(320);
           m[k] = e.innerHTML.replace(/\s+/g, ''); });
         return new Set(Object.values(m)).size === Object.keys(m).length; }), 'and no two kinds share one');
       // the LEGEND draws the mark as the panel draws it, whatever the encoding
-      ok(await p.$$eval('#panel .plgd .lg .sq.lgm', els => els.length >= 4 && els.every(e => !!e.querySelector('svg'))),
+      ok(await p.$$eval('#panel .bkfoot .ftp:not([data-part="opt"]) .fti .sq', els => els.length >= 4 && els.every(e => !!e.querySelector('svg'))),
          'the legend draws the MARK it names, in the encoding that is on');
       await p.click('#datacfg .ib[data-sq-enc="colour"]'); await p.click('#datacfg .ib[data-sq-pal="type"]'); await p.waitForTimeout(320);
-      ok(await p.$$eval('#panel .plgd .lg .sq.lgm', els => els.every(e => !e.querySelector('svg'))), 'and follows it back to colour'); }
+      ok(await p.$$eval('#panel .bkfoot .ftp:not([data-part="opt"]) .fti .sq', els => els.every(e => !e.querySelector('svg'))), 'and follows it back to colour'); }
     await p.click('#datacfg .ib[data-sq-opt="0"]'); await p.waitForTimeout(160);
     ok(await p.$$eval('#panel .sq.opt', els => els.every(e => +getComputedStyle(e).opacity === 1)), 'and that mark can be switched off');
     await p.click('#datacfg .ib[data-sq-opt="1"]'); await p.waitForTimeout(160); }

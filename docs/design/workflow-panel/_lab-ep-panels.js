@@ -834,6 +834,29 @@
     return h; }
   window.BLOCKCARD = blockCard;
 
+  /* ══ THE FOOTER ROW'S PARTS (operator 2026-09-13) ══ */
+  var FOOTDEF = { l: ["hint"], r: ["id", "text", "num", "flag", "time", "list", "other", "opt"] };
+  function footCfg(){ var c = window.DATACFG || {}, f = c.foot || FOOTDEF;
+    return { l: (f.l || []).slice(), r: (f.r || []).slice(), show: c.footShow || "both" }; }
+  function footPart(key, iconHtml, wordsHtml, cardFn){
+    var p = E("span", { class: "ftp", "data-part": key });
+    p.innerHTML = '<span class="fti">' + iconHtml + '</span><span class="ftw">' + wordsHtml + "</span>";
+    bind(p, cardFn); return p; }
+  /* the mark exactly as the blocks draw it right now — encoding AND colour rule */
+  function kindMarkShown(x, S){ var pal = (window.DATACFG || {}).sqPal || "type"; return kindMark(x, S, pal === "type" ? null : "var(--muted)"); }
+  function footKindCard(x, n, total, S){
+    var pal = (window.DATACFG || {}).sqPal || "type", carries = pal === "type", enc = sqEnc(), m = kindMarkShown(x, S);
+    m.style.setProperty("--sq", "15px");
+    var how = enc === "char" ? "a character — “" + x.ch + "”" : enc === "shape" ? "a shape — a " + x.shape : enc === "symbol" ? "the station's own " + x.word + " glyph" : "a filled mark";
+    return window.hcard({ title: x.word, value: n + " of " + total + " fields", iconHtml: '<span class="cpmark">' + m.outerHTML + "</span>",
+      color: carries ? x.col(S) : "var(--ink)",
+      rows: [["drawn as", how], ["colour", carries ? "the kind's own colour" : "the " + pal + " — the kind is carried by the mark alone"],
+             ["read from", "each column's declared type, never its name"]],
+      plain: x.plain }); }
+  /* the rail draws a kind's SYMBOL whatever the encoding, so its buttons always obey the icon rule */
+  window.KINDICON = function(key, z){ var x = TYPEC.filter(function(t){ return t.key === key; })[0]; return x ? ico(x.sym, z || 14, x.col(S)) : ""; };
+  window.FOOTDEF = FOOTDEF;
+
   function renderDataBlocks(box, F, S){
     var D = F.data, TS = dtables(D), DC = window.DATACFG || {}, B = bkcfg();
     var sel = (window.SEL || {}).data, portOn = (window.FRAME || {}).portW > 0;
@@ -876,16 +899,27 @@
       body.append(blk); });
     box.append(body);
     var mixAll = {}; TS.forEach(function(t){ t.cols.forEach(function(c){ var k = typeOf(c[1]).key; mixAll[k] = (mixAll[k] || 0) + 1; }); });
-    var foot = E("div", { class: "pfoot" });
-    foot.append(E("div", { class: "kv" }, ico("layers", 13), E("span", { class: "k" }, "click a table"),
-      E("span", { class: "v" }, (portOn ? "opens its whole record in the portrait" : "names every field of it here") + " — " + colsOf(TS) + " fields across " + TS.length + " tables")));
-    foot.append(legend(TYPEC.filter(function(x){ return mixAll[x.key]; }).map(function(x){
-      var pal = (window.DATACFG || {}).sqPal || "type", carries = pal === "type";
-      return { t: x.word + " " + mixAll[x.key], node: kindMark(x, S, carries ? null : "var(--muted)"),
-        tip: card({ title: x.word, sub: mixAll[x.key] + " of " + colsOf(TS) + " fields",
-          rows: [["drawn as", SQENC[sqEnc()].word], ["colour here", carries ? "carries the kind" : "carries the " + pal + ", so the kind is carried by the " + SQENC[sqEnc()].word + " alone"]],
-          body: x.plain + "<br><br>read from the declared type, never from the column's name." }) }; })
-      .concat([{ t: "optional", swatch: "background:var(--muted);opacity:.45", tip: card({ title: "optional", sub: "the column accepts None", body: "drawn paler. Not one of law G's three marks — dashed means inferred, hatched unmeasured, hollow a measured zero." }) }])));
+    /* THE FOOTER ROW (operator 2026-09-13) — one row of parts with a LEFT and a RIGHT column, ordered by drag like the
+       title lines; each part drawn as its icon, its words, or both; and every kind's card shows the mark ACTUALLY drawn */
+    var FT = footCfg(), total = colsOf(TS), parts = {};
+    parts.hint = footPart("hint", ico("layers", 13, "currentColor"),
+      '<b class="ftk">click a table</b> <span class="ftv">' + (portOn ? "opens its whole record in the portrait" : "names every field of it here")
+        + " — " + total + " fields across " + TS.length + " tables</span>",
+      function(){ return window.hcard({ title: "click a table", icon: "layers", color: S.KINDCOL.model,
+        rows: [["opens", portOn ? "its whole record, in the portrait beside this panel" : "every field of it, here"], ["counts", total + " fields across " + TS.length + " tables"]],
+        plain: "a block is a table — click one to read all of it" }); });
+    TYPEC.forEach(function(x){ if (!mixAll[x.key]) return;
+      parts[x.key] = footPart(x.key, kindMarkShown(x, S).outerHTML, x.word + " " + mixAll[x.key], function(){ return footKindCard(x, mixAll[x.key], total, S); }); });
+    var optN = TS.reduce(function(n, t){ return n + t.cols.filter(function(c){ return isOpt(c[1]); }).length; }, 0);
+    parts.opt = footPart("opt", '<i class="sq e-colour lgm ftopt" style="--fc:var(--muted)"></i>', "optional",
+      function(){ return window.hcard({ title: "optional", value: optN + " of " + total + " fields", iconHtml: '<span class="cpmark"><i class="sq e-colour ftopt" style="--fc:var(--muted);--sq:14px"></i></span>',
+        color: "var(--muted)", rows: [["means", "the column accepts None"], ["drawn", "paler — not one of law G's three marks (dashed inferred · hatched unmeasured · hollow measured-zero)"]],
+        plain: "a column that is allowed to be empty" }); });
+    var foot = E("div", { class: "pfoot bkfoot fshow-" + FT.show });
+    var FL = E("div", { class: "ftcol l" }), FR = E("div", { class: "ftcol r" });
+    FT.l.forEach(function(k){ if (parts[k]) FL.append(parts[k]); });
+    FT.r.forEach(function(k){ if (parts[k]) FR.append(parts[k]); });
+    foot.append(FL, FR);
     box.append(foot);
     COV.mark("ACCESSES", "data"); COV.mark("PAYLOAD", "data"); COV.mark("CONNECTIONS", "data");
   }

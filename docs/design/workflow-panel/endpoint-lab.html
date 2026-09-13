@@ -271,7 +271,7 @@
     workflow: "a real user's path, named by a human — the order these doors are called in" });
   window.hcard = function(o){ return hcard(o); };
   function hcard(o){
-    var h = '<div class="cphd">' + (o.icon ? S.icon(o.icon, 15, o.color) : "")
+    var h = '<div class="cphd">' + (o.iconHtml || (o.icon ? S.icon(o.icon, 15, o.color) : ""))
       + '<b' + (o.color ? ' style="color:' + o.color + '"' : "") + '>' + o.title + '</b>'
       + (o.value ? '<span class="cphv"' + (o.color ? ' style="color:' + o.color + '"' : "") + '>' + o.value + '</span>' : "") + '</div>';
     if (o.condition) h += '<div class="cpcond">' + o.condition + '</div>';
@@ -658,7 +658,7 @@
   /* THE DATA RAIL IS A STACK OF FOLDS (operator 2026-09-13: "the pill colour section is perfect — group all the
      other sections this way"). Every group boots closed except the one being tuned; the state lives here so a
      dial click, which rebuilds the rail, never re-folds what the operator opened. */
-  var FOLDS = window.FOLDS = { layout: 0, sections: 0, channels: 0, sort: 0, counts: 0, pills: 0, block: 1, edge: 0, lines: 0, marks: 0, grounds: 0 };
+  var FOLDS = window.FOLDS = { layout: 0, sections: 0, channels: 0, sort: 0, counts: 0, pills: 0, block: 0, edge: 0, lines: 0, marks: 0, foot: 1, grounds: 0 };
   function foldSet(key, open){ FOLDS[key] = open ? 1 : 0;
     var f = document.querySelector('#datacfg .cffold[data-group="' + key + '"]'); if (f) f.classList.toggle("open", !!open); }
   window.pillFold = function(open){ foldSet("pills", open); };
@@ -678,7 +678,10 @@
           iconCol: "model", sel: "icon",              /* the glyph's colour is a SETTING, not the entity's */
           rows: [{ l: ["icon", "name"], r: [] }, { l: ["ent"], r: ["count", "rw"] }, { l: ["model"], r: [] }],
           size: { icon: 13, rw: 11, name: 13, ent: 12, count: 11, model: 12 } },   /* rw + count under the 12px floor — the operator's choice */
-    sqSize: 14, sqGap: 4, sqShape: "round", sqPal: "type", sqOpt: 1, sqEnc: "symbol" };
+    sqSize: 14, sqGap: 4, sqShape: "round", sqPal: "type", sqOpt: 1, sqEnc: "symbol",
+    sqUq: 1, sqBase: 75, sqStep: 30,     /* ONE emphasis bar: optional = base − step · standard = base · unique = base + step, accented */
+    foot: { l: ["hint"], r: ["id", "text", "num", "flag", "time", "list", "other", "opt"] },   /* the row under the blocks */
+    footShow: "both" };
   var DSEC = [
     { key: "title",  word: "the title",   icon: "layers", on: ["grounds", "flow", "ledger", "fields", "blocks"],
       what: "the part's own name and glyph, left of the counts", lost: "which part you are looking at; the counts and the switches stay" },
@@ -710,6 +713,15 @@
     pn.style.setProperty("--sqg", DATACFG.sqGap + "px");
     ["square", "round", "circle"].forEach(function(k){ pn.classList.toggle("sqs-" + k, DATACFG.sqShape === k); });
     pn.classList.toggle("sq-noopt", !DATACFG.sqOpt);
+    /* THE EMPHASIS BAR (operator 2026-09-13): three stops on one opacity scale */
+    var sqStd = DATACFG.sqBase, sqLo = Math.max(0, DATACFG.sqBase - DATACFG.sqStep), sqHi = Math.min(100, DATACFG.sqBase + DATACFG.sqStep);
+    pn.style.setProperty("--sq-base", String(sqStd / 100));
+    pn.style.setProperty("--sq-opt-a", String(sqLo / 100));
+    pn.style.setProperty("--sq-uq-a", String(sqHi / 100));
+    pn.classList.toggle("sq-nouq", !DATACFG.sqUq);
+    [].forEach.call(document.querySelectorAll("#sqscale i[data-stop]"), function(m){
+      var v = m.dataset.stop === "opt" ? sqLo : m.dataset.stop === "uq" ? sqHi : sqStd; m.style.left = v + "%"; m.title = v + "%";
+      m.classList.toggle("edge-l", v <= 12); m.classList.toggle("edge-r", v >= 88); });
     /* the pills' colour is CSS all the way down, so a dragged opacity bar never redraws the panel */
     ["white", "ink", "kind", "accent", "muted"].forEach(function(k){ pn.classList.toggle("pink-" + k, DATACFG.pillInk === k); });
     ["accent", "kind", "chip", "panel", "ink", "none"].forEach(function(k){ pn.classList.toggle("pbg-" + k, DATACFG.pillBg === k); });
@@ -1192,7 +1204,70 @@
       [1, "a column that accepts None is drawn paler", "marked"],
       [0, "every square at full strength, optional or not", "not marked"]],
       function(o){ return labIco(o[0] ? "eye" : "eyeoff", 15); }, "blocks");
+    /* EMPHASIS (operator 2026-09-13): unique fields join optional ones on ONE opacity bar — optional sits below the standard
+       stop, unique above it with an accent ring */
+    pick("unique", "sqUq", [
+      [1, "a unique column sits at the TOP of the bar, with an accent ring", "marked"],
+      [0, "unique columns look like any other field", "not marked"]],
+      function(o){ return o[0] ? '<svg viewBox="0 0 24 24" width="15" height="15" fill="none"><rect x="6" y="6" width="12" height="12" rx="3" fill="currentColor"/><rect x="3.5" y="3.5" width="17" height="17" rx="5" stroke="var(--accent)" stroke-width="1.6"/></svg>'
+        : labIco("eyeoff", 15); }, "blocks");
+    box.append(el("div", { class: "cfl sub" }, "standard"),
+      slider({ min: 20, max: 100, step: 5, value: DATACFG.sqBase, label: "standard field mark opacity",
+        fmt: function(v){ return v + "%"; },
+        card: function(){ return hcard({ title: "standard opacity", value: DATACFG.sqBase + "%", icon: "shape",
+          rows: [["what", "where an ordinary field mark sits on the bar"], ["optional", "sits the spread BELOW it"], ["unique", "sits the spread ABOVE it, with an accent ring"]],
+          plain: "how solid an ordinary field mark is drawn" }); },
+        on: function(v){ DATACFG.sqBase = v; applyData(); } }));
+    box.append(el("div", { class: "cfl sub" }, "spread"),
+      slider({ min: 0, max: 50, step: 5, value: DATACFG.sqStep, label: "emphasis spread",
+        fmt: function(v){ return "±" + v; },
+        card: function(){ return hcard({ title: "emphasis spread", value: "±" + DATACFG.sqStep, icon: "shape",
+          rows: [["what", "how far optional and unique sit from the standard stop"], ["at 0", "all three look the same"]],
+          plain: "how different optional and unique fields look from the rest" }); },
+        on: function(v){ DATACFG.sqStep = v; applyData(); } }));
+    { var lo = Math.max(0, DATACFG.sqBase - DATACFG.sqStep), hi = Math.min(100, DATACFG.sqBase + DATACFG.sqStep);
+      var scale = el("div", { class: "sqscale", id: "sqscale" });
+      [["opt", lo, "optional"], ["std", DATACFG.sqBase, "standard"], ["uq", hi, "unique"]].forEach(function(x){
+        var m = el("i", { class: "st-" + x[0] + (x[1] <= 12 ? " edge-l" : x[1] >= 88 ? " edge-r" : "") }); m.dataset.stop = x[0]; m.style.left = x[1] + "%"; m.title = x[1] + "%";
+        m.append(el("b", {}, x[2])); scale.append(m); });
+      hoverBind(scale, function(){ return hcard({ title: "the emphasis bar", value: "0 — 100% opacity", icon: "shape",
+        rows: [["optional", Math.max(0, DATACFG.sqBase - DATACFG.sqStep) + "%"], ["standard", DATACFG.sqBase + "%"], ["unique", Math.min(100, DATACFG.sqBase + DATACFG.sqStep) + "% + an accent ring"]],
+        plain: "where each kind of field mark sits between clear and solid" }); });
+      box.append(el("div", { class: "cfl sub" }, "the bar"), scale); }
 
+    });
+    /* THE FOOTER ROW — the group being tuned now, so it boots OPEN (operator 2026-09-13) */
+    group("foot", "footer row", (DATACFG.foot.l.join(" ") || "—") + " | " + (DATACFG.foot.r.join(" ") || "—") + " · " + DATACFG.footShow,
+      "the row under the blocks — its parts, their order, and whether each shows its icon, its words or both", function(){
+      var FP = [["hint", "the click-a-table hint", function(z){ return S.icon("layers", z); }]]
+        .concat(["id", "text", "num", "flag", "time", "list", "other"].map(function(k){ return [k, k === "num" ? "number" : k, function(z){ return window.KINDICON(k, z); }]; }))
+        .concat([["opt", "optional", function(z){ return '<svg viewBox="0 0 24 24" width="' + z + '" height="' + z + '"><rect x="6" y="6" width="12" height="12" rx="3" fill="currentColor" opacity=".45"/></svg>'; }]]);
+      var byKey = {}; FP.forEach(function(x){ byKey[x[0]] = x; });
+      function zone(side){
+        var z = el("div", { class: "dzone", "data-fside": side });
+        (DATACFG.foot[side] || []).forEach(function(k){ var d = byKey[k]; if (!d) return;
+          var b = el("button", { class: "ib dg on", draggable: "true" }); b.dataset.fpart = k; b.innerHTML = d[2](14);
+          hoverBind(b, hcard({ title: d[1], value: side === "l" ? "left" : "right", icon: "shape",
+            rows: [["drag", "along this column to reorder it, or across to the other column"], ["the columns", "left is pushed left, right is pushed right"]],
+            plain: "one part of the row under the blocks" }));
+          b.addEventListener("dragstart", function(ev){ ev.dataTransfer.setData("text/plain", k); ev.dataTransfer.effectAllowed = "move"; b.classList.add("dragging"); window.hoverHide(); });
+          b.addEventListener("dragend", function(){ b.classList.remove("dragging"); });
+          z.append(b); });
+        z.addEventListener("dragover", function(ev){ ev.preventDefault(); z.classList.add("over"); });
+        z.addEventListener("dragleave", function(){ z.classList.remove("over"); });
+        z.addEventListener("drop", function(ev){ ev.preventDefault(); z.classList.remove("over");
+          var key = ev.dataTransfer.getData("text/plain"); if (!key || !byKey[key]) return;
+          var kids = [].slice.call(z.querySelectorAll(".ib")).filter(function(x){ return x.dataset.fpart !== key; }), idx = kids.length;
+          for (var j = 0; j < kids.length; j++) { var r = kids[j].getBoundingClientRect(); if (ev.clientX < r.left + r.width / 2) { idx = j; break; } }
+          window.moveFootPart(key, side, idx); });
+        return z; }
+      box.append(el("div", { class: "cfl" }, "row"),
+        el("div", { class: "lnrow" }, el("div", { class: "lnsides" }, zone("l"), el("i", { class: "lnmid" }), zone("r"))));
+      pick("shown as", "footShow", [
+        ["both", "the icon and the words together", "both"],
+        ["icon", "the icon alone — the words live on its card", "icon"],
+        ["text", "the words alone", "text"]],
+        function(o){ return o[0] === "icon" ? S.icon("layers", 15) : labIco(o[0] === "text" ? "ton" : "tauto", 15); });
     });
     group("grounds", "grounds", "by " + DATACFG.order + " · " + DATACFG.width + " · " + DATACFG.tiles,
       "only the Grounds distribution reads these", function(){
@@ -1219,6 +1294,11 @@
     var col = B.rows[line][side === "r" ? "r" : "l"];
     col.splice(Math.max(0, Math.min(idx == null ? col.length : idx, col.length)), 0, key);
     B.sel = key; window.showTab("data"); drawDataCfg(); };
+  /* move a footer part to a column, at an index — the one call both a drag and the probe use */
+  window.moveFootPart = function(key, side, idx){ var f = DATACFG.foot;
+    f.l = f.l.filter(function(k){ return k !== key; }); f.r = f.r.filter(function(k){ return k !== key; });
+    var col = f[side === "l" ? "l" : "r"]; col.splice(Math.max(0, Math.min(idx == null ? col.length : idx, col.length)), 0, key);
+    window.showTab("data"); drawDataCfg(); };
   window.bkRows = function(){ return DATACFG.bk.rows.map(function(r){ return { l: r.l.slice(), r: r.r.slice() }; }); };
 
   /* ── the PART BUTTONS block in the rail ── */
@@ -1368,7 +1448,8 @@
         + " · chips count " + B.cntBox + " " + B.cntA + "%, channel " + B.rwBox + " " + B.rwA + "%"
         + " · lines " + B.rows.map(function(r){ return (r.l.join(" ") || "—") + " | " + (r.r.join(" ") || "—"); }).join(" / ")
         + " · sizes " + Object.keys(B.size).map(function(k){ return k + " " + B.size[k]; }).join(" ")
-        + " · squares " + DATACFG.sqSize + "px gap " + DATACFG.sqGap + " " + DATACFG.sqShape + " as " + DATACFG.sqEnc + " by " + DATACFG.sqPal + (DATACFG.sqOpt ? ", optional marked" : "")
+        + " · squares " + DATACFG.sqSize + "px gap " + DATACFG.sqGap + " " + DATACFG.sqShape + " as " + DATACFG.sqEnc + " by " + DATACFG.sqPal + (DATACFG.sqOpt ? ", optional marked" : "") + (DATACFG.sqUq ? ", unique marked" : "") + ", emphasis " + DATACFG.sqBase + "% ±" + DATACFG.sqStep
+        + " · footer " + (DATACFG.foot.l.join(" ") || "—") + " | " + (DATACFG.foot.r.join(" ") || "—") + ", " + DATACFG.footShow
         + " · grounds by " + DATACFG.order + ", width " + DATACFG.width + ", tiles " + DATACFG.tiles
         + " · drawn " + shown.join(" ") + (hidden.length ? " · hidden " + hidden.join(" ") : " · nothing hidden"); },
     frame: function(){ function ln(w, st){ return w === 0 || st === "none" ? "none" : w + "px " + st; }

@@ -1029,3 +1029,44 @@ html, body{ height:100%; }
 /* the NAME does not shrink at all beside a key target until it would take more than 60% of the row — a
    subpixel shrink was enough to cut "household_id" to "household_…" (86.3px of text in an 86px box) */
 .fld:has(.fkx) .fn{ flex:0 0 auto; max-width:60%; }
+
+/* ══ THE FOOTER ROW under the blocks (operator 2026-09-13) — ordered parts in a left and a right column, each drawn
+   as its icon, its words, or both ══ */
+#panel .pfoot.bkfoot{ display:flex; align-items:center; gap:14px; }
+.bkfoot .ftcol{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 12px; min-width:0; }
+.bkfoot .ftcol.r{ margin-left:auto; justify-content:flex-end; }
+.bkfoot .ftcol:empty{ display:none; }
+.bkfoot .ftp{ display:inline-flex; align-items:center; gap:5px; font-size:12px; color:var(--muted); cursor:help; white-space:nowrap; }
+.bkfoot .ftp .fti{ display:inline-flex; align-items:center; }
+.bkfoot .ftp .fti svg{ display:block; }
+.bkfoot .ftp .fti .sq{ --sq:11px; }
+.bkfoot .ftp .ftk{ font-weight:600; color:var(--muted); margin-right:6px; }
+.bkfoot .ftp .ftv{ color:var(--ink); }
+.bkfoot .ftopt{ opacity:.45; border-radius:2px; }
+.bkfoot.fshow-icon .ftp .ftw{ display:none; }
+.bkfoot.fshow-text .ftp .fti{ display:none; }
+#panel[data-tab="data"].dh-legend .bkfoot .ftp:not([data-part="hint"]){ display:none; }
+/* a card header can lead with the mark actually drawn */
+#hover .cphd .cpmark{ display:inline-flex; align-items:center; }
+#hover .cphd .cpmark .sq{ --sq:15px; }
+
+/* ══ FIELD-MARK EMPHASIS (operator 2026-09-13) — one opacity bar with three stops: optional below the standard stop,
+   unique above it with an accent ring. Scoped to the blocks' own marks; legends and cards draw kinds at full strength. ══ */
+#panel .blk .sq{ opacity:var(--sq-base, 1); }
+#panel .blk .sq.opt{ opacity:var(--sq-opt-a, .45); }
+#panel.sq-noopt .blk .sq.opt{ opacity:var(--sq-base, 1); }
+#panel .blk .sq.uq{ opacity:var(--sq-uq-a, 1); box-shadow:0 0 0 1.5px var(--accent); }
+#panel.sq-nouq .blk .sq.uq{ opacity:var(--sq-base, 1); box-shadow:none; }
+/* the rail's bar: the three stops drawn where they sit */
+#datacfg .sqscale{ position:relative; height:30px; margin:4px 6px 0; cursor:help;
+  background:linear-gradient(90deg, color-mix(in srgb, var(--accent) 8%, transparent), var(--accent)) center 9px / 100% 4px no-repeat; }
+#datacfg .sqscale i{ position:absolute; top:5px; width:12px; height:12px; margin-left:-6px; border-radius:3px; background:var(--ink); }
+#datacfg .sqscale i.st-opt{ opacity:.45; }
+#datacfg .sqscale i.st-uq{ box-shadow:0 0 0 1.5px var(--accent); }
+#datacfg .sqscale i b{ position:absolute; top:15px; left:50%; transform:translateX(-50%); font:600 12px/1 var(--font-mono); color:var(--muted); white-space:nowrap; }
+/* the optional stop is drawn paler through its FILL, not its opacity — so its label stays readable */
+#datacfg .sqscale i.st-opt{ opacity:1; background:color-mix(in srgb, var(--ink) 45%, transparent); }
+/* a stop at either end anchors its label inward instead of centring it off the edge */
+#datacfg .sqscale i.edge-r b{ left:auto; right:-2px; transform:none; }
+#datacfg .sqscale i.edge-l b{ left:-2px; transform:none; }
+#datacfg .sqscale{ margin-bottom:6px; }
