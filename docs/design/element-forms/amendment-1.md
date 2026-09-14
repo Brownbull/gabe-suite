@@ -126,6 +126,22 @@
 | `frontend.pieces` | `fe:<file>#<Export>`; a store action is `fe:<file>#<Store>.<action>` | — |
 | `test_cases` | the C-id if it is unique in the feed, else `<tfile>::<def>` | — |
 
+### Kinds forms (as built, Slice 3a — `_a3_forms_mw.py`)
+
+```jsonc
+"middleware": {"middleware:<Cls>": {"cls", "kind": "project|third-party|unknown", "registered_at": "file:line",
+  "order": {"registered": int, "runs": int, "of": int},        // runs = of-1-registered (Starlette inserts at 0)
+  "outer": "middleware:<Cls>"|null, "inner": "middleware:<Cls>"|null, "file"?, "method"?,
+  "pass_through": [{"kind": "exact-paths|prefix|method|flag|expr", "src", "values"?, "expr"?, "at"}],
+  "exits": [{"id": "x:…", …the endpoint row's fields…, "applies_to": int, "exempt": ["endpoint:…"], "hop"?, "on_endpoints"?: false}]}},
+"dependencies": {"file::qual": {"kind": "function|class|security|unknown", "levels_id", "at"?,
+  "subdeps": ["file::qual" | {"name", "resolved": false}],   // FastAPI's parameter order, not gate-first
+  "exits": [{"id", …}], "inherited_exits": [{"id", …}], "escapes"?: ["Cls file:line"],
+  "effects": [{"op": "commit", "at", "via"?: "callee @ file:line"}], "teardown": bool, "applies_to": int,
+  "class"?/"auto_error"? (security)}}
+```
+Findings (`arm_findings.kinds`): `indistinct-exits {subject, status, at, exits[], sites[]}` · `dependency-commits {subject, commits[], applies_to}`.
+
 ### Core object shapes (per endpoint, and per `variants[]` entry)
 
 ```jsonc

@@ -41,6 +41,10 @@ OPTIONS = {
     "u3_empty": "n/a",
     # how far the shared reach walk reads (amendment 1 D17): discovery only, never a row
     "reach_depth": 4,
+    # a middleware row a path condition proves off stays in `produced` with `applies: false` (D19)
+    "exempt_rows": "annotate",
+    # a called function becomes `branches[]` only when it decides the path (D14)
+    "expand_branches": "deciding",
 }
 MUTATING_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 
@@ -105,16 +109,24 @@ FINDINGS = {
                    "says": "produces statuses the endpoint does not declare"},
     "declared-unproduced": {"arm": "endpoint", "slot": "K1", "pulse": "count",
                             "says": "declares a status no path produces"},
+    "indistinct-exits": {"arm": "kinds", "slot": "K3", "pulse": "count",
+                         "says": "one response builder answers several refusals — a client cannot tell which limit or rule fired"},
+    "dependency-commits": {"arm": "kinds", "slot": "K3", "pulse": "count",
+                           "says": "a dependency commits a transaction before the handler runs — a later refusal cannot undo it"},
 }
+# the transaction verbs an effect scan looks for (dependency forms; the effects arm widens the family)
+TX_CALLS = frozenset({"commit"})
 
 # ── the GENERATION ARMS (amendment 1, docs/design/element-forms/amendment-1.md) ────────────────────────
 # Each arm is one switch — center.config.json `forms_arms: {"paths": true, …}` or GABE_FORMS_ARMS=paths,effects|all|none —
 # and every arm defaults OFF. The ids (Slice 2) are no switch: they are written whenever any arm is on.
 ARMS = {
-    "kinds": {"slice": 3, "parts": ("middleware", "dependencies", "functions", "tasks", "handlers")},
-    "short": {"slice": 4, "parts": ("schema", "model", "migration", "setting", "mirror")},
+    "kinds": {"slice": 3, "parts": ("middleware", "dependencies", "functions", "tasks", "handlers"),
+              "part_slices": {"functions": 8, "tasks": 8, "handlers": 8}},
+    "short": {"slice": 4, "parts": ("schema", "model", "migration", "setting", "mirror"),
+              "part_slices": {"model": 10, "migration": 10, "setting": 10, "mirror": 10}},
     "switches": {"slice": 5, "parts": ()},
-    "paths": {"slice": 3, "parts": ("returns", "conditions", "framework", "paths")},
+    "paths": {"slice": 3, "parts": ("returns", "conditions", "framework", "paths"), "part_slices": {"framework": 4, "paths": 5}},
     "effects": {"slice": 6, "parts": ()},
     "contract": {"slice": 7, "parts": ()},
     "tests": {"slice": 9, "parts": ()},

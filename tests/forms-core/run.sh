@@ -415,6 +415,7 @@ PY
 
 py "K1 · FIRE: a selection writes the arms envelope — every arm listed, hard needs closed, unknown names named (F7 F36)" <<'PY'
 import _a3_forms as F, _a3_forms_build as B
+B.RUNNERS.clear()                                  # the bare envelope: no arm is built in this case
 amap, raw = forms_of(A)
 f = B.extend_backend(copy.deepcopy(raw), amap, A, {"forms_arms": {"paths": True}})
 a = f["arms"]

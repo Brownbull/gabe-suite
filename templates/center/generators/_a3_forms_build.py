@@ -24,11 +24,13 @@ import _a3_forms_catch  # noqa: F401  (a shared leaf — imported at column 0 so
 import _a3_forms_ids as I
 import _a3_forms_reach  # noqa: F401
 import _a3_forms_settings  # noqa: F401
+import _a3_forms_mw  # the kinds arm: middleware + dependency forms (Slice 3)
 
-# arm → runner(forms, ctx) -> {"version", "options", "stats"}; ctx carries amap (a private copy) · repo · cfg · selected ·
+# arm → runner(forms, ctx) -> {"version", "options", "stats"}; a runner that builds only some parts says so in a `parts`
+# attribute (the rest read "not built yet (slice n)"). ctx carries amap (a private copy) · repo · cfg · selected ·
 # parts (the parts this stage runs; () for an arm without parts) · ok (units that already succeeded) · soft (the soft
 # needs that are selected and succeeded)
-RUNNERS: dict = {}
+RUNNERS: dict = {"kinds": _a3_forms_mw.run}
 _ERR_CAP = 200
 
 
@@ -228,10 +230,14 @@ def extend_backend(forms: dict, amap: dict, repo, cfg: dict | None = None) -> di
                 else:
                     runnable.append(u)
             runner = RUNNERS.get(arm)
-            if runnable and runner is None:
-                for u in runnable:
-                    out[u] = {"present": False, "reason": f"not built yet (slice {F.ARMS[arm]['slice']})"}
-            elif runnable:
+            built = set(runner.parts) if runner is not None and hasattr(runner, "parts") else None
+            for u in list(runnable):
+                part = u.split(".", 1)[1] if "." in u else None
+                if runner is None or (built is not None and part not in built):
+                    slice_n = F.ARMS[arm].get("part_slices", {}).get(part, F.ARMS[arm]["slice"])
+                    out[u] = {"present": False, "reason": f"not built yet (slice {slice_n})"}
+                    runnable.remove(u)
+            if runnable:
                 snapshot = copy.deepcopy(forms)
                 ctx = {"amap": private, "repo": Path(repo), "cfg": cfg or {}, "selected": frozenset(sel),
                        "parts": tuple(u.split(".", 1)[1] for u in runnable if "." in u), "ok": frozenset(ok),
