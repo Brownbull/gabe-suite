@@ -286,12 +286,12 @@ g = build(d2, "kinds")
 assert g["dependencies"] == {}, g["dependencies"]
 PY
 
-py "C17 · honest: arms off writes no kinds map; paths alone runs no kinds — only its unbuilt paths part needs the stack" <<'PY'
+py "C17 · honest: arms off writes no kinds map; paths needs the middleware stack for its paths part — kinds is computed in memory and stripped" <<'PY'
 off = build(A, None)
 assert not {"middleware", "dependencies", "arms"} & set(off), sorted(off)
 f = build(A, "paths")
 assert not {"middleware", "dependencies"} & set(f), sorted(f)
-assert f["arms"]["kinds"]["reason"] == "switched off" and f["arms"]["paths"]["parts"]["paths"]["reason"] == "not built yet (slice 5)", (f["arms"]["kinds"], f["arms"]["paths"]["parts"])
+assert f["arms"]["kinds"]["reason"].startswith("switched off — computed in memory for paths") and f["arms"]["paths"]["parts"]["paths"]["present"] is True, (f["arms"]["kinds"], f["arms"]["paths"]["parts"])
 PY
 
 py "C18 · pass-through polarity: a negated prefix passes every path but its own; the kinds form and the paths rows agree endpoint by endpoint" <<'PY'

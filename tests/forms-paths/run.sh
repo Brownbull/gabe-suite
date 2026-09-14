@@ -548,7 +548,9 @@ assert p["parts"]["conditions"]["present"] is False and "exempt_rows 'drop' is n
 PY
 
 py "S3.P11 · a needed-only arm: the parts that ran say computed in memory, a part not built keeps its own reason" <<'PY'
+import _a3_forms_paths as FPm
 B.RUNNERS["effects"] = lambda forms, ctx: {}
+FPm.run.parts = ("returns", "conditions", "framework")     # a paths part no runner builds, so its own reason must survive
 p = build(A, "effects")["arms"]["paths"]
 assert p["reason"] == "switched off — computed in memory for effects" and p["parts"]["returns"]["reason"] == p["reason"], p
 assert p["parts"]["paths"]["reason"] == "not built yet (slice 5)", p["parts"]
@@ -623,7 +625,7 @@ def summary(tier: str, settings: Settings) -> int:
 def block(tier: str, settings: Settings) -> int:
     return summary(tier, settings)
 '''
-ME = '''from fastapi import APIRouter, Depends
+ME = '''from fastapi import APIRouter, Depends, HTTPException
 
 from config import Settings, get_settings
 from deps import _verifier, get_user
@@ -635,7 +637,10 @@ router = APIRouter(prefix="/me")
 
 @router.get("/credits")
 def credits(user: str = Depends(get_user), settings: Settings = Depends(get_settings)):
-    return {"allowance": block("free", settings)}
+    total = block("free", settings)
+    if total < 0:
+        raise HTTPException(status_code=409, detail="negative allowance")
+    return {"allowance": total}
 
 
 @router.get("/direct")
@@ -745,6 +750,258 @@ SW.scope_functions = boom
 c = build(d, "switches")
 assert c["arms"]["switches"]["present"] is False and "switches down" in c["arms"]["switches"]["reason"], c["arms"]["switches"]
 assert not any("switches" in v for e in c["endpoints"].values() for v in (e.get("variants") or [e])), "a half-written switch reached the feed"
+PY
+
+cat > "$T/paths_fixture.py" <<'PYF'
+TWO = '''def pick_a(session, x):
+    if x == 1:
+        session.commit()
+        return "a1"
+    return "a2"
+
+
+def pick_b(session, y):
+    if y == 1:
+        session.commit()
+        return "b1"
+    return "b2"
+'''
+TWO_API = '''from fastapi import APIRouter
+
+from services.two import pick_a, pick_b
+
+router = APIRouter(prefix="/two")
+
+
+@router.post("/both")
+def both(x: int, y: int):
+    a = pick_a(None, x)
+    b = pick_b(None, y)
+    return {"a": a, "b": b}
+'''
+SPLIT_API = '''from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+
+router = APIRouter(prefix="/split")
+
+
+class Item(BaseModel):
+    name: str
+
+
+@router.post("/body")
+def body_ep(item: Item):
+    return {"name": item.name}
+
+
+def get_token(token: str = Query(...)):
+    if token == "bad":
+        raise HTTPException(status_code=401, detail="bad token")
+    return token
+
+
+def get_scope(scope: str = Query(...)):
+    return scope
+
+
+@router.get("/me")
+def me(page: int, t: str = Depends(get_token), s: str = Depends(get_scope)):
+    return {"page": page}
+'''
+ERRORS = '''class Boom(Exception):
+    pass
+
+
+def helper(x):
+    if x:
+        raise Boom()
+'''
+BOOMY = '''from fastapi import APIRouter, Depends, Request
+
+from services.errors import Boom, helper
+
+router = APIRouter(prefix="/boomy")
+
+
+def check_boom(request: Request) -> None:
+    if request.headers.get("boom"):
+        raise Boom()
+
+
+@router.post("/direct")
+def direct(x: int):
+    if x:
+        raise Boom()
+    return {}
+
+
+@router.post("/nested")
+def nested(x: int):
+    helper(x)
+    return {}
+
+
+@router.post("/argument")
+def argument(x: int):
+    str(helper(x))
+    return {}
+
+
+@router.post("/dep")
+def dep(_: None = Depends(check_boom)):
+    return {}
+'''
+MAIN_APPH = '''
+
+from fastapi.responses import JSONResponse
+
+from services.errors import Boom
+
+
+@app.exception_handler(Boom)
+async def boom_handler(request, exc):
+    return JSONResponse(status_code=418, content={"detail": "boom"})
+'''
+
+
+def apph(d):
+    (d / "services/errors.py").write_text(ERRORS)
+    (d / "api/boomy.py").write_text(BOOMY)
+    p = d / "main.py"
+    p.write_text(p.read_text() + MAIN_APPH)
+
+
+def two(d):
+    (d / "services/two.py").write_text(TWO)
+    (d / "api/two.py").write_text(TWO_API)
+
+
+def split(d):
+    (d / "api/split.py").write_text(SPLIT_API)
+
+
+def drift(d):
+    for rel in ("services/orders.py", "api/orders.py", "middleware/gate.py"):
+        p = d / rel
+        p.write_text("\n\n\n" + p.read_text())
+PYF
+
+py "S5.W1 · paths: one per exit in request order — the stack's gates, the handler's guards and calls, each deciding arm its own success path" <<'PY'
+f = build(A, "paths")
+assert f["arms"]["paths"]["parts"]["paths"]["present"] is True, f["arms"]["paths"]["parts"]
+ps = f["endpoints"]["endpoint:POST /orders/settle"]["paths"]
+succ = [p for p in ps if p["exit"]["kind"] == "success"]
+assert [p["names"]["token"] for p in succ] == ["REPLAY", "DONE", "fall-through"] and len({p["id"] for p in succ}) == 3, [p["names"] for p in succ]
+assert len({p["exit"]["id"] for p in succ}) == 1 and all(re.fullmatch(r"p:[0-9a-f]{10}", p["id"]) for p in ps), succ
+done = [c["kind"] + ("+" if c.get("hit") else "-" if c.get("hit") is False else "") for c in succ[1]["chain"] if c["kind"] in ("call", "branch")]
+assert done == ["call", "branch-", "branch+"], done
+assert ps[-1]["exit"]["kind"] == "uncaught" and ps[-1].get("anywhere") and ps[-1]["state"] == "partial", ps[-1]
+kinds = [p["exit"]["kind"] for p in f["endpoints"]["endpoint:GET /healthz"]["paths"]]
+assert kinds == ["success", "uncaught"], "a path-exempt 429 got a path: " + str(kinds)
+PY
+
+py "S5.P4 · a translated refusal's chain: the stack passed, the call, the raise in the callee, the catch that translated it — in that order" <<'PY'
+f = build(A, "paths")
+p = next(p for p in f["endpoints"]["endpoint:POST /orders/reserve"]["paths"] if p["status"] == 409)
+tail = [c["kind"] for c in p["chain"] if c["kind"] in ("call", "gate", "catch", "exit")][-4:]
+assert tail == ["call", "gate", "catch", "exit"], [c["kind"] for c in p["chain"]]
+hit = next(c for c in p["chain"] if c.get("hit"))
+catch = next(c for c in p["chain"] if c["kind"] == "catch")
+assert hit["at"].startswith("services/orders.py:") and catch["op"] == "translate" and catch["at"].startswith("api/orders.py:") and p["names"]["exception"] == "OrderError", p["chain"]
+gates = [c for c in p["chain"] if c["kind"] == "gate" and not c["hit"]]
+assert [c["phase"] for c in gates][:2] == ["middleware", "middleware"], gates
+g2 = build(A, "switches,paths")
+k2 = [c["kind"] for c in next(p for p in g2["endpoints"]["endpoint:POST /orders/reserve"]["paths"] if p["status"] == 409)["chain"]]
+assert "switch" in k2 and k2.index("switch") < k2.index("gate"), "the middleware flag switch does not sit before the gates it decides: " + str(k2)
+PY
+
+py "S5.P5 · the linear rule: two deciding calls with two arms each give three success paths and one omitted combination" <<'PY'
+import sys; sys.path.insert(0, str(T))
+from paths_fixture import two
+f = build(variant("two", two), "paths")
+succ = [p for p in f["endpoints"]["endpoint:POST /two/both"]["paths"] if p["exit"]["kind"] == "success"]
+chosen = sorted(tuple(sorted(c["ref"] for c in p["chain"] if c["kind"] == "branch" and c.get("hit"))) for p in succ)
+assert len(succ) == 3 and len(set(chosen)) == 3 and all(len(x) == 2 for x in chosen), chosen
+assert f["arms"]["paths"]["stats"]["combinations_omitted"] == 1, f["arms"]["paths"]["stats"]
+PY
+
+py "S5.P13 · the 422 split: a dependency's parameters answer before its body, the endpoint's own after every dependency" <<'PY'
+import sys; sys.path.insert(0, str(T))
+from paths_fixture import split
+f = build(variant("split", split), "short,paths")
+order = [(p["status"], p.get("split")) for p in f["endpoints"]["endpoint:GET /split/me"]["paths"] if p["exit"]["kind"] != "success"]
+i_dep, i_401, i_own = order.index((422, "dependency-params")), order.index((401, None)), order.index((422, "own-params"))
+assert i_dep < i_401 < i_own, order
+dep = next(p for p in f["endpoints"]["endpoint:GET /split/me"]["paths"] if p.get("split") == "dependency-params")
+own = next(p for p in f["endpoints"]["endpoint:GET /split/me"]["paths"] if p.get("split") == "own-params")
+assert dep["exit"]["id"] == own["exit"]["id"] and dep["id"] != own["id"] and dep["cases"] and own["cases"] and not set(dep["cases"]) & set(own["cases"]), (dep, own)
+deps = [p for p in f["endpoints"]["endpoint:GET /split/me"]["paths"] if p.get("split") == "dependency-params"]
+assert len(deps) == 2 and len({p["id"] for p in deps}) == 2 and [p["dependency"] for p in deps] == ["api/split.py::get_token", "api/split.py::get_scope"], [(p["id"], p.get("dependency")) for p in deps]
+bp = [p for p in f["endpoints"]["endpoint:POST /split/body"]["paths"] if p.get("split") == "body-parse"]
+ids_bp = {p["exit"]["id"] for p in bp}
+assert len(bp) == 2 and all(not {c.get("ref") for c in p["chain"] if c["kind"] == "gate" and c.get("hit") is False} & ids_bp for p in bp), [p["chain"] for p in bp]
+later = next(p for p in f["endpoints"]["endpoint:POST /split/body"]["paths"] if p.get("split") == "own-params")
+assert ids_bp <= {c.get("ref") for c in later["chain"] if c["kind"] == "gate" and c.get("hit") is False}, "a later path does not pass the body read"
+PY
+
+py "S5.P8b · a binding that agrees proves the translated 401; without a declared port the same path is partial" <<'PY'
+import sys; sys.path.insert(0, str(T))
+from switches_fixture import edit_sw
+f = build(variant("sw", edit_sw), "switches,paths")
+p = next(p for p in f["endpoints"]["endpoint:GET /me/credits"]["paths"] if p["status"] == 401)
+sw = next(s for s in f["endpoints"]["endpoint:GET /me/credits"]["switches"] if s["kind"] == "binding")
+assert p["proven_by"] == sw["id"] and sw["id"] in p["switches"] and p["state"] == "defined", p
+def plain(d):
+    edit_sw(d)
+    patch(d, "ports.py", "class Verifier(Protocol):", "class Verifier:")
+g = build(variant("sw-plain", plain), "switches,paths")
+q = next(p for p in g["endpoints"]["endpoint:GET /me/credits"]["paths"] if p["status"] == 401)
+assert "proven_by" not in q and q["state"] == "partial" and any("unverified" in u for u in q["unknown"]), q
+v = [p for p in f["endpoints"]["endpoint:GET /me/credits"]["paths"] if any(c["kind"] == "switch" and c["ref"].startswith("sw:") for c in p["chain"])]
+value_id = next(s["id"] for s in f["endpoints"]["endpoint:GET /me/credits"]["switches"] if s["kind"] == "value")
+assert all(value_id not in p["switches"] for p in f["endpoints"]["endpoint:GET /me/credits"]["paths"] if p["exit"]["kind"] != "success"), "a value switch rode a refusal path"
+PY
+
+py "S5.P3 · path ids survive a line move; an exempt route loses its 429 path; honest-empty and determinism" <<'PY'
+import sys; sys.path.insert(0, str(T))
+import _a3_forms_walk as W
+from paths_fixture import drift
+f = build(A, "paths")
+g = build(variant("drift", drift), "paths")
+ids = lambda x: sorted(p["id"] for e in x["endpoints"].values() for p in e.get("paths") or [])
+assert ids(f) == ids(g) and len(ids(f)) == len(set(ids(f))), "a path id moved with a blank line"
+assert json.dumps(f, sort_keys=True) == json.dumps(build(A, "paths"), sort_keys=True)
+def exempt(d):
+    patch(d, "middleware/gate.py", 'EXEMPT = frozenset({"/healthz"})', 'EXEMPT = frozenset({"/healthz", "/orders/reserve"})')
+h = build(variant("exempt", exempt), "paths")
+before = [p["status"] for p in f["endpoints"]["endpoint:POST /orders/reserve"]["paths"]]
+after = [p["status"] for p in h["endpoints"]["endpoint:POST /orders/reserve"]["paths"]]
+assert before.count(429) == 2 and after.count(429) == 0, (before, after)   # the pass-through runs before both 429 exits
+def boom(*a, **k):
+    raise RuntimeError("paths down")
+W.endpoint_paths = boom
+x = build(A, "paths")
+assert x["arms"]["paths"]["parts"]["paths"]["present"] is False and not any("paths" in e for e in x["endpoints"].values()), x["arms"]["paths"]["parts"]
+assert x["arms"]["paths"]["parts"]["returns"]["present"] is True, "a failing paths part cost the returns"
+PY
+
+py "S5.P14 · a refusal an app exception handler answers gets its path: raised in the handler or a callee, closed by that handler's catch" <<'PY'
+import sys; sys.path.insert(0, str(T))
+from paths_fixture import apph
+f = build(variant("apph", apph), "paths")
+for key, raised, phase in (("endpoint:POST /boomy/direct", "api/boomy.py:", "handler"), ("endpoint:POST /boomy/nested", "services/errors.py:", "handler"),
+                           ("endpoint:POST /boomy/argument", "services/errors.py:", "handler"), ("endpoint:POST /boomy/dep", "api/boomy.py:", "dependency")):
+    p = next((p for p in f["endpoints"][key]["paths"] if p["status"] == 418), None)
+    assert p is not None, (key, [(x["status"], x["exit"]["kind"]) for x in f["endpoints"][key]["paths"]])
+    hit = next(c for c in p["chain"] if c.get("hit"))
+    catch = [c for c in p["chain"] if c["kind"] == "catch"]
+    assert hit["at"].startswith(raised) and catch and catch[-1]["op"] == "translate" and catch[-1]["at"].startswith("main.py:") and p["names"]["exception"] == "Boom", (key, p["chain"])
+    assert p["phase"] == phase and hit["phase"] == phase, (key, p["phase"], hit)
+arg = next(p for p in f["endpoints"]["endpoint:POST /boomy/argument"]["paths"] if p["status"] == 418)
+assert any(c["kind"] in ("call", "collapsed") and c.get("at", "").startswith("api/boomy.py:") for c in arg["chain"]), arg["chain"]   # through the outer statement
+dep = next(p for p in f["endpoints"]["endpoint:POST /boomy/dep"]["paths"] if p["status"] == 418)
+assert not any(c.get("phase") == "handler" for c in dep["chain"]), dep["chain"]   # a dependency's refusal never enters the handler
+assert f["arms"]["paths"]["stats"]["unplaced"] == 0, f["arms"]["paths"]["stats"]
 PY
 
 echo "forms-paths: $pass passed, $fail failed"

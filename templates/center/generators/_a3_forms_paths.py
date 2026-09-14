@@ -27,9 +27,10 @@ import _a3_forms_ids as I
 import _a3_forms_reach as R
 import _a3_forms_schema as SC
 import _a3_forms_settings as S
+import _a3_forms_walk as W
 import _a3_paths as P
 
-PARTS = ("returns", "conditions", "framework")
+PARTS = ("returns", "conditions", "framework", "paths")
 _BARE, _IMPLICIT = "__gabe_bare_return__", "__gabe_implicit_return__"
 
 
@@ -392,8 +393,8 @@ def conditions_part(repo: Path, forms: dict) -> tuple[dict, dict]:
 
 
 def run(forms: dict, ctx: dict) -> dict:
-    """The paths arm's parts so far: ``returns`` (returns · branches · collapsed) and ``conditions`` (Slice 3), ``framework``
-    (the body-parse exits FastAPI answers before any dependency, Slice 4)."""
+    """The paths arm's parts: ``returns`` (returns · branches · collapsed) and ``conditions`` (Slice 3), ``framework`` (the
+    body-parse exits FastAPI answers before any dependency, Slice 4) and ``paths`` (one path per exit, Slice 5b)."""
     repo, parts = Path(ctx["repo"]), ctx["parts"]
     stats: dict = {}
     if "returns" in parts:
@@ -403,6 +404,8 @@ def run(forms: dict, ctx: dict) -> dict:
         stats.update(got)
     if "framework" in parts:
         stats.update(SC.framework_exits(repo, forms))
+    if "paths" in parts:
+        stats.update(W.paths_part(repo, forms))
     return {"version": 1, "stats": stats,
             "options": {"expand_branches": F.OPTIONS["expand_branches"], "exempt_rows": F.OPTIONS["exempt_rows"]}}
 
