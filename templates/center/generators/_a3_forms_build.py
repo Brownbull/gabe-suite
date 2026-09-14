@@ -25,13 +25,15 @@ import _a3_forms_ids as I
 import _a3_forms_reach  # noqa: F401
 import _a3_forms_settings  # noqa: F401
 import _a3_forms_mw  # the kinds arm: middleware + dependency forms (Slice 3)
-import _a3_forms_paths  # the paths arm: returns · branches · collapsed · conditions (Slice 3)
+import _a3_forms_paths  # the paths arm: returns · branches · collapsed · conditions (Slice 3) · body-parse exits (Slice 4)
+import _a3_forms_short  # noqa: F401  (the short forms registry — data only)
+import _a3_forms_schema  # the short arm: request schemas + 422 cases (Slice 4)
 
 # arm → runner(forms, ctx) -> {"version", "options", "stats"}; a runner that builds only some parts says so in a `parts`
 # attribute (the rest read "not built yet (slice n)"). ctx carries amap (a private copy) · repo · cfg · selected ·
 # parts (the parts this stage runs; () for an arm without parts) · ok (units that already succeeded) · soft (the soft
 # needs that are selected and succeeded)
-RUNNERS: dict = {"kinds": _a3_forms_mw.run, "paths": _a3_forms_paths.run}
+RUNNERS: dict = {"kinds": _a3_forms_mw.run, "paths": _a3_forms_paths.run, "short": _a3_forms_schema.run}
 _ERR_CAP = 200
 
 

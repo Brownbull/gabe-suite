@@ -25,10 +25,11 @@ from pathlib import Path
 import _a3_forms as F
 import _a3_forms_ids as I
 import _a3_forms_reach as R
+import _a3_forms_schema as SC
 import _a3_forms_settings as S
 import _a3_paths as P
 
-PARTS = ("returns", "conditions")
+PARTS = ("returns", "conditions", "framework")
 _BARE, _IMPLICIT = "__gabe_bare_return__", "__gabe_implicit_return__"
 
 
@@ -381,7 +382,8 @@ def conditions_part(repo: Path, forms: dict) -> tuple[dict, dict]:
 
 
 def run(forms: dict, ctx: dict) -> dict:
-    """The paths arm's Slice 3 parts: ``returns`` (returns · branches · collapsed) and ``conditions``."""
+    """The paths arm's parts so far: ``returns`` (returns · branches · collapsed) and ``conditions`` (Slice 3), ``framework``
+    (the body-parse exits FastAPI answers before any dependency, Slice 4)."""
     repo, parts = Path(ctx["repo"]), ctx["parts"]
     stats: dict = {}
     if "returns" in parts:
@@ -389,6 +391,8 @@ def run(forms: dict, ctx: dict) -> dict:
     if "conditions" in parts:
         forms["conditions"], got = conditions_part(repo, forms)
         stats.update(got)
+    if "framework" in parts:
+        stats.update(SC.framework_exits(repo, forms))
     return {"version": 1, "stats": stats,
             "options": {"expand_branches": F.OPTIONS["expand_branches"], "exempt_rows": F.OPTIONS["exempt_rows"]}}
 

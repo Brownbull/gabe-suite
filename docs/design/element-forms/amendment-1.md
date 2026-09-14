@@ -178,6 +178,26 @@ The `returns[]` · `branches[]` · `collapsed[]` shapes are the core shapes belo
 - Stats: returns · branch_returns · branches · handlers_expanded · collapsed{reason: n} · conditions · applies_false ·
   applies_true · when_for_path.
 
+### Schema forms (as built, Slice 4 — `_a3_forms_schema.py` + `_a3_forms_short.py`)
+
+```jsonc
+"schemas": {"schema:<Cls>": {"cls", "file", "at", "extra": "forbid|ignore|allow", "extra_state": "defined|default", "extra_at",
+  "fields": [{"name", "at", "annotation", "required", "constraints": {kw: value}, "alias"?}],
+  "validators": [{"name", "kind", "fields": [...], "at", "normalises": [...],
+                  "rules": [{"type", "at", "msg", "pred"?, "allowed"?: {"values"} | {"state": "unknown", "reason": "runtime: f()"},
+                             "range"?: [lo, hi], "bound"?: {kw: value}, "via"?: "helper @ file:line"}]}],
+  "consumers": int, "claimed"?: false}},   // claimed:false = a class a handler names that no code.schemas claim covers — formed, so no case dangles
+// on a validation row:
+"cases": [{"id": "case:schema:<Cls>/<field>|__model__/<type>[/<validator>.<n>]" | "case:param:<p>/<type>" | "case:framework:<p>/missing",
+           "loc": "body.dietary.allergens", "type": "<pydantic error type>", "at"?, "rule"?, "msg"?, "allowed"?, "range"?, "bound"?,
+           "schema"?, "validator"?, "param", "state"?: "default"}],
+"schemas": ["schema:<Cls>"], "types": "collapsed", "unread"?: [{"param", "reason": "dependency parameter: rules not read"}],
+// on an endpoint that reads a body (paths.framework):
+"framework_exits": [{"id": "x:…", "phase": "body-parse", "status": 422|400, "state": "default", "form", "detail", "source"}]
+```
+A message keeps `{…}` for a value only known at runtime (`{len(cleaned)}`); constants and call-site keywords are filled in.
+Finding (`arm_findings.short`): `extra-ignored {subject, consumers}`.
+
 ### Core object shapes (per endpoint, and per `variants[]` entry)
 
 ```jsonc

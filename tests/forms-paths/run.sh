@@ -422,7 +422,7 @@ assert c[0]["when_for_path"] == "settings.limit_enabled" and "applies" not in c[
 ck = "middleware/gate.py::Gate: not (not self._enabled or request.url.path in EXEMPT)"
 assert list(on["conditions"]) == [ck], list(on["conditions"])
 assert [t["kind"] for t in on["conditions"][ck]["terms"]] == ["expr", "in"]
-assert on["arms"]["paths"]["stats"]["applies_false"] >= 1 and on["arms"]["paths"]["parts"]["framework"]["reason"] == "not built yet (slice 4)", on["arms"]["paths"]
+assert on["arms"]["paths"]["stats"]["applies_false"] >= 1 and on["arms"]["paths"]["parts"]["framework"]["present"] is True, on["arms"]["paths"]
 PY
 
 py "S3.P3 · contributes-rows: a callee whose raise the handler turns into a refusal decides the path with no commit in it" <<'PY'
@@ -544,7 +544,7 @@ s = build(A, "paths")["endpoints"]["endpoint:POST /orders/settle"]
 assert "branches" not in s and {c["call"]: c["reason"] for c in s["collapsed"]}["settle"] == "expand_branches: none", s
 F.OPTIONS["expand_branches"], F.OPTIONS["exempt_rows"] = "deciding", "drop"
 p = build(A, "paths")["arms"]["paths"]
-assert p["present"] is False and "exempt_rows 'drop' is not built" in p["reason"], p
+assert p["parts"]["conditions"]["present"] is False and "exempt_rows 'drop' is not built" in p["parts"]["conditions"]["reason"], p["parts"]
 PY
 
 py "S3.P11 · a needed-only arm: the parts that ran say computed in memory, a part not built keeps its own reason" <<'PY'

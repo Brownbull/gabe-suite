@@ -118,6 +118,8 @@ FINDINGS = {
                          "says": "one response builder answers several refusals — a client cannot tell which limit or rule fired"},
     "dependency-commits": {"arm": "kinds", "slot": "K3", "pulse": "count",
                            "says": "a dependency commits a transaction before the handler runs — a later refusal cannot undo it"},
+    "extra-ignored": {"arm": "short", "slot": "S6", "pulse": "count",
+                      "says": "a request schema ignores unknown keys — a misspelt field is dropped silently instead of refused"},
 }
 # the transaction verbs an effect scan looks for (dependency forms; the effects arm widens the family)
 TX_CALLS = frozenset({"commit"})
