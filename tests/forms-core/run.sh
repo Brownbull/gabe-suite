@@ -382,6 +382,13 @@ def hev_of(evs):
 def eps(forms):
     for e in forms["endpoints"].values():
         yield from (e.get("variants") or [e])
+def strip_ids(endpoints):
+    endpoints = copy.deepcopy(endpoints)
+    for v in eps({"endpoints": endpoints}):
+        for r in (v.get("produced") or []) + (v.get("preconditions") or []):
+            for k in ("id", "exit", "exits"):
+                r.pop(k, None)
+    return endpoints
 def writer(key):
     def run(forms, ctx):
         for v in eps(forms):
@@ -416,7 +423,8 @@ assert a["paths"]["present"] is False and a["paths"]["reason"] == "needs kinds.m
 assert a["paths"]["parts"] == {p: {"present": False, "reason": "needs kinds.middleware"} for p in F.ARMS["paths"]["parts"]}, a["paths"]["parts"]
 assert a["kinds"]["reason"] == "not built yet (slice 3) — needed by paths", a["kinds"]
 assert set(a["kinds"]["parts"]) == set(F.ARMS["kinds"]["parts"]) and set(a["short"]["parts"]) == set(F.ARMS["short"]["parts"]), (a["kinds"], a["short"])
-assert a["effects"]["reason"] == "switched off" and f["endpoints"] == raw["endpoints"] and "arm_findings" not in f, sorted(f)
+assert a["effects"]["reason"] == "switched off" and strip_ids(f["endpoints"]) == raw["endpoints"] and "arm_findings" not in f, sorted(f)
+assert f["ids"]["present"] and f["ids"]["x"] > 0 and f["ids"]["g"] > 0, f["ids"]
 os.environ["GABE_FORMS_ARMS"] = "ALL, Bogus"
 g = B.extend_backend(copy.deepcopy(raw), amap, A, {})
 assert list(g["arms"]) == list(F.ARM_ORDER) and g["arms_ignored"] == ["bogus"], (list(g["arms"]), g.get("arms_ignored"))
@@ -457,7 +465,7 @@ assert a["fake_dep"]["reason"] == "needs fake", a["fake_dep"]
 assert a["fake_late"]["present"] is True and a["fake_late"]["stats"] == {"endpoints": len(raw["endpoints"])} and a["fake_late"]["bytes"] > 0, a["fake_late"]
 assert a["fake_ok"] == {"present": False, "reason": "switched off — computed in memory for fake_late", "version": 1, "options": {}, "stats": {}}, a["fake_ok"]
 assert "junk" not in f and f["arm_findings"] == {"fake_late": [{"id": "fake_late"}]}, (sorted(f), f.get("arm_findings"))
-bare = copy.deepcopy(f["endpoints"])
+bare = strip_ids(f["endpoints"])
 for v in eps({"endpoints": bare}):
     assert v.pop("fake_late") == "fake_late" and "half" not in v and "fake_ok" not in v, sorted(v)
     af = v.pop("arm_findings", None)

@@ -101,7 +101,7 @@
 | prefix | object | tuple | shared across endpoints |
 |---|---|---|---|
 | `x:` | produced exit (refusal · uncaught · framework) | `[phase, status, at_fn, site_fn, via_sym, raised_fn, detail, n]`; no `at` → handler | yes, so `middleware{}.exits[].id == endpoints[*].produced[].id` |
-| `g:` | precondition | `[pred, status, at_fn, via_sym, depth]`; carries `exit: x:` | yes |
+| `g:` | precondition | `[pred, status, at_fn, via_sym, depth, n]` (`n` ranks distinct `at` positions, as for `x:`); carries `exit: x:` (`exits[]` + `exit: null` when several rows share its `at`) | yes |
 | `r:` | success return | `[fn, kind(return·implicit·catch-return), guards[], after[], n]` | yes |
 | `b:` | branch (a deciding callee's arm) | `[fn, guards[], after[], n]` | yes |
 | `p:` | path | `[endpoint_key, handler, exit_id, [chosen b: ids], split_tag]` | no |
@@ -302,7 +302,7 @@ This amendment. The operator rules on the §A1 interface, the switch policy (D12
 
 ### Slice 2 · Ids — A3
 
-**Generates:** `produced[].id` (`x:`), `preconditions[].id` (`g:`) and `.exit`. Written whenever any arm is on (D13).
+**Generates:** `produced[].id` (`x:`), `preconditions[].id` (`g:`) and `.exit`. Written whenever any arm is on (D13), before the first stage, so no arm owns them. A top-level `ids` block carries `{present, reason, x, g, linked, ambiguous, unlinked, collisions}`; ids that fail read `present: false` and never cost the arms.
 
 **Module:** the ids part of `_a3_forms_build.py` (+~60).
 

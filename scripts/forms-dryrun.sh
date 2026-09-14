@@ -61,7 +61,7 @@ on, b_on = load(on_p)
 arms = {arm: {k: blk.get(k) for k in ("present", "reason", "stats", "bytes")} for arm, blk in ((on or {}).get("arms") or {}).items()}
 print(json.dumps({"target": name, "forms_bytes": {"off": b_off, "on": b_on}, "version": (on or {}).get("version"),
                   "head": (on or {}).get("head"), "arms_error": (on or {}).get("arms_error"),
-                  "arms_ignored": (on or {}).get("arms_ignored"), "arms": arms,
+                  "arms_ignored": (on or {}).get("arms_ignored"), "ids": (on or {}).get("ids"), "arms": arms,
                   "moved_on_vs_off": moved.split(), "seconds": {"off": int(s_off), "on": int(s_on)}}, sort_keys=True))
 PY
 done

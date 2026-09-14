@@ -21,7 +21,7 @@ from pathlib import Path
 
 import _a3_forms as F
 import _a3_forms_catch  # noqa: F401  (a shared leaf — imported at column 0 so propagate.sh lands it on a twin)
-import _a3_forms_ids  # noqa: F401
+import _a3_forms_ids as I
 import _a3_forms_reach  # noqa: F401
 import _a3_forms_settings  # noqa: F401
 
@@ -157,6 +157,34 @@ def _containers(forms: dict) -> list[tuple]:
     return made
 
 
+def _write_ids(forms: dict, repo) -> dict:
+    """Stamp ``id`` on every produced exit (``x:``) and precondition (``g:``) — every id computed before any is written —
+    and link each precondition to its exit: the ``x:`` row whose ``at`` or ``raised_at`` is the precondition's ``at``
+    (``exit``; ``exits`` and ``exit: null`` when more than one row is). Returns the envelope's ``ids`` block."""
+    audit: dict = {}
+    xs, gs = I.x_ids(repo, forms, audit), I.g_ids(repo, forms, audit)
+    stats = {"present": True, "reason": None, "x": 0, "g": 0, "linked": 0, "ambiguous": 0, "unlinked": 0,
+             "collisions": audit.get("x", 0) + audit.get("g", 0)}
+    for key, e in (forms.get("endpoints") or {}).items():
+        for vi, v in enumerate(e.get("variants") or [e]):
+            by_at: dict[str, list] = {}
+            for r, i in zip(v.get("produced") or [], xs[key][vi]):
+                r["id"] = i
+                stats["x"] += 1
+                for k in ("at", "raised_at"):
+                    if r.get(k) and i not in by_at.setdefault(r[k], []):
+                        by_at[r[k]].append(i)
+            for g, i in zip(v.get("preconditions") or [], gs[key][vi]):
+                g["id"] = i
+                stats["g"] += 1
+                hits = by_at.get(g.get("at")) or []
+                g["exit"] = hits[0] if len(hits) == 1 else None
+                if len(hits) > 1:
+                    g["exits"] = hits
+                stats["linked" if len(hits) == 1 else "ambiguous" if hits else "unlinked"] += 1
+    return stats
+
+
 def _drop_empty(forms: dict, made: list[tuple]) -> None:
     for path in made:
         host, found = _at(forms, path)
@@ -178,6 +206,10 @@ def extend_backend(forms: dict, amap: dict, repo, cfg: dict | None = None) -> di
         run = closure(sel)
         private = copy.deepcopy(amap)                      # runners never touch the archmap the c4 · levels are built from
         made = _containers(forms)                          # arm_findings is shared: nobody owns the container, each arm its entry
+        try:                                               # ids first (D13): on P.build's own rows, before any stage owns a key
+            forms["ids"] = _write_ids(forms, repo)
+        except Exception as exc:  # noqa: BLE001 — ids that fail never cost the arms
+            forms["ids"] = {"present": False, "reason": f"error: {type(exc).__name__}: {exc}"[:_ERR_CAP]}
         ok: set[str] = set()
         results: dict[str, dict] = {}
         outcomes: dict[str, dict] = {}
