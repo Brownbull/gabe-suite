@@ -410,3 +410,9 @@ library exits (`session.commit`), and the runtime value of `rate_limit_active` (
 | 6 | `tests/gabe-universe` · `probe-eplab.mjs` | card / lab rows |
 
 Every battery is auto-discovered by `scripts/suite-doctor.sh` and `write_facts.py`; re-record facts with `--only`.
+
+---
+
+## Amendment 1 — complete the generation (2026-09-14)
+
+The remaining generation (the paths slice, Phase 4 slots, short forms, the other backend kinds and the Phase 5 frontend pass) is planned as 11 slices in [amendment-1.md](amendment-1.md): the feed interface, the slice order with goldens and batteries, the module map, the verification pass and decisions D11–D28. Status: authorized (operator "go"), building in slice order.
