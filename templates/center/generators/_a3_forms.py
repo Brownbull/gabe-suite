@@ -46,6 +46,9 @@ OPTIONS = {
     "exempt_rows": "annotate",
     # which called functions become `branches[]`: "deciding" (D14) · "all" (every callee with two value returns) · "none"
     "expand_branches": "deciding",
+    # the effects arm's four named widenings (EFFECTS["widenings"]) — off, its (model, rw) pairs and commit flag per
+    # function are `_a3_code._orm_access`'s
+    "effects_widenings": True,
 }
 MUTATING_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 
@@ -120,9 +123,52 @@ FINDINGS = {
                            "says": "a dependency commits a transaction before the handler runs — a later refusal cannot undo it"},
     "extra-ignored": {"arm": "short", "slot": "S6", "pulse": "count",
                       "says": "a request schema ignores unknown keys — a misspelt field is dropped silently instead of refused"},
+    "refusal-writes": {"arm": "effects", "slot": "U9", "pulse": "count",
+                       "says": "a refusal leaves the endpoint's own writes committed — the client hears no, the database kept a yes"},
+    "safe-method-commits": {"arm": "effects", "slot": "U9", "pulse": "count",
+                            "says": "a GET, HEAD or OPTIONS endpoint commits — a retry or a prefetch changes data"},
 }
 # the transaction verbs an effect scan looks for (dependency forms; the effects arm widens the family)
 TX_CALLS = frozenset({"commit"})
+
+# ── the EFFECTS arm (amendment 1 §A2 Slice 6) ─────────────────────────────────────────────────────────
+EFFECTS = {
+    "depth": 4,                                 # callees read below a path; one level deeper counts into `floor`
+    "write_m": {"add": "add", "add_all": "add", "merge": "merge", "delete": "delete",       # session.<m>(obj) (_a3_code._ORM_WRITE_M)
+                "bulk_save_objects": "add", "bulk_insert_mappings": "insert"},
+    "write_core": {"insert": "insert", "update": "update", "delete": "delete"},             # <core>(Model) (_ORM_WRITE_CORE)
+    "tx": {"flush": "flush", "commit": "commit", "rollback": "rollback", "begin_nested": "savepoint"},
+    "writes": ("add", "merge", "delete", "insert", "update"),
+    "safe_methods": ("GET", "HEAD", "OPTIONS"),
+    # a transaction verb, or a write whose object binds no model, counts only on a receiver named like a session or a
+    # parameter annotated `…Session` — `seen.add(x)` and `cache.delete(k)` are not database writes
+    "session_names": r"(?i)(^|_)(session|db|conn|connection|tx|uow)$",
+    "column_calls": ("Column", "mapped_column", "Field"),
+    # a method resolved on a class with one of these bases reaches an implementation the source does not name: `unresolved`
+    "abstract_bases": ("Protocol", "ABC"),
+    "widenings": {
+        "W1": "a tuple unpacked from a call whose return annotation names models",
+        "W2": "a name bound from a query of one model — select(Model)… or an awaited session.get(Model, …)",
+        "W3": "a model named anywhere inside a select, not as its argument",
+        "W4": "every element of session.add_all([...])",
+    },
+}
+SUPPRESSORS = frozenset({"suppress"})           # contextlib.suppress — an exception inside the block never leaves it
+# which dependencies ran before an exit, verified at fastapi ≥ _a3_forms_short.FRAMEWORK_MIN; below it every path reads unknown
+DEPENDENCY_ORDER = {
+    "not-run": {
+        "middleware": "a middleware answers before routing reaches the endpoint",
+        "body-parse": "fastapi/routing.py:427-457 — the body is read and parsed before solve_dependencies",
+        "security": "the security scheme is the first leaf dependency; its 401 stops the solve",
+        "dependency-params": "fastapi/dependencies/utils.py:628-663 — a dependency whose own parameters fail is never called",
+    },
+    "ran": {
+        "own-params": "fastapi/dependencies/utils.py:685-712, raised at fastapi/routing.py:723 — endpoint parameters validate after every dependency",
+        "handler": "the handler runs after the solve", "success": "the handler returned", "uncaught": "the handler was running",
+        "dependency": "a verified raise inside a dependency: those before it ran, it ran to its raise",
+    },
+    "unknown": "a refusal raised inside a dependency whose raise site is unverified",
+}
 
 # ── the GENERATION ARMS (amendment 1, docs/design/element-forms/amendment-1.md) ────────────────────────
 # Each arm is one switch — center.config.json `forms_arms: {"paths": true, …}` or GABE_FORMS_ARMS=paths,effects|all|none —

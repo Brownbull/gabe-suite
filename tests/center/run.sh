@@ -449,6 +449,7 @@ def probe(forms, ctx):                        # clears the archmap it was handed
             v["kinds_probe"] = list(ctx["parts"])
     return {"stats": {"probed": len(forms["endpoints"])}}
 B.RUNNERS["kinds"] = probe
+B.RUNNERS.pop("effects", None)                # keep kinds.functions' hard need unmet, so the part must SAY it (effects landed in Slice 6)
 sys.argv = [gen + "/build_center_a3.py"]; runpy.run_path(gen + "/build_center_a3.py", run_name="__main__")
 PY
 echo $?)
