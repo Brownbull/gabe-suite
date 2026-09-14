@@ -188,7 +188,7 @@ The `returns[]` · `branches[]` · `collapsed[]` shapes are the core shapes belo
                              "range"?: [lo, hi], "bound"?: {kw: value}, "via"?: "helper @ file:line"}]}],
   "consumers": int, "claimed"?: false}},   // claimed:false = a class a handler names that no code.schemas claim covers — formed, so no case dangles
 // on a validation row:
-"cases": [{"id": "case:schema:<Cls>/<field>|__model__/<type>[/<validator>.<n>]" | "case:param:<p>/<type>" | "case:framework:<p>/missing",
+"cases": [{"id": "case:schema:<Cls>/<field path>|<path>.__model__/<type>[/<validator>.<n>]" | "case:param:<p>/<type>" | "case:framework:<p>/missing",
            "loc": "body.dietary.allergens", "type": "<pydantic error type>", "at"?, "rule"?, "msg"?, "allowed"?, "range"?, "bound"?,
            "schema"?, "validator"?, "param", "state"?: "default"}],
 "schemas": ["schema:<Cls>"], "types": "collapsed", "unread"?: [{"param", "reason": "dependency parameter: rules not read"}],
@@ -196,7 +196,17 @@ The `returns[]` · `branches[]` · `collapsed[]` shapes are the core shapes belo
 "framework_exits": [{"id": "x:…", "phase": "body-parse", "status": 422|400, "state": "default", "form", "detail", "source"}]
 ```
 A message keeps `{…}` for a value only known at runtime (`{len(cleaned)}`); constants and call-site keywords are filled in.
-Finding (`arm_findings.short`): `extra-ignored {subject, consumers}`.
+Finding (`arm_findings.short`): `extra-ignored {subject, file, consumers}`.
+
+Readings (after the Slice 4 review):
+- **Identity.** A form belongs to one class — its file and name. Same-named classes in different files are `{"variants": [...]}`, each with its own `consumers` and finding; a case naming such a class carries `schema_file`. A row's `schemas[]` and `consumers` count every model the row reads, rules or none. A case id is `case:schema:<Cls>/<field path>/<type>` (the path from the parameter, `home.street`; `__model__` for the model's own rule), unique per row.
+- **Models.** `BaseModel` · `SQLModel` · `RootModel` (its `root` validates at the body itself), through import aliases and module-attribute bases. `extra` from a class keyword, a `ConfigDict` / dict / named constant, or `class Config`; `alias_generator` `to_camel` / `to_pascal`.
+- **Fields.** `_private` attributes and `ClassVar` are not fields. Constraints come from `Field`, `constr`-family calls, `Annotated` `Field` / `StringConstraints` / `Query`-family metadata, a module alias (`Name = Annotated[...]`) and a `NewType`; a default inside `Annotated` makes a field optional. One effective alias (validation_alias > alias > first `AliasChoices` > generator) is every loc of the field, validator cases included. v1 `min_items` / `max_items` / `regex` map to their v2 rules; any other keyword that is not metadata reads `type: unknown` (counted in `stats.unknown`); `allow_inf_nan` is a rule only when False; `max_digits` + `decimal_places` adds `decimal_whole_digits`. List items are read at `loc.[]`, dict values at `loc.{}`.
+- **Parameters** follow FastAPI's `analyze_param`: a path name → Path (never `missing` — the route would not match), `UploadFile` → a form field, a non-scalar annotation → Body, else Query; an explicit `Query/Path/Header/Cookie/Body/Form/File` in the default or in `Annotated`. Required by the default alone (`Optional[str]` with no default is required; `Query(...)` / `default=...` is). A Header's loc converts underscores to hyphens. The embed rule (more than one body name · `embed=True` · one non-model Form field) sets `embed` on the row. `Annotated[Model, Depends()]` is a dependency, never a body. A dependency's own parameters are read (FastAPI flattens them into the request); a factory's (`Depends(require_permission(P))`) arguments are `unread` with that reason.
+- **Validators.** The nearest definition of each method name only. A raise the validator catches, and a guard or an early return the call-site keywords decide, drop their rule (`and` / `or` / `not` fold); constants are read in the module that holds them (a helper's default in the helper's, a call-site keyword in the caller's). `assert` → `assertion_error`; a `ValueError` subclass and a bare `raise ValueError` → `value_error`; `PydanticCustomError(type, template, ctx)` → its type and filled template; `cls.` / `self.` helpers are followed; `*` and `*FIELDS` expand; a class-attribute allow-list resolves; `range` carries `band: accepted|refused`; messages apply format specs and conversions; `defined` names the class that defines the validator; `unread_calls` names a helper's own calls the one hop does not follow.
+- **Rows.** `cases_truncated` past `case_cap`, `nest_cut` past `nest_depth`, `cycles` for a self-referencing model; `answered_by` when an app handler takes `RequestValidationError` (S9).
+- **Framework exits** carry `body: json|form`. A form body answers starlette's 400 (its detail varies, `detail_state: variable`) and FastAPI's 400 — never `json_invalid`. Below fastapi 0.136.3, or when the version is unreadable, a row reads `status: null`, `state: unknown` with the reason. The exits' ids join the `ids` block (`framework_x`, `collisions`).
+- **Stats:** schemas (distinct classes) · schemas_unclaimed · rows · cases · unread · truncated · runtime_allowlist (distinct rules) · unknown {keyword: n} · deferred (S11, the tests arm) · validation_answered_by?.
 
 ### Switches (as built, Slice 5a — `_a3_forms_switch.py`)
 
@@ -567,6 +577,8 @@ This amendment. The operator rules on the §A1 interface, the switch policy (D12
 **Effort:** M.
 
 ---
+
+**Review (2026-09-14 — five lenses, 72 raw findings, 51 kept after an adversarial verify, none refuted): all fixed.** Two took the whole arm down: a third same-named claimed class raised `KeyError: 'file'`, and a variants entry wrote a field's internal `(_Mod, ClassDef)` handle the feed cannot serialise. The rest are the readings in §A1 "Schema forms" above. New cases in `tests/forms-short`: SF13 identity · SF14 parameters · SF15 schema reading · SF16 validator rules · SF17 framework exits and dependencies, and SF11 now proves the restore on a part that wrote its cases before it raised; every fix mutation-proven. Deferred, named in `stats.deferred`: S11 (a test's construction of a schema) goes to the tests arm, Slice 9. Floors kept: a class attribute set outside the class body; an `alias_generator` that is not `to_camel` / `to_pascal`; an `assert` inside a `try` that catches `AssertionError`.
 
 ### Slice 5 · Switches, then paths — A11 · A8
 
