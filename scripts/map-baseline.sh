@@ -99,6 +99,12 @@ if c:
     out["web_fetch_sites"] = w.get("fetch_sites"); out["web_matched"] = w.get("matched")
     h = st.get("homing") or {}
     out["homing_move"] = h.get("move"); out["homing_agree"] = h.get("agree")
+fm = j("forms.json")
+if fm and fm.get("present"):                     # element forms (plan Phase 3): what the endpoints DECIDE, counted
+    fs = fm.get("stats") or {}; ff = fs.get("findings") or {}
+    out["forms_endpoints"] = fs.get("endpoints"); out["forms_rows"] = fs.get("rows"); out["forms_unknown_rows"] = fs.get("unknown_rows")
+    out["forms_nag"] = sum(ff.get(k, 0) for k in ("shared-status", "reason-lost", "escape-500", "http-swallowed"))
+    out["forms_count"] = sum(ff.get(k, 0) for k in ("text-only", "undeclared", "declared-unproduced"))
 if l:
     out["fn_nodes"] = len(l.get("fn_nodes") or []); out["fn_edges"] = len(l.get("fn_edges") or [])
     out["lv_models"] = len(l.get("models") or []); out["use_edges"] = len(l.get("use_edges") or [])

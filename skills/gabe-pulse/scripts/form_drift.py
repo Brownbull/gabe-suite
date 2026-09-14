@@ -52,7 +52,7 @@ def load_forms(root: Path) -> tuple[str, dict, str]:
     """``(state, forms, reason)`` — state ∈ present · not_emitted · absent · unreadable."""
     p = _center(root) / "forms.json"
     if not p.is_file():
-        return "absent", {}, "no forms.json — the element-forms pass is opt-in (center.config.json `forms: true`)"
+        return "absent", {}, "no forms.json — an older map (regen with the current generators) or the pass is switched off (center.config.json `forms: false`)"
     try:
         data = json.loads(p.read_text(encoding="utf-8"))
     except Exception as exc:  # noqa: BLE001

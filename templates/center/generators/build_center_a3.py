@@ -2194,9 +2194,9 @@ def main() -> int:
     # ELEMENT FORMS (docs/design/element-forms/plan.md) — what each FastAPI endpoint DECIDES: every refusal it can
     # produce, what it declares against what it produces, the guards in its body. A SEPARATE feed, written after the
     # archmap and reading it without mutating it, so archmap · c4 · levels stay byte-identical whether the pass is
-    # off, on, failing or absent. Opt-in until an operator accepts a twin's output (plan D4): center.config.json
-    # `"forms": true`, or GABE_FORMS=1 for one run.
-    if os.environ.get("GABE_FORMS") == "1" or CFG.get("forms") is True:
+    # off, on, failing or absent. ON by default since the operator accepted gustify's forms (plan Phase 3, 2026-09-14);
+    # center.config.json `"forms": false`, or GABE_FORMS=0 for one run, turns it off.
+    if os.environ.get("GABE_FORMS") != "0" and CFG.get("forms") is not False:
         try:
             _forms = _a3_paths.build(amap, REPO_ROOT)
             if _forms.get("present"):

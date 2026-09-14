@@ -263,9 +263,9 @@ MERGE · ASPECT · LAYER — plus candidates, as if accepted).
 - `install.sh --uninstall` PRINTS `claude mcp remove -s user gabe-map` and never runs it.
 
 ### 5.11 Element forms — fields, not a tool (docs/design/element-forms/plan.md Phase 2, 2026-09-13) — read-only
-`forms.json` is the opt-in `_a3_paths` feed: per FastAPI endpoint, keyed by the c4 id `endpoint:METHOD /path`, the slot states
+`forms.json` is the `_a3_paths` feed (on by default, `forms: false` turns it off): per FastAPI endpoint, keyed by the c4 id `endpoint:METHOD /path`, the slot states
 (U3 preconditions · U7 refusal reasons · K1 status contract), declared vs produced exits, preconditions and findings. It is
-read lazily (`Center.forms`, `forms_block()` → state ∈ `FORMS_STATES`: present · not_emitted (no file — opt-in) · absent (the
+read lazily (`Center.forms`, `forms_block()` → state ∈ `FORMS_STATES`: present · not_emitted (no file — an older map, or switched off) · absent (the
 pass wrote why)) and ONLY by: **`touches`** on an endpoint → `form` (`mq.form_summary`: slots · declared · refusals capped with
 the uncaught 500 folded into `uncaught{causes, unknown_causes}` · preconditions · findings), absent when the endpoint has no
 form so the answer's shape never changes · **`trace`** from an endpoint → `from_form` (slots · findings · preconditions) ·

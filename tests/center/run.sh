@@ -354,9 +354,21 @@ assert "models" not in g, "a half-attached models block survived the error"
 assert l["models"]["present"] is False and "boom" in l["models"]["reason"], l.get("models")
 assert l.get("homing") is not None, "the homing block still rides levels.json"
 PY
-# FORMS (element-forms plan §3.3): an OPT-IN feed written after the archmap and reading it without writing it. Off by
-# default → no forms.json; a raising pass still exits 0, SAYS it skipped, writes no forms.json, and the archmap is unchanged.
-[ ! -f "$FIX/docs/site/center/forms.json" ] && ok || bad "FORMS: the switch is off by default — the happy build wrote forms.json"
+# FORMS (element-forms plan §3.3, on by default since Phase 3): a feed written after the archmap and reading it without writing
+# it. The happy build writes forms.json for the fixture's FastAPI routes; `"forms": false` writes none; a raising pass still
+# exits 0, SAYS it skipped, writes no forms.json, and the archmap is unchanged.
+python3 - "$FIX/docs/site/center/forms.json" <<'PY' && ok || bad "FORMS: on by default — the happy build writes forms.json with the fixture's endpoints formed"
+import json, sys
+o = json.load(open(sys.argv[1]))
+assert o["present"] is True and o["stats"]["endpoints"] >= 3 and "endpoint:GET /gadgets/one" in o["endpoints"], o.get("stats")
+PY
+FO="$T/foff"; rm -rf "$FO"; cp -r "$FIX" "$FO"; rm -f "$FO/docs/site/center/forms.json"
+python3 - "$FO/docs/site/center/center.config.json" <<'PY'
+import json, sys
+p = sys.argv[1]; c = json.load(open(p)); c["forms"] = False; open(p, "w").write(json.dumps(c))
+PY
+[ "$(build "$FO" "$SHELL_SRC")" = 0 ] && [ ! -f "$FO/docs/site/center/forms.json" ] && ! grep -q "forms.json" "$T/build.out" \
+  && ok || bad "FORMS: center.config.json forms:false builds clean and writes no forms.json"
 FB="$T/fboom"; rm -rf "$FB"; cp -r "$FIX" "$FB"; rm -f "$FB/docs/site/center/forms.json"
 _fb=$(cd "$T" && GABE_FORMS=1 GABE_REPO_ROOT="$FB" GABE_SHELL_SRC="$SHELL_SRC" python3 - "$GEN" >"$T/build-fboom.out" 2>&1 <<'PY'
 import sys, runpy; gen = sys.argv[1]; sys.path.insert(0, gen)

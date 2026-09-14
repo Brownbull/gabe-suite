@@ -462,7 +462,7 @@ r=$(repo s19e); mkarchmap "$r" '{not json'
 run "$r" | grep -q "arms census" && bad "S19 fired on an unparseable archmap" || ok "S19 silent (never a crash) on an unparseable archmap"
 run "$r" >/dev/null 2>&1 && ok "angles.py exits clean with a broken archmap on disk" || bad "angles.py crashed on a broken archmap"
 
-# ── S20 · element forms — the committed forms.json (the opt-in _a3_paths pass). The NAG class (a refusal a client cannot
+# ── S20 · element forms — the committed forms.json (the _a3_paths pass, on by default). The NAG class (a refusal a client cannot
 # handle correctly) fires at ≥ form_nag; the COUNT class (text-only · undeclared) rides the line and never fires it.
 mkforms() { mkdir -p "$1/docs/site/center"; printf '{}' > "$1/docs/site/center/center.config.json"
   printf '%s' "$2" > "$1/docs/site/center/forms.json"; cd "$1" && git add -A && git commit -qm "forms" && cd - >/dev/null; }
@@ -476,7 +476,7 @@ run "$r" | grep -q "element forms" && bad "S20 fired on COUNT findings / below t
 r=$(repo s20c); mkforms "$r" '{"version":1,"present":false,"reason":"no FastAPI endpoints in the archmap"}'
 run "$r" --why | grep -q "S20  UNAVAILABLE — element forms not emitted — no FastAPI endpoints in the archmap" && ok "S20 UNAVAILABLE with the pass's own reason when present:false" || bad "S20 hid a not-emitted pass: $(run "$r" --why)"
 r=$(repo s20d); mkc4 "$r" '{"stats":{}}'
-run "$r" --why | grep -q "S20  UNAVAILABLE\|element forms —" && bad "S20 spoke with no forms.json (the arm is opt-in): $(run "$r" --why | grep S20)" || ok "S20 silent with no forms.json — an opt-in arm is not a gap"
+run "$r" --why | grep -q "S20  UNAVAILABLE\|element forms —" && bad "S20 spoke with no forms.json (an older map or forms:false): $(run "$r" --why | grep S20)" || ok "S20 silent with no forms.json — an older map or a switched-off pass is not a gap"
 r=$(repo s20e); mkforms "$r" '{not json'
 run "$r" | grep -q "element forms" && bad "S20 fired on an unparseable forms.json" || ok "S20 silent (never a crash) on an unparseable forms.json"
 run "$r" >/dev/null 2>&1 && ok "angles.py exits clean with a broken forms.json on disk" || bad "angles.py crashed on a broken forms.json"

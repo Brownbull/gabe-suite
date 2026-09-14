@@ -796,12 +796,12 @@ def s19_arms_census(root: Path, plan: dict | None, cfg: dict | None):
 
 
 def s20_element_forms(root: Path, plan: dict | None, cfg: dict | None):
-    """Element forms — what each FastAPI endpoint DECIDES, read from the committed ``forms.json`` (the opt-in
-    `_a3_paths` pass; docs/design/element-forms/plan.md). Fires on the NAG class — one status carrying
+    """Element forms — what each FastAPI endpoint DECIDES, read from the committed ``forms.json`` (the
+    `_a3_paths` pass, on by default; docs/design/element-forms/plan.md). Fires on the NAG class — one status carrying
     different text-only refusals, a service reason replaced on the way out, a project error escaping as a
     500, a refusal swallowed by a broad except — at ≥ ``form_nag`` across endpoints. The COUNT class
     (text-only, undeclared) rides the line and never fires it: a convention to set once, not per-endpoint
-    debt. No forms.json → silent (the arm is opt-in); ``present: false`` → Unavailable with the pass's
+    debt. No forms.json → silent (an older map, or `forms: false`); ``present: false`` → Unavailable with the pass's
     reason; unreadable → silent. Read-only, report-never-gate."""
     if cfg is None:
         return Unavailable("no center config — the element forms live on docs/site/center/forms.json")

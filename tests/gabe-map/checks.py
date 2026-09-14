@@ -670,7 +670,7 @@ def run(T):
     ok(d and d.get("matched") and "form" not in d, "forms SILENT: an endpoint with no form carries no form field (the answer's shape is unchanged)", d and sorted(d.keys()))
     os.rename(os.path.join(root, "docs/site/center/forms.json"), os.path.join(root, "docs/site/center/forms.json.off"))
     d, _, _, _ = call_json(c, "map_census", {"kind": "forms"})
-    ok(d and d["census"]["forms"]["state"] == "not_emitted" and "opt-in" in d["census"]["forms"]["reason"], "forms SILENT: no forms.json → not_emitted, the pass named opt-in", d and d.get("census"))
+    ok(d and d["census"]["forms"]["state"] == "not_emitted" and "regen" in d["census"]["forms"]["reason"], "forms SILENT: no forms.json → not_emitted, naming an older map or the off switch", d and d.get("census"))
     d, _, _, _ = call_json(c, "touches", {"target": "GET /things/{item_id}"})
     ok(d and "form" not in d, "forms SILENT: no forms.json → no form field, never a crash", d and sorted(d.keys()))
     d, _, _, _ = call_json(c, "review_drift", {"base": "HEAD~1", "subjects": ["form"]})

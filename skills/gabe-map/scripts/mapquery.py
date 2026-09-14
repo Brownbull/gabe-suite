@@ -173,9 +173,9 @@ class Center:
 
     def forms_block(self) -> tuple:
         """The ELEMENT FORMS feed (docs/design/element-forms/plan.md) → (block, state, reason) with state ∈ FORMS_STATES:
-        present · not_emitted (no forms.json — the pass is opt-in) · absent (the pass ran and wrote why)."""
+        present · not_emitted (no forms.json — an older map, or `forms: false`) · absent (the pass ran and wrote why)."""
         if not (self.dir / "forms.json").is_file():
-            return None, "not_emitted", "no forms.json — the element-forms pass is opt-in (center.config.json `forms: true`)"
+            return None, "not_emitted", "no forms.json — an older map (regen with the current generators) or the pass is switched off (center.config.json `forms: false`)"
         f = self.forms
         if f.get("present"):
             return f, "present", None
@@ -288,7 +288,7 @@ class Center:
 
 MODELS_STATES = ("present = the entity-models block is on c4-graph.json · not_emitted = no block (an older map — regen with the current generators) · "
                  "absent = the emitter ran and says why (stats.models.reason); claim is always the registry")
-FORMS_STATES = ("present = forms.json carries the endpoint forms · not_emitted = no forms.json (the pass is opt-in) · "
+FORMS_STATES = ("present = forms.json carries the endpoint forms · not_emitted = no forms.json (an older map, or `forms: false`) · "
                 "absent = the pass ran and says why (no FastAPI endpoints, a pass error)")
 HEALTH_STATES = ("present = the pass ran and found something · clean = the pass ran (the repo-study sentinel route_mounts is on the map) "
                  "and found nothing · not_emitted = an older map that never ran the pass — regen to know")

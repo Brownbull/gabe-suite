@@ -1,8 +1,8 @@
 {
-  "generated": "2026-09-13",
-  "head": "d9fbb48",
+  "generated": "2026-09-14",
+  "head": "40f3e1f",
   "dirty": true,
-  "method": "batteries: PARTIAL refresh — 1 of 53 re-run (element-forms); the other 46 carried from their own run_at/run_head stamps by docs/center/generators/write_facts.py with the doctor's G3 exclusions honoured; assertions + failures parsed from each battery's own summary line (failures > 0 is RED even at exit 0), `protects` from its header comment, FIRE/SILENT from the battery's own text (run.sh + the siblings it delegates to). hooks: probed by hand 2026-07-26 (each hook executed in a hermetic temp repo against realistic stdin payloads) — a different instrument, carried as recorded.",
+  "method": "batteries: PARTIAL refresh — 1 of 53 re-run (center); the other 46 carried from their own run_at/run_head stamps by docs/center/generators/write_facts.py with the doctor's G3 exclusions honoured; assertions + failures parsed from each battery's own summary line (failures > 0 is RED even at exit 0), `protects` from its header comment, FIRE/SILENT from the battery's own text (run.sh + the siblings it delegates to). hooks: probed by hand 2026-07-26 (each hook executed in a hermetic temp repo against realistic stdin payloads) — a different instrument, carried as recorded.",
   "hooks": [
     {
       "name": "plan-proof-guard",
@@ -171,16 +171,16 @@
     {
       "name": "center",
       "beat": "red",
-      "assertions": 172,
+      "assertions": 173,
       "failures": 0,
       "status": "GREEN",
       "protects": "Center-generator fixture battery — the executable contract of the center's guard layer (2026-07-22 alignment review M01/M02/M04/M05/M09/M12).",
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 16.8,
-      "run_at": "2026-09-13",
-      "run_head": "d9fbb48"
+      "seconds": 17.6,
+      "run_at": "2026-09-14",
+      "run_head": "40f3e1f"
     },
     {
       "name": "center-status",

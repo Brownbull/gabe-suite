@@ -364,7 +364,7 @@ into a hook block, never into silence.
   `mcp__gabe-map__review_drift`'s `form` subject — `form_drift.py` called in-process against the committed `forms.json`
   (hand form: `python3 ~/.claude/skills/gabe-pulse/scripts/form_drift.py . --diff <base>`); a multi-line raise is joined
   until its parentheses close, and it compares (status, detail), never line numbers. Prints `FORM DRIFT NOT RUN` with
-  the reason when the project has no `forms.json` (the element-forms pass is opt-in) — never a false clean. **Detection
+  the reason when the project has no `forms.json` (an older map, or `forms: false`) — never a false clean. **Detection
   lives HERE because the refusal is new**; the STANDING findings (shared status · lost reason · escape to 500 · swallowed)
   are carried afterwards by `/gabe-pulse`'s S20 element-forms angle, the same review-detects / pulse-nags split S9 and
   S10 use. Priced like any finding — a text-only refusal on a codebase that never codes one is a LOW convention finding,
