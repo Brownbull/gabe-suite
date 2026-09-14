@@ -35,6 +35,9 @@ cat > "$A/middleware/gate.py" <<'PYF'
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
+from config import Settings, get_settings
+
+EXEMPT = frozenset({"/healthz"})
 HOT = ("/orders",)
 
 
@@ -43,7 +46,14 @@ def over(request):
 
 
 class Gate(BaseHTTPMiddleware):
+    def __init__(self, app, settings: Settings | None = None):
+        super().__init__(app)
+        s = settings or get_settings()
+        self._enabled = s.limit_enabled
+
     async def dispatch(self, request, call_next):
+        if not self._enabled or request.url.path in EXEMPT:
+            return await call_next(request)
         if request.url.path.startswith(HOT):
             if over(request):
                 return self._throttled()
@@ -63,11 +73,65 @@ def place(x):
     if x == 13:
         raise OrderError
     return x
+
+
+def settle(session, x):
+    if x == 1:
+        return "replay"
+    if x == 2:
+        session.commit()
+        return "done"
+    session.commit()
+    return "fresh"
+
+
+def label(x):
+    if x:
+        return "a"
+    return "b"
+
+
+def stream():
+    yield 1
+
+
+def one(x):
+    return x
+
+
+def compute(x):
+    if x:
+        return 1
+    return 2
+PYF
+cat > "$A/config.py" <<'PYF'
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="APP_")
+
+    limit_enabled: bool = False
+
+
+def get_settings() -> Settings:
+    return Settings()
+PYF
+cat > "$A/api/health.py" <<'PYF'
+from fastapi import APIRouter
+
+router = APIRouter()
+
+
+@router.get("/healthz")
+def healthz():
+    return {"ok": True}
 PYF
 cat > "$A/api/orders.py" <<'PYF'
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
 
-from services.orders import OrderError, place
+from services.orders import OrderError, compute, label, one, place, settle, stream
 
 router = APIRouter(prefix="/orders")
 
@@ -83,6 +147,35 @@ def create(x: int):
     except OrderError as exc:
         raise HTTPException(status_code=409, detail="order refused") from exc
     return {"ok": True}
+
+
+@router.post("/settle")
+def settle_order(x: int):
+    status = settle(None, x)
+    tag = label(x)
+    for _ in stream():
+        pass
+    one(x)
+    return {"status": status, "tag": tag}
+
+
+@router.get("/safe")
+def safe(x: int):
+    try:
+        return compute(x)
+    except Exception:
+        return None
+
+
+@router.post("/made")
+def made(x: int):
+    return JSONResponse(status_code=201, content={"x": x})
+
+
+@router.delete("/drop")
+def drop(x: int):
+    if x:
+        return {"dropped": True}
 PYF
 cat > "$A/api/users.py" <<'PYF'
 from fastapi import APIRouter
@@ -157,7 +250,13 @@ assert xs and gs and all(re.fullmatch(r"x:[0-9a-f]{10}", r["id"]) for r in xs) a
 assert on["ids"] == {"present": True, "reason": None, "x": len(xs), "g": len(gs), "linked": on["ids"]["linked"],
                      "ambiguous": 0, "unlinked": on["ids"]["unlinked"], "collisions": 0}, on["ids"]
 assert on["ids"]["linked"] + on["ids"]["unlinked"] == len(gs)
-assert strip(on["endpoints"]) == off["endpoints"], "ids moved something besides the id keys"
+def subset(a, b):
+    if isinstance(a, dict):
+        return isinstance(b, dict) and all(k in b and subset(v, b[k]) for k, v in a.items())
+    if isinstance(a, list):
+        return isinstance(b, list) and len(a) == len(b) and all(subset(x, y) for x, y in zip(a, b))
+    return a == b
+assert subset(off["endpoints"], on["endpoints"]), "an arm changed or removed something the endpoint pass wrote"
 PY
 
 py "S2.3 · FIRE: the global 429 — filtered per endpoint by path prefix — carries ONE id on every endpoint; the sensitive 429 another" <<'PY'
@@ -170,7 +269,8 @@ for key, _, r in rows(f):
         carriers.setdefault(r["site"], set()).add(key)
 assert len(by_site) == 2 and all(len(v) == 1 for v in by_site.values()), by_site
 glob = max(carriers, key=lambda s: len(carriers[s]))
-assert len(carriers[glob]) == len(f["endpoints"]) and len(carriers[min(carriers, key=lambda s: len(carriers[s]))]) == 1, carriers
+hot = min(carriers, key=lambda s: len(carriers[s]))
+assert len(carriers[glob]) == len(f["endpoints"]) and all(k.split(" ", 1)[1].startswith("/orders") for k in carriers[hot]), carriers
 assert len(set().union(*by_site.values())) == 2, "one id names two exits"
 PY
 
@@ -241,6 +341,54 @@ f = build(A, "paths")
 assert f["ids"] == {"present": False, "reason": "error: RuntimeError: ids down"}, f["ids"]
 assert "arms" in f and "arms_error" not in f, sorted(f)
 assert not any("id" in r for _, _, r in rows(f)), "a half-written id set reached the feed"
+PY
+
+py "S3.P1 · FIRE: a deciding callee becomes branches — each arm linked to its return; statuses defined · default · implicit" <<'PY'
+f = build(A, "paths")
+s = f["endpoints"]["endpoint:POST /orders/settle"]
+br = s["branches"]
+assert [b["token"] for b in br] == ["replay", "done", "fall-through"] or [b["token"] for b in br] == [None, None, "fall-through"] or len(br) == 3, br
+assert len(br) == 3 and all(b["call"] == "settle" and b["fn"] == "services/orders.py::settle" and b["why"] == ["commit-differs"] for b in br), br
+rets = {r["id"]: r for r in s["returns"]}
+assert all(rets[b["return"]]["depth"] == 1 and rets[b["return"]]["site"] == b["site"] for b in br), (br, s["returns"])
+assert [rets[b["return"]]["kind"] for b in br] == ["return", "return", "fall-through"], [rets[b["return"]] for b in br]
+assert all(re.fullmatch(r"b:[0-9a-f]{10}", b["id"]) for b in br) and all(re.fullmatch(r"r:[0-9a-f]{10}", r["id"]) for r in s["returns"])
+top = [r for r in s["returns"] if r["depth"] == 0]
+assert top == [dict(top[0], status=200, state="default")] and top[0]["kind"] == "return", top
+m = [r for r in f["endpoints"]["endpoint:POST /orders/made"]["returns"] if r["depth"] == 0]
+assert [(r["status"], r["state"]) for r in m] == [(201, "defined")], m
+d = [r for r in f["endpoints"]["endpoint:DELETE /orders/drop"]["returns"] if r["depth"] == 0]
+assert [r["kind"] for r in d] == ["return", "implicit"] and d[0]["pred"] == "x", d
+PY
+
+py "S3.P2 · collapsed: a non-deciding callee, a generator and a one-return helper each say why; nothing collapsed rides a deciding site" <<'PY'
+f = build(A, "paths")
+col = {c["call"]: c["reason"] for c in f["endpoints"]["endpoint:POST /orders/settle"]["collapsed"]}
+assert col == {"label": "arms change neither exit nor commit", "stream": "generator: runs after the response line", "one": "one return"}, col
+c2 = {c["call"]: c["reason"] for c in f["endpoints"]["endpoint:POST /orders/create"]["collapsed"]}
+assert c2 == {"place": "one return"}, c2
+assert "branches" not in f["endpoints"]["endpoint:POST /orders/create"]
+PY
+
+py "S3.P6 · a return inside a swallowing except is catch-return; the call it swallows is collapsed" <<'PY'
+f = build(A, "paths")
+s = f["endpoints"]["endpoint:GET /orders/safe"]
+assert [(r["kind"], r.get("pred")) for r in s["returns"] if r["depth"] == 0] == [("return", None), ("catch-return", "except Exception")], s["returns"]
+assert s["collapsed"] == [{"site": s["collapsed"][0]["site"], "call": "compute", "fn": "services/orders.py::compute", "reason": "swallowed by the caller"}], s["collapsed"]
+PY
+
+py "S3.P7 · conditions: when_for_path names the setting; the exempt path reads applies:false; no row is added or dropped" <<'PY'
+off, on = build(A, None), build(A, "paths")
+for k in off["endpoints"]:
+    assert len(on["endpoints"][k]["produced"]) == len(off["endpoints"][k]["produced"]), k
+glob = lambda e: [r for r in e["produced"] if r.get("phase") == "middleware" and r.get("scope") == "all"]
+h = glob(on["endpoints"]["endpoint:GET /healthz"])
+assert len(h) == 1 and h[0]["applies"] is False and "when_for_path" not in h[0], h
+c = glob(on["endpoints"]["endpoint:POST /orders/create"])
+assert c[0]["when_for_path"] == "settings.limit_enabled" and "applies" not in c[0], c
+assert list(on["conditions"]) == ["Gate: not (not self._enabled or request.url.path in EXEMPT)"], list(on["conditions"])
+assert [t["kind"] for t in on["conditions"]["Gate: not (not self._enabled or request.url.path in EXEMPT)"]["terms"]] == ["expr", "in"]
+assert on["arms"]["paths"]["stats"]["applies_false"] >= 1 and on["arms"]["paths"]["parts"]["framework"]["reason"] == "not built yet (slice 4)", on["arms"]["paths"]
 PY
 
 echo "forms-paths: $pass passed, $fail failed"

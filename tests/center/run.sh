@@ -427,15 +427,13 @@ assert off["version"] == 2 and "head" in off and "arms" not in off, sorted(off)
 assert on["version"] == 2 and on["head"] == off["head"], (on.get("version"), on.get("head"))
 assert sorted(on["arms"]) == sorted(["kinds", "short", "switches", "paths", "effects", "contract", "tests", "frontend"]), sorted(on["arms"])   # the file is written sort_keys
 assert on["head"] == json.load(open(f"{b}/archmap.json"))["head"], "forms.json head is not the same build's archmap head"
-def bare(eps):                                   # ids (Slice 2) ride on every row once any arm is on
-    eps = json.loads(json.dumps(eps))
-    for e in eps.values():
-        for v in e.get("variants") or [e]:
-            for r in (v.get("produced") or []) + (v.get("preconditions") or []):
-                for k in ("id", "exit", "exits"):
-                    r.pop(k, None)
-    return eps
-assert bare(on["endpoints"]) == off["endpoints"], "an arm that is not built yet changed the endpoint forms"
+def subset(a, b):                               # arms only ADD keys — nothing the endpoint pass wrote changes or goes
+    if isinstance(a, dict):
+        return isinstance(b, dict) and all(k in b and subset(v, b[k]) for k, v in a.items())
+    if isinstance(a, list):
+        return isinstance(b, list) and len(a) == len(b) and all(subset(x, y) for x, y in zip(a, b))
+    return a == b
+assert subset(off["endpoints"], on["endpoints"]), "an arm changed or removed something the endpoint pass wrote"
 assert on["ids"]["present"] and on["ids"]["x"] > 0 and on["ids"]["collisions"] == 0 and "ids" not in off, (on.get("ids"), sorted(off))
 PY
 # an ARM that edits the archmap it reads (runners get a private copy) and writes one key per endpoint: archmap · c4 · levels

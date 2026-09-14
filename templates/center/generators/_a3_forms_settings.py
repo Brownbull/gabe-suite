@@ -402,7 +402,9 @@ def evaluate(src: str, known: dict) -> tuple:
     def ev(node):
         if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
             v, r = ev(node.operand)
-            return (None if v is None else not v), (None if v is not None else ast.UnaryOp(op=ast.Not(), operand=r))
+            if v is not None:
+                return (not v), None
+            return None, (r.operand if isinstance(r, ast.UnaryOp) and isinstance(r.op, ast.Not) else ast.UnaryOp(op=ast.Not(), operand=r))
         if isinstance(node, ast.BoolOp):
             is_or = isinstance(node.op, ast.Or)
             rest = []

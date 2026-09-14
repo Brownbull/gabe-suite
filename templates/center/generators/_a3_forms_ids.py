@@ -89,6 +89,11 @@ def _ranked(prefix: str, entries: list[tuple], audit: dict | None) -> list[str]:
     return ids
 
 
+def ranked(prefix: str, entries: list[tuple], audit: dict | None = None) -> list[str]:
+    """The arms' entry to the ranked ids: ``[(tuple, position)]`` → one ``<prefix>:`` id each (see ``_ranked``)."""
+    return _ranked(prefix, entries, audit)
+
+
 def _feed(forms: dict, rows_key: str, tuple_of, pos_of, prefix: str, audit: dict | None) -> dict:
     out: dict[str, list] = {}
     entries, where = [], []

@@ -142,6 +142,20 @@
 ```
 Findings (`arm_findings.kinds`): `indistinct-exits {subject, status, at, exits[], sites[]}` · `dependency-commits {subject, commits[], applies_to}`.
 
+### Paths forms (as built, Slice 3b — `_a3_forms_paths.py`)
+
+The `returns[]` · `branches[]` · `collapsed[]` shapes are the core shapes below, with these readings:
+- `returns[].kind` — `return` · `implicit` (control can fall off the end; found by a walk over a copy with sentinel returns) ·
+  `catch-return` (inside an except) · `fall-through` (a branch set's first unguarded return). Depth-1 rows belong to a deciding
+  callee: `site` is the call, `status: null`, `state: "n/a"`.
+- `branches[].token` — the last name in the guard (`REPLAY`, `completed`), or `fall-through`; `why` — `contributes-rows` ·
+  `commit-differs`.
+- `conditions{}` — keyed `"<Cls>: <when>"` → `{via, when, file, terms[]}` (`_a3_forms_settings.terms`). A middleware row gains
+  `applies: true|false` only when path membership proves it, else `when_for_path` (the residual with each settings term
+  substituted; `evaluate` folds `not not X`).
+- Stats: returns · branch_returns · branches · handlers_expanded · collapsed{reason: n} · conditions · applies_false ·
+  applies_true · when_for_path.
+
 ### Core object shapes (per endpoint, and per `variants[]` entry)
 
 ```jsonc
