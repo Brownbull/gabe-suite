@@ -198,6 +198,26 @@ The `returns[]` · `branches[]` · `collapsed[]` shapes are the core shapes belo
 A message keeps `{…}` for a value only known at runtime (`{len(cleaned)}`); constants and call-site keywords are filled in.
 Finding (`arm_findings.short`): `extra-ignored {subject, consumers}`.
 
+### Switches (as built, Slice 5a — `_a3_forms_switch.py`)
+
+```jsonc
+"switches": [
+  {"id": "sw:…", "kind": "binding", "scope": "handler|call|dependency", "fn": "file::qual", "port": "TokenVerifier",
+   "site": "file:line",            // the port call in `fn`
+   "anchor": "file:line",          // the line in the endpoint's own chain that reaches `fn`
+   "factories": ["file::get_verifier"],
+   "branches": [{"impl", "t": "file::Impl.method", "pred", "binding": "selected|ambiguous", "escapes": [cls], "refuses"?: [status],
+                 "ends": ["InvalidTokenError → translate file:line"], "reason"?}],
+   "changes_exit": bool|null, "proves"?: ["x:…"]},                  // proves: the refusal rows the agreeing catches translate
+  {"id": "sw:…", "kind": "value", "scope": "call|dependency", "fn", "depth": int, "chain": ["file::qual", …], "anchor", "site",
+   "branches": [{"pred", "value", "at", "setting"?}], "settings": {name: {"default", "env"}}, "on": "success"},
+  {"id": "sw:…", "kind": "flag", "scope": "middleware", "via", "when", "expr", "settings_class", "settings": {name: {"default", "env"}},
+   "refs": ["x:…"]},                                                 // every row this condition gates on the route
+  {"id": "sw:…", "kind": "flag", "scope": "handler", "pred", "at", "refs": ["x:…"]}]   // a `kind: flag` precondition
+```
+Readings: the binding edges are `_a3_stacks_pydi.parse(repo)`'s (D18), grouped by (scope function, port), placed on each endpoint whose scope reaches the function — the handler, its level-1 callees, every dependency function and each dependency's level-1 callees (the first stage reached wins). `changes_exit` compares the branches' escaping classes after the catches at the site and at the anchor (`null` when an implementation is outside the tree). A value switch is found by `_a3_forms_reach.bfs` from the handler and each dependency to `reach_depth`; one found a level further is counted in `switch_depth_capped` and never placed. A flag switch leaves out a row its route proves off (`_a3_forms_paths.row_condition`, the same answer `conditions{}` gives). Switches are per endpoint and share an id across endpoints.
+Stats: binding · value · flag (distinct ids) · endpoints · binding_edges · binds_unplaced · changes_exit · switch_depth_capped · bindings_reason?.
+
 ### Core object shapes (per endpoint, and per `variants[]` entry)
 
 ```jsonc
@@ -594,7 +614,7 @@ The switches:
   - scope `dependency`, fn `auth/context.py::build_auth_context`, site `:77`, anchor `:97`, port `TokenVerifier`;
   - branches `FirebaseTokenVerifier` (pred `settings.auth_provider is ProviderMode.REAL`) and `MockTokenVerifier` (its negation);
   - both raise `InvalidTokenError` → `changes_exit: false`, so the dependency 401 path is `proven_by` it.
-- **Value switch** `services/ai_credits.py::allowance_for`: `tier == 'chef'` → `settings.ai_credits_chef` (`:66-67`), else `settings.ai_credits_free` (`:68`) (P, two designs agree). The call chain from `api/setup.py:204` to `:103` is (U).
+- **Value switch** `services/ai_credits.py::allowance_for`: `tier == 'chef'` → `settings.ai_credits_chef` (`:66-67`), else `settings.ai_credits_free` (`:68`) (P, two designs agree). The call chain from `api/setup.py:204` to `:103` is (U). Measured at Slice 5a: depth **4**, not 3 — `setup_complete` → `_me_response_from_result` `:204` → `_subscription_block` → `credits_summary` → `allowance_for` `:103`; inside `reach_depth` 4.
 - **Flag switch** refs the two 429 ids; flag `rate_limit_enabled` default false (`config.py:137`, R).
 
 Paths, in order. E = `step IdempotencyMiddleware · step RateLimit… · gate X3 · switch S1 · gate X4 · gate body-parse · gate 422`; the exact middleware step order is recorded at the dry run.

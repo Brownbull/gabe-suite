@@ -554,5 +554,198 @@ assert p["reason"] == "switched off — computed in memory for effects" and p["p
 assert p["parts"]["paths"]["reason"] == "not built yet (slice 5)", p["parts"]
 PY
 
+cat > "$T/switches_fixture.py" <<'PYF'
+PORTS = '''from typing import Protocol
+
+from config import Settings
+
+
+class BadToken(Exception):
+    pass
+
+
+class Verifier(Protocol):
+    def verify(self, token: str) -> str: ...
+
+
+class RealVerifier:
+    def verify(self, token: str) -> str:
+        if not token:
+            raise BadToken("empty")
+        return token
+
+
+class MockVerifier:
+    def verify(self, token: str) -> str:
+        if token == "bad":
+            raise BadToken("bad")
+        return "mock"
+
+
+def get_verifier(settings: Settings) -> Verifier:
+    if settings.real_auth:
+        return RealVerifier()
+    return MockVerifier()
+
+
+def check(token: str, verifier: Verifier) -> str:
+    return verifier.verify(token)
+'''
+DEPS = '''from fastapi import Depends, HTTPException
+
+from config import Settings, get_settings
+from ports import BadToken, Verifier, check, get_verifier
+
+
+def _verifier(settings: Settings = Depends(get_settings)) -> Verifier:
+    return get_verifier(settings)
+
+
+def get_user(token: str = "", verifier: Verifier = Depends(_verifier)) -> str:
+    try:
+        return check(token, verifier)
+    except BadToken as exc:
+        raise HTTPException(status_code=401, detail="bad token") from exc
+'''
+CREDITS = '''from config import Settings
+
+
+def allowance_for(tier: str, settings: Settings) -> int:
+    if tier == "chef":
+        return settings.credits_chef
+    return settings.credits_free
+
+
+def summary(tier: str, settings: Settings) -> int:
+    return allowance_for(tier, settings)
+
+
+def block(tier: str, settings: Settings) -> int:
+    return summary(tier, settings)
+'''
+ME = '''from fastapi import APIRouter, Depends
+
+from config import Settings, get_settings
+from deps import _verifier, get_user
+from ports import Verifier, check
+from services.credits import block
+
+router = APIRouter(prefix="/me")
+
+
+@router.get("/credits")
+def credits(user: str = Depends(get_user), settings: Settings = Depends(get_settings)):
+    return {"allowance": block("free", settings)}
+
+
+@router.get("/direct")
+def direct(token: str = "", verifier: Verifier = Depends(_verifier)):
+    return {"who": check(token, verifier)}
+'''
+
+
+def edit_sw(d):
+    (d / "ports.py").write_text(PORTS)
+    (d / "deps.py").write_text(DEPS)
+    (d / "services/credits.py").write_text(CREDITS)
+    (d / "api/me.py").write_text(ME)
+    p = d / "config.py"
+    s = p.read_text()
+    assert s.count("    limit_enabled: bool = False\n") == 1
+    p.write_text(s.replace("    limit_enabled: bool = False\n", "    limit_enabled: bool = False\n    real_auth: bool = False\n    credits_chef: int = 15\n    credits_free: int = 0\n"))
+PYF
+
+py "S5.P8 · binding switch: one per function and port, preds equal _a3_stacks_pydi, placed on the dependency scope; agreeing branches prove the translated 401, a branch that escapes differently changes the exit" <<'PY'
+import sys; sys.path.insert(0, str(T))
+import _a3_stacks_pydi as PYDI
+from switches_fixture import edit_sw
+d = variant("sw", edit_sw)
+f = build(d, "switches")
+e = f["endpoints"]["endpoint:GET /me/credits"]
+b = [s for s in e["switches"] if s["kind"] == "binding"]
+assert len(b) == 1, e["switches"]
+b = b[0]
+assert (b["scope"], b["fn"], b["port"], b["factories"]) == ("dependency", "ports.py::check", "Verifier", ["ports.py::get_verifier"]), b
+pyd = sorted((x["impl"], x["predicate"]) for x in PYDI.parse(d)["edges"] if x["via"] == "binding")
+assert sorted((x["impl"], x["pred"]) for x in b["branches"]) == pyd == [("MockVerifier", "not (settings.real_auth)"), ("RealVerifier", "settings.real_auth")], (b["branches"], pyd)
+row = next(r for r in e["produced"] if r.get("status") == 401 and r.get("detail") == "bad token")
+assert b["changes_exit"] is False and b["proves"] == [row["id"]], (b, row)
+assert b["site"].startswith("ports.py:") and b["anchor"].startswith("deps.py:") and re.fullmatch(r"sw:[0-9a-f]{10}", b["id"]), b
+assert f["arms"]["switches"]["stats"]["binding"] == 1 and f["arms"]["switches"]["stats"]["binds_unplaced"] == 0, f["arms"]["switches"]["stats"]
+dr = [s for s in f["endpoints"]["endpoint:GET /me/direct"]["switches"] if s["kind"] == "binding"]
+assert [(s["id"], s["scope"]) for s in dr] == [(b["id"], "call")] and dr[0]["anchor"].startswith("api/me.py:") and "proves" not in dr[0], dr
+def differs(d):
+    edit_sw(d)
+    patch(d, "ports.py", '            raise BadToken("bad")', '            raise ValueError("bad")')
+g = build(variant("sw-differs", differs), "switches")
+b2 = next(s for s in g["endpoints"]["endpoint:GET /me/credits"]["switches"] if s["kind"] == "binding")
+assert b2["changes_exit"] is True and "proves" not in b2, b2
+PY
+
+py "S5.P9 · value switch: a settings choice three calls down is placed with its chain; one past reach_depth is only counted" <<'PY'
+import sys; sys.path.insert(0, str(T))
+from switches_fixture import edit_sw
+f = build(variant("sw", edit_sw), "switches")
+v = [s for s in f["endpoints"]["endpoint:GET /me/credits"]["switches"] if s["kind"] == "value"]
+assert [(s["fn"], s["depth"], s["scope"], s["on"]) for s in v] == [("services/credits.py::allowance_for", 3, "call", "success")], v
+assert [(b.get("setting"), b["pred"]) for b in v[0]["branches"]] == [("credits_chef", "tier == 'chef'"), ("credits_free", "not (tier == 'chef')")], v[0]["branches"]
+assert v[0]["chain"] == ["api/me.py::credits", "services/credits.py::block", "services/credits.py::summary", "services/credits.py::allowance_for"], v[0]["chain"]
+assert v[0]["anchor"].startswith("api/me.py:") and v[0]["settings"]["credits_chef"]["default"] == "15", v[0]
+def deeper(d):
+    edit_sw(d)
+    patch(d, "services/credits.py", "def block(tier: str, settings: Settings) -> int:\n    return summary(tier, settings)\n",
+          "def block(tier: str, settings: Settings) -> int:\n    return summary(tier, settings)\n\n\ndef outer1(tier: str, settings: Settings) -> int:\n    return block(tier, settings)\n\n\ndef outer2(tier: str, settings: Settings) -> int:\n    return outer1(tier, settings)\n")
+    patch(d, "api/me.py", "from services.credits import block", "from services.credits import outer2")
+    patch(d, "api/me.py", 'block("free", settings)', 'outer2("free", settings)')
+g = build(variant("sw-deep", deeper), "switches")
+assert not [s for s in g["endpoints"]["endpoint:GET /me/credits"]["switches"] if s["kind"] == "value"], "a value switch past reach_depth was placed"
+assert g["arms"]["switches"]["stats"]["switch_depth_capped"] >= 1, g["arms"]["switches"]["stats"]
+PY
+
+py "S5.P10 · SILENT: a port no Protocol declares gives no binding; a return that is neither setting nor constant, or a guard comparing two names, gives no value switch" <<'PY'
+import sys; sys.path.insert(0, str(T))
+from switches_fixture import edit_sw
+def plain(d):
+    edit_sw(d)
+    patch(d, "ports.py", "class Verifier(Protocol):", "class Verifier:")
+f = build(variant("sw-plain", plain), "switches")
+assert not [s for s in f["endpoints"]["endpoint:GET /me/credits"].get("switches", []) if s["kind"] == "binding"], f["endpoints"]["endpoint:GET /me/credits"].get("switches")
+def open_value(d):
+    edit_sw(d)
+    patch(d, "services/credits.py", "        return settings.credits_chef\n", "        return len(tier)\n")
+g = build(variant("sw-open", open_value), "switches")
+assert not [s for s in g["endpoints"]["endpoint:GET /me/credits"]["switches"] if s["kind"] == "value"], "a computed return made a value switch"
+def names(d):
+    edit_sw(d)
+    patch(d, "services/credits.py", '    if tier == "chef":\n', "    if tier == settings.premium_name:\n")
+h = build(variant("sw-names", names), "switches")
+assert not [s for s in h["endpoints"]["endpoint:GET /me/credits"]["switches"] if s["kind"] == "value"], "a guard comparing two names made a value switch"
+PY
+
+py "S5.F1 · flag switch: the settings a middleware condition reads, naming every row it gates on the route; a path-exempt route gets none" <<'PY'
+f = build(A, "switches")
+e = f["endpoints"]["endpoint:POST /orders/create"]
+fl = [s for s in e["switches"] if s["kind"] == "flag"]
+ids429 = sorted(r["id"] for r in e["produced"] if r.get("status") == 429)
+assert len(fl) == 1 and len(ids429) == 2 and fl[0]["refs"] == ids429, (fl, ids429)
+assert fl[0]["settings"] == {"limit_enabled": {"default": "False", "env": "APP_LIMIT_ENABLED"}} and fl[0]["expr"] == "settings.limit_enabled", fl[0]
+assert not f["endpoints"]["endpoint:GET /healthz"].get("switches"), f["endpoints"]["endpoint:GET /healthz"].get("switches")
+PY
+
+py "S5.P12 · honest-empty and determinism: a raising switches arm leaves no switches key; two builds are byte-identical" <<'PY'
+import sys; sys.path.insert(0, str(T))
+import _a3_forms_switch as SW
+from switches_fixture import edit_sw
+d = variant("sw", edit_sw)
+a, b = build(d, "switches"), build(d, "switches")
+assert json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True)
+def boom(*x, **k):
+    raise RuntimeError("switches down")
+SW.scope_functions = boom
+c = build(d, "switches")
+assert c["arms"]["switches"]["present"] is False and "switches down" in c["arms"]["switches"]["reason"], c["arms"]["switches"]
+assert not any("switches" in v for e in c["endpoints"].values() for v in (e.get("variants") or [e])), "a half-written switch reached the feed"
+PY
+
 echo "forms-paths: $pass passed, $fail failed"
 [ "$fail" -eq 0 ] || exit 1

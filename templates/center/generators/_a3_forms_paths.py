@@ -337,6 +337,27 @@ class _Subst(ast.NodeTransformer):
         return ast.parse(self.table[src], mode="eval").body if src in self.table else self.generic_visit(node)
 
 
+def row_condition(repo: Path, r: dict, fp: str, cache: dict) -> tuple:
+    """A middleware row's ``when`` on the route ``fp`` → ``(True | False | None, residual, terms)``: path membership is
+    decided against the route template, every other term stays open. ``cache`` keeps the resolved terms and the method's
+    once-assigned locals per (file, via, when) — the switches arm reads the same answer."""
+    file = str(r.get("site") or r.get("at") or "").rpartition(":")[0]
+    ck = (file, r.get("via"), r["when"])
+    if ck not in cache:
+        m = P._mod(repo, file)
+        meth = next((m.defs[f"{r.get('via')}.{x}"] for x in F.MIDDLEWARE_METHODS if f"{r.get('via')}.{x}" in m.defs), None) if m else None
+        cache[ck] = (S.terms(repo, m, r.get("via"), r["when"]) if m else [], S.locals_once(meth) if meth is not None else {})
+    terms, subst = cache[ck]
+    known = {}
+    for t in terms:
+        kind = {"in": "in", "not-in": "in", "startswith": "startswith"}.get(t["kind"])
+        hit = S.path_match(fp, kind, t["values"]) if kind and S.is_path(t.get("subject"), subst) else None
+        if hit is not None:
+            known[t["src"]] = hit != (t["kind"] == "not-in")
+    val, residual = S.evaluate(r["when"], known)
+    return val, residual, terms
+
+
 def conditions_part(repo: Path, forms: dict) -> tuple[dict, dict]:
     if F.OPTIONS["exempt_rows"] != "annotate":
         raise ValueError(f"exempt_rows {F.OPTIONS['exempt_rows']!r} is not built — annotate is the only form (D19)")
@@ -349,21 +370,10 @@ def conditions_part(repo: Path, forms: dict) -> tuple[dict, dict]:
             for r in v.get("produced") or []:
                 if r.get("phase") != "middleware" or not r.get("when"):
                     continue
+                val, residual, terms = row_condition(repo, r, fp, cache)
                 file = str(r.get("site") or r.get("at") or "").rpartition(":")[0]
-                ck = (file, r.get("via"), r["when"])
-                if ck not in cache:
-                    m = P._mod(repo, file)
-                    meth = next((m.defs[f"{r.get('via')}.{x}"] for x in F.MIDDLEWARE_METHODS if f"{r.get('via')}.{x}" in m.defs), None) if m else None
-                    cache[ck] = (S.terms(repo, m, r.get("via"), r["when"]) if m else [], S.locals_once(meth) if meth is not None else {})
-                    conds[f"{file}::{r.get('via')}: {r['when']}"] = {"via": r.get("via"), "when": r["when"], "file": file, "terms": cache[ck][0]}
-                terms, subst = cache[ck]
-                known = {}
-                for t in terms:
-                    kind = {"in": "in", "not-in": "in", "startswith": "startswith"}.get(t["kind"])
-                    hit = S.path_match(fp, kind, t["values"]) if kind and S.is_path(t.get("subject"), subst) else None
-                    if hit is not None:
-                        known[t["src"]] = hit != (t["kind"] == "not-in")
-                val, residual = S.evaluate(r["when"], known)
+                if not any(c["file"] == file and c["via"] == r.get("via") and c["when"] == r["when"] for c in conds.values()):
+                    conds[f"{file}::{r.get('via')}: {r['when']}"] = {"via": r.get("via"), "when": r["when"], "file": file, "terms": terms}
                 if val is False:
                     r["applies"] = False
                     stats["applies_false"] += 1
