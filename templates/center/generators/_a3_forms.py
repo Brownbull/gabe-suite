@@ -41,9 +41,10 @@ OPTIONS = {
     "u3_empty": "n/a",
     # how far the shared reach walk reads (amendment 1 D17): discovery only, never a row
     "reach_depth": 4,
-    # a middleware row a path condition proves off stays in `produced` with `applies: false` (D19)
+    # a middleware row a path condition proves off stays in `produced` with `applies: false` (D19) — "annotate" is the
+    # only form built; the conditions part refuses any other value rather than claim it
     "exempt_rows": "annotate",
-    # a called function becomes `branches[]` only when it decides the path (D14)
+    # which called functions become `branches[]`: "deciding" (D14) · "all" (every callee with two value returns) · "none"
     "expand_branches": "deciding",
 }
 MUTATING_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
@@ -58,6 +59,10 @@ CODE_KEYS = ("code", "error_code", "reason", "type")  # a detail carrying one of
 ENUM_BASES = frozenset({"Enum", "StrEnum", "IntEnum"})
 RESPONSE_CLASSES = frozenset({"Response", "JSONResponse", "PlainTextResponse", "HTMLResponse",
                               "ORJSONResponse", "UJSONResponse"})
+# the status a RETURNED response sends when the call names none — FastAPI sends a Response it is handed as built, so the
+# route decorator's status_code never applies to it (starlette/responses.py: RedirectResponse defaults to 307)
+RESPONSE_DEFAULTS = {**{c: 200 for c in RESPONSE_CLASSES}, "RedirectResponse": 307, "StreamingResponse": 200,
+                     "FileResponse": 200, "EventSourceResponse": 200}
 DETAIL_CAP = 120
 
 # ── framework rules: FastAPI ───────────────────────────────────────────────────────────────────────
@@ -142,8 +147,8 @@ ARM_STAGES = (
     ("kinds", ("functions", "tasks", "handlers")), ("tests", ()), ("short", ("model", "migration", "setting", "mirror")),
 )
 # hard needs, unit → units ("arm" or "arm.part"); a needed unit runs in memory and is not written unless its arm is selected
-ARM_NEEDS = {
-    "paths": ("kinds.middleware",), "effects": ("paths",), "contract": ("effects",), "tests": ("paths",),
+ARM_NEEDS = {                                   # paths walks the middleware stack only in its `paths` part (Slice 5)
+    "paths.paths": ("kinds.middleware",), "effects": ("paths",), "contract": ("effects",), "tests": ("paths",),
     "kinds.functions": ("effects",), "short.model": ("effects",),
 }
 # soft needs — used only when the other arm is also selected

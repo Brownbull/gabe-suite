@@ -75,10 +75,10 @@ def place(x):
     return x
 
 
-def settle(session, x):
-    if x == 1:
+def settle(session, mode):
+    if mode == Mode.REPLAY:
         return "replay"
-    if x == 2:
+    if mode == Mode.DONE:
         session.commit()
         return "done"
     session.commit()
@@ -103,6 +103,19 @@ def compute(x):
     if x:
         return 1
     return 2
+
+
+def reserve(x):
+    if x == 13:
+        raise OrderError
+    if x > 100:
+        return "big"
+    return "small"
+
+
+class Mode:
+    REPLAY = 1
+    DONE = 2
 PYF
 cat > "$A/config.py" <<'PYF'
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -131,7 +144,7 @@ cat > "$A/api/orders.py" <<'PYF'
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
-from services.orders import OrderError, compute, label, one, place, settle, stream
+from services.orders import OrderError, compute, label, one, place, reserve, settle, stream
 
 router = APIRouter(prefix="/orders")
 
@@ -176,6 +189,15 @@ def made(x: int):
 def drop(x: int):
     if x:
         return {"dropped": True}
+
+
+@router.post("/reserve")
+def reserve_order(x: int):
+    try:
+        size = reserve(x)
+    except OrderError as exc:
+        raise HTTPException(status_code=409, detail="reserve refused") from exc
+    return {"size": size}
 PYF
 cat > "$A/api/users.py" <<'PYF'
 from fastapi import APIRouter
@@ -229,6 +251,17 @@ def strip(endpoints):
                 for k in ("id", "exit", "exits"):
                     r.pop(k, None)
     return endpoints
+def variant(name, edit):
+    d = T / name
+    shutil.rmtree(d, ignore_errors=True)
+    shutil.copytree(A, d)
+    edit(d)
+    return d
+def patch(d, rel, a, b):
+    p = d / rel
+    s = p.read_text()
+    assert s.count(a) == 1, (rel, a)
+    p.write_text(s.replace(a, b))
 $src
 PY
   ); then ok; else bad "$name: $(tail -4 "$T/py.txt")"; fi
@@ -255,7 +288,7 @@ def subset(a, b):
         return isinstance(b, dict) and all(k in b and subset(v, b[k]) for k, v in a.items())
     if isinstance(a, list):
         return isinstance(b, list) and len(a) == len(b) and all(subset(x, y) for x, y in zip(a, b))
-    return a == b
+    return type(a) is type(b) and a == b                  # 0 is not False, 200 is not 200.0 — the file would differ
 assert subset(off["endpoints"], on["endpoints"]), "an arm changed or removed something the endpoint pass wrote"
 PY
 
@@ -347,10 +380,10 @@ py "S3.P1 · FIRE: a deciding callee becomes branches — each arm linked to its
 f = build(A, "paths")
 s = f["endpoints"]["endpoint:POST /orders/settle"]
 br = s["branches"]
-assert [b["token"] for b in br] == ["replay", "done", "fall-through"] or [b["token"] for b in br] == [None, None, "fall-through"] or len(br) == 3, br
+assert [b["token"] for b in br] == ["REPLAY", "DONE", "fall-through"], [b["token"] for b in br]
 assert len(br) == 3 and all(b["call"] == "settle" and b["fn"] == "services/orders.py::settle" and b["why"] == ["commit-differs"] for b in br), br
 rets = {r["id"]: r for r in s["returns"]}
-assert all(rets[b["return"]]["depth"] == 1 and rets[b["return"]]["site"] == b["site"] for b in br), (br, s["returns"])
+assert all(rets[b["return"]]["depth"] == 1 and rets[b["return"]]["site"] == b["site"] and rets[b["return"]]["branch"] == b["id"] for b in br), (br, s["returns"])
 assert [rets[b["return"]]["kind"] for b in br] == ["return", "return", "fall-through"], [rets[b["return"]] for b in br]
 assert all(re.fullmatch(r"b:[0-9a-f]{10}", b["id"]) for b in br) and all(re.fullmatch(r"r:[0-9a-f]{10}", r["id"]) for r in s["returns"])
 top = [r for r in s["returns"] if r["depth"] == 0]
@@ -386,9 +419,139 @@ h = glob(on["endpoints"]["endpoint:GET /healthz"])
 assert len(h) == 1 and h[0]["applies"] is False and "when_for_path" not in h[0], h
 c = glob(on["endpoints"]["endpoint:POST /orders/create"])
 assert c[0]["when_for_path"] == "settings.limit_enabled" and "applies" not in c[0], c
-assert list(on["conditions"]) == ["Gate: not (not self._enabled or request.url.path in EXEMPT)"], list(on["conditions"])
-assert [t["kind"] for t in on["conditions"]["Gate: not (not self._enabled or request.url.path in EXEMPT)"]["terms"]] == ["expr", "in"]
+ck = "middleware/gate.py::Gate: not (not self._enabled or request.url.path in EXEMPT)"
+assert list(on["conditions"]) == [ck], list(on["conditions"])
+assert [t["kind"] for t in on["conditions"][ck]["terms"]] == ["expr", "in"]
 assert on["arms"]["paths"]["stats"]["applies_false"] >= 1 and on["arms"]["paths"]["parts"]["framework"]["reason"] == "not built yet (slice 4)", on["arms"]["paths"]
+PY
+
+py "S3.P3 · contributes-rows: a callee whose raise the handler turns into a refusal decides the path with no commit in it" <<'PY'
+s = build(A, "paths")["endpoints"]["endpoint:POST /orders/reserve"]
+assert [(b["token"], b["why"]) for b in s.get("branches", [])] == [("x", ["contributes-rows"]), ("fall-through", ["contributes-rows"])], s.get("branches")
+PY
+
+py "S3.P8 · returns as sent: a redirect's own 307, a runtime status unknown, a held response, no phantom implicit; one callee at two sites, a commit an except skips, a void helper, a constructor" <<'PY'
+import _a3_forms_paths as FP
+assert FP._token("match Mode.REPLAY") == "REPLAY" and FP._token("mode == Mode.DONE") == "DONE"
+def edit(d):
+    (d / "services/shapes.py").write_text("class Shape:\n    pass\n")
+    (d / "services/tx.py").write_text('''def guarded(session, x):
+    try:
+        session.commit()
+    except Exception:
+        return "failed"
+    return "ok"
+
+
+def ensure(session, x):
+    if x:
+        return
+    session.commit()
+''')
+    (d / "api/edge.py").write_text('''from fastapi import APIRouter
+from fastapi.responses import JSONResponse, RedirectResponse
+
+from services.orders import settle
+from services.shapes import Shape
+from services.tx import ensure, guarded
+
+router = APIRouter(prefix="/edge")
+
+
+@router.get("/go", status_code=200)
+def go():
+    return RedirectResponse("/elsewhere")
+
+
+@router.get("/dyn")
+def dyn(code: int):
+    return JSONResponse(status_code=code, content={})
+
+
+@router.get("/held")
+def held():
+    resp = RedirectResponse("/x", status_code=302)
+    return resp
+
+
+@router.get("/match")
+def pick(x: int):
+    match x:
+        case 1:
+            return {"one": True}
+        case _:
+            return {"other": True}
+
+
+@router.get("/loop")
+def spin():
+    while True:
+        return {"spun": True}
+
+
+@router.post("/twice")
+def twice(x: int):
+    a = settle(None, x)
+    b = settle(None, x)
+    s = Shape()
+    return {"a": a, "b": b}
+
+
+@router.post("/tx")
+def tx(x: int):
+    g = guarded(None, x)
+    ensure(None, x)
+    return {"g": g}
+''')
+f = build(variant("edge", edit), "paths")
+def top(k):
+    return [(r["kind"], r["status"], r["state"]) for r in f["endpoints"][k]["returns"] if r["depth"] == 0]
+assert top("endpoint:GET /edge/go") == [("return", 307, "default")], top("endpoint:GET /edge/go")
+assert top("endpoint:GET /edge/dyn") == [("return", None, "unknown")], top("endpoint:GET /edge/dyn")
+assert top("endpoint:GET /edge/held") == [("return", 302, "defined")], top("endpoint:GET /edge/held")
+assert [k for k, _, _ in top("endpoint:GET /edge/match")] == ["return", "return"], top("endpoint:GET /edge/match")
+assert [k for k, _, _ in top("endpoint:GET /edge/loop")] == ["return"], top("endpoint:GET /edge/loop")
+t = f["endpoints"]["endpoint:POST /edge/twice"]
+assert len(t["branches"]) == 6 and len({b["id"] for b in t["branches"]}) == 6 and len({r["id"] for r in t["returns"]}) == len(t["returns"]), (t["branches"], t["returns"])
+assert {c["call"]: c["reason"] for c in t["collapsed"]} == {"Shape": "constructor: builds a value"}, t["collapsed"]
+x = f["endpoints"]["endpoint:POST /edge/tx"]
+assert [(b["call"], b["why"]) for b in x.get("branches", [])] == [("guarded", ["commit-differs"])] * 2, x.get("branches")
+assert {c["call"]: c["reason"] for c in x["collapsed"]} == {"ensure": "one return"}, x["collapsed"]
+PY
+
+py "S3.P9 · conditions read a local path and route templates; a condition proven true reads applies:true" <<'PY'
+def edit(d):
+    patch(d, "middleware/gate.py", "        if not self._enabled or request.url.path in EXEMPT:", "        path = request.url.path\n        if path in EXEMPT:")
+    patch(d, "middleware/gate.py", 'EXEMPT = frozenset({"/healthz"})', 'EXEMPT = frozenset({"/healthz", "/users/me"})')
+    patch(d, "api/users.py", '@router.get("/list")\ndef list_users(page: int):', '@router.get("/{uid}")\ndef list_users(uid: str):')
+f = build(variant("cond", edit), "paths")
+def glob(k):
+    return [r for r in f["endpoints"][k]["produced"] if r.get("phase") == "middleware" and r.get("scope") == "all"]
+assert [r.get("applies") for r in glob("endpoint:GET /healthz")] == [False], glob("endpoint:GET /healthz")
+assert [r.get("applies") for r in glob("endpoint:GET /people/list")] == [True], glob("endpoint:GET /people/list")
+u = glob("endpoint:GET /users/{uid}")
+assert [r.get("applies") for r in u] == [None] and u[0]["when_for_path"] == "not path in EXEMPT", u
+assert list(f["conditions"]) == ["middleware/gate.py::Gate: not (path in EXEMPT)"], list(f["conditions"])
+PY
+
+py "S3.P10 · options are honoured: expand_branches all and none; an exempt_rows form that is not built refuses" <<'PY'
+import _a3_forms as F
+F.OPTIONS["expand_branches"] = "all"
+s = build(A, "paths")["endpoints"]["endpoint:POST /orders/settle"]
+assert [b["why"] for b in s["branches"] if b["call"] == "label"] == [["expand_branches: all"]] * 2, s["branches"]
+F.OPTIONS["expand_branches"] = "none"
+s = build(A, "paths")["endpoints"]["endpoint:POST /orders/settle"]
+assert "branches" not in s and {c["call"]: c["reason"] for c in s["collapsed"]}["settle"] == "expand_branches: none", s
+F.OPTIONS["expand_branches"], F.OPTIONS["exempt_rows"] = "deciding", "drop"
+p = build(A, "paths")["arms"]["paths"]
+assert p["present"] is False and "exempt_rows 'drop' is not built" in p["reason"], p
+PY
+
+py "S3.P11 · a needed-only arm: the parts that ran say computed in memory, a part not built keeps its own reason" <<'PY'
+B.RUNNERS["effects"] = lambda forms, ctx: {}
+p = build(A, "effects")["arms"]["paths"]
+assert p["reason"] == "switched off — computed in memory for effects" and p["parts"]["returns"]["reason"] == p["reason"], p
+assert p["parts"]["paths"]["reason"] == "not built yet (slice 5)", p["parts"]
 PY
 
 echo "forms-paths: $pass passed, $fail failed"

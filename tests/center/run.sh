@@ -432,7 +432,7 @@ def subset(a, b):                               # arms only ADD keys — nothing
         return isinstance(b, dict) and all(k in b and subset(v, b[k]) for k, v in a.items())
     if isinstance(a, list):
         return isinstance(b, list) and len(a) == len(b) and all(subset(x, y) for x, y in zip(a, b))
-    return a == b
+    return type(a) is type(b) and a == b                  # 0 is not False, 200 is not 200.0 — the file would differ
 assert subset(off["endpoints"], on["endpoints"]), "an arm changed or removed something the endpoint pass wrote"
 assert on["ids"]["present"] and on["ids"]["x"] > 0 and on["ids"]["collisions"] == 0 and "ids" not in off, (on.get("ids"), sorted(off))
 PY

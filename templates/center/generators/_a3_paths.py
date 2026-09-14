@@ -541,6 +541,43 @@ def _dep_target(repo: Path, m: _Mod, expr: str, decl: str | None):
     return None
 
 
+def _security_row(rm: _Mod, qual: str, val, fw) -> dict | None:
+    """The refusal a security scheme answers while ``auto_error`` is on (None when it is off), its status gated by the
+    framework version the rule was read on."""
+    rule = F.SECURITY_CLASSES[_leaf(val.func)]
+    if any(k.arg == rule["auto_error_kw"] and isinstance(k.value, ast.Constant) and k.value.value is False
+           for k in val.keywords):
+        return None
+    row = {"phase": "security", "status": rule["status"], "form": "default-phrase",
+           "detail": rule["detail"], "at": f"{rm.rel}:{val.lineno}", "via": f"{_leaf(val.func)} {qual}",
+           "source": rule["source"]}
+    if fw and _vt(fw[0]) >= _vt(rule["min_version"]):
+        row["state"] = "default"
+    else:
+        row["state"], row["status"] = "unknown", None
+        row["reason"] = ("framework version unreadable" if not fw
+                         else f"fastapi {fw[0]} predates the verified {rule['min_version']}")
+    return row
+
+
+def _dep_node(repo: Path, rm: _Mod, qual: str, called: bool = False):
+    """What FastAPI CALLS for the dependency ``qual`` → ``(module, node | None, qual of the node, kind)``: a function; a
+    class's ``__init__`` (``Depends(Cls)`` constructs it — its parameters are the sub-dependencies); an instance's class
+    ``__call__`` (``Depends(obj)``, or ``Depends(Cls(…))`` — ``called``). None when ``qual`` is none of these."""
+    if qual in rm.defs:
+        return rm, rm.defs[qual], qual, "function"
+    if qual in rm.classes and called:
+        return rm, rm.defs.get(f"{qual}.__call__"), f"{qual}.__call__", "instance"
+    if qual in rm.classes:
+        return rm, rm.defs.get(f"{qual}.__init__"), f"{qual}.__init__", "class"
+    val = rm.assigns.get(qual)
+    if isinstance(val, ast.Call) and isinstance(val.func, ast.Name):
+        r = _resolve(repo, rm, val.func.id)
+        if r and r[1] in r[0].classes:
+            return r[0], r[0].defs.get(f"{r[1]}.__call__"), f"{r[1]}.__call__", "instance"
+    return None
+
+
 def _deps(repo: Path, m: _Mod, fn, dec, depth: int, seen: set, acc: dict) -> None:
     aliases = _C._dep_aliases(repo, m.rel, m.tree)
     if depth:
@@ -558,32 +595,21 @@ def _deps(repo: Path, m: _Mod, fn, dec, depth: int, seen: set, acc: dict) -> Non
         seen.add(key)
         val = rm.assigns.get(qual)
         if isinstance(val, ast.Call) and _leaf(val.func) in F.SECURITY_CLASSES:
-            rule = F.SECURITY_CLASSES[_leaf(val.func)]
-            if any(k.arg == rule["auto_error_kw"] and isinstance(k.value, ast.Constant) and k.value.value is False
-                   for k in val.keywords):
-                continue
-            fw = acc["framework"]
-            row = {"phase": "security", "status": rule["status"], "form": "default-phrase",
-                   "detail": rule["detail"], "at": f"{rm.rel}:{val.lineno}", "via": f"{_leaf(val.func)} {qual}",
-                   "source": rule["source"]}
-            if fw and _vt(fw[0]) >= _vt(rule["min_version"]):
-                row["state"] = "default"
-            else:
-                row["state"], row["status"] = "unknown", None
-                row["reason"] = ("framework version unreadable" if not fw
-                                 else f"fastapi {fw[0]} predates the verified {rule['min_version']}")
-            acc["rows"].append(row)
+            row = _security_row(rm, qual, val, acc["framework"])
+            if row is not None:
+                acc["rows"].append(row)
             continue
-        node = rm.defs.get(qual) or rm.defs.get(f"{qual}.__call__")
-        if node is None:
+        got = _dep_node(repo, rm, qual, called=str(d["name"]).rstrip().endswith(")"))
+        if got is None or got[1] is None:
             continue
-        A = _analyse(repo, rm, node)
+        nm, node = got[0], got[1]
+        A = _analyse(repo, nm, node)
         for row in A["rows"]:
             acc["rows"].append(_copy(row, phase="dependency", dep=f"{rm.rel}::{qual}", depth=1))
         acc["escapes"] += [_copy(x, via=f"dependency {qual}") for x in A["escapes"]]
         acc["unknown_causes"] += [f"pass-through raise {p}" for p in A["passthrough"]]
         acc["swallowed"] += A["swallowed"]
-        _deps(repo, rm, node, None, depth + 1, seen, acc)
+        _deps(repo, nm, node, None, depth + 1, seen, acc)
 
 
 # ── middleware ───────────────────────────────────────────────────────────────────────────────────────

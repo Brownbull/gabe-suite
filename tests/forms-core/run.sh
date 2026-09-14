@@ -415,14 +415,16 @@ PY
 
 py "K1 · FIRE: a selection writes the arms envelope — every arm listed, hard needs closed, unknown names named (F7 F36)" <<'PY'
 import _a3_forms as F, _a3_forms_build as B
-B.RUNNERS.clear()                                  # the bare envelope: no arm is built in this case
+B.RUNNERS.clear()                                  # the bare envelope: no arm is built in this case …
 amap, raw = forms_of(A)
+assert B.closure({"paths"}, B._built) == {f"paths.{p}" for p in F.ARMS["paths"]["parts"]}, "a unit no runner builds pulled in its needs"
+B.RUNNERS["paths"] = lambda forms, ctx: {}         # … but a paths runner that builds every part and writes nothing
 f = B.extend_backend(copy.deepcopy(raw), amap, A, {"forms_arms": {"paths": True}})
 a = f["arms"]
 assert list(a) == list(F.ARM_ORDER) and "frontend" in a, list(a)
-assert a["paths"]["present"] is False and a["paths"]["reason"] == "needs kinds.middleware", a["paths"]
-assert a["paths"]["parts"] == {p: {"present": False, "reason": "needs kinds.middleware"} for p in F.ARMS["paths"]["parts"]}, a["paths"]["parts"]
-assert a["kinds"]["reason"] == "not built yet (slice 3) — needed by paths", a["kinds"]
+assert a["paths"]["present"] is True and a["paths"]["reason"] == "partial — paths: needs kinds.middleware", a["paths"]
+assert a["paths"]["parts"] == {**{p: {"present": True, "reason": None} for p in F.ARMS["paths"]["parts"]}, "paths": {"present": False, "reason": "needs kinds.middleware"}}, a["paths"]["parts"]
+assert a["kinds"]["reason"] == "not built yet (slice 3) — needed by paths" and a["kinds"]["parts"]["middleware"]["reason"] == "not built yet (slice 3)", a["kinds"]
 assert set(a["kinds"]["parts"]) == set(F.ARMS["kinds"]["parts"]) and set(a["short"]["parts"]) == set(F.ARMS["short"]["parts"]), (a["kinds"], a["short"])
 assert a["effects"]["reason"] == "switched off" and strip_ids(f["endpoints"]) == raw["endpoints"] and "arm_findings" not in f, sorted(f)
 assert f["ids"]["present"] and f["ids"]["x"] > 0 and f["ids"]["g"] > 0, f["ids"]
@@ -457,7 +459,7 @@ def finder(key):
         next(eps(forms))["arm_findings"][key] = [{"id": key}]
         return {"stats": {"endpoints": len(forms["endpoints"])}}
     return run
-B.RUNNERS.update({"fake": boom, "fake_ok": finder("fake_ok"), "fake_late": finder("fake_late")})
+B.RUNNERS.update({"fake": boom, "fake_ok": finder("fake_ok"), "fake_late": finder("fake_late"), "fake_dep": writer("fake_dep")})
 os.environ["GABE_FORMS_ARMS"] = "fake,fake_dep,fake_late"
 f = B.extend_backend(copy.deepcopy(raw), amap, A, {})
 a = f["arms"]

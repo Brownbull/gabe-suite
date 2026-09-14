@@ -16,6 +16,7 @@ from __future__ import annotations
 import ast
 import copy
 import keyword
+import re
 from pathlib import Path
 
 import _a3_paths as P
@@ -424,3 +425,39 @@ def evaluate(src: str, known: dict) -> tuple:
     except SyntaxError:
         return None, src
     return v, (ast.unparse(r) if r is not None else None)
+
+
+PATH_SUBJECTS = frozenset({"request.url.path", "scope['path']", 'scope["path"]'})
+
+
+def locals_once(fn) -> dict[str, str]:
+    """``{name: source}`` for each local ``fn`` assigns exactly once — ``path = request.url.path``."""
+    seen: dict[str, list] = {}
+    for st in ast.walk(fn):
+        if isinstance(st, ast.Assign) and len(st.targets) == 1 and isinstance(st.targets[0], ast.Name):
+            seen.setdefault(st.targets[0].id, []).append(st.value)
+    return {k: ast.unparse(v[0]) for k, v in seen.items() if len(v) == 1}
+
+
+def is_path(subject: str | None, subst: dict | None = None) -> bool:
+    """Whether a tested expression is the request path — written out, or through a local assigned once."""
+    s = (subst or {}).get(subject or "", subject or "")
+    return s in PATH_SUBJECTS or s.endswith(".url.path")
+
+
+def path_match(full_path: str | None, kind: str, values) -> bool | None:
+    """Whether a request on the route ``full_path`` passes ``in`` (exact) or ``startswith`` against ``values``. A route
+    is a TEMPLATE — ``/orders/{oid}`` answers True or False only when every value of its parameters answers the same,
+    otherwise None."""
+    fp = full_path or ""
+    vals = [v for v in (values or ()) if isinstance(v, str)]
+    if "{" not in fp:
+        return any(fp.startswith(v) for v in vals) if kind == "startswith" else fp in vals
+    head = fp.split("{", 1)[0]
+    if kind == "startswith":
+        if any(head.startswith(v) for v in vals):
+            return True
+        return None if any(v.startswith(head) for v in vals) else False
+    rx = "".join(("[^/]+" if ":path}" not in seg else ".+") if seg.startswith("{") else re.escape(seg)
+                 for seg in re.split(r"(\{[^}]*\})", fp))
+    return None if any(re.fullmatch(rx, v) for v in vals) else False

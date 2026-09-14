@@ -90,15 +90,25 @@ def _label(units) -> str:
     return ", ".join(whole + rest)
 
 
-def closure(sel: set[str]) -> set[str]:
-    """Every unit a selection runs: the selected arms' units plus, transitively, what they hard-need."""
+def _built(unit: str) -> bool:
+    """Whether a runner builds ``unit`` today: its arm has a runner, and a runner that names its ``parts`` names this one."""
+    arm, _, part = unit.partition(".")
+    runner = RUNNERS.get(arm)
+    parts = getattr(runner, "parts", None)
+    return runner is not None and (parts is None or not part or part in parts)
+
+
+def closure(sel: set[str], built=None) -> set[str]:
+    """Every unit a selection runs: the selected arms' units plus, transitively, what they hard-need. Given ``built``, a
+    unit no runner builds yet stays listed (it reports so) but pulls in nothing."""
     out: set[str] = set()
     todo = [u for a in sel for u in units_of(a)]
     while todo:
         u = todo.pop()
         if u not in out:
             out.add(u)
-            todo.extend(unit_needs(u))
+            if built is None or built(u):
+                todo.extend(unit_needs(u))
     return out
 
 
@@ -206,7 +216,7 @@ def extend_backend(forms: dict, amap: dict, repo, cfg: dict | None = None) -> di
             forms["arms_ignored"] = ignored
         if not sel:
             return forms
-        run = closure(sel)
+        run = closure(sel, _built)
         private = copy.deepcopy(amap)                      # runners never touch the archmap the c4 · levels are built from
         made = _containers(forms)                          # arm_findings is shared: nobody owns the container, each arm its entry
         try:                                               # ids first (D13): on P.build's own rows, before any stage owns a key
@@ -223,21 +233,18 @@ def extend_backend(forms: dict, amap: dict, repo, cfg: dict | None = None) -> di
                 continue
             res = results.setdefault(arm, {"present": False, "reason": None, "version": 1, "options": {}, "stats": {}})
             out = outcomes.setdefault(arm, {})
+            runner = RUNNERS.get(arm)
             runnable = []
-            for u in units:
+            for u in units:                                # an unbuilt part says so before it says what it would need
+                part = u.split(".", 1)[1] if "." in u else None
                 missing = unit_needs(u) - ok
-                if missing:
+                if not _built(u):
+                    slice_n = F.ARMS[arm].get("part_slices", {}).get(part, F.ARMS[arm]["slice"])
+                    out[u] = {"present": False, "reason": f"not built yet (slice {slice_n})"}
+                elif missing:
                     out[u] = {"present": False, "reason": "needs " + _label(missing)}
                 else:
                     runnable.append(u)
-            runner = RUNNERS.get(arm)
-            built = set(runner.parts) if runner is not None and hasattr(runner, "parts") else None
-            for u in list(runnable):
-                part = u.split(".", 1)[1] if "." in u else None
-                if runner is None or (built is not None and part not in built):
-                    slice_n = F.ARMS[arm].get("part_slices", {}).get(part, F.ARMS[arm]["slice"])
-                    out[u] = {"present": False, "reason": f"not built yet (slice {slice_n})"}
-                    runnable.remove(u)
             if runnable:
                 snapshot = copy.deepcopy(forms)
                 ctx = {"amap": private, "repo": Path(repo), "cfg": cfg or {}, "selected": frozenset(sel),
@@ -295,7 +302,7 @@ def extend_backend(forms: dict, amap: dict, repo, cfg: dict | None = None) -> di
         for arm in list(results):
             if arm in sel:
                 continue
-            why = ", ".join(sorted(a for a in sel if closure({a}) & units_of(arm))) or "a selected arm"
+            why = ", ".join(sorted(a for a in sel if closure({a}, _built) & units_of(arm))) or "a selected arm"
             res = results[arm]
             if not res["present"]:
                 off = _off(f"{res['reason']} — needed by {why}", arm)
@@ -303,8 +310,10 @@ def extend_backend(forms: dict, amap: dict, repo, cfg: dict | None = None) -> di
                 results[arm] = off
             elif arm in kept:
                 res["reason"] = f"needed by {why}; written only where {', '.join(sorted(kept[arm]))} writes inside it"
-            else:
-                results[arm] = _off(f"switched off — computed in memory for {why}", arm)
+            else:                                          # the parts that ran say so; a part that did not keeps its reason
+                off = _off(f"switched off — computed in memory for {why}", arm)
+                off.get("parts", {}).update({p: o for p, o in (res.get("parts") or {}).items() if not o["present"]})
+                results[arm] = off
         forms["arms"] = {arm: results.get(arm) or _off(
             "not built yet (slice 11) — runs beside the fe structure arm" if arm == "frontend" and arm in sel else "switched off", arm)
             for arm in F.ARM_ORDER}

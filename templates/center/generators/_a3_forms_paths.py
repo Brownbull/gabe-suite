@@ -5,21 +5,21 @@ calls were collapsed and why — and, for every middleware row that carries a ``
 this endpoint's path.
 
 * ``returns[]`` — every return of the handler (a value, a bare ``return``, falling off the end = ``implicit``, a return
-  inside an except = ``catch-return``), with its guards; a returned ``JSONResponse(status_code=2xx|3xx)`` is ``defined``,
-  anything else answers the declared success status as ``default``. A returned 4xx/5xx response is already a refusal row.
-* ``branches[]`` — the returns of a DECIDING callee (D14): at least two candidate returns (the guarded ones plus the first
+  inside an except = ``catch-return``), with its guards. A returned response is sent as built: a literal status is
+  ``defined``, the class's own default ``default``, a runtime status ``unknown``; any other value answers the declared
+  success status as ``default``. A 4xx/5xx response returned directly is already a refusal row.
+* ``branches[]`` — the value returns of a DECIDING callee (D14): at least two candidates (the guarded ones plus the first
   unguarded fall-through) AND either the call site contributes a produced row or precondition, or the arms differ in a
-  ``.commit(`` on their guard prefix. Each branch links to its depth-1 ``returns[]`` row.
+  ``.commit(`` on their guard prefix. A branch links to its depth-1 ``returns[]`` row and that row back to it.
 * ``collapsed[]`` — every other project call, with the reason it does not decide.
 * ``conditions{}`` + ``when_for_path`` / ``applies`` on middleware rows — the ``when`` terms resolved by
-  ``_a3_forms_settings``; path membership is decided against the endpoint's ``full_path``; a provable False annotates
+  ``_a3_forms_settings``; path membership is decided against the endpoint's route template; a provable False annotates
   ``applies: false`` and the row stays (D19).
 """
 from __future__ import annotations
 
 import ast
 import copy
-import json
 from pathlib import Path
 
 import _a3_forms as F
@@ -30,7 +30,6 @@ import _a3_paths as P
 
 PARTS = ("returns", "conditions")
 _BARE, _IMPLICIT = "__gabe_bare_return__", "__gabe_implicit_return__"
-_PATH_SUBJECTS = frozenset({"request.url.path", "scope['path']", 'scope["path"]'})
 
 
 def _own_nodes(fn):
@@ -56,6 +55,19 @@ def _handlers(repo: Path, forms: dict):
                 yield key, v, m, fn
 
 
+def _breaks(stmts: list) -> bool:
+    """Whether a ``break`` in ``stmts`` leaves THIS loop — a nested loop's body keeps its own breaks, its ``else`` does not."""
+    todo = list(stmts)
+    while todo:
+        n = todo.pop()
+        if isinstance(n, ast.Break):
+            return True
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)):
+            continue
+        todo.extend(n.orelse if isinstance(n, (ast.For, ast.AsyncFor, ast.While)) else ast.iter_child_nodes(n))
+    return False
+
+
 def _falls_off(stmts: list) -> bool:
     """Whether control can run past the last statement — ``implicit`` return when it can."""
     if not stmts:
@@ -70,6 +82,13 @@ def _falls_off(stmts: list) -> bool:
     if isinstance(last, P._TRY):
         return (_falls_off(last.body + last.orelse) or any(_falls_off(h.body) for h in last.handlers)) \
             and _falls_off(last.finalbody or [ast.Pass()])
+    if isinstance(last, ast.Match):                        # exhaustive only with an unguarded wildcard case
+        wild = any(isinstance(c.pattern, ast.MatchAs) and c.pattern.pattern is None and c.guard is None for c in last.cases)
+        return not wild or any(_falls_off(c.body) for c in last.cases)
+    if isinstance(last, ast.While) and isinstance(last.test, ast.Constant) and last.test.value in (True, 1):
+        return _breaks(last.body)
+    if isinstance(last, (ast.For, ast.AsyncFor, ast.While)) and last.orelse:
+        return _breaks(last.body) or _falls_off(last.orelse)
     return True
 
 
@@ -120,22 +139,41 @@ def _pred(e: dict) -> str | None:
     return " and ".join(parts) or None
 
 
-def _success(v, m, declared: dict) -> tuple:
+def _assigned_once(fn, name: str):
+    vals = [n.value for n in _own_nodes(fn) if isinstance(n, ast.Assign) and len(n.targets) == 1
+            and isinstance(n.targets[0], ast.Name) and n.targets[0].id == name]
+    return vals[0] if len(vals) == 1 else None
+
+
+def _response_class(repo: Path, m, call) -> str | None:
+    """The response class a call builds — by name, or a project class one base away from a known one."""
+    name = P._leaf(call.func)
+    if name in F.RESPONSE_DEFAULTS:
+        return name
+    r = P._resolve(repo, m, name) if isinstance(call.func, ast.Name) else None
+    cls = r[0].classes.get(r[1]) if r else None
+    return next((b for b in (P._leaf(x) for x in (cls.bases if cls is not None else ())) if b in F.RESPONSE_DEFAULTS), None)
+
+
+def _success(repo: Path, v, m, declared: dict) -> tuple:
     inner = v.value if isinstance(v, ast.Await) else v
-    if isinstance(inner, ast.Call) and P._leaf(inner.func) in F.RESPONSE_CLASSES:
-        st = next((P._status(k.value, m) for k in inner.keywords if k.arg == "status_code"), None)
-        if st is None and len(inner.args) > 1:
-            st = P._status(inner.args[1], m)
-        if st and st < 400:
-            return st, "defined"
-    return ((declared or {}).get("success") or {}).get("status"), "default"
+    cls = _response_class(repo, m, inner) if isinstance(inner, ast.Call) else None
+    if cls is None:
+        return ((declared or {}).get("success") or {}).get("status"), "default"
+    arg = next((k.value for k in inner.keywords if k.arg == "status_code"), inner.args[1] if len(inner.args) > 1 else None)
+    if arg is None:                                        # sent as built: the route's status_code never applies to it
+        return F.RESPONSE_DEFAULTS[cls], "default"
+    st = P._status(arg, m)
+    return (st, "defined") if st else (None, "unknown")
 
 
-def _token(pred: str | None) -> str | None:
-    if not pred:
+def _token(guard: str | None) -> str | None:
+    """A branch in the reader's words: the rightmost name of its innermost guard (``mode == Mode.REPLAY`` → ``REPLAY``;
+    a ``match`` case reads its pattern)."""
+    if not guard:
         return None
     try:
-        tree = ast.parse(pred.split(" and except ")[0], mode="eval")
+        tree = ast.parse(guard[len("match "):] if guard.startswith("match ") else guard, mode="eval")
     except SyntaxError:
         return None
     names = [(getattr(n, "end_col_offset", 0), n.attr if isinstance(n, ast.Attribute) else n.id)
@@ -157,12 +195,16 @@ def _row(fid: str, rel: str, e: dict, depth: int, **extra) -> dict:
     return row
 
 
-def _tuple_r(row: dict, e: dict) -> list:
-    return [row["fn"], row["kind"], [g for g, _ in e["guards"]], list(e["after"])]
+def _tuple_r(row: dict, e: dict, site_fn: str | None = None) -> list:
+    """The ``r:`` tuple; a depth-1 row adds the function it is called from, so one callee reached from two sites (ranked
+    by site) or two handlers never shares an id."""
+    t = [row["fn"], row["kind"], [g for g, _ in e["guards"]], list(e["after"])]
+    return t if site_fn is None else t + [site_fn]
 
 
 def _deciding(repo: Path, m, fn, v: dict, fid: str):
     """The handler's project calls → ``(branch sets, collapsed rows)``; a branch set is ``(site, call, callee fid, cm, [(event, fall)], why)``."""
+    mode = F.OPTIONS["expand_branches"]
     evs = P._events(fn)
     hev: dict = {}
     for e in evs:
@@ -181,7 +223,11 @@ def _deciding(repo: Path, m, fn, v: dict, fid: str):
         if r is None:
             f = call.func
             if isinstance(f, ast.Name) and (m.imports.get(f.id) or (None,))[0]:
-                collapsed.append({"site": site, "call": name, "fn": None, "reason": "unresolved"})
+                got = P._resolve(repo, m, f.id)
+                if got and got[1] in got[0].classes:
+                    collapsed.append({"site": site, "call": name, "fn": f"{got[0].rel}::{got[1]}", "reason": "constructor: builds a value"})
+                else:
+                    collapsed.append({"site": site, "call": name, "fn": None, "reason": "unresolved"})
             continue
         cm, qual = r
         cnode = cm.defs[qual]
@@ -193,9 +239,12 @@ def _deciding(repo: Path, m, fn, v: dict, fid: str):
         if P._climb("Exception", {"Exception"}, ce["tries"], hev)[0] == "swallow":
             collapsed.append({**base, "reason": "swallowed by the caller"})
             continue
-        rets = returns_of(cnode)
-        fall = next((e for e in rets if not e["guards"] and e["handler"] is None), None)
-        cands = [e for e in rets if e["guards"] or e["handler"] is not None] + ([fall] if fall else [])
+        if mode == "none":
+            collapsed.append({**base, "reason": "expand_branches: none"})
+            continue
+        rets = [e for e in returns_of(cnode) if _value(e) is not None]      # VALUE returns only (step 3)
+        fall = next((e for e in rets if not e["guards"] and e["handler"] is None and not e["loop"]), None)
+        cands = [e for e in rets if e is not fall and (e["guards"] or e["handler"] is not None or e["loop"])] + ([fall] if fall else [])
         if len(cands) < 2:
             collapsed.append({**base, "reason": "one return"})
             continue
@@ -208,11 +257,16 @@ def _deciding(repo: Path, m, fn, v: dict, fid: str):
         commits = [e for e in P._events(cnode) if e["kind"] == "call" and P._leaf(e["node"].func) in F.TX_CALLS]
 
         def committed(e) -> bool:
+            """A commit ran before this return on its guard prefix — never one inside the try whose except holds the return."""
             gs = [g for g, _ in e["guards"]]
-            return any(c["line"] < e["line"] and [g for g, _ in c["guards"]] == gs[:len(c["guards"])] for c in commits)
+            own = {e["handler"][0].lineno} if e["handler"] is not None else set()
+            return any(c["line"] < e["line"] and [g for g, _ in c["guards"]] == gs[:len(c["guards"])]
+                       and not own & {t.lineno for t in c["tries"]} for c in commits)
 
         if len({committed(e) for e in cands}) > 1:
             why.append("commit-differs")
+        if not why and mode == "all":
+            why.append("expand_branches: all")
         if not why:
             collapsed.append({**base, "reason": "arms change neither exit nor commit"})
             continue
@@ -230,7 +284,9 @@ def returns_part(repo: Path, forms: dict) -> dict:
             val = _value(e)
             if val is not None and P._response_exit(val.value if isinstance(val, ast.Await) else val, m, repo):
                 continue                                  # a returned refusal is already a produced row
-            status, state = _success(val, m, v.get("declared")) if val is not None else (((v.get("declared") or {}).get("success") or {}).get("status"), "default")
+            held = _assigned_once(fn, val.id) if isinstance(val, ast.Name) else None
+            shown = held if held is not None else val     # `resp = RedirectResponse(…); return resp` answers what resp is
+            status, state = _success(repo, shown, m, v.get("declared")) if shown is not None else (((v.get("declared") or {}).get("success") or {}).get("status"), "default")
             row = _row(fid, m.rel, e, 0, status=status, state=state)
             rets.append(row)
             r_entries.append((_tuple_r(row, e), I._pos(row["at"]), row))
@@ -242,11 +298,12 @@ def returns_part(repo: Path, forms: dict) -> dict:
                 if fall:
                     ret["kind"] = "fall-through" if ret["kind"] == "return" else ret["kind"]
                 rets.append(ret)
-                r_entries.append((_tuple_r(ret, e), I._pos(ret["at"]), ret))
+                r_entries.append((_tuple_r(ret, e, fid), I._pos(ret["at"], site), ret))
                 br = {"site": site, "call": name, "fn": cfid, "pred": ret.get("pred"), "after": ret.get("after") or [],
-                      "token": "fall-through" if fall else _token(ret.get("pred")), "why": list(why), "_ret": ret}
+                      "token": "fall-through" if fall else _token(e["guards"][-1][0] if e["guards"] else None),
+                      "why": list(why), "_ret": ret}
                 branches.append(br)
-                b_entries.append(([cfid, [g for g, _ in e["guards"]], list(e["after"])], I._pos(ret["at"]), br))
+                b_entries.append(([cfid, [g for g, _ in e["guards"]], list(e["after"]), fid], I._pos(ret["at"], site), br))
         stats["returns"] += sum(1 for r in rets if r["depth"] == 0)
         stats["branch_returns"] += sum(1 for r in rets if r["depth"] == 1)
         stats["branches"] += len(branches)
@@ -261,17 +318,13 @@ def returns_part(repo: Path, forms: dict) -> dict:
     for v, rets, branches, collapsed in pending:
         v["returns"] = sorted(rets, key=lambda r: (r["depth"], I._line(r.get("site")), I._line(r["at"])))
         for br in branches:
-            br["return"] = br.pop("_ret")["id"]
+            ret = br.pop("_ret")
+            br["return"], ret["branch"] = ret["id"], br["id"]
         if branches:
             v["branches"] = [{"id": b["id"], **{k: b[k] for k in ("site", "call", "fn", "pred", "after", "token", "return", "why")}} for b in branches]
         if collapsed:
             v["collapsed"] = collapsed
     return stats
-
-
-def _is_path(subject: str | None) -> bool:
-    s = subject or ""
-    return s in _PATH_SUBJECTS or s.endswith(".url.path")
 
 
 class _Subst(ast.NodeTransformer):
@@ -284,6 +337,8 @@ class _Subst(ast.NodeTransformer):
 
 
 def conditions_part(repo: Path, forms: dict) -> tuple[dict, dict]:
+    if F.OPTIONS["exempt_rows"] != "annotate":
+        raise ValueError(f"exempt_rows {F.OPTIONS['exempt_rows']!r} is not built — annotate is the only form (D19)")
     conds: dict = {}
     cache: dict = {}
     stats = {"conditions": 0, "applies_false": 0, "applies_true": 0, "when_for_path": 0}
@@ -297,15 +352,16 @@ def conditions_part(repo: Path, forms: dict) -> tuple[dict, dict]:
                 ck = (file, r.get("via"), r["when"])
                 if ck not in cache:
                     m = P._mod(repo, file)
-                    cache[ck] = S.terms(repo, m, r.get("via"), r["when"]) if m else []
-                    conds[f"{r.get('via')}: {r['when']}"] = {"via": r.get("via"), "when": r["when"], "file": file, "terms": cache[ck]}
-                terms = cache[ck]
+                    meth = next((m.defs[f"{r.get('via')}.{x}"] for x in F.MIDDLEWARE_METHODS if f"{r.get('via')}.{x}" in m.defs), None) if m else None
+                    cache[ck] = (S.terms(repo, m, r.get("via"), r["when"]) if m else [], S.locals_once(meth) if meth is not None else {})
+                    conds[f"{file}::{r.get('via')}: {r['when']}"] = {"via": r.get("via"), "when": r["when"], "file": file, "terms": cache[ck][0]}
+                terms, subst = cache[ck]
                 known = {}
                 for t in terms:
-                    if t["kind"] in ("in", "not-in") and _is_path(t.get("subject")):
-                        known[t["src"]] = (fp in t["values"]) == (t["kind"] == "in")
-                    elif t["kind"] == "startswith" and _is_path(t.get("subject")):
-                        known[t["src"]] = any(fp.startswith(x) for x in t["values"])
+                    kind = {"in": "in", "not-in": "in", "startswith": "startswith"}.get(t["kind"])
+                    hit = S.path_match(fp, kind, t["values"]) if kind and S.is_path(t.get("subject"), subst) else None
+                    if hit is not None:
+                        known[t["src"]] = hit != (t["kind"] == "not-in")
                 val, residual = S.evaluate(r["when"], known)
                 if val is False:
                     r["applies"] = False
@@ -315,7 +371,10 @@ def conditions_part(repo: Path, forms: dict) -> tuple[dict, dict]:
                     stats["applies_true"] += 1
                 elif residual:
                     table = {t["src"]: t["expr"] for t in terms if t["kind"] == "expr" and t.get("expr")}
-                    r["when_for_path"] = ast.unparse(_Subst(table).visit(ast.parse(residual, mode="eval").body))
+                    try:
+                        r["when_for_path"] = ast.unparse(_Subst(table).visit(ast.parse(residual, mode="eval").body))
+                    except SyntaxError:                   # a `when` cut at 160 characters stays as written
+                        r["when_for_path"] = residual
                     stats["when_for_path"] += 1
     stats["conditions"] = len(conds)
     return dict(sorted(conds.items())), stats

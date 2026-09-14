@@ -82,12 +82,13 @@
 
 **Dependencies between arms:**
 - **Hard needs** are computed in memory and written only if the needed arm is also selected (`F.ARM_NEEDS`):
-  - `paths` ← `kinds.middleware`
+  - `paths.paths` ← `kinds.middleware` (the part that walks the stack; `returns` · `conditions` · `framework` read nothing kinds writes — Slice 3 review F31)
   - `effects` ← `paths`
   - `contract` ← `effects`
   - `tests` ← `paths`
   - `kinds.functions` ← `effects`
   - `short.model` ← `effects`
+- **A unit no runner builds yet** is listed and says `not built yet (slice n)` before any need, and pulls in nothing (review F32). A needed-only arm that ran stamps `switched off — computed in memory for <arm>` on the parts that ran; a part that did not keeps its own reason (F33).
 - **Soft needs** are used only when selected: `paths` uses `switches` and `short.schema`.
 - **Ids** (the `id` keys on existing rows) are written whenever any arm is selected (D13).
 
@@ -102,8 +103,8 @@
 |---|---|---|---|
 | `x:` | produced exit (refusal · uncaught · framework) | `[phase, status, at_fn, site_fn, via_sym, raised_fn, detail, n]`; no `at` → handler | yes, so `middleware{}.exits[].id == endpoints[*].produced[].id` |
 | `g:` | precondition | `[pred, status, at_fn, via_sym, depth, n]` (`n` ranks distinct `at` positions, as for `x:`); carries `exit: x:` (`exits[]` + `exit: null` when several rows share its `at`) | yes |
-| `r:` | success return | `[fn, kind(return·implicit·catch-return), guards[], after[], n]` | yes |
-| `b:` | branch (a deciding callee's arm) | `[fn, guards[], after[], n]` | yes |
+| `r:` | success return | `[fn, kind(return·implicit·catch-return), guards[], after[], n]`; a depth-1 row adds the calling handler `site_fn` before `n`, and `n` ranks (at, site) — one callee called from two sites never shares an id (review F22) | yes |
+| `b:` | branch (a deciding callee's arm) | `[fn, guards[], after[], site_fn, n]`, ranked as a depth-1 `r:` | yes |
 | `p:` | path | `[endpoint_key, handler, exit_id, [chosen b: ids], split_tag]` | no |
 | `sw:` | switch | `["binding", s_fn, port]` · `["value", fn]` · `["flag", sorted ref ids]` | yes |
 | `st:` | effect step | `[fn, op, table, cond, n]` | stored once in `steps{}` |
@@ -130,29 +131,50 @@
 
 ```jsonc
 "middleware": {"middleware:<Cls>": {"cls", "kind": "project|third-party|unknown", "registered_at": "file:line",
-  "order": {"registered": int, "runs": int, "of": int},        // runs = of-1-registered (Starlette inserts at 0)
+  "order": {"registered": int, "runs": int, "of": int,         // runs = of-1-registered (Starlette inserts at 0)
+            "basis"?: "file-sorted — …",                        // registrations span files: their call order is not read
+            "unscanned"?: ["main.py:12 @app.middleware fn", "app.py:9 FastAPI(middleware=…)"]},   // named, never placed
   "outer": "middleware:<Cls>"|null, "inner": "middleware:<Cls>"|null, "file"?, "method"?,
-  "pass_through": [{"kind": "exact-paths|prefix|method|flag|expr", "src", "values"?, "expr"?, "at"}],
+  "pass_through": [{"kind": "exact-paths|prefix|method|flag|expr", "src", "values"?, "negated"?: true, "expr"?, "reason"?, "at"}],
   "exits": [{"id": "x:…", …the endpoint row's fields…, "applies_to": int, "exempt": ["endpoint:…"], "hop"?, "on_endpoints"?: false}]}},
-"dependencies": {"file::qual": {"kind": "function|class|security|unknown", "levels_id", "at"?,
-  "subdeps": ["file::qual" | {"name", "resolved": false}],   // FastAPI's parameter order, not gate-first
+"dependencies": {"file::qual": {"kind": "function|class|instance|security|unknown", "levels_id", "at"?, "calls"?: "file::Cls.__init__|__call__",
+  "subdeps": ["file::qual" | {"name", "resolved": false}],   // FastAPI's parameter order, not gate-first; built once, never cut by depth
   "exits": [{"id", …}], "inherited_exits": [{"id", …}], "escapes"?: ["Cls file:line"],
-  "effects": [{"op": "commit", "at", "via"?: "callee @ file:line"}], "teardown": bool, "applies_to": int,
+  "effects": [{"op": "commit", "at", "via"?: "callee @ file:line", "when"?: "teardown"}], "teardown": bool, "applies_to": int,
   "class"?/"auto_error"? (security)}}
 ```
+Readings (after the Slice 3 review):
+- A guard is rebuilt from its `if` node, never re-parsed from the 160-character text; a `match` case is one `expr` arm with a `reason`. An `elif` / `else` pass-through is decided by its own test when every earlier branch of its chain returns or raises.
+- A path arm under an odd number of `not` (or a `not in`) says `negated: true` — it passes every path except its values; a `flag` arm's `expr` keeps the arm's polarity (`not settings.limit_enabled`). Path membership reads the route TEMPLATE: `/orders/{oid}` is unknown against `/orders/ad`, never a match.
+- An exit is matched to an endpoint row on its site (on `at` only when it has no site). An exit no endpoint row carries mints its own `x:` id, ranked after every position its tuple holds among the endpoint rows, and says `on_endpoints: false`. A module helper's exit takes its scope, `pred` and `when` from its own guards.
+- Exits are filtered by the RESOLVED class in its own file (an alias registration keeps its exits); a class registered twice reads each exit once.
+- `Depends(Cls)` is read through `Cls.__init__` (its parameters are the sub-dependencies), `Depends(obj)` / `Depends(Cls(…))` through the class's `__call__` — `_a3_paths._deps` reads them the same way, so the ids agree. A security scheme's exit is the endpoint pass's own row (`_a3_paths._security_row`: status gated by the framework version).
+- A commit after the dependency's first `yield` runs at teardown and says `when: teardown`; `dependency-commits` counts only commits before the handler.
+
 Findings (`arm_findings.kinds`): `indistinct-exits {subject, status, at, exits[], sites[]}` · `dependency-commits {subject, commits[], applies_to}`.
+Stats: middleware · middleware_exits · middleware_exits_off_endpoints · unscanned_registrations · dependencies · dependency_endpoint_pairs · findings{id: n}.
 
 ### Paths forms (as built, Slice 3b — `_a3_forms_paths.py`)
 
 The `returns[]` · `branches[]` · `collapsed[]` shapes are the core shapes below, with these readings:
 - `returns[].kind` — `return` · `implicit` (control can fall off the end; found by a walk over a copy with sentinel returns) ·
-  `catch-return` (inside an except) · `fall-through` (a branch set's first unguarded return). Depth-1 rows belong to a deciding
-  callee: `site` is the call, `status: null`, `state: "n/a"`.
-- `branches[].token` — the last name in the guard (`REPLAY`, `completed`), or `fall-through`; `why` — `contributes-rows` ·
-  `commit-differs`.
-- `conditions{}` — keyed `"<Cls>: <when>"` → `{via, when, file, terms[]}` (`_a3_forms_settings.terms`). A middleware row gains
-  `applies: true|false` only when path membership proves it, else `when_for_path` (the residual with each settings term
-  substituted; `evaluate` folds `not not X`).
+  `catch-return` (inside an except) · `fall-through` (a branch set's first unguarded return outside a loop). Depth-1 rows belong
+  to a deciding callee: `site` is the call, `status: null`, `state: "n/a"`, and `branch` links back to the `b:` id. `implicit` is
+  not claimed after an exhaustive `match` (an unguarded `case _`), a `while True` with no `break`, or a loop whose `else` returns.
+- `returns[].status` — a returned response is sent AS BUILT: a literal status is `defined`, no status is the class's own default
+  (`F.RESPONSE_DEFAULTS`: 307 for `RedirectResponse`, else 200) as `default`, a runtime status is `null` · `unknown`; a response
+  held in a local assigned once is read through it; any other value answers `declared.success` as `default`.
+- Branch candidates are VALUE returns only (step 3): a void helper's bare and implicit returns never make it deciding.
+  `commit-differs` never counts a commit inside the try whose except holds the return.
+- `branches[].token` — the rightmost name of the innermost guard (`REPLAY`, `completed`; a `match` case reads its pattern), or
+  `fall-through`; `why` — `contributes-rows` · `commit-differs` · `expand_branches: all` (OPTIONS).
+- `collapsed[].reason` — `one return` · `generator: runs after the response line` · `swallowed by the caller` ·
+  `arms change neither exit nor commit` · `unresolved` · `constructor: builds a value` · `expand_branches: none`.
+- `conditions{}` — keyed `"<file>::<Cls>: <when>"` → `{via, when, file, terms[]}` (`_a3_forms_settings.terms`). A middleware row
+  gains `applies: true|false` only when path membership proves it (the path subject may be a local assigned once; the route is a
+  template, `_a3_forms_settings.path_match`), else `when_for_path` (the residual with each settings term substituted; `evaluate`
+  folds `not not X`; a `when` the endpoint pass cut at 160 characters stays as written). An `exempt_rows` other than `annotate`
+  refuses (not built).
 - Stats: returns · branch_returns · branches · handlers_expanded · collapsed{reason: n} · conditions · applies_false ·
   applies_true · when_for_path.
 
@@ -368,7 +390,7 @@ This amendment. The operator rules on the §A1 interface, the switch policy (D12
 **Modules:**
 - `_a3_forms_paths.py` (part 1, ~250)
 - `_a3_forms_mw.py` (~260)
-- `_a3_forms.py` +~30 (`RESPONSE_CLASSES` reuse, `MIDDLEWARE_ORDER`, `TX_CALLS`, OPTIONS `expand_branches` / `exempt_rows`)
+- `_a3_forms.py` +~30 (`RESPONSE_CLASSES` reuse + `RESPONSE_DEFAULTS`, `TX_CALLS`, OPTIONS `expand_branches` / `exempt_rows`) — the order is read from `amap.app_middleware`, so no `MIDDLEWARE_ORDER` table exists
 
 **Algorithm:**
 1. **Handler exits.** Re-find the handler with `P._find_handler` (`:733-743`) and read `P._events`.
@@ -422,6 +444,8 @@ This amendment. The operator rules on the §A1 interface, the switch policy (D12
 **Batteries:**
 - `tests/forms-paths/`: P1 (a deciding callee → two branches), P2 (a non-deciding callee and a generator callee → collapsed), P6 (swallowed → `catch-return`), P7 (A5 `when_for_path`, `applies false` on the exempt path, row count unchanged).
 - `tests/forms-kinds/`: C14 (middleware order + exemption + `applies_to`; mutation: swap the `add_middleware` lines → outer/inner swap; drop the exempt arm → `applies_to` +1), C15 (`indistinct-exits` FIRE/SILENT), C16 (dependency `applies_to`, subdep order, `dependency-commits`; SILENT on a dependency-free endpoint).
+
+**Review (2026-09-14 — five lenses, 52 raw findings, 41 kept after an adversarial verify, 1 refuted): all fixed.** The two that took output down: a pass-through guard past 160 characters or a `match` case raised in the kinds arm and, through the hard need, erased the paths arm; a dependency first reached at depth 4 kept `subdeps: []` for good. The rest are the readings in §A1 "Kinds forms" and "Paths forms" above. New cases: forms-kinds C17–C23 (polarity agreeing with the paths rows, minted ids, a security scheme under an unreadable version, class and instance dependencies, teardown commits, a long and a `match` guard, alias and double registration, unscanned registrations, a deep chain) · forms-paths S3.P3 (`contributes-rows`) and S3.P8–S3.P11 (returns as sent, two sites, a commit an except skips, a void helper, a constructor, local and template paths, `applies: true`, OPTIONS, needed-only part reasons); every fix mutation-proven. Floors kept, each named: a no-argument `Depends()` still names no target (`_a3_code._depends_target`); nested pass-through guards stay one `expr`; the endpoint pass still caps `when` at 160 characters; a 4xx response built by a helper and returned is not a refusal row (a held one reads its real status).
 
 **Dry run — record:**
 - returns and branches; collapsed by reason;
