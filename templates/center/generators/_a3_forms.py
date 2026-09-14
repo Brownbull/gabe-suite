@@ -16,7 +16,7 @@ A new slot, a new framework rule or a new finding is an edit HERE, not in the wa
 """
 from __future__ import annotations
 
-VERSION = 1
+VERSION = 2   # 2 (amendment 1, Slice 1): the envelope carries `head` and, when any arm is selected, `arms`
 
 # ── the five states a slot or a row can be in ──────────────────────────────────────────────────────
 #   defined  a fact found in the project's source
@@ -39,6 +39,8 @@ KINDS: dict[str, dict[str, dict]] = {
 OPTIONS = {
     # an endpoint with no in-body guard reads "n/a" (a read needs none) or "missing-on-mutating"
     "u3_empty": "n/a",
+    # how far the shared reach walk reads (amendment 1 D17): discovery only, never a row
+    "reach_depth": 4,
 }
 MUTATING_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 
@@ -89,18 +91,50 @@ THIRD_PARTY_MIDDLEWARE = {
 #   nag    counts toward S20 firing — the refusal a client cannot handle correctly
 #   count  rides the S20 line — a convention to set once, not per-endpoint debt
 FINDINGS = {
-    "text-only": {"slot": "U7", "pulse": "count",
+    "text-only": {"arm": "endpoint", "slot": "U7", "pulse": "count",
                   "says": "refusals carry text only — no stable code a client can branch on"},
-    "shared-status": {"slot": "U7", "pulse": "nag",
+    "shared-status": {"arm": "endpoint", "slot": "U7", "pulse": "nag",
                       "says": "one status carries different text-only refusals — a client must compare strings"},
-    "reason-lost": {"slot": "U7", "pulse": "nag",
+    "reason-lost": {"arm": "endpoint", "slot": "U7", "pulse": "nag",
                     "says": "a service's reason is replaced by other text on the way out"},
-    "escape-500": {"slot": "U7", "pulse": "nag",
+    "escape-500": {"arm": "endpoint", "slot": "U7", "pulse": "nag",
                    "says": "a project exception escapes untranslated and answers 500"},
-    "http-swallowed": {"slot": "U7", "pulse": "nag",
+    "http-swallowed": {"arm": "endpoint", "slot": "U7", "pulse": "nag",
                        "says": "a refusal raised inside a broad except never reaches the client"},
-    "undeclared": {"slot": "K1", "pulse": "count",
+    "undeclared": {"arm": "endpoint", "slot": "K1", "pulse": "count",
                    "says": "produces statuses the endpoint does not declare"},
-    "declared-unproduced": {"slot": "K1", "pulse": "count",
+    "declared-unproduced": {"arm": "endpoint", "slot": "K1", "pulse": "count",
                             "says": "declares a status no path produces"},
 }
+
+# ── the GENERATION ARMS (amendment 1, docs/design/element-forms/amendment-1.md) ────────────────────────
+# Each arm is one switch — center.config.json `forms_arms: {"paths": true, …}` or GABE_FORMS_ARMS=paths,effects|all|none —
+# and every arm defaults OFF. The ids (Slice 2) are no switch: they are written whenever any arm is on.
+ARMS = {
+    "kinds": {"slice": 3, "parts": ("middleware", "dependencies", "functions", "tasks", "handlers")},
+    "short": {"slice": 4, "parts": ("schema", "model", "migration", "setting", "mirror")},
+    "switches": {"slice": 5, "parts": ()},
+    "paths": {"slice": 3, "parts": ("returns", "conditions", "framework", "paths")},
+    "effects": {"slice": 6, "parts": ()},
+    "contract": {"slice": 7, "parts": ()},
+    "tests": {"slice": 9, "parts": ()},
+    "frontend": {"slice": 11, "parts": ("guards", "hooks", "client", "reason", "controls", "stores")},
+}
+ARM_ORDER = ("kinds", "short", "switches", "paths", "effects", "contract", "tests", "frontend")
+# the BACKEND run order is per PART (amendment §A2 Slice 1 step 3) — returns/conditions read the middleware and
+# dependency forms, framework exits read the schema form, paths read the switches, kinds.functions and short.model read
+# the effects; the frontend arm runs later, beside the fe structure arm (`extend_frontend`)
+ARM_STAGES = (
+    ("kinds", ("middleware", "dependencies")), ("paths", ("returns", "conditions")), ("short", ("schema",)),
+    ("paths", ("framework",)), ("switches", ()), ("paths", ("paths",)), ("effects", ()), ("contract", ()),
+    ("kinds", ("functions", "tasks", "handlers")), ("tests", ()), ("short", ("model", "migration", "setting", "mirror")),
+)
+# hard needs, unit → units ("arm" or "arm.part"); a needed unit runs in memory and is not written unless its arm is selected
+ARM_NEEDS = {
+    "paths": ("kinds.middleware",), "effects": ("paths",), "contract": ("effects",), "tests": ("paths",),
+    "kinds.functions": ("effects",), "short.model": ("effects",),
+}
+# soft needs — used only when the other arm is also selected
+ARM_SOFT = {"paths": ("switches", "short.schema")}
+# paths order by where they happen; PHASES (above) stays as it is so P.build's row sort never moves
+PATH_PHASES = ("middleware", "body-parse", "security", "dependency", "validation", "handler", "uncaught")

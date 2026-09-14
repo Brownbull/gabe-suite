@@ -86,7 +86,7 @@ Top-level keys are exactly `endpoints · framework · kind · present · stats �
 |---|---|---|
 | S20 `summary` = `endpoints · nag · count · nag_total · named · unknown_rows` | NAG = shared-status · reason-lost · escape-500 · http-swallowed; COUNT = text-only · undeclared · declared-unproduced (`form_drift.py:37-38, 77-95`) | Fires at `nag_total ≥ 3` (`angles.py:61, :814`). This endpoint contributes 1 nag (shared-status 409) and 2 counts. |
 | review FORM DRIFT | a diff-added `raise HTTPException` that is text-only, shares a status with a different text refusal, or is undeclared | `skills/gabe-review/references/review-spec.md:360-366` |
-| (defect) state-word inversion | The two readers name the same states in reverse. `mapquery.forms_block`: no file = `not_emitted`, `present:false` = `absent` (`mapquery.py:177-182`). `form_drift.load_forms`: no file = `absent`, `present:false` = `not_emitted` (`form_drift.py:54-63`). | small fix |
+| (defect) state-word inversion — **FIXED in amendment 1 Slice 1** | The two readers named the same states in reverse. `form_drift.load_forms` now speaks the suite words of `mapquery.forms_block`: no file = `not_emitted`, `present:false` = `absent`; `tests/forms-core` K9 pins the agreement. | done |
 
 ### Not in forms, but newly usable
 - **gustify levels `fn_edges` with `rel:"binds"`:** 2 edges, carrying `port "TokenVerifier"`, `bind "selected"` and `pred "settings.auth_provider is ProviderMode.REAL"` / its negation, from `auth/context.py#build_auth_context`.

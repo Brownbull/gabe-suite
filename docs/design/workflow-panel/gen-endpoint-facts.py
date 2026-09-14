@@ -336,8 +336,26 @@ def main() -> int:
             _peer[(_n.get("det") or {}).get("status") or "none"] += 1
     context["status"]["same_method"] = dict(_peer.most_common())
 
+    # the ELEMENT FORMS block for this door, raw (amendment 1 Slice 1) — no panel reads it yet; the state words are the
+    # suite's (mapquery.forms_block): not_emitted = no file · absent = the pass ran and said why · present
+    _fp = EX / "forms.json"
+    if not _fp.is_file():
+        forms_block = {"state": "not_emitted", "reason": "no forms.json in the example feed — run regen-example.sh", "endpoint": None}
+    else:
+        try:
+            _fj = json.loads(_fp.read_text(encoding="utf-8"))
+            if _fj.get("present"):
+                _fe = (_fj.get("endpoints") or {}).get(ID)
+                forms_block = {"state": "present", "reason": None if _fe else f"{ID} has no form in forms.json", "endpoint": _fe,
+                               "head": _fj.get("head"), "version": _fj.get("version")}
+            else:
+                forms_block = {"state": "absent", "reason": _fj.get("reason") or "forms.json holds no forms", "endpoint": None}
+        except Exception as _exc:  # noqa: BLE001
+            forms_block = {"state": "unreadable", "reason": f"forms.json unreadable ({_exc.__class__.__name__})", "endpoint": None}
+
     head = c4.get("head")
-    facts = {"head": head, "generated_from": "templates/center/shell/example/codebase-graph-station/{c4-graph.js,levels.json,workflows.js,commits.js}",
+    facts = {"head": head, "generated_from": "templates/center/shell/example/codebase-graph-station/{c4-graph.js,levels.json,workflows.js,commits.js,forms.json}",
+             "forms": forms_block,
              "identity": identity, "conns": conns,
              "data": {"commits": bool(access.get("commits")), "ops": tables, "tables": tables_by_name, "both": both,
                       "reads": [t for t in tables if t["rw"] == "r"], "writes": [t for t in tables if t["rw"] == "w"],

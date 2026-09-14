@@ -806,10 +806,10 @@ def s20_element_forms(root: Path, plan: dict | None, cfg: dict | None):
     if cfg is None:
         return Unavailable("no center config — the element forms live on docs/site/center/forms.json")
     state, forms, reason = form_drift.load_forms(root)
-    if state in ("absent", "unreadable"):
+    if state in ("not_emitted", "unreadable"):
         return None
-    if state == "not_emitted":
-        return Unavailable(f"element forms not emitted — {reason}")
+    if state == "absent":
+        return Unavailable(f"element forms absent — {reason}")
     s = form_drift.summary(forms)
     if s["nag_total"] < THRESHOLDS["form_nag"]:
         return None

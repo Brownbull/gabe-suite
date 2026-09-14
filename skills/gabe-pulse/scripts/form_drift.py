@@ -49,10 +49,10 @@ def _center(root: Path) -> Path:
 
 
 def load_forms(root: Path) -> tuple[str, dict, str]:
-    """``(state, forms, reason)`` — state ∈ present · not_emitted · absent · unreadable."""
+    """``(state, forms, reason)`` — the suite state words (mapquery.forms_block): present · not_emitted (no file) · absent (the pass said why) · unreadable."""
     p = _center(root) / "forms.json"
     if not p.is_file():
-        return "absent", {}, "no forms.json — an older map (regen with the current generators) or the pass is switched off (center.config.json `forms: false`)"
+        return "not_emitted", {}, "no forms.json — an older map (regen with the current generators) or the pass is switched off (center.config.json `forms: false`)"
     try:
         data = json.loads(p.read_text(encoding="utf-8"))
     except Exception as exc:  # noqa: BLE001
@@ -60,7 +60,7 @@ def load_forms(root: Path) -> tuple[str, dict, str]:
     if not isinstance(data, dict):
         return "unreadable", {}, "forms.json is not an object"
     if not data.get("present"):
-        return "not_emitted", data, data.get("reason") or "the pass wrote no forms"
+        return "absent", data, data.get("reason") or "the pass wrote no forms"
     return "present", data, ""
 
 

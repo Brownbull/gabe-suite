@@ -474,7 +474,7 @@ run "$r" | grep -q "map_census kind=forms" && ok "S20 moves to map_census kind=f
 r=$(repo s20b); mkforms "$r" '{"version":1,"present":true,"stats":{},"endpoints":{"endpoint:GET /a":{"findings":[{"id":"text-only","n":3},{"id":"undeclared","statuses":[401]}]},"endpoint:GET /b":{"findings":[{"id":"text-only","n":1}]},"endpoint:GET /c":{"findings":[{"id":"shared-status","status":409},{"id":"reason-lost"}]}}}'
 run "$r" | grep -q "element forms" && bad "S20 fired on COUNT findings / below the NAG bar: $(run "$r")" || ok "S20 SILENT on text-only + undeclared everywhere and 2 NAG (< form_nag) — a convention is not debt"
 r=$(repo s20c); mkforms "$r" '{"version":1,"present":false,"reason":"no FastAPI endpoints in the archmap"}'
-run "$r" --why | grep -q "S20  UNAVAILABLE — element forms not emitted — no FastAPI endpoints in the archmap" && ok "S20 UNAVAILABLE with the pass's own reason when present:false" || bad "S20 hid a not-emitted pass: $(run "$r" --why)"
+run "$r" --why | grep -q "S20  UNAVAILABLE — element forms absent — no FastAPI endpoints in the archmap" && ok "S20 UNAVAILABLE with the pass's own reason when present:false" || bad "S20 hid a not-emitted pass: $(run "$r" --why)"
 r=$(repo s20d); mkc4 "$r" '{"stats":{}}'
 run "$r" --why | grep -q "S20  UNAVAILABLE\|element forms —" && bad "S20 spoke with no forms.json (an older map or forms:false): $(run "$r" --why | grep S20)" || ok "S20 silent with no forms.json — an older map or a switched-off pass is not a gap"
 r=$(repo s20e); mkforms "$r" '{not json'

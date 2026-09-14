@@ -40,15 +40,27 @@
  "version": 2,                         // was 1 — F.VERSION; the endpoint pass emits it itself
  "head": "<sha>|null",                 // = amap["head"] of the same build (build_center_a3.py:2026)
  "present": true, "kind": "endpoint", "framework": {…}, "endpoints": {…}, "stats": {…},   // unchanged
- "arms": {                             // WRITTEN ONLY when ≥1 arm is selected; then every registry arm is listed
-   "<arm>": {"present": bool, "reason": "switched off|no inputs: …|error: …"|null,
+ "arms_ignored": ["<name>"],           // only when a selection named something that is not an arm (names are case-insensitive)
+ "arms_error": "<Type>: <message>",    // only when the orchestrator itself failed — the endpoint forms are still written
+ "arms": {                             // WRITTEN ONLY when ≥1 arm is selected; then every registry arm is listed, frontend included
+   "<arm>": {"present": bool,          // true when any part ran
+             "reason": "switched off" | "switched off — computed in memory for <arms>" | "needs <unit>" | "not built yet (slice n)"
+                     | "partial — <part>: <reason>; …" | "needed by <arms>; written only where <arms> writes inside it" | "error: …" | null,
              "version": int, "options": {…}, "stats": {…, "findings": {"<id>": int}},
+             "bytes": int,                                                 // selected arms: serialized size of the keys the arm added
              "parts": {"<part>": {"present": bool, "reason": str|null}}}   // only arms with parts
  }
 }
 ```
 
 **Invariant:** with every arm off, `forms.json` equals `_a3_paths.build(amap)` plus `head`. With every arm on, `archmap.json`, `c4-graph.json/.js` and `levels.json/.js` are byte-identical to the off build.
+
+**Orchestration (as built in Slice 1, after its review — `_a3_forms_build.py`):**
+- Stages run in `F.ARM_STAGES`, one arm or some of its parts at a time. A part runs only when its OWN hard needs succeeded, so a sibling's failed need never blocks it (review F1).
+- A runner is `runner(forms, ctx) -> {version, options, stats}`; `ctx` carries `amap` (a private deep copy — no arm can move the archmap · c4 · levels built after the forms block, F4) · `repo` · `cfg` · `selected` · `parts` · `ok` (units that already succeeded) · `soft` (selected soft needs that succeeded).
+- Each stage snapshots the whole feed. A raise, a non-dict return, or a feed or result that `json.dumps(sort_keys=True)` cannot write restores the snapshot and records `error: …`; nothing from that stage is merged (F2 F5).
+- The orchestrator records the key paths each stage ADDED (a diff against its snapshot). A unit that is only needed has its additions deleted before the write, unless a selected arm wrote inside them — then the host stays and the reason says so (F3 F30). The shared `arm_findings` dicts (top level and per endpoint or variant) are created before any stage, so each arm owns only its entry; ones left empty are removed.
+- An arm whose parts partly failed reads `present: true` with a `partial — …` reason (F6).
 
 ### Arms, switches and dependencies
 
@@ -81,7 +93,7 @@
 
 ### Ids: `<prefix>:<sha1(json.dumps(tuple, separators=(",",":"), ensure_ascii=False))[:10]>`, never a line number
 
-- **The ordinal `n`** counts identical tuples inside the defining function, in source order by (site line, at line).
+- **The ordinal `n`** tells identical tuples apart: it ranks the row's (site line, at line) among every DISTINCT position that tuple has anywhere in the feed. Ranking one endpoint's rows gave a middleware exit that path prefixes filter per endpoint two ids, and one id two exits (Slice 1 review F10) — `_a3_forms_ids.x_ids(repo, forms)` ranks feed-wide.
 - **Function fields** are `file::qual`, found as the innermost def in `P._Mod.defs` (`_a3_paths.py:103-109`, V). Module level is `file::<module>`.
 - **`via_sym`** is `via` with ` @ file:line` stripped (`_a3_paths.py:835`).
 - **The ids live in a leaf module,** `_a3_forms_ids.py`.
@@ -229,7 +241,7 @@ This amendment. The operator rules on the §A1 interface, the switch policy (D12
    - After `_a3_paths.build` (`:2201`), inside the existing `try`, call `_forms = _a3_forms_build.extend_backend(…)`. It never raises.
    - Leave `extend_frontend` as a stub call after the fe arm (`:2283`), returning `None`.
    - The write rule (`:2202`, V) is unchanged until Slice 11.
-6. **`_a3_forms_ids`:** `ident(prefix, tuple)` and `ordinals(rows, key, order)`. Both are pure functions.
+6. **`_a3_forms_ids`:** `ident(prefix, tuple)` · `x_tuple(repo, row, handler)` · `x_ids(repo, forms)` (the feed-wide ordinal) · `fn_at` · `via_sym`.
 7. **`_a3_forms_settings`:**
    - `self.<attr>`: follow the `__init__` assignment → the `x or get_settings()` local, typed through `_a3_stacks_pydi._ann_name` (`:66-93`) → a one-return `@property`, inlined once.
    - Read AnnAssign / `Field(default=)` values, `Final` constants, and `SettingsConfigDict(env_prefix=)`.
@@ -296,7 +308,7 @@ This amendment. The operator rules on the §A1 interface, the switch policy (D12
 
 **Algorithm:**
 1. Build a per-file line → innermost def map from `P._mod(...).defs`.
-2. Compute each row's tuple (§A1), then the ordinals within the defining function.
+2. Compute each row's tuple and ordinal with `_a3_forms_ids.x_ids(repo, forms)` (§A1: `n` ranks distinct positions feed-wide).
 3. Set `exit` on each precondition: the `x:` row whose `at` or `raised_at` equals the precondition's `at`.
 4. Handle every `variants[]` entry separately.
 

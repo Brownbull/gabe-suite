@@ -11,6 +11,7 @@
 # projects, env-override lab pattern (GABE_REPO_ROOT / GABE_SHELL_SRC), no
 # network, cleans up after itself. Exit 0 = all pass.
 set -u
+unset GABE_FORMS_ARMS   # element forms arms: an exported selection must not leak into the build cases
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 GEN="$REPO/templates/center/generators"
 SHELL_SRC="$REPO/templates/center/shell"
@@ -386,6 +387,94 @@ a, b = (json.load(open(x)) for x in sys.argv[1:3])
 for d in (a, b):
     d.pop("generated", None)
 assert json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True), "a raising forms pass changed the archmap"
+PY
+# FORMS ARMS (element-forms amendment 1, Slice 1): selecting EVERY arm moves nothing but forms.json — archmap · c4-graph ·
+# levels stay the arms-off build's bytes (the generated stamp aside), and forms.json carries version 2 · head · arms while
+# the endpoint forms stay equal (no arm is built yet). A raising orchestrator internal still exits 0 and still writes the
+# endpoint forms, the error named on the feed as `arms_error`.
+FA="$T/farms"; rm -rf "$FA"; cp -r "$FIX" "$FA"
+FC="$T/farmsoff"; rm -rf "$FC"; cp -r "$FIX" "$FC"   # the CONTROL: the same start, arms unset — a rebuild over copied outputs churns on its own
+_fc=$(cd "$T" && env -u GABE_FORMS_ARMS GABE_REPO_ROOT="$FC" GABE_SHELL_SRC="$SHELL_SRC" python3 "$GEN/build_center_a3.py" >"$T/build-farmsoff.out" 2>&1; echo $?)
+_fa=$(cd "$T" && GABE_FORMS_ARMS=all GABE_REPO_ROOT="$FA" GABE_SHELL_SRC="$SHELL_SRC" python3 "$GEN/build_center_a3.py" >"$T/build-farms.out" 2>&1; echo $?)
+python3 - "$FC/docs/site/center" "$FA/docs/site/center" "$_fc$_fa" >"$T/farms.txt" 2>&1 <<'PY' && ok || { bad "FORMS ARMS: GABE_FORMS_ARMS=all leaves archmap · c4-graph · levels identical to the arms-off control and stamps forms.json v2 + head + arms (exit $_fc$_fa)"; tail -3 "$T/farms.txt"; }
+import json, sys
+a, b, rc = sys.argv[1:4]
+assert rc == "00", "build exits " + rc
+def paths(x, y, p="", out=None):
+    out = [] if out is None else out
+    if len(out) >= 5:
+        return out
+    if isinstance(x, dict) and isinstance(y, dict):
+        for k in sorted(set(x) | set(y), key=str):
+            if x.get(k) != y.get(k):
+                paths(x.get(k), y.get(k), f"{p}.{k}", out)
+    elif isinstance(x, list) and isinstance(y, list) and len(x) == len(y):
+        for i, (u, v) in enumerate(zip(x, y)):
+            if u != v:
+                paths(u, v, f"{p}[{i}]", out)
+    else:
+        out.append(f"{p}: {str(x)[:50]} → {str(y)[:50]}")
+    return out
+def load(d, n):      # the fixture root is a different dir per build and rides a few reasons ("typescript not resolvable from <root>")
+    j = json.load(open(f"{d}/{n}"))
+    j.pop("generated", None)
+    return json.loads(json.dumps(j).replace(d[: -len("/docs/site/center")], "ROOT"))
+for n in ("archmap.json", "c4-graph.json", "levels.json"):
+    x, y = load(a, n), load(b, n)
+    assert x == y, n + " moved under GABE_FORMS_ARMS=all: " + " · ".join(paths(x, y))
+on, off = (json.load(open(f"{d}/forms.json")) for d in (b, a))
+assert off["version"] == 2 and "head" in off and "arms" not in off, sorted(off)
+assert on["version"] == 2 and on["head"] == off["head"], (on.get("version"), on.get("head"))
+assert sorted(on["arms"]) == sorted(["kinds", "short", "switches", "paths", "effects", "contract", "tests", "frontend"]), sorted(on["arms"])   # the file is written sort_keys
+assert on["head"] == json.load(open(f"{b}/archmap.json"))["head"], "forms.json head is not the same build's archmap head"
+assert on["endpoints"] == off["endpoints"], "an arm that is not built yet changed the endpoint forms"
+PY
+# an ARM that edits the archmap it reads (runners get a private copy) and writes one key per endpoint: archmap · c4 · levels
+# still equal the arms-off control, the arm's key lands, its parts report their needs
+FM="$T/farmsmut"; rm -rf "$FM"; cp -r "$FIX" "$FM"
+_fm=$(cd "$T" && GABE_FORMS_ARMS=kinds GABE_REPO_ROOT="$FM" GABE_SHELL_SRC="$SHELL_SRC" python3 - "$GEN" >"$T/build-farmsmut.out" 2>&1 <<'PY'
+import sys, runpy; gen = sys.argv[1]; sys.path.insert(0, gen)
+import _a3_forms_build as B
+def probe(forms, ctx):                        # clears the archmap it was handed, then writes its key
+    ctx["amap"]["entities"].clear()
+    for e in forms["endpoints"].values():
+        for v in e.get("variants") or [e]:
+            v["kinds_probe"] = list(ctx["parts"])
+    return {"stats": {"probed": len(forms["endpoints"])}}
+B.RUNNERS["kinds"] = probe
+sys.argv = [gen + "/build_center_a3.py"]; runpy.run_path(gen + "/build_center_a3.py", run_name="__main__")
+PY
+echo $?)
+python3 - "$FC/docs/site/center" "$FM/docs/site/center" "$_fm" >"$T/farmsmut.txt" 2>&1 <<'PY' && ok || { bad "FORMS ARMS: an arm that edits the archmap it reads moves nothing but forms.json (exit $_fm)"; tail -3 "$T/farmsmut.txt"; }
+import json, sys
+a, b, rc = sys.argv[1:4]
+assert rc == "0", "build exit " + rc
+def load(d, n):
+    j = json.load(open(f"{d}/{n}")); j.pop("generated", None)
+    return json.loads(json.dumps(j).replace(d[: -len("/docs/site/center")], "ROOT"))
+for n in ("archmap.json", "c4-graph.json", "levels.json"):
+    assert load(a, n) == load(b, n), n + " moved when an arm edited the archmap it reads"
+f = json.load(open(b + "/forms.json"))
+k = f["arms"]["kinds"]
+assert k["present"] and k["parts"]["middleware"]["present"] and k["parts"]["functions"]["reason"].startswith("needs effects"), k
+assert k["stats"]["probed"] == len(f["endpoints"]) and k["bytes"] > 0, k
+assert all(v.get("kinds_probe") for e in f["endpoints"].values() for v in (e.get("variants") or [e])), "the arm's key did not land"
+PY
+FR="$T/farmsboom"; rm -rf "$FR"; cp -r "$FIX" "$FR"; rm -f "$FR/docs/site/center/forms.json"
+_fr=$(cd "$T" && GABE_FORMS_ARMS=all GABE_REPO_ROOT="$FR" GABE_SHELL_SRC="$SHELL_SRC" python3 - "$GEN" >"$T/build-farmsboom.out" 2>&1 <<'PY'
+import sys, runpy; gen = sys.argv[1]; sys.path.insert(0, gen)
+import _a3_forms_build
+def boom(*a, **k): raise RuntimeError("boom")
+_a3_forms_build.closure = boom                # the orchestrator's own machinery blows up — the endpoint forms must not
+sys.argv = [gen + "/build_center_a3.py"]; runpy.run_path(gen + "/build_center_a3.py", run_name="__main__")
+PY
+echo $?)
+python3 - "$FR/docs/site/center/forms.json" "$FIX/docs/site/center/forms.json" "$_fr" >"$T/farmsboom.txt" 2>&1 <<'PY' && ok || { bad "FORMS ARMS SILENT: a raising orchestrator internal exits 0, still writes the endpoint forms and names the error (exit $_fr)"; tail -3 "$T/farmsboom.txt"; }
+import json, sys
+f, off = (json.load(open(p)) for p in sys.argv[1:3])
+assert sys.argv[3] == "0", "build exit " + sys.argv[3]
+assert f.get("arms_error") == "RuntimeError: boom", f.get("arms_error")
+assert f["endpoints"] == off["endpoints"] and f["head"] == off["head"], "the endpoint forms moved"
 PY
 MN="$T/mnaming"; rm -rf "$MN"; cp -r "$FIX" "$MN"; rm -f "$MN/docs/site/center/c4-graph.json"
 _mn=$(cd "$T" && GABE_REPO_ROOT="$MN" GABE_SHELL_SRC="$SHELL_SRC" python3 - "$GEN" >"$T/build-mnaming.out" 2>&1 <<'PY'

@@ -35,6 +35,7 @@ CHECK=0; [ "${1:-}" = "--check" ] && CHECK=1
 # 1 · the twin-read-only build → every data feed, in one pass (the twin's tree is never written)
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 echo "── build (twin-read-only, GABE_GRAFT_BUILD=0 → twin tree untouched): $TWIN → $TMP"
+GABE_FORMS_ARMS=none \
 GABE_GRAFT_BUILD=0 \
 GABE_REPO_ROOT="$TWIN" \
 GABE_CONFIG="$TWIN/docs/site/center/center.config.json" \
@@ -57,7 +58,8 @@ fi
 # 3 · land / compare each artifact. Volatile stamps (twin HEAD sha · regen date ·
 #     graft index_hash) are NORMALIZED under --check — the no-wallclock law: content
 #     must reproduce byte-identically, stamps churn by design.
-FEEDS="c4-graph.js levels.js levels.json commits.js"   # sim-archive.js left with the archive station (f8de670)
+FEEDS="c4-graph.js levels.js levels.json commits.js forms.json"   # sim-archive.js left with the archive station (f8de670);
+# forms.json (element forms amendment 1): its `head` stamp is normalized by the same "head" rule below
 fail=0
 # Provenance stamps are volatile w.r.t. CONTENT: `head` = which twin commit the feed was
 # built from (moves on ANY twin commit), `index_hash` = graft's index state, wallclock date.

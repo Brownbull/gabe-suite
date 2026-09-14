@@ -50,6 +50,7 @@ import _a3_commits  # noqa: E402  (recent git commits → the elements they touc
 import _a3_web  # noqa: E402  (the web→API bridge extractor — the fetch arm)
 import _a3_fe  # noqa: E402  (the frontend STRUCTURE arm — compiler-proven pieces + edges)
 import _a3_paths  # noqa: E402  (element FORMS — what each endpoint decides: refusals · declared vs produced exits · guards)
+import _a3_forms_build  # noqa: E402  (element FORMS amendment 1 — the envelope head + the opt-in generation arms)
 import _a3_guard
 import _a3_ledger  # noqa: E402  (the case ledger, rulings 2026-07-24)
 import _a3_tests  # noqa: E402  (model_insight serialization into archmap)
@@ -2196,9 +2197,13 @@ def main() -> int:
     # archmap and reading it without mutating it, so archmap · c4 · levels stay byte-identical whether the pass is
     # off, on, failing or absent. ON by default since the operator accepted gustify's forms (plan Phase 3, 2026-09-14);
     # center.config.json `"forms": false`, or GABE_FORMS=0 for one run, turns it off.
+    _forms = None
     if os.environ.get("GABE_FORMS") != "0" and CFG.get("forms") is not False:
         try:
             _forms = _a3_paths.build(amap, REPO_ROOT)
+            # amendment 1: stamp `head`, run the arms center.config.json `forms_arms` / GABE_FORMS_ARMS select (all off by
+            # default) — each arm isolated, so a failing arm reads `present: false` and never costs the endpoint forms
+            _forms = _a3_forms_build.extend_backend(_forms, amap, REPO_ROOT, CFG)
             if _forms.get("present"):
                 (CENTER_OUT / "forms.json").write_text(
                     json.dumps(_forms, indent=1, ensure_ascii=False, sort_keys=True) + "\n")
@@ -2284,6 +2289,8 @@ def main() -> int:
                                    screens=_warm.get("screens") or [])
         except Exception as _fe:  # noqa: BLE001
             _fearm = {"present": False, "reason": f"fe arm error: {_fe}"}
+        with contextlib.suppress(Exception):             # element forms amendment 1: the frontend arm's seam (Slice 11)
+            _a3_forms_build.extend_frontend(_forms, _fearm, REPO_ROOT, CFG)
         with contextlib.suppress(Exception):
             _fwas = bool((_prev.get("stats", {}).get("fe") or {}).get("present"))
             if _fwas != bool(_fearm.get("present")):
