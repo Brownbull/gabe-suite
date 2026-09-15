@@ -127,6 +127,8 @@ FINDINGS = {
                        "says": "a refusal leaves the endpoint's own writes committed — the client hears no, the database kept a yes"},
     "safe-method-commits": {"arm": "effects", "slot": "U9", "pulse": "count",
                             "says": "a GET, HEAD or OPTIONS endpoint commits — a retry or a prefetch changes data"},
+    "race-500": {"arm": "contract", "slot": "U12", "pulse": "nag",
+                 "says": "a retry races its own first try on a unique key nothing catches — the loser answers 500, not the first result"},
 }
 # the transaction verbs an effect scan looks for (dependency forms; the effects arm widens the family)
 TX_CALLS = frozenset({"commit"})
@@ -168,6 +170,30 @@ DEPENDENCY_ORDER = {
         "dependency": "a verified raise inside a dependency: those before it ran, it ran to its raise",
     },
     "unknown": "a refusal raised inside a dependency whose raise site is unverified",
+}
+
+# ── the CONTRACT arm (amendment 1 §A2 Slice 7) ────────────────────────────────────────────────────────
+CONTRACT = {
+    "key_name": r"(?i)idempot",                 # a header or request.state attribute named like an idempotency key (U12)
+    "follow_depth": 2,                          # the key argument followed into callees, by position or keyword
+    "claim_idioms": {"on_conflict_do_nothing": "an insert that skips a duplicate", "on_conflict_do_update": "an upsert",
+                     "with_for_update": "a row lock before the write", "begin_nested": "the insert inside a savepoint",
+                     "get-or-create": "a select of the model before its constructor"},
+    "rate_idioms": {"limit": r"^\s*(\d+)\s*/\s*(second|minute|hour|day)\s*$"},     # slowapi · `@limiter.limit("5/minute")`
+    "carriers": {"HTTPBearer": ["header", "Authorization"], "HTTPBasic": ["header", "Authorization"],
+                 "OAuth2PasswordBearer": ["header", "Authorization"], "APIKeyHeader": ["header", None],
+                 "APIKeyQuery": ["query", None], "APIKeyCookie": ["cookie", None]},
+    "www_authenticate": {"HTTPBearer": "Bearer"},    # fastapi/security/http.py:84-92 — read for HTTPBearer only
+    "media": {"JSONResponse": "application/json", "ORJSONResponse": "application/json", "UJSONResponse": "application/json",
+              "PlainTextResponse": "text/plain", "HTMLResponse": "text/html", "RedirectResponse": "n/a", "Response": "unknown",
+              "StreamingResponse": "n/a", "EventSourceResponse": "n/a", "FileResponse": "n/a"},
+    "bodies": {
+        "http-exception": {"media": "application/json", "body": {"detail": "…"}, "source": "fastapi/exception_handlers.py:11-17"},
+        "validation": {"media": "application/json", "body": {"detail": "list"}, "source": "fastapi/exception_handlers.py:20-26"},
+        "security": {"media": "application/json", "body": {"detail": "…"}, "source": "fastapi/security/http.py:84-92"},
+        "uncaught": {"media": "text/plain", "body": "Internal Server Error", "source": "starlette ServerErrorMiddleware"},
+        "stream": {"media": "n/a"},
+    },
 }
 
 # ── the GENERATION ARMS (amendment 1, docs/design/element-forms/amendment-1.md) ────────────────────────

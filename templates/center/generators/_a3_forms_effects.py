@@ -624,7 +624,8 @@ def endpoint_effects(repo: Path, key: str, v: dict, m, fn, dec, S: _Steps, stats
         origin = ["dependency"] * dep_n + ["endpoint"] * len(body) + ["dependency"] * len(after)
         _race_on_path(S, pairs)
         seq = [sid for sid, _ in pairs]
-        eff = {"steps": [{"step": sid, "via": S.steps[sid]["fn"]} for sid in seq], **_rollup(S.steps, seq), "dependency": state}
+        eff = {"steps": [{"step": sid, "via": S.steps[sid]["fn"], **({"dependency": True} if o == "dependency" else {})} for sid, o in zip(seq, origin)],
+               **_rollup(S.steps, seq), "dependency": state}
         p["effects"] = eff
         for (sid, _), o in zip(pairs, origin):
             if S.steps[sid]["op"] == "commit":

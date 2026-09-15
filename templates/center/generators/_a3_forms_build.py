@@ -30,13 +30,15 @@ import _a3_forms_short  # noqa: F401  (the short forms registry — data only)
 import _a3_forms_schema  # the short arm: request schemas + 422 cases (Slice 4)
 import _a3_forms_switch  # the switches arm: binding · value · flag (Slice 5)
 import _a3_forms_effects  # the effects arm: steps along paths · failure catches · race facts (Slice 6)
+import _a3_forms_contract  # the contract arm: repeat · auth · rate · responses (Slice 7)
 
 # arm → runner(forms, ctx) -> {"version", "options", "stats"}; a runner that builds only some parts says so in a `parts`
 # attribute (the rest read "not built yet (slice n)"). ctx carries amap (a private copy) · repo · cfg · selected ·
 # parts (the parts this stage runs; () for an arm without parts) · ok (units that already succeeded) · soft (the soft
 # needs that are selected and succeeded)
 RUNNERS: dict = {"kinds": _a3_forms_mw.run, "paths": _a3_forms_paths.run, "short": _a3_forms_schema.run,
-                 "switches": _a3_forms_switch.run, "effects": _a3_forms_effects.run}
+                 "switches": _a3_forms_switch.run, "effects": _a3_forms_effects.run,
+                 "contract": _a3_forms_contract.run}
 _ERR_CAP = 200
 
 
