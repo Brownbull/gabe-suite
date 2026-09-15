@@ -20,11 +20,12 @@ from pathlib import Path
 import _a3_code as C
 import _a3_forms as F
 import _a3_forms_ids as I
+import _a3_forms_model as MD  # the model and migration parts (Slice 10a)
 import _a3_forms_mw as MW
 import _a3_forms_short as SH
 import _a3_paths as P
 
-PARTS = ("schema",)
+PARTS = ("schema", "model", "migration")
 _ENUM_BASES = frozenset({"Enum", "StrEnum", "IntEnum"})
 _VALIDATORS = frozenset({"field_validator", "validator", "model_validator", "root_validator"})
 _SEQ = {"list": "list", "List": "list", "Sequence": "list", "set": "set", "Set": "set", "frozenset": "frozenset",
@@ -986,7 +987,8 @@ def framework_exits(repo: Path, forms: dict) -> dict:
 
 
 def run(forms: dict, ctx: dict) -> dict:
-    """The short arm's Slice 4 part: ``schema`` (schemas{} + cases on validation rows)."""
+    """The short arm: ``schema`` (Slice 4 — schemas{} + cases on validation rows), ``migration`` and ``model`` (Slice 10a —
+    migrations{} and models{})."""
     repo, parts = Path(ctx["repo"]), ctx["parts"]
     stats: dict = {}
     if "schema" in parts:
@@ -994,6 +996,15 @@ def run(forms: dict, ctx: dict) -> dict:
         if findings:
             forms["arm_findings"].setdefault("short", []).extend(findings)
             stats["findings"] = {"extra-ignored": len(findings)}
+    if "migration" in parts:
+        forms["migrations"], stats["migration"] = MD.migration_part(repo)
+    if "model" in parts:
+        forms["models"], stats["model"], found = MD.model_part(repo, forms, ctx["amap"])
+        if found:
+            forms["arm_findings"].setdefault("short", []).extend(found)
+            counts = stats.setdefault("findings", {})
+            for f in found:
+                counts[f["id"]] = counts.get(f["id"], 0) + 1
     return {"version": 1, "stats": stats, "options": dict(SH.OPTIONS)}
 
 

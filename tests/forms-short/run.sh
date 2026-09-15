@@ -788,5 +788,402 @@ cr = row(h, "endpoint:POST /items/create")
 assert len(cr["cases"]) == 2 and cr["cases_truncated"] > 0 and cr["nest_cut"] == ["body.inner"], {k: cr.get(k) for k in ("cases_truncated", "nest_cut")}
 PY
 
+cat > "$T/model_fixture.py" <<'PYF'
+"""Slice 10a's fixture — its own tree, so the schema cases above keep their exact counts: two SQLAlchemy 2.0 models, an
+alembic tree of two revisions (a helper spread, a module constant, a batch-added check, a loop-added column), a service
+with a unique-set guard and an overridden default, an idempotent endpoint whose claim races and one whose claim is caught,
+and constructor sites the map does not cover (a seed script, a test)."""
+import os
+import shutil
+from pathlib import Path
+
+import _a3_code as C
+import _a3_forms_build as B
+import _a3_forms_model as MD
+import _a3_paths as P
+
+T = Path(os.environ["T"])
+MODELS = [{"cls": "Order", "table": "orders", "file": "models.py", "uqs": ["UniqueConstraint('team_id', 'key', name='uq_orders_team_key')"]},
+          {"cls": "Tag", "table": "tags", "file": "models.py", "uqs": []}]
+FILES = {
+    "docs/site/center/center.config.json": "{}",
+    "uv.lock": 'version = 1\n\n[[package]]\nname = "fastapi"\nversion = "0.136.3"\n\n[[package]]\nname = "sqlalchemy"\nversion = "2.0.50"\n',
+    "alembic.ini": "[alembic]\nscript_location = migrations\n",
+    "migrations/versions/0001_orders.py": '''import sqlalchemy as sa
+from alembic import op
+
+revision = "0001_orders"
+down_revision = None
+
+STATUS = "new"
+
+
+def _stamps():
+    return (sa.Column("created_at", sa.DateTime(), server_default=sa.func.now(), nullable=True),)
+
+
+def upgrade():
+    op.create_table(
+        "orders",
+        sa.Column("id", sa.Integer(), primary_key=True),
+        sa.Column("team_id", sa.Integer(), nullable=False),
+        sa.Column("key", sa.String(length=40), nullable=False),
+        sa.Column("status", sa.String(20), nullable=False, server_default=STATUS),
+        sa.Column("qty", sa.Integer(), nullable=False),
+        *_stamps(),
+        sa.UniqueConstraint("team_id", "key", name="uq_orders_team_key"),
+    )
+    op.create_table(
+        "tags",
+        sa.Column("id", sa.Integer(), primary_key=True),
+        sa.Column("name", sa.String(30), nullable=False),
+        sa.Column("active", sa.Boolean(), nullable=False, server_default=sa.false()),
+    )
+''',
+    "migrations/versions/0002_orders_check.py": '''import sqlalchemy as sa
+from alembic import op
+
+revision = "0002_orders_check"
+down_revision = "0001_orders"
+
+_CK = "ck_orders_qty"
+_COLS = ("display_rank",)
+
+
+def upgrade():
+    with op.batch_alter_table("orders") as batch:
+        batch.create_check_constraint(_CK, "qty > 0")
+    for col in _COLS:
+        op.add_column("orders", sa.Column(col, sa.Integer(), nullable=True))
+''',
+    "models.py": '''from datetime import datetime
+
+from sqlalchemy import Boolean, CheckConstraint, DateTime, Integer, String, UniqueConstraint, event, false, func
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, validates
+
+STATUS_NEW = "new"
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class Order(Base):
+    __tablename__ = "orders"
+    __table_args__ = (
+        UniqueConstraint("team_id", "key", name="uq_orders_team_key"),
+        CheckConstraint("qty > 0", name="ck_orders_qty"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    team_id: Mapped[int] = mapped_column(Integer)
+    key: Mapped[str] = mapped_column(String(40))
+    status: Mapped[str] = mapped_column(String(20), default=STATUS_NEW, server_default=STATUS_NEW)
+    qty: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    rank: Mapped[int | None] = mapped_column("display_rank", Integer)
+
+
+@event.listens_for(Order, "before_insert")
+def _stamp(mapper, connection, target):
+    target.qty = target.qty or 1
+
+
+class Tag(Base):
+    __tablename__ = "tags"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(30), unique=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+
+    @validates("name")
+    def _name(self, key, value):
+        return value.strip()
+''',
+    "db.py": '''def get_session():
+    session = make_session()
+    try:
+        yield session
+    finally:
+        session.close()
+''',
+    "services/orders.py": '''from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+
+from models import Order, Tag
+
+
+def place(session, team_id, key, qty):
+    existing = session.execute(select(Order).where(Order.team_id == team_id, Order.key == key)).scalar_one_or_none()
+    if existing is not None:
+        return existing
+    order = Order(team_id=team_id, key=key, qty=qty, status="held")
+    session.add(order)
+    session.flush()
+    return order
+
+
+def label(session, name):
+    try:
+        with session.begin_nested():
+            tag = Tag(name=name)
+            session.add(tag)
+            session.flush()
+    except IntegrityError:
+        return None
+    return tag
+''',
+    "api/orders.py": '''from fastapi import APIRouter, Depends, Request
+
+from db import get_session
+from services.orders import label, place
+
+router = APIRouter(prefix="/orders")
+
+
+@router.post("/place")
+def place_order(request: Request, session=Depends(get_session)):
+    key = request.headers.get("Idempotency-Key")
+    order = place(session, 1, key, 2)
+    session.commit()
+    return {"id": order.id}
+
+
+@router.post("/tag")
+def tag_it(request: Request, session=Depends(get_session)):
+    key = request.headers.get("Idempotency-Key")
+    tag = label(session, key)
+    session.commit()
+    return {"tag": key}
+''',
+    "scripts/seed.py": '''from models import Tag
+
+
+def seed(session):
+    session.add(Tag(name="starter"))
+''',
+    "tests/test_orders.py": '''from models import Order
+
+
+def test_order():
+    assert Order(team_id=1, key="k", qty=1).key == "k"
+''',
+}
+
+
+def make(d=None):
+    d = d or T / "mapp"
+    shutil.rmtree(d, ignore_errors=True)
+    for rel, text in FILES.items():
+        p = d / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(text)
+    return d
+
+
+def mvariant(name, edit):
+    d = make(T / name)
+    edit(d)
+    return d
+
+
+def mbuild(repo, arms, models=MODELS):
+    C.ENTITY_CODE = {"x": {"api": ["api/*.py"], "services": ["services/*.py"], "models": ["models.py"]}}
+    C._EMAP_CACHE.clear()
+    MD._REPLAYS.clear()
+    files = sorted(str(p.relative_to(repo)) for p in (repo / "api").glob("*.py"))
+    amap = {"head": "abc1234", "entities": {"x": {"endpoints": C.parse_endpoints(repo, files), "models": models}}, "app_middleware": [],
+            "function_insight": {"services/orders.py::place": {"access": {"ops": [{"model": "Order", "rw": "w"}]}}}}
+    for e in amap["entities"]["x"]["endpoints"]:
+        e.pop("refs", None)
+    os.environ["GABE_FORMS_ARMS"] = arms
+    return B.extend_backend(P.build(amap, repo), amap, repo, {})
+
+
+def at(repo, rel, text, nth=1):
+    hits = [i + 1 for i, l in enumerate((repo / rel).read_text().splitlines()) if text in l]
+    return f"{rel}:{hits[nth - 1]}"
+PYF
+
+py "SF3 · FIRE: M2 guard_use on the unique set, M4 checks read, M6 an overridden default, M7 hooks, M8 a nullable by annotation, M9 writers in and outside the map; the tree replayed" <<'PY'
+import sys; sys.path.insert(0, str(T))
+from model_fixture import at, make, mbuild
+M = make()
+f = mbuild(M, "short")
+o = f["models"]["model:Order"]
+assert o["guard_use"] == [{"fn": "services/orders.py::place", "at": at(M, "services/orders.py", "existing = session.execute"), "unique": ["key", "team_id"],
+                           "exit_at": at(M, "services/orders.py", "if existing is not None")}], o["guard_use"]
+assert o["default_overridden"] == [{"column": "status", "default": "new", "set": "held", "at": at(M, "services/orders.py", 'status="held"')}], o["default_overridden"]
+assert o["constraints"]["checks"] == [{"name": "ck_orders_qty", "sql": "qty > 0", "at": int(at(M, "models.py", "CheckConstraint(").split(":")[1])}], o["constraints"]
+assert o["drift"] == [{"column": "created_at", "field": "nullable", "model": False, "migration": True, "model_from": "annotation"}], o["drift"]
+c = o["columns"]
+assert (c["display_rank"]["attr"], c["display_rank"]["nullable"], c["status"]["default"], c["status"]["server_default"], c["qty"]["nullable_from"]) == ("rank", True, "new", "new", "annotation"), c
+assert [h["event"] for h in o["hooks"]] == ["before_insert"] and [(h["event"], h["cols"]) for h in f["models"]["model:Tag"]["hooks"]] == [("validates", ["name"])]
+assert o["writers"] == ["services/orders.py::place"] and o["writers_outside_map"] == [] and o["tests_outside_map"] == 1, (o["writers"], o["writers_outside_map"], o["tests_outside_map"])
+assert f["models"]["model:Tag"]["writers_outside_map"] == [at(M, "scripts/seed.py", "Tag(")], f["models"]["model:Tag"]["writers_outside_map"]
+mg = f["migrations"]["migrations/versions"]
+assert (mg["state"], mg["revisions"], mg["heads"], mg["tables"], o["migration"]) == ("defined", 2, ["0002_orders_check"], 2, {"tree": "migrations/versions", "state": "defined"}), mg
+assert sorted((x["id"], x["model"]) for x in f["arm_findings"]["short"]) == [("default-overridden", "model:Order"), ("migration-drift", "model:Order")], f["arm_findings"]["short"]
+s = f["arms"]["short"]["stats"]["model"]
+assert (s["models"], s["drift_models"], s["drift_columns"], s["guard_use"], s["overridden"], s["hooks"]) == (2, 1, 1, 1, 1, 2), s
+PY
+
+py "SF3 · SILENT: the batch-added check matches, the loop-added column matches its name override, a constant and sa.false() server default match, a caught unique column has no guard, a seed that sets no default overrides none" <<'PY'
+import sys; sys.path.insert(0, str(T))
+from model_fixture import make, mbuild
+f = mbuild(make(), "short")
+o, t = f["models"]["model:Order"], f["models"]["model:Tag"]
+assert not [x for x in o["drift"] if x["field"] != "nullable"], o["drift"]
+assert t["drift"] == [] and t["default_overridden"] == [] and t["guard_use"] == [], t
+assert t["columns"]["name"]["unique"] is True and t["columns"]["active"]["server_default"] == "false", t["columns"]
+PY
+
+py "SF3 · mutations: a check dropped from the migration, a type the migration widens, a guard that names half the unique set, a constructor that sets the default" <<'PY'
+import sys; sys.path.insert(0, str(T))
+from model_fixture import mbuild, mvariant
+def edit(d):
+    patch(d, "migrations/versions/0002_orders_check.py", '''    with op.batch_alter_table("orders") as batch:
+        batch.create_check_constraint(_CK, "qty > 0")
+''', "")
+    patch(d, "migrations/versions/0001_orders.py", 'sa.Column("qty", sa.Integer(), nullable=False)', 'sa.Column("qty", sa.BigInteger(), nullable=False)')
+    patch(d, "services/orders.py", "Order.team_id == team_id, ", "")
+    patch(d, "services/orders.py", 'status="held"', 'status="new"')
+g = mbuild(mvariant("mdrift", edit), "short")
+o = g["models"]["model:Order"]
+got = {(x.get("column") or x.get("constraint"), x["field"], x["model"], x["migration"]) for x in o["drift"]}
+assert got == {("created_at", "nullable", False, True), ("ck_orders_qty", "check", "present", "absent"), ("qty", "type", "Integer", "BigInteger")}, got
+assert o["guard_use"] == [] and o["default_overridden"] == [], (o["guard_use"], o["default_overridden"])
+fd = next(x for x in g["arm_findings"]["short"] if x["id"] == "migration-drift")
+assert (fd["columns"], fd["checks"]) == (["created_at", "qty"], ["ck_orders_qty"]) and not [x for x in g["arm_findings"]["short"] if x["id"] == "default-overridden"], g["arm_findings"]["short"]
+PY
+
+py "SF3 · a second head reads the tree unknown; a model part that raises reads present:false and writes no model or finding" <<'PY'
+import sys; sys.path.insert(0, str(T))
+import _a3_forms_model as MD
+from model_fixture import make, mbuild, mvariant
+def fork(d):
+    (d / "migrations/versions/0003_side.py").write_text('revision = "0003_side"\ndown_revision = "0001_orders"\n\n\ndef upgrade():\n    pass\n')
+g = mbuild(mvariant("mfork", fork), "short")
+mg = g["migrations"]["migrations/versions"]
+assert mg["state"] == "unknown" and sorted(mg["heads"]) == ["0002_orders_check", "0003_side"] and g["arms"]["short"]["stats"]["migration"]["multi_head"] == 1, mg
+assert g["models"]["model:Order"]["migration"] == {"tree": "migrations/versions", "state": "unknown"}, g["models"]["model:Order"]["migration"]
+real = MD.model_part
+def boom(*a, **k):
+    real(*a, **k)
+    raise RuntimeError("model down")
+MD.model_part = boom
+h = mbuild(make(), "short")
+assert h["arms"]["short"]["parts"]["model"] == {"present": False, "reason": "error: RuntimeError: model down"}, h["arms"]["short"]["parts"]
+assert "models" not in h and not [x for x in h.get("arm_findings", {}).get("short", []) if x["id"] in ("migration-drift", "default-overridden")], sorted(h)
+PY
+
+py "SF3 · replay idioms: a renamed table, a check created twice under one name, a dropped table its model still maps, an import alias, a TypeDecorator impl, nested and Python-side type arguments, an enum member default, an explicit None default, Uuid ≡ UUID, a quoted text() default, an imported TypeDecorator, a table the replay only saw altered" <<'PY'
+import sys; sys.path.insert(0, str(T))
+from model_fixture import MODELS, mbuild, mvariant
+def idioms(d):
+    (d / "migrations/versions/0003_notes.py").write_text("""import sqlalchemy as sa
+from alembic import op
+from sqlalchemy.dialects import postgresql
+
+revision = "0003_notes"
+down_revision = "0002_orders_check"
+
+CK = "ck_memo_body"
+
+
+def upgrade():
+    op.create_table(
+        "memo",
+        sa.Column("id", sa.Integer(), primary_key=True),
+        sa.Column("body", sa.String(length=80), nullable=False),
+        sa.Column("ref", postgresql.UUID(as_uuid=False), nullable=True),
+        sa.Column("tags", postgresql.ARRAY(sa.String()), nullable=True),
+        sa.Column("kind", sa.String(), nullable=False, server_default="note"),
+        sa.Column("flag", sa.Boolean(), nullable=True, server_default=None),
+        sa.Column("code", postgresql.UUID(as_uuid=True), nullable=True),
+        sa.Column("labels", sa.JSON(), nullable=True, server_default=sa.text("'[]'")),
+        sa.Column("extra", sa.Text(), nullable=True),
+    )
+    op.create_check_constraint(CK, "memo", "length(body) > 0")
+    op.create_check_constraint(CK, "memo", "length(body) > 1")
+    op.rename_table("memo", "notes")
+    op.create_table("gone", sa.Column("id", sa.Integer(), primary_key=True))
+    op.drop_table("gone")
+    op.alter_column("legacy", "name", nullable=False)
+""")
+    (d / "coltypes.py").write_text("""from sqlalchemy import Text
+from sqlalchemy.types import TypeDecorator
+
+
+class Wide(TypeDecorator):
+    impl = Text
+""")
+    (d / "notes.py").write_text("""import uuid
+
+from sqlalchemy import JSON, Boolean, Integer, String, Uuid
+from sqlalchemy.dialects.postgresql import ARRAY, UUID as PGUUID
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.types import TypeDecorator
+
+from coltypes import Wide
+from models import Base
+
+
+class NoteKind:
+    NOTE = "note"
+
+
+class Trimmed(TypeDecorator):
+    impl = String
+
+
+class Note(Base):
+    __tablename__ = "notes"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    body: Mapped[str] = mapped_column(Trimmed(80))
+    ref: Mapped[str | None] = mapped_column(PGUUID(as_uuid=True))
+    tags: Mapped[list[str] | None] = mapped_column(ARRAY(String))
+    kind: Mapped[str] = mapped_column(String, server_default=NoteKind.NOTE.value)
+    flag: Mapped[bool | None] = mapped_column(Boolean)
+    code: Mapped[uuid.UUID | None] = mapped_column(Uuid)
+    labels: Mapped[list | None] = mapped_column(JSON, server_default="[]")
+    extra: Mapped[str | None] = mapped_column(Wide)
+
+
+class Gone(Base):
+    __tablename__ = "gone"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+
+class Legacy(Base):
+    __tablename__ = "legacy"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String)
+""")
+models = MODELS + [{"cls": "Note", "table": "notes", "file": "notes.py", "uqs": []}, {"cls": "Gone", "table": "gone", "file": "notes.py", "uqs": []},
+                   {"cls": "Legacy", "table": "legacy", "file": "notes.py", "uqs": []}]
+f = mbuild(mvariant("midioms", idioms), "short", models)
+n, g = f["models"]["model:Note"], f["models"]["model:Gone"]
+assert n["drift"] == [{"constraint": "ck_memo_body", "field": "check", "model": "absent", "migration": "present"}], n["drift"]
+c = n["columns"]
+assert (c["body"]["type"], c["ref"]["type"], c["tags"]["type"], c["kind"]["server_default"], c["flag"]["server_default"]) == ("String", "UUID", "ARRAY(String)", "note", None), c
+assert n["migration"] == {"tree": "migrations/versions", "state": "defined"}, n["migration"]
+assert (c["code"]["type"], c["labels"]["server_default"], c["extra"]["type"]) == ("UUID", "[]", "Text"), c
+assert f["models"]["model:Legacy"]["drift"] == [], f["models"]["model:Legacy"]["drift"]
+assert g["drift"] == [{"field": "table", "model": "present", "migration": "dropped"}] and g["migration"]["table"] == "dropped", g
+assert f["migrations"]["migrations/versions"]["tables"] == 4 and f["arms"]["short"]["stats"]["model"]["no_migration"] == 0, (f["migrations"], f["arms"]["short"]["stats"]["model"])
+PY
+
+py "SF4 · M10 by reference: the racing claim's Slice 6 fact and Slice 7 race-500 on its model; SILENT on the caught claim; no race-500 without the contract arm" <<'PY'
+import sys; sys.path.insert(0, str(T))
+from model_fixture import at, make, mbuild
+M = make()
+f = mbuild(M, "short,effects,contract")
+o, t = f["models"]["model:Order"]["m10"], f["models"]["model:Tag"]["m10"]
+assert [r["state"] for r in o["races"]] == ["uncaught"] and all(r["step"] in f["steps"] for r in o["races"]), o
+assert o["race_500"] == [{"endpoint": "endpoint:POST /orders/place", "claim": at(M, "services/orders.py", "order = Order(")}], o["race_500"]
+assert [r["state"] for r in t["races"]] == ["handled"] and t["race_500"] == [], t
+g = mbuild(M, "short")
+assert g["models"]["model:Order"]["m10"]["race_500"] == [] and g["arms"]["contract"]["present"] is False, (g["models"]["model:Order"]["m10"], g["arms"]["contract"])
+PY
+
 echo "forms-short: $pass passed, $fail failed"
 [ "$fail" -eq 0 ] || exit 1
