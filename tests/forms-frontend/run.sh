@@ -128,7 +128,8 @@ B._flow = lambda repo: (FLOW, "ok")
 fe_arm = {**FE.build_fe(FLOW, None), "present": True}
 f2 = B.extend_frontend({"present": False, "reason": "no FastAPI endpoints"}, fe_arm, HERE / "fixture", {}, graph=GRAPH)
 a = f2["arms"]["frontend"]
-assert a["present"] is True and a["parts"]["guards"] == {"present": True, "reason": None} and a["parts"]["hooks"] == {"present": False, "reason": "not built yet (slice 11)"}, a
+assert a["present"] is True and a["parts"]["guards"] == a["parts"]["hooks"] == a["parts"]["client"] == {"present": True, "reason": None} and a["parts"]["reason"] == {"present": False, "reason": "not built yet (slice 11)"}, a
+assert f2["frontend"]["pieces"]["fe:src/lib/useMe.ts#useMe"]["form"] == "hook" and f2["frontend"]["client"]["clients"] and a["stats"]["hooks"]["queries"] == 5, sorted(f2["frontend"])
 assert a["stats"]["guards"] == 7 and a["stats"]["findings"] == {"redirect-loop": 1} and a["bytes"] > 0 and sorted(f2["arms"]) == sorted(F.ARM_ORDER), a
 assert f2["present"] is False and f2["arm_findings"]["frontend"][0]["id"] == "redirect-loop" and "fe:src/routes/RequireSetup.tsx#RequireSetup" in f2["frontend"]["pieces"]
 B._flow = lambda repo: (None, "extractor timed out after 300s")
@@ -155,6 +156,60 @@ PY
 
 py "F9 · determinism: two runs are byte-identical" <<'PY'
 assert json.dumps(run(), sort_keys=True) == json.dumps(run(), sort_keys=True)
+PY
+
+py "F10 · hooks: a query's resolved key (a factory, a parameter as *), its literal-path fetch and endpoint; a mutation's invalidations forwarded through .map and its cache seed; invalidated_by by TanStack prefix; an unresolvable key named" <<'PY'
+graph = {"cross_edges": GRAPH["cross_edges"] + [{"kind": "bridge", "export": "fe:src/lib/useCompleteSetup.ts#useCompleteSetup", "to": "endpoint:POST /setup/complete", "via": "fetch"}]}
+hooks, hs = FEF.hooks_part(FLOW, graph)
+def call(name):
+    return hooks[next(k for k in hooks if k.endswith("#" + name))]["calls"][0]
+me, st, rc, lo, cs = call("useMe"), call("useSettings"), call("useRecipe"), call("useLoose"), call("useCompleteSetup")
+assert (me["kind"], me["key"], [(f["method"], f["path"], f["wrapper"]) for f in me["fetch"]], me["endpoint"]) == ("query", ["me"], [("GET", "/api/v1/me", "fe:src/lib/api/client.ts#apiFetch")], "endpoint:GET /me"), me
+assert [(b["hook"], b["key"], b["when"]) for b in me["invalidated_by"]] == [("fe:src/lib/useCompleteSetup.ts#useCompleteSetup", ["me"], "onSuccess")], me["invalidated_by"]
+assert [(i["key"], i["when"], i["call"]) for i in cs["invalidates"]] == [(["me"], "onSuccess", "invalidateQueries"), (["settings"], "onSuccess", "invalidateQueries"), (["recipes"], "onSuccess", "invalidateQueries")], cs["invalidates"]
+assert [s["key"] for s in cs["seeds"]] == [["me"]] and (cs["kind"], [(f["method"], f["path"]) for f in cs["fetch"]], cs["endpoint"]) == ("mutation", [("POST", "/api/v1/setup/complete")], "endpoint:POST /setup/complete"), cs
+assert rc["key"] == ["recipes", "detail", "*"] and [b["key"] for b in rc["invalidated_by"]] == [["recipes"]] and [f["path"] for f in rc["fetch"]] == ["/api/v1/recipes/*"], rc
+assert "key" not in lo and lo["key_unresolved"] == "KEY" and st["options"] == {"staleTime": 0} and [b["key"] for b in st["invalidated_by"]] == [["settings"]], (lo, st)
+assert call("useThings")["key"] == ["things", "list"], call("useThings")
+assert hs == {"queries": 5, "mutations": 1, "keys_unresolved": 1, "fetches": 6, "invalidations": 3, "seeds": 1, "invalidated_by": 3}, hs
+assert "fe:src/routes/RequireSetup.tsx#RequireSetup" not in hooks
+PY
+
+py "F11 · client policy: a retry function summarised one level with its predicate's status comparisons; a set option defined; an unset option the library default with its source; a lock file below the read version, or none, unknown; the hook that overrides" <<'PY'
+import shutil, tempfile
+hooks, _ = FEF.hooks_part(FLOW, GRAPH)
+cl, cs = FEF.client_part(FLOW, HERE / "fixture", hooks)
+c = cl["clients"][0]
+q, m = c["policy"]["queries"], c["policy"]["mutations"]
+assert (c["at"], c["library"]) == (at("src/lib/query/client.ts", "return new QueryClient"), {"package": "@tanstack/query-core", "version": "5.100.6", "lock": "package-lock.json"}), c
+assert q["retry"]["state"] == "defined" and q["retry"]["summary"]["branches"] == [
+    {"returns": False, "when": ["isClientError(error)"], "means": ["value.status >= 400", "value.status < 500"]},
+    {"returns": "failureCount < MAX_RETRIES", "compares": ["failureCount < 1"]}], q["retry"]
+assert (q["staleTime"], q["refetchOnReconnect"], m["retry"]) == ({"state": "defined", "value": 30000}, {"state": "defined", "value": True}, {"state": "defined", "value": False})
+assert q["refetchOnWindowFocus"] == {"state": "default", "value": True, "source": "@tanstack/query-core/src/queryObserver.ts:786"} and (q["gcTime"]["state"], q["gcTime"]["value"]) == ("default", 300000), q
+assert c["hook_overrides"] == [{"hook": "fe:src/lib/useSettings.ts#useSettings", "option": "staleTime"}] and cs["policy_unknown"] == 0 and cs["clients"] == 2, cs
+mc = cl["clients"][1]
+assert (mc["at"], mc["fn"], mc["policy"]["queries"]["staleTime"], mc["policy"]["queries"]["retry"]["state"], mc["policy"]["mutations"]["retry"]["value"]) == (
+    at("src/lib/query/moduleClient.ts", "new QueryClient"), "src/lib/query/moduleClient.ts::<module>", {"state": "defined", "value": 5000}, "default", 0), mc
+d = Path(tempfile.mkdtemp()) / "fx"
+shutil.copytree(HERE / "fixture", d)
+(d / "package-lock.json").write_text('{"packages": {"node_modules/@tanstack/query-core": {"version": "5.0.0"}}}')
+cl2, cs2 = FEF.client_part(FLOW, d, hooks)
+assert cl2["clients"][0]["policy"]["queries"]["gcTime"] == {"state": "unknown", "reason": "@tanstack/query-core 5.0.0 predates 5.100.6"} and cs2["policy_unknown"] == 2 + 5, cl2["clients"][0]["policy"]
+(d / "package-lock.json").unlink()
+cl3, _ = FEF.client_part(FLOW, d, hooks)
+assert cl3["clients"][0]["policy"]["queries"]["refetchOnWindowFocus"] == {"state": "unknown", "reason": "no lock file names @tanstack/query-core"}
+PY
+
+py "F12 · transport: the wrapper's file, every .status comparison and throw in it with the conditions above" <<'PY'
+hooks, _ = FEF.hooks_part(FLOW, GRAPH)
+cl, cs = FEF.client_part(FLOW, HERE / "fixture", hooks)
+t, f = cl["transport"], "src/lib/api/client.ts"
+assert list(t) == [f] and t[f]["wrappers"] == ["fe:src/lib/api/client.ts#apiFetch"], t
+assert [(b["fn"], b.get("status"), b.get("throws"), b["when"], b.get("ctx"), b["at"]) for b in t[f]["branches"]] == [
+    ("apiFetch", 503, None, [], "callback:then", at(f, "r.status === 503")), ("apiFetch", None, "new ApiError(503)", ["r.status === 503"], "callback:then", at(f, "throw new ApiError(503)")),
+    ("apiFetch", 401, None, [], None, at(f, "response.status === 401")), ("apiFetch", None, "new ApiError(response.status)", ["!response.ok"], None, at(f, "throw new ApiError(response.status)"))], t[f]["branches"]
+assert (cs["wrappers"], cs["transport_branches"]) == (1, 4), cs
 PY
 
 py "F15 · the structure arm never depends on flow: build_fe over the capture with and without its flow keys is identical" <<'PY'

@@ -24,7 +24,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
+from pathlib import Path
 
 import _a3_fe as FE
 import _a3_forms as F
@@ -279,13 +281,19 @@ def _k3(gid: str, pieces: dict, nodes: list, has_router: bool) -> dict:
     return {"state": state, "targets": targets, **({"pairs": [pairs[k] for k in sorted(pairs)]} if pairs else {})}
 
 
+def _bridge(graph: dict | None) -> dict:
+    """``{hook or component piece id: endpoint key}`` from the c4 bridge edges, the first per piece."""
+    out: dict = {}
+    for e in sorted((graph or {}).get("cross_edges") or [], key=lambda e: (str(e.get("export")), str(e.get("to")))):
+        if e.get("kind") == "bridge" and e.get("export"):
+            out.setdefault(e["export"], e.get("to"))
+    return out
+
+
 def guards_part(flow: dict, fe: dict, forms: dict, graph: dict | None) -> tuple[dict, dict, list]:
     """``(frontend{pieces, routers, idioms}, stats, findings)`` from the flow run, the fe structure arm and the c4 graph."""
     fe_ids = {p["id"] for p in (fe or {}).get("pieces") or []}
-    bridge: dict = {}
-    for e in sorted((graph or {}).get("cross_edges") or [], key=lambda e: (str(e.get("export")), str(e.get("to")))):
-        if e.get("kind") == "bridge" and e.get("export"):
-            bridge.setdefault(e["export"], e.get("to"))
+    bridge = _bridge(graph)
     pieces: dict = {}
     stats = {"bodies": 0, "rows": 0, "truncated": 0, "guards": 0, "exits": 0, "effects": 0, "decided_by": 0, "chain_rows": 0,
              "routers": 0, "mounted": 0, "k3": {}}
@@ -336,3 +344,232 @@ def guards_part(flow: dict, fe: dict, forms: dict, graph: dict | None) -> tuple[
     frontend = {"pieces": dict(sorted(pieces.items())), "routers": [{"at": f"{f}:{rt.get('line')}", "callee": rt.get("callee")} for f, rt, _ in routers],
                 "idioms": {"unknown": {}}}
     return frontend, stats, found
+
+
+# ── hooks · client · transport (Slice 11b) ──────────────────────────────────────────────────────────────
+def _leaf(callee) -> str:
+    return re.split(r"[(<\s]", str(callee), maxsplit=1)[0].split(".")[-1]
+
+
+def _keys_of(value) -> list | None:
+    """An option's resolved key(s): a list is one key; a forwarded ``{each: [...]}`` is its elements; else None."""
+    if isinstance(value, list):
+        return [value]
+    if isinstance(value, dict) and isinstance(value.get("each"), list):
+        return [k for k in value["each"] if isinstance(k, list)]
+    return None
+
+
+def _prefix(p: list, k: list) -> bool:
+    """TanStack's prefix match: ``p`` invalidates ``k`` when every element of ``p`` equals ``k``'s at its position (``*`` is any)."""
+    return len(p) <= len(k) and all(a == "*" or b == "*" or a == b for a, b in zip(p, k))
+
+
+def _fetches(rows: list, host: str, bindings: dict, file: str, local: set) -> list[dict]:
+    out = []
+    for r in rows:
+        ctx = r.get("ctx") or []
+        if r["k"] != "call" or not any(c in (f"prop:{host}.queryFn", f"prop:{host}.mutationFn") for c in ctx):
+            continue
+        args = r.get("args") or []
+        if not args or not isinstance(args[0], str) or not args[0].startswith(("/", "http")):
+            continue
+        method = (r.get("opts") or {}).get("method")
+        out.append({"callee": r["callee"], "wrapper": _resolve(r["callee"], bindings, file, local), "path": args[0],
+                    "method": method if isinstance(method, str) else "GET", "at": f"{file}:{r['line']}"})
+    return out
+
+
+def hooks_part(flow: dict, graph: dict | None) -> tuple[dict, dict]:
+    """``(hooks{piece id: {form: hook, calls[]}}, stats)`` — every query and mutation call a body makes outside a callback: its
+    key (a factory or a literal, resolved by the extractor), options, literal-path fetches and endpoint; a mutation's
+    invalidations and cache seeds in its ``on*`` callbacks; each query's ``invalidated_by`` by TanStack prefix."""
+    bridge = _bridge(graph)
+    hooks: dict = {}
+    stats = {"queries": 0, "mutations": 0, "keys_unresolved": 0, "fetches": 0, "invalidations": 0, "seeds": 0, "invalidated_by": 0}
+    for file, rec in sorted((flow.get("byFile") or {}).items()):
+        bodies = (rec.get("flow") or {}).get("bodies") or {}
+        local, bindings = set(bodies), rec.get("bindings") or {}
+        for name, body in sorted(bodies.items()):
+            rows, calls = body.get("rows") or [], []
+            pid = f"fe:{file}#{name.split('.', 1)[0]}"
+            for r in rows:
+                leaf = _leaf(r.get("callee"))
+                kind = "query" if leaf in FF.CACHE_QUERY_CALLS else "mutation" if leaf in FF.CACHE_MUTATION_CALLS else None
+                if r["k"] != "call" or r.get("ctx") or not kind:
+                    continue
+                opts = r.get("opts") or {}
+                c = {"kind": kind, "callee": r["callee"], "at": f"{file}:{r['line']}"}
+                if kind == "query":
+                    keys = _keys_of(opts.get("queryKey"))
+                    if keys:
+                        c["key"] = keys[0]
+                    else:
+                        c["key_unresolved"] = opts["queryKey"].get("ref") if isinstance(opts.get("queryKey"), dict) else None
+                        stats["keys_unresolved"] += 1
+                c["options"] = {k: opts[k] for k in (*FF.POLICY_KEYS, "enabled", "select") if k in opts}
+                c["fetch"] = _fetches(rows, leaf, bindings, file, local)
+                if pid in bridge:
+                    c["endpoint"] = bridge[pid]
+                if kind == "mutation":
+                    c["invalidates"], c["seeds"] = [], []
+                    for x in rows:
+                        when = next((cc.split(".", 1)[1] for cc in x.get("ctx") or [] if cc.startswith(f"prop:{leaf}.on")), None)
+                        if x["k"] != "call" or not when:
+                            continue
+                        xl = _leaf(x.get("callee"))
+                        if xl in FF.INVALIDATE_CALLS:
+                            c["invalidates"] += [{"key": k, "when": when, "call": xl, "at": f"{file}:{x['line']}"}
+                                                 for k in _keys_of((x.get("opts") or {}).get("queryKey")) or []]
+                        elif xl in FF.SEED_CALLS and isinstance((x.get("args") or [None])[0], list):
+                            c["seeds"].append({"key": x["args"][0], "when": when, "at": f"{file}:{x['line']}"})
+                    stats["invalidations"] += len(c["invalidates"])
+                    stats["seeds"] += len(c["seeds"])
+                stats["queries" if kind == "query" else "mutations"] += 1
+                stats["fetches"] += len(c["fetch"])
+                calls.append(c)
+            if calls:
+                hooks[pid] = {"form": "hook", "at": f"{file}:{body.get('line')}", "calls": calls}
+    edges = [(pid, inv) for pid, h in hooks.items() for c in h["calls"] if c["kind"] == "mutation" for inv in c["invalidates"]]
+    for h in hooks.values():
+        for c in h["calls"]:
+            if c["kind"] == "query" and "key" in c:
+                by = sorted({(m, json.dumps(inv["key"]), inv["when"]) for m, inv in edges if _prefix(inv["key"], c["key"])})
+                c["invalidated_by"] = [{"hook": m, "key": json.loads(k), "when": w} for m, k, w in by]
+                stats["invalidated_by"] += len(by)
+    return hooks, stats
+
+
+def _vt(v) -> tuple:
+    return tuple(int(x) for x in re.findall(r"\d+", str(v))[:3])
+
+
+def _lock_version(repo: Path, web: Path, pkg: str) -> tuple:
+    """``(version, lock file)`` of ``pkg`` from the nearest lock file at or above the web root."""
+    d = web
+    while True:
+        for name in ("package-lock.json", "pnpm-lock.yaml", "yarn.lock"):
+            p = d / name
+            if not p.is_file():
+                continue
+            text = p.read_text(encoding="utf-8", errors="replace")
+            v = None
+            if name == "package-lock.json":
+                try:
+                    v = ((json.loads(text).get("packages") or {}).get(f"node_modules/{pkg}") or {}).get("version")
+                except ValueError:
+                    v = None
+            else:
+                m = re.search(rf"{re.escape(pkg)}@(\d+\.\d+\.\d+)", text) or re.search(rf'{re.escape(pkg)}@[^\n]*:\n\s+version "?([\d.]+)', text)
+                v = m.group(1) if m else None
+            if v:
+                return v, os.path.relpath(p, repo)
+        if d == repo or repo not in d.parents:
+            return None, None
+        d = d.parent
+
+
+def _lit_text(value):
+    try:
+        return json.loads(value)
+    except (TypeError, ValueError):
+        return value
+
+
+def _summary(flow: dict, file: str, ref: str, bindings: dict, local: set) -> dict | None:
+    """A policy function one level deep: its returns with the conditions above them and the comparisons on their lines; a
+    condition that calls a project predicate names that predicate's comparisons (``means``)."""
+    body = (((flow["byFile"].get(file) or {}).get("flow") or {}).get("bodies") or {}).get(ref)
+    if body is None:
+        return None
+    rows, out = body.get("rows") or [], []
+    for r in rows:
+        if r["k"] != "ret" or r.get("ctx"):
+            continue
+        b = {"returns": _lit_text(r.get("value"))}
+        when = [g["pred"] for g in r.get("guards") or []]
+        if when:
+            b["when"] = when
+        cmps = [f"{x['left']} {x['op']} {x['right']}" for x in rows if x["k"] == "cmp" and x["line"] == r["line"] and not x.get("ctx")]
+        if cmps:
+            b["compares"] = cmps
+        means = []
+        for pred in when:
+            m = re.match(r"!?\s*([A-Za-z_$][\w$]*)\(", pred)
+            target = _resolve(m.group(1), bindings, file, local) if m else ""
+            if target.startswith("fe:"):
+                tf, tn = target[3:].split("#", 1)
+                tb = (((flow["byFile"].get(tf) or {}).get("flow") or {}).get("bodies") or {}).get(tn) or {}
+                means += [f"{x['left']} {x['op']} {x['right']}" for x in tb.get("rows") or [] if x["k"] == "cmp" and not x.get("ctx")]
+        if means:
+            b["means"] = means
+        out.append(b)
+    return {"fn": ref, "at": f"{file}:{body.get('line')}", "branches": out}
+
+
+def _transport(flow: dict, hooks: dict) -> dict:
+    """The fetch wrappers the hooks call, by the file that defines them: every ``.status`` comparison and throw in that file,
+    callbacks included (a middleware's ``onResponse`` names its ``ctx``)."""
+    by_file: dict = {}
+    for h in hooks.values():
+        for c in h["calls"]:
+            for f in c["fetch"]:
+                if str(f["wrapper"]).startswith("fe:"):
+                    by_file.setdefault(f["wrapper"][3:].split("#", 1)[0], set()).add(f["wrapper"])
+    out = {}
+    for file in sorted(by_file):
+        branches = []
+        for fn, body in sorted((((flow["byFile"].get(file) or {}).get("flow") or {}).get("bodies") or {}).items()):
+            for r in body.get("rows") or []:                     # a middleware callback (`onResponse`) is where a client often branches
+                when = [("!" if g.get("neg") else "") + g["pred"] for g in r.get("guards") or []]
+                ctx = {"ctx": r["ctx"][-1]} if r.get("ctx") else {}
+                if r["k"] == "cmp" and str(r.get("left")).endswith(".status"):
+                    branches.append({"fn": fn, "at": f"{file}:{r['line']}", "status": r.get("right"), "op": r.get("op"), "when": when, **ctx})
+                elif r["k"] == "throw":
+                    branches.append({"fn": fn, "at": f"{file}:{r['line']}", "throws": r.get("value"), "when": when, **ctx})
+        out[file] = {"wrappers": sorted(by_file[file]), "branches": branches}
+    return out
+
+
+def client_part(flow: dict, repo, hooks: dict) -> tuple[dict, dict]:
+    """``({clients[], transport{}}, stats)`` — every ``new QueryClient({defaultOptions})``: per scope and option ``defined`` (a
+    policy function summarised one level), else the library ``default`` with its source when the lock file's version is at
+    least the one the default was read on, else ``unknown``; the hooks that override a policy option; the transport."""
+    repo = Path(repo)
+    pkg, lib_name = next(iter(FF.QUERY_PACKAGES.items()))
+    lib = FF.LIBRARY_DEFAULTS[lib_name]
+    version, lock = _lock_version(repo, repo / (flow.get("web") or "."), pkg)
+    lib_ok = bool(version) and _vt(version) >= _vt(lib["min_version"])
+    overrides = sorted({(pid, k) for pid, h in hooks.items() for c in h["calls"] for k in c.get("options") or {} if k in FF.POLICY_KEYS})
+    clients = []
+    for file, rec in sorted((flow.get("byFile") or {}).items()):
+        bodies = (rec.get("flow") or {}).get("bodies") or {}
+        for name, body in sorted(bodies.items()):
+            for r in body.get("rows") or []:
+                if r["k"] != "new" or _leaf(r.get("callee")) not in FF.CLIENT_CLASSES:
+                    continue
+                given = (r.get("opts") or {}).get("defaultOptions") or {}
+                policy = {}
+                for scope in ("queries", "mutations"):
+                    set_, rows = given.get(scope) or {}, {}
+                    for key in sorted((set(set_) & set(FF.POLICY_KEYS)) | set(lib[scope])):
+                        if key in set_:
+                            row = {"state": "defined", "value": set_[key]}
+                            if isinstance(set_[key], dict) and set_[key].get("ref"):
+                                summary = _summary(flow, file, set_[key]["ref"], rec.get("bindings") or {}, set(bodies))
+                                if summary:
+                                    row["summary"] = summary
+                        elif lib_ok:
+                            d = lib[scope][key]
+                            row = {"state": "default", "value": d["value"], "source": d["source"], **({"note": d["note"]} if d.get("note") else {})}
+                        else:
+                            row = {"state": "unknown", "reason": f"{pkg} {version} predates {lib['min_version']}" if version else f"no lock file names {pkg}"}
+                        rows[key] = row
+                    policy[scope] = rows
+                clients.append({"at": f"{file}:{r['line']}", "fn": f"{file}::{name}", "library": {"package": pkg, "version": version, "lock": lock},
+                                "policy": policy, "hook_overrides": [{"hook": p, "option": k} for p, k in overrides]})
+    transport = _transport(flow, hooks)
+    states = [row["state"] for c in clients for scope in c["policy"].values() for row in scope.values()]
+    stats = {"clients": len(clients), **{f"policy_{s}": states.count(s) for s in ("defined", "default", "unknown")},
+             "wrappers": sum(len(t["wrappers"]) for t in transport.values()), "transport_branches": sum(len(t["branches"]) for t in transport.values())}
+    return {"clients": clients, "transport": transport}, stats

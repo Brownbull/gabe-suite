@@ -363,7 +363,7 @@ def _flow(repo) -> tuple[dict | None, str]:
 
 def extend_frontend(forms, fe, repo, cfg: dict | None = None, graph: dict | None = None):
     """The frontend arm (Slice 11) — run after the fe structure arm and the c4 graph when ``frontend`` is selected: the flow
-    run read into ``frontend{}`` (the ``guards`` part), ``arms.frontend`` said, the feed restored on a raise. Never raises;
+    run read into ``frontend{}`` (the ``guards`` · ``hooks`` · ``client`` parts), ``arms.frontend`` said, the feed restored on a raise. Never raises;
     returns ``forms``. On a tree with no endpoint forms the envelope gains ``arms`` so the frontend arm can still be written."""
     try:
         if not isinstance(forms, dict) or "frontend" not in selection(cfg)[0]:
@@ -378,12 +378,21 @@ def extend_frontend(forms, fe, repo, cfg: dict | None = None, graph: dict | None
                 raise _Absent(f"flow capture: {reason}")
             import _a3_fe_forms as FEF
             frontend, stats, found = FEF.guards_part(flow, fe, forms, graph)
+            hooks, hstats = FEF.hooks_part(flow, graph)
+            for pid, h in hooks.items():                                     # a guard that also queries keeps both
+                if pid in frontend["pieces"]:
+                    frontend["pieces"][pid]["cache"] = h["calls"]
+                else:
+                    frontend["pieces"][pid] = h
+            frontend["pieces"] = dict(sorted(frontend["pieces"].items()))
+            frontend["client"], cstats = FEF.client_part(flow, repo, hooks)
+            stats.update({"hooks": hstats, "client": cstats})
             json.dumps(frontend, ensure_ascii=False, sort_keys=True)          # the write's own test
             forms["frontend"] = frontend
             if found:
                 forms.setdefault("arm_findings", {}).setdefault("frontend", []).extend(found)
                 stats["findings"] = {k: sum(1 for x in found if x["id"] == k) for k in sorted({x["id"] for x in found})}
-            built = ("guards",)
+            built = ("guards", "hooks", "client")
             parts = {p: {"present": True, "reason": None} if p in built else {"present": False, "reason": "not built yet (slice 11)"}
                      for p in F.ARMS["frontend"]["parts"]}
             arms["frontend"] = {"present": True, "reason": ("partial — " + "; ".join(f"{p}: {o['reason']}" for p, o in parts.items()

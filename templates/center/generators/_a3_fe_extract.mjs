@@ -198,16 +198,26 @@ const isJsx = n => !!n && (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n) |
 const unparen = n => { while (n && (ts.isParenthesizedExpression(n) || ts.isAsExpression(n) || ts.isNonNullExpression(n) || (ts.isSatisfiesExpression && ts.isSatisfiesExpression(n)))) n = n.expression; return n; };
 const resolveLit = (e, depth = 0) => {
   e = unparen(e);
-  if (!e || depth > LIT_DEPTH) return null;
+  if (!e) return null;
   if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) return e.text;
-  if (ts.isTemplateExpression(e)) {                          // `${PATHS.login}?${search}` → "/login?*" — an unreadable span is `*`
-    let out = e.head.text, known = e.head.text.length > 0;
-    for (const sp of e.templateSpans) { const v = resolveLit(sp.expression, depth + 1); if (v != null) known = true; out += (v != null ? String(v) : '*') + sp.literal.text; }
-    return known ? out : null;
-  }
-  if (ts.isNumericLiteral(e)) return Number(e.text);
+  if (ts.isNumericLiteral(e)) return Number(e.text.replace(/_/g, ''));
   if (e.kind === ts.SyntaxKind.TrueKeyword) return true;
   if (e.kind === ts.SyntaxKind.FalseKeyword) return false;
+  if (depth > LIT_DEPTH) return null;                         // only a symbol hop spends depth — a literal inside what it reached never does
+  if (ts.isTemplateExpression(e)) {                          // `${PATHS.login}?${search}` → "/login?*" — an unreadable span is `*`
+    let out = e.head.text, known = e.head.text.length > 0;
+    for (const sp of e.templateSpans) { const v = resolveLit(sp.expression, depth); if (v != null) known = true; out += (v != null ? String(v) : '*') + sp.literal.text; }
+    return known ? out : null;
+  }
+  if (ts.isArrayLiteralExpression(e)) {                     // `[...groupKeys.all, "list"]` → ["groups", "list"]: a spread of a resolvable array splices in
+    const out = [];
+    for (const x of e.elements) {
+      if (ts.isSpreadElement(x)) { const v = resolveLit(x.expression, depth); if (Array.isArray(v)) out.push(...v); else out.push('*'); continue; }
+      const v = resolveLit(x, depth); out.push(v != null ? v : '*');
+    }
+    return out;
+  }
+  if (ts.isCallExpression(e)) return factoryLit(e, depth);     // `queryKeys.me()` → ["me"]: a factory returning an array literal
   if (ts.isIdentifier(e) || ts.isPropertyAccessExpression(e)) {
     let s;
     try { s = checker.getSymbolAtLocation(ts.isPropertyAccessExpression(e) ? e.name : e); if (s && s.flags & ts.SymbolFlags.Alias) s = checker.getAliasedSymbol(s); } catch { return null; }
@@ -232,12 +242,72 @@ const jsxProps = n => {
   }
   return out;
 };
+// a call to a function whose body is one array literal (`me: () => ["me"] as const`) → its elements, a parameter as `*`
+const factoryLit = (call, depth) => {
+  if (depth > LIT_DEPTH) return null;
+  let s;
+  try { s = checker.getSymbolAtLocation(ts.isPropertyAccessExpression(call.expression) ? call.expression.name : call.expression); if (s && s.flags & ts.SymbolFlags.Alias) s = checker.getAliasedSymbol(s); } catch { return null; }
+  const d = s && (s.declarations || [])[0];
+  const fn = d && (ts.isPropertyAssignment(d) || ts.isVariableDeclaration(d)) ? unparen(d.initializer) : d;
+  if (!isFn(fn) || !fn.body) return null;
+  let body = fn.body;
+  if (ts.isBlock(body)) body = body.statements.length === 1 && ts.isReturnStatement(body.statements[0]) ? body.statements[0].expression : null;
+  body = unparen(body);
+  if (!body || !ts.isArrayLiteralExpression(body)) return null;
+  const params = new Set((fn.parameters || []).map(p => p.name.getText(p.getSourceFile())));
+  const out = [];
+  for (const x of body.elements) {
+    const u = unparen(x);
+    if (ts.isSpreadElement(u)) {                             // `[...groupKeys.all, "list"]` — the spread array's elements, in place
+      const v = ts.isIdentifier(u.expression) && params.has(u.expression.text) ? null : resolveLit(u.expression, depth + 1);
+      if (Array.isArray(v)) out.push(...v); else out.push('*');
+      continue;
+    }
+    if (ts.isIdentifier(u) && params.has(u.text)) { out.push('*'); continue; }
+    const v = resolveLit(u, depth + 1); out.push(v != null ? v : '*');
+  }
+  return out;
+};
+// a name that is the first parameter of a `.map` / `.forEach` / `.flatMap` callback → the receiver's resolved elements
+const forwardOf = id => {
+  let n = id.parent;
+  while (n && !isFn(n)) n = n.parent;
+  if (!n || !(ts.isArrowFunction(n) || ts.isFunctionExpression(n))) return null;
+  const param = n.parameters[0];
+  if (!param || !ts.isIdentifier(param.name) || param.name.text !== id.text) return null;
+  const call = n.parent;
+  if (!call || !ts.isCallExpression(call) || !ts.isPropertyAccessExpression(call.expression) || !['map', 'forEach', 'flatMap'].includes(call.expression.name.text)) return null;
+  const recv = resolveLit(call.expression.expression);
+  return Array.isArray(recv) ? recv : null;
+};
+// an options object as a tree: literals resolved, functions named, nested objects kept (depth 4), a forwarded name's elements
+const optVal = (v, depth) => {
+  v = unparen(v);
+  if (!v) return null;
+  if (isFn(v)) return { fn: ts.isFunctionExpression(v) && v.name ? v.name.text : 'inline', line: lineOf(v) };
+  if (ts.isObjectLiteralExpression(v)) return depth < 4 ? optTree(v, depth + 1) : { expr: clip(v.getText(v.getSourceFile()), 60) };
+  const lit = resolveLit(v);
+  if (lit != null) return lit;
+  if (ts.isIdentifier(v)) { const each = forwardOf(v); if (each != null) return { ref: v.text, each }; }
+  return { ref: clip(v.getText(v.getSourceFile()), 60) };
+};
+const optTree = (o, depth) => {
+  const sf = o.getSourceFile(); const out = {};
+  for (const p of o.properties) {
+    if (!p.name) continue;
+    const key = p.name.getText(sf);
+    if (ts.isShorthandPropertyAssignment(p)) out[key] = optVal(p.name, depth);
+    else if (ts.isMethodDeclaration(p)) out[key] = { fn: key, line: lineOf(p) };
+    else if (ts.isPropertyAssignment(p)) out[key] = optVal(p.initializer, depth);
+  }
+  return out;
+};
 const stmtList = s => ts.isBlock(s) ? s.statements : [s];
 const exits = s => { const list = stmtList(s); const last = list[list.length - 1]; return !!last && (ts.isReturnStatement(last) || ts.isThrowStatement(last)); };
 const CMP_OPS = new Set([ts.SyntaxKind.EqualsEqualsEqualsToken, ts.SyntaxKind.ExclamationEqualsEqualsToken, ts.SyntaxKind.EqualsEqualsToken,
   ts.SyntaxKind.ExclamationEqualsToken, ts.SyntaxKind.LessThanToken, ts.SyntaxKind.GreaterThanToken, ts.SyntaxKind.LessThanEqualsToken, ts.SyntaxKind.GreaterThanEqualsToken]);
 
-const bodyRows = root => {
+const bodyRows = (root, list = null) => {
   const rows = []; let truncated = false;
   const push = (k, node, extra, guards, after, ctx) => {
     if (rows.length >= ROW_CAP) { truncated = true; return null; }
@@ -272,9 +342,10 @@ const bodyRows = root => {
       const extra = { callee };
       if (lits.some(a => a != null)) extra.args = lits;
       const obj = (n.arguments || []).map(unparen).find(a => a && ts.isObjectLiteralExpression(a));   // `redirect({ to: "/items" })` — the literal properties
-      if (obj) { const props = {}; for (const p of obj.properties) if (ts.isPropertyAssignment(p) && p.name) { const v = resolveLit(p.initializer); if (v != null) props[p.name.getText(sf)] = v; } if (Object.keys(props).length) extra.props = props; }
+      if (obj) { const props = {}; for (const p of obj.properties) if (ts.isPropertyAssignment(p) && p.name) { const v = resolveLit(p.initializer); if (v != null) props[p.name.getText(sf)] = v; } if (Object.keys(props).length) extra.props = props; extra.opts = optTree(obj, 0); }
       push(ts.isCallExpression(n) ? 'call' : 'new', n, extra, guards, after, ctx);
-      const cname = leftmost(n.expression) || callee;
+      // the callback's host: a dotted name whole (`apiClient.use`), else the member called (`fetch(…).then` → `then`)
+      const cname = /^[\w$.]+$/.test(callee) ? callee : ts.isPropertyAccessExpression(n.expression) ? n.expression.name.text : (leftmost(n.expression) || callee);
       if (ts.isPropertyAccessExpression(n.expression)) expr(n.expression.expression, guards, after, ctx);
       for (const a of n.arguments || []) {
         if (isFn(a)) { fnBody(a, guards, after, [...ctx, 'callback:' + cname]); continue; }
@@ -353,7 +424,7 @@ const bodyRows = root => {
     push('ret', b, extra, guards, after, ctx);
     expr(b, guards, after, ctx);
   };
-  fnBody(root, [], [], []);
+  if (list) stmts(list, [], [], []); else fnBody(root, [], [], []);
   return { rows, truncated };
 };
 const fnOfDecl = d => {
@@ -411,6 +482,11 @@ const flowOf = sf => {
       }
     }
   }
+  // module scope: a non-function variable initializer or an expression statement (`const queryClient = new QueryClient()`) — the
+  // declarations above are bodies of their own, so they are left out here
+  const top = sf.statements.filter(st => ts.isExpressionStatement(st) || (ts.isVariableStatement(st) && st.declarationList.declarations.every(d => d.initializer && !fnOfDecl(d)
+    && !(ts.isCallExpression(unparen(d.initializer)) && unparen(d.initializer).arguments.some(a => ts.isObjectLiteralExpression(unparen(a)) && unparen(a).properties.some(p => ts.isPropertyAssignment(p) && isFn(unparen(p.initializer))))))));
+  if (top.length) { const got = bodyRows(null, top); if (got.rows.length) bodies['<module>'] = { line: lineOf(top[0]), rows: got.rows, ...(got.truncated ? { truncated: true } : {}) }; }
   const routes = routesOf(sf);
   return { bodies: Object.fromEntries(Object.keys(bodies).sort().map(k => [k, bodies[k]])), ...(routes.length ? { routes } : {}) };
 };
