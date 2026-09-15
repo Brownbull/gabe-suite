@@ -29,7 +29,7 @@ py() {  # py "<name>" <<'PY' … PY — the prelude gives FLOW · GRAPH · FORMS
 import copy, json, os, re
 from pathlib import Path
 HERE = Path(os.environ["HERE"])
-import _a3_fe as FE, _a3_fe_forms as FEF, _a3_fe_reason as FER, _a3_forms as F, _a3_forms_build as B
+import _a3_fe as FE, _a3_fe_controls as FEC, _a3_fe_forms as FEF, _a3_fe_reason as FER, _a3_forms as F, _a3_forms_build as B
 FLOW = json.load(open(HERE / "flow.frozen.json"))
 GRAPH = {"cross_edges": [{"kind": "bridge", "export": "fe:src/lib/useMe.ts#useMe", "to": "endpoint:GET /me", "via": "fetch"}]}
 FORMS = {"present": True, "endpoints": {"endpoint:GET /me": {"declared": {"response_model": {"name": "MeResponse", "state": "defined"}}}},
@@ -139,12 +139,12 @@ B._flow = lambda repo: (FLOW, "ok")
 fe_arm = {**FE.build_fe(FLOW, None), "present": True}
 f2 = B.extend_frontend({"present": False, "reason": "no FastAPI endpoints"}, fe_arm, HERE / "fixture", {}, graph=GRAPH)
 a = f2["arms"]["frontend"]
-assert a["present"] is True and a["parts"]["guards"] == a["parts"]["hooks"] == a["parts"]["client"] == {"present": True, "reason": None} and a["parts"]["reason"] == {"present": True, "reason": None} and a["parts"]["controls"] == {"present": False, "reason": "not built yet (slice 11)"}, a
+assert a["present"] is True and a["reason"] is None and all(o == {"present": True, "reason": None} for o in a["parts"].values()) and sorted(a["parts"]) == sorted(F.ARMS["frontend"]["parts"]), a
 assert f2["frontend"]["pieces"]["fe:src/lib/useMe.ts#useMe"]["form"] == "hook" and f2["frontend"]["client"]["clients"] and a["stats"]["hooks"]["queries"] == 5, sorted(f2["frontend"])
-assert a["stats"]["guards"] == 7 and a["stats"]["findings"] == {"redirect-loop": 1} and a["bytes"] > 0 and sorted(f2["arms"]) == sorted(F.ARM_ORDER), a
+assert a["stats"]["guards"] == 7 and a["stats"]["findings"] == {"action-uncalled": 1, "dead-control": 4, "no-rollback": 1, "redirect-loop": 1} and "fe:src/components/Views.tsx#SyncError" in f2["frontend"]["pieces"] and "fe:src/store/prefs.ts#usePrefsStore" in f2["frontend"]["stores"] and a["bytes"] > 0 and sorted(f2["arms"]) == sorted(F.ARM_ORDER), a
 assert f2["present"] is False and f2["arm_findings"]["frontend"][0]["id"] == "redirect-loop" and "fe:src/routes/RequireSetup.tsx#RequireSetup" in f2["frontend"]["pieces"]
 f6 = B.extend_frontend(copy.deepcopy(FORMS_R), fe_arm, HERE / "fixture", {}, graph=GRAPH)
-assert f6["arms"]["frontend"]["stats"]["findings"] == {"branch-unproduced": 1, "client-detail-unmatched": 1, "reason-collapsed": 1, "redirect-loop": 1} and len(f6["frontend"]["reasons"]["sites"]) == 13, f6["arms"]["frontend"]["stats"]
+assert f6["arms"]["frontend"]["stats"]["findings"] == {"action-uncalled": 1, "branch-unproduced": 1, "client-detail-unmatched": 1, "dead-control": 4, "no-rollback": 1, "reason-collapsed": 1, "redirect-loop": 1} and len(f6["frontend"]["reasons"]["sites"]) == 14, f6["arms"]["frontend"]["stats"]
 B._flow = lambda repo: (None, "extractor timed out after 300s")
 f4 = B.extend_frontend({"present": True, "endpoints": {}}, fe_arm, HERE / "fixture", {}, graph=GRAPH)
 assert f4["arms"]["frontend"]["reason"] == "flow capture: extractor timed out after 300s" and "frontend" not in f4
@@ -184,7 +184,11 @@ assert [s["key"] for s in cs["seeds"]] == [["me"]] and (cs["kind"], [(f["method"
 assert rc["key"] == ["recipes", "detail", "*"] and [b["key"] for b in rc["invalidated_by"]] == [["recipes"]] and [f["path"] for f in rc["fetch"]] == ["/api/v1/recipes/*"], rc
 assert "key" not in lo and lo["key_unresolved"] == "KEY" and st["options"] == {"staleTime": 0} and [b["key"] for b in st["invalidated_by"]] == [["settings"]], (lo, st)
 assert call("useThings")["key"] == ["things", "list"], call("useThings")
-assert hs == {"queries": 5, "mutations": 2, "keys_unresolved": 1, "fetches": 7, "invalidations": 3, "seeds": 1, "invalidated_by": 3}, hs
+assert hs == {"queries": 5, "mutations": 5, "keys_unresolved": 1, "fetches": 10, "invalidations": 4, "seeds": 3, "invalidated_by": 4}, hs
+tt = {c["at"]: c for c in hooks["fe:src/lib/useToggleThing.ts#useToggleThing"]["calls"]}   # three mutations in one body: each keeps its own callbacks
+tf = "src/lib/useToggleThing.ts"
+assert ([f["path"] for f in tt[at(tf, "const careless")]["fetch"]], tt[at(tf, "const careless")]["invalidates"], [s["key"] for s in tt[at(tf, "const contextual")]["seeds"]],
+        [i["key"] for i in tt[at(tf, "const optimistic")]["invalidates"]]) == (["/api/v1/things/flag"], [], [["things", "pin"]], [["things", "list"]]), tt
 assert "fe:src/routes/RequireSetup.tsx#RequireSetup" not in hooks
 PY
 
@@ -250,7 +254,8 @@ assert {x["exit"]: x["site"] for x in rd[("ErrorBody", "error")]["routes"]}["x:l
 assert not [s for s in r["sites"] if s["at"].startswith("src/lib/api/client.ts")] and all(re.fullmatch(r"r-[0-9a-f]{10}", s["id"]) for s in r["sites"])
 lm, sv = S[at(f, "res.status === 401")], S[at(f, "response.status === 422")]
 assert [(o["kind"], o["endpoints"]) for o in lm["origins"]] == [("fetch", ["endpoint:GET /me"])] and [(o["kind"], o["endpoints"]) for o in sv["origins"]] == [("fetch", ["endpoint:PATCH /settings"])], (lm, sv)
-assert rs == {"sites": 13, "reads_status": 10, "reads_detail": 1, "reads_code": 2, "joined": 11, "unknown": 2, "endpoints": 3, "routed": 9, "rest": 11}, rs
+assert rs == {"sites": 14, "reads_status": 11, "reads_detail": 1, "reads_code": 2, "joined": 11, "unknown": 3, "endpoints": 3, "routed": 9, "rest": 11}, rs
+assert len([s for s in r["sites"] if s["at"].startswith("src/store/session.ts")]) == 1, "a store action's comparison is counted once, not again in its action body"
 PY
 
 py "F14 · reason findings FIRE: a status-only branch on a shared status, a status no reached endpoint produces, a code no exit says; SILENT on a branch that reads the detail, a status with no shared-status, a site that reaches no endpoint" <<'PY'
@@ -274,6 +279,56 @@ assert [x["id"] for x in reason(forms=m2)[2]] == ["reason-collapsed"], reason(fo
 m3 = copy.deepcopy(FORMS_R)                           # a runtime detail text: an unmatched literal proves nothing, a missing status still does
 m3["endpoints"]["endpoint:POST /setup/complete"]["produced"].append({"id": "x:dyn", "status": 409, "detail": "str(exc)", "form": "dynamic"})
 assert [x["id"] for x in reason(forms=m3)[2]] == ["branch-unproduced", "reason-collapsed"], reason(forms=m3)[2]
+PY
+
+py "F17 · controls: a button with no handler is dead, an empty handler or a parameter a call site omits maybe-dead, a submit with no form maybe-dead, disabled and spread said, a link with href live; a control component's own element is its definition" <<'PY'
+fr, cs, found = FEC.controls_part(FLOW, FE.build_fe(FLOW, None))
+v = "src/components/Views.tsx"
+C = {c["at"]: c for p in fr.values() for c in p["controls"]}
+def st(text, f=v):
+    c = C[at(f, text)]
+    return (c["state"], c.get("reason"))
+assert (st("<Button>Retry"), st("<Button>Connect"), st("<a>Nowhere")) == (("dead", None),) * 3
+assert st("Offline") == ("maybe-dead", "the handler does nothing") and st("onClick={onRetry}") == ("maybe-dead", "1 of 2 call sites omit onRetry")
+assert st("onClick={onAdd}") == ("live", None) and st("onClick={onMore}") == ("live", None), "a button rendered only when its handler is given is live"
+assert st("<Panel compact") == ("maybe-dead", "renders its control only when !compact") and st("{...{ title")[0] == "unknown"
+assert st('type="submit"') == ("maybe-dead", "a submit button with no form handler in this body") and st("<Button disabled>") == ("disabled", None)
+assert st('href="/help"') == ("live", None) and st("{...(extra")[0] == "unknown" and st("<button onClick", "src/components/PrefsPanel.tsx") == ("live", None)
+assert (st('message="saved"'), st('message="gone"')) == (("live", None), ("dead", None)), "a component that passes onDismiss to its button is judged by onDismiss"
+assert not [a for a in C if a.startswith(("src/components/Button.tsx", "src/components/Views.stories.tsx")) or a in (at(v, "<button onClick={onDismiss}>"), at(v, "<button onClick={onClose}>"), at(v, "<Menu items"))] and C[at(v, "<Button>Connect")]["when"] == ["!onAdd"], sorted(C)
+assert sorted((x["id"], x["at"]) for x in found) == sorted([("dead-control", at(v, t)) for t in ("<Button>Retry", "<Button>Connect", "<a>Nowhere", 'message="gone"')]), found
+assert st("<button>toggle") == ("live", "<CollapsibleTrigger asChild> supplies its handler") and st("<button>x</button>") == ("live", "its parent <span> handles the click")
+assert st('<button type="submit">save') == ("live", "submits the form in this body") and st("<a {...extra}>")[0] == "unknown" and at(v, "<Popup />") not in C, "a spread of a local object is no pass-through"
+assert at(v, "<ActionBar actions") not in C and st("<button {...props} onClick={action.onPick}>")[0] == "unknown", "a spread onto a button with its own handler is no pass-through"
+assert cs == {"controls": 21, "components": 3, "live": 8, "maybe-dead": 4, "dead": 4, "disabled": 1, "unknown": 4}, cs
+assert all(re.fullmatch(r"c-[0-9a-f]{10}", c["id"]) for c in C.values()) and len({c["id"] for c in C.values()}) == 21
+PY
+
+py "F18 · stores and optimistic updates: each action's transitions, persistence (a persist wrapper · a storage helper), an action nothing calls; a mutation that writes the cache in onMutate rolls back by a cache write or its context, or misses it" <<'PY'
+hooks, _ = FEF.hooks_part(FLOW, GRAPH)
+pieces = copy.deepcopy(hooks)
+stores, ss, found = FEC.stores_part(FLOW, FE.build_fe(FLOW, None), pieces, HERE / "fixture")
+m = copy.deepcopy(FLOW)                               # a caller's body cut at the row cap: the source still names the call
+body = m["byFile"]["src/components/PrefsPanel.tsx"]["flow"]["bodies"]["PrefsPanel"]
+body["rows"], body["truncated"] = [r for r in body["rows"] if '"add' not in json.dumps(r) and ".add" not in json.dumps(r)], True
+assert FEC.stores_part(m, FE.build_fe(m, None), copy.deepcopy(hooks), HERE / "fixture")[0]["fe:src/store/prefs.ts#usePrefsStore"]["actions"]["add"]["called"] is True
+assert FEC.stores_part(m, FE.build_fe(m, None), copy.deepcopy(hooks))[0]["fe:src/store/prefs.ts#usePrefsStore"]["actions"]["add"]["called"] is False
+p, s = stores["fe:src/store/prefs.ts#usePrefsStore"], stores["fe:src/store/session.ts#useSessionStore"]
+T = {a: [(t["field"], t["kind"]) for t in x["transitions"]] for a, x in p["actions"].items()}
+assert T == {"add": [("items", "append")], "clear": [("items", "reset")], "remove": [("items", "remove")], "saveTheme": [("theme", "set-literal")],
+             "setTheme": [("theme", "set-param")], "toggle": [("open", "expr")], "unused": [("open", "set-literal")],
+             "resetAll": [("*", "reset")], "wipe": [("*", "reset")], "noop": [("*", "expr")]}, T
+assert p["initial"] == {"theme": '"light"', "items": "[]", "open": "false", "...INITIAL": True}, p["initial"]
+assert p["persist"] == {"state": "partial", "writers": ["saveTheme"], "set_by_writers": ["theme"], "via": ["fe:src/store/prefs.ts#storeTheme"]}, p["persist"]
+assert s["persist"] == {"state": "persisted", "via": "persist", "name": "session"} and {a: [(t["field"], t["kind"]) for t in x["transitions"]] for a, x in s["actions"].items()} == {"expire": [("token", "expr")], "signOut": [("token", "reset")]}, s
+assert [a for a, x in p["actions"].items() if not x["called"]] == ["unused"] and s["actions"]["signOut"]["called"] is True
+f = "src/lib/useToggleThing.ts"
+O = {c["at"]: c.get("optimistic") for c in pieces["fe:src/lib/useToggleThing.ts#useToggleThing"]["calls"]}
+assert O[at(f, "const optimistic")] == {"writes": [at(f, "onMutate: (done) => writeThings")], "rollback": "defined", "via": "cache write", "reconcile": True}, O
+assert O[at(f, "const careless")] == {"writes": [at(f, 'setQueryData(["things", "flag"]')], "rollback": "missing", "reconcile": False}, O
+assert (O[at(f, "const contextual")]["rollback"], O[at(f, "const contextual")]["via"]) == ("defined", "context"), O
+assert [(x["id"], x["at"]) for x in found] == [("action-uncalled", p["actions"]["unused"]["at"]), ("no-rollback", at(f, "const careless"))], found
+assert ss["stores"] == 2 and ss["actions"] == 12 and ss["persist"] == {"partial": 1, "persisted": 1} and ss["rollback"] == {"defined": 2, "missing": 1}, ss
 PY
 
 py "F15 · the structure arm never depends on flow: build_fe over the capture with and without its flow keys is identical" <<'PY'

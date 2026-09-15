@@ -363,7 +363,7 @@ def _flow(repo) -> tuple[dict | None, str]:
 
 def extend_frontend(forms, fe, repo, cfg: dict | None = None, graph: dict | None = None):
     """The frontend arm (Slice 11) — run after the fe structure arm and the c4 graph when ``frontend`` is selected: the flow
-    run read into ``frontend{}`` (the ``guards`` · ``hooks`` · ``client`` · ``reason`` parts), ``arms.frontend`` said, the feed restored on a raise. Never raises;
+    run read into ``frontend{}`` (the ``guards`` · ``hooks`` · ``client`` · ``reason`` · ``controls`` · ``stores`` parts), ``arms.frontend`` said, the feed restored on a raise. Never raises;
     returns ``forms``. On a tree with no endpoint forms the envelope gains ``arms`` so the frontend arm can still be written."""
     try:
         if not isinstance(forms, dict) or "frontend" not in selection(cfg)[0]:
@@ -388,18 +388,24 @@ def extend_frontend(forms, fe, repo, cfg: dict | None = None, graph: dict | None
             frontend["client"], cstats = FEF.client_part(flow, repo, hooks)
             import _a3_fe_reason as FER
             frontend["reasons"], rstats, rfound = FER.reason_part(flow, forms, hooks, frontend["client"]["transport"])
-            found = [*found, *rfound]
-            stats.update({"hooks": hstats, "client": cstats, "reason": rstats})
+            import _a3_fe_controls as FEC
+            controls, kstats, kfound = FEC.controls_part(flow, fe)
+            for pid, ctl in controls.items():                                # a component that also queries or guards keeps both
+                frontend["pieces"].setdefault(pid, {"form": "component", "at": ctl["at"]})["controls"] = ctl["controls"]
+            frontend["pieces"] = dict(sorted(frontend["pieces"].items()))
+            frontend["stores"], sstats, sfound = FEC.stores_part(flow, fe, frontend["pieces"], repo)
+            found = [*found, *rfound, *kfound, *sfound]
+            stats.update({"hooks": hstats, "client": cstats, "reason": rstats, "controls": kstats, "stores": sstats})
             json.dumps(frontend, ensure_ascii=False, sort_keys=True)          # the write's own test
             forms["frontend"] = frontend
             if found:
                 forms.setdefault("arm_findings", {}).setdefault("frontend", []).extend(found)
                 stats["findings"] = {k: sum(1 for x in found if x["id"] == k) for k in sorted({x["id"] for x in found})}
-            built = ("guards", "hooks", "client", "reason")
+            built = ("guards", "hooks", "client", "reason", "controls", "stores")
             parts = {p: {"present": True, "reason": None} if p in built else {"present": False, "reason": "not built yet (slice 11)"}
                      for p in F.ARMS["frontend"]["parts"]}
-            arms["frontend"] = {"present": True, "reason": ("partial — " + "; ".join(f"{p}: {o['reason']}" for p, o in parts.items()
-                                                                                   if not o["present"]))[:_ERR_CAP],
+            missing = "; ".join(f"{p}: {o['reason']}" for p, o in parts.items() if not o["present"])
+            arms["frontend"] = {"present": True, "reason": ("partial — " + missing)[:_ERR_CAP] if missing else None,
                                 "version": 1, "options": {}, "stats": stats, "parts": parts, "bytes": _size(frontend)}
         except _Absent as absent:
             forms.clear()

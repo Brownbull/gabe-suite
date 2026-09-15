@@ -393,12 +393,15 @@ def hooks_part(flow: dict, graph: dict | None) -> tuple[dict, dict]:
         for name, body in sorted(bodies.items()):
             rows, calls = body.get("rows") or [], []
             pid = f"fe:{file}#{name.split('.', 1)[0]}"
+            starts = sorted(x["line"] for x in rows if x["k"] == "call" and not x.get("ctx") and _leaf(x.get("callee")) in FF.CACHE_QUERY_CALLS | FF.CACHE_MUTATION_CALLS)
             for r in rows:
                 leaf = _leaf(r.get("callee"))
                 kind = "query" if leaf in FF.CACHE_QUERY_CALLS else "mutation" if leaf in FF.CACHE_MUTATION_CALLS else None
                 if r["k"] != "call" or r.get("ctx") or not kind:
                     continue
                 opts = r.get("opts") or {}
+                end = next((line for line in starts if line > r["line"]), float("inf"))
+                span = [x for x in rows if r["line"] <= x["line"] < end]           # a sibling call's callbacks are not this call's
                 c = {"kind": kind, "callee": r["callee"], "at": f"{file}:{r['line']}"}
                 if kind == "query":
                     keys = _keys_of(opts.get("queryKey"))
@@ -408,12 +411,12 @@ def hooks_part(flow: dict, graph: dict | None) -> tuple[dict, dict]:
                         c["key_unresolved"] = opts["queryKey"].get("ref") if isinstance(opts.get("queryKey"), dict) else None
                         stats["keys_unresolved"] += 1
                 c["options"] = {k: opts[k] for k in (*FF.POLICY_KEYS, "enabled", "select") if k in opts}
-                c["fetch"] = _fetches(rows, leaf, bindings, file, local)
+                c["fetch"] = _fetches(span, leaf, bindings, file, local)
                 if pid in bridge:
                     c["endpoint"] = bridge[pid]
                 if kind == "mutation":
                     c["invalidates"], c["seeds"] = [], []
-                    for x in rows:
+                    for x in span:
                         when = next((cc.split(".", 1)[1] for cc in x.get("ctx") or [] if cc.startswith(f"prop:{leaf}.on")), None)
                         if x["k"] != "call" or not when:
                             continue

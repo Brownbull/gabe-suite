@@ -242,6 +242,37 @@ const jsxProps = n => {
   }
   return out;
 };
+const jsxSpread = n => { const el = ts.isJsxElement(n) ? n.openingElement : n; const s = el.attributes && el.attributes.properties.find(ts.isJsxSpreadAttribute); return s ? clip(s.expression.getText(n.getSourceFile()), 40) : null; };
+// the nearest JSX element around this one, when it carries `asChild` or an `on*` attribute — a Radix trigger or a clickable
+// wrapper supplies the handler its child does not set (raw attribute names; the forms decide what they mean)
+const jsxUp = n => {
+  for (let a = n.parent; a; a = a.parent) {
+    if (isFn(a)) return null;
+    if (ts.isJsxElement(a)) {
+      const attrs = ((a.openingElement.attributes && a.openingElement.attributes.properties) || []).filter(ts.isJsxAttribute)
+        .map(x => x.name.getText(a.getSourceFile())).filter(x => x === 'asChild' || /^on[A-Z]/.test(x));
+      return attrs.length ? { tag: tagOf(a), attrs } : null;
+    }
+  }
+  return null;
+};
+// a returned object literal, key → value text (a spread as `...<expr>`): what a store's `set` callback writes
+const objText = (o, depth = 0) => {
+  const sf = o.getSourceFile(); const out = {};
+  for (const p of o.properties) {
+    if (ts.isSpreadAssignment(p)) {                          // `...INITIAL_STATE` — the spread constant's own fields, then the spread itself
+      const e = unparen(p.expression);
+      if (depth < 2 && ts.isIdentifier(e)) {
+        let s; try { s = checker.getSymbolAtLocation(e); if (s && s.flags & ts.SymbolFlags.Alias) s = checker.getAliasedSymbol(s); } catch { s = null; }
+        const d = s && (s.declarations || [])[0], init = d && ts.isVariableDeclaration(d) && unparen(d.initializer);
+        if (init && ts.isObjectLiteralExpression(init)) Object.assign(out, objText(init, depth + 1));
+      }
+      out['...' + clip(p.expression.getText(sf), 40)] = true;
+    }
+    else if (p.name) out[p.name.getText(sf)] = ts.isPropertyAssignment(p) ? clip(p.initializer.getText(sf), 80) : ts.isShorthandPropertyAssignment(p) ? p.name.getText(sf) : 'method';
+  }
+  return out;
+};
 // a call to a function whose body is one array literal (`me: () => ["me"] as const`) → its elements, a parameter as `*`
 const factoryLit = (call, depth) => {
   if (depth > LIT_DEPTH) return null;
@@ -302,6 +333,7 @@ const optVal = (v, depth) => {
 const optTree = (o, depth) => {
   const sf = o.getSourceFile(); const out = {};
   for (const p of o.properties) {
+    if (ts.isSpreadAssignment(p)) { out['...' + clip(p.expression.getText(sf), 40)] = true; continue; }   // `set({ ...INITIAL_STATE })`
     if (!p.name) continue;
     const key = p.name.getText(sf);
     if (ts.isShorthandPropertyAssignment(p)) out[key] = optVal(p.name, depth);
@@ -343,7 +375,7 @@ const bodyRows = (root, list = null) => {
       return;
     }
     if (isFn(n)) { fnBody(n, guards, after, [...ctx, 'callback']); return; }
-    if (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n)) push('jsx', n, { tag: tagOf(n), props: jsxProps(n) }, guards, after, ctx);
+    if (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n)) { const sp = jsxSpread(n), up = jsxUp(n); push('jsx', n, { tag: tagOf(n), props: jsxProps(n), ...(sp ? { spread: sp } : {}), ...(up ? { up } : {}) }, guards, after, ctx); }
     else if (ts.isCallExpression(n) || ts.isNewExpression(n)) {
       const callee = clip(n.expression.getText(sf), 80);
       const lits = (n.arguments || []).slice(0, 3).map(a => resolveLit(a));
@@ -393,6 +425,7 @@ const bodyRows = (root, list = null) => {
         const extra = { value: st.expression ? clip(st.expression.getText(sf), 80) : null };
         if (isJsx(v)) { extra.jsx = tagOf(v); extra.tags = jsxTags(v); }
         else if (v && v.kind === ts.SyntaxKind.NullKeyword) extra.null = true;
+        else if (v && ts.isObjectLiteralExpression(v)) extra.obj = objText(v);
         push('ret', st, extra, guards, passed, ctx);
         if (st.expression) expr(st.expression, guards, passed, ctx);
       } else if (ts.isThrowStatement(st)) {
@@ -437,6 +470,7 @@ const bodyRows = (root, list = null) => {
     const v = unparen(b);
     const extra = { value: clip(b.getText(b.getSourceFile()), 80), implicit: true };
     if (isJsx(v)) { extra.jsx = tagOf(v); extra.tags = jsxTags(v); }
+    else if (v && ts.isObjectLiteralExpression(v)) extra.obj = objText(v);   // `set((s) => ({ toasts: [...s.toasts, t] }))`
     push('ret', b, extra, guards, after, ctx);
     expr(b, guards, after, ctx);
   };
@@ -448,6 +482,34 @@ const fnOfDecl = d => {
   let i = unparen(d.initializer);
   while (i && ts.isCallExpression(i) && !isFn(i)) { const f = i.arguments.find(isFn); if (f) return f; i = unparen(i.arguments[0]); }   // memo(() => …) · forwardRef(function …)
   return isFn(i) ? i : null;
+};
+// a STORE initializer: a declaration whose value is a call wrapping a function that returns an object literal
+// (`create<T>()((set, get) => ({ … }))`, `create(persist((set) => ({ … }), { name }))`) — each function-valued property is an
+// action body `<Store>.<key>`, and the calls it is wrapped in (with their literal options) ride the store body as `wraps`
+const returnedObject = fn => {
+  let b = fn.body; if (!b) return null;
+  if (ts.isBlock(b)) { const last = b.statements[b.statements.length - 1]; b = last && ts.isReturnStatement(last) ? last.expression : null; }
+  b = unparen(b);
+  return b && ts.isObjectLiteralExpression(b) ? b : null;
+};
+const storeActions = (d, fn) => {
+  if (!ts.isCallExpression(unparen(d.initializer))) return [];
+  const o = returnedObject(fn); if (!o) return [];
+  return o.properties.filter(p => p.name && (ts.isMethodDeclaration(p) || (ts.isPropertyAssignment(p) && isFn(unparen(p.initializer)))))
+    .map(p => [p.name.getText(p.getSourceFile()), ts.isMethodDeclaration(p) ? p : unparen(p.initializer)]);
+};
+const wrapsOf = init => {
+  const out = [];
+  const w = n => {
+    if (!n || isFn(n)) return;
+    if (ts.isCallExpression(n)) {
+      const e = n.expression, nm = ts.isIdentifier(e) ? e.text : ts.isPropertyAccessExpression(e) ? e.name.text : null;
+      if (nm) { const obj = n.arguments.map(unparen).find(a => a && ts.isObjectLiteralExpression(a)); out.push(obj ? { call: nm, opts: optTree(obj, 0) } : { call: nm }); }
+    }
+    ts.forEachChild(n, w);
+  };
+  w(init);
+  return out;
 };
 const ROUTE_KEYS = new Set(['path', 'element', 'children', 'index', 'Component', 'component', 'lazy', 'loader', 'beforeLoad', 'errorElement']);
 const isRouteObj = o => ts.isObjectLiteralExpression(o) && o.properties.some(p => ts.isPropertyAssignment(p) && p.name && ROUTE_KEYS.has(p.name.getText(o.getSourceFile())));
@@ -487,7 +549,12 @@ const flowOf = sf => {
       for (const d of st.declarationList.declarations) {
         if (!ts.isIdentifier(d.name)) continue;
         const fn = fnOfDecl(d);
-        if (fn) { add(d.name.text, fn); continue; }
+        if (fn) {
+          add(d.name.text, fn);
+          const acts = storeActions(d, fn);
+          if (acts.length) { bodies[d.name.text].wraps = wrapsOf(d.initializer); for (const [k, v] of acts) add(d.name.text + '.' + k, v); }
+          continue;
+        }
         for (let c = unparen(d.initializer); c && ts.isCallExpression(c); c = unparen(c.expression))
           for (const a of c.arguments)
             if (ts.isObjectLiteralExpression(a))

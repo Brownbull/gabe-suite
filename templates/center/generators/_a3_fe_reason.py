@@ -244,6 +244,8 @@ def reason_part(flow: dict, forms: dict, hooks: dict, transport: dict) -> tuple[
         if file in (transport or {}):
             continue
         for name, body in sorted(reach.bodies(file).items()):
+            if "." in name and name.split(".", 1)[0] in reach.bodies(file):   # a store action: its rows are the store body's
+                continue
             rows, pid, n = body.get("rows") or [], f"fe:{file}#{name.split('.', 1)[0]}", 0
             for r in rows:
                 if not (got := _site(r)):

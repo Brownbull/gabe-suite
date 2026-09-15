@@ -26,6 +26,14 @@ CLIENT_CLASSES = frozenset({"QueryClient"})
 INVALIDATE_CALLS = frozenset({"invalidateQueries", "refetchQueries", "resetQueries", "removeQueries"})
 SEED_CALLS = frozenset({"setQueryData"})
 POLICY_KEYS = ("retry", "retryDelay", "staleTime", "gcTime", "refetchOnWindowFocus", "refetchOnReconnect", "refetchOnMount", "networkMode")
+# ── controls · stores · optimistic (Slice 11d) ─────────────────────────────────────────────────────────
+CONTROL_TAGS = frozenset({"button", "a"})                    # host elements a user acts on; a component wrapping one is a control too
+HANDLER_PROPS = ("onClick", "onPress", "onSubmit", "onChange", "onSelect", "onPointerDown", "onMouseDown", "onKeyDown", "href", "to")
+CLICK_PROPS = frozenset({"onClick", "onPress", "onPointerDown", "onMouseDown", "onKeyDown"})   # a wrapper's click reaches a nested control
+PERSIST_CALLS = frozenset({"persist", "atomWithStorage"})    # zustand `persist(…, { name })` · jotai `atomWithStorage`
+STORAGE_WRITES = r"(?:window\.)?(?:localStorage|sessionStorage)\.(?:setItem|removeItem|clear)"
+CACHE_WRITE_CALLS = frozenset({"setQueryData", "setQueriesData"})
+CLIENT_HOOKS = frozenset({"useQueryClient"})                  # the value a helper is handed when it writes the cache
 MUTATE_CALLS = frozenset({"mutate", "mutateAsync"})           # `m.mutate(body, { onError })` — the callback's error is m's request
 REASON_MEMBERS = ("detail", "code")                             # what a client reads to tell two refusals of one status apart (Slice 11c)
 # the defaults a query client uses when nothing sets them, READ from the installed package — each value names its source

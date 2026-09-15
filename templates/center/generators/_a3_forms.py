@@ -176,6 +176,12 @@ FINDINGS = {
                           "says": "a client branches on a status no endpoint it calls produces — the branch never runs"},
     "client-detail-unmatched": {"arm": "frontend", "slot": "U7", "pulse": "count",
                                 "says": "a client compares a detail or code no exit of the endpoint says — the branch never matches"},
+    "dead-control": {"arm": "frontend", "slot": "K2", "pulse": "nag",
+                     "says": "a button or link has no handler — the user presses it and nothing happens"},
+    "action-uncalled": {"arm": "frontend", "slot": "K1", "pulse": "count",
+                        "says": "a store action nothing outside the store calls — its transition never runs"},
+    "no-rollback": {"arm": "frontend", "slot": "K2", "pulse": "nag",
+                    "says": "a mutation writes the cache before the server answers and nothing undoes it on error — a refused change stays on screen"},
     "race-500": {"arm": "contract", "slot": "U12", "pulse": "nag",
                  "says": "a retry races its own first try on a unique key nothing catches — the loser answers 500, not the first result"},
 }
