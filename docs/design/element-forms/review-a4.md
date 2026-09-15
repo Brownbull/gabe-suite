@@ -136,6 +136,22 @@ need new fixture sources → re-derive tests/forms-frontend/flow.frozen.json. V2
     declared-unproduced 2 → 0, text-only 452 → 449; census forms_nag 275 → 214, forms_count 934 → 929. gustify and
     gastify stay census-IDENTICAL on all 30 measures — response_model and full_path feed no finding. 62/62 goldens match.
 
+3 · the shared falsification leaf — `_a3_forms_falsify.py` (bind + truth + dead), called from the endpoint pass's call
+    loop (V3 V4), the walker's arm combination (V7) and, through the paths it removes, the effects rollup (V9d). Cases
+    C17 (element-forms) and S5.P16 (forms-paths), 7 mutants each killed by its own case.
+    Measured: gustify 1 falsified row → escape-500 8 → 7 (the predicted `clean_tags(allowed=None)`); gastify 0 — nothing
+    to prove, and the feed grows only by the new stat key; tier3 38 falsified → rows 2492 → 2486, escape-500 71 → 69
+    (the predicted `threadpool_concurrency.py` pair), reason-lost 20 → 19. Paths: gustify 756 → 752 (impossible 4),
+    tier3 4076 → 4046 (impossible 24), gastify 0. gustify's `DELETE /pantry/locations/{location_id}` goes 12 paths → 10:
+    both the 404 that booked two writes as uncommitted and the 204 that booked none are gone.
+
+⚠ V4 is PARTIAL, and the number is smaller than the review's. One row went — exactly the cited
+`chat_backend.py:381`, whose `was` came from the INNER `get_chat_session_by_id(..., include_deleted=True)`. The other
+four rows carrying that same `was` come from the OUTER call, which passes `include_deleted=include_deleted` — a
+parameter, not a literal, so nothing at THIS call site proves the branch dead and the leaf abstains by design. Closing
+them needs a different rule (reading the endpoint's own parameter default and its declared values), not a stronger
+fold. Recorded, not fixed; it belongs with the state-word sweep, fix 6.
+
 ⚠ BASELINE NOISE (not a finding, seen while re-blessing): `board.html` carries WALLCLOCK card ages ("on the board 56
 days"), so every `map-baseline check` run a day after its bless reports it as moved on gustify and gastify. Re-blessing
 re-stamps it and the drift returns tomorrow. The fix is one more `_NORM_RX` rule in `scripts/map-baseline.sh`; owed,

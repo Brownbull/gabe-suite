@@ -18,6 +18,7 @@ from pathlib import Path
 import _a3_code as C
 import _a3_forms as F
 import _a3_forms_catch as CA
+import _a3_forms_falsify as _FAL
 import _a3_forms_ids as I
 import _a3_forms_mw as MW
 import _a3_forms_paths as FP
@@ -194,6 +195,15 @@ class _Spine:
         for b in v.get("branches") or []:
             self.deciding.setdefault(_line(b["site"]), []).append(b)
         self.returns_by_id = {rr["id"]: rr for rr in v.get("returns") or []}
+        self.recv: dict = {}                                 # `deleted = await delete_location(…)` → line: "deleted"
+        for st in ast.walk(fn):
+            tgt = st.targets[0] if isinstance(st, ast.Assign) and len(st.targets) == 1 else \
+                st.target if isinstance(st, ast.AnnAssign) else None
+            val = getattr(st, "value", None)
+            if isinstance(tgt, ast.Name) and val is not None:
+                call = val.value if isinstance(val, ast.Await) else val
+                if isinstance(call, ast.Call):
+                    self.recv[call.lineno] = tgt.id
 
     def raise_at(self, line: int):
         return next((e for e in self.evs if e["kind"] == "raise" and e["line"] == line), None)
@@ -321,6 +331,32 @@ class _Spine:
                 out.append({"kind": "collapsed", "call": c["call"], "fn": c.get("fn"), "at": c["site"], "reason": c["reason"]})
         return out, chosen
 
+    def impossible(self, t: dict, combo: dict) -> bool:
+        """The chosen arms CONTRADICT the way to ``t`` (§A4 RC-A, V7). ``deleted = await delete_location(…)`` binds the
+        handler's name to the value each arm returns, so the arm that deletes and returns ``True`` cannot reach
+        ``if not deleted: raise 404`` — a path that books its two writes as uncommitted on a refusal that never fires.
+        Only a literal return decides; anything else abstains, and the caller keeps one path whatever this says."""
+        bound = {}
+        for site, b in combo.items():
+            name = self.recv.get(site)
+            rr = self.returns_by_id.get(b.get("return") or "")
+            if not name or not rr or rr.get("value") is None:
+                continue
+            try:
+                bound[name] = (ast.parse(str(rr["value"]), mode="eval").body, "callee")
+            except SyntaxError:
+                continue
+        if not bound:
+            return False
+        return _FAL.dead({"pred": " and ".join(_guards(t)) or None, "after": list(t.get("after") or ())}, bound)
+
+    def live(self, t: dict, stop_site: int | None) -> list[dict]:
+        """``combos`` minus the ones the arms falsify — never empty: an exit with NO path would be a bigger lie than an
+        impossible one, so a fold that kills every combination keeps the base and says so."""
+        all_ = self.combos(t, stop_site)
+        kept = [c for c in all_ if not self.impossible(t, c)]
+        return kept or all_[:1]
+
     def combos(self, t: dict, stop_site: int | None) -> list[dict]:
         """The linear combinations of the deciding calls on the way to ``t``: the base (every call at its fall-through)
         plus one per other arm."""
@@ -425,7 +461,9 @@ def endpoint_paths(repo: Path, forms: dict, key: str, v: dict, m, fn, dec, stats
         if t is None:
             stats["unplaced"] += 1
             continue
-        for combo in spine.combos(t, site):
+        live = spine.live(t, site)
+        stats["impossible"] += len(spine.combos(t, site)) - len(live)
+        for combo in live:
             entries, chosen = spine.walk(t, site, combo)
             if site is not None and site in spine.deciding:
                 inner, _ = spine.inner(site, _line(row.get("raised_at") or row.get("at")), spine.deciding[site])
@@ -436,7 +474,9 @@ def endpoint_paths(repo: Path, forms: dict, key: str, v: dict, m, fn, dec, stats
                              _pos=(1, t["line"], _line(row.get("raised_at") or (row.get("at") if site is not None else None)))))
         stats["combinations_omitted"] += _product(spine, t, site) - len(spine.combos(t, site))
     for line, (t, rr) in sorted(spine.returns.items()):   # the handler's success returns
-        for combo in spine.combos(t, None):
+        live = spine.live(t, None)
+        stats["impossible"] += len(spine.combos(t, None)) - len(live)
+        for combo in live:
             entries, chosen = spine.walk(t, None, combo)
             chain = with_switches(prefix + entries, t["line"], True)
             tok = next((b["token"] for s in sorted(combo, reverse=True) for b in [combo[s]]), None)
@@ -460,7 +500,7 @@ def endpoint_paths(repo: Path, forms: dict, key: str, v: dict, m, fn, dec, stats
 
 def paths_part(repo: Path, forms: dict) -> dict:
     stats = {"paths": 0, "success": 0, "refusal": 0, "framework": 0, "uncaught": 0, "partial": 0, "combinations_omitted": 0,
-             "paths_truncated": 0, "unplaced": 0, "endpoints": 0}
+             "paths_truncated": 0, "unplaced": 0, "endpoints": 0, "impossible": 0}
     for key, v, m, fn, dec in MW._handlers(repo, forms):
         ps = endpoint_paths(repo, forms, key, v, m, fn, dec, stats)
         if ps:

@@ -180,6 +180,20 @@ def deny(err):
 def lock():
     from errors import LockedError
     raise LockedError()
+
+
+def scrub(tag, allowed=None):
+    if allowed is not None and tag not in allowed:
+        raise HTTPException(422, "tag not allowed")
+    return tag
+
+
+def fetch(item_id, include_deleted=False):
+    if not include_deleted:
+        raise Lost("deleted items are hidden")
+    if item_id < 0:
+        raise Lost("bad id")
+    return item_id
 PYF
 cat > "$A/api/items.py" <<'PYF'
 from typing import Annotated
@@ -188,7 +202,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
 from auth import Ctx, get_ctx
-from services.items import Busy, Denied, apply, coded, deep, deny, guard, lock
+from services.items import Busy, Denied, Lost, apply, coded, deep, deny, fetch, guard, lock, scrub
 
 router = APIRouter(prefix="/items")
 
@@ -246,6 +260,29 @@ async def get_denied(request: Request):
     if request.headers.get("x") is None:
         raise Denied("no x")
     return deny(ValueError("v"))
+
+
+@router.get("/loose")
+async def get_loose(tag: str):
+    return scrub(tag)
+
+
+@router.get("/strict")
+async def get_strict(tag: str):
+    return scrub(tag, allowed=("fresh",))
+
+
+@router.get("/kept")
+async def get_kept(item_id: int):
+    try:
+        return fetch(item_id, include_deleted=True)
+    except Lost as exc:
+        raise HTTPException(404, "not found") from exc
+
+
+@router.get("/leak")
+async def get_leak(item_id: int):
+    return fetch(item_id, include_deleted=True)
 PYF
 mkdir -p "$A/api/errors"
 cat > "$A/api/errors/handlers.py" <<'PYF'
@@ -357,11 +394,12 @@ PY
 check "C0 · the pass runs and forms every endpoint" <<'PY'
 assert O["present"] is True, O
 assert O["framework"]["locks"] == {"uv.lock": "0.136.3"}, O["framework"]
-assert O["stats"]["endpoints"] == 15 and O["stats"]["unformed"] == 0 and O["stats"]["collisions"] == 0, O["stats"]
+assert O["stats"]["endpoints"] == 19 and O["stats"]["unformed"] == 0 and O["stats"]["collisions"] == 0, O["stats"]
 assert set(O["endpoints"]) == {"endpoint:POST /items/apply", "endpoint:GET /items/team", "endpoint:GET /items/dynamic",
     "endpoint:GET /items/deep", "endpoint:GET /items/swallow", "endpoint:GET /items/coded", "endpoint:GET /items/denied",
     "endpoint:GET /items/locked", "endpoint:GET /plain", "endpoint:GET /files/raw", "endpoint:GET /files/sheet",
-    "endpoint:GET /files/meta", "endpoint:GET /files/spent", "endpoint:GET /files", "endpoint:POST /files"}, sorted(O["endpoints"])
+    "endpoint:GET /files/meta", "endpoint:GET /files/spent", "endpoint:GET /files", "endpoint:POST /files", "endpoint:GET /items/loose", "endpoint:GET /items/strict",
+    "endpoint:GET /items/kept", "endpoint:GET /items/leak"}, sorted(O["endpoints"])
 PY
 
 check "C1 · FIRE: a handler raise is a text-only refusal, its guard a precondition, the body a 422" <<'PY'
@@ -478,6 +516,18 @@ assert r[0]["via"] == "app handler SpentError", r[0]
 assert "text-only" not in fid(k), E(k)["findings"]
 t = rows("endpoint:POST /items/apply", status=400)                                      # a plain string detail stays text
 assert t and t[0]["form"] == "text" and not t[0].get("code"), t
+PY
+
+check "C17 · FIRE+SILENT: a guard the CALL SITE decides kills the row, the reason and the escape behind it" <<'PY'
+loose, strict = "endpoint:GET /items/loose", "endpoint:GET /items/strict"
+assert not rows(loose, detail="tag not allowed"), E(loose)["produced"]      # scrub(tag): allowed defaults to None
+assert len(rows(strict, detail="tag not allowed")) == 1, E(strict)["produced"]   # scrub(tag, allowed=(…)): live
+assert rows(loose, status=422), "the framework's own 422 must survive"      # falsification drops one row, not a status
+rl = [f for f in E("endpoint:GET /items/kept")["findings"] if f["id"] == "reason-lost"]
+assert len(rl) == 1 and rl[0]["was"] == "bad id", rl                        # include_deleted=True kills the other raise
+esc = [f for f in E("endpoint:GET /items/leak")["findings"] if f["id"] == "escape-500"]
+assert len(esc) == 1 and esc[0]["cls"] == "Lost", esc                       # one escape, not two
+assert O["stats"]["falsified"] == 3, O["stats"]                             # and the feed SAYS how many it dropped
 PY
 
 check "C10a · determinism and no mutation of the archmap it reads" <<'PY'

@@ -31,6 +31,7 @@ from pathlib import Path
 
 import _a3_code as _C
 import _a3_forms as F
+import _a3_forms_falsify as _FAL
 from _a3_stacks_pydi import _ann_name
 
 from _a3_paths_read import (  # noqa: F401 — re-exported: the arms reach these through `_a3_paths` (D26 split; forms-core K8 pins the list)
@@ -582,12 +583,19 @@ def _form(repo: Path, amap: dict, slug: str, ep: dict, mwx: list, files: list, f
         cm, qual = r
         CA = _analyse(repo, cm, cm.defs[qual])
         via = f"call {qual} @ {m.rel}:{ce['line']}"
+        bound = _FAL.bind(cm.defs[qual], ce["node"])         # §A4 RC-A: what THIS call site decides for the callee
         for row in CA["rows"]:
+            if _FAL.dead(row, bound):                        # the arguments passed make this branch unreachable
+                stats["falsified"] += 1
+                continue
             if _climb("HTTPException", {"Exception"}, ce["tries"], H["hev"])[0] == "swallow":
                 swallowed.append(row["at"])
                 continue
             hrows.append(_copy(row, phase="handler", depth=1, via=via))
         for ex in CA["escapes"]:
+            if _FAL.dead(ex, bound):
+                stats["falsified"] += 1
+                continue
             where, h = _climb(ex["cls"], _bases(repo, cm, ex["cls"]), ce["tries"], H["hev"])
             if where == "translate":
                 for hr in by_handler.get(id(h), []):
@@ -723,7 +731,8 @@ def _build(amap: dict, repo: Path) -> dict:
     if not eps:
         return {"version": F.VERSION, "present": False, "reason": "no FastAPI endpoints in the archmap"}
     stats = {"endpoints": 0, "rows": 0, "unknown_rows": 0, "unknown_reasons": {}, "findings": {},
-             "unresolved_calls": 0, "collisions": 0, "unformed": 0, "unknown_middleware": []}
+             "unresolved_calls": 0, "collisions": 0, "unformed": 0, "unknown_middleware": [],
+             "falsified": 0}
     files = sorted({ep["file"] for _, ep in eps})
     mwx = _middleware_exits(repo, amap, stats)
     apph = _app_handlers(repo, files)

@@ -779,6 +779,40 @@ def both(x: int, y: int):
     b = pick_b(None, y)
     return {"a": a, "b": b}
 '''
+DROP = '''class PrincipalError(Exception):
+    pass
+
+
+def lookup(session, key):
+    return None
+
+
+def drop_row(session, key):
+    row = lookup(session, key)
+    if row is None:
+        return False
+    if row.is_principal:
+        raise PrincipalError()
+    session.delete(row)
+    return True
+'''
+DROP_API = '''from fastapi import APIRouter, HTTPException
+
+from services.drop import PrincipalError, drop_row
+
+router = APIRouter(prefix="/drop")
+
+
+@router.delete("/{key}", status_code=204)
+def remove(key: str, session=None):
+    try:
+        deleted = drop_row(session, key)
+    except PrincipalError as exc:
+        raise HTTPException(409, "principal") from exc
+    if not deleted:
+        raise HTTPException(404, "not found")
+    session.commit()
+'''
 SPLIT_API = '''from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
@@ -876,6 +910,11 @@ def two(d):
     (d / "api/two.py").write_text(TWO_API)
 
 
+def drop(d):
+    (d / "services/drop.py").write_text(DROP)
+    (d / "api/drop.py").write_text(DROP_API)
+
+
 def split(d):
     (d / "api/split.py").write_text(SPLIT_API)
 
@@ -923,6 +962,23 @@ succ = [p for p in f["endpoints"]["endpoint:POST /two/both"]["paths"] if p["exit
 chosen = sorted(tuple(sorted(c["ref"] for c in p["chain"] if c["kind"] == "branch" and c.get("hit"))) for p in succ)
 assert len(succ) == 3 and len(set(chosen)) == 3 and all(len(x) == 2 for x in chosen), chosen
 assert f["arms"]["paths"]["stats"]["combinations_omitted"] == 1, f["arms"]["paths"]["stats"]
+PY
+
+py "S5.P16 · FIRE+SILENT: an arm that contradicts the exit gets no path — the delete that ran cannot reach the not-deleted refusal" <<'PY'
+import sys; sys.path.insert(0, str(T))
+from paths_fixture import drop, two as two_
+f = build(variant("drop", drop), "paths,effects")
+ps = f["endpoints"]["endpoint:DELETE /drop/{key}"]["paths"]
+r404 = [p for p in ps if p["status"] == 404]
+succ = [p for p in ps if p["exit"]["kind"] == "success"]
+assert len(r404) == 1 and len(succ) == 1, [(p["status"], p["exit"]["kind"]) for p in ps]
+w404 = r404[0].get("effects") or {}
+assert not any(w404.get(b) for b in ("committed", "maybe_committed", "uncommitted")), w404   # the refusal books no write
+assert any((succ[0].get("effects") or {}).get(b) for b in ("committed", "maybe_committed")), succ[0].get("effects")
+assert f["arms"]["paths"]["stats"]["impossible"] == 2, f["arms"]["paths"]["stats"]          # one per exit, and it SAYS so
+assert "refusal-writes" not in {x["id"] for x in f.get("arm_findings", {}).get("effects", [])}, f.get("arm_findings")
+two = build(variant("two", two_), "paths")                                                  # SILENT: arms nothing guards
+assert two["arms"]["paths"]["stats"]["impossible"] == 0, two["arms"]["paths"]["stats"]
 PY
 
 py "S5.P13 · the 422 split: a dependency's parameters answer before its body, the endpoint's own after every dependency" <<'PY'

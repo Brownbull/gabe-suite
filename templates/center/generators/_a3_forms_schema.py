@@ -19,6 +19,7 @@ from pathlib import Path
 
 import _a3_code as C
 import _a3_forms as F
+import _a3_forms_falsify as _FAL  # the shared falsification leaf (§A4 RC-A)
 import _a3_forms_ids as I
 import _a3_forms_model as MD  # the model and migration parts (Slice 10a)
 import _a3_forms_mirror as MR  # the mirror part (Slice 10c)
@@ -309,20 +310,7 @@ def _fields(repo: Path, chain: list, config: dict) -> list[dict]:
 
 
 # ── validators ───────────────────────────────────────────────────────────────────────────────────────
-def _bound(fn, call: ast.Call | None) -> dict:
-    """The helper's parameters → ``(expression, origin)``: its own defaults (``callee``, read in the helper's module) and
-    what the call site passes (``caller``, read in the caller's module)."""
-    args = fn.args
-    params = [a.arg for a in args.posonlyargs + args.args]
-    out = {p: (d, "callee") for p, d in zip(params[len(params) - len(args.defaults):], args.defaults)}
-    out.update({a.arg: (d, "callee") for a, d in zip(args.kwonlyargs, args.kw_defaults) if d is not None})
-    for a in args.kwonlyargs:
-        out.setdefault(a.arg, (None, "callee"))
-    if call is not None:
-        pos = params[1:] if isinstance(call.func, ast.Attribute) and params and params[0] in ("cls", "self") else params
-        out.update({p: (v, "caller") for p, v in zip(pos, call.args)})
-        out.update({k.arg: (k.value, "caller") for k in call.keywords if k.arg})
-    return out
+_bound = _FAL.bind                                           # the shared falsification leaf (§A4 RC-A): one binder …
 
 
 def _bval(repo: Path, m, bm, entry):
@@ -331,28 +319,9 @@ def _bval(repo: Path, m, bm, entry):
 
 
 def _truth(pred: str, bound: dict):
-    """``True`` / ``False`` / ``None`` of a guard once the bound keywords are known — ``allowed is None`` with ``allowed``
-    unpassed (its default None) is True; ``and`` / ``or`` / ``not`` fold."""
-    try:
-        node = ast.parse(pred, mode="eval").body
-    except SyntaxError:
-        return None
-
-    def ev(n):
-        if isinstance(n, ast.UnaryOp) and isinstance(n.op, ast.Not):
-            v = ev(n.operand)
-            return None if v is None else not v
-        if isinstance(n, ast.BoolOp):
-            vals = [ev(x) for x in n.values]
-            hit, miss = (True, False) if isinstance(n.op, ast.Or) else (False, True)
-            return hit if hit in vals else (miss if all(v is miss for v in vals) else None)
-        if isinstance(n, ast.Compare) and len(n.ops) == 1 and isinstance(n.left, ast.Name) and n.left.id in bound \
-                and isinstance(n.comparators[0], ast.Constant) and n.comparators[0].value is None and isinstance(n.ops[0], (ast.Is, ast.IsNot)):
-            expr = bound[n.left.id][0]
-            is_none = expr is None or (isinstance(expr, ast.Constant) and expr.value is None)
-            return is_none if isinstance(n.ops[0], ast.Is) else not is_none
-        return None
-    return ev(node)
+    """A guard's truth once the bound keywords are known. Literal-only by design: a validator rule is dropped when the
+    CALL SITE decides its guard, never when a module constant elsewhere might."""
+    return _FAL.truth(pred, bound)
 
 
 def _allowed(repo: Path, m, bm, fn, pred: str, bound: dict, chain: list) -> dict | None:
