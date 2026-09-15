@@ -21,11 +21,12 @@ import _a3_code as C
 import _a3_forms as F
 import _a3_forms_ids as I
 import _a3_forms_model as MD  # the model and migration parts (Slice 10a)
+import _a3_forms_setting as ST  # the setting part (Slice 10b)
 import _a3_forms_mw as MW
 import _a3_forms_short as SH
 import _a3_paths as P
 
-PARTS = ("schema", "model", "migration")
+PARTS = ("schema", "model", "migration", "setting")
 _ENUM_BASES = frozenset({"Enum", "StrEnum", "IntEnum"})
 _VALIDATORS = frozenset({"field_validator", "validator", "model_validator", "root_validator"})
 _SEQ = {"list": "list", "List": "list", "Sequence": "list", "set": "set", "Set": "set", "frozenset": "frozenset",
@@ -988,7 +989,7 @@ def framework_exits(repo: Path, forms: dict) -> dict:
 
 def run(forms: dict, ctx: dict) -> dict:
     """The short arm: ``schema`` (Slice 4 — schemas{} + cases on validation rows), ``migration`` and ``model`` (Slice 10a —
-    migrations{} and models{})."""
+    migrations{} and models{}), ``setting`` (Slice 10b — settings{})."""
     repo, parts = Path(ctx["repo"]), ctx["parts"]
     stats: dict = {}
     if "schema" in parts:
@@ -1005,7 +1006,19 @@ def run(forms: dict, ctx: dict) -> dict:
             counts = stats.setdefault("findings", {})
             for f in found:
                 counts[f["id"]] = counts.get(f["id"], 0) + 1
-    return {"version": 1, "stats": stats, "options": dict(SH.OPTIONS)}
+    absent = {}
+    if "setting" in parts:
+        settings, got, found = ST.setting_part(repo, forms)
+        if not got["classes"]:
+            absent["setting"] = "no BaseSettings class in the project"
+        else:
+            forms["settings"], stats["setting"] = settings, got
+        if found:
+            forms["arm_findings"].setdefault("short", []).extend(found)
+            counts = stats.setdefault("findings", {})
+            for f in found:
+                counts[f["id"]] = counts.get(f["id"], 0) + 1
+    return {"version": 1, "stats": stats, "options": dict(SH.OPTIONS), **({"absent": absent} if absent else {})}
 
 
 run.parts = PARTS

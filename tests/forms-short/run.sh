@@ -1185,5 +1185,228 @@ g = mbuild(M, "short")
 assert g["models"]["model:Order"]["m10"]["race_500"] == [] and g["arms"]["contract"]["present"] is False, (g["models"]["model:Order"]["m10"], g["arms"]["contract"])
 PY
 
+cat > "$T/setting_fixture.py" <<'PYF'
+"""Slice 10b's fixture — its own tree: one settings class (a Literal, an Enum, a flag its constant pairs with, a bare cap, a
+Field-bounded and a validator-bounded number, an aliased secret), readers a parameter, a module name and a property prove,
+an untyped receiver and a copy, tracked env files beside a `.env` and `.env.local` that must never be read, and tests with
+an autouse fixture."""
+import os
+import shutil
+from pathlib import Path
+
+T = Path(os.environ["T"])
+FILES = {
+    "docs/site/center/center.config.json": "{}",
+    "uv.lock": 'version = 1\n\n[[package]]\nname = "fastapi"\nversion = "0.136.3"\n',
+    "config.py": """from enum import StrEnum
+from functools import lru_cache
+from typing import Literal
+
+from pydantic import Field, field_validator, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Mode(StrEnum):
+    MOCK = "mock"
+    REAL = "real"
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="SHOP_")
+
+    environment: Literal["local", "staging", "production"] = "local"
+    mode: Mode = Mode.MOCK
+    # Set SHOP_ORDERS_ENABLED=true on staging; leave unset everywhere else.
+    orders_enabled: bool = False
+    order_cap: int = 10
+    page_size: int = Field(default=20, ge=1, le=100)
+    photo_limit: int = 5
+    api_token: str = Field(default="", validation_alias="SHOP_TOKEN")
+    region: str = "eu"
+
+    @field_validator("photo_limit")
+    @classmethod
+    def _positive(cls, v: int) -> int:
+        if v < 1:
+            raise ValueError("photo_limit must be >= 1")
+        return v
+
+    @property
+    def orders_live(self) -> bool:
+        return self.orders_enabled and self.environment != "production"
+
+    @model_validator(mode="after")
+    def _guard(self):
+        if self.orders_enabled and self.environment == "production":
+            raise ValueError("orders_enabled is forbidden in production")
+        return self
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+""",
+    "constants.py": "from typing import Final\n\nORDERS_ENABLED: Final[bool] = False\n",
+    "api/orders.py": """from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException
+
+from config import Settings, get_settings
+from constants import ORDERS_ENABLED
+
+router = APIRouter(prefix="/orders")
+
+
+@router.post("/place")
+def place(settings: Annotated[Settings, Depends(get_settings)]):
+    if not (ORDERS_ENABLED or settings.orders_enabled):
+        raise HTTPException(status_code=403, detail="orders are disabled")
+    return {"cap": settings.order_cap}
+
+
+@router.get("/list")
+def list_orders(cfg=Depends(get_settings)):
+    return {"size": cfg.page_size}
+""",
+    "services/limits.py": """from config import get_settings
+
+settings = get_settings()
+CAP = settings.order_cap
+
+
+def live() -> bool:
+    return settings.orders_live
+
+
+def region_for(s) -> str:
+    return s.region
+""",
+    ".env.example": "SHOP_MODE=real\n# SHOP_ORDER_CAP=10\n# SHOP_REGION=us\nSHOP_TOKEN=abc123\n",
+    ".env": "SHOP_ORDER_CAP=99\nSHOP_ORDERS_ENABLED=true\n",
+    ".env.local": "SHOP_REGION=zz\n",
+    ".github/workflows/ci.yml": "jobs:\n  test:\n    env:\n      SHOP_ENVIRONMENT: staging\n",
+    "tests/conftest.py": """import pytest
+
+import api.orders as orders
+
+
+@pytest.fixture(autouse=True)
+def _orders_on(monkeypatch):
+    monkeypatch.setattr(orders, "ORDERS_ENABLED", True)
+""",
+    "tests/test_orders.py": """from config import Settings, get_settings
+
+
+def test_orders_off(monkeypatch, client):
+    import api.orders as orders
+    monkeypatch.setattr(orders, "ORDERS_ENABLED", False)
+    client.app.dependency_overrides[get_settings] = lambda: Settings(orders_enabled=False)
+
+
+def test_cap():
+    s = Settings(order_cap=10)
+    assert s.order_cap == 10
+
+
+def test_page(monkeypatch):
+    monkeypatch.setenv("SHOP_PAGE_SIZE", "50")
+""",
+}
+
+
+def make(d=None):
+    d = d or T / "sapp"
+    shutil.rmtree(d, ignore_errors=True)
+    for rel, text in FILES.items():
+        p = d / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(text)
+    return d
+
+
+def at(repo, rel, text, nth=1):
+    hits = [i + 1 for i, l in enumerate((repo / rel).read_text().splitlines()) if text in l]
+    return f"{rel}:{hits[nth - 1]}"
+PYF
+
+py "SF5 · setting forms: a flag paired with its constant, readers proven by a parameter, a module name and a property, a copy that is no reader, the exit it decides, its startup rule, the autouse test value" <<'PY'
+import sys; sys.path.insert(0, str(T))
+from setting_fixture import at, make
+S_ = make()
+f = build(S_, "short", ())
+st = f["settings"]
+oe = st["setting:orders_enabled"]
+assert (oe["at"], oe["env"], oe["allowed"], oe["cls"]) == (at(S_, "config.py", "orders_enabled: bool"), "SHOP_ORDERS_ENABLED", {"values": [False, True]}, "Settings"), oe
+assert [(r["at"], r["receiver"], r["receiver_at"]) for r in oe["readers"] if not r.get("via")] == [(at(S_, "api/orders.py", "settings.orders_enabled"), "parameter", at(S_, "api/orders.py", "def place("))], oe["readers"]
+assert [(r["at"], r["via"], r["receiver"], r["receiver_at"]) for r in oe["readers"] if r.get("via")] == [(at(S_, "services/limits.py", "settings.orders_live"), "orders_live", "module", "services/limits.py:3")], oe["readers"]
+assert [(e["constant"], e["at"], e["value"], e["op"]) for e in oe["effective"]] == [("ORDERS_ENABLED", "constants.py:3", False, ["or"])], oe["effective"]
+assert [(x["endpoint"], x["status"]) for x in oe["fallback"]] == [("endpoint:POST /orders/place", 403)], oe["fallback"]
+assert [(r["kind"], r["at"]) for r in oe["startup"]] == [("model_validator", at(S_, "config.py", "if self.orders_enabled and"))], oe["startup"]
+oc = st["setting:order_cap"]
+assert [(c["to"], c["receiver"]) for c in oc["copies"]] == [("CAP", "module")] and [r["at"] for r in oc["readers"]] == [at(S_, "api/orders.py", "settings.order_cap")], (oc["copies"], oc["readers"])
+assert oe["tests"]["values"] == ["false", "true"] and oe["tests"]["default_runs"] is False and any(t.get("autouse") for t in oe["tests"]["sets"]), oe["tests"]
+assert [r["via"] for r in st["setting:environment"]["readers"]] == ["orders_live"] and st["setting:environment"]["allowed"] == {"values": ["local", "staging", "production"]}
+assert st["setting:mode"]["allowed"] == {"values": ["mock", "real"], "enum": "Mode"} and f["arms"]["short"]["parts"]["setting"]["present"] is True
+PY
+
+py "SF6 · F2 unbounded-number FIRE on a bare cap, SILENT on a Field bound and a validator comparison; F4 a commented default, a commented other value, a redacted secret, a workflow value, never .env; F7 and F8 counts" <<'PY'
+import sys; sys.path.insert(0, str(T))
+from setting_fixture import at, make
+S_ = make()
+f = build(S_, "short", ())
+st = f["settings"]
+fs = sorted((x["id"], x["setting"]) for x in f["arm_findings"]["short"] if x["id"] in ("unbounded-number", "startup-unchecked", "env-unset", "one-value-tested"))
+assert fs == [("env-unset", "setting:orders_enabled"), ("env-unset", "setting:region"), ("one-value-tested", "setting:order_cap"),
+              ("startup-unchecked", "setting:order_cap"), ("unbounded-number", "setting:order_cap")], fs
+assert st["setting:page_size"]["bounds"] == {"ge": 1, "le": 100} and [r.get("bound") for r in st["setting:photo_limit"]["startup"]] == ["v < 1"]
+assert [r["at"] for r in st["setting:page_size"]["readers_unverified"]] == [at(S_, "api/orders.py", "cfg.page_size")] and not st["setting:page_size"]["readers"]
+assert [r["at"] for r in st["setting:region"]["readers_unverified"]] == [at(S_, "services/limits.py", "s.region")]
+env = st["setting:order_cap"]["environment"]
+assert env["state"] == "default" and [(x["file"], x.get("commented"), x["value"]) for x in env["files"]] == [(".env.example", True, "10")], env
+assert (st["setting:region"]["environment"]["state"], st["setting:region"]["environment"]["because"]) == ("external", "commented value")
+assert (st["setting:orders_enabled"]["environment"]["state"], st["setting:orders_enabled"]["environment"]["because"]) == ("external", "declaration comment")
+tok = st["setting:api_token"]
+assert tok["env"] == "SHOP_TOKEN" and tok["environment"]["state"] == "defined" and tok["environment"]["files"][0]["value"] == "<redacted>", tok["environment"]
+assert (st["setting:environment"]["environment"]["state"], st["setting:environment"]["environment"]["files"][0]["file"]) == ("defined", ".github/workflows/ci.yml")
+read = {x["file"] for s in st.values() for x in s["environment"]["files"]}
+assert read <= {".env.example", ".github/workflows/ci.yml"}, read
+assert st["setting:page_size"]["tests"]["values"] == ["50.0"] and st["setting:page_size"]["tests"]["default_runs"] is True
+PY
+
+py "SF-X · external on a deploy-only value; SILENT once a tracked example file sets it" <<'PY'
+import sys; sys.path.insert(0, str(T))
+from setting_fixture import T as TT, make
+d = make(TT / "sfx")
+(d / ".env.example").write_text((d / ".env.example").read_text() + "SHOP_ORDERS_ENABLED=false\n")
+f = build(d, "short", ())
+oe = f["settings"]["setting:orders_enabled"]["environment"]
+assert oe["state"] == "defined" and [(x["file"], x["value"]) for x in oe["files"]] == [(".env.example", "false")], oe
+assert not [x for x in f["arm_findings"]["short"] if x["id"] == "env-unset" and x["setting"] == "setting:orders_enabled"], f["arm_findings"]["short"]
+PY
+
+py "SF10 · mutations: a typed receiver turns an unverified read into a reader; a tree with no settings class reads the part absent while its stage stands; a setting part that raises reads present:false and writes no settings" <<'PY'
+import sys; sys.path.insert(0, str(T))
+import _a3_forms_setting as ST
+from setting_fixture import T as TT, at, make
+d = make(TT / "styped")
+patch(d, "api/orders.py", "def list_orders(cfg=Depends(get_settings)):", "def list_orders(cfg: Settings = Depends(get_settings)):")
+f = build(d, "short", ())
+ps = f["settings"]["setting:page_size"]
+assert [(r["at"], r["receiver"]) for r in ps["readers"]] == [(at(d, "api/orders.py", "cfg.page_size"), "parameter")] and ps["readers_unverified"] == [], ps
+e = make(TT / "snone")
+(e / "config.py").write_text("X = 1\n")
+h = build(e, "short", ())
+assert h["arms"]["short"]["parts"]["setting"] == {"present": False, "reason": "no BaseSettings class in the project"} and "settings" not in h, h["arms"]["short"]["parts"]
+assert h["arms"]["short"]["parts"]["schema"]["present"] is True and h["arms"]["short"]["parts"]["model"]["present"] is True, h["arms"]["short"]["parts"]
+real = ST.setting_part
+def boom(*a, **k):
+    real(*a, **k)
+    raise RuntimeError("setting down")
+ST.setting_part = boom
+g = build(make(), "short", ())
+assert g["arms"]["short"]["parts"]["setting"] == {"present": False, "reason": "error: RuntimeError: setting down"}, g["arms"]["short"]["parts"]
+assert "settings" not in g and not [x for x in g.get("arm_findings", {}).get("short", []) if x.get("setting")], sorted(g)
+PY
+
 echo "forms-short: $pass passed, $fail failed"
 [ "$fail" -eq 0 ] || exit 1

@@ -281,9 +281,11 @@ def extend_backend(forms: dict, amap: dict, repo, cfg: dict | None = None) -> di
                     if isinstance(earlier, dict) and isinstance(stats.get("findings"), dict):   # an arm run in two stages counts both
                         res["stats"]["findings"] = {k: earlier.get(k, 0) + stats["findings"].get(k, 0)
                                                     for k in sorted(set(earlier) | set(stats["findings"]))}
+                    absent = dict(got.get("absent") or {})         # a part with nothing to read says so; the rest of its stage stands
                     for u in runnable:
-                        out[u] = {"present": True, "reason": None}
-                    ok.update(runnable)
+                        part = u.split(".", 1)[1] if "." in u else None
+                        out[u] = {"present": False, "reason": str(absent[part])[:_ERR_CAP]} if part in absent else {"present": True, "reason": None}
+                    ok.update(u for u in runnable if not ("." in u and u.split(".", 1)[1] in absent))
                 except _Absent as absent:
                     forms.clear()
                     forms.update(snapshot)

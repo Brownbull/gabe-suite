@@ -54,6 +54,9 @@ OPTIONS = {
     # how far a raise is joined to the endpoint that translates it: "one-level" (the endpoint pass reads one call level;
     # a deeper raise reads "beyond one level") · "all"
     "k2_climb": "one-level",
+    # which module constants the setting part forms (Slice 10b): "paired" — a constant appears only inside the setting it is
+    # read beside (`effective[]`); the part refuses any other value rather than claim it
+    "setting_constants": "paired",
 }
 MUTATING_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 
@@ -150,6 +153,14 @@ FINDINGS = {
                         "says": "a model and the schema its migrations leave disagree — the code trusts a column the database does not have"},
     "default-overridden": {"arm": "short", "slot": "M6", "pulse": "count",
                            "says": "a constructor sets a defaulted column to another literal — the default is not the value that ships"},
+    "unbounded-number": {"arm": "short", "slot": "F2", "pulse": "count",
+                         "says": "a numeric setting takes any value — no Field bound and no validator comparison, so 0, a negative or a huge value boots"},
+    "startup-unchecked": {"arm": "short", "slot": "F7", "pulse": "count",
+                          "says": "a setting that decides a refusal or caps a number has no validator — a wrong value surfaces at request time, not at boot"},
+    "env-unset": {"arm": "short", "slot": "F4", "pulse": "count",
+                  "says": "the repo expects a value from outside (a required field, a commented-out value, the declaration naming its variable) and no tracked file sets it"},
+    "one-value-tested": {"arm": "short", "slot": "F8", "pulse": "count",
+                         "says": "tests give a setting, or the constant it pairs with, one value only — the other branch never runs"},
     "race-500": {"arm": "contract", "slot": "U12", "pulse": "nag",
                  "says": "a retry races its own first try on a unique key nothing catches — the loser answers 500, not the first result"},
 }
@@ -237,7 +248,7 @@ ARMS = {
     "kinds": {"slice": 3, "parts": ("middleware", "dependencies", "functions", "tasks", "handlers"),
               "part_slices": {}},
     "short": {"slice": 4, "parts": ("schema", "model", "migration", "setting", "mirror"),
-              "part_slices": {"setting": 10, "mirror": 10}},
+              "part_slices": {"mirror": 10}},
     "switches": {"slice": 5, "parts": ()},
     "paths": {"slice": 3, "parts": ("returns", "conditions", "framework", "paths"), "part_slices": {"framework": 4, "paths": 5}},
     "effects": {"slice": 6, "parts": ()},

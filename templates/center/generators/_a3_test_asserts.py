@@ -227,3 +227,60 @@ def extract(src: str) -> dict:
         _roles(ctx["calls"])
         out["tests"][fn.name] = {"line": fn.lineno, "calls": ctx["calls"], "raises": ctx["raises"]}
     return out
+
+
+def _sw_leaf(node) -> str | None:
+    while isinstance(node, ast.Call):
+        node = node.func
+    return node.attr if isinstance(node, ast.Attribute) else node.id if isinstance(node, ast.Name) else None
+
+
+def _sw_value(node):
+    try:
+        return ast.literal_eval(node)
+    except (ValueError, SyntaxError, TypeError):
+        return ast.unparse(node)[:60] if isinstance(node, ast.Attribute) else "?"
+
+
+def setting_writes(src: str) -> dict:
+    """``{function: {line, fixture, autouse, writes[]}}`` for every test function and fixture in one test file that gives a
+    setting a value: a ``*Settings(...)`` constructor's keywords (``callee``), ``setattr`` / ``patch.object`` of a named
+    attribute (``monkeypatch.setattr(mod, "NAME", v)`` and the one-string ``setattr("pkg.mod.NAME", v)``), ``setenv`` of
+    a variable (``env``), an assignment to an attribute (``recv`` names its receiver). Lambdas count — a
+    ``dependency_overrides[...] = lambda: Settings(...)`` is the test's own. A value that is not a literal reads ``"?"``
+    (an enum member reads its dotted name). Pure extraction: no forms knowledge."""
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return {}
+    out = {}
+    for fn in (n for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))):
+        fixture = [d for d in fn.decorator_list if _sw_leaf(d) == "fixture"]
+        if not (fn.name.startswith("test") or fixture):
+            continue
+        autouse = any(isinstance(d, ast.Call) and any(k.arg == "autouse" and isinstance(k.value, ast.Constant) and k.value.value is True
+                                                      for k in d.keywords) for d in fixture)
+        writes, todo = [], list(fn.body)
+        while todo:
+            n = todo.pop()
+            todo += [c for c in ast.iter_child_nodes(n) if not isinstance(c, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))]
+            if isinstance(n, ast.Call):
+                leaf, args = _sw_leaf(n.func), n.args
+                if leaf in ("setattr", "object") and len(args) >= 3 and isinstance(args[1], ast.Constant) and isinstance(args[1].value, str):
+                    writes.append({"name": args[1].value, "value": _sw_value(args[2]), "line": n.lineno, "via": "setattr" if leaf == "setattr" else "patch.object"})
+                elif leaf == "setattr" and len(args) == 2 and isinstance(args[0], ast.Constant) and isinstance(args[0].value, str):
+                    writes.append({"name": args[0].value.rsplit(".", 1)[-1], "value": _sw_value(args[1]), "line": n.lineno, "via": "setattr"})
+                elif leaf == "setenv" and len(args) >= 2 and isinstance(args[0], ast.Constant) and isinstance(args[0].value, str):
+                    writes.append({"env": args[0].value, "value": _sw_value(args[1]), "line": n.lineno, "via": "setenv"})
+                elif leaf and leaf.endswith("Settings") and isinstance(n.func, (ast.Name, ast.Attribute)):
+                    writes += [{"name": k.arg, "value": _sw_value(k.value), "line": n.lineno, "via": "constructor", "callee": leaf} for k in n.keywords if k.arg]
+            elif isinstance(n, ast.Assign):
+                for t in n.targets:
+                    if isinstance(t, ast.Attribute):
+                        recv = t.value.attr if isinstance(t.value, ast.Attribute) else getattr(t.value, "id", None)
+                        writes.append({"name": t.attr, "value": _sw_value(n.value), "line": n.lineno, "via": "assign", "recv": recv})
+        if writes or autouse:
+            out[fn.name] = {"line": fn.lineno, "fixture": bool(fixture), "autouse": autouse,
+                            "writes": sorted(writes, key=lambda w: (w["line"], w.get("name") or w.get("env")))}
+    return out
+
