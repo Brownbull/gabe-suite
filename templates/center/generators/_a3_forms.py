@@ -57,6 +57,9 @@ OPTIONS = {
     # which module constants the setting part forms (Slice 10b): "paired" — a constant appears only inside the setting it is
     # read beside (`effective[]`); the part refuses any other value rather than claim it
     "setting_constants": "paired",
+    # how the mirror part pairs copies of a rule (Slice 10c): "flow+orm" — constructor keyword flow, sibling rebuilds,
+    # from_attributes response schemas, a setting's paired and same-named constants; the part refuses any other value
+    "mirror_pairing": "flow+orm",
 }
 MUTATING_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 
@@ -161,6 +164,10 @@ FINDINGS = {
                   "says": "the repo expects a value from outside (a required field, a commented-out value, the declaration naming its variable) and no tracked file sets it"},
     "one-value-tested": {"arm": "short", "slot": "F8", "pulse": "count",
                          "says": "tests give a setting, or the constant it pairs with, one value only — the other branch never runs"},
+    "mirror-disagree": {"arm": "short", "slot": "MR", "pulse": "nag",
+                        "says": "two copies of one rule disagree — a schema and its table, or two sibling schemas, accept different values"},
+    "schema-only-bound": {"arm": "short", "slot": "MR", "pulse": "count",
+                          "says": "a bound only the schema enforces while a writer sets the column without the schema — the table takes what the API refuses"},
     "race-500": {"arm": "contract", "slot": "U12", "pulse": "nag",
                  "says": "a retry races its own first try on a unique key nothing catches — the loser answers 500, not the first result"},
 }
@@ -248,7 +255,7 @@ ARMS = {
     "kinds": {"slice": 3, "parts": ("middleware", "dependencies", "functions", "tasks", "handlers"),
               "part_slices": {}},
     "short": {"slice": 4, "parts": ("schema", "model", "migration", "setting", "mirror"),
-              "part_slices": {"mirror": 10}},
+              "part_slices": {}},
     "switches": {"slice": 5, "parts": ()},
     "paths": {"slice": 3, "parts": ("returns", "conditions", "framework", "paths"), "part_slices": {"framework": 4, "paths": 5}},
     "effects": {"slice": 6, "parts": ()},

@@ -1408,5 +1408,210 @@ assert g["arms"]["short"]["parts"]["setting"] == {"present": False, "reason": "e
 assert "settings" not in g and not [x for x in g.get("arm_findings", {}).get("short", []) if x.get("setting")], sorted(g)
 PY
 
+cat > "$T/mirror_fixture.py" <<'PYF'
+"""Slice 10c's fixture — its own tree: a model with a check, a create schema and its batch sibling (a type alias, a
+different default, a length only the sibling caps), a from_attributes response, a service fed by the schema and one that
+writes the column from nothing a schema checked."""
+import os
+import shutil
+from pathlib import Path
+
+import _a3_code as C
+import _a3_forms_build as B
+import _a3_forms_model as MD
+import _a3_paths as P
+
+T = Path(os.environ["T"])
+FILES = {
+    "docs/site/center/center.config.json": "{}",
+    "uv.lock": 'version = 1\n\n[[package]]\nname = "fastapi"\nversion = "0.136.3"\n\n[[package]]\nname = "sqlalchemy"\nversion = "2.0.50"\n',
+    "models.py": """from enum import Enum
+
+from sqlalchemy import CheckConstraint, Float, String, Text
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+
+class Size(str, Enum):
+    SMALL = "s"
+    LARGE = "l"
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class Item(Base):
+    __tablename__ = "items"
+    __table_args__ = (CheckConstraint("kind IN ('a', 'b')", name="ck_items_kind"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(40))
+    kind: Mapped[str] = mapped_column(String(10), default="a")
+    qty: Mapped[float] = mapped_column(Float, default=1.0)
+    unit: Mapped[str] = mapped_column(String(10), default="u")
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    size: Mapped[str] = mapped_column(String(5), default=Size.SMALL)
+""",
+    "schemas.py": """from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from models import Size
+
+RowKind = Literal["a", "b"]
+
+
+class ItemCreate(BaseModel):
+    name: str = Field(max_length=40)
+    kind: Literal["a", "b"] = "a"
+    qty: float = Field(default=1.0, gt=0)
+    unit: str = Field(default="u", max_length=10)
+    note: str | None = None
+    size: Size = Size.SMALL
+
+
+class RowBase(BaseModel):
+    kind: RowKind = "a"
+
+
+class RowInput(RowBase):
+    name: str = Field(max_length=40)
+    qty: float = Field(default=1.0, gt=0)
+    unit: str = Field(default="uu", max_length=10)
+    note: str | None = Field(default=None, max_length=300)
+
+
+class BatchRequest(BaseModel):
+    rows: list[RowInput]
+
+
+class ItemOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    name: str
+    note: str
+
+
+class ItemEcho(BaseModel):
+    name: str
+    note: str = ""
+""",
+    "services/items.py": """from models import Item
+from schemas import ItemCreate
+
+
+def add(session, payload: ItemCreate):
+    item = Item(name=payload.name, kind=payload.kind, qty=payload.qty, unit=payload.unit, note=payload.note, size=payload.size)
+    session.add(item)
+    return item
+
+
+def restock(session, name):
+    session.add(Item(name=name, qty=0))
+
+
+def clone(session, payload: ItemCreate):
+    session.add(Item(**payload.model_dump()))
+""",
+    "api/items.py": """from fastapi import APIRouter
+
+from schemas import BatchRequest, ItemCreate, ItemEcho, ItemOut
+from services.items import add
+
+router = APIRouter(prefix="/items")
+
+
+@router.post("/one", response_model=ItemOut)
+def one(payload: ItemCreate):
+    return add(None, payload)
+
+
+@router.post("/batch")
+def batch(payload: BatchRequest):
+    for index, row in enumerate(payload.rows):
+        create = ItemCreate(name=row.name, kind=row.kind, qty=row.qty, unit=row.unit, note=row.note)
+        add(None, create)
+    return {}
+
+
+@router.post("/echo")
+def echo(payload: ItemCreate):
+    return ItemEcho(name=payload.name, note=payload.note)
+""",
+}
+
+
+def make(d=None):
+    d = d or T / "mirapp"
+    shutil.rmtree(d, ignore_errors=True)
+    for rel, text in FILES.items():
+        p = d / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(text)
+    return d
+
+
+def mirbuild(repo):
+    C.ENTITY_CODE = {"x": {"api": ["api/*.py"], "services": ["services/*.py"], "models": ["models.py"], "schemas": ["schemas.py"]}}
+    C._EMAP_CACHE.clear()
+    MD._REPLAYS.clear()
+    files = sorted(str(p.relative_to(repo)) for p in (repo / "api").glob("*.py"))
+    amap = {"head": "abc1234", "app_middleware": [], "entities": {"x": {"endpoints": C.parse_endpoints(repo, files),
+            "schemas": C.parse_schemas(repo, ["schemas.py"]), "models": [{"cls": "Item", "table": "items", "file": "models.py", "uqs": []}]}}}
+    for e in amap["entities"]["x"]["endpoints"]:
+        e.pop("refs", None)
+    os.environ["GABE_FORMS_ARMS"] = "short"
+    return B.extend_backend(P.build(amap, repo), amap, repo, {})
+
+
+def at(repo, rel, text, nth=1):
+    hits = [i + 1 for i, l in enumerate((repo / rel).read_text().splitlines()) if text in l]
+    return f"{rel}:{hits[nth - 1]}"
+PYF
+
+py "SF7 · mirrors: a schema bound the table lacks and the writer that bypasses it, a sibling default and length that differ, allowed values that agree through an alias and a base class, a response that calls a nullable column required, a model_dump writer, an enum member default that agrees, no pair into a response rebuilt from a request" <<'PY'
+import sys; sys.path.insert(0, str(T))
+from mirror_fixture import at, make, mirbuild
+M_ = make()
+f = mirbuild(M_)
+mr = f["mirrors"]
+q = mr["mirror:Item.qty"]
+assert [(p["with"], p["via"], p["sites"]) for p in q["pairs"]] == [("schema:ItemCreate.qty", "flow", [at(M_, "services/items.py", "item = Item("), at(M_, "services/items.py", "Item(**payload.model_dump())")])], q["pairs"]
+assert "mirror:ItemEcho.note" not in mr and "mirror:ItemEcho.name" not in mr, sorted(k for k in mr if "Echo" in k)
+assert [(r["rule"], r["verdict"], r["a"]) for r in q["rows"]] == [("bound", "schema-only", {"gt": 0})], q["rows"]
+assert q["bypass_writers"] == [{"at": at(M_, "services/items.py", "Item(name=name, qty=0)"), "value": "0"}], q["bypass_writers"]
+u = mr["mirror:ItemCreate.unit"]
+assert [(p["with"], p["via"], p["sites"]) for p in u["pairs"]] == [("schema:RowInput.unit", "sibling", [at(M_, "api/items.py", "create = ItemCreate(")])], u["pairs"]
+assert [(r["rule"], r["verdict"], r["a"], r["b"]) for r in u["rows"]] == [("default", "disagree", "uu", "u")], u["rows"]
+assert [(r["rule"], r["verdict"], r["a"], r["b"]) for r in mr["mirror:ItemCreate.note"]["rows"]] == [("length", "disagree", 300, None)]
+assert mr["mirror:ItemCreate.kind"]["rows"] == [] and mr["mirror:ItemCreate.kind"]["agree"] >= 1, mr["mirror:ItemCreate.kind"]
+k = mr["mirror:Item.kind"]
+assert [(r["rule"], r["verdict"]) for r in k["rows"]] == [("length", "model-only")] and k["agree"] >= 2, k
+assert [(r["rule"], r["verdict"], r["via"]) for r in mr["mirror:Item.note"]["rows"]] == [("nullable", "disagree", "orm")], mr["mirror:Item.note"]
+sz = mr["mirror:Item.size"]
+assert not [r for r in sz["rows"] if r["rule"] == "default"] and sz["agree"] >= 2, sz
+fs = sorted((x["id"], x["mirror"], x.get("rule")) for x in f["arm_findings"]["short"] if x["id"] in ("mirror-disagree", "schema-only-bound"))
+assert fs == [("mirror-disagree", "mirror:Item.note", "nullable"), ("mirror-disagree", "mirror:ItemCreate.note", "length"),
+              ("mirror-disagree", "mirror:ItemCreate.unit", "default"), ("schema-only-bound", "mirror:Item.qty", None)], fs
+assert f["arms"]["short"]["parts"]["mirror"]["present"] is True and not [p for p in f["arms"]["short"]["parts"].values() if "not built" in str(p.get("reason"))]
+PY
+
+py "SF10 · mirror mutations: equal sibling defaults drop the row; a table check agrees with the schema bound; a copied setting constant with another value disagrees, its paired constant agrees" <<'PY'
+import sys; sys.path.insert(0, str(T))
+from mirror_fixture import T as TT, make, mirbuild
+d = make(TT / "mireq")
+patch(d, "schemas.py", 'unit: str = Field(default="uu", max_length=10)', 'unit: str = Field(default="u", max_length=10)')
+patch(d, "models.py", '(CheckConstraint("kind IN (\'a\', \'b\')", name="ck_items_kind"),)', '(CheckConstraint("kind IN (\'a\', \'b\')", name="ck_items_kind"), CheckConstraint("qty > 0", name="ck_items_qty"))')
+g = mirbuild(d)
+assert g["mirrors"]["mirror:ItemCreate.unit"]["rows"] == [], g["mirrors"]["mirror:ItemCreate.unit"]
+assert [(r["rule"], r["verdict"]) for r in g["mirrors"]["mirror:Item.qty"]["rows"]] == [] and "bypass_writers" not in g["mirrors"]["mirror:Item.qty"], g["mirrors"]["mirror:Item.qty"]
+assert not [x for x in g["arm_findings"]["short"] if x["id"] == "schema-only-bound" or (x["id"] == "mirror-disagree" and x["mirror"] == "mirror:ItemCreate.unit")]
+from setting_fixture import make as smake
+e = smake(TT / "mircopy")
+(e / "constants.py").write_text((e / "constants.py").read_text() + "ORDER_CAP = 12\n")
+h = build(e, "short", ())
+oc, oe = h["mirrors"]["mirror:setting:order_cap"], h["mirrors"]["mirror:setting:orders_enabled"]
+assert [(r["rule"], r["verdict"], r["a"], r["b"], r["via"]) for r in oc["rows"]] == [("value", "disagree", "10", 12, "setting-copy")], oc
+assert oe["rows"] == [] and oe["agree"] == 1 and [p["via"] for p in oe["pairs"]] == ["flag-pair"], oe
+PY
+
 echo "forms-short: $pass passed, $fail failed"
 [ "$fail" -eq 0 ] || exit 1

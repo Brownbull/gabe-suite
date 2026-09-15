@@ -21,12 +21,13 @@ import _a3_code as C
 import _a3_forms as F
 import _a3_forms_ids as I
 import _a3_forms_model as MD  # the model and migration parts (Slice 10a)
+import _a3_forms_mirror as MR  # the mirror part (Slice 10c)
 import _a3_forms_setting as ST  # the setting part (Slice 10b)
 import _a3_forms_mw as MW
 import _a3_forms_short as SH
 import _a3_paths as P
 
-PARTS = ("schema", "model", "migration", "setting")
+PARTS = ("schema", "model", "migration", "setting", "mirror")
 _ENUM_BASES = frozenset({"Enum", "StrEnum", "IntEnum"})
 _VALIDATORS = frozenset({"field_validator", "validator", "model_validator", "root_validator"})
 _SEQ = {"list": "list", "List": "list", "Sequence": "list", "set": "set", "Set": "set", "frozenset": "frozenset",
@@ -989,7 +990,7 @@ def framework_exits(repo: Path, forms: dict) -> dict:
 
 def run(forms: dict, ctx: dict) -> dict:
     """The short arm: ``schema`` (Slice 4 — schemas{} + cases on validation rows), ``migration`` and ``model`` (Slice 10a —
-    migrations{} and models{}), ``setting`` (Slice 10b — settings{})."""
+    migrations{} and models{}), ``setting`` (Slice 10b — settings{}), ``mirror`` (Slice 10c — mirrors{}, after the setting part it reads)."""
     repo, parts = Path(ctx["repo"]), ctx["parts"]
     stats: dict = {}
     if "schema" in parts:
@@ -1013,6 +1014,13 @@ def run(forms: dict, ctx: dict) -> dict:
             absent["setting"] = "no BaseSettings class in the project"
         else:
             forms["settings"], stats["setting"] = settings, got
+        if found:
+            forms["arm_findings"].setdefault("short", []).extend(found)
+            counts = stats.setdefault("findings", {})
+            for f in found:
+                counts[f["id"]] = counts.get(f["id"], 0) + 1
+    if "mirror" in parts:
+        forms["mirrors"], stats["mirror"], found = MR.mirror_part(repo, forms)
         if found:
             forms["arm_findings"].setdefault("short", []).extend(found)
             counts = stats.setdefault("findings", {})
