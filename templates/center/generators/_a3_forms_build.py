@@ -31,6 +31,8 @@ import _a3_forms_schema  # the short arm: request schemas + 422 cases (Slice 4)
 import _a3_forms_switch  # the switches arm: binding · value · flag (Slice 5)
 import _a3_forms_effects  # the effects arm: steps along paths · failure catches · race facts (Slice 6)
 import _a3_forms_contract  # the contract arm: repeat · auth · rate · responses (Slice 7)
+import _a3_test_asserts  # noqa: F401  (a shared leaf — test calls and assertions)
+import _a3_forms_tests  # the tests arm: which test proves which exit and path (Slice 9)
 
 # arm → runner(forms, ctx) -> {"version", "options", "stats"}; a runner that builds only some parts says so in a `parts`
 # attribute (the rest read "not built yet (slice n)"). ctx carries amap (a private copy) · repo · cfg · selected ·
@@ -38,8 +40,12 @@ import _a3_forms_contract  # the contract arm: repeat · auth · rate · respons
 # needs that are selected and succeeded)
 RUNNERS: dict = {"kinds": _a3_forms_mw.run, "paths": _a3_forms_paths.run, "short": _a3_forms_schema.run,
                  "switches": _a3_forms_switch.run, "effects": _a3_forms_effects.run,
-                 "contract": _a3_forms_contract.run}
+                 "contract": _a3_forms_contract.run, "tests": _a3_forms_tests.run}
 _ERR_CAP = 200
+
+
+class _Absent(Exception):
+    """A runner found nothing to read (``{"present": False, "reason": …}``): the stage writes nothing and says why."""
 
 
 def _names(raw) -> tuple[set[str], list[str]]:
@@ -265,6 +271,8 @@ def extend_backend(forms: dict, amap: dict, repo, cfg: dict | None = None) -> di
                     version = int(got.get("version", res["version"]))
                     options, stats = dict(got.get("options") or {}), dict(got.get("stats") or {})
                     json.dumps([forms, options, stats], ensure_ascii=False, sort_keys=True)   # the write's own test
+                    if got.get("present") is False:                   # a runner with nothing to read says so — it writes nothing
+                        raise _Absent(str(got.get("reason") or "absent"))
                     owned.setdefault(arm, []).extend(_added(snapshot, forms))
                     res["version"] = version
                     res["options"].update(options)
@@ -276,6 +284,11 @@ def extend_backend(forms: dict, amap: dict, repo, cfg: dict | None = None) -> di
                     for u in runnable:
                         out[u] = {"present": True, "reason": None}
                     ok.update(runnable)
+                except _Absent as absent:
+                    forms.clear()
+                    forms.update(snapshot)
+                    for u in runnable:
+                        out[u] = {"present": False, "reason": str(absent)[:_ERR_CAP]}
                 except Exception as exc:  # noqa: BLE001 — one stage's failure never costs the feed
                     forms.clear()
                     forms.update(snapshot)

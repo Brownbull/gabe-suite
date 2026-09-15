@@ -140,6 +140,12 @@ FINDINGS = {
                         "says": "a task retries with no max_retries and no last-failure branch — a poisoned message retries forever"},
     "handler-dropped": {"arm": "kinds", "slot": "B-evt", "pulse": "count",
                         "says": "the publish loop swallows a handler's failure — the handler's work is dropped, never retried"},
+    "test-detail-unmatched": {"arm": "tests", "slot": "U14", "pulse": "count",
+                              "says": "a test asserts a detail no candidate exit says — the test and the code disagree on the words"},
+    "asserted-unproduced": {"arm": "tests", "slot": "U14", "pulse": "count",
+                            "says": "a test asserts a status the endpoint never produces"},
+    "untested-exit": {"arm": "tests", "slot": "U14", "pulse": "count",
+                      "says": "a tested endpoint has exits no test asserts"},
     "race-500": {"arm": "contract", "slot": "U12", "pulse": "nag",
                  "says": "a retry races its own first try on a unique key nothing catches — the loser answers 500, not the first result"},
 }
