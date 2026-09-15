@@ -268,7 +268,11 @@ def extend_backend(forms: dict, amap: dict, repo, cfg: dict | None = None) -> di
                     owned.setdefault(arm, []).extend(_added(snapshot, forms))
                     res["version"] = version
                     res["options"].update(options)
+                    earlier = res["stats"].get("findings")
                     res["stats"].update(stats)
+                    if isinstance(earlier, dict) and isinstance(stats.get("findings"), dict):   # an arm run in two stages counts both
+                        res["stats"]["findings"] = {k: earlier.get(k, 0) + stats["findings"].get(k, 0)
+                                                    for k in sorted(set(earlier) | set(stats["findings"]))}
                     for u in runnable:
                         out[u] = {"present": True, "reason": None}
                     ok.update(runnable)

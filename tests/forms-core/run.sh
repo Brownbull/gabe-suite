@@ -495,9 +495,9 @@ def boom(forms, ctx):
     raise ValueError("boom")
 f, _ = run("kinds", {"kinds": writer("kinds_k"), "paths": writer("paths_k"), "effects": boom})
 k = f["arms"]["kinds"]
-assert k["parts"]["tasks"]["present"] and k["parts"]["handlers"]["present"] and k["parts"]["functions"]["reason"] == "needs effects", k["parts"]
+assert k["parts"]["tasks"]["present"] and k["parts"]["handlers"]["reason"] == "needs effects" and k["parts"]["functions"]["reason"] == "needs effects", k["parts"]   # handlers read the publisher's effects steps (Slice 8)
 assert k["present"] and k["reason"].startswith("partial — functions: needs effects"), k
-assert all(v["kinds_k"] == ["tasks", "handlers"] for v in eps(f))
+assert all(v["kinds_k"] == ["tasks"] for v in eps(f))   # the stage runs only the part whose needs held
 def setter(forms, ctx):
     for v in eps(forms):
         v["paths_k"] = {"a"}

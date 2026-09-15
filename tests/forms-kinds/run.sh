@@ -178,17 +178,185 @@ def healthz():
     return {"ok": True}
 PYF
 
+# the Slice 8 fixture: a copy of the tree above plus services, tasks and an event bus — the Slice 3 cases keep theirs
+S8="$T/s8"; cp -r "$A" "$S8"
+mkdir -p "$S8/services" "$S8/tasks" "$S8/events"
+cat > "$S8/services/work.py" <<'PYF'
+class Busy(Exception):
+    pass
+
+
+class Gone(Exception):
+    pass
+
+
+def reserve(x):
+    if x > 10:
+        raise Busy
+    return x
+
+
+def deep_a(x):
+    return deep_b(x)
+
+
+def deep_b(x):
+    if x < 0:
+        raise Gone
+    return x
+
+
+def record(session, x):
+    try:
+        with session.begin_nested():
+            session.add(x)
+    except Exception:
+        return None
+
+
+def careful(x):
+    try:
+        return reserve(x)
+    except Exception:
+        raise
+PYF
+cat > "$S8/services/listen.py" <<'PYF'
+def on_placed(session, event):
+    session.add(event)
+PYF
+cat > "$S8/events/types.py" <<'PYF'
+class Placed:
+    def __init__(self, x):
+        self.x = x
+PYF
+cat > "$S8/events/bus.py" <<'PYF'
+class EventBus:
+    def __init__(self):
+        self._handlers = {}
+        self._failed = {}
+
+    def register_once(self, event_type, handler):
+        self._handlers.setdefault(event_type, []).append(handler)
+
+    def publish(self, session, event):
+        for handler in self._handlers.get(type(event), []):
+            try:
+                with session.begin_nested():
+                    handler(session, event)
+            except Exception:
+                self._failed[handler] += 1
+
+
+bus = EventBus()
+
+
+def register_handlers():
+    from events.types import Placed
+    from services.listen import on_placed as audit_handler
+    bus.register_once(Placed, audit_handler)
+PYF
+cat > "$S8/tasks/jobs.py" <<'PYF'
+from celery import shared_task
+
+MAX = 3
+
+
+class Names:
+    SWEEP = "sweep_docs"
+
+
+@shared_task(name=Names.SWEEP, bind=True, max_retries=MAX, acks_late=True)
+def sweep(self, doc):
+    for _ in range(1):
+        try:
+            return doc
+        except Exception as e:
+            if self.request.retries >= self.max_retries:
+                break
+            self.retry(exc=e, countdown=5)
+
+
+@shared_task(bind=True)
+def spin(self, doc):
+    try:
+        return doc
+    except Exception as e:
+        self.retry(exc=e)
+
+
+def kick(doc):
+    sweep.delay(doc)
+    spin.apply_async((doc,))
+    celery_app.send_task(dynamic_name)
+
+
+beat_schedule = {
+    "sweep-nightly": {"task": Names.SWEEP, "schedule": 3600},
+    "ghost": {"task": "no_such_task", "schedule": 60},
+}
+PYF
+cat > "$S8/api/work.py" <<'PYF'
+from fastapi import APIRouter, Depends, HTTPException
+
+from db import get_session
+from events.bus import bus
+from events.types import Placed
+from services.work import Busy, careful, deep_a, record, reserve
+
+router = APIRouter(prefix="/work")
+
+
+@router.post("/reserve")
+def do_reserve(x: int):
+    try:
+        reserve(x)
+    except Busy:
+        raise HTTPException(status_code=409, detail="busy")
+    return {"ok": True}
+
+
+@router.post("/raw")
+def raw(x: int):
+    reserve(x)
+    return {"ok": True}
+
+
+@router.post("/deep")
+def deep(x: int):
+    deep_a(x)
+    return {"ok": True}
+
+
+@router.post("/record")
+def rec(x: int, session=Depends(get_session)):
+    record(session, x)
+    careful(x)
+    return {"ok": True}
+
+
+@router.post("/place")
+def place(x: int, session=Depends(get_session)):
+    session.commit()
+    bus.publish(session, Placed(x))
+    session.commit()
+    return {"ok": True}
+PYF
+
 py() {  # py "<name>" <<'PY' … PY  — the prelude gives A · T · build(repo, arms) → forms · variant(name, edit) → repo copy
   local name="$1" src; src=$(cat)
   if (cd "$T" && PYTHONPATH="$GEN" A="$A" T="$T" python3 - >"$T/py.txt" 2>&1 <<PY
 import copy, json, os, re, shutil
 from pathlib import Path
 A, T = Path(os.environ["A"]), Path(os.environ["T"])
+S8 = T / "s8"
 import _a3_code as C, _a3_paths as P, _a3_forms_build as B
 def build(repo, arms):
     files = sorted(str(p.relative_to(repo)) for p in (repo / "api").glob("*.py"))
+    C.ENTITY_CODE = {"x": {"api": files, "services": ["services/*.py", "events/*.py", "tasks/*.py", "auth.py", "db.py"]}}
+    C._TASKS = None; C._TASK_ROOTS = None; C._DISPATCH = None; C._EMAP_CACHE.clear()   # the task + dispatch maps read the claims, cached per process
     amap = {"head": "abc1234", "entities": {"x": {"endpoints": C.parse_endpoints(repo, files)}},
-            "app_middleware": C.parse_app_middleware(repo, {"x": {"api": ["api/*.py"]}})}
+            "app_middleware": C.parse_app_middleware(repo, {"x": {"api": ["api/*.py"]}}),
+            "task_roots": C.parse_task_roots(repo), "dispatch": C.dispatch_map(repo)}
     for ep in amap["entities"]["x"]["endpoints"]:
         ep.pop("refs", None)
     if arms is None:
@@ -200,6 +368,16 @@ def variant(name, edit):
     d = T / name
     shutil.rmtree(d, ignore_errors=True)
     shutil.copytree(A, d)
+    edit(d)
+    return d
+def at(rel, text, nth=1, repo=None):
+    repo = repo or S8
+    hits = [i + 1 for i, l in enumerate((repo / rel).read_text().splitlines()) if text in l]
+    return f"{rel}:{hits[nth - 1]}"
+def variant8(name, edit):
+    d = T / name
+    shutil.rmtree(d, ignore_errors=True)
+    shutil.copytree(S8, d)
     edit(d)
     return d
 def patch(d, rel, a, b):
@@ -227,7 +405,7 @@ assert by_scope["all"]["applies_to"] == 3 and by_scope["all"]["exempt"] == ["end
 rows = {r["site"]: r["id"] for e in f["endpoints"].values() for r in e["produced"] if r.get("phase") == "middleware"}
 assert all(x["id"] == rows[x["site"]] for x in g["exits"]) and "on_endpoints" not in json.dumps(g["exits"]), (g["exits"], rows)
 parts = f["arms"]["kinds"]["parts"]
-assert parts["functions"]["reason"] == "not built yet (slice 8)" and parts["tasks"]["reason"] == "not built yet (slice 8)", parts
+assert all(parts[p]["present"] for p in ("functions", "tasks", "handlers")), parts   # Slice 8 built them
 PY
 
 py "C14 · FIRE: swapping two registrations swaps outer and inner; dropping the exempt arm widens applies_to by one" <<'PY'
@@ -428,6 +606,85 @@ def edit(d):
                                    '@router.get("/aaa/deep")\ndef deep(x=Depends(a_dep)):\n    return {}\n\n\n@router.get("/zzz/shallow")\ndef shallow(y=Depends(d_dep)):\n    return {}\n')
 deps = build(variant("chain", edit), "kinds")["dependencies"]
 assert deps["depchain.py::d_dep"]["subdeps"] == ["depchain.py::e_dep"] and deps["depchain.py::e_dep"]["applies_to"] == 2, {k: (v["subdeps"], v["applies_to"]) for k, v in deps.items() if k.startswith("depchain")}
+PY
+
+py "C24 · FIRE + SILENT: a service raise joined to the endpoint that translates it and the one that leaves it to 500; a raise two calls down reads beyond one level" <<'PY'
+f = build(S8, "kinds")
+r = f["functions"]["services/work.py::reserve"]["raises"]
+busy = next(x for x in r if x["cls"] == "Busy")
+assert [(t["endpoint"], t["status"]) for t in busy["translated_by"]] == [("endpoint:POST /work/reserve", 409)], busy
+assert [(u["endpoint"], u["status"]) for u in busy["untranslated_at"]] == [("endpoint:POST /work/raw", 500)] and busy["translation"] == "mixed", busy
+gone = next(x for x in f["functions"]["services/work.py::deep_b"]["raises"] if x["cls"] == "Gone")
+assert gone["translation"] == "beyond one level" and not gone["translated_by"] and not gone["untranslated_at"], gone
+db = {b["root"]: b for b in f["functions"]["services/work.py::deep_b"]["reached_by"]}
+assert db["endpoint:POST /work/deep"]["depth"] == 2 and db["endpoint:POST /work/deep"]["root_site"] == at("api/work.py", "deep_a(x)"), db   # the site in the ROOT, not the last hop
+assert any(b["root"] == "auth.py::get_auth" for b in f["functions"]["auth.py::persist"]["reached_by"]), f["functions"].get("auth.py::persist")   # a dependency function is a root
+by = {b["root"]: b for b in f["functions"]["services/work.py::reserve"]["reached_by"]}
+assert by["endpoint:POST /work/reserve"]["depth"] == 1 and by["endpoint:POST /work/reserve"]["root_site"] == at("api/work.py", "reserve(x)", 1), by
+assert by["endpoint:POST /work/reserve"]["paths"], by["endpoint:POST /work/reserve"]
+ids = [x for x in f["arm_findings"]["kinds"] if x["id"] == "untranslated-raise"]
+assert [(x["fn"], x["cls"], x["endpoints"]) for x in ids] == [("services/work.py::reserve", "Busy", ["endpoint:POST /work/raw"])], ids
+PY
+
+py "C25 · FIRE + SILENT: a broad except that returns normally is swallows-broad; one that re-raises is not" <<'PY'
+f = build(S8, "kinds")
+rec = f["functions"]["services/work.py::record"]
+assert [s["at"] for s in rec["swallows"]] == [at("services/work.py", "except Exception:", 1)] and rec["savepoints"] == [at("services/work.py", "begin_nested")], rec
+assert not (f["functions"].get("services/work.py::careful") or {}).get("swallows"), f["functions"].get("services/work.py::careful")
+sw = [x for x in f["arm_findings"]["kinds"] if x["id"] == "swallows-broad"]
+assert [x["fn"] for x in sw] == ["services/work.py::record"], sw
+PY
+
+py "C26 · FIRE + SILENT: task forms — decorator keywords, the retry and its last-failure branch, dispatch and beat triggers; a retry with no bound is retry-unbounded" <<'PY'
+f = build(S8, "kinds")
+t = f["tasks"]["endpoint:TASK sweep_docs"]
+assert t["decorator"]["keywords"] == {"name": "sweep_docs", "bind": True, "max_retries": 3, "acks_late": True}, t["decorator"]
+assert [s["at"] for s in t["retry"]["sites"]] == [at("tasks/jobs.py", "self.retry(exc=e, countdown=5)")] and t["retry"]["max_retries"] == 3, t["retry"]
+assert t["retry"]["last_failure"] == [{"at": at("tasks/jobs.py", "if self.request.retries >= self.max_retries"), "guard": "self.request.retries >= self.max_retries", "exit": "break"}], t["retry"]
+assert {(x["kind"], x.get("from") or x.get("schedule")) for x in t["triggers"]} == {("dispatch", "tasks/jobs.py#kick"), ("beat", "3600")}, t["triggers"]
+assert t["concurrency"] == {"acks_late": True, "locks": []}, t["concurrency"]
+st = f["arms"]["kinds"]["stats"]["tasks"]
+assert st["beat"] == {"entries": 2, "joined": 1, "unjoined": 1} and "dynamic_name" in st["unresolved_dispatch"], st
+un = [x for x in f["arm_findings"]["kinds"] if x["id"] == "retry-unbounded"]
+assert [x["task"] for x in un] == ["endpoint:TASK spin"], un
+PY
+
+py "C27 · FIRE: a handler form — publisher, bus loop isolation and catch, registration order, retries, the publisher's commits around the publish" <<'PY'
+f = build(S8, "kinds")
+h = f["handlers"]["services/listen.py::on_placed"]
+assert h["event"] == "Placed" and h["publisher"] == {"fn": "api/work.py::place", "at": at("api/work.py", "bus.publish")}, h
+assert h["bus"]["fn"] == "events/bus.py::EventBus.publish" and h["bus"]["isolation"] == {"kind": "savepoint", "at": at("events/bus.py", "begin_nested")}, h["bus"]
+assert h["bus"]["catch"] == {"at": at("events/bus.py", "except Exception:"), "types": ["Exception"], "outcome": "swallow", "counter": at("events/bus.py", "+= 1")}, h["bus"]["catch"]
+assert h["registration"] == [{"at": at("events/bus.py", "bus.register_once(Placed"), "call": "register_once", "order": 0, "of": 1}] and h["retries"] == 0 and h["bus"]["execution"] == "sequential", h
+assert h["publisher_commits"] == {"before": [at("api/work.py", "session.commit()", 1)], "after": [at("api/work.py", "session.commit()", 2)]}, h["publisher_commits"]
+assert h["dropped"] and [x["handler"] for x in f["arm_findings"]["kinds"] if x["id"] == "handler-dropped"] == ["services/listen.py::on_placed"]
+PY
+
+py "C28 · mutation: no except Busy moves the translator to untranslated_at; no bound on sweep makes it retry-unbounded; no register_once takes the handler form away" <<'PY'
+g = build(variant8("nobusy", lambda d: patch(d, "api/work.py", "    try:\n        reserve(x)\n    except Busy:\n        raise HTTPException(status_code=409, detail=\"busy\")\n", "    reserve(x)\n")), "kinds")
+busy = next(x for x in g["functions"]["services/work.py::reserve"]["raises"] if x["cls"] == "Busy")
+assert not busy["translated_by"] and sorted(u["endpoint"] for u in busy["untranslated_at"]) == ["endpoint:POST /work/raw", "endpoint:POST /work/reserve"], busy
+def unbound(d):
+    patch(d, "tasks/jobs.py", "max_retries=MAX, ", "")
+    patch(d, "tasks/jobs.py", "            if self.request.retries >= self.max_retries:\n                break\n", "")
+h = build(variant8("unbound", unbound), "kinds")
+assert sorted(x["task"] for x in h["arm_findings"]["kinds"] if x["id"] == "retry-unbounded") == ["endpoint:TASK spin", "endpoint:TASK sweep_docs"]
+k = build(variant8("noreg", lambda d: patch(d, "events/bus.py", "    bus.register_once(Placed, audit_handler)\n", "    pass\n")), "kinds")
+assert k["handlers"] == {} and not any(x["id"] == "handler-dropped" for x in k["arm_findings"]["kinds"]), k["handlers"]
+PY
+
+py "C29 · honest-empty + determinism + non-interference: no task or bus writes empty parts; two builds agree; the kinds parts change no endpoint row" <<'PY'
+def strip(d):
+    for rel in ("tasks/jobs.py", "events/bus.py", "events/types.py", "services/listen.py"):
+        (d / rel).unlink()
+    patch(d, "api/work.py", "from events.bus import bus\nfrom events.types import Placed\n", "")
+    patch(d, "api/work.py", "    bus.publish(session, Placed(x))\n", "")
+e = build(variant8("bare", strip), "kinds")
+assert e["tasks"] == {} and e["handlers"] == {} and e["arms"]["kinds"]["stats"]["tasks"]["tasks"] == 0, (e["tasks"], e["handlers"])
+a1, a2 = build(S8, "kinds"), build(S8, "kinds")
+assert json.dumps(a1, sort_keys=True) == json.dumps(a2, sort_keys=True), "two builds differ"
+kp, p = build(S8, "kinds,paths"), build(S8, "paths")
+assert all(kp["endpoints"][k]["produced"] == p["endpoints"][k]["produced"] for k in p["endpoints"]), "a kinds part moved an endpoint row"
 PY
 
 echo "forms-kinds: $pass passed, $fail failed"

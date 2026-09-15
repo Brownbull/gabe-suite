@@ -49,6 +49,11 @@ OPTIONS = {
     # the effects arm's four named widenings (EFFECTS["widenings"]) — off, its (model, rw) pairs and commit flag per
     # function are `_a3_code._orm_access`'s
     "effects_widenings": True,
+    # which reached functions get a form (Slice 8): "facts" (a commit, raise, refusal, swallow or savepoint) · "all"
+    "function_scope": "facts",
+    # how far a raise is joined to the endpoint that translates it: "one-level" (the endpoint pass reads one call level;
+    # a deeper raise reads "beyond one level") · "all"
+    "k2_climb": "one-level",
 }
 MUTATING_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 
@@ -127,6 +132,14 @@ FINDINGS = {
                        "says": "a refusal leaves the endpoint's own writes committed — the client hears no, the database kept a yes"},
     "safe-method-commits": {"arm": "effects", "slot": "U9", "pulse": "count",
                             "says": "a GET, HEAD or OPTIONS endpoint commits — a retry or a prefetch changes data"},
+    "swallows-broad": {"arm": "kinds", "slot": "B-fn", "pulse": "count",
+                       "says": "a broad except returns normally — whatever failed is logged or nothing, never surfaced"},
+    "untranslated-raise": {"arm": "kinds", "slot": "B-fn", "pulse": "count",
+                           "says": "a raise reaches an endpoint that does not translate it — the endpoint's escape-500"},
+    "retry-unbounded": {"arm": "kinds", "slot": "B-task", "pulse": "nag",
+                        "says": "a task retries with no max_retries and no last-failure branch — a poisoned message retries forever"},
+    "handler-dropped": {"arm": "kinds", "slot": "B-evt", "pulse": "count",
+                        "says": "the publish loop swallows a handler's failure — the handler's work is dropped, never retried"},
     "race-500": {"arm": "contract", "slot": "U12", "pulse": "nag",
                  "says": "a retry races its own first try on a unique key nothing catches — the loser answers 500, not the first result"},
 }
@@ -196,12 +209,23 @@ CONTRACT = {
     },
 }
 
+# ── the KINDS arm's function, task and handler parts (amendment 1 §A2 Slice 8) ───────────────────────
+TASK_KW = ("name", "bind", "max_retries", "default_retry_delay", "autoretry_for", "retry_backoff", "retry_backoff_max",
+           "retry_jitter", "soft_time_limit", "time_limit", "acks_late", "reject_on_worker_lost", "rate_limit", "queue",
+           "ignore_result", "expires")                  # Celery task options a task form reads (celery/app/task.py)
+TASK_CONCURRENCY_KW = ("rate_limit", "acks_late", "queue", "soft_time_limit", "time_limit")
+RETRY_CALLS = frozenset({"retry"})                      # self.retry(exc=…, countdown=…) — raises Retry
+LOCK_CALLS = frozenset({"lock", "acquire", "Lock", "RedisLock", "advisory_lock", "try_advisory_lock"})
+BUS_PUBLISH = frozenset({"publish", "emit"})
+BUS_REGISTER = frozenset({"register", "register_once", "subscribe", "add_handler"})   # `_a3_code._DISPATCH_REG` minus `on`
+CONCURRENT_CALLS = frozenset({"gather", "create_task", "TaskGroup", "start_soon"})
+
 # ── the GENERATION ARMS (amendment 1, docs/design/element-forms/amendment-1.md) ────────────────────────
 # Each arm is one switch — center.config.json `forms_arms: {"paths": true, …}` or GABE_FORMS_ARMS=paths,effects|all|none —
 # and every arm defaults OFF. The ids (Slice 2) are no switch: they are written whenever any arm is on.
 ARMS = {
     "kinds": {"slice": 3, "parts": ("middleware", "dependencies", "functions", "tasks", "handlers"),
-              "part_slices": {"functions": 8, "tasks": 8, "handlers": 8}},
+              "part_slices": {}},
     "short": {"slice": 4, "parts": ("schema", "model", "migration", "setting", "mirror"),
               "part_slices": {"model": 10, "migration": 10, "setting": 10, "mirror": 10}},
     "switches": {"slice": 5, "parts": ()},
@@ -223,7 +247,7 @@ ARM_STAGES = (
 # hard needs, unit → units ("arm" or "arm.part"); a needed unit runs in memory and is not written unless its arm is selected
 ARM_NEEDS = {                                   # paths walks the middleware stack only in its `paths` part (Slice 5)
     "paths.paths": ("kinds.middleware",), "effects": ("paths",), "contract": ("effects",), "tests": ("paths",),
-    "kinds.functions": ("effects",), "short.model": ("effects",),
+    "kinds.functions": ("effects",), "kinds.handlers": ("effects",), "short.model": ("effects",),
 }
 # soft needs — used only when the other arm is also selected
 ARM_SOFT = {"paths": ("switches", "short.schema")}
