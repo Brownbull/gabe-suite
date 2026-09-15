@@ -168,6 +168,8 @@ FINDINGS = {
                         "says": "two copies of one rule disagree — a schema and its table, or two sibling schemas, accept different values"},
     "schema-only-bound": {"arm": "short", "slot": "MR", "pulse": "count",
                           "says": "a bound only the schema enforces while a writer sets the column without the schema — the table takes what the API refuses"},
+    "redirect-loop": {"arm": "frontend", "slot": "K3", "pulse": "nag",
+                      "says": "a guard redirects into its own route subtree — the page it sends the user to runs the same guard again"},
     "race-500": {"arm": "contract", "slot": "U12", "pulse": "nag",
                  "says": "a retry races its own first try on a unique key nothing catches — the loser answers 500, not the first result"},
 }

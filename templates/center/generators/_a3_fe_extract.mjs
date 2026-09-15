@@ -180,6 +180,241 @@ const shapeOf = d => {
   return { text: typeText(ta, sf), refs: [...refs].sort(), members };
 };
 
+// ── FLOW (element forms Slice 11a, GABE_FE_FLOW=1 — a SECOND invocation, D21): raw control flow per body. Every
+//    function-like module-level declaration, and every function-valued property of an object a declaration's call is
+//    given (`createFileRoute(…)({ beforeLoad })`), becomes a body of ROWS — ret · throw · call · new · cmp · jsx — each
+//    with the GUARDS above it, the earlier exits it PASSED (`after`), and the callback CONTEXT it sits in. Destructured
+//    binds ride the call that feeds them; a name or property access resolves to its literal through the checker
+//    (constants ≤ 3 hops: `PATHS.setup` → "/setup"). Route-config trees (object literals carrying path · element ·
+//    children …) are captured as trees. Raw facts only — no roster: the Python forms decide what a navigation, a query
+//    state or a guard is. Without the flag no `flow` key is emitted, so the structure run's bytes never depend on it.
+const FLOW = process.env.GABE_FE_FLOW === '1';
+const ROW_CAP = 600;
+const LIT_DEPTH = 3;
+const clip = (s, n = 120) => String(s).replace(/\s+/g, ' ').slice(0, n);
+const lineOf = n => { const sf = n.getSourceFile(); return sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1; };
+const isFn = n => !!n && (ts.isArrowFunction(n) || ts.isFunctionExpression(n) || ts.isFunctionDeclaration(n) || ts.isMethodDeclaration(n));
+const isJsx = n => !!n && (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n) || ts.isJsxFragment(n));
+const unparen = n => { while (n && (ts.isParenthesizedExpression(n) || ts.isAsExpression(n) || ts.isNonNullExpression(n) || (ts.isSatisfiesExpression && ts.isSatisfiesExpression(n)))) n = n.expression; return n; };
+const resolveLit = (e, depth = 0) => {
+  e = unparen(e);
+  if (!e || depth > LIT_DEPTH) return null;
+  if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) return e.text;
+  if (ts.isTemplateExpression(e)) {                          // `${PATHS.login}?${search}` → "/login?*" — an unreadable span is `*`
+    let out = e.head.text, known = e.head.text.length > 0;
+    for (const sp of e.templateSpans) { const v = resolveLit(sp.expression, depth + 1); if (v != null) known = true; out += (v != null ? String(v) : '*') + sp.literal.text; }
+    return known ? out : null;
+  }
+  if (ts.isNumericLiteral(e)) return Number(e.text);
+  if (e.kind === ts.SyntaxKind.TrueKeyword) return true;
+  if (e.kind === ts.SyntaxKind.FalseKeyword) return false;
+  if (ts.isIdentifier(e) || ts.isPropertyAccessExpression(e)) {
+    let s;
+    try { s = checker.getSymbolAtLocation(ts.isPropertyAccessExpression(e) ? e.name : e); if (s && s.flags & ts.SymbolFlags.Alias) s = checker.getAliasedSymbol(s); } catch { return null; }
+    const d = s && (s.declarations || [])[0];
+    if (!d) return null;
+    if ((ts.isVariableDeclaration(d) || ts.isPropertyAssignment(d)) && d.initializer) return resolveLit(d.initializer, depth + 1);
+    if (ts.isEnumMember(d) && d.initializer) return resolveLit(d.initializer, depth + 1);
+  }
+  return null;
+};
+const tagOf = n => ts.isJsxElement(n) ? n.openingElement.tagName.getText(n.getSourceFile()) : ts.isJsxSelfClosingElement(n) ? n.tagName.getText(n.getSourceFile()) : ts.isJsxFragment(n) ? '<>' : null;
+const jsxTags = (n, cap = 6) => { const out = []; const w = x => { if (out.length >= cap) return; const t = isJsx(x) ? tagOf(x) : null; if (t && t !== '<>') out.push(t); ts.forEachChild(x, w); }; w(n); return out; };
+const jsxProps = n => {
+  const el = ts.isJsxElement(n) ? n.openingElement : n; const sf = n.getSourceFile(); const out = {};
+  for (const a of (el.attributes && el.attributes.properties) || []) {
+    if (!ts.isJsxAttribute(a) || !a.name) continue;
+    const nm = a.name.getText(sf), init = a.initializer;
+    if (!init) { out[nm] = true; continue; }
+    const ex = ts.isJsxExpression(init) ? init.expression : init;
+    const lit = resolveLit(ex);
+    out[nm] = lit != null ? lit : (ex ? clip(ex.getText(sf), 60) : true);
+  }
+  return out;
+};
+const stmtList = s => ts.isBlock(s) ? s.statements : [s];
+const exits = s => { const list = stmtList(s); const last = list[list.length - 1]; return !!last && (ts.isReturnStatement(last) || ts.isThrowStatement(last)); };
+const CMP_OPS = new Set([ts.SyntaxKind.EqualsEqualsEqualsToken, ts.SyntaxKind.ExclamationEqualsEqualsToken, ts.SyntaxKind.EqualsEqualsToken,
+  ts.SyntaxKind.ExclamationEqualsToken, ts.SyntaxKind.LessThanToken, ts.SyntaxKind.GreaterThanToken, ts.SyntaxKind.LessThanEqualsToken, ts.SyntaxKind.GreaterThanEqualsToken]);
+
+const bodyRows = root => {
+  const rows = []; let truncated = false;
+  const push = (k, node, extra, guards, after, ctx) => {
+    if (rows.length >= ROW_CAP) { truncated = true; return null; }
+    const row = { k, line: lineOf(node) };
+    if (guards.length) row.guards = guards.map(g => ({ ...g }));
+    if (after.length) row.after = after.map(g => ({ ...g }));
+    if (ctx.length) row.ctx = [...ctx];
+    Object.assign(row, extra);
+    rows.push(row);
+    return row;
+  };
+  const pred = n => clip(n.getText(n.getSourceFile()));
+  const expr = (n, guards, after, ctx) => {
+    if (!n) return;
+    const sf = n.getSourceFile();
+    if (ts.isConditionalExpression(n)) {
+      expr(n.condition, guards, after, ctx);
+      expr(n.whenTrue, [...guards, { pred: pred(n.condition) }], after, ctx);
+      expr(n.whenFalse, [...guards, { pred: pred(n.condition), neg: true }], after, ctx);
+      return;
+    }
+    if (ts.isBinaryExpression(n) && n.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken && isJsx(unparen(n.right))) {
+      expr(n.left, guards, after, ctx);
+      expr(n.right, [...guards, { pred: pred(n.left) }], after, ctx);
+      return;
+    }
+    if (isFn(n)) { fnBody(n, guards, after, [...ctx, 'callback']); return; }
+    if (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n)) push('jsx', n, { tag: tagOf(n), props: jsxProps(n) }, guards, after, ctx);
+    else if (ts.isCallExpression(n) || ts.isNewExpression(n)) {
+      const callee = clip(n.expression.getText(sf), 80);
+      const lits = (n.arguments || []).slice(0, 3).map(a => resolveLit(a));
+      const extra = { callee };
+      if (lits.some(a => a != null)) extra.args = lits;
+      const obj = (n.arguments || []).map(unparen).find(a => a && ts.isObjectLiteralExpression(a));   // `redirect({ to: "/items" })` — the literal properties
+      if (obj) { const props = {}; for (const p of obj.properties) if (ts.isPropertyAssignment(p) && p.name) { const v = resolveLit(p.initializer); if (v != null) props[p.name.getText(sf)] = v; } if (Object.keys(props).length) extra.props = props; }
+      push(ts.isCallExpression(n) ? 'call' : 'new', n, extra, guards, after, ctx);
+      const cname = leftmost(n.expression) || callee;
+      if (ts.isPropertyAccessExpression(n.expression)) expr(n.expression.expression, guards, after, ctx);
+      for (const a of n.arguments || []) {
+        if (isFn(a)) { fnBody(a, guards, after, [...ctx, 'callback:' + cname]); continue; }
+        if (ts.isObjectLiteralExpression(a)) {
+          for (const p of a.properties) {
+            const v = ts.isPropertyAssignment(p) ? p.initializer : ts.isMethodDeclaration(p) ? p : ts.isShorthandPropertyAssignment(p) ? null : null;
+            const key = p.name ? p.name.getText(sf) : '';
+            if (isFn(v)) fnBody(v, guards, after, [...ctx, 'prop:' + cname + '.' + key]);
+            else if (v) expr(v, guards, after, ctx);
+          }
+          continue;
+        }
+        expr(a, guards, after, ctx);
+      }
+      return;
+    }
+    else if (ts.isBinaryExpression(n) && CMP_OPS.has(n.operatorToken.kind)) {
+      const r = resolveLit(n.right), l = resolveLit(n.left);
+      push('cmp', n, { left: clip(n.left.getText(sf), 60), op: n.operatorToken.getText(sf), right: r != null ? r : clip(n.right.getText(sf), 60), ...(l != null ? { left_lit: l } : {}) }, guards, after, ctx);
+    }
+    ts.forEachChild(n, c => expr(c, guards, after, ctx));
+  };
+  const stmts = (list, guards, after, ctx) => {
+    let passed = [...after];
+    for (const st of list) {
+      const sf = st.getSourceFile();
+      if (ts.isIfStatement(st)) {
+        const p = pred(st.expression);
+        expr(st.expression, guards, passed, ctx);
+        stmts(stmtList(st.thenStatement), [...guards, { pred: p }], passed, ctx);
+        if (st.elseStatement) stmts(stmtList(st.elseStatement), [...guards, { pred: p, neg: true }], passed, ctx);
+        if (exits(st.thenStatement) && !st.elseStatement) passed = [...passed, { pred: p, neg: true }];
+      } else if (ts.isReturnStatement(st)) {
+        const v = unparen(st.expression);
+        const extra = { value: st.expression ? clip(st.expression.getText(sf), 80) : null };
+        if (isJsx(v)) { extra.jsx = tagOf(v); extra.tags = jsxTags(v); }
+        else if (v && v.kind === ts.SyntaxKind.NullKeyword) extra.null = true;
+        push('ret', st, extra, guards, passed, ctx);
+        if (st.expression) expr(st.expression, guards, passed, ctx);
+      } else if (ts.isThrowStatement(st)) {
+        const v = unparen(st.expression);
+        push('throw', st, { value: clip(st.expression.getText(sf), 80), ...((ts.isCallExpression(v) || ts.isNewExpression(v)) ? { callee: clip(v.expression.getText(sf), 60) } : {}) }, guards, passed, ctx);
+        expr(st.expression, guards, passed, ctx);
+      } else if (ts.isTryStatement(st)) {
+        stmts(st.tryBlock.statements, guards, passed, [...ctx, 'try']);
+        if (st.catchClause) stmts(st.catchClause.block.statements, guards, passed, [...ctx, 'catch:' + (st.catchClause.variableDeclaration ? st.catchClause.variableDeclaration.name.getText(sf) : '')]);
+        if (st.finallyBlock) stmts(st.finallyBlock.statements, guards, passed, [...ctx, 'finally']);
+      } else if (ts.isVariableStatement(st)) {
+        for (const d of st.declarationList.declarations) {
+          if (!d.initializer) continue;
+          const binds = ts.isObjectBindingPattern(d.name) ? d.name.elements.map(e => e.propertyName ? e.propertyName.getText(sf) + ':' + e.name.getText(sf) : e.name.getText(sf))
+            : ts.isArrayBindingPattern(d.name) ? d.name.elements.map(e => ts.isOmittedExpression(e) ? '' : e.name.getText(sf)) : [d.name.getText(sf)];
+          const before = rows.length;
+          expr(d.initializer, guards, passed, ctx);
+          const init = unparen(ts.isAwaitExpression(d.initializer) ? d.initializer.expression : d.initializer);
+          const fed = ts.isCallExpression(init) ? rows.slice(before).find(r => r.k === 'call' && r.line === lineOf(init) && !r.ctx === !ctx.length) : null;
+          if (fed) fed.binds = binds;
+        }
+      } else if (ts.isBlock(st)) stmts(st.statements, guards, passed, ctx);
+      else if (ts.isForOfStatement(st) || ts.isForInStatement(st) || ts.isForStatement(st) || ts.isWhileStatement(st) || ts.isDoStatement(st)) {
+        if (st.expression) expr(st.expression, guards, passed, ctx);
+        stmts(stmtList(st.statement), guards, passed, [...ctx, 'loop']);
+      } else if (ts.isSwitchStatement(st)) {
+        expr(st.expression, guards, passed, ctx);
+        for (const c of st.caseBlock.clauses)
+          stmts(c.statements, [...guards, { pred: ts.isCaseClause(c) ? clip(st.expression.getText(sf), 60) + ' === ' + clip(c.expression.getText(sf), 40) : 'default' }], passed, ctx);
+      } else expr(st, guards, passed, ctx);
+    }
+  };
+  const fnBody = (fn, guards, after, ctx) => {
+    const b = fn.body; if (!b) return;
+    if (ts.isBlock(b)) { stmts(b.statements, guards, after, ctx); return; }
+    const v = unparen(b);
+    const extra = { value: clip(b.getText(b.getSourceFile()), 80), implicit: true };
+    if (isJsx(v)) { extra.jsx = tagOf(v); extra.tags = jsxTags(v); }
+    push('ret', b, extra, guards, after, ctx);
+    expr(b, guards, after, ctx);
+  };
+  fnBody(root, [], [], []);
+  return { rows, truncated };
+};
+const fnOfDecl = d => {
+  if (!d || !d.initializer) return null;
+  let i = unparen(d.initializer);
+  while (i && ts.isCallExpression(i) && !isFn(i)) { const f = i.arguments.find(isFn); if (f) return f; i = unparen(i.arguments[0]); }   // memo(() => …) · forwardRef(function …)
+  return isFn(i) ? i : null;
+};
+const ROUTE_KEYS = new Set(['path', 'element', 'children', 'index', 'Component', 'component', 'lazy', 'loader', 'beforeLoad', 'errorElement']);
+const isRouteObj = o => ts.isObjectLiteralExpression(o) && o.properties.some(p => ts.isPropertyAssignment(p) && p.name && ROUTE_KEYS.has(p.name.getText(o.getSourceFile())));
+const routeNode = o => {
+  const sf = o.getSourceFile(); const out = { line: lineOf(o) };
+  for (const p of o.properties) {
+    if (!ts.isPropertyAssignment(p) || !p.name) continue;
+    const key = p.name.getText(sf), v = unparen(p.initializer);
+    if (key === 'path') { const l = resolveLit(v); out.path = l != null ? l : clip(v.getText(sf), 60); }
+    else if (key === 'index') out.index = resolveLit(v) === true;
+    else if (key === 'element' || key === 'errorElement') out[key] = jsxTags(v);
+    else if (key === 'children' && ts.isArrayLiteralExpression(v)) out.children = v.elements.filter(isRouteObj).map(routeNode);
+    else if (key === 'Component' || key === 'component') out.component = clip(v.getText(sf), 60);
+    else if (key === 'beforeLoad' || key === 'loader' || key === 'lazy') out[key] = true;
+  }
+  return out;
+};
+const routesOf = sf => {
+  const out = [];
+  const walk = n => {
+    if (ts.isArrayLiteralExpression(n) && n.elements.length && n.elements.some(e => isRouteObj(e) && e.properties.some(p => ts.isPropertyAssignment(p) && p.name && ['element', 'Component', 'children'].includes(p.name.getText(sf))))) {
+      out.push({ line: lineOf(n), callee: n.parent && ts.isCallExpression(n.parent) ? clip(n.parent.expression.getText(sf), 60) : null, routes: n.elements.filter(isRouteObj).map(routeNode) });
+      return;                                                  // the nested `children` arrays are read by routeNode
+    }
+    ts.forEachChild(n, walk);
+  };
+  walk(sf);
+  return out;
+};
+const flowOf = sf => {
+  const bodies = {};
+  const add = (name, fn) => { if (!fn || bodies[name]) return; const got = bodyRows(fn); bodies[name] = { line: lineOf(fn), rows: got.rows, ...(got.truncated ? { truncated: true } : {}) }; };
+  for (const st of sf.statements) {
+    if (ts.isFunctionDeclaration(st) && st.name) add(st.name.text, st);
+    else if (ts.isExportAssignment(st) && isFn(unparen(st.expression))) add('default', unparen(st.expression));
+    else if (ts.isVariableStatement(st)) {
+      for (const d of st.declarationList.declarations) {
+        if (!ts.isIdentifier(d.name)) continue;
+        const fn = fnOfDecl(d);
+        if (fn) { add(d.name.text, fn); continue; }
+        for (let c = unparen(d.initializer); c && ts.isCallExpression(c); c = unparen(c.expression))
+          for (const a of c.arguments)
+            if (ts.isObjectLiteralExpression(a))
+              for (const p of a.properties) {
+                const v = ts.isPropertyAssignment(p) ? unparen(p.initializer) : ts.isMethodDeclaration(p) ? p : null;
+                if (p.name && isFn(v)) add(d.name.text + '.' + p.name.getText(sf), v);
+              }
+      }
+    }
+  }
+  const routes = routesOf(sf);
+  return { bodies: Object.fromEntries(Object.keys(bodies).sort().map(k => [k, bodies[k]])), ...(routes.length ? { routes } : {}) };
+};
+
 const files = {};
 for (const sf of program.getSourceFiles()) {
   const f = sf.fileName;
@@ -277,6 +512,7 @@ for (const sf of program.getSourceFiles()) {
   rec.file_refs = { calls: top.calls, jsx: top.jsx, hasJsx: top.hasJsx };
   if (top.storage) rec.file_refs.storage = top.storage;
   if (top.queryKeys) rec.file_refs.queryKeys = top.queryKeys;
+  if (FLOW) rec.flow = flowOf(sf);
   files[rel(f)] = rec;
 }
 const keys = Object.keys(files).sort();

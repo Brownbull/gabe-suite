@@ -302,6 +302,14 @@ if ts_dir and shutil.which("node"):
     same = json.dumps({k: live.get(k) for k in ("pieces", "edges", "homes")}, sort_keys=True) == \
            json.dumps({k: fe[k] for k in ("pieces", "edges", "homes")}, sort_keys=True)
     check(same, "LIVE: the compiler pass re-derives the FROZEN fixture graph exactly (pieces · edges · homes)")
+    # element forms Slice 11: the flow capture is a SECOND run behind GABE_FE_FLOW=1 — without the flag no body carries a `flow` key
+    os.environ["GABE_TS_DIR"] = ts_dir
+    _wr = _a3_web._detect_web_root(fix)
+    _raw, _ = _a3_fe.run_extractor(_wr.parent if _wr.name == "src" else _wr, fix)
+    _flowed, _ = _a3_fe.run_extractor(_wr.parent if _wr.name == "src" else _wr, fix, env={"GABE_FE_FLOW": "1"})
+    del os.environ["GABE_TS_DIR"]
+    check(bool(_raw) and not [f for f, r in _raw["byFile"].items() if "flow" in r] and bool(_flowed) and all("flow" in r for r in _flowed["byFile"].values()),
+          "LIVE (Slice 11): the extractor emits no flow key without GABE_FE_FLOW=1, and one per file with it")
     # ── review finding 2: a files:[]+references tsconfig (the default Vite React+TS stub) must be FOLLOWED ──
     import tempfile
     _td = Path(tempfile.mkdtemp())

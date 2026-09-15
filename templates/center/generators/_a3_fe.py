@@ -723,9 +723,11 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
     }
 
 
-def run_extractor(web_root: Path, repo_root: Path, timeout: int = 180) -> tuple[dict[str, Any] | None, str]:
+def run_extractor(web_root: Path, repo_root: Path, timeout: int = 180,
+                  env: dict[str, str] | None = None) -> tuple[dict[str, Any] | None, str]:
     """Run the compiler pass into a temp file (never into the twin). (json, reason). Paths are
-    emitted relative to ``repo_root`` so piece ids join the fetch arm's screens + graft's nodes."""
+    emitted relative to ``repo_root`` so piece ids join the fetch arm's screens + graft's nodes. ``env`` adds variables for
+    this run only (the element forms flow capture passes ``GABE_FE_FLOW=1``)."""
     node = shutil.which("node")
     if not node:
         return None, "node not on PATH"
@@ -733,7 +735,8 @@ def run_extractor(web_root: Path, repo_root: Path, timeout: int = 180) -> tuple[
         out = Path(td) / "fe.json"
         try:
             r = subprocess.run([node, str(EXTRACTOR), str(web_root), str(out), str(repo_root)],
-                               capture_output=True, text=True, timeout=timeout)
+                               capture_output=True, text=True, timeout=timeout,
+                               env={**os.environ, **env} if env else None)   # the flow run (Slice 11): GABE_FE_FLOW=1
         except subprocess.TimeoutExpired:
             return None, f"extractor timed out after {timeout}s"
         if r.returncode == 3:              # typescript not resolvable — say what fixes it (review 2026-09-06: every study clone lacked node_modules)

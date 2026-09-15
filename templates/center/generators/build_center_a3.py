@@ -2289,8 +2289,6 @@ def main() -> int:
                                    screens=_warm.get("screens") or [])
         except Exception as _fe:  # noqa: BLE001
             _fearm = {"present": False, "reason": f"fe arm error: {_fe}"}
-        with contextlib.suppress(Exception):             # element forms amendment 1: the frontend arm's seam (Slice 11)
-            _a3_forms_build.extend_frontend(_forms, _fearm, REPO_ROOT, CFG)
         with contextlib.suppress(Exception):
             _fwas = bool((_prev.get("stats", {}).get("fe") or {}).get("present"))
             if _fwas != bool(_fearm.get("present")):
@@ -2302,6 +2300,24 @@ def main() -> int:
             amap, labels=LABELS,
             status={s["entity"]: s.get("status") for s in sections},
             colors=_gcolors, graft=_garm, web=_warm, fe=_fearm)
+        # element forms amendment 1 Slice 11 — the frontend arm reads the fe structure arm and the c4 bridge edges, so it runs
+        # after the graph; with `frontend` selected, forms.json is (re)written when the endpoint forms OR the frontend arm are
+        # present (D21), so a TypeScript-only tree gains the file. Unselected, nothing here touches the feed.
+        if _forms is not None and "frontend" in _a3_forms_build.selection(CFG)[0]:
+            try:
+                _a3_forms_build.extend_frontend(_forms, _fearm, REPO_ROOT, CFG, graph=_graph)
+                _fa = (_forms.get("arms") or {}).get("frontend") or {}
+                if _forms.get("present") or _fa.get("present"):
+                    (CENTER_OUT / "forms.json").write_text(
+                        json.dumps(_forms, indent=1, ensure_ascii=False, sort_keys=True) + "\n")
+                    if ("forms.json", 0) not in wrote:
+                        wrote.append(("forms.json", 0))
+                    print(f"    frontend forms — {'present' if _fa.get('present') else 'absent'}: "
+                          f"{json.dumps(_fa.get('stats') or {}, sort_keys=True)[:200] if _fa.get('present') else _fa.get('reason')}")
+                else:
+                    print(f"    frontend forms — not written: {_fa.get('reason')}")
+            except Exception as _ffe:  # noqa: BLE001
+                print(f"    ⚠ frontend forms SKIPPED (the map is unaffected): {_ffe}")
         # the LEVELS graph (window.GABE_LEVELS) — the lab-native station's rich feed:
         # functions · use-cases · communities · use-edges, ALL from the archmap insight
         # blocks (_a3_code already writes them) + the C4 topology; only cross-file call

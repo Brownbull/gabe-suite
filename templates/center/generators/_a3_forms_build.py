@@ -350,6 +350,55 @@ def extend_backend(forms: dict, amap: dict, repo, cfg: dict | None = None) -> di
         return forms
 
 
-def extend_frontend(forms, fe, repo, cfg: dict | None = None):
-    """The frontend arm's seam (Slice 11) — called after the fe structure arm; nothing yet."""
-    return None
+def _flow(repo) -> tuple[dict | None, str]:
+    """The flow run (D21): a second extractor invocation over the fe arm's web root, with ``GABE_FE_FLOW=1`` and its own timeout."""
+    import _a3_fe as FE
+    import _a3_forms_fe as FF
+    root = Path(repo)
+    web = FE._detect_web_root(root)
+    if web is None:
+        return None, "no web source"
+    return FE.run_extractor(web.parent if web.name == "src" else web, root, timeout=FF.FLOW_TIMEOUT, env={"GABE_FE_FLOW": "1"})
+
+
+def extend_frontend(forms, fe, repo, cfg: dict | None = None, graph: dict | None = None):
+    """The frontend arm (Slice 11) — run after the fe structure arm and the c4 graph when ``frontend`` is selected: the flow
+    run read into ``frontend{}`` (the ``guards`` part), ``arms.frontend`` said, the feed restored on a raise. Never raises;
+    returns ``forms``. On a tree with no endpoint forms the envelope gains ``arms`` so the frontend arm can still be written."""
+    try:
+        if not isinstance(forms, dict) or "frontend" not in selection(cfg)[0]:
+            return forms
+        arms = forms.setdefault("arms", {arm: _off("switched off", arm) for arm in F.ARM_ORDER})
+        snapshot = copy.deepcopy(forms)
+        try:
+            if not (fe or {}).get("present"):
+                raise _Absent(f"the fe structure arm is absent: {(fe or {}).get('reason')}")
+            flow, reason = _flow(repo)
+            if flow is None:
+                raise _Absent(f"flow capture: {reason}")
+            import _a3_fe_forms as FEF
+            frontend, stats, found = FEF.guards_part(flow, fe, forms, graph)
+            json.dumps(frontend, ensure_ascii=False, sort_keys=True)          # the write's own test
+            forms["frontend"] = frontend
+            if found:
+                forms.setdefault("arm_findings", {}).setdefault("frontend", []).extend(found)
+                stats["findings"] = {k: sum(1 for x in found if x["id"] == k) for k in sorted({x["id"] for x in found})}
+            built = ("guards",)
+            parts = {p: {"present": True, "reason": None} if p in built else {"present": False, "reason": "not built yet (slice 11)"}
+                     for p in F.ARMS["frontend"]["parts"]}
+            arms["frontend"] = {"present": True, "reason": ("partial — " + "; ".join(f"{p}: {o['reason']}" for p, o in parts.items()
+                                                                                   if not o["present"]))[:_ERR_CAP],
+                                "version": 1, "options": {}, "stats": stats, "parts": parts, "bytes": _size(frontend)}
+        except _Absent as absent:
+            forms.clear()
+            forms.update(snapshot)
+            forms["arms"]["frontend"] = _off(str(absent)[:_ERR_CAP], "frontend")
+        except Exception as exc:  # noqa: BLE001 — the frontend arm never costs the feed
+            forms.clear()
+            forms.update(snapshot)
+            forms["arms"]["frontend"] = _off(f"error: {type(exc).__name__}: {exc}"[:_ERR_CAP], "frontend")
+        return forms
+    except Exception as exc:  # noqa: BLE001
+        if isinstance(forms, dict):
+            forms["arms_error"] = f"{type(exc).__name__}: {exc}"[:_ERR_CAP]
+        return forms

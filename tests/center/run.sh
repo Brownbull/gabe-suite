@@ -388,6 +388,28 @@ for d in (a, b):
     d.pop("generated", None)
 assert json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True), "a raising forms pass changed the archmap"
 PY
+# FRONTEND FORMS (element-forms amendment 1, Slice 11): with the frontend arm selected, a raising extend_frontend still exits
+# 0, SAYS it skipped, and the endpoint forms stay the ones the build wrote.
+FF="$T/ffboom"; rm -rf "$FF"; cp -r "$FIX" "$FF"
+_ff=$(cd "$T" && GABE_FORMS_ARMS=frontend GABE_REPO_ROOT="$FF" GABE_SHELL_SRC="$SHELL_SRC" python3 - "$GEN" >"$T/build-ffboom.out" 2>&1 <<'PY'
+import sys, runpy; gen = sys.argv[1]; sys.path.insert(0, gen)
+import _a3_forms_build
+def boom(*a, **k): raise RuntimeError("fe boom")
+_a3_forms_build.extend_frontend = boom        # the frontend arm blows up — the wiring must not
+sys.argv = [gen + "/build_center_a3.py"]; runpy.run_path(gen + "/build_center_a3.py", run_name="__main__")
+PY
+echo $?)
+[ "$_ff" = 0 ] && grep -q "frontend forms SKIPPED (the map is unaffected): fe boom" "$T/build-ffboom.out" \
+  && ok || { bad "FRONTEND FORMS SILENT: a raising extend_frontend still exits 0 and SAYS it skipped (exit $_ff)"; grep -i "frontend\|Traceback" "$T/build-ffboom.out" | head; }
+python3 - "$FIX/docs/site/center/forms.json" "$FF/docs/site/center/forms.json" <<'PY' && ok || bad "FRONTEND FORMS SILENT: a raising extend_frontend leaves the endpoint forms as the build wrote them"
+import json, sys
+a, b = (json.load(open(x)) for x in sys.argv[1:3])
+def bare(v):                                  # a selected arm stamps x: / g: ids (Slice 2) — the forms themselves must not move
+    if isinstance(v, dict):
+        return {k: bare(x) for k, x in v.items() if k not in ("id", "exit", "exits")}
+    return [bare(x) for x in v] if isinstance(v, list) else v
+assert bare(a["endpoints"]) == bare(b["endpoints"]) and "frontend" not in b, "the endpoint forms moved, or a frontend key was written"
+PY
 # FORMS ARMS (element-forms amendment 1, Slice 1): selecting EVERY arm moves nothing but forms.json — archmap · c4-graph ·
 # levels stay the arms-off build's bytes (the generated stamp aside), and forms.json carries version 2 · head · arms while
 # the endpoint forms stay equal (no arm is built yet). A raising orchestrator internal still exits 0 and still writes the
