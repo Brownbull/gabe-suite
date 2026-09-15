@@ -456,9 +456,12 @@ def _find_handler(m: _Mod, ep: dict):
     return (hits[0][2], hits[0][3]) if hits else (None, None)
 
 
-def _full_path(repo: Path, m: _Mod, dec, files: list[str]) -> str:
+def _full_path(repo: Path, m: _Mod, dec, files: list[str]) -> tuple[str, bool]:
+    """``(path, resolved)`` — the mount, the router prefix and the route's own argument. An argument that is not a
+    literal resolves through the module's constants; when it does not resolve the caller says `full_path_state`."""
     rv = dec.func.value
-    sub = dec.args[0].value if dec.args and isinstance(dec.args[0], ast.Constant) and isinstance(dec.args[0].value, str) else ""
+    got = _path_str(m, dec.args[0]) if dec.args else ""
+    sub = got or ""
     pre, mount = "", ""
     if isinstance(rv, ast.Name):
         val = m.assigns.get(rv.id)
@@ -467,7 +470,38 @@ def _full_path(repo: Path, m: _Mod, dec, files: list[str]) -> str:
                 if kw.arg == "prefix" and isinstance(kw.value, ast.Constant) and isinstance(kw.value.value, str):
                     pre = kw.value.value
         mount = _C._mounts_for(repo, files)["mount"].get((m.rel, rv.id), "")
-    return mount + pre + sub
+    return mount + pre + sub, got is not None
+
+
+def _response_annotation(m: _Mod, fn) -> str | None:
+    """The Response class a handler's return annotation names — the library's own (`F.RESPONSE_DEFAULTS`) or a project
+    class built on one. FastAPI declares NO response model for such a handler (`routing.py:847-850`:
+    `lenient_issubclass(return_annotation, Response)` → `response_model = None`), so it serializes nothing."""
+    if fn.returns is None:
+        return None
+    name = (_unp(fn.returns) or "").split("[")[0].split("|")[0].strip()
+    if name in F.RESPONSE_DEFAULTS:
+        return name
+    cls = m.classes.get(name)
+    if cls and any(_leaf(b) in F.RESPONSE_DEFAULTS for b in cls.bases):
+        return name
+    return None
+
+
+def _path_str(m: _Mod, node) -> str | None:
+    """A route path argument as a string: a literal, a module constant one hop away, their concatenation, or an f-string
+    whose spans are all literal. Anything else is unresolved — and said so, never silently dropped."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    if isinstance(node, ast.Name) and isinstance(m.consts.get(node.id), str):
+        return str(m.consts[node.id])
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+        left, right = _path_str(m, node.left), _path_str(m, node.right)
+        return None if left is None or right is None else left + right
+    if isinstance(node, ast.JoinedStr):
+        parts = [x.value for x in node.values if isinstance(x, ast.Constant) and isinstance(x.value, str)]
+        return "".join(parts) if len(parts) == len(node.values) else None
+    return None
 
 
 def _declared(dec, fn, m: _Mod, ep: dict) -> dict:
@@ -482,11 +516,13 @@ def _declared(dec, fn, m: _Mod, ep: dict) -> dict:
                 s = _status(k, m) if k is not None else None
                 if s is None and isinstance(k, ast.Constant) and str(k.value).isdigit():
                     s = int(k.value)
-                if s:
+                if s and s >= 400:                           # a 2xx `responses={}` key documents the success shape
                     refusals.append(s)
     if resp:
         rm = {"name": resp, "state": "defined"}
     elif ep.get("stream"):
+        rm = {"state": "n/a"}
+    elif _response_annotation(m, fn):                         # routing.py:847-850 sets response_model = None
         rm = {"state": "n/a"}
     elif fn.returns is not None:
         rm = {"name": _unp(fn.returns), "state": "default"}
@@ -511,7 +547,7 @@ def _form(repo: Path, amap: dict, slug: str, ep: dict, mwx: list, files: list, f
     if fn is None:
         stats["unformed"] += 1
         return {**head, "state": "unknown", "reason": "handler file unparseable" if m is None else "handler not found"}
-    full = _full_path(repo, m, dec, files)
+    full, full_ok = _full_path(repo, m, dec, files)
     produced: list[dict] = []
     for x in mwx:                                            # 1 · app middleware, by path prefix
         if x["scope"] == "all" or any(full.startswith(p) for p in x["scope"]):
@@ -662,7 +698,8 @@ def _form(repo: Path, amap: dict, slug: str, ep: dict, mwx: list, files: list, f
             stats["unknown_reasons"][r.get("reason", "?")] = stats["unknown_reasons"].get(r.get("reason", "?"), 0) + 1
     for f in findings:
         stats["findings"][f["id"]] = stats["findings"].get(f["id"], 0) + 1
-    return {**head, "line": dec.lineno, "full_path": full, "declared": declared, "produced": rows,
+    return {**head, "line": dec.lineno, "full_path": full, **({} if full_ok else {"full_path_state": "unknown"}),
+            "declared": declared, "produced": rows,
             "preconditions": pre, "findings": findings,
             "slots": {"U3": {"state": u3, "rows": len(pre)},
                       "U7": {"state": u7, "rows": len(refusals), "unknown": unknown},

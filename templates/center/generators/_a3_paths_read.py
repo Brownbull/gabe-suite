@@ -152,6 +152,19 @@ def _status(expr, m: _Mod) -> int | None:
     return None
 
 
+def _unpacked_code(v, m: _Mod, repo: Path) -> str | None:
+    """A dict's `**<Enum>.<MEMBER>.detail(...)` unpack: the enum member IS the stable code the dict carries, so the
+    detail is not text-only. Onyx builds every error body this way (`error_handling/error_codes.py`)."""
+    node = v.func if isinstance(v, ast.Call) else v
+    while isinstance(node, ast.Attribute):
+        owner = node.value
+        if isinstance(owner, ast.Attribute) and isinstance(owner.value, ast.Name) and (
+                _bases(repo, m, owner.value.id) & F.ENUM_BASES):
+            return _unp(owner)
+        node = owner
+    return None
+
+
 def _detail(expr, m: _Mod, repo: Path, status: int | None) -> dict:
     """{form, detail[, code]} — text · object · enum · const · dynamic · expr · default-phrase."""
     if expr is None:
@@ -164,6 +177,8 @@ def _detail(expr, m: _Mod, repo: Path, status: int | None) -> dict:
         return {"form": "text", "detail": expr.value[:F.DETAIL_CAP]}
     if isinstance(expr, ast.Dict):
         for k, v in zip(expr.keys, expr.values):
+            if k is None and (code := _unpacked_code(v, m, repo)):   # `**OnyxErrorCode.BAD_REQUEST.detail(msg)`
+                return {"form": "object", "detail": _unp(expr), "code": code}
             if isinstance(k, ast.Constant) and k.value in F.CODE_KEYS and isinstance(v, ast.Constant):
                 return {"form": "object", "detail": _unp(expr), "code": str(v.value)}
         return {"form": "object", "detail": _unp(expr)}

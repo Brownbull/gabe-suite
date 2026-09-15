@@ -32,18 +32,32 @@ name = "fastapi"
 version = "0.136.3"
 LOCK
 cat > "$A/errors.py" <<'PYF'
+from enum import Enum
+
+
 class CodedError(Exception):
     pass
 
 
 class LockedError(Exception):
     status = 423
+
+
+class SpentError(Exception):
+    pass
+
+
+class ErrCode(Enum):
+    SPENT = ("SPENT", 402)
+
+    def detail(self, message: str) -> dict:
+        return {"error_code": self.value[0], "detail": message}
 PYF
 cat > "$A/main.py" <<'PYF'
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from errors import CodedError
+from errors import CodedError, ErrCode, SpentError
 from middleware.throttle import Throttle
 
 app = FastAPI()
@@ -53,6 +67,11 @@ app.add_middleware(Throttle)
 @app.exception_handler(CodedError)
 async def coded_handler(request, exc):
     return JSONResponse(status_code=422, content={"code": "coded", "detail": "coded failure"})
+
+
+@app.exception_handler(SpentError)
+async def spent_handler(request, exc):
+    return JSONResponse(status_code=402, content={"message": str(exc), **ErrCode.SPENT.detail(str(exc))})
 PYF
 cat > "$A/middleware/throttle.py" <<'PYF'
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -255,6 +274,56 @@ async def get_plain(request: Request):
     return {"ok": True}
 PYF
 
+cat > "$A/api/files.py" <<'PYF'
+from fastapi import APIRouter, Response
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+
+from errors import SpentError
+
+router = APIRouter(prefix="/files")
+_BASE = "/kept"
+_ROUTES = {"pick": "/pick"}
+
+
+class FileMeta(BaseModel):
+    name: str
+
+
+class CsvResponse(Response):
+    media_type = "text/csv"
+
+
+@router.get("/raw")
+def raw_file() -> Response:
+    return Response(content=b"x", media_type="application/octet-stream")
+
+
+@router.get("/sheet")
+def sheet_file() -> CsvResponse:
+    return CsvResponse(content=b"a,b")
+
+
+@router.get("/meta", response_model=FileMeta, responses={200: {"model": FileMeta}, 404: {"description": "gone"}})
+def file_meta() -> Response:
+    return JSONResponse({"name": "x"})
+
+
+@router.get(_BASE + "/{name}")
+def kept_file(name: str) -> FileMeta:
+    return FileMeta(name=name)
+
+
+@router.post(_ROUTES["pick"])
+def pick_file() -> FileMeta:
+    return FileMeta(name="p")
+
+
+@router.get("/spent")
+def spent_file() -> FileMeta:
+    raise SpentError("out of credit")
+PYF
+
 # the shared driver: parse the tree the way the build does, run the pass, dump JSON
 cat > "$T/drive.py" <<'PYF'
 import json, pathlib, sys
@@ -288,10 +357,11 @@ PY
 check "C0 · the pass runs and forms every endpoint" <<'PY'
 assert O["present"] is True, O
 assert O["framework"]["locks"] == {"uv.lock": "0.136.3"}, O["framework"]
-assert O["stats"]["endpoints"] == 9 and O["stats"]["unformed"] == 0, O["stats"]
+assert O["stats"]["endpoints"] == 15 and O["stats"]["unformed"] == 0 and O["stats"]["collisions"] == 0, O["stats"]
 assert set(O["endpoints"]) == {"endpoint:POST /items/apply", "endpoint:GET /items/team", "endpoint:GET /items/dynamic",
     "endpoint:GET /items/deep", "endpoint:GET /items/swallow", "endpoint:GET /items/coded", "endpoint:GET /items/denied",
-    "endpoint:GET /items/locked", "endpoint:GET /plain"}, sorted(O["endpoints"])
+    "endpoint:GET /items/locked", "endpoint:GET /plain", "endpoint:GET /files/raw", "endpoint:GET /files/sheet",
+    "endpoint:GET /files/meta", "endpoint:GET /files/spent", "endpoint:GET /files", "endpoint:POST /files"}, sorted(O["endpoints"])
 PY
 
 check "C1 · FIRE: a handler raise is a text-only refusal, its guard a precondition, the body a 422" <<'PY'
@@ -379,6 +449,35 @@ k = "endpoint:GET /items/locked"
 r = [x for x in E(k)["produced"] if x.get("via") == "app handler LockedError"]
 assert r and r[0]["state"] == "unknown" and r[0]["status"] is None and "status set at runtime" in r[0]["reason"], E(k)["produced"]
 assert "escape-500" not in fid(k), E(k)["findings"]
+PY
+
+check "C14 · FIRE+SILENT: FastAPI declares no response model for a Response return, and a 2xx `responses={}` key is no refusal" <<'PY'
+raw, sheet, meta = E("endpoint:GET /files/raw"), E("endpoint:GET /files/sheet"), E("endpoint:GET /files/meta")
+assert raw["declared"]["response_model"] == {"state": "n/a"}, raw["declared"]          # -> Response (routing.py:847-850)
+assert sheet["declared"]["response_model"] == {"state": "n/a"}, sheet["declared"]      # -> a project Response subclass
+assert meta["declared"]["response_model"] == {"name": "FileMeta", "state": "defined"}, meta["declared"]
+assert E("endpoint:GET /files")["declared"]["response_model"] == {"name": "FileMeta", "state": "default"}, "a model return still reads default"
+assert meta["declared"]["refusals"] == [404], meta["declared"]                         # the documented 200 is the success shape
+d = [f for f in meta["findings"] if f["id"] == "declared-unproduced"]
+assert d and d[0]["statuses"] == [404], meta["findings"]                               # a real declared refusal still fires
+assert not [f for f in meta["findings"] if f["id"] == "declared-unproduced" and 200 in f["statuses"]], meta["findings"]
+PY
+
+check "C15 · FIRE+SILENT: a route path built from a module constant resolves; an unresolved argument says so" <<'PY'
+kept, pick = E("endpoint:GET /files"), E("endpoint:POST /files")
+assert kept["full_path"] == "/files/kept/{name}" and "full_path_state" not in kept, kept["full_path"]
+assert pick["full_path"] == "/files" and pick["full_path_state"] == "unknown", (pick["full_path"], pick.get("full_path_state"))
+assert E("endpoint:GET /items/team")["full_path"] == "/items/team" and "full_path_state" not in E("endpoint:GET /items/team")
+PY
+
+check "C16 · FIRE+SILENT: a code carried by a double-star Enum-member detail unpack is a code, not text-only" <<'PY'
+k = "endpoint:GET /files/spent"
+r = rows(k, status=402)
+assert len(r) == 1 and r[0]["form"] == "object" and r[0]["code"] == "ErrCode.SPENT", r
+assert r[0]["via"] == "app handler SpentError", r[0]
+assert "text-only" not in fid(k), E(k)["findings"]
+t = rows("endpoint:POST /items/apply", status=400)                                      # a plain string detail stays text
+assert t and t[0]["form"] == "text" and not t[0].get("code"), t
 PY
 
 check "C10a · determinism and no mutation of the archmap it reads" <<'PY'

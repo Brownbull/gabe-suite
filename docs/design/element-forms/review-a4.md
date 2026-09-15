@@ -126,6 +126,21 @@ confirmed findings. The largest group is RC-D (12, an idiom roster); the costlie
 FROZEN FIXTURE: no confirmed frontend fix needs the extractor for its RULE; the battery CASES for V13 V14 V40a and the clean variant of V28
 need new fixture sources → re-derive tests/forms-frontend/flow.frozen.json. V27's fix re-blesses run.sh F17.
 
+## Landed
+
+1 · the split — `728856f`, byte-neutral on all four feeds (D26's own trigger).
+2 · the endpoint-pass batch — V1 V2 V5 V6 in ONE commit (they share the fixture and one re-bless), cases C14 C15 C16,
+    6 mutants each killed by its own case. V3 and V4's escape/reason lifts move to fix 3: both need the falsification leaf.
+    Measured old → new: response_model → n/a 4 · 1 · 20 (gustify · gastify · tier3) · full_path corrected 4 · 0 · 1 ·
+    declared.refusals fixed 0 · 0 · 2 · rows that gained a code 0 · 0 · 75. tier3 shared-status 164 → 103,
+    declared-unproduced 2 → 0, text-only 452 → 449; census forms_nag 275 → 214, forms_count 934 → 929. gustify and
+    gastify stay census-IDENTICAL on all 30 measures — response_model and full_path feed no finding. 62/62 goldens match.
+
+⚠ BASELINE NOISE (not a finding, seen while re-blessing): `board.html` carries WALLCLOCK card ages ("on the board 56
+days"), so every `map-baseline check` run a day after its bless reports it as moved on gustify and gastify. Re-blessing
+re-stamps it and the drift returns tomorrow. The fix is one more `_NORM_RX` rule in `scripts/map-baseline.sh`; owed,
+outside this pass — until then, read a lone `board.html` in a check as the calendar, never as a regression.
+
 ## Refuted (8)
 B6  /healthz findings from an applies:false row — declared floor D19, and the fix is forbidden by §A1 shared rules + D16. Operator config flip.
 B10 mutually exclusive callee writes as definite — declared twice in Slice 6 "As built"; every step carries cond: true; W2 is a model-binding widening.
