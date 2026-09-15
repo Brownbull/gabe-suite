@@ -268,6 +268,14 @@ const factoryLit = (call, depth) => {
   }
   return out;
 };
+// a function's parameters: a name, or a destructured object's keys (`{ error: err }` → "error:err") — the reason map follows them
+const NAME_RX = /^[A-Za-z_$][\w$]*(\??\.[A-Za-z_$][\w$]*)*$/;
+const paramsOf = fn => {
+  const sf = fn.getSourceFile();
+  const ps = (fn.parameters || []).map(p => ts.isIdentifier(p.name) ? p.name.text
+    : ts.isObjectBindingPattern(p.name) ? p.name.elements.map(e => e.propertyName ? e.propertyName.getText(sf) + ':' + e.name.getText(sf) : e.name.getText(sf)) : null);
+  return ps.length ? { params: ps } : {};
+};
 // a name that is the first parameter of a `.map` / `.forEach` / `.flatMap` callback → the receiver's resolved elements
 const forwardOf = id => {
   let n = id.parent;
@@ -284,7 +292,7 @@ const forwardOf = id => {
 const optVal = (v, depth) => {
   v = unparen(v);
   if (!v) return null;
-  if (isFn(v)) return { fn: ts.isFunctionExpression(v) && v.name ? v.name.text : 'inline', line: lineOf(v) };
+  if (isFn(v)) return { fn: ts.isFunctionExpression(v) && v.name ? v.name.text : 'inline', line: lineOf(v), ...paramsOf(v) };
   if (ts.isObjectLiteralExpression(v)) return depth < 4 ? optTree(v, depth + 1) : { expr: clip(v.getText(v.getSourceFile()), 60) };
   const lit = resolveLit(v);
   if (lit != null) return lit;
@@ -297,7 +305,7 @@ const optTree = (o, depth) => {
     if (!p.name) continue;
     const key = p.name.getText(sf);
     if (ts.isShorthandPropertyAssignment(p)) out[key] = optVal(p.name, depth);
-    else if (ts.isMethodDeclaration(p)) out[key] = { fn: key, line: lineOf(p) };
+    else if (ts.isMethodDeclaration(p)) out[key] = { fn: key, line: lineOf(p), ...paramsOf(p) };
     else if (ts.isPropertyAssignment(p)) out[key] = optVal(p.initializer, depth);
   }
   return out;
@@ -341,6 +349,8 @@ const bodyRows = (root, list = null) => {
       const lits = (n.arguments || []).slice(0, 3).map(a => resolveLit(a));
       const extra = { callee };
       if (lits.some(a => a != null)) extra.args = lits;
+      const refs = (n.arguments || []).slice(0, 3).map(a => { const t = unparen(a) && unparen(a).getText(sf); return t && NAME_RX.test(t) ? t : null; });   // `describe(mutation.error)`
+      if (refs.some(a => a != null)) extra.refs = refs;
       const obj = (n.arguments || []).map(unparen).find(a => a && ts.isObjectLiteralExpression(a));   // `redirect({ to: "/items" })` — the literal properties
       if (obj) { const props = {}; for (const p of obj.properties) if (ts.isPropertyAssignment(p) && p.name) { const v = resolveLit(p.initializer); if (v != null) props[p.name.getText(sf)] = v; } if (Object.keys(props).length) extra.props = props; extra.opts = optTree(obj, 0); }
       push(ts.isCallExpression(n) ? 'call' : 'new', n, extra, guards, after, ctx);
@@ -364,7 +374,7 @@ const bodyRows = (root, list = null) => {
     }
     else if (ts.isBinaryExpression(n) && CMP_OPS.has(n.operatorToken.kind)) {
       const r = resolveLit(n.right), l = resolveLit(n.left);
-      push('cmp', n, { left: clip(n.left.getText(sf), 60), op: n.operatorToken.getText(sf), right: r != null ? r : clip(n.right.getText(sf), 60), ...(l != null ? { left_lit: l } : {}) }, guards, after, ctx);
+      push('cmp', n, { left: clip(n.left.getText(sf), 60), op: n.operatorToken.getText(sf), right: r != null ? r : clip(n.right.getText(sf), 60), ...(r == null ? { rx: true } : {}), ...(l != null ? { left_lit: l } : {}) }, guards, after, ctx);
     }
     ts.forEachChild(n, c => expr(c, guards, after, ctx));
   };
@@ -403,6 +413,12 @@ const bodyRows = (root, list = null) => {
           const init = unparen(ts.isAwaitExpression(d.initializer) ? d.initializer.expression : d.initializer);
           const fed = ts.isCallExpression(init) ? rows.slice(before).find(r => r.k === 'call' && r.line === lineOf(init) && !r.ctx === !ctx.length) : null;
           if (fed) fed.binds = binds;
+          else if (init && !ts.isCallExpression(init) && !isFn(init)) {   // `const active = redo ? save : complete` — the names an alias may hold
+            const alts = ts.isConditionalExpression(init) ? [init.whenTrue, init.whenFalse]
+              : ts.isBinaryExpression(init) && [ts.SyntaxKind.QuestionQuestionToken, ts.SyntaxKind.BarBarToken].includes(init.operatorToken.kind) ? [init.left, init.right] : [init];
+            const texts = alts.map(a => unparen(a).getText(sf));
+            if (texts.every(t => NAME_RX.test(t))) push('let', d, { binds, alts: texts }, guards, passed, ctx);
+          }
         }
       } else if (ts.isBlock(st)) stmts(st.statements, guards, passed, ctx);
       else if (ts.isForOfStatement(st) || ts.isForInStatement(st) || ts.isForStatement(st) || ts.isWhileStatement(st) || ts.isDoStatement(st)) {
@@ -463,7 +479,7 @@ const routesOf = sf => {
 };
 const flowOf = sf => {
   const bodies = {};
-  const add = (name, fn) => { if (!fn || bodies[name]) return; const got = bodyRows(fn); bodies[name] = { line: lineOf(fn), rows: got.rows, ...(got.truncated ? { truncated: true } : {}) }; };
+  const add = (name, fn) => { if (!fn || bodies[name]) return; const got = bodyRows(fn); bodies[name] = { line: lineOf(fn), ...paramsOf(fn), rows: got.rows, ...(got.truncated ? { truncated: true } : {}) }; };
   for (const st of sf.statements) {
     if (ts.isFunctionDeclaration(st) && st.name) add(st.name.text, st);
     else if (ts.isExportAssignment(st) && isFn(unparen(st.expression))) add('default', unparen(st.expression));

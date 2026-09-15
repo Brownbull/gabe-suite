@@ -29,13 +29,24 @@ py() {  # py "<name>" <<'PY' … PY — the prelude gives FLOW · GRAPH · FORMS
 import copy, json, os, re
 from pathlib import Path
 HERE = Path(os.environ["HERE"])
-import _a3_fe as FE, _a3_fe_forms as FEF, _a3_forms as F, _a3_forms_build as B
+import _a3_fe as FE, _a3_fe_forms as FEF, _a3_fe_reason as FER, _a3_forms as F, _a3_forms_build as B
 FLOW = json.load(open(HERE / "flow.frozen.json"))
 GRAPH = {"cross_edges": [{"kind": "bridge", "export": "fe:src/lib/useMe.ts#useMe", "to": "endpoint:GET /me", "via": "fetch"}]}
 FORMS = {"present": True, "endpoints": {"endpoint:GET /me": {"declared": {"response_model": {"name": "MeResponse", "state": "defined"}}}},
          "schemas": {"schema:MeResponse": {"fields": [{"name": "setup_required"}]}}}
 def run(flow=FLOW, forms=FORMS, graph=GRAPH):
     return FEF.guards_part(flow, FE.build_fe(flow, None), copy.deepcopy(forms), graph)
+FORMS_R = {"present": True, "endpoints": {
+    "endpoint:GET /me": {"produced": [{"id": "x:me401", "status": 401, "detail": "Not authenticated"}]},
+    "endpoint:POST /setup/complete": {"produced": [{"id": "x:401", "status": 401, "detail": "Not authenticated"}, {"id": "x:inprog", "status": 409, "detail": "setup in progress"},
+                                                   {"id": "x:consent", "status": 409, "detail": "consent required"}, {"id": "x:locked", "status": 423, "detail": "locked", "code": "setup_locked"},
+                                                   {"id": "x:500", "status": 500}],
+                                      "findings": [{"id": "shared-status", "slot": "U7", "status": 409, "details": ["consent required", "setup in progress"]}]},
+    "endpoint:PATCH /settings": {"produced": [{"id": "x:422", "status": 422}]}}}
+def reason(flow=FLOW, forms=FORMS_R):
+    hooks, _ = FEF.hooks_part(flow, GRAPH)
+    cl, _ = FEF.client_part(flow, HERE / "fixture", hooks)
+    return FER.reason_part(flow, copy.deepcopy(forms), hooks, cl["transport"])
 def G(fr, name):
     return next(v for k, v in fr["pieces"].items() if k.endswith("#" + name))
 def at(rel, text, nth=1):
@@ -128,10 +139,12 @@ B._flow = lambda repo: (FLOW, "ok")
 fe_arm = {**FE.build_fe(FLOW, None), "present": True}
 f2 = B.extend_frontend({"present": False, "reason": "no FastAPI endpoints"}, fe_arm, HERE / "fixture", {}, graph=GRAPH)
 a = f2["arms"]["frontend"]
-assert a["present"] is True and a["parts"]["guards"] == a["parts"]["hooks"] == a["parts"]["client"] == {"present": True, "reason": None} and a["parts"]["reason"] == {"present": False, "reason": "not built yet (slice 11)"}, a
+assert a["present"] is True and a["parts"]["guards"] == a["parts"]["hooks"] == a["parts"]["client"] == {"present": True, "reason": None} and a["parts"]["reason"] == {"present": True, "reason": None} and a["parts"]["controls"] == {"present": False, "reason": "not built yet (slice 11)"}, a
 assert f2["frontend"]["pieces"]["fe:src/lib/useMe.ts#useMe"]["form"] == "hook" and f2["frontend"]["client"]["clients"] and a["stats"]["hooks"]["queries"] == 5, sorted(f2["frontend"])
 assert a["stats"]["guards"] == 7 and a["stats"]["findings"] == {"redirect-loop": 1} and a["bytes"] > 0 and sorted(f2["arms"]) == sorted(F.ARM_ORDER), a
 assert f2["present"] is False and f2["arm_findings"]["frontend"][0]["id"] == "redirect-loop" and "fe:src/routes/RequireSetup.tsx#RequireSetup" in f2["frontend"]["pieces"]
+f6 = B.extend_frontend(copy.deepcopy(FORMS_R), fe_arm, HERE / "fixture", {}, graph=GRAPH)
+assert f6["arms"]["frontend"]["stats"]["findings"] == {"branch-unproduced": 1, "client-detail-unmatched": 1, "reason-collapsed": 1, "redirect-loop": 1} and len(f6["frontend"]["reasons"]["sites"]) == 13, f6["arms"]["frontend"]["stats"]
 B._flow = lambda repo: (None, "extractor timed out after 300s")
 f4 = B.extend_frontend({"present": True, "endpoints": {}}, fe_arm, HERE / "fixture", {}, graph=GRAPH)
 assert f4["arms"]["frontend"]["reason"] == "flow capture: extractor timed out after 300s" and "frontend" not in f4
@@ -171,7 +184,7 @@ assert [s["key"] for s in cs["seeds"]] == [["me"]] and (cs["kind"], [(f["method"
 assert rc["key"] == ["recipes", "detail", "*"] and [b["key"] for b in rc["invalidated_by"]] == [["recipes"]] and [f["path"] for f in rc["fetch"]] == ["/api/v1/recipes/*"], rc
 assert "key" not in lo and lo["key_unresolved"] == "KEY" and st["options"] == {"staleTime": 0} and [b["key"] for b in st["invalidated_by"]] == [["settings"]], (lo, st)
 assert call("useThings")["key"] == ["things", "list"], call("useThings")
-assert hs == {"queries": 5, "mutations": 1, "keys_unresolved": 1, "fetches": 6, "invalidations": 3, "seeds": 1, "invalidated_by": 3}, hs
+assert hs == {"queries": 5, "mutations": 2, "keys_unresolved": 1, "fetches": 7, "invalidations": 3, "seeds": 1, "invalidated_by": 3}, hs
 assert "fe:src/routes/RequireSetup.tsx#RequireSetup" not in hooks
 PY
 
@@ -210,6 +223,57 @@ assert [(b["fn"], b.get("status"), b.get("throws"), b["when"], b.get("ctx"), b["
     ("apiFetch", 503, None, [], "callback:then", at(f, "r.status === 503")), ("apiFetch", None, "new ApiError(503)", ["r.status === 503"], "callback:then", at(f, "throw new ApiError(503)")),
     ("apiFetch", 401, None, [], None, at(f, "response.status === 401")), ("apiFetch", None, "new ApiError(response.status)", ["!response.ok"], None, at(f, "throw new ApiError(response.status)"))], t[f]["branches"]
 assert (cs["wrappers"], cs["transport_branches"]) == (1, 4), cs
+PY
+
+py "F13 · reason map: each status, detail or code comparison walked back to the requests its receiver holds — a hook value through an alias, a parameter's call sites, a caught error's try block, a mutate onError, a component prop — and each endpoint's exits routed to the first site that covers them" <<'PY'
+r, rs, _ = reason()
+f = "src/routes/SetupForm.tsx"
+S = {s["at"]: s for s in r["sites"]}
+s409 = S[at(f, "error.status === 409) return")]
+assert (s409["reads"], s409["value"], s409["branch"], s409["endpoints"]) == ("status", 409, "none", ["endpoint:PATCH /settings", "endpoint:POST /setup/complete"]), s409
+assert sorted((o["kind"], tuple(o["endpoints"])) for o in s409["origins"]) == [("catch", ()), ("hook", ("endpoint:PATCH /settings",)), ("hook", ("endpoint:POST /setup/complete",))], s409["origins"]
+cm = S[at(f, "error.status === 409) {")]
+assert (cm["branch"], cm["endpoints"], [o["kind"] for o in cm["origins"]]) == ("reads", ["endpoint:POST /setup/complete"], ["hook", "hook"]), cm
+assert sorted(len(o["via"]) for o in cm["origins"]) == [3, 4] and any(v == at(f, "useRetrySetup({ mutation: complete })") for o in cm["origins"] for v in o["via"]), cm["origins"]
+eb = S[at(f, 'error.code === "setup_locked"')]
+assert (eb["reads"], eb["endpoints"], eb["origins"][0]["kind"]) == ("code", ["endpoint:POST /setup/complete"], "hook"), eb
+me = S[at(f, "me.error.status === 401")]
+assert (me["branch"], me["endpoints"]) == ("value", ["endpoint:GET /me"]), me
+rq = S[at("src/routes/RequireSetup.tsx", ".status === 401")]
+assert (rq["receiver"], rq["branch"], rq["endpoints"], rq["origins"][0]["kind"]) == ("error", "none", ["endpoint:GET /me"], "hook"), rq
+un = S[at("src/lib/api/errors.ts", "value.status >= 400")]
+assert (un["endpoints"], un["origins"][0]["kind"], un["origins"][0]["reason"]) == ([], "unknown", "no call site passes error"), un
+rd = {(x["fn"], x["receiver"]): x for x in r["readers"]["endpoint:POST /setup/complete"]}
+assert sorted(rd) == [("ErrorBody", "error"), ("conflictMessage", "error"), ("setupErrorMessage", "error")], sorted(rd)
+assert {x["exit"]: x["site"] for x in rd[("setupErrorMessage", "error")]["routes"]} == {"x:401": "rest", "x:inprog": s409["id"], "x:consent": s409["id"], "x:locked": "rest", "x:500": "rest"}
+assert {x["exit"]: x["site"] for x in rd[("ErrorBody", "error")]["routes"]}["x:locked"] == eb["id"]
+assert not [s for s in r["sites"] if s["at"].startswith("src/lib/api/client.ts")] and all(re.fullmatch(r"r-[0-9a-f]{10}", s["id"]) for s in r["sites"])
+lm, sv = S[at(f, "res.status === 401")], S[at(f, "response.status === 422")]
+assert [(o["kind"], o["endpoints"]) for o in lm["origins"]] == [("fetch", ["endpoint:GET /me"])] and [(o["kind"], o["endpoints"]) for o in sv["origins"]] == [("fetch", ["endpoint:PATCH /settings"])], (lm, sv)
+assert rs == {"sites": 13, "reads_status": 10, "reads_detail": 1, "reads_code": 2, "joined": 11, "unknown": 2, "endpoints": 3, "routed": 9, "rest": 11}, rs
+PY
+
+py "F14 · reason findings FIRE: a status-only branch on a shared status, a status no reached endpoint produces, a code no exit says; SILENT on a branch that reads the detail, a status with no shared-status, a site that reaches no endpoint" <<'PY'
+_, _, found = reason()
+f = "src/routes/SetupForm.tsx"
+assert [(x["id"], x["at"], x.get("endpoint"), x.get("status") or x.get("value")) for x in found] == [
+    ("branch-unproduced", at(f, "error.status === 418"), None, 418),
+    ("client-detail-unmatched", at(f, '"no_such_code"'), None, "no_such_code"),
+    ("reason-collapsed", at(f, "error.status === 409) return"), "endpoint:POST /setup/complete", 409)], found
+assert found[2]["details"] == ["consent required", "setup in progress"] and found[0]["endpoints"] == ["endpoint:PATCH /settings", "endpoint:POST /setup/complete"], found
+m = copy.deepcopy(FORMS_R)
+m["endpoints"]["endpoint:POST /setup/complete"].pop("findings")
+assert [x["id"] for x in reason(forms=m)[2]] == ["branch-unproduced", "client-detail-unmatched"]
+m["endpoints"]["endpoint:GET /me"]["findings"] = [{"id": "shared-status", "status": 401, "details": ["Not authenticated", "token expired"]}]
+got = [(x["at"], x["endpoint"]) for x in reason(forms=m)[2] if x["id"] == "reason-collapsed"]
+assert got == [(at("src/routes/RequireSetup.tsx", ".status === 401"), "endpoint:GET /me"), (at(f, "res.status === 401"), "endpoint:GET /me"), (at(f, "me.error.status === 401"), "endpoint:GET /me")], got
+assert reason(forms={"present": True, "endpoints": {}})[2] == []
+m2 = copy.deepcopy(FORMS_R)                           # an exit whose status an app handler sets at runtime: nothing is provably absent
+m2["endpoints"]["endpoint:PATCH /settings"]["produced"].append({"id": "x:rt", "status": None, "form": "dynamic", "detail": "handler"})
+assert [x["id"] for x in reason(forms=m2)[2]] == ["reason-collapsed"], reason(forms=m2)[2]
+m3 = copy.deepcopy(FORMS_R)                           # a runtime detail text: an unmatched literal proves nothing, a missing status still does
+m3["endpoints"]["endpoint:POST /setup/complete"]["produced"].append({"id": "x:dyn", "status": 409, "detail": "str(exc)", "form": "dynamic"})
+assert [x["id"] for x in reason(forms=m3)[2]] == ["branch-unproduced", "reason-collapsed"], reason(forms=m3)[2]
 PY
 
 py "F15 · the structure arm never depends on flow: build_fe over the capture with and without its flow keys is identical" <<'PY'

@@ -26,6 +26,8 @@ CLIENT_CLASSES = frozenset({"QueryClient"})
 INVALIDATE_CALLS = frozenset({"invalidateQueries", "refetchQueries", "resetQueries", "removeQueries"})
 SEED_CALLS = frozenset({"setQueryData"})
 POLICY_KEYS = ("retry", "retryDelay", "staleTime", "gcTime", "refetchOnWindowFocus", "refetchOnReconnect", "refetchOnMount", "networkMode")
+MUTATE_CALLS = frozenset({"mutate", "mutateAsync"})           # `m.mutate(body, { onError })` — the callback's error is m's request
+REASON_MEMBERS = ("detail", "code")                             # what a client reads to tell two refusals of one status apart (Slice 11c)
 # the defaults a query client uses when nothing sets them, READ from the installed package — each value names its source
 # and the lowest version it was read on; a lock file below that version (or none) reads `unknown`, never a guess
 LIBRARY_DEFAULTS = {

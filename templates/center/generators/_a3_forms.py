@@ -170,6 +170,12 @@ FINDINGS = {
                           "says": "a bound only the schema enforces while a writer sets the column without the schema — the table takes what the API refuses"},
     "redirect-loop": {"arm": "frontend", "slot": "K3", "pulse": "nag",
                       "says": "a guard redirects into its own route subtree — the page it sends the user to runs the same guard again"},
+    "reason-collapsed": {"arm": "frontend", "slot": "U7", "pulse": "nag",
+                         "says": "a client branch reads only the status of a refusal whose status another refusal shares — two reasons show one message"},
+    "branch-unproduced": {"arm": "frontend", "slot": "U7", "pulse": "count",
+                          "says": "a client branches on a status no endpoint it calls produces — the branch never runs"},
+    "client-detail-unmatched": {"arm": "frontend", "slot": "U7", "pulse": "count",
+                                "says": "a client compares a detail or code no exit of the endpoint says — the branch never matches"},
     "race-500": {"arm": "contract", "slot": "U12", "pulse": "nag",
                  "says": "a retry races its own first try on a unique key nothing catches — the loser answers 500, not the first result"},
 }
