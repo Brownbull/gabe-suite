@@ -176,6 +176,14 @@ need new fixture sources → re-derive tests/forms-frontend/flow.frozen.json. V2
     `_a3_graph`); two arch-graph checks, two mutants; bridges gustify 53 → 56 · tier3 188 → 192 with every
     (screen, endpoint) pair unchanged; gastify and keypro untouched; 62/62 goldens.
 
+6 · the state-word sweep — V21 (FRAMEWORK_MIN 0.136.1, the proven floor; a closed gate says `dependency_gate:
+    closed: fastapi <v> < 0.136.1` and the inherited counters read unknown — gastify's 391 unknown paths become 308 ran,
+    its provisions 0 → 188, which closes V22b) · V23 (`surfaces: beyond one level | not reached by an endpoint` beside an
+    empty `surfaces_on`) · V25 (`fields{}` on migration-drift; tier3's 29 server_default-only named) · V26 (mirror rows
+    `subject` / `other`, `with` the reference) · V30 (a selected arm with nothing to build on is `absent: …`, keypro) ·
+    V40b (`route_config: read | no route config read`, `mounts_state`). 8 mutants each killed by its own case on a
+    green baseline; arms-off byte-identical on all four targets.
+
 ⚠ CORRECTION to fix 3 (`16ba773`): its `is None` fold read any bound non-constant expression as proof of "not None",
 so `need_owner(session)` with a `session` parameter had its 409 proven dead — in the default feed. Fixed in fix 4 (the
 fold abstains on a name; cases C17 `/items/maybe` + S5.P18 `need_owner`, one mutant). Its published `falsified`

@@ -618,6 +618,8 @@ def _race_on_path(S: _Steps, pairs: list) -> None:
 def endpoint_effects(repo: Path, key: str, v: dict, m, fn, dec, S: _Steps, stats: dict) -> dict:
     fw = P._framework(repo, m.rel)
     fw_ok = bool(fw and P._vt(fw[0]) >= P._vt(SH.FRAMEWORK_MIN))
+    if not fw_ok:                                            # §A4 V21: a closed gate is a state, not a zero
+        stats["dependency_gate"] = f"closed: fastapi {fw[0] if fw else 'unpinned'} < {SH.FRAMEWORK_MIN}"
     deps = [d for d in W._dep_order(repo, m, fn, dec) if d.get("node") is not None]
     dep_pairs = {d["fid"]: S.of(d["m"], _qual(d["m"], d["node"])) for d in deps}
     rows = {r.get("id"): r for r in v.get("produced") or []}
@@ -754,6 +756,10 @@ def run(forms: dict, ctx: dict) -> dict:
     for r in S.steps.values():
         if r.get("widening"):
             stats["widenings"][r["widening"]] = stats["widenings"].get(r["widening"], 0) + 1
+    if str(stats.get("dependency_gate", "")).startswith("closed"):   # nothing inherited could be counted
+        stats["refusal_writes_inherited"] = stats["safe_method_commits_inherited"] = "unknown"
+    else:
+        stats["dependency_gate"] = "open"
     stats.update(steps=len(S.steps), floor=S.floor, unresolved=len(S.unresolved),
                  commit_sites=len({r["at"] for r in S.steps.values() if r["op"] == "commit"}))
     return {"version": 1, "stats": stats, "options": {"depth": EF["depth"], "widenings": widen}}

@@ -323,10 +323,13 @@ def guards_part(flow: dict, fe: dict, forms: dict, graph: dict | None) -> tuple[
                            **({} if pid in fe_ids else {"structure": "no fe piece"}),
                            "hooks": {k: v[0] for k, v in sorted(binds.items()) if str(v[0]).startswith("fe:")}, "exits": exits, "effects": effects}
     routers = _routers(flow)
+    stats["route_config"] = "read" if routers else "no route config read"   # §A4 V40b: `routers: 0` alone reads as a count
     nodes = _mounts(routers, flow, set(pieces))
     found = []
     for pid, g in pieces.items():
         g["mounts"] = sum(1 for n in nodes if pid in n["own"])
+        if not routers:
+            g["mounts_state"] = "no route config read"
         g["chain"] = _chain(pid, pieces, nodes)
         g["k3"] = _k3(pid, pieces, nodes, bool(routers))
         stats["guards"] += 1

@@ -190,8 +190,10 @@ def functions_part(repo: Path, forms: dict, amap: dict) -> tuple[dict, list, dic
         raises = _raises(repo, m, node, rows_by_raise, escapes_by_at, climbs_one, bool(endpoint_depths), late_by_at)
         refusals = []
         for r in P._analyse(repo, m, node)["rows"]:
+            hit = rows_by_at.get(r.get("at"), [])
             refusals.append({"status": r.get("status"), "at": r.get("at"), **({"pred": r["pred"]} if r.get("pred") else {}),
-                             "surfaces_on": rows_by_at.get(r.get("at"), [])})
+                             "surfaces_on": hit,              # §A4 V23: an empty list is not "nowhere" — say why
+                             **({} if hit else {"surfaces": "beyond one level" if endpoint_depths else "not reached by an endpoint"})})
         swallows = _swallows(repo, m, node)
         savepoints = sorted({f"{m.rel}:{n.lineno}" for n in ast.walk(node) if isinstance(n, ast.Call) and P._leaf(n.func) == "begin_nested"},
                             key=lambda a: int(a.rpartition(":")[2]))

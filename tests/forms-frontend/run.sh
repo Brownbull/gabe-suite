@@ -138,6 +138,11 @@ assert f1["arms"]["frontend"]["present"] is False and "the fe structure arm is a
 B._flow = lambda repo: (FLOW, "ok")
 fe_arm = {**FE.build_fe(FLOW, None), "present": True}
 f2 = B.extend_frontend({"present": False, "reason": "no FastAPI endpoints"}, fe_arm, HERE / "fixture", {}, graph=GRAPH)
+assert f2["arms"]["paths"]["reason"] == "switched off", f2["arms"]["paths"]          # V30: not selected → switched off …
+os.environ["GABE_FORMS_ARMS"] = "all"
+f2a = B.extend_frontend({"present": False, "reason": "no FastAPI endpoints"}, fe_arm, HERE / "fixture", {}, graph=GRAPH)
+assert f2a["arms"]["paths"]["reason"].startswith("absent: no endpoint forms") and f2a["arms"]["frontend"]["present"] is True, f2a["arms"]["paths"]   # … selected but nothing to build on → absent, with why
+os.environ["GABE_FORMS_ARMS"] = "frontend"
 a = f2["arms"]["frontend"]
 assert a["present"] is True and a["reason"] is None and all(o == {"present": True, "reason": None} for o in a["parts"].values()) and sorted(a["parts"]) == sorted(F.ARMS["frontend"]["parts"]), a
 assert f2["frontend"]["pieces"]["fe:src/lib/useMe.ts#useMe"]["form"] == "hook" and f2["frontend"]["client"]["clients"] and a["stats"]["hooks"]["queries"] == 8, sorted(f2["frontend"])
@@ -165,6 +170,20 @@ B._size = size_boom                                   # fails AFTER frontend{} a
 f5 = B.extend_frontend({"present": True, "endpoints": {}}, fe_arm, HERE / "fixture", {}, graph=GRAPH)
 assert "size down" in f5["arms"]["frontend"]["reason"] and "frontend" not in f5 and "arm_findings" not in f5, sorted(f5)
 B._size = real_size
+PY
+
+py "F20 · FIRE+SILENT: routers 0 and mounts 0 beside a state word — the route config was read, or it was not" <<'PY'
+g, gs, _ = run(flow=FLOW)
+assert gs["route_config"] == "read" and gs["routers"] == 1, gs                       # SILENT: the fixture's router is read
+bare = copy.deepcopy(FLOW)
+for file, rec in list(bare["byFile"].items()):
+    if (rec.get("flow") or {}).get("routes"):
+        rec["flow"]["routes"] = []
+g2, gs2, _ = run(flow=bare)
+assert gs2["route_config"] == "no route config read" and gs2["routers"] == 0 and gs2["mounted"] == 0, gs2   # V40b: a zero with its reason
+guards2 = list(g2["pieces"].values())
+assert guards2 and all(x["mounts"] == 0 and x.get("mounts_state") == "no route config read" for x in guards2), guards2[:1]
+assert all("mounts_state" not in x for x in g["pieces"].values()), "a read route config leaves no mounts_state"   # SILENT
 PY
 
 py "F9 · determinism: two runs are byte-identical" <<'PY'

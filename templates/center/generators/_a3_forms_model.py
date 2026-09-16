@@ -412,8 +412,12 @@ def model_part(repo: Path, forms: dict, amap: dict) -> tuple[dict, dict, list]:
             stats["drift_models"] += 1
             stats["drift_columns"] += len({x["column"] for x in d if "column" in x})
             stats["drift_checks"] += sum(1 for x in d if x["field"] == "check")
+            fields: dict = {}
+            for x in d:                                       # §A4 V25: 103 of 150 tier3 rows were server_default-only —
+                fields[x["field"]] = fields.get(x["field"], 0) + 1   # the finding must say which field disagrees
             found.append({"id": "migration-drift", "slot": F.FINDINGS["migration-drift"]["slot"], "model": key,
-                          "columns": sorted({x["column"] for x in d if "column" in x}), "checks": sorted(x["constraint"] for x in d if x["field"] == "check")})
+                          "columns": sorted({x["column"] for x in d if "column" in x}), "checks": sorted(x["constraint"] for x in d if x["field"] == "check"),
+                          "fields": dict(sorted(fields.items()))})
         for o in overridden:
             found.append({"id": "default-overridden", "slot": F.FINDINGS["default-overridden"]["slot"], "model": key, **o})
     return dict(sorted(out.items())), stats, found

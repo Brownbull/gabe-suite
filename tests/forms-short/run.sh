@@ -1014,6 +1014,8 @@ assert o["guard_use"] == [{"fn": "services/orders.py::place", "at": at(M, "servi
 assert o["default_overridden"] == [{"column": "status", "default": "new", "set": "held", "at": at(M, "services/orders.py", 'status="held"')}], o["default_overridden"]
 assert o["constraints"]["checks"] == [{"name": "ck_orders_qty", "sql": "qty > 0", "at": int(at(M, "models.py", "CheckConstraint(").split(":")[1])}], o["constraints"]
 assert o["drift"] == [{"column": "created_at", "field": "nullable", "model": False, "migration": True, "model_from": "annotation"}], o["drift"]
+md = next(x for x in f["arm_findings"]["short"] if x["id"] == "migration-drift")
+assert md["fields"] == {"nullable": 1} and md["columns"] == ["created_at"], md      # V25: the finding says WHICH field disagrees
 c = o["columns"]
 assert (c["display_rank"]["attr"], c["display_rank"]["nullable"], c["status"]["default"], c["status"]["server_default"], c["qty"]["nullable_from"]) == ("rank", True, "new", "new", "annotation"), c
 assert [h["event"] for h in o["hooks"]] == ["before_insert"] and [(h["event"], h["cols"]) for h in f["models"]["model:Tag"]["hooks"]] == [("validates", ["name"])]
@@ -1595,12 +1597,12 @@ mr = f["mirrors"]
 q = mr["mirror:Item.qty"]
 assert [(p["with"], p["via"], p["sites"]) for p in q["pairs"]] == [("schema:ItemCreate.qty", "flow", [at(M_, "services/items.py", "item = Item("), at(M_, "services/items.py", "Item(**payload.model_dump())")])], q["pairs"]
 assert "mirror:ItemEcho.note" not in mr and "mirror:ItemEcho.name" not in mr, sorted(k for k in mr if "Echo" in k)
-assert [(r["rule"], r["verdict"], r["a"]) for r in q["rows"]] == [("bound", "schema-only", {"gt": 0})], q["rows"]
+assert [(r["rule"], r["verdict"], r["other"]) for r in q["rows"]] == [("bound", "schema-only", {"gt": 0})], q["rows"]   # V26: `other` is the schema's value, `with` its reference
 assert q["bypass_writers"] == [{"at": at(M_, "services/items.py", "Item(name=name, qty=0)"), "value": "0"}], q["bypass_writers"]
 u = mr["mirror:ItemCreate.unit"]
 assert [(p["with"], p["via"], p["sites"]) for p in u["pairs"]] == [("schema:RowInput.unit", "sibling", [at(M_, "api/items.py", "create = ItemCreate(")])], u["pairs"]
-assert [(r["rule"], r["verdict"], r["a"], r["b"]) for r in u["rows"]] == [("default", "disagree", "uu", "u")], u["rows"]
-assert [(r["rule"], r["verdict"], r["a"], r["b"]) for r in mr["mirror:ItemCreate.note"]["rows"]] == [("length", "disagree", 300, None)]
+assert [(r["rule"], r["verdict"], r["other"], r["subject"]) for r in u["rows"]] == [("default", "disagree", "uu", "u")], u["rows"]   # V26: the form is the subject's
+assert [(r["rule"], r["verdict"], r["other"], r["subject"]) for r in mr["mirror:ItemCreate.note"]["rows"]] == [("length", "disagree", 300, None)]
 assert mr["mirror:ItemCreate.kind"]["rows"] == [] and mr["mirror:ItemCreate.kind"]["agree"] >= 1, mr["mirror:ItemCreate.kind"]
 k = mr["mirror:Item.kind"]
 assert [(r["rule"], r["verdict"]) for r in k["rows"]] == [("length", "model-only")] and k["agree"] >= 2, k
@@ -1628,7 +1630,7 @@ e = smake(TT / "mircopy")
 (e / "constants.py").write_text((e / "constants.py").read_text() + "ORDER_CAP = 12\n")
 h = build(e, "short", ())
 oc, oe = h["mirrors"]["mirror:setting:order_cap"], h["mirrors"]["mirror:setting:orders_enabled"]
-assert [(r["rule"], r["verdict"], r["a"], r["b"], r["via"]) for r in oc["rows"]] == [("value", "disagree", "10", 12, "setting-copy")], oc
+assert [(r["rule"], r["verdict"], r["subject"], r["other"], r["via"]) for r in oc["rows"]] == [("value", "disagree", "10", 12, "setting-copy")], oc   # the setting is the subject, the copied constant the other
 assert oe["rows"] == [] and oe["agree"] == 1 and [p["via"] for p in oe["pairs"]] == ["flag-pair"], oe
 PY
 

@@ -368,7 +368,9 @@ def extend_frontend(forms, fe, repo, cfg: dict | None = None, graph: dict | None
     try:
         if not isinstance(forms, dict) or "frontend" not in selection(cfg)[0]:
             return forms
-        arms = forms.setdefault("arms", {arm: _off("switched off", arm) for arm in F.ARM_ORDER})
+        sel = selection(cfg)[0]                              # §A4 V30: a selected arm that could not run is ABSENT, with why
+        arms = forms.setdefault("arms", {arm: _off("switched off" if arm not in sel else "absent: no endpoint forms to build on", arm)
+                                         for arm in F.ARM_ORDER})
         snapshot = copy.deepcopy(forms)
         try:
             if not (fe or {}).get("present"):

@@ -153,7 +153,7 @@ FINDINGS = {
     "untested-exit": {"arm": "tests", "slot": "U14", "pulse": "count",
                       "says": "a tested endpoint has exits no test asserts"},
     "migration-drift": {"arm": "short", "slot": "M8", "pulse": "nag",
-                        "says": "a model and the schema its migrations leave disagree — the code trusts a column the database does not have"},
+                        "says": "a model and the schema its migrations leave disagree — on a column, its type, its nullability, its server default or a check; `fields` says which"},
     "default-overridden": {"arm": "short", "slot": "M6", "pulse": "count",
                            "says": "a constructor sets a defaulted column to another literal — the default is not the value that ships"},
     "unbounded-number": {"arm": "short", "slot": "F2", "pulse": "count",

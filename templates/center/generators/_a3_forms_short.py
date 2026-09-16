@@ -88,7 +88,7 @@ UPLOAD_TYPES: frozenset[str] = frozenset({"UploadFile"})
 BODY_EMBED_SRC = "fastapi/dependencies/utils.py _should_embed_body_fields (fastapi 0.136.3)"   # >1 body name · embed=True · one non-model Form field
 
 # what FastAPI answers before any dependency runs when an endpoint reads a body — gated on the framework version it was read on
-FRAMEWORK_MIN = "0.136.3"
+FRAMEWORK_MIN = "0.136.1"     # §A4 V21: the 0.136.1 ↔ 0.136.3 diff is empty in every range the rules cite (gastify pins 0.136.1); 0.133.1 (tier3) stays unproven
 FRAMEWORK_BODY_EXITS: tuple[dict, ...] = (                # a JSON body (routing.py: request.json())
     {"phase": "body-parse", "status": 422, "state": "default", "form": "object", "code": "json_invalid",
      "detail": "JSON decode error", "source": "fastapi/routing.py:427"},

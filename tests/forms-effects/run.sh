@@ -436,6 +436,11 @@ old = variant("oldfw", lambda d: patch(d, "uv.lock", 'version = "0.136.3"', 'ver
 g = build(old)
 states = {p["effects"]["dependency"] for e in g["endpoints"].values() for v in (e.get("variants") or [e]) for p in v.get("paths") or []}
 assert states == {"unknown"}, states
+gs = g["arms"]["effects"]["stats"]                                                  # V21: a closed gate SAYS so, and the
+assert gs["dependency_gate"].startswith("closed: fastapi 0.100.0 < ") and gs["refusal_writes_inherited"] == "unknown" and gs["safe_method_commits_inherited"] == "unknown", gs   # inherited counters are unknown, not 0
+assert st["dependency_gate"] == "open", st
+floor = build(variant("floorfw", lambda d: patch(d, "uv.lock", 'version = "0.136.3"', 'version = "0.136.1"')))
+assert floor["arms"]["effects"]["stats"]["dependency_gate"] == "open" and floor["arms"]["effects"]["stats"]["refusal_writes_inherited"] == 1, floor["arms"]["effects"]["stats"]   # gastify's pin is inside the gate
 PY
 
 py "E3 · FIRE: a consent-shape refusal — the rollback undoes the claim and the order, the suppressed discard may commit its delete" <<'PY'

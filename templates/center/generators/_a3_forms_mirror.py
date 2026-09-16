@@ -208,8 +208,8 @@ def _rules(via: str, a: dict, b: dict) -> list[dict]:
     rows = []
     sib = via == "sibling"
 
-    def row(rule, verdict, av, bv):
-        rows.append({"rule": rule, "verdict": verdict, "a": av, "b": bv})
+    def row(rule, verdict, av, bv):                       # §A4 V26: the form is the SUBJECT's; its side is named so
+        rows.append({"rule": rule, "verdict": verdict, "subject": bv, "other": av})   # `with` is the other side's REFERENCE
     ac, bc = a.get("constraints") or {}, (b.get("constraints") or {}) if sib else {}
     al, bl = ac.get("max_length"), (bc.get("max_length") if sib else b.get("length"))
     if via != "orm" and (al is not None or bl is not None):
@@ -284,7 +284,7 @@ def mirror_part(repo: Path, forms: dict) -> tuple[dict, dict, list]:
             if same:
                 form["agree"] += 1
             else:
-                form["rows"].append({"rule": "value", "verdict": "disagree", "a": s.get("default"), "b": e.get("value"), "with": f"constant:{e['constant']}", "via": "flag-pair"})
+                form["rows"].append({"rule": "value", "verdict": "disagree", "subject": s.get("default"), "other": e.get("value"), "with": f"constant:{e['constant']}", "via": "flag-pair"})
         name = sid.split(":", 1)[1].rsplit(".", 1)[-1].upper()
         for rel, p in code:
             if name in paired or name not in ST._read(p):
@@ -302,7 +302,7 @@ def mirror_part(repo: Path, forms: dict) -> tuple[dict, dict, list]:
             if same:
                 form["agree"] += 1
             else:
-                form["rows"].append({"rule": "value", "verdict": "disagree", "a": s.get("default"), "b": value, "with": f"constant:{name}@{at}", "via": "setting-copy"})
+                form["rows"].append({"rule": "value", "verdict": "disagree", "subject": s.get("default"), "other": value, "with": f"constant:{name}@{at}", "via": "setting-copy"})
     found = []
     for key, form in sorted(out.items()):
         cls, _, col = key.split(":", 1)[1].partition(".")

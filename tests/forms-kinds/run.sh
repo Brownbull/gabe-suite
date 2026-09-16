@@ -182,6 +182,9 @@ PYF
 S8="$T/s8"; cp -r "$A" "$S8"
 mkdir -p "$S8/services" "$S8/tasks" "$S8/events"
 cat > "$S8/services/work.py" <<'PYF'
+from fastapi import HTTPException
+
+
 class Busy(Exception):
     pass
 
@@ -203,6 +206,8 @@ def deep_a(x):
 def deep_b(x):
     if x < 0:
         raise Gone
+    if x == 0:
+        raise HTTPException(status_code=410, detail="deep gone")
     return x
 
 
@@ -614,6 +619,12 @@ r = f["functions"]["services/work.py::reserve"]["raises"]
 busy = next(x for x in r if x["cls"] == "Busy")
 assert [(t["endpoint"], t["status"]) for t in busy["translated_by"]] == [("endpoint:POST /work/reserve", 409)], busy
 assert [(u["endpoint"], u["status"]) for u in busy["untranslated_at"]] == [("endpoint:POST /work/raw", 500)] and busy["translation"] == "mixed", busy
+deep = next(x for x in f["functions"]["services/work.py::deep_b"]["refusals"] if x["status"] == 410)
+assert deep["surfaces_on"] == [] and deep["surfaces"] == "beyond one level", deep      # V23: reached, two levels down, on no row — and it says so
+for fid, fn_ in f["functions"].items():                                             # V23: `surfaces_on: []` never reads "nowhere"
+    for x in fn_["refusals"]:
+        assert ("surfaces" in x) == (not x["surfaces_on"]), (fid, x)
+        assert x.get("surfaces") in (None, "beyond one level", "not reached by an endpoint"), (fid, x)
 gone = next(x for x in f["functions"]["services/work.py::deep_b"]["raises"] if x["cls"] == "Gone")
 assert gone["translation"] == "beyond one level" and not gone["translated_by"] and not gone["untranslated_at"], gone
 db = {b["root"]: b for b in f["functions"]["services/work.py::deep_b"]["reached_by"]}
