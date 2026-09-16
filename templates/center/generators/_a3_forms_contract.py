@@ -285,7 +285,31 @@ def _repeat(repo: Path, forms: dict, amap: dict, m2t: dict, uq: dict, v: dict, m
 
 
 # ── K2 · auth ────────────────────────────────────────────────────────────────────────────────────────
-def _auth(repo: Path, v: dict, ep: dict | None, steps: dict, m) -> dict:
+def _alias_fn(repo: Path, m, fn, name: str):
+    """A gate the archmap named by its function but whose module the endpoint never imports: the handler's parameter
+    annotations name an ``Annotated[…, Depends(<name>)]`` alias, and the alias's own module resolves the function
+    (§A4 V22a — gastify's 47 gates all arrive through ``CurrentCtx``)."""
+    if fn is None:
+        return None
+    for a in fn.args.posonlyargs + fn.args.args + fn.args.kwonlyargs:
+        ann = a.annotation
+        ann = ann.value if isinstance(ann, ast.Attribute) else ann
+        if not isinstance(ann, ast.Name):
+            continue
+        r = P._resolve(repo, m, ann.id)
+        if not r or r[1] in r[0].defs:
+            continue
+        am, q = r
+        val = am.assigns.get(q)
+        for n in ast.walk(val) if val is not None else ():
+            if isinstance(n, ast.Call) and P._leaf(n.func) == "Depends" and n.args and P._leaf(n.args[0]) == name:
+                got = P._resolve(repo, am, P._leaf(n.args[0]))
+                if got and got[1] in got[0].defs:
+                    return f"{got[0].rel}::{got[1]}"
+    return None
+
+
+def _auth(repo: Path, v: dict, ep: dict | None, steps: dict, m, fn=None) -> dict:
     rows = [r for r in v.get("produced") or [] if r.get("applies") is not False]
     schemes = []
     for r in rows:
@@ -299,7 +323,7 @@ def _auth(repo: Path, v: dict, ep: dict | None, steps: dict, m) -> dict:
         if not g.get("gate"):
             continue
         r = P._resolve(repo, m, g.get("name")) if not g.get("fn") else None     # the archmap names the gate's fn only after its build pass
-        fid = g.get("fn") or (f"{r[0].rel}::{r[1]}" if r and r[1] in r[0].defs else None)
+        fid = g.get("fn") or (f"{r[0].rel}::{r[1]}" if r and r[1] in r[0].defs else None) or _alias_fn(repo, m, fn, g.get("name"))
         gates.append({"name": g.get("name"), "fn": fid})
         rel, _, q = str(fid or "").partition("::")
         gm = P._mod(repo, rel) if rel else None
@@ -417,18 +441,25 @@ def _response_literal(repo: Path, at) -> dict | None:
     if isinstance(content, ast.Dict):
         shape["body"] = {k.value: "…" for k in content.keys if isinstance(k, ast.Constant)}
     headers = next((k.value for k in call.keywords if k.arg == "headers"), None)
+    if isinstance(headers, ast.Name):                        # §A4 V24: `headers=_SSE_HEADERS` — one hop, or say so
+        headers = mm.assigns.get(headers.id) if isinstance(mm.assigns.get(headers.id), ast.Dict) else {"name": headers.id}
     if isinstance(headers, ast.Dict):
         shape["headers"] = {k.value: "…" for k in headers.keys if isinstance(k, ast.Constant)}
+    elif isinstance(headers, dict):
+        shape["headers"] = {"state": "unresolved", "name": headers["name"]}
     return shape
 
 
 def _success(repo: Path, m, v: dict, rr: dict, stream: bool) -> dict:
-    if stream:
-        return dict(CT["bodies"]["stream"])
     lit = _response_literal(repo, rr.get("at"))
+    if stream:                                               # §A4 V24: a stream still carries the headers it was built with
+        return {**CT["bodies"]["stream"], **({"headers": lit["headers"]} if lit and lit.get("headers") else {})}
     if lit:
         return lit
-    model = ((v.get("declared") or {}).get("response_model") or {}).get("name")
+    rm = (v.get("declared") or {}).get("response_model") or {}
+    model = rm.get("name")
+    if model == "None" or rr.get("status") == 204:            # §A4 V24: nothing is serialized — no body, no media
+        return {"media": "n/a", "body": "none", "source": rr.get("at")}
     got = S._class(repo, m, model) if model else None
     if got:
         fields = [n.target.id for _, c in S._chain(repo, *got) for n in c.body if isinstance(n, ast.AnnAssign) and isinstance(n.target, ast.Name)]
@@ -475,7 +506,7 @@ def run(forms: dict, ctx: dict) -> dict:
     for key, v, m, fn, dec in _handlers(repo, forms):
         ep = eps.get((m.rel, fn.name, str(v.get("method") or "").upper()))
         v["repeat"] = _repeat(repo, forms, amap, m2t, uq, v, m, fn)
-        v["auth"] = _auth(repo, v, ep, steps, m)
+        v["auth"] = _auth(repo, v, ep, steps, m, fn)
         v["rate"] = _rate(repo, forms, v, m, fn)
         v["responses"] = _responses(repo, m, v, ep)
         stats["endpoints"] += 1

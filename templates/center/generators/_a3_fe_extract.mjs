@@ -441,6 +441,8 @@ const bodyRows = (root, list = null) => {
           if (!d.initializer) continue;
           const binds = ts.isObjectBindingPattern(d.name) ? d.name.elements.map(e => e.propertyName ? e.propertyName.getText(sf) + ':' + e.name.getText(sf) : e.name.getText(sf))
             : ts.isArrayBindingPattern(d.name) ? d.name.elements.map(e => ts.isOmittedExpression(e) ? '' : e.name.getText(sf)) : [d.name.getText(sf)];
+          const fnInit = unparen(d.initializer);                     // `const handleSaved = () => {…}` — the callback keeps its name,
+          if (isFn(fnInit) && ts.isIdentifier(d.name)) { fnBody(fnInit, guards, passed, [...ctx, 'callback:' + d.name.text]); continue; }   // so `onSuccess: handleSaved` can find it
           const before = rows.length;
           expr(d.initializer, guards, passed, ctx);
           const init = unparen(ts.isAwaitExpression(d.initializer) ? d.initializer.expression : d.initializer);

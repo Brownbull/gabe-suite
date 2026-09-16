@@ -1055,6 +1055,25 @@ fd = next(x for x in g["arm_findings"]["short"] if x["id"] == "migration-drift")
 assert (fd["columns"], fd["checks"]) == (["created_at", "qty"], ["ck_orders_qty"]) and not [x for x in g["arm_findings"]["short"] if x["id"] == "default-overridden"], g["arm_findings"]["short"]
 PY
 
+py "SF11 · FIRE+SILENT: a raw ALTER TABLE … RENAME COLUMN is a rename the replay reads — no phantom drift for either half, and it is not a raw op" <<'PY'
+import sys; sys.path.insert(0, str(T))
+from model_fixture import make, mbuild, mvariant
+def rename(d):
+    (d / "migrations/versions/0003_note.py").write_text('import sqlalchemy as sa\nfrom alembic import op\n\nrevision = "0003_note"\ndown_revision = "0002_orders_check"\n\n\ndef upgrade():\n    op.add_column("orders", sa.Column("note", sa.String(50), nullable=True))\n')
+    (d / "migrations/versions/0004_rename.py").write_text('from alembic import op\n\nrevision = "0004_rename"\ndown_revision = "0003_note"\n\n\ndef upgrade():\n    op.execute("ALTER TABLE orders RENAME COLUMN note TO memo")\n    op.execute("SELECT 1")\n')
+    m = d / "models.py"; src = m.read_text()
+    assert src.count("    qty: Mapped[int] = mapped_column(Integer, default=1)\n") == 1
+    m.write_text(src.replace("    qty: Mapped[int] = mapped_column(Integer, default=1)\n", "    qty: Mapped[int] = mapped_column(Integer, default=1)\n    memo: Mapped[str | None] = mapped_column(String(50), nullable=True)\n"))
+base = mbuild(make(), "short")
+g = mbuild(mvariant("rename", rename), "short")
+o = g["models"]["model:Order"]
+assert "memo" in o["columns"] and o["columns"]["memo"]["nullable"] is True, sorted(o["columns"])       # the model's column …
+drift = [x for x in o["drift"] if x.get("column") in ("note", "memo")]
+assert drift == [], drift                                                                            # … meets a migration column: no phantom half
+assert g["migrations"]["migrations/versions"]["state"] == "defined", g["migrations"]
+assert g["arms"]["short"]["stats"]["migration"]["raw_ops"] == base["arms"]["short"]["stats"]["migration"]["raw_ops"] + 1, "only SELECT 1 is raw"
+PY
+
 py "SF3 · a second head reads the tree unknown; a model part that raises reads present:false and writes no model or finding" <<'PY'
 import sys; sys.path.insert(0, str(T))
 import _a3_forms_model as MD

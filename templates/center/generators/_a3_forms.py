@@ -234,7 +234,10 @@ CONTRACT = {
     "claim_idioms": {"on_conflict_do_nothing": "an insert that skips a duplicate", "on_conflict_do_update": "an upsert",
                      "with_for_update": "a row lock before the write", "begin_nested": "the insert inside a savepoint",
                      "get-or-create": "a select of the model before its constructor"},
-    "rate_idioms": {"limit": r"^\s*(\d+)\s*/\s*(second|minute|hour|day)\s*$"},     # slowapi · `@limiter.limit("5/minute")`
+    "rate_idioms": {"limit": r"^\s*(\d+)\s*/\s*(second|minute|hour|day)\s*$",       # slowapi · `@limiter.limit("5/minute")`
+                    "shared_limit": r"^\s*(\d+)\s*/\s*(second|minute|hour|day)\s*$"},   # · `@limiter.shared_limit("10/minute", scope=…)`
+    "rate_refusal": {"status": 429, "form": "object", "detail": "{'error': 'Rate limit exceeded: {spec}'}"},   # slowapi's
+                                                    # _rate_limit_exceeded_handler: JSONResponse({"error": f"Rate limit exceeded: {exc.detail}"}, 429)
     "carriers": {"HTTPBearer": ["header", "Authorization"], "HTTPBasic": ["header", "Authorization"],
                  "OAuth2PasswordBearer": ["header", "Authorization"], "APIKeyHeader": ["header", None],
                  "APIKeyQuery": ["query", None], "APIKeyCookie": ["cookie", None]},

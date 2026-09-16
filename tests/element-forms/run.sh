@@ -52,6 +52,11 @@ class ErrCode(Enum):
 
     def detail(self, message: str) -> dict:
         return {"error_code": self.value[0], "detail": message}
+
+
+METER_LIMIT = "3/hour"
+TIERS = ["6/hour", "20/day"]
+
 PYF
 cat > "$A/main.py" <<'PYF'
 from fastapi import FastAPI
@@ -201,8 +206,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from slowapi import Limiter
 
 from auth import Ctx, get_ctx
+from errors import METER_LIMIT, TIERS
 from services.items import Busy, Denied, Lost, apply, coded, deep, deny, fetch, guard, lock, scrub
 
 router = APIRouter(prefix="/items")
@@ -307,6 +314,34 @@ async def get_stream(item_id: int):
 async def get_stream2(item_id: int):
     body = _chunks(item_id)
     return StreamingResponse(body, media_type="text/event-stream")
+
+
+limiter = Limiter(key_func=lambda r: "k")
+
+
+@router.get("/limited")
+@limiter.limit("5/minute")
+async def get_limited(request: Request):
+    return {"ok": True}
+
+
+@router.get("/pooled")
+@limiter.shared_limit("10/minute", scope="items")
+async def get_pooled(request: Request):
+    return {"ok": True}
+
+
+@router.get("/metered")
+@limiter.limit(METER_LIMIT, key_func=lambda r: "k")
+async def get_metered(request: Request):
+    return {"ok": True}
+
+
+@router.get("/tiered")
+@limiter.limit(TIERS[0], key_func=lambda r: "k")
+@limiter.limit(TIERS[1], key_func=lambda r: "k")
+async def get_tiered(request: Request):
+    return {"ok": True}
 PYF
 mkdir -p "$A/api/errors"
 cat > "$A/api/errors/handlers.py" <<'PYF'
@@ -418,13 +453,13 @@ PY
 check "C0 · the pass runs and forms every endpoint" <<'PY'
 assert O["present"] is True, O
 assert O["framework"]["locks"] == {"uv.lock": "0.136.3"}, O["framework"]
-assert O["stats"]["endpoints"] == 22 and O["stats"]["unformed"] == 0 and O["stats"]["collisions"] == 0, O["stats"]
+assert O["stats"]["endpoints"] == 26 and O["stats"]["unformed"] == 0 and O["stats"]["collisions"] == 0, O["stats"]
 assert set(O["endpoints"]) == {"endpoint:POST /items/apply", "endpoint:GET /items/team", "endpoint:GET /items/dynamic",
     "endpoint:GET /items/deep", "endpoint:GET /items/swallow", "endpoint:GET /items/coded", "endpoint:GET /items/denied",
     "endpoint:GET /items/locked", "endpoint:GET /plain", "endpoint:GET /files/raw", "endpoint:GET /files/sheet",
     "endpoint:GET /files/meta", "endpoint:GET /files/spent", "endpoint:GET /files", "endpoint:POST /files", "endpoint:GET /items/loose", "endpoint:GET /items/strict",
     "endpoint:GET /items/kept", "endpoint:GET /items/leak", "endpoint:GET /items/maybe",
-    "endpoint:GET /items/stream", "endpoint:GET /items/stream2"}, sorted(O["endpoints"])
+    "endpoint:GET /items/stream", "endpoint:GET /items/stream2", "endpoint:GET /items/limited", "endpoint:GET /items/pooled", "endpoint:GET /items/metered", "endpoint:GET /items/tiered"}, sorted(O["endpoints"])
 PY
 
 check "C1 · FIRE: a handler raise is a text-only refusal, its guard a precondition, the body a 422" <<'PY'
@@ -567,6 +602,20 @@ assert "escape-500" not in fid(k2) and [x["cls"] for x in rows(k2, phase="uncaug
 assert O["stats"]["after_response"] == 2, O["stats"]
 leak = [f for f in E("endpoint:GET /items/leak")["findings"] if f["id"] == "escape-500"]      # SILENT: a plain call's
 assert len(leak) == 1, leak                                                                    # raise is still the 500
+PY
+
+check "C19 · FIRE+SILENT: a third-party limiter on the route is a 429 the route produces — limit and shared_limit alike; a route without one has none" <<'PY'
+for k, spec in (("endpoint:GET /items/limited", "5/minute"), ("endpoint:GET /items/pooled", "10/minute")):
+    r = rows(k, status=429)
+    assert len(r) == 1 and r[0]["form"] == "object" and spec in r[0]["detail"] and r[0]["via"].startswith("decorator limiter."), E(k)["produced"]
+    assert r[0]["state"] == "defined" and r[0]["source"] == "framework", r[0]
+    assert any(f["id"] == "undeclared" and 429 in f["statuses"] for f in E(k)["findings"]), E(k)["findings"]   # produced, never declared
+m = rows("endpoint:GET /items/metered", status=429)
+assert len(m) == 1 and "3/hour" in m[0]["detail"] and m[0]["state"] == "defined", m           # the spec imported as a constant resolves one hop
+t = rows("endpoint:GET /items/tiered", status=429)
+assert sorted(r["detail"] for r in t) == ["{'error': 'Rate limit exceeded: 20/day'}", "{'error': 'Rate limit exceeded: 6/hour'}"] and all(r["state"] == "defined" for r in t), t   # one entry each of a list constant, two decorators → two rows
+assert "shared-status" in fid("endpoint:GET /items/tiered"), E("endpoint:GET /items/tiered")["findings"]   # two 429s told apart only by text — a real nag
+assert not rows("endpoint:GET /items/loose", status=429), "a route without a limiter mints no 429"
 PY
 
 check "C10a · determinism and no mutation of the archmap it reads" <<'PY'

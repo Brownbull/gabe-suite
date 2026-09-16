@@ -143,6 +143,7 @@ def get_session():
         session.close()
 PYF
 cat > "$A/auth.py" <<'PYF'
+from typing import Annotated
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer
 
@@ -167,6 +168,10 @@ def get_current_ctx(creds=Depends(bearer), session=Depends(get_session)) -> Ctx:
     session.add(seen)
     session.commit()
     return Ctx(None)
+
+
+CurrentCtx = Annotated[Ctx, Depends(get_current_ctx)]
+
 PYF
 cat > "$A/schemas.py" <<'PYF'
 from pydantic import BaseModel
@@ -204,6 +209,18 @@ def stage(session, key):
     row = Claim(key=key)
     session.add(row)
     return row
+PYF
+cat > "$A/api/mine.py" <<'PYF'
+from fastapi import APIRouter
+
+from auth import CurrentCtx
+
+router = APIRouter(prefix="/shop")
+
+
+@router.get("/mine")
+def mine(ctx: CurrentCtx):
+    return {"user": ctx.user_id}
 PYF
 cat > "$A/api/shop.py" <<'PYF'
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -278,6 +295,27 @@ def made(q: int = 1):
 @router.get("/feed")
 def feed():
     return StreamingResponse(iter([b"a"]), media_type="text/event-stream")
+
+
+_SSE_HEADERS = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+
+
+@router.get("/pooled")
+@limiter.shared_limit("10/minute", scope="shop")
+def pooled(request: Request):
+    return {"ok": True}
+
+
+@router.get("/feed2")
+def feed_sse(request: Request):
+    return StreamingResponse(iter([b"x"]), media_type="text/event-stream", headers=_SSE_HEADERS)
+
+
+@router.delete("/gone", status_code=204)
+def gone(request: Request) -> None:
+    return None
+
+
 PYF
 
 py() {  # py "<name>" <<'PY' … PY  — the prelude gives A · T · GEN · build() · variant() · patch() · at() · ep()
@@ -324,6 +362,25 @@ PY
   ); then ok; else bad "$name: $(tail -4 "$T/py.txt")"; fi
 }
 
+py "E10 · FIRE+SILENT: shared_limit is a limiter and a 429; headers from a module constant are read; a -> None handler has no body" <<'PY'
+f = build(A)
+pooled = ep(f, "endpoint:GET /shop/pooled")
+dec = [x for x in pooled["rate"]["limits"] if x.get("idiom")]                                      # beside the app middleware's
+assert [x["idiom"] for x in dec] == ["limiter.shared_limit"] and dec[0]["limit"] == 10, pooled["rate"]
+assert [r["status"] for r in pooled["produced"] if r.get("via", "").startswith("decorator")] == [429], pooled["produced"]
+ping = ep(f, "endpoint:GET /shop/ping")
+assert [r["status"] for r in ping["produced"] if r.get("via", "").startswith("decorator")] == [429], ping["produced"]
+feed = ep(f, "endpoint:GET /shop/feed2")["responses"]
+succ = next(v for k, v in feed.items() if isinstance(v, dict) and v.get("status") == 200)
+assert succ.get("headers") == {"Cache-Control": "…", "X-Accel-Buffering": "…"}, succ                  # V24: _SSE_HEADERS read one hop
+gone = ep(f, "endpoint:DELETE /shop/gone")["responses"]
+none = next(v for k, v in gone.items() if isinstance(v, dict) and v.get("body") == "none")
+assert none["media"] == "n/a", gone                                                                 # V24: -> None serializes nothing
+mine = ep(f, "endpoint:GET /shop/mine")["auth"]["gates"]                                            # V22a: the gate behind an
+assert mine and all(g["fn"] == "auth.py::get_current_ctx" for g in mine), mine                    # Annotated alias resolves
+assert ep(f, "endpoint:GET /shop/look")["responses"] and all(v.get("body") != "none" for v in ep(f, "endpoint:GET /shop/look")["responses"].values() if isinstance(v, dict)), "a model return still reads its fields"
+PY
+
 py "E6 · FIRE + SILENT: race-500 on an unguarded claim; silent on a savepoint claim and on a claim whose commit sits in the caller's try" <<'PY'
 f = build(A)
 assert race500(f) == [("endpoint:POST /shop/place", at("services/orders.py", "order = Order(key=key)"))], race500(f)
@@ -349,7 +406,7 @@ cl = ep(f, "endpoint:POST /shop/claim")["repeat"]
 assert cl["state"] == "defined" and cl["key"]["carrier"] == "header" and "through" not in cl["key"] and cl["required"] is None, cl
 assert ep(f, "endpoint:POST /shop/nokey")["repeat"] == {"state": "missing"} and ep(f, "endpoint:GET /shop/look")["repeat"] == {"state": "n/a"}
 s = f["arms"]["contract"]["stats"]["repeat"]
-assert s == {"defined": 3, "missing": 2, "n/a": 3}, s
+assert s == {"defined": 3, "missing": 3, "n/a": 6}, s          # E10's routes: DELETE /gone keyless · GET /pooled · GET /feed2 · GET /mine
 PY
 
 py "E8 · FIRE + SILENT: K3 — limiter arguments resolved to settings defaults, the key, the switch and exempt paths; the hot limit only on the hot path; a decorator limit" <<'PY'

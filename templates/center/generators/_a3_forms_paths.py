@@ -222,6 +222,7 @@ def _deciding(repo: Path, m, fn, v: dict, fid: str):
             hev.setdefault(id(e["handler"][1]), []).append(e)
     rows = (v.get("produced") or []) + (v.get("preconditions") or [])
     sets, collapsed, seen = [], [], set()
+    streamed = P._streamed_calls(fn)                         # §A4 V15: a `with`-entered @contextmanager is no stream
     for ce in (e for e in evs if e["kind"] == "call"):
         call = ce["node"]
         site = f"{m.rel}:{ce['line']}"
@@ -243,7 +244,7 @@ def _deciding(repo: Path, m, fn, v: dict, fid: str):
         cnode = cm.defs[qual]
         cfid = f"{cm.rel}::{qual}"
         base = {"site": site, "call": name, "fn": cfid}
-        if any(isinstance(n, (ast.Yield, ast.YieldFrom)) for n in _own_nodes(cnode)):
+        if id(call) in streamed and any(isinstance(n, (ast.Yield, ast.YieldFrom)) for n in _own_nodes(cnode)):
             collapsed.append({**base, "reason": "generator: runs after the response line"})
             continue
         if P._climb("Exception", {"Exception"}, ce["tries"], hev)[0] == "swallow":

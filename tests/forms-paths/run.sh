@@ -394,10 +394,10 @@ d = [r for r in f["endpoints"]["endpoint:DELETE /orders/drop"]["returns"] if r["
 assert [r["kind"] for r in d] == ["return", "implicit"] and d[0]["pred"] == "x", d
 PY
 
-py "S3.P2 · collapsed: a non-deciding callee, a generator and a one-return helper each say why; nothing collapsed rides a deciding site" <<'PY'
+py "S3.P2 · collapsed: a non-deciding callee, an iterated generator and a one-return helper each say why; nothing collapsed rides a deciding site" <<'PY'
 f = build(A, "paths")
 col = {c["call"]: c["reason"] for c in f["endpoints"]["endpoint:POST /orders/settle"]["collapsed"]}
-assert col == {"label": "arms change neither exit nor commit", "stream": "generator: runs after the response line", "one": "one return"}, col
+assert col == {"label": "arms change neither exit nor commit", "stream": "no value return", "one": "one return"}, col   # `for _ in stream()` runs BEFORE the response (§A4 V15)
 c2 = {c["call"]: c["reason"] for c in f["endpoints"]["endpoint:POST /orders/create"]["collapsed"]}
 assert c2 == {"place": "one return"}, c2
 assert "branches" not in f["endpoints"]["endpoint:POST /orders/create"]
@@ -852,12 +852,37 @@ def pick_mode(job_id):
     if job_id == 1:
         return "a"
     return "b"
-'''
-RELIEF_API = '''from fastapi import APIRouter, HTTPException
 
-from services.relief import NotFound, need_owner, pick_mode, run_job, translate
+
+def ticks(n):
+    for i in range(n):
+        yield b"tick"
+'''
+RELIEF_API = '''from fastapi import APIRouter, HTTPException, Request
+from slowapi import Limiter
+
+from fastapi.responses import StreamingResponse
+
+from services.relief import NotFound, need_owner, pick_mode, run_job, ticks, translate
 
 router = APIRouter(prefix="/relief")
+
+
+@router.get("/live")
+def live(n: int):
+    for _ in ticks(1):
+        pass
+    return StreamingResponse(ticks(n))
+
+
+limiter = Limiter(key_func=lambda r: "k")
+
+
+@router.post("/rush")
+@limiter.limit("5/minute")
+def rush(request: Request, job_id: int, session=None):
+    outcome = run_job(session, job_id)
+    return {"outcome": outcome}
 
 
 @router.post("/{job_id}")
@@ -1077,6 +1102,14 @@ assert "contributes" not in col["pick_mode"], col["pick_mode"]                  
 assert "arms change neither exit nor commit" not in {c["reason"] for c in col.values()}, col
 base = {c["call"]: c["reason"] for c in f["endpoints"]["endpoint:POST /orders/settle"]["collapsed"]}
 assert base["label"] == "arms change neither exit nor commit", base                # SILENT: a callee that never raises
+rush = f["endpoints"]["endpoint:POST /relief/rush"]["paths"]
+p429 = [p for p in rush if p["status"] == 429 and p["phase"] == "handler"]
+assert len(p429) == 1 and p429[0]["exit"]["kind"] == "refusal", [(p["status"], p["phase"]) for p in rush]     # V12: the limiter's 429 has a path …
+kinds = [c["kind"] for c in p429[0]["chain"]]
+assert kinds[-2:] == ["gate", "exit"] and "call" not in kinds, kinds                                               # … the gate before the body, no call ran
+assert f["arms"]["paths"]["stats"]["unplaced"] == 0, f["arms"]["paths"]["stats"]
+live = [(c["site"], c["reason"]) for c in f["endpoints"]["endpoint:GET /relief/live"]["collapsed"] if c["call"] == "ticks"]
+assert sorted(r for _, r in live) == ["generator: runs after the response line", "no value return"], live   # V15: the same
 PY
 
 py "S5.P13 · the 422 split: a dependency's parameters answer before its body, the endpoint's own after every dependency" <<'PY'

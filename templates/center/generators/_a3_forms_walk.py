@@ -163,6 +163,8 @@ def _before_handler(repo: Path, forms: dict, v: dict, m, fn, dec, claim: list | 
         if own:
             items.append({"item": "row", "row": val, "split": "own-params",
                           "cases": [c["id"] for c in cases if "." not in str(c.get("param", "")) or str(c.get("param")).split(".", 1)[0] not in names]})
+    items += [{"item": "row", "row": r, "split": "decorator"} for r in rows            # §A4 V12: a limiter decorator is the last
+              if r.get("phase") == "handler" and str(r.get("via", "")).startswith("decorator ")]   # gate before the body runs
     return items
 
 
@@ -431,7 +433,8 @@ def _path(key: str, v: dict, exit_row: dict, kind: str, chain: list, chosen: lis
 def endpoint_paths(repo: Path, forms: dict, key: str, v: dict, m, fn, dec, stats: dict) -> list[dict]:
     switches = {sw["id"]: sw for sw in v.get("switches") or []}
     spine = _Spine(repo, v, m, fn)
-    handler_rows = [r for r in v.get("produced") or [] if r.get("phase") == "handler"]
+    handler_rows = [r for r in v.get("produced") or [] if r.get("phase") == "handler"
+                    and not str(r.get("via", "")).startswith("decorator ")]   # placed as a gate before the body, above
     anchors = {id(r): spine.anchor(r) for r in handler_rows}
     claim = [r for r in handler_rows if anchors[id(r)][0] is None and r.get("raised_at") and str(r.get("via", "")).startswith("app handler ")]
     items = _before_handler(repo, forms, v, m, fn, dec, claim)

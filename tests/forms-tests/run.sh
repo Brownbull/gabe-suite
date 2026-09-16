@@ -126,6 +126,19 @@ def other(user=Depends(get_user)):
     except Busy:
         raise HTTPException(status_code=409, detail="other busy")
     return {"ok": True}
+
+
+@router.get("/things/special")
+def thing_special():
+    return {"special": True}
+
+
+@router.get("/things/{thing_id}")
+def thing_one(thing_id: str):
+    if thing_id == "gone":
+        raise HTTPException(status_code=404, detail="no thing")
+    return {"id": thing_id}
+
 PYF
 cat > "$A/tests/test_items.py" <<'PYF'
 import pytest
@@ -194,11 +207,36 @@ async def test_setup_only_C10(client):
     await client.get("/api/v1/items/me", headers=AUTH)
     resp = await client.post("/api/v1/items/create", json={"name": "y"}, headers={**AUTH, "Idempotency-Key": "c"})
     assert resp.status_code == 200
+
+
+def test_thing_special(client):
+    r = client.get("/api/v1/other/things/special")
+    assert r.status_code == 200
+
+
+def test_thing_by_id(client):
+    tid = "gone"
+    r = client.get(f"/api/v1/other/things/{tid}")
+    assert r.status_code == 404
+    assert "no thing" in r.json()["detail"]
+
+
+def test_things_unknown_literal(client):
+    r = client.get("/api/v1/other/things/special/extra")
+    assert r.status_code == 404
+
+
+def test_two_slots(client):
+    kind, tid = "things", "gone"
+    r = client.get(f"/api/v1/other/{kind}/{tid}")
+    assert r.status_code == 404
+
 PYF
 python3 - "$A/tests/results/api-junit.xml" <<'PYJ'
 import sys
 names = ["test_missing_key_400_C1", "test_me_unauthenticated_C2", "test_conflict_C3", "test_flow_C4", "test_helper_only_C5",
-         "test_blank_422_C6", "test_teapot_C7", "test_detail_mismatch_C8", "test_service_busy_C9", "test_setup_only_C10"]
+         "test_blank_422_C6", "test_teapot_C7", "test_detail_mismatch_C8", "test_service_busy_C9", "test_setup_only_C10",
+         "test_thing_special", "test_thing_by_id", "test_things_unknown_literal", "test_two_slots"]
 cases = "".join(f'<testcase classname="tests.test_items" name="{n}" time="0.01" />' for n in names)
 open(sys.argv[1], "w").write(f'<testsuites><testsuite name="pytest" tests="{len(names)}">{cases}</testsuite></testsuites>')
 PYJ
@@ -241,6 +279,21 @@ $src
 PY
   ); then ok; else bad "$name: $(tail -4 "$T/py.txt")"; fi
 }
+
+py "T5 · FIRE+SILENT: a literal test path joins the most literal route, an f-string slot joins the template, and a slot never stands in for a literal" <<'PY'
+f = build(A)
+sp = next(v for k, v in f["endpoints"].items() if k.endswith("/things/special")); one = next(v for k, v in f["endpoints"].items() if k.endswith("/things/{thing_id}"))
+assert any(t["case"].endswith("test_thing_special") for r in sp["returns"] for t in r.get("tests") or []), sp.get("returns")   # the literal route, not {thing_id}
+assert not any(t["case"].endswith("test_thing_special") for r in one["produced"] + one["returns"] for t in r.get("tests") or []), "the literal test leaked onto the template route"
+r404 = next(r for r in one["produced"] if r.get("status") == 404 and r.get("detail") == "no thing")
+assert any(t["case"].endswith("test_thing_by_id") for t in r404.get("tests") or []), r404          # the f-string slot fits {thing_id}
+assert not any(t["case"].endswith("test_things_unknown_literal") for e in (sp, one) for r in e["produced"] + e["returns"] for t in r.get("tests") or []), "a longer literal path joined by suffix"
+joined = {t["case"] for e in f["endpoints"].values() for r in e["produced"] + e.get("returns", []) for t in r.get("tests") or []}
+assert not any(c.endswith("test_two_slots") for c in joined), "a path of two slots stood in for a literal route (V11)"
+two = next(v for k, v in f["test_cases"].items() if k.endswith("::test_two_slots"))
+act = next(c for c in two["calls"] if c["role"] == "act")
+assert act["path"] == "/api/v1/other/{*}/{*}" and "endpoint" not in act and "route_match" not in act, act   # V11: no route stands behind two slots
+PY
 
 py "T1 · FIRE: a status plus a detail literal joins the one refusal that says it — never the body-parse 400" <<'PY'
 f = build(A)

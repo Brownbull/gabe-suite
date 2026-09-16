@@ -375,9 +375,21 @@ def _fetches(rows: list, host: str, bindings: dict, file: str, local: set) -> li
         if not args or not isinstance(args[0], str) or not args[0].startswith(("/", "http")):
             continue
         method = (r.get("opts") or {}).get("method")
+        verb = _leaf(r["callee"]).upper() if _leaf(r["callee"]) else ""   # §A4 V13: `apiClient.PATCH(path)` names its verb
         out.append({"callee": r["callee"], "wrapper": _resolve(r["callee"], bindings, file, local), "path": args[0],
-                    "method": method if isinstance(method, str) else "GET", "at": f"{file}:{r['line']}"})
+                    "method": method.upper() if isinstance(method, str) else verb if verb in FF.HTTP_VERBS else "GET", "at": f"{file}:{r['line']}"})
     return out
+
+
+_NAME_RX = re.compile(r"[A-Za-z_$][\w$]*")
+
+
+def _body_of(flow: dict, pid: str | None) -> dict | None:
+    """The body a piece id names — ``fe:<file>#<export>`` → ``flow.byFile[file].flow.bodies[export]``."""
+    if not pid or not pid.startswith("fe:") or "#" not in pid:
+        return None
+    file, _, name = pid[3:].partition("#")
+    return (((flow.get("byFile") or {}).get(file) or {}).get("flow") or {}).get("bodies", {}).get(name)
 
 
 def hooks_part(flow: dict, graph: dict | None) -> tuple[dict, dict]:
@@ -403,7 +415,15 @@ def hooks_part(flow: dict, graph: dict | None) -> tuple[dict, dict]:
                 end = next((line for line in starts if line > r["line"]), float("inf"))
                 span = [x for x in rows if r["line"] <= x["line"] < end]           # a sibling call's callbacks are not this call's
                 c = {"kind": kind, "callee": r["callee"], "at": f"{file}:{r['line']}"}
-                if kind == "query":
+                if kind == "query" and leaf == "useQueries":                       # §A4 V28: one key per entry, or say why not
+                    entries = opts.get("queries")
+                    keys = [(_keys_of(q.get("queryKey")) or [None])[0] for q in entries] if isinstance(entries, list) and all(isinstance(q, dict) for q in entries) else None
+                    if keys and all(keys):
+                        c["keys"] = keys
+                    else:
+                        c["key_unresolved"] = f"useQueries: {len(entries)} entries, keys per entry" if isinstance(entries, list) else "useQueries: entries are not literal"
+                        stats["keys_unresolved"] += 1
+                elif kind == "query":
                     keys = _keys_of(opts.get("queryKey"))
                     if keys:
                         c["key"] = keys[0]
@@ -416,8 +436,19 @@ def hooks_part(flow: dict, graph: dict | None) -> tuple[dict, dict]:
                     c["endpoint"] = bridge[pid]
                 if kind == "mutation":
                     c["invalidates"], c["seeds"] = [], []
-                    for x in span:
-                        when = next((cc.split(".", 1)[1] for cc in x.get("ctx") or [] if cc.startswith(f"prop:{leaf}.on")), None)
+                    named = {v["ref"]: k for k, v in opts.items() if k.startswith("on") and isinstance(v, dict)          # §A4 V14:
+                             and isinstance(v.get("ref"), str) and _NAME_RX.fullmatch(v["ref"])}                          # `onSuccess: handleSaved`
+                    reach = [(x, None) for x in span]
+                    if named:
+                        reach += [(x, None) for x in rows if any(cc.startswith("callback:") and cc[9:] in named for cc in x.get("ctx") or [])]
+                        for x in rows:                                                # `const invalidate = useCardsInvalidate()`:
+                            for b in x.get("binds") or []:                            # the callback is what another hook RETURNED
+                                if b in named and x["k"] == "call":
+                                    tb = _body_of(flow, _resolve(x["callee"], bindings, file, local))
+                                    reach += [(y, named[b]) for y in (tb or {}).get("rows") or []]
+                    for x, hop in reach:
+                        when = next((cc.split(".", 1)[1] for cc in x.get("ctx") or [] if cc.startswith(f"prop:{leaf}.on")), None) \
+                            or next((named[cc[9:]] for cc in x.get("ctx") or [] if cc.startswith("callback:") and cc[9:] in named), None) or hop
                         if x["k"] != "call" or not when:
                             continue
                         xl = _leaf(x.get("callee"))

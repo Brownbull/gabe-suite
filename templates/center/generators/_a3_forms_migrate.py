@@ -11,6 +11,8 @@ and ``String(20) ≡ String(length=20)``.
 """
 from __future__ import annotations
 
+import re
+
 import ast
 import configparser
 import os
@@ -18,6 +20,7 @@ from pathlib import Path
 
 SKIP_DIRS = frozenset({"node_modules", ".git", ".venv", "venv", "__pycache__", "dist", "build", ".next", "site-packages"})
 RAW_OPS = frozenset({"execute", "get_bind", "bulk_insert"})
+_RENAME_COL = re.compile(r'\s*ALTER\s+TABLE\s+"?(\w+)"?\s+RENAME\s+(?:COLUMN\s+)?"?(\w+)"?\s+TO\s+"?(\w+)"?\s*;?\s*$', re.I)
 # unbound alembic verbs whose first argument is a constraint or index name and whose second is the table
 NAME_FIRST = frozenset({"create_check_constraint", "create_unique_constraint", "create_foreign_key", "drop_constraint", "create_index"})
 # spellings of one database type
@@ -254,6 +257,11 @@ def replay(repo: Path, versions: str) -> dict:
 
     def apply(verb: str, args: list, kw: dict, bound: str | None) -> None:
         nonlocal raw
+        if verb == "execute" and args and isinstance(lit(args[0]), str):   # §A4 V16: the one raw statement the replay
+            mt = _RENAME_COL.match(lit(args[0]))                             # can read — a column rename in SQL
+            if mt and mt.group(1) in schema and mt.group(2) in schema[mt.group(1)]["columns"]:
+                schema[mt.group(1)]["columns"][mt.group(3)] = schema[mt.group(1)]["columns"].pop(mt.group(2))
+                return
         if verb in RAW_OPS:
             raw += 1
             return

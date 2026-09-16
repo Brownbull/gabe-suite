@@ -474,6 +474,27 @@ def _full_path(repo: Path, m: _Mod, dec, files: list[str]) -> tuple[str, bool]:
     return mount + pre + sub, got is not None
 
 
+def _limit_spec(repo: Path, m: _Mod, node) -> str | None:
+    """A limiter's spec as written: a literal (`"5/minute"`), a module constant here or one import hop away
+    (`BATCH_DELETE_CALL_LIMIT = "10/hour"`), or one entry of a list constant (`SHARE_LIMITS[0]` with
+    `SHARE_LIMITS = ["30/hour", "200/day"]`). Anything else stays unknown and says so (§A4 V12)."""
+    got = _path_str(m, node)
+    if got is not None:
+        return got
+    idx = None
+    if isinstance(node, ast.Subscript) and isinstance(node.value, ast.Name) and isinstance(node.slice, ast.Constant) and isinstance(node.slice.value, int):
+        node, idx = node.value, node.slice.value
+    if not isinstance(node, ast.Name):
+        return None
+    val = m.consts.get(node.id)
+    if val is None:
+        r = _resolve(repo, m, node.id)
+        val = r[0].consts.get(r[1]) if r else None
+    if idx is not None:
+        return val[idx] if isinstance(val, (list, tuple)) and 0 <= idx < len(val) and isinstance(val[idx], str) else None
+    return val if isinstance(val, str) else None
+
+
 def _response_annotation(m: _Mod, fn) -> str | None:
     """The Response class a handler's return annotation names — the library's own (`F.RESPONSE_DEFAULTS`) or a project
     class built on one. FastAPI declares NO response model for such a handler (`routing.py:847-850`:
@@ -565,6 +586,13 @@ def _form(repo: Path, amap: dict, slug: str, ep: dict, mwx: list, files: list, f
                          "source": F.VALIDATION["source"]})
     H = _analyse(repo, m, fn)                                # 4 · the handler body …
     hrows = [_copy(r, phase="handler", depth=0) for r in H["rows"]]
+    for d in fn.decorator_list:                              # §A4 V12: a third-party limiter on the route is a 429 the
+        if isinstance(d, ast.Call) and isinstance(d.func, ast.Attribute) and d.func.attr in F.CONTRACT["rate_idioms"] and d.args:
+            spec = _limit_spec(repo, m, d.args[0])           # a literal, a constant one hop away, or one entry of a list constant
+            rr = F.CONTRACT["rate_refusal"]
+            hrows.append({"phase": "handler", "depth": 0, "status": rr["status"], "form": rr["form"],
+                          "detail": rr["detail"].replace("{spec}", spec or "…"), "at": f"{m.rel}:{d.lineno}",
+                          "state": "defined" if spec else "unknown", "source": "framework", "via": f"decorator {_unp(d.func, 40)}"})
     by_handler = {r.get("_handler"): [] for r in hrows if r.get("_handler")}
     for r in hrows:
         if r.get("_handler"):

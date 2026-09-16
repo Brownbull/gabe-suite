@@ -140,7 +140,7 @@ fe_arm = {**FE.build_fe(FLOW, None), "present": True}
 f2 = B.extend_frontend({"present": False, "reason": "no FastAPI endpoints"}, fe_arm, HERE / "fixture", {}, graph=GRAPH)
 a = f2["arms"]["frontend"]
 assert a["present"] is True and a["reason"] is None and all(o == {"present": True, "reason": None} for o in a["parts"].values()) and sorted(a["parts"]) == sorted(F.ARMS["frontend"]["parts"]), a
-assert f2["frontend"]["pieces"]["fe:src/lib/useMe.ts#useMe"]["form"] == "hook" and f2["frontend"]["client"]["clients"] and a["stats"]["hooks"]["queries"] == 5, sorted(f2["frontend"])
+assert f2["frontend"]["pieces"]["fe:src/lib/useMe.ts#useMe"]["form"] == "hook" and f2["frontend"]["client"]["clients"] and a["stats"]["hooks"]["queries"] == 8, sorted(f2["frontend"])
 assert a["stats"]["guards"] == 7 and a["stats"]["findings"] == {"action-uncalled": 1, "dead-control": 4, "no-rollback": 1, "redirect-loop": 1} and "fe:src/components/Views.tsx#SyncError" in f2["frontend"]["pieces"] and "fe:src/store/prefs.ts#usePrefsStore" in f2["frontend"]["stores"] and a["bytes"] > 0 and sorted(f2["arms"]) == sorted(F.ARM_ORDER), a
 assert f2["present"] is False and f2["arm_findings"]["frontend"][0]["id"] == "redirect-loop" and "fe:src/routes/RequireSetup.tsx#RequireSetup" in f2["frontend"]["pieces"]
 f6 = B.extend_frontend(copy.deepcopy(FORMS_R), fe_arm, HERE / "fixture", {}, graph=GRAPH)
@@ -184,7 +184,7 @@ assert [s["key"] for s in cs["seeds"]] == [["me"]] and (cs["kind"], [(f["method"
 assert rc["key"] == ["recipes", "detail", "*"] and [b["key"] for b in rc["invalidated_by"]] == [["recipes"]] and [f["path"] for f in rc["fetch"]] == ["/api/v1/recipes/*"], rc
 assert "key" not in lo and lo["key_unresolved"] == "KEY" and st["options"] == {"staleTime": 0} and [b["key"] for b in st["invalidated_by"]] == [["settings"]], (lo, st)
 assert call("useThings")["key"] == ["things", "list"], call("useThings")
-assert hs == {"queries": 5, "mutations": 5, "keys_unresolved": 1, "fetches": 10, "invalidations": 4, "seeds": 3, "invalidated_by": 4}, hs
+assert hs == {"queries": 8, "mutations": 7, "keys_unresolved": 3, "fetches": 13, "invalidations": 6, "seeds": 3, "invalidated_by": 6}, hs   # + useCards · useCardPair (§A4 fix 5)
 tt = {c["at"]: c for c in hooks["fe:src/lib/useToggleThing.ts#useToggleThing"]["calls"]}   # three mutations in one body: each keeps its own callbacks
 tf = "src/lib/useToggleThing.ts"
 assert ([f["path"] for f in tt[at(tf, "const careless")]["fetch"]], tt[at(tf, "const careless")]["invalidates"], [s["key"] for s in tt[at(tf, "const contextual")]["seeds"]],
@@ -222,11 +222,26 @@ py "F12 · transport: the wrapper's file, every .status comparison and throw in 
 hooks, _ = FEF.hooks_part(FLOW, GRAPH)
 cl, cs = FEF.client_part(FLOW, HERE / "fixture", hooks)
 t, f = cl["transport"], "src/lib/api/client.ts"
-assert list(t) == [f] and t[f]["wrappers"] == ["fe:src/lib/api/client.ts#apiFetch"], t
+assert sorted(t) == [f, "src/lib/api/openapi.ts"] and t[f]["wrappers"] == ["fe:src/lib/api/client.ts#apiFetch"], t   # openapi.ts: a verb-named client, no status branch
 assert [(b["fn"], b.get("status"), b.get("throws"), b["when"], b.get("ctx"), b["at"]) for b in t[f]["branches"]] == [
     ("apiFetch", 503, None, [], "callback:then", at(f, "r.status === 503")), ("apiFetch", None, "new ApiError(503)", ["r.status === 503"], "callback:then", at(f, "throw new ApiError(503)")),
     ("apiFetch", 401, None, [], None, at(f, "response.status === 401")), ("apiFetch", None, "new ApiError(response.status)", ["!response.ok"], None, at(f, "throw new ApiError(response.status)"))], t[f]["branches"]
-assert (cs["wrappers"], cs["transport_branches"]) == (1, 4), cs
+assert (cs["wrappers"], cs["transport_branches"]) == (2, 4), cs
+PY
+
+py "F19 · FIRE+SILENT: a verb-named client call carries its verb; a named onSuccess callback — a local arrow, or a function another hook returned — yields its invalidations; useQueries says why it has no key" <<'PY'
+hooks, hs = FEF.hooks_part(FLOW, {"cross_edges": []})
+def call(name):
+    return hooks[next(k for k in hooks if k.endswith("#" + name))]["calls"][0]
+pc, pc2, cards, pair, two = call("usePatchCard"), call("usePatchCardTwo"), call("useCards"), call("useCardPair"), call("useCardTwo")
+assert [(x["method"], x["path"]) for x in pc["fetch"]] == [("PATCH", "/api/v1/cards/1")], pc["fetch"]            # V13: apiClient.PATCH
+assert [(x["method"], x["path"]) for x in cards["fetch"]] == [("GET", "/api/v1/cards")], cards["fetch"]           # SILENT: GET stays GET
+assert [(i["key"], i["when"]) for i in pc["invalidates"]] == [(["cards"], "onSuccess")], pc["invalidates"]         # V14: `onSuccess: handleSaved`
+assert [(i["key"], i["when"]) for i in pc2["invalidates"]] == [(["cards"], "onSuccess")], pc2["invalidates"]       # V14: `onSuccess: invalidate` (another hook's return)
+assert "key" not in pair and pair["key_unresolved"] == "useQueries: entries are not literal", pair                # V28: a reason, never null
+assert "key" not in two and two["key_unresolved"] == "useQueries: 2 entries, keys per entry", two
+sv = call("useSaveSettings")
+assert [(x["method"], x["path"]) for x in sv["fetch"]] == [("PATCH", "/api/v1/settings")], sv["fetch"]              # SILENT: opts.method still wins
 PY
 
 py "F13 · reason map: each status, detail or code comparison walked back to the requests its receiver holds — a hook value through an alias, a parameter's call sites, a caught error's try block, a mutate onError, a component prop — and each endpoint's exits routed to the first site that covers them" <<'PY'

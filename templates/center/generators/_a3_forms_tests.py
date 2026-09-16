@@ -53,14 +53,29 @@ def _endpoints(forms: dict) -> list[dict]:
     return out
 
 
+def _fits(t: str, s: str) -> bool:
+    """One segment: an endpoint template `{x}` takes any test segment; a literal takes only itself — a test's `*` slot
+    (an f-string variable) never stands in for a literal the route spells out (§A4 V10 · V11)."""
+    return t.startswith("{") or t == s
+
+
 def _match(eps: list, method: str, path: str) -> tuple[dict | None, str | None]:
+    """The endpoint a test path names — ``full`` when every segment fits, else the longest fitting ``suffix``. When a
+    literal route and a template route both fit (`/things/special` beside `/things/{id}`), the literal one comes
+    first: ``_endpoints`` sorts the keys, and a literal segment sorts before ``{`` — the order a sane registration
+    protects, which the feed cannot read. That invariant, not a tie-break, is what picks it."""
     segs = ["*" if "{*}" in s else s for s in TS._segs(path.split("?")[0])]
     for e in eps:
-        if e["method"] == method and e["full"] and len(e["full"]) == len(segs) and \
-                all(t.startswith("{") or s == "*" or t == s for t, s in zip(e["full"], segs)):
+        if e["method"] == method and e["full"] and len(e["full"]) == len(segs) and all(_fits(t, s) for t, s in zip(e["full"], segs)):
             return e, "full"
-    got = TS._ep_match(method, segs, eps, [])
-    return (got, "suffix") if got else (None, None)
+    best = None
+    for e in eps:                                            # the suffix fallback, under the same segment rule
+        t = e["tsegs"]
+        if e["method"] != method or not t or len(t) > len(segs):
+            continue
+        if all(_fits(ts, ls) for ts, ls in zip(t, segs[-len(t):])) and (best is None or len(t) > len(best["tsegs"])):
+            best = e
+    return (best, "suffix") if best else (None, None)
 
 
 def _candidates(v: dict) -> list[dict]:

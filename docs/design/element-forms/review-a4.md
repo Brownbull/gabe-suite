@@ -159,6 +159,20 @@ need new fixture sources → re-derive tests/forms-frontend/flow.frozen.json. V2
     V9b ("rides a callee's whole step list past the raise") is NOT reproduced after V7 + V9a — keyed on the raising
     FUNCTION, gustify's one candidate is complete_setup's own except rollback, which ran; gastify and tier3 none.
 
+5 · the idiom rosters — ten of eleven: V10 V11 (a test's `*` slot fits only a template segment; the literal route
+    wins by the sorted-key invariant, stated not tie-broken) · V12 (a limiter decorator IS a produced 429, `shared_limit`
+    an idiom, the spec resolved one hop, placed as the gate after own-params) · V13 (`apiClient.PATCH` names its verb) ·
+    V14 (`onSuccess: handleSaved` via the extractor's `callback:<name>` tag; `onSuccess: invalidate` where another hook
+    RETURNED the function, followed to that body) · V15 (only a streamed generator runs after the response line) ·
+    V16 (`ALTER TABLE … RENAME COLUMN` read) · V22a (a gate through an `Annotated` alias, resolved from the handler's own
+    annotations — no arm depends on another) · V24 (stream headers one hop, `-> None` = no body) · V28 (`useQueries`
+    says why). Cases T5 · C19 · E10 · S3.P2 + S5.P18 · SF11 · F19, six pins re-set; 15 mutants, each killed by its own
+    case. Measured: gastify gates with fn null 47 → 0, asserted-unproduced 16 → 3, fetch methods no longer all GET,
+    27 decorator 429 rows all defined; tier3 generator collapses 19 → 3, UserFile's phantom drift pair gone;
+    gustify invalidations 30 → 32. V29 — the web bridge keeps the first export per (method, path), in two dedups
+    (`_a3_web` per file, `_a3_graph` per screen→endpoint) — moves the c4-graph feed and the station; it lands as its
+    own measured commit next.
+
 ⚠ CORRECTION to fix 3 (`16ba773`): its `is None` fold read any bound non-constant expression as proof of "not None",
 so `need_owner(session)` with a `session` parameter had its 409 proven dead — in the default feed. Fixed in fix 4 (the
 fold abstains on a name; cases C17 `/items/maybe` + S5.P18 `need_owner`, one mutant). Its published `falsified`

@@ -33,6 +33,7 @@ CLICK_PROPS = frozenset({"onClick", "onPress", "onPointerDown", "onMouseDown", "
 PERSIST_CALLS = frozenset({"persist", "atomWithStorage"})    # zustand `persist(…, { name })` · jotai `atomWithStorage`
 STORAGE_WRITES = r"(?:window\.)?(?:localStorage|sessionStorage)\.(?:setItem|removeItem|clear)"
 CACHE_WRITE_CALLS = frozenset({"setQueryData", "setQueriesData"})
+HTTP_VERBS = frozenset({"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"})   # a generated client names the verb as the callee: `apiClient.PATCH(path)`
 CLIENT_HOOKS = frozenset({"useQueryClient"})                  # the value a helper is handed when it writes the cache
 MUTATE_CALLS = frozenset({"mutate", "mutateAsync"})           # `m.mutate(body, { onError })` — the callback's error is m's request
 REASON_MEMBERS = ("detail", "code")                             # what a client reads to tell two refusals of one status apart (Slice 11c)
