@@ -32,15 +32,17 @@ for f in "$GEN"/*.py "$GEN"/*.mjs "$GEN"/*.sh; do
 done
 # A NEW generator that an UPDATED generator imports is not a new capability — it is a hard dependency the regen
 # below would crash on (2026-09-06: _a3_homing.py imported by build_center_a3.py left both twins with a broken
-# regen). Land it, say so; every other new generator stays a deliberate adoption.
+# regen). Land it, say so; every other new generator stays a deliberate adoption. The import may sit INSIDE a
+# function (§A4 step 8, 2026-09-16): the frontend arm's parts are imported lazily so a broken part never costs the
+# feed — an indented `import _a3_fe_reason` is a hard dependency all the same.
 req_gen=(); opt_gen=()
 for b in "${new_gen[@]}"; do
   mod="${b%.py}"
   # the SUITE's generators are the source of record: the build_center_a3.py about to be landed is the one that imports it
   # (review 2026-09-06 — a twin still on the old build would otherwise call the new generator "optional")
-  if [[ "$b" == *.py ]] && grep -lqE "^(import|from) ${mod}\b" "$GEN"/*.py 2>/dev/null; then
-    if [ "$CHECK" = 1 ]; then echo "  DRIFT $b (NEW, required by $(grep -lE "^(import|from) ${mod}\b" "$GEN"/*.py | xargs -n1 basename | tr '\n' ' '))"; drift=1
-    else cp "$GEN/$b" "$TGEN/$b"; echo "  landed $b — NEW, required by $(grep -lE "^(import|from) ${mod}\b" "$GEN"/*.py | xargs -n1 basename | tr '\n' ' ')"; fi
+  if [[ "$b" == *.py ]] && grep -lqE "^\s*(import|from) ${mod}\b" "$GEN"/*.py 2>/dev/null; then
+    if [ "$CHECK" = 1 ]; then echo "  DRIFT $b (NEW, required by $(grep -lE "^\s*(import|from) ${mod}\b" "$GEN"/*.py | xargs -n1 basename | tr '\n' ' '))"; drift=1
+    else cp "$GEN/$b" "$TGEN/$b"; echo "  landed $b — NEW, required by $(grep -lE "^\s*(import|from) ${mod}\b" "$GEN"/*.py | xargs -n1 basename | tr '\n' ' ')"; fi
     req_gen+=("$b")
   else opt_gen+=("$b"); fi
 done
