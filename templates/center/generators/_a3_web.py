@@ -338,11 +338,12 @@ def _extract_file(text: str, idiom: str, sdk: dict | None = None) -> tuple[list[
             c["export"] = exp
         calls.append(c)
     dyn = len(_CALL_DYN[idiom].findall(text))
-    # de-dup + sort for determinism
-    seen: set[tuple[str, str]] = set()
+    # de-dup + sort for determinism — per EXPORT (§A4 V29): two hooks in one file PATCHing one path are two fetch
+    # sites, and the bridge names the export that fetched (D3); a file-level call with no export is one site
+    seen: set[tuple[str, str, str]] = set()
     uniq: list[dict[str, str]] = []
-    for c in sorted(calls, key=lambda c: (c["method"], c["path"], c.get("export") or "")):   # same (method, path) from two exports → the sorted-first export wins, deterministically
-        key = (c["method"], c["path"])
+    for c in sorted(calls, key=lambda c: (c["method"], c["path"], c.get("export") or "")):
+        key = (c["method"], c["path"], c.get("export") or "")
         if key not in seen:
             seen.add(key)
             uniq.append(c)

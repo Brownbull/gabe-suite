@@ -1029,12 +1029,13 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                 if _exp and screen.get("file"):            # D3 (2026-09-05): the wire names the EXPORT that fetched —
                     _b["export"] = f"fe:{screen['file']}#{_exp}"   # the hook's own fe piece id; the file stays as `from`
                 _bridges.append(_b)
-        # dedup a screen's repeat calls to one endpoint; sort both lists
-        _seen: set[tuple[str, str]] = set()
+        # dedup a screen's repeat calls to one endpoint PER EXPORT (§A4 V29 — D3's wire names the hook that fetched,
+        # so two hooks in one file reaching one endpoint are two wires); sort both lists
+        _seen: set[tuple[str, str, str]] = set()
         _bd: list[dict] = []
         for e in sorted(_bridges, key=lambda e: (e["from_slug"], e["from"],
                                                  e["to_slug"], e["to"], 0 if e.get("export") else 1, e.get("export") or "")):   # a bridge WITH its export outranks one without
-            k = (e["from"], e["to"])
+            k = (e["from"], e["to"], e.get("export") or "")
             if k not in _seen:
                 _seen.add(k)
                 _bd.append(e)

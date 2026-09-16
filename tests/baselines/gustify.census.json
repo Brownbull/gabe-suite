@@ -2,7 +2,7 @@
  "action_roots": 0,
  "app_middleware": 3,
  "boot_roots": 1,
- "cross_edges": 343,
+ "cross_edges": 346,
  "endpoints": 80,
  "entities": 8,
  "fe_edges": 3229,
@@ -27,6 +27,6 @@
  "task_roots": 0,
  "unparseable": 0,
  "use_edges": 173,
- "web_fetch_sites": 55,
- "web_matched": 53
+ "web_fetch_sites": 58,
+ "web_matched": 56
 }

@@ -1216,7 +1216,8 @@ with tempfile.TemporaryDirectory() as _td:
         'import { apiFetch } from "@lib/api/client";\n'
         'export function useOrders(){ return apiFetch<T>("/api/v1/orders", { signal }); }\n'
         'export function addLine(id){ return apiFetch<T>(`/api/v1/orders/${id}/lines`,'
-        ' { method: "POST", body: { qty: 1 } }); }\n', encoding="utf-8")
+        ' { method: "POST", body: { qty: 1 } }); }\n'
+        'export function useOrdersAgain(){ return apiFetch<T>("/api/v1/orders"); }\n', encoding="utf-8")   # §A4 V29: a second export, same (method, path)
     (_wr / "client.ts").write_text(               # the DEFINITION file → excluded
         'export async function apiFetch<T>(path, opts){ return fetch(path); }\n', encoding="utf-8")
     _ent = {"orders": {"files": [["web", "apps/web/src/features/OrderList.tsx", 3]]}}
@@ -1227,10 +1228,14 @@ with tempfile.TemporaryDirectory() as _td:
     check(len(_ol) == 1, "web_arm collapses a fetching file to ONE screen node")
     _calls = {(c["method"], c["path"]) for c in _ol[0]["calls"]} if _ol else set()
     check(("GET", "/api/v1/orders") in _calls, "web_arm extracts a literal apiFetch path")
-    _exp = {c["path"]: c.get("export") for c in _ol[0]["calls"]} if _ol else {}
+    _exp = {}
+    for c in (_ol[0]["calls"] if _ol else []):
+        _exp.setdefault(c["path"], c.get("export"))            # the FIRST export per path (V29 keeps a second one beside it)
     check(_exp.get("/api/v1/orders") == "useOrders" and _exp.get("/api/v1/orders/${id}/lines") == "addLine",
           "D3 (2026-09-05): each call site names the EXPORT enclosing it (useOrders · addLine) — the nearest column-0 declaration above an indented call")
-    check((_wa.get("stats") or {}).get("sites_with_export") == 2, "D3: stats.sites_with_export counts the attributed sites")
+    check((_wa.get("stats") or {}).get("sites_with_export") == 3, "D3: stats.sites_with_export counts the attributed sites (three exports)")
+    _same = sorted(c.get("export") or "" for c in _ol[0]["calls"] if (c["method"], c["path"]) == ("GET", "/api/v1/orders")) if _ol else []
+    check(_same == ["useOrders", "useOrdersAgain"], "V29 FIRE: two exports fetching one (method, path) are two call sites — the file keeps both, each with its export")
     # MUTATION of the rule: a module-level call (column 0) belongs to no export → no `export` key
     _ml = W._extract_file(W._strip_comments('import { apiFetch } from "x";\nexport function useA(){ return apiFetch("/api/v1/a"); }\napiFetch("/api/v1/top");\nconst warm = apiFetch("/api/v1/warm");\n'), "apiFetch")[0]
     check({c["path"]: c.get("export") for c in _ml} == {"/api/v1/a": "useA", "/api/v1/top": None, "/api/v1/warm": "warm"},
@@ -1534,6 +1539,17 @@ check(_gx3_br and all(e.get("export", "").startswith("fe:") and e["export"].ends
       "D3 FIRE: a bridge whose call names an export carries export = fe:<file>#<export> (the hook's own piece id)")
 check(_gx3["stats"]["web"].get("sites_with_export") is not None, "D3: stats.web.sites_with_export rides the build")
 check(not any("export" in e for e in gsse_br), "D3 SILENT: a call with no export leaves the bridge byte-identical (no export key)")
+
+# ── §A4 V29: two hooks in one file reaching one endpoint are two wires — the bridge dedups per EXPORT, not per (from, to) ──
+_wy = _cp.deepcopy(_wx)
+for _s in _wy.get("screens") or []:
+    _s["calls"] = list(_s.get("calls") or []) + [dict(_c, export="useStreamY") for _c in (_s.get("calls") or [])[:1]]
+_gy = G.build_c4_graph(FIX_SSE, web=_wy)
+_gy_br = [e for e in _gy["cross_edges"] if e.get("kind") == "bridge"]
+_pairs = {(e["from"], e["to"]) for e in _gy_br}
+check(len(_gy_br) == len(_gx3_br) + 1 and sorted({e["export"].rpartition("#")[2] for e in _gy_br}) == ["useStreamX", "useStreamY"],
+      "V29 FIRE: a second export fetching the same endpoint from the same file adds its own bridge, export = its hook")
+check(len(_pairs) == len(_gx3_br), "V29 SILENT: the (screen, endpoint) pairs are unchanged — only the per-export wires multiplied")
 
 # ── PASS 2 (review 2026-09-06, repo-study): a bare /api mount normalizes; the generated-SDK idiom (hey-api) ──
 check(G._norm_path("/api/manage/admin/x") == "/manage/admin/x" and G._norm_path("/api/v1/users/{id}") == "/users/{}",

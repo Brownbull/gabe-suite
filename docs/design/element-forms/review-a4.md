@@ -172,6 +172,9 @@ need new fixture sources → re-derive tests/forms-frontend/flow.frozen.json. V2
     gustify invalidations 30 → 32. V29 — the web bridge keeps the first export per (method, path), in two dedups
     (`_a3_web` per file, `_a3_graph` per screen→endpoint) — moves the c4-graph feed and the station; it lands as its
     own measured commit next.
+    V29 — landed: both dedups keyed by export (`(method, path, export)` in `_a3_web`, `(from, to, export)` in
+    `_a3_graph`); two arch-graph checks, two mutants; bridges gustify 53 → 56 · tier3 188 → 192 with every
+    (screen, endpoint) pair unchanged; gastify and keypro untouched; 62/62 goldens.
 
 ⚠ CORRECTION to fix 3 (`16ba773`): its `is None` fold read any bound non-constant expression as proof of "not None",
 so `need_owner(session)` with a `session` parameter had its 409 proven dead — in the default feed. Fixed in fix 4 (the
