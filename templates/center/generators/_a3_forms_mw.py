@@ -67,6 +67,7 @@ def _exit(ids: dict, row: dict, fresh: list, **extra) -> dict:
     key = ("site", row.get("site")) if row.get("site") else ("at",)
     ident = ids.get(key + (row.get("at"), row.get("status"), _detail(row)))
     out = {"id": ident, **_row(row), **extra}
+    out.setdefault("phase", "dependency")                    # §A4 V36: a dependency's own exit is in its phase
     if ident is None:
         out["on_endpoints"] = False
         fresh.append((out, row))

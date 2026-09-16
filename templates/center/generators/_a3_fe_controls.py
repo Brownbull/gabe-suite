@@ -287,7 +287,7 @@ def stores_part(flow: dict, fe: dict, pieces: dict, repo=None) -> tuple[dict, di
                 for t in trans:
                     stats["transitions"][t["kind"]] = stats["transitions"].get(t["kind"], 0) + 1
                 if not called:
-                    found.append({"id": "action-uncalled", "slot": F.FINDINGS["action-uncalled"]["slot"], "piece": pid, "action": key, "at": actions[key]["at"]})
+                    found.append({"id": "action-uncalled", "slot": F.FINDINGS["action-uncalled"]["slot"], "store": pid, "action": key, "at": actions[key]["at"]})   # §A4 V34: `store` is a frontend.stores key
             wrap = next((w for w in body["wraps"] if w.get("call") in FF.PERSIST_CALLS), None)
             if wrap:
                 persist = {"state": "persisted", "via": wrap["call"], **({"name": wrap["opts"]["name"]} if isinstance((wrap.get("opts") or {}).get("name"), str) else {})}

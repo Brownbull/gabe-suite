@@ -781,6 +781,16 @@ armed["endpoints"]["endpoint:GET /x"]["arm_findings"] = {"effects": [{"id": "rea
 assert fd.summary(armed) == fd.summary(base), "arm findings leaked into the endpoint nag/count summary"
 PY
 
+py "K12 · FIRE: the registry the spec promised — every kind and slot as built, external a state; head on a feed that is not present" <<'PY'
+import _a3_forms as F, _a3_forms_build as B
+assert set(F.KINDS["endpoint"]) == {"U3", "U7", "K1", "U6", "U8", "U9", "U11", "U12", "U14", "K2", "K3", "K4"}, sorted(F.KINDS["endpoint"])   # V32
+assert {"middleware", "dependency", "service", "task", "handler", "schema", "model", "migration", "setting", "mirror", "guard", "hook", "component", "store_action"} <= set(F.KINDS), sorted(F.KINDS)
+assert all("block" in v for k in F.KINDS if k != "endpoint" for v in F.KINDS[k].values()), "every kind's slot names the block that is it"
+assert "external" in F.STATES, F.STATES
+off = B.extend_backend({"present": False, "reason": "no FastAPI endpoints in the archmap"}, {"head": "h123"}, T, {})
+assert off["head"] == "h123" and off["present"] is False, off                                              # V37: head rides an absent feed (D21)
+PY
+
 py "K8 · guard: every private the arms reach for in _a3_paths · _a3_graft · _a3_stacks_pydi exists" <<'PY'
 import _a3_paths as P, _a3_graft as G, _a3_stacks_pydi as PD
 srcs = {f.name: f.read_text() for f in sorted(GEN.glob("_a3_forms_*.py"))}

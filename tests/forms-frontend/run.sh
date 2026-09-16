@@ -362,6 +362,8 @@ assert O[at(f, "const optimistic")] == {"writes": [at(f, "onMutate: (done) => wr
 assert O[at(f, "const careless")] == {"writes": [at(f, 'setQueryData(["things", "flag"]')], "rollback": "missing", "reconcile": False}, O
 assert (O[at(f, "const contextual")]["rollback"], O[at(f, "const contextual")]["via"]) == ("defined", "context"), O
 assert [(x["id"], x["at"]) for x in found] == [("action-uncalled", p["actions"]["unused"]["at"]), ("no-rollback", at(f, "const careless"))], found
+au = next(x for x in found if x["id"] == "action-uncalled")
+assert au["store"] in stores and "piece" not in au and au["action"] == "unused", au                        # V34: store + action, no dangling piece
 assert ss["stores"] == 2 and ss["actions"] == 12 and ss["persist"] == {"partial": 1, "persisted": 1} and ss["rollback"] == {"defined": 2, "missing": 1}, ss
 PY
 

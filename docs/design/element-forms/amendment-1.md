@@ -44,7 +44,7 @@
  "arms_error": "<Type>: <message>",    // only when the orchestrator itself failed — the endpoint forms are still written
  "arms": {                             // WRITTEN ONLY when ≥1 arm is selected; then every registry arm is listed, frontend included
    "<arm>": {"present": bool,          // true when any part ran
-             "reason": "switched off" | "switched off — computed in memory for <arms>" | "needs <unit>" | "not built yet (slice n)"
+             "reason": "switched off" | "switched off — computed in memory for <arms>" | "needs <unit>" | "not built yet (slice n)" | "absent: <why>"   // §A4 V30 V39: a selected unit that had nothing to read
                      | "partial — <part>: <reason>; …" | "needed by <arms>; written only where <arms> writes inside it" | "error: …" | null,
              "version": int, "options": {…}, "stats": {…, "findings": {"<id>": int}},
              "bytes": int,                                                 // selected arms: serialized size of the keys the arm added
@@ -91,6 +91,7 @@
 - **A unit no runner builds yet** is listed and says `not built yet (slice n)` before any need, and pulls in nothing (review F32). A needed-only arm that ran stamps `switched off — computed in memory for <arm>` on the parts that ran; a part that did not keeps its own reason (F33).
 - **Soft needs** are used only when selected: `paths` uses `switches` and `short.schema`.
 - **Ids** (the `id` keys on existing rows) are written whenever any arm is selected (D13).
+- **Where an endpoint-scoped finding lives (§A4 V38).** On the endpoint's own `arm_findings.<arm>` when the arm walks endpoints (effects · contract · the kinds arm's dependency findings); feed-wide in the top-level `arm_findings.<arm>` with an `endpoint` key when the arm's subject is a test case or a frontend piece (tests · frontend). A consumer joins the two on `endpoint`; neither place duplicates the other.
 
 ### Ids: `<prefix>:<sha1(json.dumps(tuple, separators=(",",":"), ensure_ascii=False))[:10]>`, never a line number
 
@@ -109,11 +110,9 @@
 | `sw:` | switch | `["binding", s_fn, port]` · `["value", fn]` · `["flag", sorted ref ids]` | yes |
 | `st:` | effect step | `[fn, op, table, cond, n]` | stored once in `steps{}` |
 | `c:` | catch | `[fn, sorted types[], n]` | yes |
-| `k:` | claim | `[fn, model, column]` | yes |
-| `w:` | rate window | `[limiter_cls, attr]` | yes |
-| `e:` | service raise | `[fn, cls, pred, after[], n]` | yes |
+| ~~`k:` · `w:` · `e:`~~ | claim · rate window · service raise | planned; never minted across four feeds — **struck at §A4 (V33)**; a claim, a limiter and a service raise are addressed by their `at` | — |
 | `case:schema:` | a 422 case | `<Cls>/<field path>/<pydantic type>[/<validator>.<n>]` | yes |
-| `<l>-<sha10>` | a frontend row (`x e c b s a q m t p r`) | hashed per piece | scoped per piece |
+| `<l>-<sha10>` | a frontend row (`x e c p r` — exit · effect · control · path · reason site; `b s a q m t` were planned and never minted, struck at §A4 V33) | hashed per piece | scoped per piece |
 
 ### Map keys
 
@@ -124,7 +123,7 @@
 | `middleware` | `middleware:<Cls>` | a collision becomes `{"variants": […]}` |
 | `dependencies` · `functions` · `handlers` | `file::qual` | `levels_id: "file#qual"`. Archmap `dispatch.dispatches[].t` is `file#qual` and is converted (V) |
 | `tasks` | `endpoint:TASK <name>` | `fn`, `levels_id` |
-| `frontend.pieces` | `fe:<file>#<Export>`; a store action is `fe:<file>#<Store>.<action>` | — |
+| `frontend.pieces` | `fe:<file>#<Export>`; a store action is addressed by `store` (a `frontend.stores` key) + `action` on its finding — the `#<Store>.<action>` piece key was never minted, struck at §A4 V34 | — |
 | `test_cases` | the C-id if it is unique in the feed, else `<tfile>::<def>` | — |
 
 ### Kinds forms (as built, Slice 3a — `_a3_forms_mw.py`)
@@ -245,7 +244,7 @@ Stats: binding · value · flag (distinct ids) · endpoints · binding_edges · 
   "exit":{"id":"x:…|r:…","kind":"refusal|success|uncaught|framework"},
   "names":{"detail":str|null,"token":str|null,"exception":str|null,"stage":str},   // D15: never a chosen `name`
   "split"?:"dependency-params|own-params|body-parse","cases"?:["case:schema:…"],
-  "chain":[{"kind":"step|gate|branch|switch|call|collapsed|catch|commit|exit","ref"?:id,"hit"?:bool,
+  "chain":[{"kind":"step|gate|branch|switch|call|collapsed|catch|exit","ref"?:id,"hit"?:bool,   // `commit` was never minted — struck at §A4 V33; a commit is a `st:` step on the path's effects
             "phase"?:str,"at"?:"file:line","cond"?:str,"call"?:str,"fn"?:"file::qual",
             "op"?:"translate|pass-through|rethrow|swallow","cls"?:str}],
   "switches":["sw:…"],"proven_by"?:"sw:…","state":"defined|partial","unknown"?:[str],"anywhere"?:true,
@@ -260,7 +259,7 @@ Stats: binding · value · flag (distinct ids) · endpoints · binding_edges · 
 "failure":{"state","catches":[{"id":"c:…","fn","at","depth","types","scope","guards":{"writes","commits"},
            "actions":[{"op","at","fn"?,"suppressed"?,"steps"?}],"outcome":"translate|pass-through|rethrow|swallow","answers"?}]},
 "arm_findings":{"<arm>":[{"id","slot",…}]},
-"slots":{ /* U3 U7 K1 unchanged */ "U6","U8","U9","U11","U12","U14","K2","K3","K4": {"state", …counts} }
+"slots":{ /* U3 U7 K1 only — as built. The nine other slots ARE their arm blocks (§A4 V32): U6 paths[] · U8 switches[] · U9 paths[].effects · U11 failure{} · U12 repeat{} · U14 tests{} · K2 auth{} · K3 rate{} · K4 responses{}; F.KINDS names each */ }
 ```
 
 **Changes to existing rows** (each key appears only when its arm is on):
@@ -1147,7 +1146,7 @@ Sub-slices: **11a** extractor flow + guards + router topology · **11b** hooks +
    - **Limits:** 600 rows per body.
 3. **Origins** (`_a3_fe_reason.origin`): hook member · cache call (`_a3_fe._CACHE_CALLEES`, `:68-73`) · cond union · catch parameter → try body · parameter → call sites · store selector · unknown.
 4. **Form classification:**
-   - **guard:** a conditional NAV element / `throw redirect` / nav hook, with a trailing outlet or none;
+   - **guard:** a conditional NAV element / `throw redirect` / nav hook, with a trailing outlet or none; **Not built (§A4 V40a): the nav-hook guard** — a component that calls `useNavigate()`/`navigate(…)` inside an effect or handler and renders children otherwise (gastify's `ProtectedRoute`, wrapped around every non-public route at `__root.tsx:19-25`, has no guard row though the c4-graph knows the piece). Build when a target's auth guard is such a hook and the operator wants it drawn; until then the guards part reads the conditional-element and `throw redirect` kinds only;
    - **hook:** a cache callee;
    - **component:** conditional rets or controls;
    - **store action:** a function-valued property of a `_STORE_CALLEES` initializer.

@@ -234,7 +234,7 @@ class _Reach:
         return [{"kind": "unknown", "via": via, "reason": f"{base} is not a hook value, alias, parameter or caught error"}]
 
 
-def reason_part(flow: dict, forms: dict, hooks: dict, transport: dict) -> tuple[dict, dict, list]:
+def reason_part(flow: dict, forms: dict, hooks: dict, transport: dict, fe_ids: set | None = None) -> tuple[dict, dict, list]:
     """``({sites[], readers{endpoint: [...]}}, stats, findings)`` — every status, detail and code comparison a client makes,
     the endpoints its receiver reaches, each endpoint's exits routed to the site that catches them."""
     reach = _Reach(flow, forms, hooks)
@@ -252,7 +252,8 @@ def reason_part(flow: dict, forms: dict, hooks: dict, transport: dict) -> tuple[
                     continue
                 recv, member, value = got
                 s = {"id": _rid("r", pid, [name, recv, member, r["op"], value, n]), "piece": pid, "at": f"{file}:{r['line']}",
-                     "receiver": recv, "reads": member, "op": r["op"], "value": value}
+                     "receiver": recv, "reads": member, "op": r["op"], "value": value,
+                     **({} if fe_ids is None or pid in fe_ids else {"classified": False})}   # §A4 V34: a body no arm classified
                 n += 1
                 if member == "status":
                     s["branch"] = _branch(rows, r, recv)

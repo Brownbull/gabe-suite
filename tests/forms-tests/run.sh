@@ -231,12 +231,17 @@ def test_two_slots(client):
     r = client.get(f"/api/v1/other/{kind}/{tid}")
     assert r.status_code == 404
 
+
+def test_para_C12(client):
+    r = client.get("/api/v1/other/things/special")
+    assert r.status_code == 200
+
 PYF
 python3 - "$A/tests/results/api-junit.xml" <<'PYJ'
 import sys
 names = ["test_missing_key_400_C1", "test_me_unauthenticated_C2", "test_conflict_C3", "test_flow_C4", "test_helper_only_C5",
          "test_blank_422_C6", "test_teapot_C7", "test_detail_mismatch_C8", "test_service_busy_C9", "test_setup_only_C10",
-         "test_thing_special", "test_thing_by_id", "test_things_unknown_literal", "test_two_slots"]
+         "test_thing_special", "test_thing_by_id", "test_things_unknown_literal", "test_two_slots", "test_para_C12[a]", "test_para_C12[b]"]
 cases = "".join(f'<testcase classname="tests.test_items" name="{n}" time="0.01" />' for n in names)
 open(sys.argv[1], "w").write(f'<testsuites><testsuite name="pytest" tests="{len(names)}">{cases}</testsuite></testsuites>')
 PYJ
@@ -293,6 +298,15 @@ assert not any(c.endswith("test_two_slots") for c in joined), "a path of two slo
 two = next(v for k, v in f["test_cases"].items() if k.endswith("::test_two_slots"))
 act = next(c for c in two["calls"] if c["role"] == "act")
 assert act["path"] == "/api/v1/other/{*}/{*}" and "endpoint" not in act and "route_match" not in act, act   # V11: no route stands behind two slots
+PY
+
+py "T6 · FIRE+SILENT: a C-id keys a case only when it is unique in the feed — parametrized runs fall back to <tfile>::<def>; a unique C-id still keys as itself" <<'PY'
+f = build(A)
+assert "C12" not in f["test_cases"] and "tests/test_items.py::test_para_C12" in f["test_cases"], sorted(k for k in f["test_cases"] if "para" in k or k == "C12")   # V35
+assert "C1" in f["test_cases"], sorted(f["test_cases"])[:4]
+assert f["arms"]["tests"]["present"] is True
+g = build(variant("nojunit2", lambda d: (d / "tests/results/api-junit.xml").unlink()))
+assert g["arms"]["tests"]["reason"].startswith("absent: "), g["arms"]["tests"]                            # V39: the enumerated form
 PY
 
 py "T1 · FIRE: a status plus a detail literal joins the one refusal that says it — never the body-parse 400" <<'PY'

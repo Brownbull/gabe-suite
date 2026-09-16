@@ -184,6 +184,24 @@ need new fixture sources → re-derive tests/forms-frontend/flow.frozen.json. V2
     V40b (`route_config: read | no route config read`, `mounts_state`). 8 mutants each killed by its own case on a
     green baseline; arms-off byte-identical on all four targets.
 
+7 · the §A1 reconciliation — BUILT: V32 (the registry: nine endpoint slots naming their arm blocks, fourteen kinds,
+    `external`) · V35 (a C-id keys a case only when unique; else `<tfile>::<def>`) · V36 (dependency exits carry
+    `phase`) · V37 (`head` before the present check — keypro's feed carries one) · V39 (`absent: no pytest junit …`) ·
+    V34 (`store` + `action` on action-uncalled; `classified: false` on a reason site over an unclassified body).
+    STRUCK in amendment-1.md §A1, each with its note: `k:` `w:` `e:`, the chain kind `commit`, six frontend id letters
+    (V33); the `#<Store>.<action>` piece key (V34); the endpoint `slots{}` promise for the nine slots (they ARE the arm
+    blocks, V32); V38 written as a Shared rule (per endpoint when the arm walks endpoints, feed-wide with `endpoint`
+    when the subject is a test or a piece). 7 mutants each killed by its own case; arms-off byte-identical on all four.
+    THE FIX ORDER IS COMPLETE: 40 confirmed findings — 37 fixed, V4 partial (recorded), V9b not reproduced (recorded),
+    V40a struck with a trigger (below, the operator's to overrule).
+
+DECISION (V40a): the nav-hook guard is NOT BUILT. Slice 11a's guard kinds read the conditional NAV element and
+`throw redirect`; a component that calls `navigate(…)` inside an effect or handler and renders children otherwise
+(gastify's `ProtectedRoute`, `__root.tsx:19-25`) gets no guard row, though the c4-graph knows the piece. CHOSE strike
++ list over build: the build needs a third extractor rule (an effect's call sites walked for the router's navigate)
+and a fourth guard kind, and gastify is the only target that would draw it today. Listed under Slice 11a as Not built
+with the trigger: build when a target's auth guard is such a hook and the operator wants it drawn.
+
 ⚠ CORRECTION to fix 3 (`16ba773`): its `is None` fold read any bound non-constant expression as proof of "not None",
 so `need_owner(session)` with a `session` parameter had its 409 proven dead — in the default feed. Fixed in fix 4 (the
 fold abstains on a name; cases C17 `/items/maybe` + S5.P18 `need_owner`, one mutant). Its published `falsified`

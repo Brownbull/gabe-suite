@@ -619,6 +619,9 @@ r = f["functions"]["services/work.py::reserve"]["raises"]
 busy = next(x for x in r if x["cls"] == "Busy")
 assert [(t["endpoint"], t["status"]) for t in busy["translated_by"]] == [("endpoint:POST /work/reserve", 409)], busy
 assert [(u["endpoint"], u["status"]) for u in busy["untranslated_at"]] == [("endpoint:POST /work/raw", 500)] and busy["translation"] == "mixed", busy
+for did, dep in f["dependencies"].items():                                        # V36: a dependency's exits carry their phase
+    for x in dep.get("exits") or []:
+        assert x.get("phase") in ("dependency", "security"), (did, x)   # a security-class dependency keeps its own phase
 deep = next(x for x in f["functions"]["services/work.py::deep_b"]["refusals"] if x["status"] == 410)
 assert deep["surfaces_on"] == [] and deep["surfaces"] == "beyond one level", deep      # V23: reached, two levels down, on no row — and it says so
 for fid, fn_ in f["functions"].items():                                             # V23: `surfaces_on: []` never reads "nowhere"

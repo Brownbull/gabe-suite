@@ -126,7 +126,7 @@ def run(forms: dict, ctx: dict) -> dict:
     repo = Path(ctx["repo"])
     cases = _cases(repo, ctx.get("cfg") or {})
     if not cases:
-        return {"present": False, "reason": "no pytest junit under the results directory", "version": 1, "stats": {}}
+        return {"present": False, "reason": "absent: no pytest junit under the results directory", "version": 1, "stats": {}}
     eps = _endpoints(forms)
     extracted: dict = {}
     stats = {"cases": 0, "calls": {}, "unmatched": 0, "headers_unknown": 0, "joins": {"single": 0, "ambiguous": 0, "unproduced": 0},
@@ -134,6 +134,11 @@ def run(forms: dict, ctx: dict) -> dict:
     found: list = []
     summary: dict = {}
     test_cases: dict = {}
+    seen_cid: dict = {}                                      # §A4 V35: a C-id keys a case only when it is UNIQUE in
+    for case in cases:                                       # the feed — parametrized runs share one and fall back
+        m0 = TA.CID_RX.search(case["name"])
+        if m0:
+            seen_cid[f"C{m0.group(1)}"] = seen_cid.get(f"C{m0.group(1)}", 0) + 1
     for case in cases:
         src_path = repo / case["path"]
         if src_path not in extracted:
@@ -147,7 +152,7 @@ def run(forms: dict, ctx: dict) -> dict:
         if t is None:
             continue
         m = TA.CID_RX.search(case["name"])
-        cid = f"C{m.group(1)}" if m else f"{case['path']}::{fn_name}"
+        cid = f"C{m.group(1)}" if m and seen_cid.get(f"C{m.group(1)}", 0) == 1 else f"{case['path']}::{fn_name}"
         stats["cases"] += 1
         calls_out = []
         for call in t["calls"]:

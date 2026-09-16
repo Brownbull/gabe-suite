@@ -24,7 +24,7 @@ VERSION = 2   # 2 (amendment 1, Slice 1): the envelope carries `head` and, when 
 #   missing  the slot applies, the pass ran, nothing defines it
 #   n/a      this kind has no such slot here
 #   unknown  the source cannot tell (a dynamic status, an unreadable framework version)
-STATES = ("defined", "default", "missing", "n/a", "unknown")
+STATES = ("defined", "default", "missing", "n/a", "unknown", "external")   # `external` — a setting's value lives outside the tree (D23)
 
 # ── slots per kind (slice 1: FastAPI endpoints) ────────────────────────────────────────────────────
 KINDS: dict[str, dict[str, dict]] = {
@@ -32,7 +32,38 @@ KINDS: dict[str, dict[str, dict]] = {
         "U3": {"name": "Preconditions", "question": "the guards in the body whose branch ends in a refusal"},
         "U7": {"name": "Refusal reasons", "question": "does each refusal carry a stable code, or only text"},
         "K1": {"name": "Status contract", "question": "declared responses vs the exits the code produces"},
+        # §A4 V32 — the nine slots the arms fill; each names the block that IS the slot (the endpoint's `slots{}` carries U3 U7 K1 only)
+        "U6": {"name": "Paths", "question": "one ordered path per exit, in request order", "block": "paths[]", "arm": "paths"},
+        "U8": {"name": "Switches & flags", "question": "which binding, value or flag changes the exit this request meets", "block": "switches[]", "arm": "switches"},
+        "U9": {"name": "Effects", "question": "what each path writes, commits and rolls back", "block": "paths[].effects", "arm": "effects"},
+        "U11": {"name": "Failure handling", "question": "every try on a path and what its handler does", "block": "failure{}", "arm": "effects"},
+        "U12": {"name": "Repeat safety", "question": "the idempotency key it reads and the unique claims it makes", "block": "repeat{}", "arm": "contract"},
+        "U14": {"name": "Tests per path", "question": "which test proves which exit and path", "block": "tests{}", "arm": "tests"},
+        "K2": {"name": "Auth scope", "question": "schemes, carriers, gates and what their commits provision", "block": "auth{}", "arm": "contract"},
+        "K3": {"name": "Rate limit", "question": "each limiter, its key, its switch and the paths it exempts", "block": "rate{}", "arm": "contract"},
+        "K4": {"name": "Response per exit", "question": "each exit's media type, body and headers", "block": "responses{}", "arm": "contract"},
     },
+    # the kinds the arms wrote (§A4 V32): slot ids are scoped per kind and name the block as built
+    "middleware": {"stack": {"name": "Stack order", "block": "middleware{}.runs"}, "exits": {"name": "Exits", "block": "middleware{}.exits"},
+                   "applies": {"name": "Applies to", "block": "middleware{}.applies_to · exempt"}},
+    "dependency": {"exits": {"name": "Own and inherited exits", "block": "dependencies{}.exits · inherited_exits"},
+                   "commits": {"name": "Commits", "block": "dependencies{}.effects"}, "teardown": {"name": "Teardown", "block": "dependencies{}.teardown"}},
+    "service": {"raises": {"name": "Raises and where they surface", "block": "functions{}.raises"}, "refusals": {"name": "Refusals", "block": "functions{}.refusals"},
+                "commits": {"name": "Commits and savepoints", "block": "functions{}.commits · savepoints"}, "swallows": {"name": "Broad swallows", "block": "functions{}.swallows"}},
+    "task": {"retry": {"name": "Retry", "block": "tasks{}.retry"}, "triggers": {"name": "Dispatch and beat", "block": "tasks{}.dispatch · beat"}, "locks": {"name": "Locks", "block": "tasks{}.locks"}},
+    "handler": {"publisher": {"name": "Publisher", "block": "handlers{}.publisher"}, "isolation": {"name": "Bus isolation", "block": "handlers{}.isolation · catch"}},
+    "schema": {"cases": {"name": "422 cases", "block": "schemas{}.fields[].cases"}, "extra": {"name": "Extra fields", "block": "schemas{}.extra"}},
+    "model": {"constraints": {"name": "Constraints", "block": "models{}.constraints"}, "columns": {"name": "Columns", "block": "models{}.columns"},
+              "drift": {"name": "Migration drift", "block": "models{}.drift"}, "writers": {"name": "Writers", "block": "models{}.writers"}},
+    "migration": {"schema": {"name": "Schema it leaves", "block": "migrations{}"}, "heads": {"name": "Heads", "block": "migrations{}.heads"}},
+    "setting": {"declaration": {"name": "Declaration and bounds", "block": "settings{}.field"}, "readers": {"name": "Readers", "block": "settings{}.readers"},
+                "environment": {"name": "Environment", "block": "settings{}.environment"}, "tests": {"name": "Values tested", "block": "settings{}.tests"}},
+    "mirror": {"pairs": {"name": "Pairs", "block": "mirrors{}.pairs"}, "rows": {"name": "Rule agreement", "block": "mirrors{}.rows"}},
+    "guard": {"exits": {"name": "Exits and what decides them", "block": "frontend.pieces[guard].exits"}, "chain": {"name": "Chain", "block": "frontend.pieces[guard].chain"},
+              "k3": {"name": "Router topology", "block": "frontend.pieces[guard].k3"}},
+    "hook": {"calls": {"name": "Query and mutation calls", "block": "frontend.pieces[hook].calls"}, "reason": {"name": "Reason sites", "block": "frontend.reasons"}},
+    "component": {"controls": {"name": "Controls", "block": "frontend.pieces[component].controls"}},
+    "store_action": {"transitions": {"name": "Transitions", "block": "frontend.stores{}.actions[].transitions"}, "called": {"name": "Called", "block": "frontend.stores{}.actions[].called"}},
 }
 
 # ── options: choices built, not decided — flip them here ───────────────────────────────────────────
