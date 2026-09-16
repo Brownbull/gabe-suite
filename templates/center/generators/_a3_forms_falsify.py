@@ -11,9 +11,10 @@ arrives negated) against those bindings.
 The leaf is deliberately timid: a predicate it cannot decide is ``None``, never ``False``, so a row is dropped only
 when the call site PROVES its branch dead. Two floors follow from that. A parameter bound to ``(None, "callee")`` is
 a keyword-only argument with NO default that this call site did not pass — an impossible call, not the value
-``None`` — so only the ``is``/``is not None`` comparison reads it (the rule the schema part has always used, kept
-verbatim so its rules do not move); every other fold requires a real expression. And a name the leaf cannot resolve
-to a literal abstains, which is why ``dead`` asks for proof rather than the absence of doubt.
+``None`` — so only the ``is``/``is not None`` comparison reads it; every other fold requires a real expression. And a
+name the leaf cannot resolve to a literal abstains, which is why ``dead`` asks for proof rather than the absence of
+doubt: ``ctx is None`` with ``ctx`` bound to the caller's own ``session`` parameter is UNKNOWN, not False — a name
+holds whatever the request gave it.
 """
 from __future__ import annotations
 
@@ -84,9 +85,17 @@ def truth(pred: str, bound: dict, value=None):
         if isinstance(n, ast.Compare) and len(n.ops) == 1 and isinstance(n.left, ast.Name):
             op, right = n.ops[0], n.comparators[0]
             if isinstance(op, (ast.Is, ast.IsNot)) and isinstance(right, ast.Constant) and right.value is None \
-                    and n.left.id in bound:                  # the schema part's rule, kept verbatim: an unpassed
-                expr = bound[n.left.id][0]                   # keyword-only argument reads as None here and only here
-                is_none = expr is None or (isinstance(expr, ast.Constant) and expr.value is None)
+                    and n.left.id in bound:
+                expr, origin = bound[n.left.id]
+                if expr is None:                             # a keyword-only argument with no default, unpassed here
+                    is_none = True
+                elif isinstance(expr, ast.Constant):
+                    is_none = expr.value is None
+                else:
+                    got = _literal(expr, origin, value)      # a NAME could hold anything at runtime — abstain, never
+                    if got is _UNSET:                        # read "not a literal None" as "provably not None"
+                        return None
+                    is_none = got is None
                 return is_none if isinstance(op, ast.Is) else not is_none
             left = val(n.left.id)
             if left is _UNSET:

@@ -205,7 +205,15 @@ def _tuple_r(row: dict, e: dict, site_fn: str | None = None) -> list:
 
 
 def _deciding(repo: Path, m, fn, v: dict, fid: str):
-    """The handler's project calls → ``(branch sets, collapsed rows)``; a branch set is ``(site, call, callee fid, cm, [(event, fall)], why)``."""
+    """The handler's project calls → ``(branch sets, collapsed rows)``; a branch set is ``(site, call, callee fid, cm, [(event, fall)], why)``.
+
+    A collapsed row's ``reason`` is one of a DECLARED set, each saying what the code does and nothing more (§A4 V20):
+    ``unresolved`` · ``constructor: builds a value`` · ``generator: runs after the response line`` · ``swallowed by the
+    caller`` · ``expand_branches: none`` · ``no value return`` (the callee raises, or returns nothing to branch on) ·
+    ``one return`` · ``arms change neither exit nor commit`` (≥2 arms, same exit and same commit state, and nothing
+    leaves the callee by raising) · ``arms differ only in the value returned`` (the same, but a raise DOES leave it, so
+    the exit it reaches is reported on the endpoint, not here). A row whose callee supplies one of the endpoint's own
+    rows carries ``contributes: "rows"`` whatever its reason — the fact is read before the arm count, never after."""
     mode = F.OPTIONS["expand_branches"]
     evs = P._events(fn)
     hev: dict = {}
@@ -247,15 +255,16 @@ def _deciding(repo: Path, m, fn, v: dict, fid: str):
         rets = [e for e in returns_of(cnode) if _value(e) is not None]      # VALUE returns only (step 3)
         fall = next((e for e in rets if not e["guards"] and e["handler"] is None and not e["loop"]), None)
         cands = [e for e in rets if e is not fall and (e["guards"] or e["handler"] is not None or e["loop"])] + ([fall] if fall else [])
-        if len(cands) < 2:
-            collapsed.append({**base, "reason": "one return"})
-            continue
-        why = []
         via = f"call {qual} @ {site}"
         lo, hi = cnode.lineno, getattr(cnode, "end_lineno", cnode.lineno)
-        if any(x.get("via") == via for x in rows) or any(
-                (x.get("raised_at") or "").rpartition(":")[0] == cm.rel and lo <= I._line(x.get("raised_at")) <= hi for x in rows):
-            why.append("contributes-rows")
+        rowy = any(x.get("via") == via for x in rows) or any(                # §A4 V20: read BEFORE the arm count, so a
+            (x.get("raised_at") or "").rpartition(":")[0] == cm.rel          # callee that supplies a row says so even
+            and lo <= I._line(x.get("raised_at")) <= hi for x in rows)       # when it has no arm to draw
+        note = {"contributes": "rows"} if rowy else {}
+        if len(cands) < 2:
+            collapsed.append({**base, **note, "reason": "one return" if cands else "no value return"})
+            continue
+        why = ["contributes-rows"] if rowy else []
         commits = [e for e in P._events(cnode) if e["kind"] == "call" and P._leaf(e["node"].func) in F.TX_CALLS]
 
         def committed(e) -> bool:
@@ -269,8 +278,16 @@ def _deciding(repo: Path, m, fn, v: dict, fid: str):
             why.append("commit-differs")
         if not why and mode == "all":
             why.append("expand_branches: all")
-        if not why:
-            collapsed.append({**base, "reason": "arms change neither exit nor commit"})
+        if not why:                                                      # §A4 V20: only claim "neither exit" when
+            cev = P._events(cnode)                                        # nothing leaves the callee by raising
+            chev: dict = {}
+            for e in cev:
+                if e["handler"] is not None:
+                    chev.setdefault(id(e["handler"][1]), []).append(e)
+            escapes = any(e["kind"] == "raise" and P._climb("Exception", {"Exception"}, e["tries"], chev)[0] == "escape"
+                          for e in cev)
+            collapsed.append({**base, **note, "reason": "arms differ only in the value returned" if escapes
+                              else "arms change neither exit nor commit"})
             continue
         sets.append((site, name, cfid, cm, [(e, e is fall) for e in sorted(cands, key=lambda e: e["line"])], why))
     return sets, collapsed

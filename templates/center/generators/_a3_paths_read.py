@@ -306,6 +306,24 @@ def _walk(stmts, guards: tuple, after: tuple, tries: tuple, handler, loop: bool,
             _calls(st, ctx, out)
 
 
+def _streamed_calls(fn) -> set[int]:
+    """ids of the ``Call`` nodes whose result the RESPONSE iterates: a call inside a ``return``'s value, or one assigned
+    to a name that a ``return``'s value loads (``event_stream = stream(…); return StreamingResponse(_frames(event_stream))``).
+    A generator among them runs after the status line went out (§A4 V17 · V18); a ``with``-entered one does not."""
+    own = [n for n in ast.walk(fn) if not isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)) or n is fn]
+    rets = [r.value for r in own if isinstance(r, ast.Return) and r.value is not None]
+    out = {id(c) for v in rets for c in ast.walk(v) if isinstance(c, ast.Call)}
+    names = {n.id for v in rets for n in ast.walk(v) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)}
+    for st in own:
+        tgt = st.targets[0] if isinstance(st, ast.Assign) and len(st.targets) == 1 else st.target if isinstance(st, ast.AnnAssign) else None
+        val = getattr(st, "value", None)
+        if isinstance(tgt, ast.Name) and tgt.id in names and val is not None:
+            call = val.value if isinstance(val, ast.Await) else val
+            if isinstance(call, ast.Call):
+                out.add(id(call))
+    return out
+
+
 def _events(fn) -> list:
     k = id(fn)
     if k not in _EVENTS:

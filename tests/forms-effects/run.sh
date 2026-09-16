@@ -159,6 +159,18 @@ def alert(port: Notifier, msg):
 def write_note(session, ref):
     if ref:
         session.add(Audit(note=ref))
+
+
+def feed(session, ref):
+    session.add(Audit(note=ref))
+    session.commit()
+    yield b"x"
+    raise Refused()
+
+
+def frames(events):
+    for e in events:
+        yield b"data: " + e
 PYF
 cat > "$A/services/deep.py" <<'PYF'
 from models import Audit
@@ -185,12 +197,14 @@ def d5(session, ref):
 PYF
 cat > "$A/api/shop.py" <<'PYF'
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from db import get_session, get_user
 from models import Audit, Order, Tag
 from services.deep import d1
-from services.orders import Refused, alert, make_pair, place, tally, write_note
+from services.orders import Refused, alert, feed, frames, make_pair, place, tally, write_note
 
 router = APIRouter(prefix="/shop")
 
@@ -258,6 +272,49 @@ def retry(ref: str, session=Depends(get_session)):
         session.rollback()
         write_note(session, ref)
     return {"ok": True}
+
+
+@router.post("/claim")
+def claim(ref: str, session=Depends(get_session)):
+    try:
+        session.add(Audit(note=ref))
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(status_code=409, detail="dup")
+    return {"ok": True}
+
+
+@router.post("/quiet")
+def quiet(ref: str, session=Depends(get_session)):
+    try:
+        write_note(session, ref)
+    except Exception:
+        pass
+    session.commit()
+    return {"ok": True}
+
+
+@router.get("/stream")
+def stream(ref: str, session=Depends(get_session)):
+    return StreamingResponse(feed(session, ref))
+
+
+@router.get("/stream2")
+def stream2(ref: str, session=Depends(get_session)):
+    events = feed(session, ref)
+    return StreamingResponse(frames(events), media_type="text/event-stream")
+
+
+@router.delete("/me")
+def delete_me(ref: str, session=Depends(get_session)):
+    session.add(Audit(note=ref))
+    session.commit()
+    try:
+        alert(None, ref)
+    except Exception:
+        pass
+    return None
 PYF
 
 py() {  # py "<name>" <<'PY' … PY  — the prelude gives A · T · GEN · build() · variant() · patch() · at() · paths() · seq()
@@ -401,6 +458,50 @@ tr = next(c for c in cat if c["outcome"] == "translate")
 assert tr["answers"] == [409] and tr["types"] == ["Refused"], tr
 races = {(r["table"], r["race"]["state"], json.dumps(r["race"]["keys"])) for r in f["steps"].values() if "race" in r}
 assert races == {("claims", "handled", '[["key"]]'), ("orders", "uncaught", '[["ref"]]')}, races
+PY
+
+py "E14 · FIRE+SILENT: the commit that raised into the except this path leaves through committed nothing — the rollback rolls the write back" <<'PY'
+f = build(A)
+r409 = by_split(f, "endpoint:POST /shop/claim")[(409, "handler")]
+eff = r409["effects"]
+assert tables(f, eff["rolled_back"]) == ["audits"] and not eff["committed"] and not eff["maybe_committed"], eff
+failed = [x for x in eff["steps"] if x.get("failed")]
+assert len(failed) == 1 and f["steps"][failed[0]["step"]]["op"] == "commit", eff["steps"]   # and the feed SAYS which
+ok = next(p for p in paths(f, "endpoint:POST /shop/claim") if p["exit"]["kind"] == "success")
+assert tables(f, ok["effects"]["committed"]) == ["audits"] and not any(x.get("failed") for x in ok["effects"]["steps"]), ok["effects"]
+PY
+
+py "E15 · FIRE: a try whose handler swallows is on the path and says so — no exit ever minted it" <<'PY'
+f = build(A)
+cat = f["endpoints"]["endpoint:POST /shop/quiet"]["failure"]["catches"]
+sw = [c for c in cat if c["outcome"] == "swallow"]
+assert len(sw) == 1 and sw[0]["types"] == ["Exception"] and sw[0]["answers"] == [], cat
+ok = next(p for p in paths(f, "endpoint:POST /shop/quiet") if p["exit"]["kind"] == "success")
+assert ok["id"] in sw[0]["paths"] and tables(f, sw[0]["writes"]) == ["audits"], sw[0]
+me = [c for c in f["endpoints"]["endpoint:DELETE /shop/me"]["failure"]["catches"] if c["outcome"] == "swallow"]
+assert len(me) == 1 and me[0]["writes"] == [] and me[0]["types"] == ["Exception"], f["endpoints"]["endpoint:DELETE /shop/me"].get("failure")   # no step inside — still on the path
+PY
+
+py "E16 · FIRE+SILENT: a generator the response streams runs after the exit — its steps are listed apart, never rolled up, never a finding" <<'PY'
+f = build(A, arms="paths,effects,kinds")
+ok = next(p for p in paths(f, "endpoint:GET /shop/stream") if p["exit"]["kind"] == "success")
+eff = ok["effects"]
+late = [f["steps"][x["step"]]["op"] for x in eff.get("after_response") or []]
+assert late == [E.EF["write_m"]["add"], "commit"], eff                      # V17: the walk is kept, apart
+assert not eff["committed"] and not eff["maybe_committed"] and not eff["uncommitted"], eff
+assert "safe-method-commits" not in {x["id"] for x in f["endpoints"]["endpoint:GET /shop/stream"].get("arm_findings", {}).get("effects", [])}
+unc = next(r for r in f["endpoints"]["endpoint:GET /shop/stream"]["produced"] if r["phase"] == "uncaught")
+assert [x["cls"] for x in unc.get("after_response") or []] == ["Refused"] and not unc.get("causes"), unc   # V18: not the 500
+assert "escape-500" not in {x["id"] for x in f["endpoints"]["endpoint:GET /shop/stream"]["findings"]}
+fn = f["functions"]["services/orders.py::feed"]
+raise_ = next(x for x in fn["raises"] if x["cls"] == "Refused")
+assert raise_["translation"] == "after the response line" and raise_["after_response"], raise_
+assert "untranslated-raise" not in {x["id"] for x in f["arm_findings"].get("kinds", []) if x.get("fn") == "services/orders.py::feed"}
+ok2 = next(p for p in paths(f, "endpoint:GET /shop/stream2") if p["exit"]["kind"] == "success")   # the generator bound to a
+late2 = [f["steps"][x["step"]]["op"] for x in ok2["effects"].get("after_response") or []]         # NAME the return hands on
+assert late2 == [E.EF["write_m"]["add"], "commit"] and not ok2["effects"]["committed"], ok2["effects"]
+place = by_split(f, "endpoint:POST /shop/place")[(409, "handler")]                  # SILENT: a plain callee's steps
+assert "after_response" not in place["effects"] and place["effects"]["rolled_back"], place["effects"]   # stay in the rollup
 PY
 
 py "E4 · FIRE + SILENT: each widening tagged where it binds; with widenings off no step carries one" <<'PY'

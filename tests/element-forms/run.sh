@@ -199,6 +199,7 @@ cat > "$A/api/items.py" <<'PYF'
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from auth import Ctx, get_ctx
@@ -283,6 +284,29 @@ async def get_kept(item_id: int):
 @router.get("/leak")
 async def get_leak(item_id: int):
     return fetch(item_id, include_deleted=True)
+
+
+@router.get("/maybe")
+async def get_maybe(item_id: int, keep: bool = False):
+    return fetch(item_id, include_deleted=keep)
+
+
+def _chunks(item_id: int):
+    yield b"a"
+    if item_id < 0:
+        raise Lost("stream broke")
+    yield b"b"
+
+
+@router.get("/stream")
+async def get_stream(item_id: int):
+    return StreamingResponse(_chunks(item_id))
+
+
+@router.get("/stream2")
+async def get_stream2(item_id: int):
+    body = _chunks(item_id)
+    return StreamingResponse(body, media_type="text/event-stream")
 PYF
 mkdir -p "$A/api/errors"
 cat > "$A/api/errors/handlers.py" <<'PYF'
@@ -394,12 +418,13 @@ PY
 check "C0 · the pass runs and forms every endpoint" <<'PY'
 assert O["present"] is True, O
 assert O["framework"]["locks"] == {"uv.lock": "0.136.3"}, O["framework"]
-assert O["stats"]["endpoints"] == 19 and O["stats"]["unformed"] == 0 and O["stats"]["collisions"] == 0, O["stats"]
+assert O["stats"]["endpoints"] == 22 and O["stats"]["unformed"] == 0 and O["stats"]["collisions"] == 0, O["stats"]
 assert set(O["endpoints"]) == {"endpoint:POST /items/apply", "endpoint:GET /items/team", "endpoint:GET /items/dynamic",
     "endpoint:GET /items/deep", "endpoint:GET /items/swallow", "endpoint:GET /items/coded", "endpoint:GET /items/denied",
     "endpoint:GET /items/locked", "endpoint:GET /plain", "endpoint:GET /files/raw", "endpoint:GET /files/sheet",
     "endpoint:GET /files/meta", "endpoint:GET /files/spent", "endpoint:GET /files", "endpoint:POST /files", "endpoint:GET /items/loose", "endpoint:GET /items/strict",
-    "endpoint:GET /items/kept", "endpoint:GET /items/leak"}, sorted(O["endpoints"])
+    "endpoint:GET /items/kept", "endpoint:GET /items/leak", "endpoint:GET /items/maybe",
+    "endpoint:GET /items/stream", "endpoint:GET /items/stream2"}, sorted(O["endpoints"])
 PY
 
 check "C1 · FIRE: a handler raise is a text-only refusal, its guard a precondition, the body a 422" <<'PY'
@@ -527,7 +552,21 @@ rl = [f for f in E("endpoint:GET /items/kept")["findings"] if f["id"] == "reason
 assert len(rl) == 1 and rl[0]["was"] == "bad id", rl                        # include_deleted=True kills the other raise
 esc = [f for f in E("endpoint:GET /items/leak")["findings"] if f["id"] == "escape-500"]
 assert len(esc) == 1 and esc[0]["cls"] == "Lost", esc                       # one escape, not two
-assert O["stats"]["falsified"] == 3, O["stats"]                             # and the feed SAYS how many it dropped
+maybe = [f for f in E("endpoint:GET /items/maybe")["findings"] if f["id"] == "escape-500"]
+assert len(maybe) == 2, maybe    # SILENT: `include_deleted=keep` passes a NAME — a name holds whatever the request
+assert O["stats"]["falsified"] == 3, O["stats"]                             # gave it, so NOTHING is proven dead here
+PY
+
+check "C18 · FIRE+SILENT: a raise inside the generator the response streams is not the endpoint's 500 — the status line already went out" <<'PY'
+k = "endpoint:GET /items/stream"
+assert "escape-500" not in fid(k), E(k)["findings"]
+unc = rows(k, phase="uncaught")[0]
+assert [x["cls"] for x in unc.get("after_response") or []] == ["Lost"] and not unc.get("causes"), unc
+k2 = "endpoint:GET /items/stream2"                                                          # bound to a NAME first
+assert "escape-500" not in fid(k2) and [x["cls"] for x in rows(k2, phase="uncaught")[0].get("after_response") or []] == ["Lost"], E(k2)
+assert O["stats"]["after_response"] == 2, O["stats"]
+leak = [f for f in E("endpoint:GET /items/leak")["findings"] if f["id"] == "escape-500"]      # SILENT: a plain call's
+assert len(leak) == 1, leak                                                                    # raise is still the 500
 PY
 
 check "C10a · determinism and no mutation of the archmap it reads" <<'PY'

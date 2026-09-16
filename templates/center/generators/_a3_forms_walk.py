@@ -59,6 +59,13 @@ def _on(a: dict, t: dict) -> bool:
     return a["line"] <= t["line"] and ga == gt[:len(ga)]
 
 
+def _raised_into(a: dict, t: dict) -> bool:
+    """The call ``a`` is the one whose exception put us inside ``t``'s ``except`` body (§A4 RC-B, V8). It RAN — so it
+    stays on the chain — but it never returned, so none of its arms is on this path and the handler that caught it is."""
+    h = t.get("handler")
+    return bool(h) and h[0] in (a.get("tries") or ())
+
+
 def _gate(r: dict, hit: bool) -> dict:
     g = {"kind": "gate", "ref": r.get("id"), "hit": hit, "phase": r.get("phase")}
     if r.get("raised_at") or r.get("site") or r.get("at"):
@@ -269,6 +276,15 @@ class _Spine:
                 out.append(_gate(raises[line][1], False))
         return out, point
 
+    def caught(self, t: dict) -> dict | None:
+        """The ``except`` handler ``t`` sits inside, as a chain entry — the catch that got us here (§A4 RC-B, V8)."""
+        h = t.get("handler")
+        if not h:
+            return None
+        types = P._handler_types(h[1])
+        return {"kind": "catch", "op": "translate", "at": f"{self.m.rel}:{h[1].lineno}",
+                "cls": " | ".join(sorted(types)) if types else "BaseException"}
+
     def catches(self, row: dict) -> list[dict]:
         """The handlers an exception passed on its way to ``row`` — a callee's own (``pass-through``), then the one that
         translated it."""
@@ -304,7 +320,8 @@ class _Spine:
     def walk(self, t: dict, stop_site: int | None, arms_choice: dict) -> tuple[list, list]:
         """The handler chain up to the event ``t``: the refusals and returns passed, the calls made — a deciding call takes
         ``arms_choice[site]`` — and the value/binding switches anchored on the way. Returns (entries, chosen b: ids)."""
-        out, chosen = [], []
+        out, chosen = [], []                                  # a call that raised into t's except keeps its `call`
+                                                              # entry and gets no arm: `combos` never offers one
         anchors = sorted(set(self.raises) | set(self.returns) | set(self.collapsed) | set(self.deciding))
         for line in anchors:
             if line > t["line"] or (line == t["line"] and line not in (self.collapsed.keys() | self.deciding.keys())):
@@ -360,7 +377,8 @@ class _Spine:
     def combos(self, t: dict, stop_site: int | None) -> list[dict]:
         """The linear combinations of the deciding calls on the way to ``t``: the base (every call at its fall-through)
         plus one per other arm."""
-        sites = [line for line in sorted(self.deciding) if line != stop_site and line < t["line"] and line in self.calls and _on(self.calls[line], t)]
+        sites = [line for line in sorted(self.deciding) if line != stop_site and line < t["line"] and line in self.calls
+                 and _on(self.calls[line], t) and not _raised_into(self.calls[line], t)]
         def base(arms):
             return next((b for b in arms if b["token"] == "fall-through"), arms[-1])
         out = [{s: base(self.deciding[s]) for s in sites}]
@@ -374,7 +392,8 @@ class _Spine:
 def _product(spine: _Spine, t: dict, stop_site) -> int:
     n = 1
     for line in spine.deciding:
-        if line != stop_site and line < t["line"] and line in spine.calls and _on(spine.calls[line], t):
+        if line != stop_site and line < t["line"] and line in spine.calls and _on(spine.calls[line], t) \
+                and not _raised_into(spine.calls[line], t):
             n *= len(spine.deciding[line])
     return n
 
@@ -468,7 +487,9 @@ def endpoint_paths(repo: Path, forms: dict, key: str, v: dict, m, fn, dec, stats
             if site is not None and site in spine.deciding:
                 inner, _ = spine.inner(site, _line(row.get("raised_at") or row.get("at")), spine.deciding[site])
                 entries += inner
-            chain = with_switches(prefix + entries + [_gate(row, True)] + spine.catches(row), t["line"], False)
+            seen = spine.catches(row)
+            here = [] if seen else [x for x in (spine.caught(t),) if x]      # the except body this refusal is raised in
+            chain = with_switches(prefix + entries + here + [_gate(row, True)] + seen, t["line"], False)
             out.append(_path(key, v, row, "refusal", chain, chosen, None, switches, token=FP._token(_guards(t)[-1] if t.get("guards") else None),
                              exception=(str(row.get("via", "")).partition("except ")[2] or (str(row["via"])[len("app handler "):] if app else None)),
                              _pos=(1, t["line"], _line(row.get("raised_at") or (row.get("at") if site is not None else None)))))

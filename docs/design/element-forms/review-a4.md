@@ -145,6 +145,25 @@ need new fixture sources → re-derive tests/forms-frontend/flow.frozen.json. V2
     tier3 4076 → 4046 (impossible 24), gastify 0. gustify's `DELETE /pantry/locations/{location_id}` goes 12 paths → 10:
     both the 404 that booked two writes as uncommitted and the 204 that booked none are gone.
 
+4 · the path/effect atomicity pass — V8 (a call that raised into the except returns no arm; the handler it landed in
+    joins the chain) · V9a (the commit that ends the try body this path leaves through FAILED — `_rollup` skips it, the
+    rollback rolls back; `failed: true` on the step) · V17 (a generator the RESPONSE iterates — inside a `return`, or
+    bound to a name the return hands on — lists its steps in `effects.after_response`, never rolled up) · V18 (its raise
+    is the uncaught row's `after_response`, and the fn form says "after the response line") · V19 (every try the path's
+    FLOW passes joins `failure.catches`, owner carried in `try_fids`, `passed: true` when only passed; a try around a
+    step-less call included) · V20 (declared wording: `no value return`, `contributes: "rows"` before the arm count,
+    `arms differ only in the value returned`). Cases S5.P17 S5.P18 S3.P8 · E14 E15 E16 · C18; 18 mutants (8 + 10), each
+    killed by its own case. Measured on the review's own evidence: relief-accept's eight refusals 2 paths → 1 with a
+    catch; gustify DELETE /me catches ['swallow', 'translate']; the SSE path's 42 steps apart and its false
+    safe-method-commits gone (2 → 1); gastify refusal-writes 7 → 4, tier3 27 → 25; tier3 untranslated-raise 22 → 19.
+    V9b ("rides a callee's whole step list past the raise") is NOT reproduced after V7 + V9a — keyed on the raising
+    FUNCTION, gustify's one candidate is complete_setup's own except rollback, which ran; gastify and tier3 none.
+
+⚠ CORRECTION to fix 3 (`16ba773`): its `is None` fold read any bound non-constant expression as proof of "not None",
+so `need_owner(session)` with a `session` parameter had its 409 proven dead — in the default feed. Fixed in fix 4 (the
+fold abstains on a name; cases C17 `/items/maybe` + S5.P18 `need_owner`, one mutant). Its published `falsified`
+counts were inflated: tier3 38 → 18 is the honest number, gustify's 1 stands.
+
 ⚠ V4 is PARTIAL, and the number is smaller than the review's. One row went — exactly the cited
 `chat_backend.py:381`, whose `was` came from the INNER `get_chat_session_by_id(..., include_deleted=True)`. The other
 four rows carrying that same `was` come from the OUTER call, which passes `include_deleted=include_deleted` — a

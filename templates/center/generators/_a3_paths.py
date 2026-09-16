@@ -39,7 +39,7 @@ from _a3_paths_read import (  # noqa: F401 — re-exported: the arms reach these
     _ROUTE_METHODS, _STATUS_RX, _TRY,
     _VER_RX, _bases, _calls, _climb, _detail, _events,
     _exits, _handler_types, _http_parts, _http_subclass, _is_reraise, _leaf,
-    _literal, _mod, _resolve, _response_exit, _status, _unp,
+    _literal, _mod, _resolve, _response_exit, _status, _streamed_calls, _unp,
     _walk, _where, reset_caches,
 )
 
@@ -572,7 +572,8 @@ def _form(repo: Path, amap: dict, slug: str, ep: dict, mwx: list, files: list, f
     escapes = list(acc["escapes"]) + [_copy(x) for x in H["escapes"]]
     unknown_causes = list(acc["unknown_causes"]) + [f"pass-through raise {p}" for p in H["passthrough"]]
     swallowed = list(acc["swallowed"]) + list(H["swallowed"])
-    reason_lost, guard_rows = [], []
+    reason_lost, guard_rows, late = [], [], []
+    streamed = _streamed_calls(fn)
     for ce in H["calls"]:                                    # … and ONE call level
         r = _callee(repo, m, fn, ce["node"])
         if not r:
@@ -584,6 +585,9 @@ def _form(repo: Path, amap: dict, slug: str, ep: dict, mwx: list, files: list, f
         CA = _analyse(repo, cm, cm.defs[qual])
         via = f"call {qual} @ {m.rel}:{ce['line']}"
         bound = _FAL.bind(cm.defs[qual], ce["node"])         # §A4 RC-A: what THIS call site decides for the callee
+        gen = id(ce["node"]) in streamed and any(            # §A4 V18: a generator the RESPONSE iterates raises after
+            isinstance(n, (ast.Yield, ast.YieldFrom)) for n in ast.walk(cm.defs[qual])   # the status line went out
+            if not isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)))
         for row in CA["rows"]:
             if _FAL.dead(row, bound):                        # the arguments passed make this branch unreachable
                 stats["falsified"] += 1
@@ -595,6 +599,9 @@ def _form(repo: Path, amap: dict, slug: str, ep: dict, mwx: list, files: list, f
         for ex in CA["escapes"]:
             if _FAL.dead(ex, bound):
                 stats["falsified"] += 1
+                continue
+            if gen:                                          # not this endpoint's 500: the client sees a cut stream
+                late.append({"cls": ex["cls"], "at": ex["at"], "via": via})
                 continue
             where, h = _climb(ex["cls"], _bases(repo, cm, ex["cls"]), ce["tries"], H["hev"])
             if where == "translate":
@@ -629,6 +636,9 @@ def _form(repo: Path, amap: dict, slug: str, ep: dict, mwx: list, files: list, f
         unc["causes"] = sorted({f"{x['cls']} {x['at']}" for x in escapes})
     if unknown_causes:
         unc["unknown_causes"] = sorted(set(unknown_causes))
+    if late:                                                 # §A4 V18: raised while streaming, after the status line
+        unc["after_response"] = sorted(late, key=lambda x: (x["at"], x["cls"]))
+        stats["after_response"] += len(late)
     produced.append(unc)
     seen, rows = set(), []
     for r in sorted(produced, key=_row_key):                 # 5 · dedupe + a byte-stable order
@@ -732,7 +742,7 @@ def _build(amap: dict, repo: Path) -> dict:
         return {"version": F.VERSION, "present": False, "reason": "no FastAPI endpoints in the archmap"}
     stats = {"endpoints": 0, "rows": 0, "unknown_rows": 0, "unknown_reasons": {}, "findings": {},
              "unresolved_calls": 0, "collisions": 0, "unformed": 0, "unknown_middleware": [],
-             "falsified": 0}
+             "falsified": 0, "after_response": 0}
     files = sorted({ep["file"] for _, ep in eps})
     mwx = _middleware_exits(repo, amap, stats)
     apph = _app_handlers(repo, files)

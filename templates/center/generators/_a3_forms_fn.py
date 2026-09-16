@@ -106,7 +106,8 @@ def _swallows(repo: Path, m, node) -> list[dict]:
     return sorted(out, key=lambda x: int(x["at"].rpartition(":")[2]))
 
 
-def _raises(repo: Path, m, node, rows_by_raise: dict, escapes_by_at: dict, climbs_one: bool, by_endpoint: bool) -> list[dict]:
+def _raises(repo: Path, m, node, rows_by_raise: dict, escapes_by_at: dict, climbs_one: bool, by_endpoint: bool,
+            late_by_at: dict | None = None) -> list[dict]:
     hev: dict = {}
     events = {}
     for e in P._events(node):
@@ -123,7 +124,11 @@ def _raises(repo: Path, m, node, rows_by_raise: dict, escapes_by_at: dict, climb
             row["through"] = [{"at": f"{m.rel}:{t['handler']}", "types": t["types"], "op": t["op"]} for t in through]
         row["translated_by"] = rows_by_raise.get(x["at"], [])
         row["untranslated_at"] = escapes_by_at.get((x["cls"], x["at"]), [])
-        if row["translated_by"] or row["untranslated_at"]:
+        late = (late_by_at or {}).get((x["cls"], x["at"]), [])
+        if late and not row["translated_by"] and not row["untranslated_at"]:
+            row["after_response"] = late                     # §A4 V18: the stream had started; no status can carry it
+            row["translation"] = "after the response line"
+        elif row["translated_by"] or row["untranslated_at"]:
             row["translation"] = "untranslated" if not row["translated_by"] else ("mixed" if row["untranslated_at"] else "translated")
         else:
             row["translation"] = ("not reached by an endpoint" if not by_endpoint else "beyond one level" if not climbs_one else "not joined")
@@ -147,12 +152,15 @@ def functions_part(repo: Path, forms: dict, amap: dict) -> tuple[dict, list, dic
         if r.get("at") and r.get("phase") in ("handler", "dependency"):
             rows_by_at.setdefault(r["at"], []).append({"endpoint": key, "exit": r.get("id"), "status": r.get("status")})
     escapes_by_at: dict = {}
+    late_by_at: dict = {}
     for key, e in sorted((forms.get("endpoints") or {}).items()):
         for v in e.get("variants") or [e]:
             unc = next((r for r in v.get("produced") or [] if r.get("phase") == "uncaught"), None)
             for cause in (unc or {}).get("causes") or []:
                 cls, _, at = str(cause).partition(" ")
                 escapes_by_at.setdefault((cls, at), []).append({"endpoint": key, "exit": (unc or {}).get("id"), "status": 500})
+            for x in (unc or {}).get("after_response") or []:   # §A4 V18: raised while streaming — the two arms agree
+                late_by_at.setdefault((x["cls"], x["at"]), []).append({"endpoint": key, "via": x.get("via")})
     commits: dict = {}
     for sid, s in sorted((forms.get("steps") or {}).items()):
         if s.get("op") == "commit":
@@ -179,7 +187,7 @@ def functions_part(repo: Path, forms: dict, amap: dict) -> tuple[dict, list, dic
         stats["pairs"] += sum(1 for b in by if b["depth"] > 0)
         endpoint_depths = [b["depth"] for b in by if str(b["root"]).startswith("endpoint:") and not str(b["root"]).startswith("endpoint:TASK ")]
         climbs_one = F.OPTIONS.get("k2_climb", "one-level") != "one-level" or not endpoint_depths or min(endpoint_depths) <= 1
-        raises = _raises(repo, m, node, rows_by_raise, escapes_by_at, climbs_one, bool(endpoint_depths))
+        raises = _raises(repo, m, node, rows_by_raise, escapes_by_at, climbs_one, bool(endpoint_depths), late_by_at)
         refusals = []
         for r in P._analyse(repo, m, node)["rows"]:
             refusals.append({"status": r.get("status"), "at": r.get("at"), **({"pred": r["pred"]} if r.get("pred") else {}),

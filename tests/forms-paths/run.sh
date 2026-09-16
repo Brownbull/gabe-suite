@@ -516,7 +516,7 @@ assert len(t["branches"]) == 6 and len({b["id"] for b in t["branches"]}) == 6 an
 assert {c["call"]: c["reason"] for c in t["collapsed"]} == {"Shape": "constructor: builds a value"}, t["collapsed"]
 x = f["endpoints"]["endpoint:POST /edge/tx"]
 assert [(b["call"], b["why"]) for b in x.get("branches", [])] == [("guarded", ["commit-differs"])] * 2, x.get("branches")
-assert {c["call"]: c["reason"] for c in x["collapsed"]} == {"ensure": "one return"}, x["collapsed"]
+assert {c["call"]: c["reason"] for c in x["collapsed"]} == {"ensure": "no value return"}, x["collapsed"]   # a void helper
 PY
 
 py "S3.P9 · conditions read a local path and route templates; a condition proven true reads applies:true" <<'PY'
@@ -813,6 +813,67 @@ def remove(key: str, session=None):
         raise HTTPException(404, "not found")
     session.commit()
 '''
+RELIEF = '''from fastapi import HTTPException
+
+
+class NotFound(Exception):
+    pass
+
+
+class Quota(Exception):
+    pass
+
+
+def run_job(session, job_id):
+    if job_id < 0:
+        raise NotFound()
+    if job_id == 0:
+        session.commit()
+        return "empty"
+    session.commit()
+    return "done"
+
+
+def translate(exc):
+    if isinstance(exc, Quota):
+        raise HTTPException(429, "quota")
+    raise HTTPException(502, "upstream")
+
+
+def need_owner(ctx):
+    if ctx is None:
+        raise HTTPException(409, "owner required")
+    return ctx
+
+
+def pick_mode(job_id):
+    if job_id > 10:
+        raise RuntimeError("too big")
+    if job_id == 1:
+        return "a"
+    return "b"
+'''
+RELIEF_API = '''from fastapi import APIRouter, HTTPException
+
+from services.relief import NotFound, need_owner, pick_mode, run_job, translate
+
+router = APIRouter(prefix="/relief")
+
+
+@router.post("/{job_id}")
+def accept(job_id: int, session=None):
+    ctx = need_owner(session)
+    mode = pick_mode(job_id)
+    try:
+        outcome = run_job(session, job_id)
+    except NotFound as exc:
+        raise HTTPException(404, "not found") from exc
+    except Exception as exc:
+        translate(exc)
+        raise
+    session.commit()
+    return {"outcome": outcome, "mode": mode, "ctx": ctx}
+'''
 SPLIT_API = '''from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
@@ -915,6 +976,11 @@ def drop(d):
     (d / "api/drop.py").write_text(DROP_API)
 
 
+def relief(d):
+    (d / "services/relief.py").write_text(RELIEF)
+    (d / "api/relief.py").write_text(RELIEF_API)
+
+
 def split(d):
     (d / "api/split.py").write_text(SPLIT_API)
 
@@ -979,6 +1045,38 @@ assert f["arms"]["paths"]["stats"]["impossible"] == 2, f["arms"]["paths"]["stats
 assert "refusal-writes" not in {x["id"] for x in f.get("arm_findings", {}).get("effects", [])}, f.get("arm_findings")
 two = build(variant("two", two_), "paths")                                                  # SILENT: arms nothing guards
 assert two["arms"]["paths"]["stats"]["impossible"] == 0, two["arms"]["paths"]["stats"]
+PY
+
+py "S5.P17 · FIRE+SILENT: a call that raised into the except we stand in returns no arm, and the catch joins the chain" <<'PY'
+import sys; sys.path.insert(0, str(T))
+from paths_fixture import relief
+f = build(variant("relief", relief), "paths")
+ps = f["endpoints"]["endpoint:POST /relief/{job_id}"]["paths"]
+def kinds(p): return [c["kind"] for c in p["chain"]]
+for st in (429, 502, 404):                                                  # every refusal raised inside an except …
+    got = [p for p in ps if p["status"] == st and p["phase"] == "handler"]   # the app's own 429 middleware is not this
+    assert len(got) == 1, (st, [kinds(p) for p in got])                      # … gets ONE path, not one per arm
+    assert "catch" in kinds(got[0]), (st, kinds(got[0]))                     # … and says which handler caught it
+    assert "branch" not in kinds(got[0]), (st, kinds(got[0]))                # … and claims no arm returned
+    assert kinds(got[0]).index("catch") < kinds(got[0]).index("exit"), kinds(got[0])
+succ = [p for p in ps if p["exit"]["kind"] == "success"]                     # SILENT: the arms still enumerate where
+assert len(succ) == 2 and all("branch" in kinds(p) for p in succ), [kinds(p) for p in succ]   # the call DID return
+st = f["arms"]["paths"]["stats"]                                             # nothing is "omitted": the product and
+assert st["combinations_omitted"] == 0 and st["impossible"] == 0, st         # the walk agree once the raiser is out
+PY
+
+py "S5.P18 · FIRE+SILENT: a collapsed reason says what the code does — the row-supplier says so, the raiser does not claim it changes no exit" <<'PY'
+import sys; sys.path.insert(0, str(T))
+from paths_fixture import relief
+f = build(variant("relief", relief), "paths")
+col = {c["call"]: c for c in f["endpoints"]["endpoint:POST /relief/{job_id}"]["collapsed"]}
+assert col["need_owner"]["reason"] == "one return", col["need_owner"]              # one arm …
+assert col["need_owner"]["contributes"] == "rows", col["need_owner"]
+assert col["pick_mode"]["reason"] == "arms differ only in the value returned", col["pick_mode"]
+assert "contributes" not in col["pick_mode"], col["pick_mode"]                     # SILENT: it supplies no row
+assert "arms change neither exit nor commit" not in {c["reason"] for c in col.values()}, col
+base = {c["call"]: c["reason"] for c in f["endpoints"]["endpoint:POST /orders/settle"]["collapsed"]}
+assert base["label"] == "arms change neither exit nor commit", base                # SILENT: a callee that never raises
 PY
 
 py "S5.P13 · the 422 split: a dependency's parameters answer before its body, the endpoint's own after every dependency" <<'PY'

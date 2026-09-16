@@ -314,6 +314,12 @@ def effect_events(repo: Path, m, qual: str, fn, m2t: dict, widen: bool = True) -
             e.update(kind="fx", op="update", model=sym.map[e["name"]], widening=sym.widened.get(e["name"]), bound=True)
     out = [e for e in out if e["kind"] != "attr"]
     out.sort(key=lambda e: (e["line"], 0 if e["kind"] == "fx" else 1))
+    streamed = P._streamed_calls(fn)                       # §A4 V17: a generator the RESPONSE iterates runs after
+    for e in out:                                          # the exit — a `with`-entered one does not
+        if e["kind"] == "call" and id(e["node"]) in streamed:
+            cm, cq = e["target"]
+            if any(isinstance(n, (ast.Yield, ast.YieldFrom)) for n in _own(cm.defs[cq])):
+                e["after_response"] = True
     first_yield = min((n.lineno for n in _own(fn) if isinstance(n, (ast.Yield, ast.YieldFrom))), default=None)
     ords: dict = {}
     for e in out:
@@ -391,9 +397,11 @@ class _Steps:
         return sid
 
     def take(self, fid: str, e: dict, cond: bool, suppressed: bool, depth: int, trail: frozenset, callee_point=None) -> list:
-        """The steps one event contributes: itself, or a callee's steps read to ``callee_point`` (None = completion)."""
+        """The steps one event contributes: itself, or a callee's steps read to ``callee_point`` (None = completion).
+        Every pair's event carries ``tries`` and, aligned with it, ``try_fids`` — the function each try belongs to — so a
+        try the path passes can be named whichever function's step sits inside it (§A4 V19)."""
         if e["kind"] == "fx":
-            return [(self.mint(fid, e, cond, suppressed), e)]
+            return [(self.mint(fid, e, cond, suppressed), {**e, "try_fids": (fid,) * len(e["tries"])})]
         if e["kind"] == "unresolved":
             self.unresolved.add(f"{fid.partition('::')[0]}:{e['line']}")
             return []
@@ -404,13 +412,17 @@ class _Steps:
             return []
         force = callee_point == "cond"
         point = None if force else callee_point
-        return [(sid, {**sub, "tries": e["tries"] + sub["tries"]})
+        late = e.get("after_response", False)                 # §A4 V17: a generator the response streams runs later
+        return [(sid, {**sub, "tries": e["tries"] + sub["tries"], "try_fids": (fid,) * len(e["tries"]) + sub["try_fids"],
+                       **({"after_response": True} if late or sub.get("after_response") else {})})
                 for sid, sub in self.of(cm, cq, depth + 1, trail | {fid}, point, cond or force, suppressed)]
 
     def of(self, m, qual: str, depth: int = 0, trail: frozenset = frozenset(), point=None, cond: bool = False,
-           suppressed: bool = False, sites: dict | None = None) -> list:
+           suppressed: bool = False, sites: dict | None = None, tries_seen: list | None = None) -> list:
         """``[(step id, event)]`` in ``m::qual`` read to ``point`` (``(stack, last line)``) or to its completion.
-        ``sites`` maps a call line to the point its callee is read to (``"cond"``: somewhere unknown)."""
+        ``sites`` maps a call line to the point its callee is read to (``"cond"``: somewhere unknown). ``tries_seen``,
+        when given, collects ``(try, fid)`` for EVERY event the path runs — a call with no step inside still sits in
+        a try the path passes (§A4 V19: ``try: await delete_identity(uid) except Exception: log``)."""
         fid = f"{m.rel}::{qual}"
         node = m.defs.get(qual)
         if node is None:
@@ -422,7 +434,12 @@ class _Steps:
         if key is not None and key in self._memo:
             return self._memo[key]
         out = []
-        for e in effect_events(self.repo, m, qual, node, self.m2t, self.widen):
+        evs = effect_events(self.repo, m, qual, node, self.m2t, self.widen)
+        hline = next((k[1] for k in reversed(point[0]) if k[0] == "except"), None) if point else None
+        T = next((t for t in ast.walk(node) if isinstance(t, P._TRY) and any(h.lineno == hline for h in t.handlers)), None) \
+            if hline is not None else None                    # §A4 V9: the try whose except this path leaves through
+        last_in_T = max((e["line"] for e in evs if e["kind"] == "fx" and T is not None and T in e["tries"]), default=None)
+        for e in evs:
             if point is not None and e["line"] > point[1]:
                 break
             if e["kind"] in ("raise", "return"):
@@ -430,8 +447,15 @@ class _Steps:
             rel = _rel(e["stack"], point[0] if point else None)
             if rel is None:
                 continue
-            out += self.take(fid, e, cond or rel == "cond", suppressed or e["suppressed"], depth, trail,
-                             (sites or {}).get(e["line"]) if e["kind"] == "call" else None)
+            if tries_seen is not None and e["kind"] in ("fx", "call", "unresolved"):
+                tries_seen += [(tr, fid) for tr in e["tries"]]
+            in_T = T is not None and T in e["tries"]           # the exception interrupted T's body somewhere: every
+            if in_T:                                          # step in it MAY have run, and a commit that ends the
+                rel = "cond"                                  # body did NOT complete — it is what raised, or never ran
+            failed = in_T and e["kind"] == "fx" and e["op"] == "commit" and e["line"] == last_in_T
+            got = self.take(fid, e, cond or rel == "cond", suppressed or e["suppressed"], depth, trail,
+                            (sites or {}).get(e["line"]) if e["kind"] == "call" else None)
+            out += [(sid, {**ev, "failed": True}) for sid, ev in got] if failed else got
         if key is not None:
             self._memo[key] = out
         return out
@@ -462,9 +486,10 @@ def _dependency_state(p: dict, row: dict | None, fw_ok: bool) -> str:
     return "ran"
 
 
-def _handler_pairs(repo: Path, v: dict, m, fn, p: dict, S: _Steps) -> list:
+def _handler_pairs(repo: Path, v: dict, m, fn, p: dict, S: _Steps) -> tuple[list, list]:
     """The handler's steps on a handler path: read to the exit's raise or return, or to the call that reached it — that
-    callee read to its raise, a deciding callee to the arm the path took."""
+    callee read to its raise (the chain's hit gate sits at the CALLEE's raise for a translated row), a deciding callee
+    to the arm the path took."""
     qual = _qual(m, fn)
     evs = effect_events(repo, m, qual, fn, S.m2t, S.widen)
     chain = p["chain"]
@@ -493,9 +518,10 @@ def _handler_pairs(repo: Path, v: dict, m, fn, p: dict, S: _Steps) -> list:
             cm, cq = ce["target"]
             cev = effect_events(repo, cm, cq, cm.defs[cq], S.m2t, S.widen)
             sites[ce["line"]] = (_point(cev, "raise", I._line(hit["at"])) or "cond") if hit and _inside(cm, cq, hit.get("at")) else "cond"
+    seen: list = []
     if point is None:                                      # nowhere to stop: every step the handler could take, cond
-        return S.of(m, qual, 0, cond=True, sites=sites or {0: None})
-    return S.of(m, qual, 0, point=point, sites=sites or {0: None})
+        return S.of(m, qual, 0, cond=True, sites=sites or {0: None}, tries_seen=seen), seen
+    return S.of(m, qual, 0, point=point, sites=sites or {0: None}, tries_seen=seen), seen
 
 
 def _catch_pairs(repo: Path, p: dict, S: _Steps, through: list) -> list:
@@ -530,17 +556,19 @@ def _catch_pairs(repo: Path, p: dict, S: _Steps, through: list) -> list:
     return out
 
 
-def _rollup(steps: dict, seq: list) -> dict:
+def _rollup(steps: dict, seq: list, failed: set = frozenset()) -> dict:
     """Each write's last state along the path — ``committed`` · ``maybe_committed`` · ``rolled_back`` · ``uncommitted``;
-    a conditional or suppressed commit or rollback may not have run. A step met twice on one path (a retry in an
-    ``except``) keeps its strongest reading, in that order — a write committed once stays committed."""
+    a conditional or suppressed commit or rollback may not have run, and a commit in ``failed`` — the one that raised
+    into the except this path leaves through — committed nothing, so the rollback that follows it rolls back (§A4 V9).
+    A step met twice on one path (a retry in an ``except``) keeps its strongest reading, in that order — a write
+    committed once stays committed."""
     states = []
     for sid in seq:
         row = steps[sid]
         if row["op"] in EF["writes"]:
             states.append([sid, "pending"])
             continue
-        if row["op"] not in ("commit", "rollback"):
+        if row["op"] not in ("commit", "rollback") or (row["op"] == "commit" and sid in failed):
             continue
         maybe = row["cond"] or row.get("suppressed")
         for s in states:
@@ -616,16 +644,24 @@ def endpoint_effects(repo: Path, key: str, v: dict, m, fn, dec, S: _Steps, stats
                 for pr in dep_pairs[d["fid"]]:
                     (after if pr[1].get("teardown") else before).append(pr)
         dep_n = len(before)
-        body = []
+        body, passed = [], []
         if p["phase"] == "handler" and p["exit"]["kind"] in ("refusal", "success"):
-            body = _handler_pairs(repo, v, m, fn, p, S)
+            body, passed = _handler_pairs(repo, v, m, fn, p, S)
         body += _catch_pairs(repo, p, S, through)
         pairs = before + body + after
         origin = ["dependency"] * dep_n + ["endpoint"] * len(body) + ["dependency"] * len(after)
+        late = [(sid, ev) for sid, ev in pairs if ev.get("after_response")]          # §A4 V17: streamed after the exit
+        if late:
+            keep = [i for i, (_, ev) in enumerate(pairs) if not ev.get("after_response")]
+            pairs, origin = [pairs[i] for i in keep], [origin[i] for i in keep]
         _race_on_path(S, pairs)
         seq = [sid for sid, _ in pairs]
-        eff = {"steps": [{"step": sid, "via": S.steps[sid]["fn"], **({"dependency": True} if o == "dependency" else {})} for sid, o in zip(seq, origin)],
-               **_rollup(S.steps, seq), "dependency": state}
+        failed = {sid for sid, ev in pairs if ev.get("failed")}                      # §A4 V9: the commit that raised
+        eff = {"steps": [{"step": sid, "via": S.steps[sid]["fn"], **({"dependency": True} if o == "dependency" else {}),
+                          **({"failed": True} if sid in failed else {})} for sid, o in zip(seq, origin)],
+               **_rollup(S.steps, seq, failed), "dependency": state}
+        if late:
+            eff["after_response"] = [{"step": sid, "via": S.steps[sid]["fn"]} for sid, _ in late]
         p["effects"] = eff
         for (sid, _), o in zip(pairs, origin):
             if S.steps[sid]["op"] == "commit":
@@ -637,12 +673,34 @@ def endpoint_effects(repo: Path, key: str, v: dict, m, fn, dec, S: _Steps, stats
                 refusal_own.append(p["id"])
             elif kept:
                 refusal_inherited.append(p["id"])
+        seen_keys = {t["key"] for t in through}                # §A4 V19: every try the path's flow passes — a
+        on_path = [(tr, tfid) for _, ev in pairs for tr, tfid in zip(ev.get("tries") or (), ev.get("try_fids") or ())] + passed
+        for tr, tfid in on_path:                               # swallowing handler never minted an exit, so it was
+            if True:                                           # never on the chain
+                for h in tr.handlers:
+                    key = (tfid, tr.lineno, h.lineno)
+                    if key in seen_keys:
+                        continue
+                    seen_keys.add(key)
+                    om = P._mod(repo, tfid.partition("::")[0])
+                    onode = om.defs.get(tfid.partition("::")[2]) if om is not None else None
+                    if onode is None:
+                        continue
+                    ohev: dict = {}
+                    for oe in P._events(onode):
+                        if oe["handler"] is not None:
+                            ohev.setdefault(id(oe["handler"][1]), []).append(oe)
+                    tries = sorted((t for t in ast.walk(onode) if isinstance(t, P._TRY)), key=lambda t: t.lineno)
+                    through.append({"key": key, "try": tr, "fid": tfid, "at": f"{om.rel}:{h.lineno}", "passed": True,
+                                    "types": sorted(P._handler_types(h) or {"BaseException"}), "outcome": CA.classify(h, ohev),
+                                    "actions": CA.actions(h), "ord": tries.index(tr)})
         for t in through:
             c = catches.setdefault(t["key"], {"id": I.ident("c", [t["fid"], t["types"], t["ord"]]), "fn": t["fid"], "at": t["at"],
                                               "types": t["types"], "outcome": t["outcome"], "actions": t["actions"],
                                               "writes": [], "commits": [], "answers": [], "paths": []})
             c["paths"].append(p["id"])
-            if t["outcome"] in ("translate", "return") and p.get("status") is not None and p["status"] not in c["answers"]:
+            if t["outcome"] in ("translate", "return") and not t.get("passed") and p.get("status") is not None \
+                    and p["status"] not in c["answers"]:      # a try the path only PASSED answered nothing on it
                 c["answers"].append(p["status"])
             for sid, ev in pairs:
                 if any(tr is t["try"] for tr in ev.get("tries") or ()):
