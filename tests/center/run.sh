@@ -951,9 +951,9 @@ bash "$GEN/propagate.sh" "$BS" --check >"$T/bootstrap3.out" 2>&1; grep -q "in sy
 # propagate.sh (2026-09-06): a NEW generator that a twin-side generator IMPORTS is a hard dependency — it lands and says so;
 # a new generator nobody imports stays a deliberate adoption (the twins' regen crashed at `import _a3_homing` before this rule)
 rm -f "$BS/scripts/_a3_homing.py"
-bash "$GEN/propagate.sh" "$BS" --check >"$T/prop-req.out" 2>&1; grep -q "DRIFT _a3_homing.py (NEW, required by build_center_a3.py" "$T/prop-req.out" \
+bash "$GEN/propagate.sh" "$BS" --check >"$T/prop-req.out" 2>&1; grep -qE "DRIFT _a3_homing.py \(NEW, required by [^)]*build_center_a3.py" "$T/prop-req.out" \
   && ok || { bad "propagate FIRE (--check): a missing generator the twin imports reads as REQUIRED drift, named with its importer"; cat "$T/prop-req.out"; }
-bash "$GEN/propagate.sh" "$BS" >"$T/prop-req2.out" 2>&1; grep -q "landed _a3_homing.py — NEW, required by build_center_a3.py" "$T/prop-req2.out" && [ -f "$BS/scripts/_a3_homing.py" ] \
+bash "$GEN/propagate.sh" "$BS" >"$T/prop-req2.out" 2>&1; grep -qE "landed _a3_homing.py — NEW, required by [^)]*build_center_a3.py" "$T/prop-req2.out" && [ -f "$BS/scripts/_a3_homing.py" ] \
   && ok || { bad "propagate FIRE: the required new generator LANDS and the log says which file needed it"; cat "$T/prop-req2.out" | head -20; }
 grep -lE "^(import|from) scaffold_census\b" "$BS"/scripts/*.py >/dev/null 2>&1 && bad "propagate SILENT precondition: scaffold_census.py must be imported by nothing" || true
 rm -f "$BS/scripts/scaffold_census.py"

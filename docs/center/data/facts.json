@@ -1,8 +1,8 @@
 {
-  "generated": "2026-09-14",
-  "head": "40f3e1f",
+  "generated": "2026-09-16",
+  "head": "92dc6ed",
   "dirty": true,
-  "method": "batteries: PARTIAL refresh — 1 of 53 re-run (center); the other 46 carried from their own run_at/run_head stamps by docs/center/generators/write_facts.py with the doctor's G3 exclusions honoured; assertions + failures parsed from each battery's own summary line (failures > 0 is RED even at exit 0), `protects` from its header comment, FIRE/SILENT from the battery's own text (run.sh + the siblings it delegates to). hooks: probed by hand 2026-07-26 (each hook executed in a hermetic temp repo against realistic stdin payloads) — a different instrument, carried as recorded.",
+  "method": "batteries: every tests/*/run.sh executed serially by docs/center/generators/write_facts.py with the doctor's G3 exclusions honoured; assertions + failures parsed from each battery's own summary line (failures > 0 is RED even at exit 0), `protects` from its header comment, FIRE/SILENT from the battery's own text (run.sh + the siblings it delegates to). hooks: probed by hand 2026-07-26 (each hook executed in a hermetic temp repo against realistic stdin payloads) — a different instrument, carried as recorded.",
   "hooks": [
     {
       "name": "plan-proof-guard",
@@ -75,38 +75,44 @@
     {
       "name": "action-roots",
       "beat": "center",
-      "assertions": 0,
+      "assertions": 18,
       "failures": 0,
-      "status": "NOT RUN",
+      "status": "GREEN",
       "protects": "ACTION roots (class 15) fixture battery — `_a3_code.parse_action_roots` executable contract.",
       "proves_fire": true,
       "proves_silent": true,
-      "note": "no recorded run yet — run write_facts.py without --only"
+      "rc": 0,
+      "seconds": 0.5,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "arch-graph",
       "beat": "center",
-      "assertions": 329,
+      "assertions": 337,
       "failures": 0,
       "status": "GREEN",
       "protects": "_a3_graph battery — the C4 codebase-graph derivation's executable contract.",
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.1,
-      "run_at": "2026-09-11",
-      "run_head": "3e24583"
+      "seconds": 0.5,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "arms",
       "beat": "center",
-      "assertions": 0,
+      "assertions": 8,
       "failures": 0,
-      "status": "NOT RUN",
+      "status": "GREEN",
       "protects": "Arms register battery (extractor-gateway plan, step 2) — the executable contract of _a3_stacks.REGISTER and _a3_code.probe().",
       "proves_fire": true,
       "proves_silent": true,
-      "note": "no recorded run yet — run write_facts.py without --only"
+      "rc": 0,
+      "seconds": 2.7,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "artifact-chrome",
@@ -118,7 +124,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 46.7
+      "seconds": 61.3,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "artifact-motion",
@@ -130,7 +138,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 39.6
+      "seconds": 41.6,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "board",
@@ -142,7 +152,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.0
+      "seconds": 0.1,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "case-thread",
@@ -154,7 +166,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.4
+      "seconds": 0.8,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "census-scaffold",
@@ -166,21 +180,24 @@
       "proves_fire": true,
       "proves_silent": false,
       "rc": 0,
-      "seconds": 0.3
+      "seconds": 0.7,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "center",
       "beat": "red",
-      "assertions": 173,
-      "failures": 0,
-      "status": "GREEN",
+      "assertions": 178,
+      "failures": 2,
+      "status": "RED",
       "protects": "Center-generator fixture battery — the executable contract of the center's guard layer (2026-07-22 alignment review M01/M02/M04/M05/M09/M12).",
       "proves_fire": true,
       "proves_silent": true,
-      "rc": 0,
-      "seconds": 17.6,
-      "run_at": "2026-09-14",
-      "run_head": "40f3e1f"
+      "rc": 1,
+      "seconds": 43.8,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed",
+      "note": "FAILING — last lines: ── regenerate the twin's center (its own data) | center: _a3_feature.ENTITY_RX has key(s) ['keep'] that are not entities in adoption.json. Registry: [] | ── regenerate + gates | ⚠ adoption.json absent at /tmp/tmp.0A5mlNoXrn/bootstrap/docs/site/center/adoption.json — entity registry taken from center.config.json (0 entities); /gabe-cc-init records the adoption sections | 3 badge(s), all on the appended row | center battery: 176 passed, 2 failed"
     },
     {
       "name": "center-status",
@@ -192,7 +209,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.1
+      "seconds": 0.2,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "checkers",
@@ -204,7 +223,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 6.0
+      "seconds": 6.7,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "chrome",
@@ -216,7 +237,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 4.1
+      "seconds": 7.5,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "commit-scripts",
@@ -228,19 +251,23 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.8
+      "seconds": 1.5,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "commits",
       "beat": "center",
-      "assertions": 11,
+      "assertions": 19,
       "failures": 0,
       "status": "GREEN",
       "protects": "_a3_commits battery — recent git commits → the graph ELEMENTS they touched, as journeys.",
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.1
+      "seconds": 0.2,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "disposition",
@@ -252,7 +279,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.7
+      "seconds": 1.3,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "docsite-staleness",
@@ -264,7 +293,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.2
+      "seconds": 0.2,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "doctor",
@@ -276,9 +307,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 17.6,
-      "run_at": "2026-09-11",
-      "run_head": "3e24583"
+      "seconds": 36.4,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "draft-entities",
@@ -290,21 +321,23 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.9
+      "seconds": 2.0,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "element-forms",
       "beat": "satellites",
-      "assertions": 15,
+      "assertions": 21,
       "failures": 0,
       "status": "GREEN",
       "protects": "Element forms battery — _a3_paths.py's executable contract (docs/design/element-forms/plan.md §3.4).",
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.5,
-      "run_at": "2026-09-13",
-      "run_head": "d9fbb48"
+      "seconds": 1.2,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "entity-drift",
@@ -316,7 +349,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.0
+      "seconds": 0.1,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "entity-models",
@@ -328,7 +363,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.1
+      "seconds": 0.1,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "evidence-nav",
@@ -340,21 +377,135 @@
       "proves_fire": true,
       "proves_silent": false,
       "rc": 0,
-      "seconds": 4.2,
-      "run_at": "2026-09-11",
-      "run_head": "3e24583"
+      "seconds": 4.8,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
+    },
+    {
+      "name": "forms-contract",
+      "beat": "center",
+      "assertions": 8,
+      "failures": 0,
+      "status": "GREEN",
+      "protects": "Forms contract battery — the CONTRACT arm (docs/design/element-forms/amendment-1.md §A2 Slice 7): what a client can rely on at an endpoint — repeat{} (the idempotency key and the inserts it claims, finding race-500) · auth{} · rate{} · responses{}. The cases drive the real orchestrator (_a3_forms_build.extend_backend) with `contract` selected over _a3_paths.build output on a synthetic FastAPI + SQLAlchemy tree — AST only. Each case FIREs and stays SILENT. Exit 0 = all pass.",
+      "proves_fire": true,
+      "proves_silent": true,
+      "rc": 0,
+      "seconds": 2.2,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
+    },
+    {
+      "name": "forms-core",
+      "beat": "satellites",
+      "assertions": 19,
+      "failures": 0,
+      "status": "GREEN",
+      "protects": "Forms core battery — the amendment-1 FOUNDATION (docs/design/element-forms/amendment-1.md §A2 Slice 1): the arms orchestrator `_a3_forms_build` and the shared leaves every generation arm stands on — ids · settings · catch · reach — plus the two sync laws the consumers depend on. K1–K9, each shown to FIRE and to stay SILENT; K6–K9 also mutate in-process to prove the guard can fail. Every case below either pins a law of the slice or reproduces a defect the Slice 1 review confirmed (F-ids in the case names). Hermetic: a synthetic FastAPI tree, AST only. Exit 0 = all pass.",
+      "proves_fire": true,
+      "proves_silent": true,
+      "rc": 0,
+      "seconds": 1.9,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
+    },
+    {
+      "name": "forms-effects",
+      "beat": "center",
+      "assertions": 12,
+      "failures": 0,
+      "status": "GREEN",
+      "protects": "Forms effects battery — the EFFECTS arm (docs/design/element-forms/amendment-1.md §A2 Slice 6): what each path writes, commits and rolls back, read against the point the path leaves each function. The cases drive the real orchestrator (_a3_forms_build.extend_backend) with `effects` selected over _a3_paths.build output on a synthetic FastAPI + SQLAlchemy tree — AST only, nothing imports the fixture. Each case is shown to FIRE and to stay SILENT. Exit 0 = all pass.",
+      "proves_fire": true,
+      "proves_silent": true,
+      "rc": 0,
+      "seconds": 3.8,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
+    },
+    {
+      "name": "forms-frontend",
+      "beat": "center",
+      "assertions": 21,
+      "failures": 0,
+      "status": "GREEN",
+      "protects": "Forms frontend battery — the FRONTEND arm's guards part (docs/design/element-forms/amendment-1.md §A2 Slice 11a): the extractor's flow run (GABE_FE_FLOW=1) read into guard forms — exits with the hook-member atoms that decide them, the endpoint field a data atom is decided by, the effects a guard's useEffect runs, one chain row per way a request ends through the guards mounted above, and the router topology (loops · exclusive · unproven · unknown · safe). The cases read the FROZEN flow capture of this directory's own fixture app (tests/frontend/fixture counts never move) and mutate it in memory to prove each case can FAIL; F16 re-derives the frozen capture LIVE when a typescript resolves, else it SKIPS by name. Exit 0 = all pass.",
+      "proves_fire": true,
+      "proves_silent": true,
+      "rc": 0,
+      "seconds": 4.9,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
+    },
+    {
+      "name": "forms-kinds",
+      "beat": "center",
+      "assertions": 18,
+      "failures": 0,
+      "status": "GREEN",
+      "protects": "Forms kinds battery — the KINDS arm (docs/design/element-forms/amendment-1.md §A2 Slice 3 · B-mw · B-dep): the middleware forms (stack order, pass-through arms, exits with the endpoint rows' ids, applies_to / exempt) and the dependency forms (parameter order, own + inherited exits, commits one call down, teardown, applies_to), with their findings `indistinct-exits` and `dependency-commits`. The cases drive the real orchestrator over _a3_paths.build on a synthetic FastAPI tree — AST only — and edit the fixture in-test to prove each case can FAIL. Exit 0 = all pass.",
+      "proves_fire": true,
+      "proves_silent": true,
+      "rc": 0,
+      "seconds": 3.7,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
+    },
+    {
+      "name": "forms-paths",
+      "beat": "center",
+      "assertions": 32,
+      "failures": 0,
+      "status": "GREEN",
+      "protects": "Forms paths battery — what the generation ARMS write into forms.json, slice by slice (docs/design/element-forms/ amendment-1.md §A2). Slice 2 · ids: once any arm is selected, every produced exit carries an `x:` id and every precondition a `g:` id plus the `exit` it guards; with no arm selected nothing changes. The cases drive the real orchestrator (_a3_forms_build.extend_backend) over _a3_paths.build output on a synthetic FastAPI tree — AST only. Each case is shown to FIRE and to stay SILENT. Exit 0 = all pass.",
+      "proves_fire": true,
+      "proves_silent": true,
+      "rc": 0,
+      "seconds": 5.8,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
+    },
+    {
+      "name": "forms-short",
+      "beat": "center",
+      "assertions": 26,
+      "failures": 0,
+      "status": "GREEN",
+      "protects": "Forms short battery — the SHORT arm's schema part and the body-parse framework exits (docs/design/element-forms/ amendment-1.md §A2 Slice 4 · A6 · critic gap G2): request schemas become `schemas{}`, every validation row gains the 422 `cases[]` a request can break (pydantic error type · full loc · the rule's line), and a body endpoint gains FastAPI's two body-parse `framework_exits[]`. The cases drive the real orchestrator over _a3_paths.build on a synthetic FastAPI tree — AST only — and edit the fixture in-test to prove each case can FAIL. Exit 0 = all pass.",
+      "proves_fire": true,
+      "proves_silent": true,
+      "rc": 0,
+      "seconds": 3.7,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
+    },
+    {
+      "name": "forms-tests",
+      "beat": "center",
+      "assertions": 13,
+      "failures": 0,
+      "status": "GREEN",
+      "protects": "Forms tests battery — the TESTS arm (docs/design/element-forms/amendment-1.md §A2 Slice 9): which test proves which exit and which path. A synthetic FastAPI tree with a pytest module and its junit results is built through the real orchestrator with `paths,tests` selected — AST only, no test runs. Each case FIREs and stays SILENT. Exit 0 = all pass.",
+      "proves_fire": true,
+      "proves_silent": true,
+      "rc": 0,
+      "seconds": 1.9,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "frontend",
       "beat": "center",
-      "assertions": 129,
+      "assertions": 130,
       "failures": 0,
       "status": "GREEN",
       "protects": "_a3_fe battery — the FRONTEND arm's executable contract (compiler-proven pieces + typed wires).",
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 1.5
+      "seconds": 5.2,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "gabe-kdbp",
@@ -366,7 +517,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.5
+      "seconds": 0.8,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "gabe-map",
@@ -378,23 +531,23 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 3.0,
-      "run_at": "2026-09-13",
-      "run_head": "d9fbb48"
+      "seconds": 5.2,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "gabe-universe",
       "beat": "center",
-      "assertions": 668,
+      "assertions": 678,
       "failures": 0,
       "status": "GREEN",
       "protects": "Gabe Universe station battery — a STATIC/STRUCTURAL executable contract for the twin center's \"Gabe Universe\" station (templates/center/shell/gabe-universe.html): the 5C 3D graph (lifted from the graft-adoption spike) fed LIVE by window.GABE_C4, with the element-components card ported to read the real per-node dossier (det).",
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 109.5,
-      "run_at": "2026-09-11",
-      "run_head": "3e24583"
+      "seconds": 236.0,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "hooks",
@@ -406,7 +559,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 3.9
+      "seconds": 6.6,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "inflight",
@@ -418,19 +573,23 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.9
+      "seconds": 1.5,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "levels",
       "beat": "center",
-      "assertions": 77,
+      "assertions": 83,
       "failures": 0,
       "status": "GREEN",
       "protects": "_a3_levels battery — the rich LEVELS graph (window.GABE_LEVELS) derivation. Hermetic (a synthetic archmap + the real _a3_graph topology), zero-arg, python-stdlib only. Proves the rich lenses come from the archmap insight blocks (function_insight → fn_nodes · model_insight.internal_refs → use_edges · URL → usecases · FK components → communities · guard_insight → guards), the honest-empty contract (missing block ⇒ empty field, graft-less ⇒ no fn_edges), determinism, and that stripping a block is DETECTABLE (mutation-proven — a checker that cannot fail is non-evidence). Doctor auto-runs it.",
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.1
+      "seconds": 0.1,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "map-deltas",
@@ -442,7 +601,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 1.0
+      "seconds": 1.9,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "mcp-registration",
@@ -454,7 +615,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.4
+      "seconds": 0.7,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "naming",
@@ -466,7 +629,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.1
+      "seconds": 0.2,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "orm-access",
@@ -478,7 +643,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.2
+      "seconds": 0.4,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "plan-mirror",
@@ -490,7 +657,9 @@
       "proves_fire": false,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.9
+      "seconds": 1.9,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "prism",
@@ -502,7 +671,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 8.0
+      "seconds": 11.8,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "prism-fit",
@@ -514,7 +685,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 11.9
+      "seconds": 14.0,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "prism-probe",
@@ -526,7 +699,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 25.0
+      "seconds": 28.1,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "pulse-angles",
@@ -538,9 +713,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 8.3,
-      "run_at": "2026-09-13",
-      "run_head": "d9fbb48"
+      "seconds": 15.2,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "pulse-scripts",
@@ -552,7 +727,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.6
+      "seconds": 1.2,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "reach-emit",
@@ -564,7 +741,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.5
+      "seconds": 0.9,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "red-sweep",
@@ -576,7 +755,9 @@
       "proves_fire": true,
       "proves_silent": false,
       "rc": 0,
-      "seconds": 0.1
+      "seconds": 0.1,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "register",
@@ -588,7 +769,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.1
+      "seconds": 0.2,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "risk-sweep",
@@ -600,7 +783,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.6
+      "seconds": 1.0,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "scope-prompt-harness",
@@ -623,7 +808,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.9
+      "seconds": 1.6,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "sim",
@@ -635,40 +822,51 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.2
+      "seconds": 0.3,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "stack-di",
       "beat": "center",
-      "assertions": 0,
+      "assertions": 6,
       "failures": 0,
-      "status": "NOT RUN",
+      "status": "GREEN",
       "protects": "Port-seam arm battery (dispatch-gap phase 3) — _a3_stacks_di's executable contract.",
       "proves_fire": false,
       "proves_silent": true,
-      "note": "no recorded run yet — run write_facts.py without --only"
+      "rc": 0,
+      "seconds": 0.2,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "stack-pydi",
       "beat": "center",
-      "assertions": 0,
+      "assertions": 3,
       "failures": 0,
-      "status": "NOT RUN",
+      "status": "GREEN",
       "protects": "Python port-seam battery — _a3_stacks_pydi's executable contract.",
       "proves_fire": true,
       "proves_silent": true,
-      "note": "no recorded run yet — run write_facts.py without --only"
+      "rc": 0,
+      "seconds": 0.2,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "stack-sql",
       "beat": "center",
-      "assertions": 0,
+      "assertions": 11,
       "failures": 0,
-      "status": "NOT RUN",
+      "status": "GREEN",
       "protects": "Raw-SQL arm battery (extractor-gateway plan, step 8) — _a3_stacks_sql's executable contract.",
       "proves_fire": true,
       "proves_silent": true,
-      "note": "no recorded run yet — run write_facts.py without --only"
+      "rc": 0,
+      "seconds": 0.9,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "suite-center",
@@ -680,9 +878,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 1.3,
-      "run_at": "2026-09-11",
-      "run_head": "3e24583"
+      "seconds": 2.5,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "suite-presence",
@@ -694,7 +892,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.2
+      "seconds": 0.4,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "workflow-drafts",
@@ -706,7 +906,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.5
+      "seconds": 1.0,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     },
     {
       "name": "workflow-drift",
@@ -718,7 +920,9 @@
       "proves_fire": true,
       "proves_silent": true,
       "rc": 0,
-      "seconds": 0.4
+      "seconds": 0.8,
+      "run_at": "2026-09-16",
+      "run_head": "92dc6ed"
     }
   ],
   "uncovered": [
