@@ -2707,46 +2707,75 @@
     { key: "choose", name: "CHOOSE", ico: "journey", plain: "pick the one ending the rest of the console then follows" },
     { key: "show", name: "SHOW", ico: "shape", plain: "put a fact on the middle panel — the card itself stays where it is" },
     { key: "go", name: "GO", ico: "external", plain: "leave the card — open the part, or the level above this door" } ];
-  var G2GROUPS = [
-    { key: "paths", word: "PATHS", part: null, ico: "journey", badge: "walk", verbs: ["walk", "refusals", "success", "prev", "next"],
-      plain: "every way a request through this door can end, and the two ways to step between them" },
-    { key: "data", part: "data", badge: "writes", verbs: ["writes"],
-      plain: "the changes this door makes in the database, and whether each survived" },
-    { key: "security", part: "security", badge: "pre", verbs: ["pre", "gates", "findings"],
-      plain: "everything the request has to get past, and what the forms pass found wrong with it" },
-    { key: "tests", part: "tests", badge: "tests", verbs: ["tests", "untested", "declared"],
-      plain: "the proof that this door answers the way it says it does" },
-    { key: "code", word: "CODE", part: "functions", badge: null, verbs: ["handler", "up"],
-      plain: "where this door is written, and the level it hangs from" } ];
-  function g2Group(k){ for (var i = 0; i < G2GROUPS.length; i++) if (G2GROUPS[i].key === k) return G2GROUPS[i]; return null; }
-  /* a group's WORD is its part's own, read from the registry and never retyped; only the two groups
-     that are NOT a part (PATHS) or that the operator named apart from it (CODE ▸ over Functions)
-     carry one of their own */
+  /* LEVEL 1 IS THE TOPIC ROSTER (operator 2026-09-17, endpoint-stages.md: "in the command panel, when
+     we are positioned for data, we see the stages in the middle panel"). The card navigates the TOPIC
+     and the LABEL; the middle SHOWS the topic. So level 1 is PATHS — the label axis — followed by the
+     six part buttons in their own order, and pressing one both opens that part in the middle and drops
+     to its own level 2: its DISTRIBUTIONS first, then whatever verbs it carries.
+     Everything about a topic cell is READ from window.PANELS — the word, the glyph, the colour and the
+     count; only PATHS, which is no part, carries a word and a glyph of its own. */
+  var G2VERBS = { data: ["writes"], schemas: [], functions: ["handler", "up"],
+                  tests: ["tests", "untested", "declared"], widening: [], security: ["pre", "gates", "findings"] };
+  var G2PLAIN = {
+    data: "every table this door reads or writes, and where on its stages it touches them",
+    schemas: "the shapes that cross this door — what comes in, and what goes back",
+    functions: "the handler this door runs, and everything it calls behind it",
+    tests: "the cases that prove this door answers the way it says it does",
+    widening: "how far this door reaches — the screens that fetch it and the journeys around it",
+    security: "everything the request has to get past before the body ever runs" };
+  function G2GROUPS(){
+    var out = [{ key: "paths", word: "PATHS", part: null, ico: "journey", verbs: ["walk", "refusals", "success", "prev", "next"],
+      plain: "every way a request through this door can end — pick one and every topic is read through it" }];
+    (window.PARTORDER || []).forEach(function(k){
+      if (window.PANELS[k]) out.push({ key: k, part: k, verbs: G2VERBS[k] || [], plain: G2PLAIN[k] }); });
+    return out; }
+  function g2Group(k){ var g = G2GROUPS(); for (var i = 0; i < g.length; i++) if (g[i].key === k) return g[i]; return null; }
   function g2Word(g){ return g.word || String(window.PANELS[g.part].word).toUpperCase(); }
   function g2Col(g){ return g.part ? window.PANELS[g.part].col : "var(--accent)"; }
   function g2Ico(g){ return g.ico || (g.part ? window.PANELS[g.part].icon : "info"); }
-  /* a GROUP cell — it holds verbs the card already carries, so it names them and goes one level down */
+  /* the BADGE is the part's own count — the same number its button carries. PATHS counts the cells the
+     card would draw if you pressed it, which is the walk verb's own badge. */
+  function g2Badge(g, F){ if (!g.part) return pathCells(F).length;
+    var P = window.PANELS[g.part]; try { return P.count(F); } catch (e) { return null; } }
+  function g2Dists(k){ return ((window.PANELS[k] || {}).variants || []); }
+  /* a TOPIC cell — pressing it opens that topic in the MIDDLE and drops the card to its level 2 */
   function groupCellDef(g, byCmd, F, S){
     var held = g.verbs.map(function(c){ return byCmd[c]; }).filter(function(x){ return !!x; });
     var col = g2Col(g), ic = g2Ico(g), P = g.part ? window.PANELS[g.part] : null, w = g2Word(g);
-    var bd = g.badge && byCmd[g.badge] ? byCmd[g.badge].badge : null;
-    return { cmd: "grp-" + g.key, ico: ic, verb: w, label: w, state: "lit", col: col, badge: bd,
-      card: function(){ return cmdc({ title: w + " ▸", value: held.length + (held.length === 1 ? " verb" : " verbs"), icon: ic, color: col,
-        rows: held.map(function(v){ return [v.verb, v.badge == null ? "—" : String(v.badge)]; })
-          .concat([["opens", "one level down — these verbs, then Back"],
-                   ["part", P ? P.word : "no part — a path is the console's own axis"]]),
+    var dists = g.part ? g2Dists(g.part) : [];
+    return { cmd: "grp-" + g.key, ico: ic, verb: w, label: w, state: "lit", col: col, badge: g2Badge(g, F),
+      on: !!(g.part && window.PANELS[g.part] && document.getElementById("panel") && document.getElementById("panel").dataset.tab === g.part),
+      card: function(){ return cmdc({ title: w + " ▸", value: P ? P.count(F) + " inside" : held.length + " verbs", icon: ic, color: col,
+        rows: (P ? [["opens", "this topic in the middle panel, and its own verbs one level down"],
+                    ["distributions", dists.map(function(v){ return v.label; }).join(" · ")]] : [["opens", "one level down — these verbs, then the paths"]])
+          .concat(held.length ? [["verbs", held.map(function(v){ return v.verb; }).join(" · ")]] : P ? [["verbs", "none — this topic is read, not acted on"]] : []),
         plain: g.plain }); },
-      cap: function(){ return w + " · " + held.length + " verbs, one level down"; },
-      act: function(){ window.CMD.grp = g.key; window.drawCmd(); } }; }
-  /* G2's level-2 corner: Back to the five groups. The PATH grid's Back (backDef) leaves CMD.grp
-     alone, so level 3 → level 2 lands on the group that opened it, and B again lands on level 1. */
-  function backGroupDef(g){ return { cmd: "back", ico: "up", verb: "Back", state: "lit", col: "var(--accent)",
+      cap: function(){ return w + " · " + (P ? dists.length + " distributions" : held.length + " verbs") + ", one level down"; },
+      act: function(){ window.CMD.grp = g.key;
+        if (g.part) window.showTab(g.part);   /* positioned for the topic: the middle opens it */
+        window.drawCmd(); } }; }
+  /* a DISTRIBUTION cell — the same rosters the part bars offer, on the card. Pressing one re-renders
+     the middle and leaves the card exactly where it is, with that cell lit. */
+  function distCellDef(k, v, F, S){ var P = window.PANELS[k];
+    var ic = (window.VARICO || {})[v.key] || "shape";
+    var live = (window.PANELVAR ? window.PANELVAR(k) : null) === v.key;
+    return { cmd: "var-" + k + "-" + v.key, ico: ic, verb: v.label, label: v.label, state: "lit", col: P.col, on: live,
+      card: function(){ return cmdc({ title: v.label, value: "a distribution of " + P.word, icon: ic, color: P.col,
+        rows: [["the middle", live ? "this is what it is drawing now" : "press it and the middle draws this instead"],
+               ["of", g2Dists(k).length + " distributions of " + P.word]],
+        plain: v.hint }); },
+      cap: function(){ return P.word + " · " + v.label + (live ? " — drawn now" : ""); },
+      act: function(){ window.showVariant(k, v.key); window.drawCmd(); } }; }
+  /* G2's level-2 corner: Back to the topic roster. The PATH grid's Back (backDef) leaves CMD.grp alone,
+     so level 3 → level 2 lands on the group that opened it, and B again lands on level 1. */
+  function backGroupDef(g){ var n = G2GROUPS().length;
+    return { cmd: "back", ico: "up", verb: "Back", state: "lit", col: "var(--accent)",
       card: function(){ return cmdc({ title: "back", value: "B", icon: "up", color: "var(--accent)",
-        rows: [["returns to", "the five groups"], ["leaving", g2Word(g) + " · " + g.verbs.length + " verbs"],
+        rows: [["returns to", "the " + n + " topics"], ["leaving", g2Word(g)],
                ["keeps", "whatever is in force — Esc is what clears it"],
                ["place", "bottom-right — the corner keeps its place in every mode of the card"]],
-        plain: "one level up — the five groups again, nothing cleared" }); },
-      cap: function(){ return "back to the five groups — B (Esc clears)"; },
+        plain: "one level up — the topics again, nothing cleared" }); },
+      cap: function(){ return "back to the topics — B (Esc clears)"; },
       act: function(){ window.CMD.grp = null; window.drawCmd(); } }; }
   /* a G1 ROW NAME: small caps in the muted ink, at the 12px floor, spanning the row */
   function rowNameNode(rn, members, F, S){
@@ -2791,10 +2820,15 @@
       right = V === "g2" ? (list.length + " PATHS") : (list.length + " paths"); }
     else if (V === "g2") { var all = cmdVerbs(F, S), byCmd = {};
       all.forEach(function(o){ if (o.cmd) byCmd[o.cmd] = o; });
-      if (grp) { list = grp.verbs.map(function(c){ return byCmd[c]; }).filter(function(x){ return !!x; });
-        corner = backGroupDef(grp); right = g2Word(grp) + " · " + list.length + " VERBS"; }
-      else { list = G2GROUPS.map(function(g){ return groupCellDef(g, byCmd, F, S); });
-        corner = clearDef(); right = list.length + " GROUPS"; } }
+      if (grp) { var vb = grp.verbs.map(function(c){ return byCmd[c]; }).filter(function(x){ return !!x; });
+        if (grp.part) { var ds = g2Dists(grp.part).map(function(v){ return distCellDef(grp.part, v, F, S); });
+          list = ds.concat(vb);
+          right = g2Word(grp) + " · " + ds.length + (ds.length === 1 ? " DISTRIBUTION" : " DISTRIBUTIONS")
+            + " · " + vb.length + (vb.length === 1 ? " VERB" : " VERBS"); }
+        else { list = vb; right = g2Word(grp) + " · " + vb.length + " VERBS"; }
+        corner = backGroupDef(grp); }
+      else { list = G2GROUPS().map(function(g){ return groupCellDef(g, byCmd, F, S); });
+        corner = clearDef(); right = list.length + " TOPICS"; } }
     else { list = cmdVerbs(F, S); corner = cornerOf(list);
       if (V === "g1") rowNames = G1ROWS;
       right = (list.length + 1) + " verbs"; }

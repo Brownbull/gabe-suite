@@ -173,32 +173,45 @@ one more pick in the rail's `layout` fold, directly after the layout pick — CM
 |---|---|---|
 | `rows` | the fifteen verbs in three unnamed rows, exactly as the card was first built. Nothing already ruled moves. | 1 (2 with the path grid) |
 | `g1` | *by what the verb does* — the SAME fifteen cells in the SAME places, with each row NAMED on the card: **CHOOSE · SHOW · GO**. Each name is a caption drawn ACROSS its row (`grid-column: 1 / -1`), never a column beside the grid, so the five-column template — and every square's column, width and order — is untouched. Small caps, muted ink, 12px floor, one hover card per row saying what the row does. | 2 |
-| `g2` | **the default since 2026-09-17** — *by part*: five GROUP cells (Q W E R T) + the Clear corner at slot 14, the nine slots between them blank and in place. A group opens its own verbs one level down; PATHS' three walking verbs open the path grid one level below that. | 3 |
+| `g2` | **the default since 2026-09-17** — *by part*: seven TOPIC cells (Q W E R T A S) + the Clear corner at slot 14, the seven slots between them blank and in place. A topic opens in the MIDDLE and its distributions one level down; PATHS' three walking verbs open the path grid one level below that. | 3 |
 
 The default moved from `rows` to `g2` when the standard dimension landed (`endpoint-stages.md`): the console
 positions on a TOPIC first (DATA ▸ · SECURITY ▸ · TESTS ▸ · CODE ▸) and on a LABEL second (PATHS ▸), which is
 the same order the middle panel now reads in. `rows` and `g1` stay as picks.
 
-### G2 — the groups as built
+### G2 — the seven TOPICS as built (2026-09-17, `endpoint-stages.md`)
 
-| slot | group | colour | badge (its source) | level 2 | level 3 |
+*"In the command panel, when we are positioned for data, we see the stages in the middle panel."* The card
+navigates the **topic** and the **label**; the middle SHOWS the topic. So level 1 is the label axis followed
+by the six part buttons **in their own order**, and pressing one both opens that part in the middle and drops
+the card to that topic's own level 2 — its DISTRIBUTIONS first, then whatever verbs it carries.
+
+| slot | topic | colour | badge | level 2 | level 3 |
 |---|---|---|---|---|---|
-| 0 · Q | **PATHS ▸** | `var(--accent)` | the `walk` verb's badge — the path count | Walk all paths ▸ · Show refusals ▸ · Show success ▸ · Previous exit · Next exit + **Back** | the path grid (`CMD.mode = "path"`, `CMD.only` for refusals / success) + **Back** |
-| 1 · W | **DATA ▸** | `PANELS.data.col` | the `writes` verb's badge | Show writes + **Back** | — |
-| 2 · E | **SECURITY ▸** | `PANELS.security.col` | the `pre` verb's badge — the precondition rows | Show preconditions · Show gates · Show findings + **Back** | — |
-| 3 · R | **TESTS ▸** | `PANELS.tests.col` | the `tests` verb's badge — tests for this exit | Tests for this exit · Untested exits · Declared vs produced + **Back** | — |
-| 4 · T | **CODE ▸** | `PANELS.functions.col` | none — no verb under it carries a count | Open the handler · Up to entity (hatched, as today) + **Back** | — |
+| 0 · Q | **PATHS ▸** | `var(--accent)` | 14 — the path cells it would draw | Walk a path ▸ · Show refusals ▸ · Show success ▸ · Previous exit · Next exit + **Back** | the path grid + **Back** |
+| 1 · W | **DATA ▸** | `PANELS.data.col` | `PANELS.data.count(F)` = 13 | Grounds · Flow · Ledger · Fields · Blocks · **Stages** · Show writes + **Back** | — |
+| 2 · E | **SCHEMAS ▸** | `PANELS.schemas.col` | 13 | Shapes · Fields · **Blocks** + **Back** (no verb of its own) | — |
+| 3 · R | **FUNCTIONS ▸** | `PANELS.functions.col` | 29 | Levels · Chain · Ledger · **Blocks** · Open the handler · Up to entity (hatched) + **Back** | — |
+| 4 · T | **TESTS ▸** | `PANELS.tests.col` | 27 | **Status** · Ledger · Tests for this exit · Untested exits · Declared vs produced + **Back** | — |
+| 5 · A | **WIDENING ▸** | `PANELS.widening.col` | 5 | **Ladder** · Flow + **Back** (no verb of its own) | — |
+| 6 · S | **SECURITY ▸** | `PANELS.security.col` | 6 | **Band** · Gauntlet · Show preconditions · Show gates · Show findings + **Back** | — |
 | 14 · B | the **corner** | `var(--accent)` | — | Clear at level 1, Back at levels 2 and 3 | |
 
-The verb defs are REUSED — a group cell names the verbs it holds and says "one level down"; nothing is
-retyped, and no count, name or colour is written by hand (they come from `cmdVerbs()` and `window.PANELS`).
-A group's WORD is its part's own, read from the registry and upper-cased (`PANELS.data.word` → DATA); only
-**PATHS**, which is no part, and **CODE ▸**, which §6 named apart from its part's word (Functions), carry
-one of their own. The word is drawn in the cell the way a path cell draws its name (`clbl`, at cell size
-≥ 64), so the five squares read as the six part buttons do.
+The bold distribution is the one the middle is drawing; pressing another **re-renders the middle and leaves
+the card exactly where it is**, with that cell lit. A topic cell lights while its part is the one open,
+however the part was opened — from the card or from the buttons. The head pill reads `7 TOPICS` at level 1
+and `DATA · 6 DISTRIBUTIONS · 1 VERB` at level 2, both computed. Slots 7–13 stay blank and keep their place.
 
-**The level is CMD state**: `CMD.grp` (`null` = the five groups) beside `CMD.mode` (`"cmd"` / `"path"`).
-Back at level 3 goes to the PATHS group, Back at level 2 to the five groups; `clearPath()` — the Clear
+Every word, glyph, colour, count and distribution roster is read from `window.PANELS` — only **PATHS**, which
+is no part, carries a word and a glyph of its own. The **entity card is gone** (operator 2026-09-17): this
+lab is the API endpoint kind, and an entity has its own setup, later.
+
+The verb defs are REUSED — nothing is retyped, and no count, name or colour is written by hand. A topic's
+word is drawn in the cell the way a path cell draws its name (`clbl`, at cell size ≥ 64), so the seven
+squares read as the six part buttons do.
+
+**The level is CMD state**: `CMD.grp` (`null` = the topic roster) beside `CMD.mode` (`"cmd"` / `"path"`).
+Back at level 3 goes to the PATHS topic, Back at level 2 to the roster; `clearPath()` — the Clear
 corner and **Esc** — returns to level 1 as well as clearing the selection. Hotkeys stay positional at every
 level (Q W E R T / A S D F G / Z X C V, the corner always **B**), and the corner law, the four cell states,
 the tooltip pick, the cell sizes and the colour-by pick are untouched by either grouping.
@@ -206,6 +219,6 @@ the tooltip pick, the cell sizes and the colour-by pick are untouched by either 
 Probe: the command section asserts the pick's three options and its place in the fold, that `rows` redraws
 the card it drew before either grouping existed (every square's data-cmd, x, size, state, letter and badge,
 and the grid's width), that `g1` draws three row names with no cell moved sideways, and that `g2` walks
-1 → 2 → 3 → back → back with the head pill reading `5 GROUPS` · `SECURITY · 3 VERBS` · `14 PATHS`, the floor
+1 → 2 → 3 → back → back with the head pill reading `7 TOPICS` · `DATA · 6 DISTRIBUTIONS · 1 VERB` · `14 PATHS`, the floor
 holding at every level. `--shots` adds `eplab-cmd-verbs-g1.png`, `-g2-groups.png`, `-g2-security.png`,
 `-g2-paths.png`.

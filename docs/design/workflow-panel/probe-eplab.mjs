@@ -2292,49 +2292,91 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
     ok(/SHOW/.test(h) && /middle panel/.test(h), 'a row name answers a hover with a card saying what the row does', h.replace(/\s+/g, ' ').slice(0, 90));
     await p.mouse.move(5, 1030); }
 
-  // ── G2 · level 1: five groups, the corner, nine blanks ──
-  await p.evaluate(() => { window.CMD.verbs = 'g2'; window.drawCmd(); window.drawCmdCfg(); }); await p.waitForTimeout(200);
+  // ── G2 · level 1: the TOPIC roster — PATHS (the label axis) and the six part buttons in their order ──
+  await p.evaluate(() => { window.CMD.verbs = 'g2'; window.CMD.grp = null; window.drawCmd(); window.drawCmdCfg(); }); await p.waitForTimeout(220);
+  const TOP = await p.evaluate(() => ({ order: window.PARTORDER.slice(),
+    count: window.PARTORDER.reduce((o, k) => (o[k] = String(window.PANELS[k].count(window.LABEP)), o), {}),
+    col: window.PARTORDER.reduce((o, k) => (o[k] = window.PANELS[k].col, o), {}),
+    word: window.PARTORDER.reduce((o, k) => (o[k] = window.PANELS[k].word.toUpperCase(), o), {}),
+    dists: window.PARTORDER.reduce((o, k) => (o[k] = window.PANELS[k].variants.map(v => v.key), o), {}),
+    paths: window.CMDKIT.paths(window.LABEP).length }));
   { const g = await p.$$eval('#cmd .cmdgrid .cmdcell', els => els.map((e, i) => ({ i, cmd: e.dataset.cmd || null,
       hot: (e.querySelector('.chot') || {}).textContent || null, badge: (e.querySelector('.cbadge') || {}).textContent || null,
+      lbl: (e.querySelector('.clbl') || {}).textContent || null,
       tc: e.style.getPropertyValue('--tc'), blank: e.classList.contains('st-blank') })));
     ok(g.length === 15, 'g2 level 1 keeps the fifteen places', String(g.length));
     const groups = g.filter(c => /^grp-/.test(c.cmd || ''));
-    ok(groups.map(c => c.cmd).join(',') === 'grp-paths,grp-data,grp-security,grp-tests,grp-code',
-      'five GROUP cells in slots 0–4: PATHS · DATA · SECURITY · TESTS · CODE', groups.map(c => c.cmd + '@' + c.i).join(' '));
-    ok(groups.map(c => c.hot).join('') === 'QWERT', 'lettered Q W E R T by their place on the grid', groups.map(c => c.hot).join(''));
+    ok(groups.map(c => c.cmd.slice(4)).join(',') === ['paths'].concat(TOP.order).join(','),
+      'seven TOPIC cells in slots 0–6: PATHS, then the six part buttons in their own order', groups.map(c => c.cmd + '@' + c.i).join(' '));
+    ok(groups.map(c => c.hot).join('') === 'QWERTAS', 'lettered Q W E R T A S by their place on the grid', groups.map(c => c.hot).join(''));
     ok(g[14].cmd === 'clear' && g[14].hot === 'B', 'and the corner is Clear at slot 14, lettered B', JSON.stringify(g[14]));
-    ok(g.filter(c => c.blank).length === 9, 'the nine slots between them keep their place, empty', String(g.filter(c => c.blank).length));
-    const want = await p.evaluate(() => ({ data: window.PANELS.data.col, security: window.PANELS.security.col,
-      tests: window.PANELS.tests.col, code: window.PANELS.functions.col }));
-    const by = {}; groups.forEach(c => { by[c.cmd.slice(4)] = c.tc; });
-    ok(by.data === want.data && by.security === want.security && by.tests === want.tests && by.code === want.code,
-      'each group wears its PART\'s own colour, read from window.PANELS — never a pasted hex', JSON.stringify(by));
+    ok(g.filter(c => c.blank).length === 7, 'the seven slots between them keep their place, empty', String(g.filter(c => c.blank).length));
+    const by = {}, badges = {}, words = {};
+    groups.forEach(c => { const k = c.cmd.slice(4); by[k] = c.tc; badges[k] = c.badge; words[k] = c.lbl; });
+    ok(TOP.order.every(k => by[k] === TOP.col[k]),
+      'each topic wears its PART\'s own colour, read from window.PANELS — never a pasted hex', JSON.stringify(by));
     ok(by.paths === 'var(--accent)', 'and PATHS, which is no part, wears the accent', by.paths);
-    const badges = {}; groups.forEach(c => { badges[c.cmd.slice(4)] = c.badge; });
-    ok(badges.paths === String(N.paths) && badges.security === String(N.pre),
-      'the group badges are the badges their own verbs carry — PATHS the path count, SECURITY the precondition rows', JSON.stringify(badges));
-    const words = await p.$$eval('#cmd .cmdcell[data-cmd^="grp-"] .clbl', els => els.map(e => e.textContent));
-    const wantW = await p.evaluate(() => ['data', 'security', 'tests'].map(k => window.PANELS[k].word.toUpperCase()));
-    ok(words.join(',') === 'PATHS,' + wantW.join(',') + ',CODE',
-      'each group is named by its part\'s own word from the registry — PATHS and CODE, which are not a part\'s word, are the two the map named', words.join(','));
+    ok(TOP.order.every(k => badges[k] === TOP.count[k]),
+      'every topic badge is that part\'s OWN count — the same number its button carries', JSON.stringify({ badges, want: TOP.count }));
+    ok(badges.paths === String(TOP.paths), `and PATHS counts the ${TOP.paths} cells it would draw`, badges.paths);
+    ok(TOP.order.every(k => words[k] === TOP.word[k]) && words.paths === 'PATHS',
+      'each topic is named by its part\'s own word from the registry — PATHS is the one word the card names itself', JSON.stringify(words));
     const head = await p.$eval('#cmd .cmdhd .sechd .cnt', e => e.textContent);
-    ok(head === '5 GROUPS', 'the head pill says 5 GROUPS', head);
-    await p.hover('#cmd .cmdcell[data-cmd="grp-security"]'); await p.waitForTimeout(160);
+    ok(head === '7 TOPICS', 'the head pill says 7 TOPICS', head);
+    await p.hover('#cmd .cmdcell[data-cmd="grp-security"]'); await p.waitForTimeout(170);
     const hc = await p.evaluate(() => document.getElementById('hover').innerText.replace(/\s+/g, ' '));
-    ok(/one level down/i.test(hc) && /show gates/i.test(hc), 'a group card lists the verbs it holds and says one level down', hc.slice(0, 110));
+    ok(/one level down/i.test(hc) && /show gates/i.test(hc) && /middle panel/i.test(hc),
+      'a topic card says it opens the middle AND lists what sits one level down', hc.slice(0, 130));
     await p.mouse.move(5, 1030); }
 
-  // ── G2 · level 2: one group's verbs, and Back ──
-  await p.click('#cmd .cmdcell[data-cmd="grp-security"]'); await p.waitForTimeout(200);
-  { const g = await p.$$eval('#cmd .cmdgrid .cmdcell', els => els.filter(e => e.dataset.cmd).map(e => e.dataset.cmd + '/' + ((e.querySelector('.chot') || {}).textContent || '')));
-    ok(g.join(' ') === 'pre/Q gates/W findings/E back/B', 'SECURITY ▸ draws its three verbs and the Back corner', g.join(' '));
-    ok(await p.evaluate(() => window.CMD.grp) === 'security', 'and the level is CMD state, not a redraw trick');
-    ok(await p.$eval('#cmd .cmdhd .sechd .cnt', e => e.textContent) === 'SECURITY · 3 VERBS', 'the head pill names the group and counts its verbs',
-      await p.$eval('#cmd .cmdhd .sechd .cnt', e => e.textContent));
+  // ── PRESSING A TOPIC does two things: the MIDDLE opens it, and the card drops to its level 2 ──
+  await p.evaluate(() => window.showVariant('data', window.PANELS.data.defaultVariant)); await p.waitForTimeout(320);
+  await p.click('#cmd .cmdcell[data-cmd="grp-data"]'); await p.waitForTimeout(360);
+  { ok(await p.$eval('#panel', e => e.dataset.tab) === 'data', 'DATA ▸ opens the Data topic in the middle panel');
+    const live = await p.evaluate(() => window.PANELVAR('data'));
+    ok(live === 'stages', 'reading the Data topic on the distribution it defaults to — the stages', live);
+    const g = await p.$$eval('#cmd .cmdgrid .cmdcell', els => els.filter(e => e.dataset.cmd)
+      .map(e => e.dataset.cmd + '/' + ((e.querySelector('.chot') || {}).textContent || '') + (e.classList.contains('on') ? '*' : '')));
+    const want = TOP.dists.data.map((k, i) => 'var-data-' + k + '/' + 'QWERTASDFGZXCVB'[i] + (k === live ? '*' : ''))
+      .concat(['writes/' + 'QWERTASDFGZXCVB'[TOP.dists.data.length], 'back/B']);
+    ok(g.join(' ') === want.join(' '),
+      `and the card draws its ${TOP.dists.data.length} distributions, then its one verb, then Back — the live one lit`, g.join(' '));
+    ok(await p.$eval('#cmd .cmdhd .sechd .cnt', e => e.textContent) === 'DATA · 6 DISTRIBUTIONS · 1 VERB',
+      'the head pill counts both, computed', await p.$eval('#cmd .cmdhd .sechd .cnt', e => e.textContent));
     const fl = await cmdFloorAt(); ok(fl.under === 0, 'level 2 holds the 12px floor', JSON.stringify(fl)); }
-  await p.click('#cmd .cmdcell[data-cmd="back"]'); await p.waitForTimeout(180);
-  ok(await p.$$eval('#cmd .cmdcell[data-cmd^="grp-"]', els => els.length) === 5 && await p.evaluate(() => window.CMD.grp) === null,
-    'Back returns to the five groups');
+  // a distribution cell re-renders the MIDDLE and leaves the card where it is
+  await p.click('#cmd .cmdcell[data-cmd="var-data-blocks"]'); await p.waitForTimeout(360);
+  { ok(await p.$eval('#panel', e => e.dataset.variant) === 'blocks', 'pressing a distribution re-renders the middle in it');
+    ok(await p.evaluate(() => window.CMD.grp) === 'data', 'and the card stays at that topic\'s level 2');
+    ok(await p.$eval('#cmd .cmdcell[data-cmd="var-data-blocks"]', e => e.classList.contains('on')), 'with the cell it drew now lit');
+    ok(await p.$$eval('#cmd .cmdcell[data-cmd^="var-data-"].on', els => els.length) === 1, 'and only that one');
+    await p.evaluate(() => window.showVariant('data', 'stages')); await p.waitForTimeout(320); }
+  // a topic with no verbs of its own keeps the slots blank, in place
+  await p.click('#cmd .cmdcell[data-cmd="back"]'); await p.waitForTimeout(200);
+  await p.click('#cmd .cmdcell[data-cmd="grp-schemas"]'); await p.waitForTimeout(360);
+  { ok(await p.$eval('#panel', e => e.dataset.tab) === 'schemas', 'SCHEMAS ▸ opens the Schemas topic in the middle');
+    const g = await p.$$eval('#cmd .cmdgrid .cmdcell', els => els.filter(e => e.dataset.cmd).map(e => e.dataset.cmd));
+    ok(g.join(' ') === TOP.dists.schemas.map(k => 'var-schemas-' + k).join(' ') + ' back',
+      `its ${TOP.dists.schemas.length} distributions and Back — it carries no verb of its own`, g.join(' '));
+    ok(await p.$eval('#cmd .cmdhd .sechd .cnt', e => e.textContent) === 'SCHEMAS · 3 DISTRIBUTIONS · 0 VERBS',
+      'and the head pill says so out loud', await p.$eval('#cmd .cmdhd .sechd .cnt', e => e.textContent));
+    ok((await p.$$('#cmd .cmdcell.st-blank')).length === 15 - TOP.dists.schemas.length - 1,
+      'the empty slots keep their place — the corner never moves'); }
+
+  // ── G2 · level 2 of a topic that DOES carry verbs ──
+  await p.click('#cmd .cmdcell[data-cmd="back"]'); await p.waitForTimeout(200);
+  await p.click('#cmd .cmdcell[data-cmd="grp-security"]'); await p.waitForTimeout(360);
+  { const g = await p.$$eval('#cmd .cmdgrid .cmdcell', els => els.filter(e => e.dataset.cmd).map(e => e.dataset.cmd + '/' + ((e.querySelector('.chot') || {}).textContent || '')));
+    ok(g.join(' ') === TOP.dists.security.map((k, i) => 'var-security-' + k + '/' + 'QWERTASDFGZXCVB'[i]).join(' ')
+      + ' pre/E gates/R findings/T back/B',
+      'SECURITY ▸ draws its distributions, then its three verbs, then the Back corner', g.join(' '));
+    ok(await p.evaluate(() => window.CMD.grp) === 'security', 'and the level is CMD state, not a redraw trick');
+    ok(await p.$eval('#cmd .cmdhd .sechd .cnt', e => e.textContent) === 'SECURITY · 2 DISTRIBUTIONS · 3 VERBS', 'the head pill names the topic and counts both',
+      await p.$eval('#cmd .cmdhd .sechd .cnt', e => e.textContent));
+    const fl = await cmdFloorAt(); ok(fl.under === 0, 'it holds the 12px floor', JSON.stringify(fl)); }
+  await p.click('#cmd .cmdcell[data-cmd="back"]'); await p.waitForTimeout(200);
+  ok(await p.$$eval('#cmd .cmdcell[data-cmd^="grp-"]', els => els.length) === 7 && await p.evaluate(() => window.CMD.grp) === null,
+    'Back returns to the seven topics');
 
   // ── G2 · level 3: the paths, and back up one level at a time ──
   await p.click('#cmd .cmdcell[data-cmd="grp-paths"]'); await p.waitForTimeout(180);
@@ -2351,7 +2393,7 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
     ok(g.join(',') === 'walk,refusals,success,prev,next,back' && await p.evaluate(() => window.CMD.grp) === 'paths',
       'Back from the paths goes UP ONE level, to the PATHS group — not all the way out', g.join(',')); }
   await p.click('#cmd .cmdcell[data-cmd="back"]'); await p.waitForTimeout(180);
-  ok(await p.$$eval('#cmd .cmdcell[data-cmd^="grp-"]', els => els.length) === 5, 'and Back again is level 1 — three levels, never a fourth');
+  ok(await p.$$eval('#cmd .cmdcell[data-cmd^="grp-"]', els => els.length) === 7, 'and Back again is level 1 — three levels, never a fourth');
   // Esc from the deepest level lands on level 1 with nothing in force
   await p.click('#cmd .cmdcell[data-cmd="grp-paths"]'); await p.waitForTimeout(160);
   await p.click('#cmd .cmdcell[data-cmd="walk"]'); await p.waitForTimeout(180);
@@ -2359,12 +2401,17 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
   await p.evaluate(() => document.body.focus()); await p.keyboard.press('Escape'); await p.waitForTimeout(220);
   { const st = await p.evaluate(() => ({ grp: window.CMD.grp, mode: window.CMD.mode, path: window.SEL.path,
       groups: document.querySelectorAll('#cmd .cmdcell[data-cmd^="grp-"]').length }));
-    ok(st.grp === null && st.mode === 'cmd' && st.path === null && st.groups === 5,
-      'Esc from level 3 clears the selection AND returns the card to the five groups', JSON.stringify(st)); }
+    ok(st.grp === null && st.mode === 'cmd' && st.path === null && st.groups === 7,
+      'Esc from level 3 clears the selection AND returns the card to the seven topics', JSON.stringify(st)); }
   if (shotsAt) { fs.mkdirSync(shotsAt, { recursive: true });
     const shot = async (name) => { await p.mouse.move(5, 1030); await p.evaluate(() => window.hoverHide()); await p.waitForTimeout(200);
       await (await p.$('#cmd')).screenshot({ path: path.join(shotsAt, name) }); };
     await shot('eplab-cmd-verbs-g2-groups.png');
+    await p.click('#cmd .cmdcell[data-cmd="grp-data"]'); await p.waitForTimeout(320);
+    await shot('eplab-cmd-verbs-g2-data.png');
+    await p.click('#cmd .cmdcell[data-cmd="back"]'); await p.click('#cmd .cmdcell[data-cmd="grp-schemas"]'); await p.waitForTimeout(320);
+    await shot('eplab-cmd-verbs-g2-schemas.png');
+    await p.click('#cmd .cmdcell[data-cmd="back"]'); await p.waitForTimeout(160);
     await p.click('#cmd .cmdcell[data-cmd="grp-security"]'); await p.waitForTimeout(180);
     await shot('eplab-cmd-verbs-g2-security.png');
     await p.click('#cmd .cmdcell[data-cmd="back"]'); await p.click('#cmd .cmdcell[data-cmd="grp-paths"]'); await p.waitForTimeout(160);

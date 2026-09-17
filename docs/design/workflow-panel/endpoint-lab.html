@@ -1989,7 +1989,7 @@
   /* ── tabs: SC2 command buttons — a square per part, icon + NAME + the count badge (operator 2026-09-11).
      The face is a VALLEY: the part's colour is strongest at the rim and falls away toward the middle. ── */
   var TABS = document.getElementById("tabs"), PANEL = document.getElementById("panel"), VARBAR = document.getElementById("varbar"), cur = null, curVar = {};
-  var order = ["data", "schemas", "functions", "tests", "widening", "security"];   /* the six PARTS — data and schemas split again (operator 2026-09-12) */
+  var order = window.PARTORDER = ["data", "schemas", "functions", "tests", "widening", "security"];   /* the six PARTS — data and schemas split again (operator 2026-09-12) */
   /* ══ THE PART BUTTONS — every dial the operator asked for (2026-09-11) ══════════════════════
      colour intensity · which colours · the pattern inside · the glyph's size and how it is shown
      (inline · a watermark · a watermark that bleeds past the button's edges) · the count's size and
@@ -2256,7 +2256,7 @@
   RAILBLK.forEach(function(r){ foldable(r[0]); if (r[0] !== OPENBLK) document.getElementById(r[0]).classList.add("min"); });
 
   /* ── the variant bar: one panel, several DISTRIBUTIONS — proposals to compare, not settings ── */
-  var VARICO = { shapes: "drill", grounds: "entity", flow: "drill", ledger: "table", fields: "schema", blocks: "layers", stages: "journey", levels: "layers", chain: "merge", status: "info", ladder: "up", band: "shield", gauntlet: "drill" };
+  var VARICO = window.VARICO = { shapes: "drill", grounds: "entity", flow: "drill", ledger: "table", fields: "schema", blocks: "layers", stages: "journey", levels: "layers", chain: "merge", status: "info", ladder: "up", band: "shield", gauntlet: "drill" };
   function drawVars(){ var PC = document.getElementById("partcfg"); if (!PC) return; PC.innerHTML = "";
     order.forEach(function(k){ var P = window.PANELS[k];
       var row = E("div", { class: "prow" + (cur === k ? " on" : "") });
@@ -2294,6 +2294,9 @@
        rest per choice 8 (dim .28 · filter · outline). A post-render pass, never a second renderer. */
     if (window.CMDKIT) window.CMDKIT.applyPath(PANEL, k, window.CMDKIT.pathById(F, (window.SEL || {}).path));
     drawPortrait();
+    /* the card is POSITIONED on a topic (2026-09-17), so it lights the part that is open — whichever way
+       the part was opened, from the card or from the buttons */
+    if (window.drawCmd) window.drawCmd();
     readBox(); }
   /* THE PORTRAIT (operator 2026-09-12): a panel publishes `portrait(box, F, S)` and the stage draws it
      beside the picture. Selection is one call — the panel says what was picked, the portrait reads it. */

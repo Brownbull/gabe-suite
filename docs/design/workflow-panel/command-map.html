@@ -53,7 +53,7 @@
 </style>
 <div id="page">
   <h1>The command panel — what is new, and how to move through it</h1>
-  <p class="lede">A map of the endpoint lab after the command panel landed (commit <code>b2d41b1</code>). Counts on this page are read from <code>_lab-ep.js</code> when it opens; the option lists and defaults are copied from the lab's source at that commit. Read it top to bottom: the page, then the two axes, then the steps, then the dials.</p>
+  <p class="lede">A map of the endpoint lab after the command panel landed (commit <code>b2d41b1</code>; the by-topic card became the default on 2026-09-17). Counts on this page are read from <code>_lab-ep.js</code> when it opens; the option lists and defaults are copied from the lab's source at that commit. Read it top to bottom: the page, then the two axes, then the steps, then the dials.</p>
 
   <h2>1 · The page — what was there, what is new</h2>
   <div class="lay">
@@ -147,13 +147,13 @@
         <i class="g3">tests for exit<small>Z · go</small></i><i class="g3">untested exits<small>X · go</small></i><i class="g3">open handler<small>C · go</small></i><i class="g3 sub">up to entity<small>V · hatched</small></i><i class="corner">Clear<small>B · corner</small></i>
       </div>
       <p class="note">Row 1 chooses (a path or an exit), row 2 shows a fact inside a part, row 3 goes somewhere. Depth: <span class="depth">2</span>. The rows already sit like this; what is missing is the row NAME on the card.</p></div>
-    <div class="box"><b>G2 · by part — the card mirrors the six buttons</b>
+    <div class="box"><b>G2 · by topic — the card IS the part buttons (built, the default)</b>
       <div class="card">
-        <i class="g1">PATHS ▸<small>Q · 14 paths</small></i><i class="g4">DATA ▸<small>W · writes · commit</small></i><i class="g2">SECURITY ▸<small>E · preconditions · gates · findings · flag</small></i><i class="g3">TESTS ▸<small>R · for exit · untested · declared</small></i><i class="g5">CODE ▸<small>T · handler · up</small></i>
-        <i class="sub"></i><i class="sub"></i><i class="sub"></i><i class="sub"></i><i class="sub"></i>
+        <i class="g1">PATHS ▸<small>Q · the label</small></i><i class="g4">DATA ▸<small>W · 6 distributions · 1 verb</small></i><i class="g5">SCHEMAS ▸<small>E · 3 distributions</small></i><i class="g5">FUNCTIONS ▸<small>R · 4 · 2 verbs</small></i><i class="g3">TESTS ▸<small>T · 2 · 3 verbs</small></i>
+        <i class="g5">WIDENING ▸<small>A · 2 distributions</small></i><i class="g2">SECURITY ▸<small>S · 2 · 3 verbs</small></i><i class="sub"></i><i class="sub"></i><i class="sub"></i>
         <i class="sub"></i><i class="sub"></i><i class="sub"></i><i class="sub"></i><i class="corner">Clear<small>B · corner</small></i>
       </div>
-      <p class="note">Level 1 = five groups that ARE the parts (plus the corner). Level 2 = that group's verbs, with Back. Level 3 = the path cells under PATHS ▸. Depth: <span class="depth">3</span> — the ceiling you named, never past it. This is also the shape in which "move the part buttons into the command section" stops being a move: the group squares are the part buttons.</p></div>
+      <p class="note">Level 1 = PATHS and the six topics in the part buttons' order (plus the corner); pressing a topic OPENS it in the middle. Level 2 = that topic's distributions (pressing one changes the middle) and its verbs, with Back. Level 3 = the path cells under PATHS ▸ — the label. Depth: <span class="depth">3</span>, never past it. Built 2026-09-17 as the card's default: the command panel navigates topic and label, the middle shows the result.</p></div>
   </div>
   <p class="note" style="margin-top:10px">Read the two side by side on this page first; say "build G1", "build G2" or both, and they become the <code>verbs</code> pick in the rail beside the layout you already have.</p>
 </div>
