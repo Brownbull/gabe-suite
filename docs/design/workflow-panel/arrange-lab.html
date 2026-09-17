@@ -29,6 +29,7 @@ html,body{ margin:0; padding:0; background:var(--bg); color:var(--ink); font-fam
   padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--nav-bg); }
 .tbgrp{ display:flex; align-items:center; gap:5px; }
 .tbl{ font:700 12px/1 var(--font-mono); text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-right:3px; }
+.tbmid{ margin:0 auto; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
 .tbright{ margin-left:auto; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
 .ib{ display:inline-flex; align-items:center; justify-content:center; gap:5px; min-width:30px; height:26px; padding:0 8px;
   font:700 12px/1 var(--font-mono); color:var(--muted); background:var(--chip-bg); border:1px solid var(--line);
@@ -318,15 +319,19 @@ body.clock-paused *{ animation-play-state:paused !important; }
   <div class="topbar">
     <div class="tbgrp"><span class="tbl">middle</span><span id="dial"></span></div>
     <div class="tbgrp"><span class="tbl">clock</span><span id="clockbar"></span></div>
-    <div class="tbright">
+    <!-- three zones (operator 2026-09-17): what SIZES the board on the left · the PRESETS in the middle · the
+         LAYOUT actions (copy · paste · load · reset) on the right -->
+    <div class="tbmid" id="tbpresets">
+      <span class="tbl">presets</span>
+      <button class="ib" id="btnfirst">the operator's first cut</button>
+      <button class="ib" id="btntoday">today</button>
+      <button class="ib" id="btnproposed">proposed</button>
+    </div>
+    <div class="tbright" id="tbactions">
       <button class="ib" id="btncopy">COPY</button>
       <input class="pastebox" id="paste" placeholder="paste an arrange line here…" spellcheck="false">
       <button class="ib" id="btnload">LOAD</button>
       <button class="ib" id="btnreset">RESET</button>
-      <button class="ib" id="btnfirst">the operator's first cut</button>
-      <span class="tbl">presets</span>
-      <button class="ib" id="btntoday">today</button>
-      <button class="ib" id="btnproposed">proposed</button>
     </div>
   </div>
   <div id="copyout" hidden></div>
@@ -376,12 +381,23 @@ function sum(a){ return a.reduce(function(x, y){ return x + y; }, 0); }
 
 /* ── the hover card: the station's .jdcolpop shape, the four sections the operator asked for ── */
 var HV = document.getElementById("hover");
+/* the card never covers the thing it describes (operator 2026-09-17): try right, left, below, above — the first
+   place that fits inside the window WITHOUT touching the anchor's box wins; the last resort is below, clamped */
+window.hoverPlace = function(r, w, h, W, H){
+  var G = 8, cands = [
+    { x: r.right + G, y: r.top }, { x: r.left - w - G, y: r.top },
+    { x: r.left, y: r.bottom + G }, { x: r.left, y: r.top - h - G } ];
+  function clampX(x){ return Math.min(W - w - G, Math.max(G, x)); }
+  function clampY(y){ return Math.min(H - h - G, Math.max(G, y)); }
+  for (var i = 0; i < cands.length; i++) { var c = cands[i], x = clampX(c.x), y = clampY(c.y);
+    var apart = x >= r.right + 2 || x + w <= r.left - 2 || y >= r.bottom + 2 || y + h <= r.top - 2;
+    if (apart) return { x: x, y: y, side: ["right", "left", "below", "above"][i] }; }
+  return { x: clampX(r.left), y: clampY(r.bottom + G), side: "below-clamped" }; };
 window.hoverShow = function(anchor, html){
   HV.innerHTML = html; HV.hidden = false;
   var r = anchor.getBoundingClientRect(), w = HV.offsetWidth, h = HV.offsetHeight;
-  var x = Math.min(window.innerWidth - w - 8, Math.max(8, r.right + 8)), y = r.top;
-  if (y + h > window.innerHeight - 8) y = Math.max(8, window.innerHeight - h - 8);
-  HV.style.left = x + "px"; HV.style.top = y + "px";
+  var at = window.hoverPlace(r, w, h, window.innerWidth, window.innerHeight);
+  HV.style.left = at.x + "px"; HV.style.top = at.y + "px"; HV.dataset.side = at.side;
   LAST.card = html; drawDocks(); };
 window.hoverHide = function(){ HV.hidden = true; };
 window.hoverBind = function(e, fn){

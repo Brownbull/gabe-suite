@@ -106,6 +106,26 @@ ok(N.tiles === 20, 'the registry holds every dimension the brief names, plus the
 { await p.hover('.mnode[data-node="security"]');
   await p.waitForTimeout(150);
   const card = await p.$eval('#hover', e => ({ hidden: e.hidden, t: e.innerText }));
+  // ── THE CARD NEVER COVERS ITS ANCHOR (operator 2026-09-17) — measured on three anchors at the edges of the page ──
+  { const probe = async (sel) => { const el = await p.$(sel); if (!el) return { sel, missing: true };
+      await el.hover(); await p.waitForTimeout(140);
+      return await p.evaluate(sel => { const a = document.querySelector(sel).getBoundingClientRect(), c = document.getElementById('hover').getBoundingClientRect();
+        const apart = c.left >= a.right + 1 || c.right <= a.left - 1 || c.top >= a.bottom + 1 || c.bottom <= a.top - 1;
+        const inside = c.left >= 0 && c.top >= 0 && c.right <= innerWidth && c.bottom <= innerHeight;
+        return { sel, apart, inside, side: document.getElementById('hover').dataset.side }; }, sel); };
+    for (const sel of ['#btnproposed', '#dial .ib:last-child', '.mnode[data-node="widening"]']) {
+      const r = await probe(sel); if (r.missing) continue;
+      ok(r.apart && r.inside, 'the hover card sits clear of ' + sel + ' and inside the window', JSON.stringify(r)); }
+    await p.mouse.move(2, 2); await p.waitForTimeout(120); }
+  // ── THE TOP BAR IN THREE ZONES: sizes + clock left · presets middle · copy/paste/load/reset right ──
+  { const z = await p.evaluate(() => { const x = s => document.querySelector(s).getBoundingClientRect();
+      return { dial: x('#dial').right, presetsL: x('#tbpresets').left, presetsR: x('#tbpresets').right, actionsL: x('#tbactions').left,
+               presets: [...document.querySelectorAll('#tbpresets .ib')].map(b => b.id), actions: [...document.querySelectorAll('#tbactions .ib, #tbactions input')].map(b => b.id),
+               bar: x('.topbar') }; });
+    ok(z.dial < z.presetsL && z.presetsR < z.actionsL, 'sizes and clock on the left, presets in the middle, the layout actions on the right', JSON.stringify([z.dial, z.presetsL, z.presetsR, z.actionsL].map(Math.round)));
+    const mid = (z.presetsL + z.presetsR) / 2, barMid = (z.bar.left + z.bar.right) / 2;
+    ok(Math.abs(mid - barMid) < z.bar.width * 0.2, 'the presets sit near the middle of the bar', Math.round(mid) + ' vs ' + Math.round(barMid));
+    ok(z.presets.join(',') === 'btnfirst,btntoday,btnproposed' && z.actions.join(',') === 'btncopy,paste,btnload,btnreset', 'the groups hold exactly the presets and the actions', z.presets.join(',') + ' | ' + z.actions.join(',')); }
   ok(!card.hidden, 'hovering a node opens the lab hover card');
   const low = card.t.toLowerCase();
   for (const s of ['what happens here', 'kind', 'on this door', 'use it when'])
