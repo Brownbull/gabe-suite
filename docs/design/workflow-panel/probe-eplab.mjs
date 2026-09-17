@@ -1881,13 +1881,25 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
   // ── Walk a path ▸ swaps the grid, and the wrong-question cell keeps its place ──
   await p.click('#cmd .cmdcell[data-cmd="walk"]'); await p.waitForTimeout(160);
   ok((await p.$$('#cmd .cmdcell[data-path]')).length === N.paths, 'Walk a path ▸ draws exactly one cell per path the feed carries');
-  ok((await p.$$('#cmd .cmdcell')).length === 15, 'the grid keeps its fifteen places — the fifteenth is the wrong question, blank');
-  ok((await p.$$('#cmd .cmdcell.st-blank')).length === 15 - N.paths, 'the blank cells are the slots no path fills');
+  ok((await p.$$('#cmd .cmdcell')).length === 15, 'the grid keeps its fifteen places — fourteen paths and the corner');
+  ok((await p.$$('#cmd .cmdcell.st-blank')).length === 15 - N.paths - 1, 'the blank cells are the slots neither a path nor the corner fills');
+  // ── THE CORNER (operator 2026-09-17, first look): the bottom-right cell is cancel/back in EVERY mode of the card ──
+  { const last = await p.$eval('#cmd .cmdgrid .cmdcell:last-child', e => ({ cmd: e.dataset.cmd, hot: (e.querySelector('.chot') || {}).textContent, idx: [...e.parentNode.children].indexOf(e), n: e.parentNode.children.length }));
+    ok(last.cmd === 'back' && last.hot === 'B' && last.idx === last.n - 1, 'in the path grid the bottom-right cell is BACK, lettered B', JSON.stringify(last)); }
+  await p.evaluate(id => window.selectPath(id), N.firstRun); await p.waitForTimeout(200);
+  await p.click('#cmd .cmdcell[data-cmd="back"]'); await p.waitForTimeout(160);
+  ok(await p.evaluate(() => window.CMD.mode) === 'cmd' && await p.evaluate(() => window.SEL.path) === N.firstRun, 'Back returns to the verbs and KEEPS the path in force — cancel is not clear');
+  { const last = await p.$eval('#cmd .cmdgrid .cmdcell:last-child', e => ({ cmd: e.dataset.cmd, hot: (e.querySelector('.chot') || {}).textContent }));
+    ok(last.cmd === 'clear' && last.hot === 'B', 'on the verb card the bottom-right cell is CLEAR, lettered B', JSON.stringify(last)); }
+  await p.evaluate(() => { window.clearPath(); window.CMD.scope = 'entity'; window.drawCmd(); }); await p.waitForTimeout(160);
+  ok(await p.$eval('#cmd .cmdgrid .cmdcell:last-child', e => e.dataset.cmd) === 'clear', 'on the entity card the bottom-right cell is CLEAR too');
+  await p.evaluate(() => { window.CMD.scope = 'kind'; window.CMD.mode = 'path'; window.CMD.sub = 'merged'; window.drawCmd(); }); await p.waitForTimeout(160);
   { const blank = await p.$eval('#cmd .cmdcell.st-blank', e => ({ svg: e.querySelectorAll('svg').length, dis: e.disabled, bg: getComputedStyle(e).backgroundImage }));
     ok(blank.svg === 0 && blank.dis === true && blank.bg === 'none', 'a blank cell draws nothing and cannot be clicked — it only holds the place', JSON.stringify(blank)); }
   await p.evaluate(() => { window.CMD.wrong = 'collapsed'; window.drawCmd(); }); await p.waitForTimeout(140);
-  ok((await p.$$('#cmd .cmdcell')).length === N.paths, 'collapsed closes the grid over the wrong question — the count drops to the paths');
-  await p.evaluate(() => { window.CMD.wrong = 'blank'; window.drawCmd(); }); await p.waitForTimeout(140);
+  { const n = (await p.$$('#cmd .cmdcell')).length, merged = (await p.$$('#cmd .cmdcell[data-path]')).length, last = await p.$eval('#cmd .cmdgrid .cmdcell:last-child', e => e.dataset.cmd);
+    ok(n === Math.ceil((merged + 1) / 5) * 5 && n < 15 && last === 'back', 'collapsed drops the empty ROWS, never the corner — the last cell is still Back', n + ' cells · ' + merged + ' paths · last ' + last); }
+  await p.evaluate(() => { window.CMD.wrong = 'blank'; window.CMD.sub = 'split'; window.drawCmd(); }); await p.waitForTimeout(140);
   { const nm = await p.$$eval('#cmd .cmdcell[data-path] .clbl', els => els.map(e => e.textContent));
     const want = await p.evaluate(() => window.CMDKIT.paths(window.LABEP).map(c => window.CMDKIT.pathName(c.lead)));
     ok(nm.join('|') === want.join('|'), 'each path cell is labelled by the name the `names` pick chose', nm.join('|').slice(0, 120)); }
@@ -2183,8 +2195,11 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
   await p.evaluate(() => document.body.focus());
   await p.keyboard.press('q'); await p.waitForTimeout(200);
   ok((await p.$$('#cmd .cmdcell[data-path]')).length === N.paths, 'Q walks the paths from the keyboard');
+  await p.evaluate(id => window.selectPath(id), N.firstRun); await p.waitForTimeout(200);
   await p.keyboard.press('b'); await p.waitForTimeout(200);
-  ok(await p.evaluate(() => window.CMD.mode) === 'cmd', 'B clears, the same as Esc — even in the path grid, where no cell carries the letter');
+  ok(await p.evaluate(() => window.CMD.mode) === 'cmd' && await p.evaluate(() => window.SEL.path) === N.firstRun, 'B in the path grid is the Back corner — up to the verbs, the path still in force');
+  await p.keyboard.press('b'); await p.waitForTimeout(200);
+  ok(await p.evaluate(() => window.SEL.path) === null, 'B on the verb card is the Clear corner — the same as Esc');
   { await p.evaluate(() => { const i = document.createElement('input'); i.id = '__t'; document.body.append(i); i.focus(); });
     await p.keyboard.press('q'); await p.waitForTimeout(160);
     ok((await p.$$('#cmd .cmdcell[data-path]')).length === 0, 'a hotkey never fires while an input has focus');

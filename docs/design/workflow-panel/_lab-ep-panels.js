@@ -2427,12 +2427,24 @@
         plain: "one step out of this door — the three levels above it are named here" }); },
       cap: function(){ return (F.identity.above || []).map(function(a){ return a.label; }).join(" ↑ ") + " — hatched, the lab has no graph"; },
       act: null });
-    L.push({ cmd: "clear", ico: "skip", verb: "Clear", state: "lit", col: "var(--accent)",
-      card: function(){ return cmdc({ title: "clear", value: "Esc", icon: "skip", color: "var(--accent)",
-        rows: [["clears", "the path, the exit and the case"], ["key", "Esc, or B"]],
-        plain: "put everything back — no path in force, every part unmarked" }); },
-      cap: function(){ return "clear the selection — Esc"; }, act: function(){ window.clearPath(); } });
+    L.push(clearDef());
     return L; }
+  /* the CORNER cells — bottom-right, in every mode of the card (path-map-status.md §6: SC2's cancel corner,
+     "two screen edges, the largest target, the highest click frequency"; operator 2026-09-17 on first look:
+     the card had dropped it in its own sub-menu). Clear on the verb and entity cards; Back on the path grid. */
+  function clearDef(){ return { cmd: "clear", ico: "skip", verb: "Clear", state: "lit", col: "var(--accent)",
+      card: function(){ return cmdc({ title: "clear", value: "Esc", icon: "skip", color: "var(--accent)",
+        rows: [["clears", "the path, the exit and the case"], ["key", "Esc, or B"], ["place", "bottom-right — the corner keeps its place in every mode of the card"]],
+        plain: "put everything back — no path in force, every part unmarked" }); },
+      cap: function(){ return "clear the selection — Esc"; }, act: function(){ window.clearPath(); } }; }
+  function backDef(){ return { cmd: "back", ico: "up", verb: "Back", state: "lit", col: "var(--accent)",
+      card: function(){ return cmdc({ title: "back", value: "B", icon: "up", color: "var(--accent)",
+        rows: [["returns to", "the fifteen verbs"], ["keeps", "the path in force — Esc is what clears it"], ["place", "bottom-right — the corner keeps its place in every mode of the card"]],
+        plain: "one level up — the verb card again, nothing cleared" }); },
+      cap: function(){ return "back to the verbs — B (Esc clears)"; },
+      act: function(){ window.CMD.mode = "cmd"; window.CMD.only = null; window.drawCmd(); } }; }
+  /* lift the clear cell out of a verb list so the grid can pin it to the corner; a list without one gets one */
+  function cornerOf(list){ for (var i = 0; i < list.length; i++) if (list[i].cmd === "clear") return list.splice(i, 1)[0]; return clearDef(); }
   function uniq(a){ var o = {}, r = []; a.forEach(function(x){ if (x != null && !o[x]) { o[x] = 1; r.push(x); } }); return r; }
 
   /* ── the ENTITY card (choice 3): the owning entity's endpoints. The feed carries the COUNT
@@ -2453,26 +2465,29 @@
     return L; }
 
   /* ── LAYOUT 1 · the CARD: a 3×5 grid of SC2 command squares ── */
-  function cmdGrid(host, list, F, S){ var C = cmdCfg(), SLOTS = 15;
+  function cmdGrid(host, list, F, S, corner){ var C = cmdCfg(), COLS = 5, SLOTS = 15;
     var g = E("div", { class: "cmdgrid" });
     g.style.setProperty("--cz", (C.size || 64) + "px");
-    var n = C.wrong === "collapsed" ? list.length : Math.max(SLOTS, Math.ceil(list.length / SLOTS) * SLOTS);
-    var hots = hotLetters(list);
+    var need = list.length + (corner ? 1 : 0);
+    /* `collapsed` drops empty ROWS; it never moves the corner off the bottom-right */
+    var n = C.wrong === "collapsed" ? Math.max(COLS, Math.ceil(need / COLS) * COLS) : Math.max(SLOTS, Math.ceil(need / SLOTS) * SLOTS);
+    var hots = hotLetters(list), last = n - 1;
     for (var i = 0; i < n; i++) { var o = list[i], d;
-      if (o) { d = {}; for (var k in o) d[k] = o[k]; d.hot = hots[i]; g.append(cellNode(d, F, S)); }
+      if (corner && i === last) { d = {}; for (var kc in corner) d[kc] = corner[kc]; d.hot = C.keys === "off" ? null : "B"; g.append(cellNode(d, F, S)); }
+      else if (o && i < last) { d = {}; for (var k in o) d[k] = o[k]; d.hot = (corner && hots[i] === "B") ? null : hots[i]; g.append(cellNode(d, F, S)); }
       else g.append(cellNode({ state: "blank", ico: "info" }, F, S)); }
     host.append(g); return g; }
   function renderCmdCard(host, F, S){ var C = cmdCfg(), fm = FRM(F);
     var mode = C.mode === "path" ? "path" : "cmd";
-    var list;
+    var list, corner;
     if (mode === "path") { var cells = pathCells(F);
       if (C.only) cells = cells.filter(function(c){ return c.lead.kind === C.only; });
-      list = cells.map(function(c){ return pathCellDef(c, F, S); }); }
-    else list = C.scope === "entity" ? entVerbs(F, S) : cmdVerbs(F, S);
-    cmdHead(host, F, S, mode === "path" ? (list.length + " paths") : (list.length + " verbs"));
-    cmdGrid(host, list, F, S);
+      list = cells.map(function(c){ return pathCellDef(c, F, S); }); corner = backDef(); }
+    else { list = C.scope === "entity" ? entVerbs(F, S) : cmdVerbs(F, S); corner = cornerOf(list); }
+    cmdHead(host, F, S, mode === "path" ? (list.length + " paths") : ((list.length + 1) + " verbs"));
+    cmdGrid(host, list, F, S, corner);
     if (C.scope === "both" && mode === "cmd") { host.append(E("div", { class: "cmdsub" }, esc("the owning entity · " + (((F.feedwide || {}).entity_counts || {}).endpoints || 1) + " endpoints")));
-      cmdGrid(host, entVerbs(F, S), F, S); }
+      var el2 = entVerbs(F, S); cmdGrid(host, el2, F, S, cornerOf(el2)); }
     cmdTip(host, F, S); }
   /* the FLAG a path's own exit is gated by — never every switch it crossed, or the chip would ride
      all fourteen cells; the switch's own `refs` name the two exits the rate limiter can produce */
