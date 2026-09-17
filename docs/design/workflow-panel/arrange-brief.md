@@ -85,3 +85,21 @@ PNG of the operator's first cut, one of the empty page, one per panel size.
 
 Deliver the page, the probe green with its count, the shots, and a report (tiles built, what each renders and from
 which keys, the first-cut copy line verbatim, anything hatched and why, line counts).
+
+## Addition (operator, 2026-09-17, mid-build): the shelf is a MIND MAP, and a hover explains each dimension
+
+- **The map.** The shelf becomes a 2D map of the dimensions in a fixed layout computed from nature (no physics): the
+  global `selection` at the centre; the four CONTROL tiles on the left with SETS arrows into the centre; the six
+  STANDPOINT tiles on the right in request order (security · functions · data · schemas · tests · widening) with READS
+  arrows out of the centre; the TEMPORAL tiles at the top (`paths-timeline` sets the selection; `clock` → timeline,
+  "walks it"); the RECORD tiles at the bottom-right (read); the TRANSIENT tiles at the bottom with one faint dashed ring
+  ("shows" — every tile feeds the hover card). Edge kinds drawn with distinct strokes from the station's own tokens and
+  a legend that draws each stroke as drawn. Nodes ARE the draggable tiles: drag a node into a panel; a placed node stays
+  on the map dimmed with an "in <panel>" tag; drag it back to remove. A compact list under the map stays as the fallback.
+- **The hover.** Each node opens the lab's hcard with four sections in this order: *what happens here* (one plain
+  sentence) · *kind* (the nature word + its plain line) · *on this door* (ONE live example computed from the facts — e.g.
+  security: deps · lanes · gates passed/fired on the selected path; data: tables and commits on the first run; timeline:
+  paths over stages, the longest chain) · *use it when* (two or three examples of application, authored plain lines).
+- **Probe.** One node per tile; SETS = controls + the timeline, READS = standpoints + records, measured on the drawn map;
+  hovering `security` shows the four titles and a number equal to one computed in the page; `ARR.place` dims the node
+  and tags it; the 12px floor on node labels; shots of the empty map and of the first cut placed.
