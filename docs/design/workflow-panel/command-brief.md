@@ -160,3 +160,48 @@ measuring the DRAWN thing (a bare `> 0` is not an assert):
 
 The edited files, the probe GREEN with its count, the shots directory, and a report: what each layout and option
 does, the default line, the counts measured on the page, anything left hatched and why.
+
+---
+
+## The `verbs` pick (operator 2026-09-17: "build both, selectable on command panel on the left")
+
+`command-map.html` §6 drew two ways to group the card's fifteen verbs. Both are BUILT, neither is a ruling:
+one more pick in the rail's `layout` fold, directly after the layout pick — CMD key `verbs`, copy line
+`· verbs rows`.
+
+| key | what the card shows | depth |
+|---|---|---|
+| `rows` | **the default** — the fifteen verbs in three unnamed rows, exactly as the card was first built. Nothing already ruled moves. | 1 (2 with the path grid) |
+| `g1` | *by what the verb does* — the SAME fifteen cells in the SAME places, with each row NAMED on the card: **CHOOSE · SHOW · GO**. Each name is a caption drawn ACROSS its row (`grid-column: 1 / -1`), never a column beside the grid, so the five-column template — and every square's column, width and order — is untouched. Small caps, muted ink, 12px floor, one hover card per row saying what the row does. | 2 |
+| `g2` | *by part* — five GROUP cells (Q W E R T) + the Clear corner at slot 14, the nine slots between them blank and in place. A group opens its own verbs one level down; PATHS' three walking verbs open the path grid one level below that. | 3 |
+
+### G2 — the groups as built
+
+| slot | group | colour | badge (its source) | level 2 | level 3 |
+|---|---|---|---|---|---|
+| 0 · Q | **PATHS ▸** | `var(--accent)` | the `walk` verb's badge — the path count | Walk all paths ▸ · Show refusals ▸ · Show success ▸ · Previous exit · Next exit + **Back** | the path grid (`CMD.mode = "path"`, `CMD.only` for refusals / success) + **Back** |
+| 1 · W | **DATA ▸** | `PANELS.data.col` | the `writes` verb's badge | Show writes + **Back** | — |
+| 2 · E | **SECURITY ▸** | `PANELS.security.col` | the `pre` verb's badge — the precondition rows | Show preconditions · Show gates · Show findings + **Back** | — |
+| 3 · R | **TESTS ▸** | `PANELS.tests.col` | the `tests` verb's badge — tests for this exit | Tests for this exit · Untested exits · Declared vs produced + **Back** | — |
+| 4 · T | **CODE ▸** | `PANELS.functions.col` | none — no verb under it carries a count | Open the handler · Up to entity (hatched, as today) + **Back** | — |
+| 14 · B | the **corner** | `var(--accent)` | — | Clear at level 1, Back at levels 2 and 3 | |
+
+The verb defs are REUSED — a group cell names the verbs it holds and says "one level down"; nothing is
+retyped, and no count, name or colour is written by hand (they come from `cmdVerbs()` and `window.PANELS`).
+A group's WORD is its part's own, read from the registry and upper-cased (`PANELS.data.word` → DATA); only
+**PATHS**, which is no part, and **CODE ▸**, which §6 named apart from its part's word (Functions), carry
+one of their own. The word is drawn in the cell the way a path cell draws its name (`clbl`, at cell size
+≥ 64), so the five squares read as the six part buttons do.
+
+**The level is CMD state**: `CMD.grp` (`null` = the five groups) beside `CMD.mode` (`"cmd"` / `"path"`).
+Back at level 3 goes to the PATHS group, Back at level 2 to the five groups; `clearPath()` — the Clear
+corner and **Esc** — returns to level 1 as well as clearing the selection. Hotkeys stay positional at every
+level (Q W E R T / A S D F G / Z X C V, the corner always **B**), and the corner law, the four cell states,
+the tooltip pick, the cell sizes and the colour-by pick are untouched by either grouping.
+
+Probe: the command section asserts the pick's three options and its place in the fold, that `rows` redraws
+the card it drew before either grouping existed (every square's data-cmd, x, size, state, letter and badge,
+and the grid's width), that `g1` draws three row names with no cell moved sideways, and that `g2` walks
+1 → 2 → 3 → back → back with the head pill reading `5 GROUPS` · `SECURITY · 3 VERBS` · `14 PATHS`, the floor
+holding at every level. `--shots` adds `eplab-cmd-verbs-g1.png`, `-g2-groups.png`, `-g2-security.png`,
+`-g2-paths.png`.

@@ -2445,6 +2445,75 @@
       act: function(){ window.CMD.mode = "cmd"; window.CMD.only = null; window.drawCmd(); } }; }
   /* lift the clear cell out of a verb list so the grid can pin it to the corner; a list without one gets one */
   function cornerOf(list){ for (var i = 0; i < list.length; i++) if (list[i].cmd === "clear") return list.splice(i, 1)[0]; return clearDef(); }
+
+  /* ══ THE VERB GROUPINGS — the `verbs` pick (operator 2026-09-17: "build both, selectable on
+     command panel on the left"). Both groupings are drawn on the REAL card; neither is a ruling.
+
+       rows · the card as it was first built — fifteen verbs in three unnamed rows. Nothing moves.
+       g1   · command-map.html §6 G1: the SAME fifteen cells in the same places, with each row NAMED.
+              The name is drawn as a caption strip ACROSS the row (grid-column 1 / -1), never as a
+              column beside the grid: the five-column template is untouched, so every square keeps
+              its column, its width and its order. Depth stays 2.
+       g2   · §6 G2: the same verbs folded into five GROUPS, one per part. Level 1 = the groups,
+              level 2 = that group's verbs, level 3 = the paths. Depth never passes 3 — the ceiling
+              the operator named. The verb defs are REUSED, never retyped; a group's badge is the
+              badge one of its own verbs already carries.                                        ══ */
+  var G1ROWS = [
+    { key: "choose", name: "CHOOSE", ico: "journey", plain: "pick the one ending the rest of the console then follows" },
+    { key: "show", name: "SHOW", ico: "shape", plain: "put a fact on the middle panel — the card itself stays where it is" },
+    { key: "go", name: "GO", ico: "external", plain: "leave the card — open the part, or the level above this door" } ];
+  var G2GROUPS = [
+    { key: "paths", word: "PATHS", part: null, ico: "journey", badge: "walk", verbs: ["walk", "refusals", "success", "prev", "next"],
+      plain: "every way a request through this door can end, and the two ways to step between them" },
+    { key: "data", part: "data", badge: "writes", verbs: ["writes"],
+      plain: "what this door changes in the database, and whether the change survived" },
+    { key: "security", part: "security", badge: "pre", verbs: ["pre", "gates", "findings"],
+      plain: "everything the request has to get past, and what the forms pass found wrong with it" },
+    { key: "tests", part: "tests", badge: "tests", verbs: ["tests", "untested", "declared"],
+      plain: "what proves this door answers the way it says it does" },
+    { key: "code", word: "CODE", part: "functions", badge: null, verbs: ["handler", "up"],
+      plain: "where this door is written, and the level it hangs from" } ];
+  function g2Group(k){ for (var i = 0; i < G2GROUPS.length; i++) if (G2GROUPS[i].key === k) return G2GROUPS[i]; return null; }
+  /* a group's WORD is its part's own, read from the registry and never retyped; only the two groups
+     that are NOT a part (PATHS) or that the operator named apart from it (CODE ▸ over Functions)
+     carry one of their own */
+  function g2Word(g){ return g.word || String(window.PANELS[g.part].word).toUpperCase(); }
+  function g2Col(g){ return g.part ? window.PANELS[g.part].col : "var(--accent)"; }
+  function g2Ico(g){ return g.ico || (g.part ? window.PANELS[g.part].icon : "info"); }
+  /* a GROUP cell — it holds verbs the card already carries, so it names them and goes one level down */
+  function groupCellDef(g, byCmd, F, S){
+    var held = g.verbs.map(function(c){ return byCmd[c]; }).filter(function(x){ return !!x; });
+    var col = g2Col(g), ic = g2Ico(g), P = g.part ? window.PANELS[g.part] : null, w = g2Word(g);
+    var bd = g.badge && byCmd[g.badge] ? byCmd[g.badge].badge : null;
+    return { cmd: "grp-" + g.key, ico: ic, verb: w, label: w, state: "lit", col: col, badge: bd,
+      card: function(){ return cmdc({ title: w + " ▸", value: held.length + (held.length === 1 ? " verb" : " verbs"), icon: ic, color: col,
+        rows: held.map(function(v){ return [v.verb, v.badge == null ? "—" : String(v.badge)]; })
+          .concat([["opens", "one level down — these verbs, then Back"],
+                   ["part", P ? P.word : "no part — a path is the console's own axis"]]),
+        plain: g.plain }); },
+      cap: function(){ return w + " · " + held.length + " verbs, one level down"; },
+      act: function(){ window.CMD.grp = g.key; window.drawCmd(); } }; }
+  /* G2's level-2 corner: Back to the five groups. The PATH grid's Back (backDef) leaves CMD.grp
+     alone, so level 3 → level 2 lands on the group that opened it, and B again lands on level 1. */
+  function backGroupDef(g){ return { cmd: "back", ico: "up", verb: "Back", state: "lit", col: "var(--accent)",
+      card: function(){ return cmdc({ title: "back", value: "B", icon: "up", color: "var(--accent)",
+        rows: [["returns to", "the five groups"], ["leaving", g2Word(g) + " · " + g.verbs.length + " verbs"],
+               ["keeps", "whatever is in force — Esc is what clears it"],
+               ["place", "bottom-right — the corner keeps its place in every mode of the card"]],
+        plain: "one level up — the five groups again, nothing cleared" }); },
+      cap: function(){ return "back to the five groups — B (Esc clears)"; },
+      act: function(){ window.CMD.grp = null; window.drawCmd(); } }; }
+  /* a G1 ROW NAME: small caps in the muted ink, at the 12px floor, spanning the row */
+  function rowNameNode(rn, members, F, S){
+    var el = E("div", { class: "cmdrow" });
+    el.dataset.row = rn.key;
+    el.append(E("span", { class: "cmdrowl" }, esc(rn.name)));
+    var held = members.filter(function(x){ return !!x; });
+    tipBind(el, function(){ return cmdc({ title: rn.name, value: held.length + " verbs", icon: rn.ico, color: "var(--muted)",
+      rows: held.map(function(v){ return [v.verb, v.badge == null ? "—" : String(v.badge)]; }),
+      plain: rn.plain }); }, function(){ return esc(rn.name + " · " + held.map(function(v){ return v.verb; }).join(" · ")); });
+    return el; }
+
   function uniq(a){ var o = {}, r = []; a.forEach(function(x){ if (x != null && !o[x]) { o[x] = 1; r.push(x); } }); return r; }
 
   /* ── the ENTITY card (choice 3): the owning entity's endpoints. The feed carries the COUNT
@@ -2465,27 +2534,42 @@
     return L; }
 
   /* ── LAYOUT 1 · the CARD: a 3×5 grid of SC2 command squares ── */
-  function cmdGrid(host, list, F, S, corner){ var C = cmdCfg(), COLS = 5, SLOTS = 15;
-    var g = E("div", { class: "cmdgrid" });
+  function cmdGrid(host, list, F, S, corner, rowNames){ var C = cmdCfg(), COLS = 5, SLOTS = 15;
+    var g = E("div", { class: "cmdgrid" + (rowNames ? " named" : "") });
     g.style.setProperty("--cz", (C.size || 64) + "px");
     var need = list.length + (corner ? 1 : 0);
     /* `collapsed` drops empty ROWS; it never moves the corner off the bottom-right */
     var n = C.wrong === "collapsed" ? Math.max(COLS, Math.ceil(need / COLS) * COLS) : Math.max(SLOTS, Math.ceil(need / SLOTS) * SLOTS);
     var hots = hotLetters(list), last = n - 1;
     for (var i = 0; i < n; i++) { var o = list[i], d;
+      /* G1's row name rides the row as a caption spanning all five columns — the template, and so
+         every square's column and width, is exactly what it is without it */
+      if (rowNames && i % COLS === 0 && rowNames[i / COLS]) g.append(rowNameNode(rowNames[i / COLS], list.slice(i, i + COLS).concat(i + COLS > last && corner ? [corner] : []), F, S));
       if (corner && i === last) { d = {}; for (var kc in corner) d[kc] = corner[kc]; d.hot = C.keys === "off" ? null : "B"; g.append(cellNode(d, F, S)); }
       else if (o && i < last) { d = {}; for (var k in o) d[k] = o[k]; d.hot = (corner && hots[i] === "B") ? null : hots[i]; g.append(cellNode(d, F, S)); }
       else g.append(cellNode({ state: "blank", ico: "info" }, F, S)); }
     host.append(g); return g; }
   function renderCmdCard(host, F, S){ var C = cmdCfg(), fm = FRM(F);
     var mode = C.mode === "path" ? "path" : "cmd";
-    var list, corner;
+    /* the grouping only reshapes the KIND card's verbs; the entity card is its own roster */
+    var V = (C.scope === "entity") ? "rows" : (C.verbs || "rows");
+    var grp = V === "g2" ? g2Group(C.grp) : null;
+    var list, corner, rowNames = null, right;
     if (mode === "path") { var cells = pathCells(F);
       if (C.only) cells = cells.filter(function(c){ return c.lead.kind === C.only; });
-      list = cells.map(function(c){ return pathCellDef(c, F, S); }); corner = backDef(); }
-    else { list = C.scope === "entity" ? entVerbs(F, S) : cmdVerbs(F, S); corner = cornerOf(list); }
-    cmdHead(host, F, S, mode === "path" ? (list.length + " paths") : ((list.length + 1) + " verbs"));
-    cmdGrid(host, list, F, S, corner);
+      list = cells.map(function(c){ return pathCellDef(c, F, S); }); corner = backDef();
+      right = V === "g2" ? (list.length + " PATHS") : (list.length + " paths"); }
+    else if (V === "g2") { var all = cmdVerbs(F, S), byCmd = {};
+      all.forEach(function(o){ if (o.cmd) byCmd[o.cmd] = o; });
+      if (grp) { list = grp.verbs.map(function(c){ return byCmd[c]; }).filter(function(x){ return !!x; });
+        corner = backGroupDef(grp); right = g2Word(grp) + " · " + list.length + " VERBS"; }
+      else { list = G2GROUPS.map(function(g){ return groupCellDef(g, byCmd, F, S); });
+        corner = clearDef(); right = list.length + " GROUPS"; } }
+    else { list = C.scope === "entity" ? entVerbs(F, S) : cmdVerbs(F, S); corner = cornerOf(list);
+      if (V === "g1") rowNames = G1ROWS;
+      right = (list.length + 1) + " verbs"; }
+    cmdHead(host, F, S, right);
+    cmdGrid(host, list, F, S, corner, rowNames);
     if (C.scope === "both" && mode === "cmd") { host.append(E("div", { class: "cmdsub" }, esc("the owning entity · " + (((F.feedwide || {}).entity_counts || {}).endpoints || 1) + " endpoints")));
       var el2 = entVerbs(F, S); cmdGrid(host, el2, F, S, cornerOf(el2)); }
     cmdTip(host, F, S); }

@@ -1807,7 +1807,7 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
 // samples at uneven gaps. A bare `> 0` is not an assert here.
 {
   const resetCmd = () => p.evaluate(() => {
-    Object.assign(window.CMD, { layout: "card", mode: "cmd", only: null, rows: "command", scope: "kind",
+    Object.assign(window.CMD, { layout: "card", verbs: "rows", mode: "cmd", grp: null, only: null, rows: "command", scope: "kind",
       group: "request", names: "drawn", success: "shown", sub: "split", middle: "dim", portrait: "path",
       wrong: "blank", keys: "grid", size: 64, face: "valley", tip: "hover", join: "exact", keep: "kept",
       side: "right", ladder: "cmd", walk: "replay", flag: "shown", colour: "kind", matrix: "path" });
@@ -1839,7 +1839,7 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
       consentN: f.paths.find(x => x.names.drawn === 'consent required').effects.n,
       labTables: window.LABEP.data.tables.map(t => t.table) }; });
 
-  const DEFLINE = 'command · layout card · rows command · scope kind · grouping request · names drawn · success shown'
+  const DEFLINE = 'command · layout card · verbs rows · rows command · scope kind · grouping request · names drawn · success shown'
     + ' · sub-paths split · middle dim .28 · portrait path record · wrong-question blank · hotkeys QWERT grid'
     + ' · cells 64px valley · tooltip lab hover card · test join exact · on part switch kept'
     + ' · card side right of portrait · ladder in the region · walking one-clock replay · rate-limit chip shown'
@@ -2054,7 +2054,7 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
     await p.evaluate(() => { window.CMD.flag = 'shown'; window.drawCmd(); }); await p.waitForTimeout(140); }
 
   // a control the OPEN layout does not use is drawn DASHED, and its card says why (law 10)
-  { const na = await p.$$eval('#blk-command .ib.na', els => els.map(e => e.getAttribute('data-cmdladder') || e.getAttribute('data-cmdwalk') || e.getAttribute('data-cmdscope') || e.getAttribute('data-cmdwrong') || e.getAttribute('data-cmdmatrix') || e.getAttribute('data-cmdside') || '?'));
+  { const na = await p.$$eval('#blk-command .ib.na', els => els.map(e => e.getAttribute('data-cmdladder') || e.getAttribute('data-cmdwalk') || e.getAttribute('data-cmdscope') || e.getAttribute('data-cmdwrong') || e.getAttribute('data-cmdmatrix') || e.getAttribute('data-cmdside') || e.getAttribute('data-cmdverbs') || '?'));
     ok(na.length > 0, 'in the strip layout the card-only and ladder-only dials are marked unusable', na.join(','));
     ok(await p.$eval('#blk-command .ib.na', e => getComputedStyle(e).borderTopStyle) === 'dashed', 'and they are drawn DASHED, not hidden');
     await p.hover('#blk-command .ib.na'); await p.waitForTimeout(150);
@@ -2204,6 +2204,142 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
     await p.keyboard.press('q'); await p.waitForTimeout(160);
     ok((await p.$$('#cmd .cmdcell[data-path]')).length === 0, 'a hotkey never fires while an input has focus');
     await p.evaluate(() => { document.getElementById('__t').remove(); document.body.focus(); }); }
+
+  // ── THE TWO VERB GROUPINGS (operator 2026-09-17: "build both, selectable on command panel on the
+  //    left"). rows must not move by a pixel; g1 names the three rows without moving a cell; g2 goes
+  //    five groups → that group's verbs → the paths, and never deeper. ──
+  await resetCmd(); await p.waitForTimeout(180);
+  // the WHOLE card, measured: every cell's data-cmd, its x inside the region, its size, its state,
+  // the grid's own width, and the text the region draws.
+  const cardFp = () => p.evaluate(() => { const c = document.getElementById('cmd'), g = c.querySelector('.cmdgrid'), o = c.getBoundingClientRect();
+    const cells = [...c.querySelectorAll('.cmdcell')].map(e => { const r = e.getBoundingClientRect();
+      return (e.dataset.cmd || e.dataset.path || '·') + '@' + Math.round(r.left - o.left) + ',' + Math.round(r.top - o.top)
+        + ':' + Math.round(r.width) + 'x' + Math.round(r.height) + ':' + e.className + ':' + (e.style.getPropertyValue('--tc') || '')
+        + ':' + ((e.querySelector('.chot') || {}).textContent || '') + '/' + ((e.querySelector('.cbadge') || {}).textContent || ''); });
+    return { w: g.getBoundingClientRect().width, cells, text: c.innerText.replace(/\s+/g, ' ').trim() }; });
+  const cmdFloorAt = () => p.evaluate(() => { let n = 0, worst = 99;
+    document.querySelectorAll('#cmd *').forEach(el => { if (!el.offsetParent) return;
+      const t = el.childNodes && [...el.childNodes].some(c => c.nodeType === 3 && c.textContent.trim()); if (!t) return;
+      const fs = parseFloat(getComputedStyle(el).fontSize); if (fs < 12) { n++; worst = Math.min(worst, fs); } });
+    return { under: n, worst }; });
+  { const opts = await p.$$eval('#blk-command [data-cmdverbs]', els => els.map(e => e.getAttribute('data-cmdverbs')));
+    ok(opts.join(',') === 'rows,g1,g2', 'the rail carries a verbs pick with three options, rows first', opts.join(','));
+    const where = await p.evaluate(() => { const f = document.querySelector('#blk-command .cffold[data-group="layout"]');
+      const labs = [...f.querySelectorAll('.cfl')].map(e => e.textContent);
+      return { fold: !!f.querySelector('[data-cmdverbs]'), labs }; });
+    ok(where.fold && where.labs[0] === 'layout' && where.labs[1] === 'verbs',
+      'it sits in the layout fold, directly after the layout pick', where.labs.join(' · ')); }
+
+  const ROWS = await cardFp();
+  ok(ROWS.cells.length === 15 && ROWS.cells.filter(c => /st-blank/.test(c)).length === 0,
+    'rows: the card is the fifteen verbs, no blank slot', String(ROWS.cells.length));
+
+  // ── G1 · the same fifteen cells, three rows NAMED ──
+  await p.evaluate(() => { window.CMD.verbs = 'g1'; window.drawCmd(); window.drawCmdCfg(); }); await p.waitForTimeout(200);
+  const G1 = await cardFp();
+  { const names = await p.$$eval('#cmd .cmdgrid .cmdrow .cmdrowl', els => els.map(e => e.textContent));
+    ok(names.join(' · ') === 'CHOOSE · SHOW · GO', 'g1 draws exactly three row names, CHOOSE · SHOW · GO', names.join(' · '));
+    const cmds = g => g.cells.map(c => c.split('@')[0]).join(',');
+    ok(cmds(G1) === cmds(ROWS), 'every one of the fifteen cells is still at its slot — the same verbs in the same order', cmds(G1));
+    const x = g => g.cells.map(c => c.split('@')[1].split(',')[0]).join(',');
+    ok(x(G1) === x(ROWS), 'and at the same x — the names ride ACROSS the row, so no square moved sideways', x(G1));
+    ok(Math.round(G1.w) === Math.round(ROWS.w), 'the grid is exactly as wide as it was without the names', G1.w + ' vs ' + ROWS.w);
+    const fs = await p.$$eval('#cmd .cmdgrid .cmdrowl', els => els.map(e => parseFloat(getComputedStyle(e).fontSize)));
+    ok(fs.every(v => v >= 12), 'the row names are drawn at the 12px floor, never under it', fs.join(','));
+    const fl = await cmdFloorAt(); ok(fl.under === 0, 'and nothing else in the region drops under it either', JSON.stringify(fl));
+    await p.hover('#cmd .cmdgrid .cmdrow[data-row="show"]'); await p.waitForTimeout(160);
+    const h = await p.evaluate(() => document.getElementById('hover').hidden ? '' : document.getElementById('hover').innerText);
+    ok(/SHOW/.test(h) && /middle panel/.test(h), 'a row name answers a hover with a card saying what the row does', h.replace(/\s+/g, ' ').slice(0, 90));
+    await p.mouse.move(5, 1030); }
+
+  // ── G2 · level 1: five groups, the corner, nine blanks ──
+  await p.evaluate(() => { window.CMD.verbs = 'g2'; window.drawCmd(); window.drawCmdCfg(); }); await p.waitForTimeout(200);
+  { const g = await p.$$eval('#cmd .cmdgrid .cmdcell', els => els.map((e, i) => ({ i, cmd: e.dataset.cmd || null,
+      hot: (e.querySelector('.chot') || {}).textContent || null, badge: (e.querySelector('.cbadge') || {}).textContent || null,
+      tc: e.style.getPropertyValue('--tc'), blank: e.classList.contains('st-blank') })));
+    ok(g.length === 15, 'g2 level 1 keeps the fifteen places', String(g.length));
+    const groups = g.filter(c => /^grp-/.test(c.cmd || ''));
+    ok(groups.map(c => c.cmd).join(',') === 'grp-paths,grp-data,grp-security,grp-tests,grp-code',
+      'five GROUP cells in slots 0–4: PATHS · DATA · SECURITY · TESTS · CODE', groups.map(c => c.cmd + '@' + c.i).join(' '));
+    ok(groups.map(c => c.hot).join('') === 'QWERT', 'lettered Q W E R T by their place on the grid', groups.map(c => c.hot).join(''));
+    ok(g[14].cmd === 'clear' && g[14].hot === 'B', 'and the corner is Clear at slot 14, lettered B', JSON.stringify(g[14]));
+    ok(g.filter(c => c.blank).length === 9, 'the nine slots between them keep their place, empty', String(g.filter(c => c.blank).length));
+    const want = await p.evaluate(() => ({ data: window.PANELS.data.col, security: window.PANELS.security.col,
+      tests: window.PANELS.tests.col, code: window.PANELS.functions.col }));
+    const by = {}; groups.forEach(c => { by[c.cmd.slice(4)] = c.tc; });
+    ok(by.data === want.data && by.security === want.security && by.tests === want.tests && by.code === want.code,
+      'each group wears its PART\'s own colour, read from window.PANELS — never a pasted hex', JSON.stringify(by));
+    ok(by.paths === 'var(--accent)', 'and PATHS, which is no part, wears the accent', by.paths);
+    const badges = {}; groups.forEach(c => { badges[c.cmd.slice(4)] = c.badge; });
+    ok(badges.paths === String(N.paths) && badges.security === String(N.pre),
+      'the group badges are the badges their own verbs carry — PATHS the path count, SECURITY the precondition rows', JSON.stringify(badges));
+    const words = await p.$$eval('#cmd .cmdcell[data-cmd^="grp-"] .clbl', els => els.map(e => e.textContent));
+    const wantW = await p.evaluate(() => ['data', 'security', 'tests'].map(k => window.PANELS[k].word.toUpperCase()));
+    ok(words.join(',') === 'PATHS,' + wantW.join(',') + ',CODE',
+      'each group is named by its part\'s own word from the registry — PATHS and CODE, which are not a part\'s word, are the two the map named', words.join(','));
+    const head = await p.$eval('#cmd .cmdhd .sechd .cnt', e => e.textContent);
+    ok(head === '5 GROUPS', 'the head pill says 5 GROUPS', head);
+    await p.hover('#cmd .cmdcell[data-cmd="grp-security"]'); await p.waitForTimeout(160);
+    const hc = await p.evaluate(() => document.getElementById('hover').innerText.replace(/\s+/g, ' '));
+    ok(/one level down/i.test(hc) && /show gates/i.test(hc), 'a group card lists the verbs it holds and says one level down', hc.slice(0, 110));
+    await p.mouse.move(5, 1030); }
+
+  // ── G2 · level 2: one group's verbs, and Back ──
+  await p.click('#cmd .cmdcell[data-cmd="grp-security"]'); await p.waitForTimeout(200);
+  { const g = await p.$$eval('#cmd .cmdgrid .cmdcell', els => els.filter(e => e.dataset.cmd).map(e => e.dataset.cmd + '/' + ((e.querySelector('.chot') || {}).textContent || '')));
+    ok(g.join(' ') === 'pre/Q gates/W findings/E back/B', 'SECURITY ▸ draws its three verbs and the Back corner', g.join(' '));
+    ok(await p.evaluate(() => window.CMD.grp) === 'security', 'and the level is CMD state, not a redraw trick');
+    ok(await p.$eval('#cmd .cmdhd .sechd .cnt', e => e.textContent) === 'SECURITY · 3 VERBS', 'the head pill names the group and counts its verbs',
+      await p.$eval('#cmd .cmdhd .sechd .cnt', e => e.textContent));
+    const fl = await cmdFloorAt(); ok(fl.under === 0, 'level 2 holds the 12px floor', JSON.stringify(fl)); }
+  await p.click('#cmd .cmdcell[data-cmd="back"]'); await p.waitForTimeout(180);
+  ok(await p.$$eval('#cmd .cmdcell[data-cmd^="grp-"]', els => els.length) === 5 && await p.evaluate(() => window.CMD.grp) === null,
+    'Back returns to the five groups');
+
+  // ── G2 · level 3: the paths, and back up one level at a time ──
+  await p.click('#cmd .cmdcell[data-cmd="grp-paths"]'); await p.waitForTimeout(180);
+  { const g = await p.$$eval('#cmd .cmdgrid .cmdcell', els => els.filter(e => e.dataset.cmd).map(e => e.dataset.cmd));
+    ok(g.join(',') === 'walk,refusals,success,prev,next,back', 'PATHS ▸ draws the five path verbs and Back', g.join(',')); }
+  await p.click('#cmd .cmdcell[data-cmd="walk"]'); await p.waitForTimeout(200);
+  ok((await p.$$('#cmd .cmdcell[data-path]')).length === N.paths, `Walk ▸ draws the ${N.paths} path cells, one level further down`);
+  ok(await p.$eval('#cmd .cmdgrid .cmdcell:last-child', e => e.dataset.cmd) === 'back', 'with Back in the corner');
+  ok(await p.$eval('#cmd .cmdhd .sechd .cnt', e => e.textContent) === N.paths + ' PATHS', 'and the head pill counts them',
+    await p.$eval('#cmd .cmdhd .sechd .cnt', e => e.textContent));
+  { const fl = await cmdFloorAt(); ok(fl.under === 0, 'level 3 holds the 12px floor', JSON.stringify(fl)); }
+  await p.click('#cmd .cmdcell[data-cmd="back"]'); await p.waitForTimeout(180);
+  { const g = await p.$$eval('#cmd .cmdgrid .cmdcell', els => els.filter(e => e.dataset.cmd).map(e => e.dataset.cmd));
+    ok(g.join(',') === 'walk,refusals,success,prev,next,back' && await p.evaluate(() => window.CMD.grp) === 'paths',
+      'Back from the paths goes UP ONE level, to the PATHS group — not all the way out', g.join(',')); }
+  await p.click('#cmd .cmdcell[data-cmd="back"]'); await p.waitForTimeout(180);
+  ok(await p.$$eval('#cmd .cmdcell[data-cmd^="grp-"]', els => els.length) === 5, 'and Back again is level 1 — three levels, never a fourth');
+  // Esc from the deepest level lands on level 1 with nothing in force
+  await p.click('#cmd .cmdcell[data-cmd="grp-paths"]'); await p.waitForTimeout(160);
+  await p.click('#cmd .cmdcell[data-cmd="walk"]'); await p.waitForTimeout(180);
+  await p.evaluate(id => window.selectPath(id), N.firstRun); await p.waitForTimeout(200);
+  await p.evaluate(() => document.body.focus()); await p.keyboard.press('Escape'); await p.waitForTimeout(220);
+  { const st = await p.evaluate(() => ({ grp: window.CMD.grp, mode: window.CMD.mode, path: window.SEL.path,
+      groups: document.querySelectorAll('#cmd .cmdcell[data-cmd^="grp-"]').length }));
+    ok(st.grp === null && st.mode === 'cmd' && st.path === null && st.groups === 5,
+      'Esc from level 3 clears the selection AND returns the card to the five groups', JSON.stringify(st)); }
+  if (shotsAt) { fs.mkdirSync(shotsAt, { recursive: true });
+    const shot = async (name) => { await p.mouse.move(5, 1030); await p.evaluate(() => window.hoverHide()); await p.waitForTimeout(200);
+      await (await p.$('#cmd')).screenshot({ path: path.join(shotsAt, name) }); };
+    await shot('eplab-cmd-verbs-g2-groups.png');
+    await p.click('#cmd .cmdcell[data-cmd="grp-security"]'); await p.waitForTimeout(180);
+    await shot('eplab-cmd-verbs-g2-security.png');
+    await p.click('#cmd .cmdcell[data-cmd="back"]'); await p.click('#cmd .cmdcell[data-cmd="grp-paths"]'); await p.waitForTimeout(160);
+    await p.click('#cmd .cmdcell[data-cmd="walk"]'); await p.waitForTimeout(200);
+    await shot('eplab-cmd-verbs-g2-paths.png');
+    await p.evaluate(() => { window.clearPath(); window.CMD.verbs = 'g1'; window.drawCmd(); }); await p.waitForTimeout(200);
+    await shot('eplab-cmd-verbs-g1.png'); }
+
+  // ── and back to rows: not one pixel of the card may have moved ──
+  await resetCmd(); await p.waitForTimeout(220);
+  { const back = await cardFp();
+    ok(JSON.stringify(back) === JSON.stringify(ROWS),
+      'verbs rows draws the card it drew before either grouping existed — the same fifteen squares, the same places, the same words',
+      JSON.stringify(back.cells.filter((c, i) => c !== ROWS.cells[i])).slice(0, 160));
+    ok((await p.$$('#cmd .cmdgrid .cmdrow')).length === 0, 'and no row name is drawn under rows'); }
 
   // ── THE FLOOR, inside the command region, at the smallest cell ──
   const cmdFloor = async () => p.evaluate(() => { let n = 0, worst = 99;

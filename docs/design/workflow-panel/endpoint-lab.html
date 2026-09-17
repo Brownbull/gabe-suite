@@ -1980,7 +1980,7 @@
         walk: { replay: "one-clock replay", "static": "static" },
         matrix: { path: "per-path", hook: "with the hook" } };
       var sec = ["chip", "strip", "region", "title", "caption"];
-      return "command · layout " + C.layout + " · rows " + C.rows + " · scope " + C.scope
+      return "command · layout " + C.layout + " · verbs " + C.verbs + " · rows " + C.rows + " · scope " + C.scope
         + " · grouping " + C.group + " · names " + C.names + " · success " + C.success + " · sub-paths " + C.sub
         + " · middle " + W.middle[C.middle] + " · portrait " + W.portrait[C.portrait] + " · wrong-question " + C.wrong
         + " · hotkeys " + W.keys[C.keys] + " · cells " + C.size + "px " + C.face + " · tooltip " + W.tip[C.tip]
@@ -2226,7 +2226,9 @@
      ONE selection runs all four: window.SEL.path · .exit · .case.                          ══ */
   var CMD = window.CMD = {
     layout: "card",        /* 1  · card · strip · ladder · matrix */
+    verbs: "rows",         /* 1b · rows (as built) · g1 (the rows NAMED) · g2 (five groups, one per part) */
     mode: "cmd",           /*      the card's own state: the verbs, or the paths (Walk a path ▸) */
+    grp: null,             /*      g2's level: null = the five groups, else the group whose verbs are open */
     only: null,            /*      the kind filter R and T set */
     rows: "command",       /* 2  · command · parts · both */
     scope: "kind",         /* 3  · kind · entity · both */
@@ -2305,7 +2307,9 @@
   function selectCase(cid){ window.SEL["case"] = cid; cmdPortKey("cmd-case"); cmdRefresh(); }
   function clearPath(){ window.SEL.path = null; window.SEL.exit = null; window.SEL["case"] = null;
     if (/^cmd-/.test(portVar[cur] || "")) delete portVar[cur];
-    CMD.only = null; CMD.mode = "cmd"; cmdRefresh(); }
+    /* Esc / the Clear corner put the card back to its TOP level too — under g2 that is the five
+       groups, so clearing never leaves you two levels in with nothing in force (2026-09-17) */
+    CMD.only = null; CMD.mode = "cmd"; CMD.grp = null; cmdRefresh(); }
   function stepExit(d){ var ex = ((F.forms || {}).exits) || []; if (!ex.length) return;
     var ids = ex.map(function(e){ return e.id; }), i = ids.indexOf(window.SEL.exit);
     i = (i < 0 ? (d > 0 ? -1 : 0) : i) + d;
@@ -2338,7 +2342,7 @@
       K.pick(label, ds, function(){ return CMD[key]; }, function(v){ CMD[key] = v; }, opts, iconFor, onlyIn); }
     function sw2(bg){ return '<i class="chsw" style="background:' + bg + '"></i>'; }
 
-    K.group("layout", "layout", CMD.layout, "which of the four pictures the command region draws", function(){
+    K.group("layout", "layout", CMD.layout + " · verbs " + CMD.verbs, "which of the four pictures the command region draws, and how the card's verbs are grouped", function(){
       P("layout", "cmdlayout", "layout",
         [["card", "a 3×5 grid of command squares — the SC2 card, the fewest regions", "card"],
          ["strip", "one cell per path under the part buttons, the card still beside — paths always visible", "strip"],
@@ -2346,6 +2350,12 @@
          ["matrix", "path × part — every cell says whether that part has anything for that path", "matrix"]],
         function(o){ return o[0] === "card" ? labIco("patvalley", 15) : o[0] === "strip" ? labIco("bars", 15)
           : o[0] === "ladder" ? S.icon("layers", 15) : labIco("laycfill", 15); });
+      /* the two GROUPINGS the operator asked to see on the real card (2026-09-17, command-map §6) */
+      K.pick("verbs", "cmdverbs", function(){ return CMD.verbs; }, function(v){ CMD.verbs = v; CMD.grp = null; },
+        [["rows", "the fifteen verbs in three unnamed rows — the card exactly as it was built", "rows"],
+         ["g1", "the same fifteen cells, in the same places, with each row NAMED: CHOOSE · SHOW · GO", "g1 · by what it does"],
+         ["g2", "five GROUPS, one per part — the verbs sit one level down, the paths two. Depth 3, never more", "g2 · by part"]],
+        function(o){ return o[0] === "rows" ? labIco("sh-square", 15) : o[0] === "g1" ? labIco("bars", 15) : S.icon("layers", 15); }, "card");
       P("rows", "cmdrows", "rows",
         [["command", "the per-path facts stay in the command region", "command region"],
          ["parts", "each part draws its own one-line strip instead", "the parts"],
