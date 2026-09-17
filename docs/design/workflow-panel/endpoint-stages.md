@@ -50,3 +50,22 @@ gates that fired. With no label chosen, a topic shows the union over every path 
 
 Built first: the Data topic across the stages in the endpoint lab (the WHEN picture as a Data distribution), then each topic in
 turn, one at a time. The robot (`data-atlas.html` §6) is the verification view of the same spine.
+
+## What should be there — the expectation per stage, per topic (the stage header's hover; never a diagnosis)
+
+The operator (2026-09-17): "when I hover over the stage, the information I should get there is not diagnostic — only what
+should be there in that stage for that specific topic." One plain line per stage per topic, kept in the lab as
+`STAGE_EXPECT[topic][stage]`; beside it the page shows one fact row ("on this door: n") and nothing else.
+
+| stage | data |
+|---|---|
+| EDGE | no table — the app band checks the request before any data is touched |
+| GATE | the rows the lock reads or creates to know who is knocking — here the user row, provisioned before the body is read |
+| INPUT | no table — the body is read and checked against its shape, not against the database |
+| HANDLER | the reads and writes the door's own code makes — every table it touches, in the order it touches them |
+| EFFECTS | the fate of each write — committed, still open, or rolled back — decided by the ending |
+| ANSWER | no table — the reply is built from what was already read; nothing is touched here |
+
+The other topics add their column when they are carried onto the spine. The BLOCKS card stays the table's face in every
+layout (the operator: "we worked super hard on the blocks layout — the perfect representation of how we want to show each
+table"); the stage only groups it — rows of stages or columns of stages.
