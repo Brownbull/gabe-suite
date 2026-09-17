@@ -1,0 +1,1064 @@
+<title>Tables and models · POST /setup/complete</title>
+
+<style>
+  /* ── font roster (H3) — the script keeps these in sync ─────────────── */
+  :root { --af-stack: ui-monospace, monospace; --af-size: 15px; --af-track: -0.025em; }
+
+  /* ── title face (H3) — ONLY the section title pills pin a face: a modern
+        condensed grotesque, set in caps. DIN lineage, so it reads as console
+        lettering rather than book type, and it holds a long title in a pill
+        without wrapping. Locally resolvable in order — Bahnschrift ships with
+        Windows 10+, DIN Alternate with macOS — so nothing routes through a
+        blocked webfont. Every OTHER title on the page stays in the body face:
+        one distinctive treatment, or the distinction is worthless. */
+  :root {
+    --af-title: "Bahnschrift", "DIN Alternate", "Roboto Condensed",
+                "Arial Narrow", ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* ── the legibility floor (H6) — the smallest text on a page is the text
+        most often unreadable. Secondary content sizes off THESE steps, never
+        below them: at the 15px base they compute to 13.8 / 12.8 / 12.3px.
+        They are calc() off the roster base, NOT bare `em`, because `em`
+        stacks: a .855em head inside a .92em table lands at 11.8px while both
+        authored values look safe. An absolute step cannot compound. */
+  :root {
+    --fs-sm:  calc(var(--af-size) * 0.92);
+    --fs-xs:  calc(var(--af-size) * 0.855);
+    --fs-min: calc(var(--af-size) * 0.82);
+  }
+
+  /* ══ skins (H5) — chrome only: ground, ink, rules, accent, geometry.
+        Sources: Catalog = docs/site/center/assets/a3.css · Blueprint = skin F ·
+        Mission Console = skin B (output/mockups/center-skins.css). B and F are
+        spec'd light-only; their dark arms are derived so the viewer's theme
+        toggle still answers. Chart series and status colours are NEVER themed. */
+
+  /* ── Catalog · cool developer portal (default) ── */
+  :root, :root[data-skin="catalog"] {
+    --ground:#f6f7f9; --card:#ffffff; --raised:#fbfcfd;
+    --ink:#141a24; --ink-soft:#3d4756; --muted:#7a8595;
+    --rule:#e7e9ee; --rule-soft:#eef0f4;
+    --accent:#4f46e5; --accent-soft:#eef0fe; --strong:#101726;
+    --radius:10px; --rail:5px;
+    --shadow:0 1px 2px rgba(16,24,40,.05), 0 4px 14px rgba(16,24,40,.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]), :root[data-skin="catalog"]:not([data-theme="light"]) {
+      --ground:#101726; --card:#1b2436; --raised:#212b40;
+      --ink:#e7ebf3; --ink-soft:#c7cfdd; --muted:#79839a;
+      --rule:#2c3648; --rule-soft:#232d3f;
+      --accent:#8b83f5; --accent-soft:#23214a; --strong:#c7cfdd;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="dark"], :root[data-skin="catalog"][data-theme="dark"] {
+    --ground:#101726; --card:#1b2436; --raised:#212b40;
+    --ink:#e7ebf3; --ink-soft:#c7cfdd; --muted:#79839a;
+    --rule:#2c3648; --rule-soft:#232d3f;
+    --accent:#8b83f5; --accent-soft:#23214a; --strong:#c7cfdd;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
+  }
+  :root[data-skin="catalog"][data-theme="light"] {
+    --ground:#f6f7f9; --card:#ffffff; --raised:#fbfcfd;
+    --ink:#141a24; --ink-soft:#3d4756; --muted:#7a8595;
+    --rule:#e7e9ee; --rule-soft:#eef0f4; --accent:#4f46e5; --accent-soft:#eef0fe;
+    --strong:#101726;
+  }
+
+  /* ── Blueprint · skin F, blue ink ── */
+  :root[data-skin="blueprint"] {
+    --ground:#f6f8fc; --card:#fdfeff; --raised:#f1f5fd;
+    --ink:#16233b; --ink-soft:#41547a; --muted:#8494b5;
+    --rule:#c3d0f0; --rule-soft:#dde5f8;
+    --accent:#1d4ed8; --accent-soft:#e4ecfe; --strong:#16233b;
+    --radius:6px; --rail:5px; --shadow:none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-skin="blueprint"]:not([data-theme="light"]) {
+      --ground:#0b1220; --card:#101a2e; --raised:#142138;
+      --ink:#dce6fa; --ink-soft:#a8bce4; --muted:#7286b0;
+      --rule:#23375f; --rule-soft:#1a2942;
+      --accent:#6f9bff; --accent-soft:#16264a; --strong:#a8bce4; --shadow:none;
+    }
+  }
+  :root[data-skin="blueprint"][data-theme="dark"] {
+    --ground:#0b1220; --card:#101a2e; --raised:#142138;
+    --ink:#dce6fa; --ink-soft:#a8bce4; --muted:#7286b0;
+    --rule:#23375f; --rule-soft:#1a2942;
+    --accent:#6f9bff; --accent-soft:#16264a; --strong:#a8bce4; --shadow:none;
+  }
+  :root[data-skin="blueprint"][data-theme="light"] {
+    --ground:#f6f8fc; --card:#fdfeff; --raised:#f1f5fd;
+    --ink:#16233b; --ink-soft:#41547a; --muted:#8494b5;
+    --rule:#c3d0f0; --rule-soft:#dde5f8; --accent:#1d4ed8; --accent-soft:#e4ecfe;
+    --strong:#16233b;
+  }
+
+  /* ── Mission Console · skin B, teal ops console ── */
+  :root[data-skin="mission"] {
+    --ground:#eef1f4; --card:#ffffff; --raised:#f6f8fa;
+    --ink:#1a2b36; --ink-soft:#4a6272; --muted:#7d92a0;
+    --rule:#c8d4dc; --rule-soft:#e2e9ee;
+    --accent:#0e7c8c; --accent-soft:#e0f1f4; --strong:#1a2b36;
+    --radius:4px; --rail:5px; --shadow:none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-skin="mission"]:not([data-theme="light"]) {
+      --ground:#0e161c; --card:#16222b; --raised:#1b2934;
+      --ink:#e3edf3; --ink-soft:#b3c6d2; --muted:#7d92a0;
+      --rule:#27394a; --rule-soft:#1e2c39;
+      --accent:#2ba7bb; --accent-soft:#0f3038; --strong:#b3c6d2; --shadow:none;
+    }
+  }
+  :root[data-skin="mission"][data-theme="dark"] {
+    --ground:#0e161c; --card:#16222b; --raised:#1b2934;
+    --ink:#e3edf3; --ink-soft:#b3c6d2; --muted:#7d92a0;
+    --rule:#27394a; --rule-soft:#1e2c39;
+    --accent:#2ba7bb; --accent-soft:#0f3038; --strong:#b3c6d2; --shadow:none;
+  }
+  :root[data-skin="mission"][data-theme="light"] {
+    --ground:#eef1f4; --card:#ffffff; --raised:#f6f8fa;
+    --ink:#1a2b36; --ink-soft:#4a6272; --muted:#7d92a0;
+    --rule:#c8d4dc; --rule-soft:#e2e9ee; --accent:#0e7c8c; --accent-soft:#e0f1f4;
+    --strong:#1a2b36;
+  }
+
+  /* ══ section blocks — page furniture, deliberately OUTSIDE the series and
+        status palettes so a section header can never be mistaken for data. */
+  :root {
+    --sec1:#2b3a55; --sec2:#2f4858; --sec3:#1f5453; --sec4:#2e5339;
+    --sec5:#5a4a2b; --sec6:#5c3340; --sec7:#4a3560; --sec8:#33415c;
+    --sec9:#6b3f2e;
+    --sec-ink:#f7f8fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sec1:#9fb4d6; --sec2:#a3bfcd; --sec3:#8fc9c4; --sec4:#a8cfa6;
+      --sec5:#d8c48d; --sec6:#d9a3b0; --sec7:#bda8dd; --sec8:#a6b6d9;
+      --sec9:#e3ab8f;
+      --sec-ink:#111722;
+    }
+  }
+  :root[data-theme="dark"] {
+    --sec1:#9fb4d6; --sec2:#a3bfcd; --sec3:#8fc9c4; --sec4:#a8cfa6;
+    --sec5:#d8c48d; --sec6:#d9a3b0; --sec7:#bda8dd; --sec8:#a6b6d9;
+    --sec9:#e3ab8f;
+    --sec-ink:#111722;
+  }
+  :root[data-theme="light"] {
+    --sec1:#2b3a55; --sec2:#2f4858; --sec3:#1f5453; --sec4:#2e5339;
+    --sec5:#5a4a2b; --sec6:#5c3340; --sec7:#4a3560; --sec8:#33415c;
+    --sec9:#6b3f2e;
+    --sec-ink:#f7f8fa;
+  }
+
+  /* ── chart series + status — never themed, validated (dataviz skill) ── */
+  :root {
+    --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+    --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; }
+  }
+  :root[data-theme="dark"] { --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; }
+
+  /* ══ the page: content anchored LEFT, never centred (H1) ═══════════ */
+  body {
+    background: var(--ground); color: var(--ink);
+    font-family: var(--af-stack); font-size: var(--af-size); letter-spacing: var(--af-track);
+    line-height: 1.55; text-align: left; -webkit-font-smoothing: antialiased;
+  }
+  /* ── scrollbars wear the skin ────────────────────────────────────────
+     A native scrollbar is the one piece of chrome the page does not own by
+     default, and it shows: a grey OS bar with stepper arrows sitting inside a
+     dark panel reads as a rendering fault, not as a control. Both engines are
+     addressed (Firefox takes the two `scrollbar-*` properties, WebKit/Blink the
+     pseudo-elements), the thumb is mixed from the skin's own accent so it moves
+     with the theme, and the stepper arrows are removed — a scroll bar is a
+     position indicator, not a set of buttons anyone clicks. */
+  :root {
+    --sb-thumb: color-mix(in srgb, var(--accent) 42%, var(--rule));
+    scrollbar-width: thin;
+    scrollbar-color: var(--sb-thumb) var(--rule-soft);
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--rule-soft); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--sb-thumb); border-radius: 999px;
+    border: 2px solid transparent; background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); background-clip: padding-box; }
+  ::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+  ::-webkit-scrollbar-corner { background: transparent; }
+
+  .artifact-page {
+    max-width: 74rem;
+    margin: 0 auto 0 clamp(16px, 4vw, 56px);   /* left-anchored, never `margin: 0 auto` */
+    padding: 32px 24px 48px;
+    display: flex; flex-direction: column; gap: 30px;
+    text-align: left;
+  }
+  .artifact-page > :first-child { padding-right: 56px; }   /* clear of the fixed cog */
+  :is(a, button, select, input, textarea, summary):focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px;
+  }
+  p { margin: 0; }
+
+  /* ══ the two devices (H5) — every skin, every section ══════════════ */
+  .sec { display: flex; flex-direction: column; gap: 14px; }
+  .sec-head { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--rule); padding-bottom: 8px; }
+  .sec-head .n { margin-left: auto; font-size: var(--fs-min); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+  /* Title = normal-size text in a PILL that hugs it, led by an icon.
+     Prominence is the background and the icon, never the type: no uppercase,
+     no tracking, no size bump. The pill's padding stays tight — a wide slab
+     reads as a banner and competes with the content it introduces. */
+  .sec-head h2 {
+    margin: 0; background: var(--sec, var(--strong)); color: var(--sec-ink, var(--ground));
+    padding: 2px 11px 2px 9px; border-radius: 999px;
+    font-family: var(--af-title);
+    font-size: 1em; font-weight: 600; letter-spacing: .045em; text-transform: uppercase;
+    line-height: 1.34;
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  /* Every title carries an icon (H6). Lucide geometry, inlined — the CSP
+     blocks icon CDNs, and an icon font would fall back silently. */
+  .sec-head h2 svg {
+    width: 1.02em; height: 1.02em; flex: 0 0 auto;
+    fill: none; stroke: currentColor; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .sec[data-sec="1"] { --sec: var(--sec1); } .sec[data-sec="2"] { --sec: var(--sec2); }
+  .sec[data-sec="3"] { --sec: var(--sec3); } .sec[data-sec="4"] { --sec: var(--sec4); }
+  .sec[data-sec="5"] { --sec: var(--sec5); } .sec[data-sec="6"] { --sec: var(--sec6); }
+  .sec[data-sec="7"] { --sec: var(--sec7); } .sec[data-sec="8"] { --sec: var(--sec8); }
+  .sec[data-sec="9"] { --sec: var(--sec9); }
+
+  .panel {
+    background: var(--card); border: 1px solid var(--rule);
+    border-radius: var(--radius, 10px); padding: 15px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  /* :root prefix so the rail beats the `border:` shorthand above at equal
+     specificity — without it the rail silently renders at 1px. */
+  :root .panel { border-left: var(--rail) solid var(--accent); }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; align-items: start; }
+
+  /* ══ cog + options panel (H2 — the only floating affordance) ═══════ */
+  .af-chrome { position: fixed; top: 14px; right: 14px; z-index: 200; }
+  .af-cog {
+    display: grid; place-items: center; width: 38px; height: 38px;
+    background: var(--card); color: var(--muted);
+    border: 1px solid var(--rule); border-radius: 10px; box-shadow: var(--shadow);
+    cursor: pointer; transition: color .15s ease, border-color .15s ease, transform .25s ease;
+  }
+  .af-cog:hover { color: var(--accent); border-color: var(--accent); }
+  .af-cog[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); transform: rotate(45deg); }
+  .af-cog svg { width: 18px; height: 18px; display: block; }
+  .af-panel {
+    position: absolute; top: 46px; right: 0; width: 262px;
+    background: var(--card); border: 1px solid var(--rule); border-radius: 12px;
+    box-shadow: var(--shadow); padding: 14px;
+    display: none; flex-direction: column; gap: 11px; max-height: 82vh; overflow-y: auto;
+  }
+  .af-panel[data-open="true"] { display: flex; }
+  .af-group { display: flex; flex-direction: column; gap: 7px; }
+  .af-legend { font-size: .72em; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .af-opt {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+    width: 100%; text-align: left; cursor: pointer; font-family: inherit;
+    background: var(--raised); color: var(--ink);
+    border: 1px solid var(--rule); border-radius: 8px; padding: 8px 11px;
+  }
+  .af-opt:hover { border-color: var(--accent); }
+  .af-opt[aria-checked="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .af-opt .af-name { font-size: 14px; line-height: 1.2; }
+  .af-opt .af-spec { font-size: 12px; color: var(--muted); letter-spacing: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .af-opt[aria-checked="true"] .af-spec { color: var(--accent); }
+  .af-foot { font-size: 12px; color: var(--muted); margin: 0; letter-spacing: 0; }
+  .af-divider { height: 1px; background: var(--rule-soft); }
+
+  /* motion primitives — global pause is wired to this attribute */
+  :root[data-motion="off"] *, :root[data-motion="off"] *::before { animation-play-state: paused !important; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<style>
+  /* ── the operator's standing rule (2026-09-17): centre the column.
+        This deliberately overrides H1's left anchor; the chrome gate's
+        "content column is left-anchored, not centred" check FAILS on purpose. */
+  .artifact-page { margin: 0 auto; }
+
+  .eyebrow { font-size: var(--fs-min); letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0; }
+  h1 { font-size: 2.05em; line-height: 1.14; margin: 8px 0 0; text-wrap: balance; }
+  .lede { color: var(--muted); max-width: 70ch; margin: 11px 0 0; font-size: var(--fs-sm); }
+  .cap { font-size: var(--fs-xs); color: var(--muted); margin: 0; }
+  .panel { position: relative; }
+  code { font-size: var(--fs-min); color: var(--ink-soft); }
+
+  /* ── tip (lifted from the static pattern library, raised to the 12px floor) ── */
+  .tip {
+    position: absolute; pointer-events: none; opacity: 0;
+    background: var(--ink); color: var(--ground);
+    font-size: var(--fs-min); letter-spacing: 0; line-height: 1.45;
+    padding: 6px 9px; border-radius: 7px; z-index: 9; max-width: 34ch;
+    transition: opacity .12s ease;
+  }
+  .tip[data-show="true"] { opacity: 1; }
+  .tip b { color: var(--ground); }
+  .tip .k { color: var(--muted); }
+
+  /* ── chips (static library) ── */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-size: var(--fs-min); letter-spacing: 0; line-height: 1.3;
+    border: 1px solid var(--rule); background: var(--raised); color: var(--muted);
+    border-radius: 999px; padding: 3px 10px; cursor: pointer; font-family: inherit;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .chip .s { font-variant-numeric: tabular-nums; opacity: .8; }
+  .chip.new { border-color: var(--accent); color: var(--accent); cursor: default; padding: 5px 12px; }
+
+  /* ── one legend row, drawn not described ── */
+  .lg { display: flex; flex-wrap: wrap; gap: 12px; font-size: var(--fs-min); color: var(--muted); letter-spacing: 0; align-items: center; }
+  .lg span { display: inline-flex; align-items: center; gap: 5px; }
+  .lg i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .lg i.sq { border-radius: 2px; }
+  .lg i.ring { background: transparent; border: 1.5px solid var(--ink-soft); }
+
+  /* ══ 1 · WHEN ═══════════════════════════════════════════════════════ */
+  .when { --wlab: 250px; --wend: 42px; position: relative; }
+  .wrow { display: flex; align-items: stretch; }
+  .wlab {
+    flex: 0 0 var(--wlab); font-size: var(--fs-min); color: var(--ink-soft); letter-spacing: 0;
+    display: flex; align-items: center; gap: 5px; padding-right: 8px; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .wlab .sw { width: 8px; height: 8px; border-radius: 2px; flex: 0 0 auto; }
+  .wlab .sw.hollow { background: transparent !important; border: 1px dashed var(--muted); }
+  .wtr .tag { position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+               font-size: var(--fs-min); letter-spacing: 0; color: var(--muted);
+               background: var(--card); padding-right: 6px; white-space: nowrap; }
+  .wtr { flex: 1 1 auto; min-width: 0; position: relative; }
+  .wend { flex: 0 0 var(--wend); font-size: var(--fs-min); letter-spacing: 0; text-align: right;
+          font-variant-numeric: tabular-nums; display: flex; align-items: center; justify-content: flex-end; }
+  .whead { padding-bottom: 5px; border-bottom: 1px solid var(--rule); margin-bottom: 4px; }
+  .whead .wtr { display: flex; }
+  .wst { font-size: var(--fs-min); color: var(--muted); letter-spacing: 0; white-space: nowrap;
+         overflow: hidden; padding-left: 4px; border-left: 1px solid var(--rule-soft); }
+  .wst:first-child { border-left: 0; }
+  .wlanes { position: relative; }
+  .wlane { height: 21px; }
+  .wlane .wtr::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--rule-soft); }
+  .wlane[data-hollow="1"] .wtr::before { background: none; border-top: 1px dashed var(--rule); }
+  .wlane[data-hollow="1"] .wlab { color: var(--muted); }
+  .wrail { height: 19px; }
+  .wrail .wtr::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px;
+                        background: none; border-top: 1px dotted var(--rule); }
+  .wover { position: absolute; left: var(--wlab); right: var(--wend); top: 0; bottom: 0; pointer-events: none; }
+  .wrules { position: absolute; inset: 0; display: flex; }
+  .wrules i { border-left: 1px solid var(--rule-soft); }
+  .wrules i:first-child { border-left: 0; }
+  .wbead { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--accent); left: 0;
+           box-shadow: 0 0 0 2px var(--accent-soft); }
+  .wbead::after { content: ""; position: absolute; left: -3px; top: -4px; width: 8px; height: 8px;
+                  border-radius: 50%; background: var(--accent); }
+
+  .wdot { position: absolute; top: 50%; opacity: 0; transform: translate(-50%, -50%);
+          transition: opacity .16s linear, background-color .34s ease, border-color .34s ease; }
+  .wdot[data-on="1"] { opacity: 1; }
+  .wdot[data-k="read"]  { width: 5px; height: 5px; border-radius: 50%; background: var(--muted); }
+  .wdot[data-k="write"] { width: 9px; height: 9px; border-radius: 50%; background: transparent; border: 1.6px solid var(--ink-soft); }
+  .wdot[data-k="write"][data-cond="1"] { border-style: dashed; }
+  .wdot[data-k="tx"]    { width: 7px; height: 7px; border-radius: 2px; background: var(--ink-soft); }
+  .wdot[data-k="tx"][data-op="flush"]     { width: 5px; height: 5px; background: var(--muted); }
+  .wdot[data-k="tx"][data-op="savepoint"] { background: transparent; border: 1.5px solid var(--ink-soft); }
+  .wdot[data-k="tx"][data-op="rollback"]  { background: var(--s2); }
+  .wdot[data-race="uncaught"]::after { content: ""; position: absolute; inset: -4px; border-radius: 50%;
+                                       border: 1px dotted var(--s2); }
+  .wdot { pointer-events: auto; cursor: crosshair; }
+  .wmark { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 5px; }
+
+  /* ══ 2 · WHICH ══════════════════════════════════════════════════════ */
+  .mxwrap { position: relative; overflow-x: auto; }
+  .mx { display: grid; gap: 2px; }
+  .mx .h { font-size: var(--fs-min); letter-spacing: 0; color: var(--ink-soft);
+           writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap;
+           align-self: end; justify-self: center; padding-bottom: 4px; }
+  .mx .rl { font-size: var(--fs-min); letter-spacing: 0; color: var(--ink-soft); white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis; padding-right: 8px; display: flex; align-items: center; gap: 5px; }
+  .mx .rl .sw { width: 8px; height: 8px; border-radius: 2px; flex: 0 0 auto; }
+  .mx .rl .sw.hollow { background: transparent !important; border: 1px dashed var(--muted); }
+  .mx .c { height: 19px; border-radius: 3px; background: var(--rule-soft); cursor: crosshair; }
+  .mx .c[data-f="none"] { background: transparent; border: 1px dashed var(--rule-soft); }
+
+  /* ══ 3 · THE TABLE ══════════════════════════════════════════════════ */
+  .tree { font-size: var(--fs-xs); letter-spacing: 0; }
+  .tree ul { list-style: none; margin: 0; padding-left: 15px; border-left: 1px solid var(--rule-soft); }
+  .tree > ul { padding-left: 0; border-left: 0; }
+  .tree li { padding: 2px 0; }
+  .tree .k { color: var(--ink-soft); cursor: help; border-bottom: 1px dotted var(--rule); }
+  .tree .v { color: var(--ink); }
+  .tree .t { color: var(--muted); }
+  .tree .root { color: var(--ink); font-size: var(--fs-sm); }
+  .tree ul.nb { border-left: 2px solid var(--accent); }
+  .tree .newring { display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+                   border: 1.6px solid var(--accent); margin-right: 6px; vertical-align: -1px; }
+  .tree .pd { display: inline-flex; gap: 3px; margin-left: 7px; vertical-align: 1px; }
+  .tree .pd i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; cursor: help; }
+  .tree .pd i.data { background: var(--ink-soft); }
+  .tree .pd i.portrait { background: transparent; border: 1px solid var(--ink-soft); }
+  .tree .pd i.security { background: var(--ink-soft); border-radius: 1px; }
+  .tree .fd { display: inline-flex; gap: 2px; margin-left: 4px; vertical-align: 0px; }
+  .tree .fd i { width: 7px; height: 7px; border-radius: 2px; display: inline-block; cursor: crosshair; }
+  .tree .uq, .tree .fk { color: var(--muted); }
+  .treecols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 4px 20px; }
+
+  /* ══ 4 · THE JOINS ══════════════════════════════════════════════════ */
+  .jrow { display: grid; grid-template-columns: 18ch 1fr 3ch; gap: 10px; align-items: center;
+          font-size: var(--fs-min); letter-spacing: 0; padding: 3px 0; }
+  .jrow .jk { color: var(--ink-soft); white-space: nowrap; cursor: help; }
+  .jrow .jt { height: 11px; background: var(--rule-soft); border-radius: 3px; position: relative; cursor: crosshair; }
+  .jrow .jb { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ink-soft); border-radius: 3px; }
+  .jrow .jn { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+
+  /* ── motion contract: the paused / reduced frame never transitions ── */
+  :root[data-motion="off"] .when *, .when[data-still="1"] * { transition: none !important; animation: none !important; }
+  @media (prefers-reduced-motion: reduce) { .when * { transition: none !important; } }
+</style>
+
+<script type="application/json" id="ATLAS">{"head": "05007957", "door": "POST /setup/complete", "entity": "auth", "stages": ["middleware", "security", "dependency", "body-parse", "validation", "handler", "uncaught", "return"], "tables": [{"table": "consent_records", "model": "ConsentRecord", "entity": "legal-consent", "color": "#0f766e", "rw": "r", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "user_id", "type": "uuid.UUID", "flag": ""}, {"name": "policy_version", "type": "str", "flag": ""}, {"name": "accepted_at", "type": "datetime", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}], "fks": [{"col": "user_id", "to": "users.id"}], "uqs": [], "file": "apps/api/models/consent.py", "inPanel": true}, {"table": "households", "model": "Household", "entity": "auth", "color": "#5a53a8", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "name", "type": "str", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}], "fks": [], "uqs": [], "file": "apps/api/models/household.py", "inPanel": true}, {"table": "household_format_preferences", "model": "HouseholdFormatPreferences", "entity": "settings", "color": "#8e4585", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "household_id", "type": "uuid.UUID", "flag": ""}, {"name": "country", "type": "str", "flag": ""}, {"name": "units", "type": "str", "flag": ""}, {"name": "currency", "type": "str", "flag": ""}, {"name": "default_servings", "type": "int", "flag": ""}, {"name": "auto_discount_servings", "type": "bool", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}, {"name": "updated_at", "type": "datetime", "flag": ""}], "fks": [{"col": "household_id", "to": "households.id"}], "uqs": ["household_id"], "file": "apps/api/models/preferences.py", "inPanel": true}, {"table": "idempotency_keys", "model": "IdempotencyKey", "entity": "auth", "color": "#5a53a8", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "key", "type": "str", "flag": ""}, {"name": "operation", "type": "str", "flag": ""}, {"name": "owner_scope", "type": "str", "flag": ""}, {"name": "status", "type": "str", "flag": ""}, {"name": "result_ref", "type": "str | None", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}, {"name": "completed_at", "type": "datetime | None", "flag": ""}], "fks": [], "uqs": ["key", "operation", "owner_scope"], "file": "apps/api/models/idempotency.py", "inPanel": true}, {"table": "locations", "model": "Location", "entity": "pantry", "color": "#b45309", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "household_id", "type": "uuid.UUID", "flag": ""}, {"name": "name", "type": "str", "flag": ""}, {"name": "is_principal", "type": "bool", "flag": ""}, {"name": "color", "type": "str | None", "flag": ""}, {"name": "icon", "type": "str | None", "flag": ""}, {"name": "order", "type": "int | None", "flag": ""}, {"name": "active", "type": "bool", "flag": ""}, {"name": "type", "type": "str | None", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}], "fks": [{"col": "household_id", "to": "households.id"}], "uqs": [], "file": "apps/api/models/location.py", "inPanel": true}, {"table": "memberships", "model": "Membership", "entity": "auth", "color": "#5a53a8", "rw": "r", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "household_id", "type": "uuid.UUID", "flag": ""}, {"name": "user_id", "type": "uuid.UUID", "flag": ""}, {"name": "role", "type": "str", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}], "fks": [{"col": "household_id", "to": "households.id"}, {"col": "user_id", "to": "users.id"}], "uqs": ["household_id", "user_id"], "file": "apps/api/models/household.py", "inPanel": true}, {"table": "setup_completion_state", "model": "SetupCompletionState", "entity": "auth", "color": "#5a53a8", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "user_id", "type": "uuid.UUID", "flag": ""}, {"name": "completed", "type": "bool", "flag": ""}, {"name": "completed_at", "type": "datetime | None", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}, {"name": "updated_at", "type": "datetime", "flag": ""}], "fks": [{"col": "user_id", "to": "users.id"}], "uqs": ["user_id"], "file": "apps/api/models/setup.py", "inPanel": true}, {"table": "subscription_entitlement", "model": "SubscriptionEntitlement", "entity": "auth", "color": "#5a53a8", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "user_id", "type": "uuid.UUID", "flag": ""}, {"name": "tier", "type": "str", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}, {"name": "updated_at", "type": "datetime", "flag": ""}], "fks": [{"col": "user_id", "to": "users.id"}], "uqs": ["user_id"], "file": "apps/api/models/subscription.py", "inPanel": true}, {"table": "user_dietary_profile", "model": "UserDietaryProfile", "entity": "allergen", "color": "#3f6d4c", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "user_id", "type": "uuid.UUID", "flag": ""}, {"name": "allergens", "type": "list[str]", "flag": ""}, {"name": "preferences", "type": "list[str]", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}, {"name": "updated_at", "type": "datetime", "flag": ""}], "fks": [{"col": "user_id", "to": "users.id"}], "uqs": ["user_id"], "file": "apps/api/models/preferences.py", "inPanel": true}, {"table": "user_exploration_preferences", "model": "UserExplorationPreferences", "entity": "settings", "color": "#8e4585", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "user_id", "type": "uuid.UUID", "flag": ""}, {"name": "explore_regions", "type": "list[str]", "flag": ""}, {"name": "curiosity_techniques", "type": "list[str]", "flag": ""}, {"name": "comfort_techniques", "type": "list[str]", "flag": ""}, {"name": "comfort_time", "type": "list[str]", "flag": ""}, {"name": "skill_complexity_cap", "type": "int | None", "flag": ""}, {"name": "preference_tastes", "type": "list[str]", "flag": ""}, {"name": "preference_textures", "type": "list[str]", "flag": ""}, {"name": "preference_temperature", "type": "str | None", "flag": ""}], "fks": [{"col": "user_id", "to": "users.id"}], "uqs": ["user_id"], "file": "apps/api/models/preferences.py", "inPanel": true}, {"table": "user_format_preferences", "model": "UserFormatPreferences", "entity": "settings", "color": "#8e4585", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "user_id", "type": "uuid.UUID", "flag": ""}, {"name": "language", "type": "str", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}, {"name": "updated_at", "type": "datetime", "flag": ""}], "fks": [{"col": "user_id", "to": "users.id"}], "uqs": ["user_id"], "file": "apps/api/models/preferences.py", "inPanel": true}, {"table": "user_notification_preferences", "model": "UserNotificationPreferences", "entity": "settings", "color": "#8e4585", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "user_id", "type": "uuid.UUID", "flag": ""}, {"name": "cooking", "type": "bool", "flag": ""}, {"name": "shopping", "type": "bool", "flag": ""}, {"name": "pantry", "type": "bool", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}, {"name": "updated_at", "type": "datetime", "flag": ""}], "fks": [{"col": "user_id", "to": "users.id"}], "uqs": ["user_id"], "file": "apps/api/models/preferences.py", "inPanel": true}, {"table": "user_privacy_permissions", "model": "UserPrivacyPermissions", "entity": "settings", "color": "#8e4585", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "user_id", "type": "uuid.UUID", "flag": ""}, {"name": "share_shopping_data", "type": "bool", "flag": ""}, {"name": "share_culinary_preferences", "type": "bool", "flag": ""}, {"name": "allow_reminders", "type": "bool", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}, {"name": "updated_at", "type": "datetime", "flag": ""}], "fks": [{"col": "user_id", "to": "users.id"}], "uqs": ["user_id"], "file": "apps/api/models/preferences.py", "inPanel": true}, {"table": "users", "model": null, "entity": null, "color": null, "rw": null, "cols": [], "fks": [], "uqs": [], "file": null, "inPanel": false}, {"table": "ai_spend_log", "model": null, "entity": null, "color": null, "rw": null, "cols": [], "fks": [], "uqs": [], "file": null, "inPanel": false}], "paths": [{"id": "p:51719726e3", "status": 429, "kind": "refusal", "phase": "middleware", "name": "rate limit (sensitive)", "detail": "Rate limit exceeded. Try again shortly.", "steps": 4, "exitAt": "middleware", "n": {"committed": 0, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": [], "writes": [], "touches": [], "dependencyRan": "not-run"}, {"id": "p:da0a053b53", "status": 429, "kind": "refusal", "phase": "middleware", "name": "rate limit (global)", "detail": "Rate limit exceeded. Try again shortly.", "steps": 5, "exitAt": "middleware", "n": {"committed": 0, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": [], "writes": [], "touches": [], "dependencyRan": "not-run"}, {"id": "p:57de16a71b", "status": 422, "kind": "framework", "phase": "body-parse", "name": "json_invalid (framework)", "detail": "JSON decode error", "steps": 7, "exitAt": "body-parse", "n": {"committed": 0, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": [], "writes": [], "touches": [], "dependencyRan": "not-run"}, {"id": "p:201d91702d", "status": 400, "kind": "framework", "phase": "body-parse", "name": "body (framework)", "detail": "There was an error parsing the body", "steps": 7, "exitAt": "body-parse", "n": {"committed": 0, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": [], "writes": [], "touches": [], "dependencyRan": "not-run"}, {"id": "p:e8c672a046", "status": 401, "kind": "refusal", "phase": "security", "name": "Not authenticated", "detail": "Not authenticated", "steps": 9, "exitAt": "security", "n": {"committed": 0, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": [], "writes": [], "touches": [], "dependencyRan": "not-run"}, {"id": "p:ec6c43e906", "status": 401, "kind": "refusal", "phase": "dependency", "name": "invalid token", "detail": "invalid token", "steps": 12, "exitAt": "dependency", "n": {"committed": 0, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": [], "writes": [], "touches": [], "dependencyRan": "unknown"}, {"id": "p:a90ffd3af4", "status": 422, "kind": "validation", "phase": "validation", "name": "validation", "detail": null, "steps": 12, "exitAt": "validation", "n": {"committed": 1, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": ["households", "locations", "memberships", "users"], "writes": ["users"], "touches": [{"i": 0, "table": "users", "op": "read", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": false, "race": null}, {"i": 1, "table": "users", "op": "add", "bucket": "committed", "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": "uncaught"}, {"i": 2, "table": null, "op": "flush", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": null}, {"i": 3, "table": null, "op": "commit", "bucket": null, "fn": "build_auth_context", "stage": "dependency", "cond": false, "race": null}, {"i": 4, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": false, "race": null}, {"i": 5, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": true, "race": null}, {"i": 6, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "dependency", "cond": true, "race": null}], "dependencyRan": "ran"}, {"id": "p:fd1039c2ca", "status": 400, "kind": "refusal", "phase": "handler", "name": "Idempotency-Key required", "detail": "Idempotency-Key required", "steps": 14, "exitAt": "handler", "n": {"committed": 1, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": ["households", "locations", "memberships", "users"], "writes": ["users"], "touches": [{"i": 0, "table": "users", "op": "read", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": false, "race": null}, {"i": 1, "table": "users", "op": "add", "bucket": "committed", "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": "uncaught"}, {"i": 2, "table": null, "op": "flush", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": null}, {"i": 3, "table": null, "op": "commit", "bucket": null, "fn": "build_auth_context", "stage": "dependency", "cond": false, "race": null}, {"i": 4, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": false, "race": null}, {"i": 5, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": true, "race": null}, {"i": 6, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "dependency", "cond": true, "race": null}], "dependencyRan": "ran"}, {"id": "p:2adb89467d", "status": 409, "kind": "refusal", "phase": "handler", "name": "setup in progress", "detail": "setup in progress", "steps": 18, "exitAt": "handler", "n": {"committed": 1, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 5}, "tables": ["households", "idempotency_keys", "locations", "memberships", "users"], "writes": ["idempotency_keys", "users"], "touches": [{"i": 0, "table": "users", "op": "read", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": false, "race": null}, {"i": 1, "table": "users", "op": "add", "bucket": "committed", "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": "uncaught"}, {"i": 2, "table": null, "op": "flush", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": null}, {"i": 3, "table": null, "op": "commit", "bucket": null, "fn": "build_auth_context", "stage": "dependency", "cond": false, "race": null}, {"i": 4, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": false, "race": null}, {"i": 5, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": true, "race": null}, {"i": 6, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "dependency", "cond": true, "race": null}, {"i": 7, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_lookup", "stage": "handler", "cond": false, "race": null}, {"i": 8, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 9, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 10, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 11, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 12, "table": null, "op": "flush", "bucket": null, "fn": "_outcome_for", "stage": "handler", "cond": true, "race": null}, {"i": 13, "table": null, "op": "savepoint", "bucket": null, "fn": "claim", "stage": "handler", "cond": true, "race": null}, {"i": 14, "table": "idempotency_keys", "op": "add", "bucket": "uncommitted", "fn": "claim", "stage": "handler", "cond": true, "race": "handled"}, {"i": 15, "table": null, "op": "flush", "bucket": null, "fn": "claim", "stage": "handler", "cond": true, "race": null}, {"i": 16, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_lookup", "stage": "handler", "cond": true, "race": null}, {"i": 17, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 18, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 19, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 20, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 21, "table": null, "op": "flush", "bucket": null, "fn": "_outcome_for", "stage": "handler", "cond": true, "race": null}], "dependencyRan": "ran"}, {"id": "p:5c8ba607f9", "status": 409, "kind": "refusal", "phase": "handler", "name": "consent required", "detail": "consent required", "steps": 21, "exitAt": "handler", "n": {"committed": 1, "maybe_committed": 1, "rolled_back": 5, "uncommitted": 0}, "tables": ["consent_records", "households", "idempotency_keys", "locations", "memberships", "setup_completion_state", "users"], "writes": ["idempotency_keys", "users"], "touches": [{"i": 0, "table": "users", "op": "read", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": false, "race": null}, {"i": 1, "table": "users", "op": "add", "bucket": "committed", "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": "uncaught"}, {"i": 2, "table": null, "op": "flush", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": null}, {"i": 3, "table": null, "op": "commit", "bucket": null, "fn": "build_auth_context", "stage": "dependency", "cond": false, "race": null}, {"i": 4, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": false, "race": null}, {"i": 5, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": true, "race": null}, {"i": 6, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "dependency", "cond": true, "race": null}, {"i": 7, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_lookup", "stage": "handler", "cond": false, "race": null}, {"i": 8, "table": "idempotency_keys", "op": "update", "bucket": "rolled_back", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 9, "table": "idempotency_keys", "op": "update", "bucket": "rolled_back", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 10, "table": "idempotency_keys", "op": "update", "bucket": "rolled_back", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 11, "table": "idempotency_keys", "op": "update", "bucket": "rolled_back", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 12, "table": null, "op": "flush", "bucket": null, "fn": "_outcome_for", "stage": "handler", "cond": true, "race": null}, {"i": 13, "table": null, "op": "savepoint", "bucket": null, "fn": "claim", "stage": "handler", "cond": true, "race": null}, {"i": 14, "table": "idempotency_keys", "op": "add", "bucket": "rolled_back", "fn": "claim", "stage": "handler", "cond": true, "race": "handled"}, {"i": 15, "table": null, "op": "flush", "bucket": null, "fn": "claim", "stage": "handler", "cond": true, "race": null}, {"i": 16, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_lookup", "stage": "handler", "cond": true, "race": null}, {"i": 17, "table": "idempotency_keys", "op": "update", "bucket": "rolled_back", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 18, "table": "idempotency_keys", "op": "update", "bucket": "rolled_back", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 19, "table": "idempotency_keys", "op": "update", "bucket": "rolled_back", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 20, "table": "idempotency_keys", "op": "update", "bucket": "rolled_back", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 21, "table": null, "op": "flush", "bucket": null, "fn": "_outcome_for", "stage": "handler", "cond": true, "race": null}, {"i": 22, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "handler", "cond": false, "race": null}, {"i": 23, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "handler", "cond": true, "race": null}, {"i": 24, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "handler", "cond": true, "race": null}, {"i": 25, "table": "setup_completion_state", "op": "read", "bucket": null, "fn": "complete_setup", "stage": "handler", "cond": false, "race": null}, {"i": 26, "table": "consent_records", "op": "read", "bucket": null, "fn": "latest_consent", "stage": "handler", "cond": false, "race": null}, {"i": 27, "table": null, "op": "rollback", "bucket": null, "fn": "complete_setup", "stage": "handler", "cond": false, "race": null}, {"i": 28, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_discard_claim", "stage": "handler", "cond": false, "race": null}, {"i": 29, "table": "idempotency_keys", "op": "delete", "bucket": "maybe_committed", "fn": "_discard_claim", "stage": "handler", "cond": true, "race": null}, {"i": 30, "table": null, "op": "commit", "bucket": null, "fn": "_discard_claim", "stage": "handler", "cond": true, "race": null}], "dependencyRan": "ran"}, {"id": "p:bba821f362", "status": 200, "kind": "success", "phase": "handler", "name": "replay", "detail": "await _me_response_from_result(ctx, result, session, settings)", "steps": 18, "exitAt": "return", "n": {"committed": 1, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 5}, "tables": ["ai_spend_log", "household_format_preferences", "households", "idempotency_keys", "locations", "memberships", "setup_completion_state", "subscription_entitlement", "user_dietary_profile", "user_exploration_preferences", "user_format_preferences", "user_notification_preferences", "user_privacy_permissions", "users"], "writes": ["idempotency_keys", "users"], "touches": [{"i": 0, "table": "users", "op": "read", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": false, "race": null}, {"i": 1, "table": "users", "op": "add", "bucket": "committed", "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": "uncaught"}, {"i": 2, "table": null, "op": "flush", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": null}, {"i": 3, "table": null, "op": "commit", "bucket": null, "fn": "build_auth_context", "stage": "dependency", "cond": false, "race": null}, {"i": 4, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": false, "race": null}, {"i": 5, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": true, "race": null}, {"i": 6, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "dependency", "cond": true, "race": null}, {"i": 7, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_lookup", "stage": "handler", "cond": false, "race": null}, {"i": 8, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 9, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 10, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 11, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 12, "table": null, "op": "flush", "bucket": null, "fn": "_outcome_for", "stage": "handler", "cond": true, "race": null}, {"i": 13, "table": null, "op": "savepoint", "bucket": null, "fn": "claim", "stage": "handler", "cond": true, "race": null}, {"i": 14, "table": "idempotency_keys", "op": "add", "bucket": "uncommitted", "fn": "claim", "stage": "handler", "cond": true, "race": "handled"}, {"i": 15, "table": null, "op": "flush", "bucket": null, "fn": "claim", "stage": "handler", "cond": true, "race": null}, {"i": 16, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_lookup", "stage": "handler", "cond": true, "race": null}, {"i": 17, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 18, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 19, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 20, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 21, "table": null, "op": "flush", "bucket": null, "fn": "_outcome_for", "stage": "handler", "cond": true, "race": null}, {"i": 22, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "handler", "cond": false, "race": null}, {"i": 23, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "handler", "cond": true, "race": null}, {"i": 24, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "handler", "cond": true, "race": null}, {"i": 25, "table": "household_format_preferences", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 26, "table": "user_format_preferences", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 27, "table": "user_dietary_profile", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 28, "table": "user_exploration_preferences", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 29, "table": "user_privacy_permissions", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 30, "table": "user_notification_preferences", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 31, "table": "subscription_entitlement", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 32, "table": "setup_completion_state", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 33, "table": "ai_spend_log", "op": "read", "bucket": null, "fn": "credits_used_this_month", "stage": "handler", "cond": false, "race": null}], "dependencyRan": "ran"}, {"id": "p:1ac75d260a", "status": 200, "kind": "success", "phase": "handler", "name": "already done", "detail": "await _me_response_from_result(ctx, result, session, settings)", "steps": 20, "exitAt": "return", "n": {"committed": 9, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": ["ai_spend_log", "household_format_preferences", "households", "idempotency_keys", "locations", "memberships", "setup_completion_state", "subscription_entitlement", "user_dietary_profile", "user_exploration_preferences", "user_format_preferences", "user_notification_preferences", "user_privacy_permissions", "users"], "writes": ["idempotency_keys", "users"], "touches": [{"i": 0, "table": "users", "op": "read", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": false, "race": null}, {"i": 1, "table": "users", "op": "add", "bucket": "committed", "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": "uncaught"}, {"i": 2, "table": null, "op": "flush", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": null}, {"i": 3, "table": null, "op": "commit", "bucket": null, "fn": "build_auth_context", "stage": "dependency", "cond": false, "race": null}, {"i": 4, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": false, "race": null}, {"i": 5, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": true, "race": null}, {"i": 6, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "dependency", "cond": true, "race": null}, {"i": 7, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_lookup", "stage": "handler", "cond": false, "race": null}, {"i": 8, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 9, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 10, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 11, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 12, "table": null, "op": "flush", "bucket": null, "fn": "_outcome_for", "stage": "handler", "cond": true, "race": null}, {"i": 13, "table": null, "op": "savepoint", "bucket": null, "fn": "claim", "stage": "handler", "cond": true, "race": null}, {"i": 14, "table": "idempotency_keys", "op": "add", "bucket": "committed", "fn": "claim", "stage": "handler", "cond": true, "race": "handled"}, {"i": 15, "table": null, "op": "flush", "bucket": null, "fn": "claim", "stage": "handler", "cond": true, "race": null}, {"i": 16, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_lookup", "stage": "handler", "cond": true, "race": null}, {"i": 17, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 18, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 19, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 20, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 21, "table": null, "op": "flush", "bucket": null, "fn": "_outcome_for", "stage": "handler", "cond": true, "race": null}, {"i": 22, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "handler", "cond": false, "race": null}, {"i": 23, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "handler", "cond": true, "race": null}, {"i": 24, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "handler", "cond": true, "race": null}, {"i": 25, "table": "setup_completion_state", "op": "read", "bucket": null, "fn": "complete_setup", "stage": "handler", "cond": false, "race": null}, {"i": 26, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "handler", "cond": false, "race": null}, {"i": 27, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "handler", "cond": true, "race": null}, {"i": 28, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "handler", "cond": true, "race": null}, {"i": 29, "table": "household_format_preferences", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 30, "table": "user_format_preferences", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 31, "table": "user_dietary_profile", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 32, "table": "user_exploration_preferences", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 33, "table": "user_privacy_permissions", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 34, "table": "user_notification_preferences", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 35, "table": "subscription_entitlement", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 36, "table": "setup_completion_state", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 37, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "complete", "stage": "handler", "cond": false, "race": null}, {"i": 38, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "complete", "stage": "handler", "cond": false, "race": null}, {"i": 39, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "complete", "stage": "handler", "cond": false, "race": null}, {"i": 40, "table": null, "op": "flush", "bucket": null, "fn": "complete", "stage": "handler", "cond": false, "race": null}, {"i": 41, "table": null, "op": "commit", "bucket": null, "fn": "complete_setup", "stage": "handler", "cond": false, "race": null}, {"i": 42, "table": "ai_spend_log", "op": "read", "bucket": null, "fn": "credits_used_this_month", "stage": "handler", "cond": false, "race": null}], "dependencyRan": "ran"}, {"id": "p:0f099873d5", "status": 200, "kind": "success", "phase": "handler", "name": "first run", "detail": "await _me_response_from_result(ctx, result, session, settings)", "steps": 22, "exitAt": "return", "n": {"committed": 45, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": ["ai_spend_log", "consent_records", "household_format_preferences", "households", "idempotency_keys", "locations", "memberships", "setup_completion_state", "subscription_entitlement", "user_dietary_profile", "user_exploration_preferences", "user_format_preferences", "user_notification_preferences", "user_privacy_permissions", "users"], "writes": ["household_format_preferences", "households", "idempotency_keys", "locations", "memberships", "setup_completion_state", "subscription_entitlement", "user_dietary_profile", "user_exploration_preferences", "user_format_preferences", "user_notification_preferences", "user_privacy_permissions", "users"], "touches": [{"i": 0, "table": "users", "op": "read", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": false, "race": null}, {"i": 1, "table": "users", "op": "add", "bucket": "committed", "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": "uncaught"}, {"i": 2, "table": null, "op": "flush", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": null}, {"i": 3, "table": null, "op": "commit", "bucket": null, "fn": "build_auth_context", "stage": "dependency", "cond": false, "race": null}, {"i": 4, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": false, "race": null}, {"i": 5, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": true, "race": null}, {"i": 6, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "dependency", "cond": true, "race": null}, {"i": 7, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_lookup", "stage": "handler", "cond": false, "race": null}, {"i": 8, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 9, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 10, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 11, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 12, "table": null, "op": "flush", "bucket": null, "fn": "_outcome_for", "stage": "handler", "cond": true, "race": null}, {"i": 13, "table": null, "op": "savepoint", "bucket": null, "fn": "claim", "stage": "handler", "cond": true, "race": null}, {"i": 14, "table": "idempotency_keys", "op": "add", "bucket": "committed", "fn": "claim", "stage": "handler", "cond": true, "race": "handled"}, {"i": 15, "table": null, "op": "flush", "bucket": null, "fn": "claim", "stage": "handler", "cond": true, "race": null}, {"i": 16, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_lookup", "stage": "handler", "cond": true, "race": null}, {"i": 17, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 18, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 19, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 20, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 21, "table": null, "op": "flush", "bucket": null, "fn": "_outcome_for", "stage": "handler", "cond": true, "race": null}, {"i": 22, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "handler", "cond": false, "race": null}, {"i": 23, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "handler", "cond": true, "race": null}, {"i": 24, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "handler", "cond": true, "race": null}, {"i": 25, "table": "setup_completion_state", "op": "read", "bucket": null, "fn": "complete_setup", "stage": "handler", "cond": false, "race": null}, {"i": 26, "table": "consent_records", "op": "read", "bucket": null, "fn": "latest_consent", "stage": "handler", "cond": false, "race": null}, {"i": 27, "table": "memberships", "op": "read", "bucket": null, "fn": "ensure_principal_household", "stage": "handler", "cond": false, "race": null}, {"i": 28, "table": "households", "op": "read", "bucket": null, "fn": "ensure_principal_household", "stage": "handler", "cond": true, "race": null}, {"i": 29, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "handler", "cond": true, "race": null}, {"i": 30, "table": "locations", "op": "add", "bucket": "committed", "fn": "ensure_principal_household", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 31, "table": null, "op": "flush", "bucket": null, "fn": "ensure_principal_household", "stage": "handler", "cond": true, "race": null}, {"i": 32, "table": "households", "op": "add", "bucket": "committed", "fn": "ensure_principal_household", "stage": "handler", "cond": true, "race": null}, {"i": 33, "table": null, "op": "flush", "bucket": null, "fn": "ensure_principal_household", "stage": "handler", "cond": true, "race": null}, {"i": 34, "table": "memberships", "op": "add", "bucket": "committed", "fn": "ensure_principal_household", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 35, "table": "locations", "op": "add", "bucket": "committed", "fn": "ensure_principal_household", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 36, "table": null, "op": "flush", "bucket": null, "fn": "ensure_principal_household", "stage": "handler", "cond": true, "race": null}, {"i": 37, "table": "households", "op": "update", "bucket": "committed", "fn": "complete_setup", "stage": "handler", "cond": false, "race": null}, {"i": 38, "table": null, "op": "flush", "bucket": null, "fn": "complete_setup", "stage": "handler", "cond": false, "race": null}, {"i": 39, "table": "household_format_preferences", "op": "read", "bucket": null, "fn": "_upsert_format_prefs", "stage": "handler", "cond": false, "race": null}, {"i": 40, "table": "household_format_preferences", "op": "add", "bucket": "committed", "fn": "_upsert_format_prefs", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 41, "table": "household_format_preferences", "op": "update", "bucket": "committed", "fn": "_upsert_format_prefs", "stage": "handler", "cond": false, "race": null}, {"i": 42, "table": "household_format_preferences", "op": "update", "bucket": "committed", "fn": "_upsert_format_prefs", "stage": "handler", "cond": false, "race": null}, {"i": 43, "table": "household_format_preferences", "op": "update", "bucket": "committed", "fn": "_upsert_format_prefs", "stage": "handler", "cond": false, "race": null}, {"i": 44, "table": "household_format_preferences", "op": "update", "bucket": "committed", "fn": "_upsert_format_prefs", "stage": "handler", "cond": false, "race": null}, {"i": 45, "table": null, "op": "flush", "bucket": null, "fn": "_upsert_format_prefs", "stage": "handler", "cond": false, "race": null}, {"i": 46, "table": "user_format_preferences", "op": "read", "bucket": null, "fn": "_upsert_user_format", "stage": "handler", "cond": false, "race": null}, {"i": 47, "table": "user_format_preferences", "op": "add", "bucket": "committed", "fn": "_upsert_user_format", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 48, "table": "user_format_preferences", "op": "update", "bucket": "committed", "fn": "_upsert_user_format", "stage": "handler", "cond": false, "race": null}, {"i": 49, "table": null, "op": "flush", "bucket": null, "fn": "_upsert_user_format", "stage": "handler", "cond": false, "race": null}, {"i": 50, "table": "user_dietary_profile", "op": "read", "bucket": null, "fn": "_upsert_dietary", "stage": "handler", "cond": false, "race": null}, {"i": 51, "table": "user_dietary_profile", "op": "add", "bucket": "committed", "fn": "_upsert_dietary", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 52, "table": "user_dietary_profile", "op": "update", "bucket": "committed", "fn": "_upsert_dietary", "stage": "handler", "cond": false, "race": null}, {"i": 53, "table": "user_dietary_profile", "op": "update", "bucket": "committed", "fn": "_upsert_dietary", "stage": "handler", "cond": false, "race": null}, {"i": 54, "table": null, "op": "flush", "bucket": null, "fn": "_upsert_dietary", "stage": "handler", "cond": false, "race": null}, {"i": 55, "table": "user_exploration_preferences", "op": "read", "bucket": null, "fn": "upsert_exploration_preferences", "stage": "handler", "cond": false, "race": null}, {"i": 56, "table": "user_exploration_preferences", "op": "add", "bucket": "committed", "fn": "upsert_exploration_preferences", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 57, "table": "user_exploration_preferences", "op": "update", "bucket": "committed", "fn": "upsert_exploration_preferences", "stage": "handler", "cond": false, "race": null}, {"i": 58, "table": "user_exploration_preferences", "op": "update", "bucket": "committed", "fn": "upsert_exploration_preferences", "stage": "handler", "cond": false, "race": null}, {"i": 59, "table": "user_exploration_preferences", "op": "update", "bucket": "committed", "fn": "upsert_exploration_preferences", "stage": "handler", "cond": false, "race": null}, {"i": 60, "table": "user_exploration_preferences", "op": "update", "bucket": "committed", "fn": "upsert_exploration_preferences", "stage": "handler", "cond": false, "race": null}, {"i": 61, "table": "user_exploration_preferences", "op": "update", "bucket": "committed", "fn": "upsert_exploration_preferences", "stage": "handler", "cond": false, "race": null}, {"i": 62, "table": "user_exploration_preferences", "op": "update", "bucket": "committed", "fn": "upsert_exploration_preferences", "stage": "handler", "cond": false, "race": null}, {"i": 63, "table": "user_exploration_preferences", "op": "update", "bucket": "committed", "fn": "upsert_exploration_preferences", "stage": "handler", "cond": false, "race": null}, {"i": 64, "table": "user_exploration_preferences", "op": "update", "bucket": "committed", "fn": "upsert_exploration_preferences", "stage": "handler", "cond": false, "race": null}, {"i": 65, "table": null, "op": "flush", "bucket": null, "fn": "upsert_exploration_preferences", "stage": "handler", "cond": false, "race": null}, {"i": 66, "table": "user_privacy_permissions", "op": "read", "bucket": null, "fn": "_upsert_privacy", "stage": "handler", "cond": false, "race": null}, {"i": 67, "table": "user_privacy_permissions", "op": "add", "bucket": "committed", "fn": "_upsert_privacy", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 68, "table": "user_privacy_permissions", "op": "update", "bucket": "committed", "fn": "_upsert_privacy", "stage": "handler", "cond": false, "race": null}, {"i": 69, "table": "user_privacy_permissions", "op": "update", "bucket": "committed", "fn": "_upsert_privacy", "stage": "handler", "cond": false, "race": null}, {"i": 70, "table": "user_privacy_permissions", "op": "update", "bucket": "committed", "fn": "_upsert_privacy", "stage": "handler", "cond": false, "race": null}, {"i": 71, "table": null, "op": "flush", "bucket": null, "fn": "_upsert_privacy", "stage": "handler", "cond": false, "race": null}, {"i": 72, "table": "user_notification_preferences", "op": "read", "bucket": null, "fn": "_upsert_notifications", "stage": "handler", "cond": false, "race": null}, {"i": 73, "table": "user_notification_preferences", "op": "add", "bucket": "committed", "fn": "_upsert_notifications", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 74, "table": "user_notification_preferences", "op": "update", "bucket": "committed", "fn": "_upsert_notifications", "stage": "handler", "cond": false, "race": null}, {"i": 75, "table": "user_notification_preferences", "op": "update", "bucket": "committed", "fn": "_upsert_notifications", "stage": "handler", "cond": false, "race": null}, {"i": 76, "table": "user_notification_preferences", "op": "update", "bucket": "committed", "fn": "_upsert_notifications", "stage": "handler", "cond": false, "race": null}, {"i": 77, "table": null, "op": "flush", "bucket": null, "fn": "_upsert_notifications", "stage": "handler", "cond": false, "race": null}, {"i": 78, "table": "subscription_entitlement", "op": "read", "bucket": null, "fn": "_upsert_subscription", "stage": "handler", "cond": false, "race": null}, {"i": 79, "table": "subscription_entitlement", "op": "add", "bucket": "committed", "fn": "_upsert_subscription", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 80, "table": null, "op": "flush", "bucket": null, "fn": "_upsert_subscription", "stage": "handler", "cond": true, "race": null}, {"i": 81, "table": "setup_completion_state", "op": "read", "bucket": null, "fn": "_stamp_completion", "stage": "handler", "cond": false, "race": null}, {"i": 82, "table": "setup_completion_state", "op": "add", "bucket": "committed", "fn": "_stamp_completion", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 83, "table": "setup_completion_state", "op": "update", "bucket": "committed", "fn": "_stamp_completion", "stage": "handler", "cond": false, "race": null}, {"i": 84, "table": "setup_completion_state", "op": "update", "bucket": "committed", "fn": "_stamp_completion", "stage": "handler", "cond": false, "race": null}, {"i": 85, "table": null, "op": "flush", "bucket": null, "fn": "_stamp_completion", "stage": "handler", "cond": false, "race": null}, {"i": 86, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "complete", "stage": "handler", "cond": false, "race": null}, {"i": 87, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "complete", "stage": "handler", "cond": false, "race": null}, {"i": 88, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "complete", "stage": "handler", "cond": false, "race": null}, {"i": 89, "table": null, "op": "flush", "bucket": null, "fn": "complete", "stage": "handler", "cond": false, "race": null}, {"i": 90, "table": null, "op": "commit", "bucket": null, "fn": "complete_setup", "stage": "handler", "cond": false, "race": null}, {"i": 91, "table": "ai_spend_log", "op": "read", "bucket": null, "fn": "credits_used_this_month", "stage": "handler", "cond": false, "race": null}], "dependencyRan": "ran"}, {"id": "p:3ee19bd271", "status": 500, "kind": "uncaught", "phase": "uncaught", "name": "uncaught", "detail": null, "steps": 12, "exitAt": "uncaught", "n": {"committed": 1, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": ["households", "locations", "memberships", "users"], "writes": ["users"], "touches": [{"i": 0, "table": "users", "op": "read", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": false, "race": null}, {"i": 1, "table": "users", "op": "add", "bucket": "committed", "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": "uncaught"}, {"i": 2, "table": null, "op": "flush", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": null}, {"i": 3, "table": null, "op": "commit", "bucket": null, "fn": "build_auth_context", "stage": "dependency", "cond": false, "race": null}, {"i": 4, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": false, "race": null}, {"i": 5, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": true, "race": null}, {"i": 6, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "dependency", "cond": true, "race": null}], "dependencyRan": "ran"}], "provisions": [{"table": "users", "op": "add", "state": "committed", "committed_at": "apps/api/auth/context.py:79", "at": "apps/api/services/ownership.py:49"}], "claims": [{"table": "idempotency_keys", "model": "IdempotencyKey", "unique": ["key", "operation", "owner_scope"], "race": "handled", "idioms": ["begin_nested"], "constraint": "uq_idempotency_key_op_owner"}], "races": [{"path": "validation", "table": "users", "state": "uncaught"}, {"path": "Idempotency-Key required", "table": "users", "state": "uncaught"}, {"path": "setup in progress", "table": "users", "state": "uncaught"}, {"path": "setup in progress", "table": "idempotency_keys", "state": "handled"}, {"path": "consent required", "table": "users", "state": "uncaught"}, {"path": "consent required", "table": "idempotency_keys", "state": "handled"}, {"path": "replay", "table": "users", "state": "uncaught"}, {"path": "replay", "table": "idempotency_keys", "state": "handled"}, {"path": "already done", "table": "users", "state": "uncaught"}, {"path": "already done", "table": "idempotency_keys", "state": "handled"}, {"path": "first run", "table": "users", "state": "uncaught"}, {"path": "first run", "table": "idempotency_keys", "state": "handled"}, {"path": "first run", "table": "locations", "state": "uncaught"}, {"path": "first run", "table": "memberships", "state": "uncaught"}, {"path": "first run", "table": "household_format_preferences", "state": "uncaught"}, {"path": "first run", "table": "user_format_preferences", "state": "uncaught"}, {"path": "first run", "table": "user_dietary_profile", "state": "uncaught"}, {"path": "first run", "table": "user_exploration_preferences", "state": "uncaught"}, {"path": "first run", "table": "user_privacy_permissions", "state": "uncaught"}, {"path": "first run", "table": "user_notification_preferences", "state": "uncaught"}, {"path": "first run", "table": "subscription_entitlement", "state": "uncaught"}, {"path": "first run", "table": "setup_completion_state", "state": "uncaught"}, {"path": "uncaught", "table": "users", "state": "uncaught"}], "commits": true, "idempotent": true, "idempotency_table": "idempotency_keys", "ops": 24, "entities": ["allergen", "auth", "legal-consent", "pantry", "settings"], "counts": {"tables": 15, "inPanel": 13, "paths": 14, "stepsMax": 92}}</script>
+<script type="application/json" id="PLAIN">{"tree_plain": "every table the door reads or writes, on the door as a whole", "fields": [{"name": "table", "plain": "a database table — where the data actually lives", "src": "data.tables[].table", "joins": ["forms effects.steps.table (WHEN it is touched)", "forms.repeat.claims.table", "forms.auth.provisions.table", "data.tables.fks (→ table.col)"], "flags": ["key"]}, {"name": "model", "plain": "the class that maps the table — the code's name for it", "src": "data.tables[].model", "joins": ["schemas nested shapes (from_attributes)", "forms effects.steps.model", "feed models{} (columns · constraints · drift)"], "flags": ["key", "feed"]}, {"name": "entity + colour", "plain": "the business area that owns the table — the ground it sits on", "src": "data.tables[].entity · entity_color", "joins": ["identity.entity", "data.entities (the grounds)"], "flags": ["key"]}, {"name": "channel R · W · RW", "plain": "read, written or both — the UNION over every path, never one path", "src": "data.tables[].rw · data.reads · data.writes · data.both · data.ops", "joins": ["forms effects.steps.op (per path, per step)"], "flags": []}, {"name": "columns", "plain": "the fields with their types — the table's shape", "src": "data.tables[].cols · cols_more", "joins": ["feed models{} (nullability · defaults)", "schemas cols (the mirror)"], "flags": []}, {"name": "foreign keys", "plain": "which column points at which other table — the joins", "src": "data.tables[].fks", "joins": ["data.tables.table"], "flags": []}, {"name": "unique keys", "plain": "the latches the database refuses to duplicate", "src": "data.tables[].uqs", "joins": ["forms effects.steps.race (an insert that can lose)", "forms.repeat.claims.unique"], "flags": []}, {"name": "DB commit", "plain": "whether the door commits — the transaction pulse, on the door as a whole", "src": "data.commits · security.commits", "joins": ["forms effects buckets (per path: committed · maybe · rolled back · uncommitted)"], "flags": []}, {"name": "idempotent write", "plain": "the door writes idempotency_keys — replays are recognised", "src": "security.idempotent · security.idempotency_table", "joins": ["forms.repeat"], "flags": []}, {"name": "effects along the path", "plain": "one row per read and write in the order the request makes them, with the bucket each write fell in", "src": "forms.paths[].effects.steps (step · table · op · bucket · fn · at · cond · race · dependency)", "joins": ["data.tables.table", "functions (fn)", "forms.exits (the bucket depends on the ending)"], "flags": ["new"]}, {"name": "effect buckets", "plain": "committed · maybe committed · rolled back · uncommitted — what a write's fate was on this ending", "src": "forms.paths[].effects.n · effects.writes · effects.tables", "joins": ["forms.paths (the ending decides)"], "flags": ["new", "state"]}, {"name": "race", "plain": "an insert on a unique key that can lose to a concurrent one — handled by a savepoint or uncaught", "src": "forms effects.steps.race · forms.repeat.claims.race", "joins": ["data.tables.uqs"], "flags": ["new", "state"]}, {"name": "provisions", "plain": "what the auth dependency creates before the handler runs — the user row, committed", "src": "forms.auth.provisions (table · op · step · committed_at)", "joins": ["data.tables.table", "security.guards"], "flags": ["new"]}], "joins": [{"key": "entity slug", "where": "identity · data.tables · schemas · functions · tests.journeys · home_ev · above", "plain": "the business-area key — the grounds, the faces, the home"}, {"key": "table name", "where": "data.tables · effects.steps · repeat.claims · auth.provisions · idempotency_table · fks", "plain": "the data key — WHAT is touched and WHEN"}, {"key": "file:line (`at`)", "where": "identity · handler · guards · asgi · exits · preconditions · effects.steps · catches · reason sites · hook · guard", "plain": "the source anchor — every fact can be opened"}, {"key": "step id (st:)", "where": "effects.steps · auth.provisions.step · catches.commits · catches.writes", "plain": "the write key — one read or write, its fate"}, {"key": "schema name", "where": "schemas.request/response · exits.response.model · nested · mirrors", "plain": "the shape key"}]}</script>
+
+<div class="artifact-page">
+
+  <header>
+    <p class="eyebrow">POST /setup/complete &middot; 05007957</p>
+    <h1>Tables and models, as pictures</h1>
+    <p class="lede">Five sections, one idea each. Hover anything for its words.</p>
+  </header>
+
+  <section class="sec" data-sec="1">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="19" r="3"></circle><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path><circle cx="18" cy="5" r="3"></circle></svg>When</h2><span class="n">14 paths &middot; 15 lanes</span></div>
+    <div class="panel">
+      <div class="chips" id="p-chips" role="group" aria-label="path"></div>
+      <div class="when" data-fx="when" id="when"></div>
+      <div class="lg" id="when-lg"></div>
+      <p class="cap">one path, stage by stage <button class="chip" type="button" id="when-replay">Replay</button></p>
+    </div>
+  </section>
+
+  <section class="sec" data-sec="2">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M3 9h18"></path><path d="M3 15h18"></path><path d="M9 3v18"></path><path d="M15 3v18"></path></svg>Which</h2><span class="n">15 &times; 14</span></div>
+    <div class="panel">
+      <div class="mxwrap"><div class="mx" id="mx"></div></div>
+      <div class="lg" id="mx-lg"></div>
+      <p class="cap">every path at once</p>
+    </div>
+  </section>
+
+  <section class="sec" data-sec="3">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="6" x2="6" y1="3" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>The table</h2><span class="n">15 tables</span></div>
+    <div class="panel">
+      <div class="chips" id="t-chips" role="group" aria-label="table"></div>
+      <div class="tree" id="tree"></div>
+      <div class="lg" id="tree-lg"></div>
+      <p class="cap">one table, everything known</p>
+    </div>
+  </section>
+
+  <section class="sec" data-sec="4">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>The joins</h2><span class="n">5 keys</span></div>
+    <div class="panel">
+      <div id="joins"></div>
+      <p class="cap">what hangs off a table</p>
+    </div>
+  </section>
+
+  <section class="sec" data-sec="5">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.13-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.13a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.13 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.13a.5.5 0 0 1-.96 0z"></path><path d="M20 3v4"></path><path d="M22 5h-4"></path><path d="M4 17v2"></path><path d="M5 18H3"></path></svg>Not shown yet</h2><span class="n">5 fields</span></div>
+    <div class="panel">
+      <div class="chips" id="new-chips"></div>
+      <p class="cap">what the command panel will select and the middle will show</p>
+    </div>
+  </section>
+</div>
+
+<div class="af-chrome">
+  <button class="af-cog" id="af-cog" type="button" aria-expanded="false" aria-controls="af-panel" aria-label="Display options">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.2"></circle>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    </svg>
+  </button>
+
+  <div class="af-panel" id="af-panel" data-open="false">
+    <div class="af-group" role="radiogroup" aria-label="Font family" id="af-fonts"><p class="af-legend">Font family</p></div>
+    <div class="af-divider"></div>
+    <div class="af-group" role="radiogroup" aria-label="Theme" id="af-skins"><p class="af-legend">Theme</p></div>
+    <div class="af-divider"></div>
+    <!-- Drop this Motion group only if the page has no animation at all. -->
+    <div class="af-group" role="radiogroup" aria-label="Motion" id="af-motion"><p class="af-legend">Motion</p></div>
+    <p class="af-foot" id="af-foot">—</p>
+  </div>
+</div>
+
+<script>
+var MOTION = { on: true };   /* animations read this before scheduling work */
+
+(function () {
+  "use strict";
+
+  /* Add an entry to either roster to add an option — nothing else changes. */
+  var FONTS = [
+    { id: "mono",  label: "Mono",     stack: 'ui-monospace, monospace', size: 15, track: -0.025 },
+    { id: "segoe", label: "Segoe UI", stack: '"Segoe UI", sans-serif',  size: 16, track: -0.015 }
+  ];
+  var SKINS = [
+    { id: "catalog",   label: "Catalog",         note: "center · indigo" },
+    { id: "blueprint", label: "Blueprint",       note: "skin F · blue" },
+    { id: "mission",   label: "Mission Console", note: "skin B · teal" }
+  ];
+  var FKEY = "gabe:artifact:font", SKEY = "gabe:artifact:skin";
+
+  var root = document.documentElement;
+  var cog = document.getElementById("af-cog"), panel = document.getElementById("af-panel");
+  var fhost = document.getElementById("af-fonts"), shost = document.getElementById("af-skins");
+  var mhost = document.getElementById("af-motion"), foot = document.getElementById("af-foot");
+
+  function read(key, list, dflt) {          /* sandboxed frames can throw on storage */
+    try {
+      var v = window.localStorage.getItem(key);
+      return list.some(function (x) { return x.id === v; }) ? v : dflt;
+    } catch (e) { return dflt; }
+  }
+  function write(key, v) { try { window.localStorage.setItem(key, v); } catch (e) {} }
+
+  function opt(host, item, spec, onPick) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "af-opt";
+    b.setAttribute("role", "radio"); b.setAttribute("data-id", item.id); b.setAttribute("aria-checked", "false");
+    var n = document.createElement("span");
+    n.className = "af-name"; n.textContent = item.label;
+    if (item.stack) n.style.fontFamily = item.stack;      /* preview its own face */
+    var s = document.createElement("span");
+    s.className = "af-spec"; s.textContent = spec;
+    b.appendChild(n); b.appendChild(s);
+    b.addEventListener("click", function () { onPick(item.id); });
+    host.appendChild(b);
+  }
+  function mark(host, id) {
+    host.querySelectorAll(".af-opt").forEach(function (o) {
+      o.setAttribute("aria-checked", String(o.getAttribute("data-id") === id));
+    });
+  }
+
+  function applyFont(id) {
+    var f = FONTS.filter(function (x) { return x.id === id; })[0] || FONTS[0];
+    root.style.setProperty("--af-stack", f.stack);
+    root.style.setProperty("--af-size", f.size + "px");
+    root.style.setProperty("--af-track", f.track + "em");
+    write(FKEY, f.id); mark(fhost, f.id);
+    foot.textContent = f.size + "px · " + f.track + "em";
+  }
+  function applySkin(id) {
+    root.setAttribute("data-skin", id);
+    write(SKEY, id); mark(shost, id);
+  }
+  function setMotion(on) {
+    MOTION.on = on;
+    root.setAttribute("data-motion", on ? "on" : "off");
+    /* Rebuild BEFORE pausing. A rebuild replaces the SVG, and a
+       pauseAnimations() called on the old element does nothing for the new
+       one — which is why four SMIL patterns kept running through "Paused"
+       even after the rebuild hook landed. Order: rebuild, then freeze. */
+    if (window.__rebuildMotion) window.__rebuildMotion();
+    document.querySelectorAll("svg").forEach(function (s) {
+      if (s.pauseAnimations && s.unpauseAnimations) { on ? s.unpauseAnimations() : s.pauseAnimations(); }
+    });
+    mark(mhost, on ? "on" : "off");
+  }
+
+  FONTS.forEach(function (f) { opt(fhost, f, f.size + " / " + f.track, applyFont); });
+  SKINS.forEach(function (s) { opt(shost, s, s.note, applySkin); });
+  [{ id: "on", label: "Playing" }, { id: "off", label: "Paused" }].forEach(function (m) {
+    opt(mhost, m, m.id === "on" ? "loops + replays" : "frozen", function (id) { setMotion(id === "on"); });
+  });
+
+  function open(next) { panel.setAttribute("data-open", String(next)); cog.setAttribute("aria-expanded", String(next)); }
+  cog.addEventListener("click", function (e) { e.stopPropagation(); open(panel.getAttribute("data-open") !== "true"); });
+  panel.addEventListener("click", function (e) { e.stopPropagation(); });
+  document.addEventListener("click", function () { if (panel.getAttribute("data-open") === "true") open(false); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && panel.getAttribute("data-open") === "true") { open(false); cog.focus(); }
+  });
+
+  applyFont(read(FKEY, FONTS, "mono"));
+  applySkin(read(SKEY, SKINS, "catalog"));
+  setMotion(!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  window.__setSkin = applySkin;
+  window.__setMotion = setMotion;
+})();
+</script>
+
+<script>
+(function () {
+  "use strict";
+  var D = JSON.parse(document.getElementById("ATLAS").textContent);
+  var P = JSON.parse(document.getElementById("PLAIN").textContent);
+
+  /* fate of a write — the dataviz-validated series in the kit, never the accent */
+  var FATE = { rolled_back: "var(--s2)", committed: "var(--s3)", maybe_committed: "var(--s4)",
+               uncommitted: "var(--s1)", read: "var(--muted)" };
+  var RANK = ["rolled_back", "committed", "maybe_committed", "uncommitted", "read"];
+  var say = function (b) { return b ? b.replace(/_/g, " ") : "read"; };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); };
+
+  /* ── tip (static pattern library) ───────────────────────────────── */
+  function tipFor(stage) { var t = document.createElement("div"); t.className = "tip"; stage.appendChild(t); return t; }
+  function showTip(tip, stage, evt, html) {
+    var box = stage.getBoundingClientRect();
+    tip.innerHTML = html; tip.setAttribute("data-show", "true");
+    var x = evt.clientX - box.left + 12, y = evt.clientY - box.top - tip.offsetHeight - 10;
+    tip.style.left = Math.max(0, Math.min(x, box.width - tip.offsetWidth - 4)) + "px";
+    tip.style.top = Math.max(0, y) + "px";
+  }
+  function hideTip(tip) { tip.setAttribute("data-show", "false"); }
+  function wire(node, tip, stage, html) {
+    node.addEventListener("mousemove", function (e) { showTip(tip, stage, e, html); });
+    node.addEventListener("mouseleave", function () { hideTip(tip); });
+    node.addEventListener("focus", function (e) { showTip(tip, stage, { clientX: node.getBoundingClientRect().left, clientY: node.getBoundingClientRect().top }, html); });
+    node.addEventListener("blur", function () { hideTip(tip); });
+  }
+
+  /* ── shared joins ───────────────────────────────────────────────── */
+  var TBL = D.tables.slice();
+  var byName = {}; TBL.forEach(function (t) { byName[t.table] = t; });
+  var PLAINF = {}; P.fields.forEach(function (f) { PLAINF[f.name] = f; });
+
+  function touchesOf(path, table) {
+    return path.touches.filter(function (t) { return t.table === table; });
+  }
+  function strongest(ts) {
+    if (!ts.length) return "none";
+    for (var i = 0; i < RANK.length - 1; i++) {
+      for (var j = 0; j < ts.length; j++) if (ts[j].bucket === RANK[i]) return RANK[i];
+    }
+    return "read";
+  }
+
+  /* ═══ 1 · WHEN ═════════════════════════════════════════════════════ */
+  var whenHost = document.getElementById("when");
+  var whenTip = tipFor(whenHost);
+  var chipHost = document.getElementById("p-chips");
+  var sel = D.paths.filter(function (p) { return p.name === "first run"; })[0] || D.paths[0];
+  var raf = null;
+
+  /* column weights: the LABEL sets the floor, the touches take the remainder */
+  var maxAt = {};
+  D.stages.forEach(function (s) { maxAt[s] = 0; });
+  D.paths.forEach(function (p) {
+    var c = {};
+    p.touches.forEach(function (t) { c[t.stage] = (c[t.stage] || 0) + 1; });
+    D.stages.forEach(function (s) { if ((c[s] || 0) > maxAt[s]) maxAt[s] = c[s]; });
+  });
+  function flexOf(s) { return maxAt[s] + " 0 " + (s.length + 2) + "ch"; }
+
+  D.paths.forEach(function (p) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "chip"; b.setAttribute("aria-pressed", String(p === sel));
+    b.innerHTML = '<span class="s">' + p.status + "</span> " + esc(p.name);
+    b.addEventListener("click", function () {
+      sel = p;
+      [].forEach.call(chipHost.children, function (c) { c.setAttribute("aria-pressed", String(c === b)); });
+      buildWhen();
+    });
+    chipHost.appendChild(b);
+  });
+
+  var lanes = TBL.map(function (t) { return t.table; });
+
+  function buildWhen() {
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    var still = !MOTION.on || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    whenHost.setAttribute("data-still", still ? "1" : "0");
+    whenHost.innerHTML = "";
+    whenHost.appendChild(whenTip);
+
+    /* header row */
+    var hr = document.createElement("div");
+    hr.className = "wrow whead";
+    hr.innerHTML = '<span class="wlab"></span><div class="wtr"></div><span class="wend"></span>';
+    var htr = hr.querySelector(".wtr");
+    D.stages.forEach(function (s) {
+      var c = document.createElement("span");
+      c.className = "wst"; c.style.flex = flexOf(s); c.textContent = s;
+      htr.appendChild(c);
+    });
+    whenHost.appendChild(hr);
+
+    var wrap = document.createElement("div");
+    wrap.className = "wlanes";
+    whenHost.appendChild(wrap);
+
+    /* transaction rail + one lane per table */
+    var rows = {};
+    var rail = document.createElement("div");
+    rail.className = "wrow wrail";
+    rail.innerHTML = '<span class="wlab">transaction</span><div class="wtr"></div><span class="wend"></span>';
+    wrap.appendChild(rail); rows["__tx__"] = rail.querySelector(".wtr");
+
+    TBL.forEach(function (t) {
+      var r = document.createElement("div");
+      r.className = "wrow wlane";
+      r.setAttribute("data-hollow", t.inPanel ? "0" : "1");
+      var lab = '<span class="sw' + (t.inPanel ? "" : " hollow") + '" style="background:' + (t.color || "transparent") + '"></span>' + esc(t.table);
+      var tag = t.inPanel ? "" : '<span class="tag">not in the Data panel</span>';
+      r.innerHTML = '<span class="wlab">' + lab + '</span><div class="wtr">' + tag + '</div><span class="wend"></span>';
+      wrap.appendChild(r);
+      rows[t.table] = r.querySelector(".wtr");
+      r.__end = r.querySelector(".wend");
+    });
+
+    /* overlay: stage rules + the bead */
+    var over = document.createElement("div");
+    over.className = "wover";
+    var rules = document.createElement("div");
+    rules.className = "wrules";
+    var cols = {};
+    D.stages.forEach(function (s) {
+      var i = document.createElement("i"); i.className = "wst"; i.style.flex = flexOf(s);
+      rules.appendChild(i); cols[s] = i;
+    });
+    over.appendChild(rules);
+    var bead = document.createElement("div");
+    bead.className = "wbead";
+    over.appendChild(bead);
+    wrap.appendChild(over);
+
+    /* measure the columns, place the touches */
+    var base = rules.getBoundingClientRect();
+    var geo = {};
+    D.stages.forEach(function (s) {
+      var b = cols[s].getBoundingClientRect();
+      geo[s] = { x: b.left - base.left, w: b.width };
+    });
+    var trackW = base.width || 1;
+    var exitX = geo[sel.exitAt] ? geo[sel.exitAt].x + geo[sel.exitAt].w : trackW;
+
+    var grouped = {};
+    sel.touches.forEach(function (t) { (grouped[t.stage] = grouped[t.stage] || []).push(t); });
+
+    var dots = [];
+    Object.keys(grouped).forEach(function (st) {
+      var list = grouped[st], g = geo[st] || { x: 0, w: trackW }, pad = 7;
+      var span = Math.max(1, g.w - pad * 2);
+      list.forEach(function (t, k) {
+        var x = g.x + pad + (k + 0.5) * span / list.length;
+        var lane = t.table ? rows[t.table] : rows["__tx__"];
+        if (!lane) return;
+        var d = document.createElement("span");
+        d.className = "wdot";
+        var kind = t.table ? (t.op === "read" ? "read" : "write") : "tx";
+        d.setAttribute("data-k", kind);
+        d.setAttribute("data-op", t.op);
+        if (t.cond) d.setAttribute("data-cond", "1");
+        if (t.race) d.setAttribute("data-race", t.race);
+        d.style.left = x + "px";
+        d.tabIndex = -1;
+        lane.appendChild(d);
+        var words = '<b>' + esc(t.table || "transaction") + "</b> &middot; " + esc(t.op)
+          + '<br><span class="k">fate</span> ' + esc(say(t.bucket))
+          + '<br><span class="k">fn</span> ' + esc(t.fn)
+          + (t.race ? '<br><span class="k">race</span> ' + esc(t.race) : "")
+          + (t.cond ? '<br><span class="k">conditional</span>' : "");
+        wire(d, whenTip, whenHost, words);
+        dots.push({ el: d, x: x, t: t, kind: kind });
+      });
+    });
+    dots.sort(function (a, b) { return a.x - b.x; });
+
+    /* lane end markers — the status this lane ended with */
+    var ends = [];
+    TBL.forEach(function (t) {
+      var ts = touchesOf(sel, t.table);
+      if (!ts.length) return;
+      var f = strongest(ts);
+      var row = rows[t.table].parentNode;
+      var e = row.querySelector(".wend");
+      ends.push({ el: e, f: f, status: sel.status, table: t.table, n: ts.length });
+    });
+
+    function paint(x, done) {
+      bead.style.left = Math.max(0, Math.min(x, trackW)) + "px";
+      for (var i = 0; i < dots.length; i++) {
+        var d = dots[i];
+        var on = d.x <= x;
+        if (d.el.getAttribute("data-on") !== (on ? "1" : "0")) d.el.setAttribute("data-on", on ? "1" : "0");
+        if (d.kind === "write") {
+          var c = done && on ? FATE[d.t.bucket] || FATE.read : "";
+          d.el.style.backgroundColor = c;
+          d.el.style.borderColor = c || "";
+        }
+      }
+      ends.forEach(function (e) {
+        if (done) {
+          e.el.innerHTML = '<span class="wmark" style="background:' + (FATE[e.f] || FATE.read) + '"></span>' + e.status;
+          e.el.style.color = "var(--ink-soft)";
+        } else { e.el.innerHTML = ""; }
+      });
+    }
+
+    ends.forEach(function (e) {
+      wire(e.el, whenTip, whenHost, '<b>' + esc(e.table) + "</b> &middot; " + esc(e.status)
+        + '<br><span class="k">strongest fate</span> ' + esc(say(e.f === "read" ? null : e.f))
+        + '<br><span class="k">steps</span> ' + e.n);
+    });
+
+    if (still) { paint(exitX, true); return; }
+
+    var dur = Math.max(1500, 4600 * (exitX / trackW)), hold = 3200, t0 = null;
+    function frame(now) {
+      if (t0 === null) t0 = now;
+      var el = now - t0;
+      if (el <= dur) paint(exitX * (el / dur), false);
+      else if (el <= dur + hold) paint(exitX, true);
+      else { t0 = now; paint(0, false); }
+      raf = requestAnimationFrame(frame);
+    }
+    paint(0, false);
+    raf = requestAnimationFrame(frame);
+  }
+
+  /* fate legend, drawn from the buckets the data carries */
+  (function () {
+    var host = document.getElementById("when-lg");
+    RANK.forEach(function (b) {
+      var s = document.createElement("span");
+      s.innerHTML = '<i style="background:' + FATE[b] + '"></i>' + say(b === "read" ? null : b);
+      host.appendChild(s);
+    });
+    var ring = document.createElement("span");
+    ring.innerHTML = '<i class="ring"></i>pending';
+    host.appendChild(ring);
+    var tx = document.createElement("span");
+    tx.innerHTML = '<i class="sq" style="background:var(--ink-soft)"></i>commit';
+    host.appendChild(tx);
+  })();
+
+  document.getElementById("when-replay").addEventListener("click", buildWhen);
+
+  /* ═══ 2 · WHICH ════════════════════════════════════════════════════ */
+  (function () {
+    var host = document.getElementById("mx");
+    var stage = host.closest(".panel");
+    var tip = tipFor(stage);
+    host.style.gridTemplateColumns = "250px repeat(" + D.paths.length + ", minmax(34px, 1fr))";
+    var corner = document.createElement("div"); host.appendChild(corner);
+    D.paths.forEach(function (p) {
+      var h = document.createElement("div"); h.className = "h";
+      h.textContent = p.status + " " + p.name;
+      host.appendChild(h);
+    });
+    TBL.forEach(function (t) {
+      var rl = document.createElement("div"); rl.className = "rl";
+      rl.innerHTML = '<span class="sw' + (t.inPanel ? "" : " hollow") + '" style="background:' + (t.color || "transparent") + '"></span>' + esc(t.table);
+      host.appendChild(rl);
+      D.paths.forEach(function (p) {
+        var ts = touchesOf(p, t.table), f = strongest(ts);
+        var c = document.createElement("div"); c.className = "c"; c.setAttribute("data-f", f);
+        if (f !== "none") c.style.background = FATE[f];
+        var w = '<b>' + esc(t.table) + "</b> &middot; " + esc(p.status) + " " + esc(p.name);
+        if (!ts.length) w += '<br><span class="k">no step on this path</span>';
+        else {
+          var seen = {};
+          ts.forEach(function (x) { var k = x.op + "|" + say(x.bucket); seen[k] = (seen[k] || 0) + 1; });
+          w += "<br>" + Object.keys(seen).map(function (k) {
+            var pp = k.split("|"); return esc(pp[0]) + " &rarr; " + esc(pp[1]) + " &times;" + seen[k];
+          }).join("<br>");
+        }
+        wire(c, tip, stage, w);
+        host.appendChild(c);
+      });
+    });
+    var lg = document.getElementById("mx-lg");
+    RANK.forEach(function (b) {
+      var s = document.createElement("span");
+      s.innerHTML = '<i style="background:' + FATE[b] + '"></i>' + say(b === "read" ? null : b);
+      lg.appendChild(s);
+    });
+    var n = document.createElement("span");
+    n.innerHTML = '<i style="background:transparent;border:1px dashed var(--rule)"></i>never';
+    lg.appendChild(n);
+  })();
+
+  /* ═══ 3 · THE TABLE ════════════════════════════════════════════════ */
+  (function () {
+    var chips = document.getElementById("t-chips");
+    var host = document.getElementById("tree");
+    var stage = host.parentNode; stage.style.position = "relative";
+    var tip = tipFor(stage);
+    var cur = byName[D.idempotency_table] || TBL[0];
+
+    /* which PART each field is shown in — the Data panel's own roster, UNION the
+       parts the field's src key names (a field can be drawn in more than one part) */
+    var IN_DATA = ["table", "model", "entity + colour", "channel R \u00b7 W \u00b7 RW", "columns",
+                   "foreign keys", "unique keys", "DB commit", "idempotent write"];
+    function parts(fname) {
+      var f = PLAINF[fname], out = [];
+      if (!f) return out;
+      if (IN_DATA.indexOf(fname) >= 0 || /(^|[^a-z])data\./.test(f.src)) out.push("data");
+      if (["columns", "foreign keys", "unique keys"].indexOf(fname) >= 0) out.push("portrait");
+      if (/security\./.test(f.src)) out.push("security");
+      return out;
+    }
+    function pd(fname) {
+      var ps = parts(fname);
+      if (!ps.length) return "";
+      return '<span class="pd">' + ps.map(function (p) { return '<i class="' + p + '" data-part="' + p + '"></i>'; }).join("") + "</span>";
+    }
+    function li(fname, valueHtml, extra) {
+      var f = PLAINF[fname];
+      return '<li><span class="k" data-plain="' + esc(fname) + '">' + esc(f ? f.name : fname) + "</span> "
+        + (valueHtml || "") + pd(fname) + (extra || "") + "</li>";
+    }
+
+    function render() {
+      var t = cur;
+      var ts = D.paths.map(function (p) { return { p: p, ts: touchesOf(p, t.table) }; });
+      var hit = ts.filter(function (x) { return x.ts.length; });
+      var steps = hit.reduce(function (a, x) { return a + x.ts.length; }, 0);
+      var races = D.races.filter(function (r) { return r.table === t.table; });
+      var raceState = {};
+      races.forEach(function (r) { raceState[r.state] = (raceState[r.state] || 0) + 1; });
+      var claim = D.claims.filter(function (c) { return c.table === t.table; })[0];
+      var prov = D.provisions.filter(function (c) { return c.table === t.table; })[0];
+      var fkmap = {}; t.fks.forEach(function (f) { fkmap[f.col] = f.to; });
+
+      var cols = t.cols.map(function (c) {
+        return '<li><span class="v">' + esc(c.name) + '</span> <span class="t">' + esc(c.type) + "</span>"
+          + (fkmap[c.name] ? ' <span class="fk" data-plain="foreign keys">&rarr; ' + esc(fkmap[c.name]) + "</span>" : "")
+          + (t.uqs.indexOf(c.name) >= 0 ? ' <span class="uq" data-plain="unique keys">&oplus;</span>' : "")
+          + "</li>";
+      }).join("");
+
+      var fdots = ts.map(function (x) {
+        var f = strongest(x.ts);
+        return '<i data-f="' + f + '" style="background:' + (f === "none" ? "var(--rule-soft)" : FATE[f]) + '" data-p="' + esc(x.p.name) + '" data-s="' + x.p.status + '" data-n="' + x.ts.length + '"></i>';
+      }).join("");
+
+      var html = '<ul><li><span class="root" data-plain="table">'
+        + '<span class="wmark" style="background:' + (t.color || "transparent") + (t.inPanel ? "" : ";border:1px dashed var(--muted);background:transparent") + '"></span>'
+        + esc(t.table) + "</span>" + pd("table")
+        + (t.inPanel ? "" : ' <span class="t">not in the Data panel</span>')
+        + (t.file ? ' <span class="t">' + esc(t.file) + "</span>" : "")
+        + "<ul>"
+        + li("model", '<span class="v">' + esc(t.model || "—") + "</span>")
+        + li("entity + colour", '<span class="v">' + esc(t.entity || "—") + "</span>")
+        + li("channel R · W · RW", '<span class="v">' + esc(t.rw || "—") + "</span>")
+        + li("columns", '<span class="t">' + t.cols.length + "</span>", t.cols.length ? "<ul>" + cols + "</ul>" : "")
+        + li("DB commit", '<span class="v">' + (D.commits ? "yes" : "no") + "</span>")
+        + li("idempotent write", '<span class="v">' + (D.idempotent ? esc(D.idempotency_table) : "no") + "</span>")
+        + '<li><span class="newring"></span><span class="t" data-ring="1">not shown yet</span>'
+        + '<ul class="nb">'
+        + li("effects along the path", '<span class="v">' + steps + "</span> <span class=\"t\">steps on " + hit.length + " of " + D.paths.length + " paths</span>")
+        + li("effect buckets", '<span class="fd">' + fdots + "</span>")
+        + li("race", '<span class="v">' + (races.length ? Object.keys(raceState).map(function (k) { return k + " ×" + raceState[k]; }).join(" · ") : "—") + "</span>")
+        + (claim ? '<li><span class="k">claim</span> <span class="v">' + esc(claim.constraint) + '</span> <span class="t">' + esc(claim.idioms.join(" · ")) + " · " + esc(claim.race) + "</span></li>" : "")
+        + li("provisions", '<span class="v">' + (prov ? esc(prov.op + " · " + prov.state) : "—") + "</span>")
+        + "</ul></li></ul></li></ul>";
+      host.innerHTML = html;
+
+      host.querySelectorAll("[data-plain]").forEach(function (n) {
+        var f = PLAINF[n.getAttribute("data-plain")];
+        if (!f) return;
+        wire(n, tip, stage, "<b>" + esc(f.name) + "</b><br>" + esc(f.plain) + '<br><span class="k">' + esc(f.src) + "</span>");
+      });
+      host.querySelectorAll(".pd i").forEach(function (n) {
+        wire(n, tip, stage, "shown in the <b>" + n.getAttribute("data-part") + "</b> part");
+      });
+      host.querySelectorAll(".fd i").forEach(function (n) {
+        var f = n.getAttribute("data-f");
+        wire(n, tip, stage, "<b>" + esc(n.getAttribute("data-s")) + " " + esc(n.getAttribute("data-p")) + "</b><br>"
+          + (f === "none" ? "no step" : esc(say(f === "read" ? null : f)) + ' &middot; <span class="k">' + n.getAttribute("data-n") + " steps</span>"));
+      });
+      host.querySelectorAll('.newring, [data-ring="1"]').forEach(function (n) {
+        wire(n, tip, stage, "below this ring the Data panel shows <b>nothing</b>");
+      });
+    }
+
+    TBL.forEach(function (t) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "chip"; b.setAttribute("aria-pressed", String(t === cur));
+      b.textContent = t.table;
+      b.addEventListener("click", function () {
+        cur = t;
+        [].forEach.call(chips.children, function (c) { c.setAttribute("aria-pressed", String(c === b)); });
+        render();
+      });
+      chips.appendChild(b);
+    });
+    render();
+
+    var lg = document.getElementById("tree-lg");
+    [["data", "data"], ["portrait", "portrait"], ["security", "security"]].forEach(function (p) {
+      var s = document.createElement("span");
+      s.innerHTML = '<i class="' + p[0] + '" style="width:7px;height:7px;' + (p[0] === "portrait" ? "background:transparent;border:1px solid var(--ink-soft)" : "background:var(--ink-soft)") + (p[0] === "security" ? ";border-radius:1px" : "") + '"></i>' + p[1];
+      lg.appendChild(s);
+    });
+    var nr = document.createElement("span");
+    nr.innerHTML = '<i style="background:transparent;border:1.6px solid var(--accent)"></i>not shown yet';
+    lg.appendChild(nr);
+  })();
+
+  /* ═══ 4 · THE JOINS ════════════════════════════════════════════════ */
+  (function () {
+    var host = document.getElementById("joins");
+    var stage = host.parentNode; stage.style.position = "relative";
+    var tip = tipFor(stage);
+    var rows = P.joins.map(function (j) {
+      return { j: j, places: j.where.split("·").map(function (s) { return s.trim(); }).filter(Boolean) };
+    });
+    var max = rows.reduce(function (a, r) { return Math.max(a, r.places.length); }, 1);
+    rows.forEach(function (r) {
+      var d = document.createElement("div");
+      d.className = "jrow";
+      d.innerHTML = '<span class="jk">' + esc(r.j.key) + '</span>'
+        + '<span class="jt"><span class="jb" style="width:' + (100 * r.places.length / max) + '%"></span></span>'
+        + '<span class="jn">' + r.places.length + "</span>";
+      var w = "<b>" + esc(r.j.key) + "</b><br>" + esc(r.j.plain) + "<br>" + r.places.map(esc).join(" &middot; ");
+      wire(d.querySelector(".jk"), tip, stage, w);
+      wire(d.querySelector(".jt"), tip, stage, w);
+      host.appendChild(d);
+    });
+  })();
+
+  /* ═══ 5 · NOT SHOWN YET ════════════════════════════════════════════ */
+  (function () {
+    var host = document.getElementById("new-chips");
+    var stage = host.parentNode; stage.style.position = "relative";
+    var tip = tipFor(stage);
+    P.fields.filter(function (f) { return f.flags.indexOf("new") >= 0 || f.flags.indexOf("feed") >= 0; })
+      .forEach(function (f) {
+        var b = document.createElement("span");
+        b.className = "chip new"; b.tabIndex = 0; b.textContent = f.name;
+        wire(b, tip, stage, "<b>" + esc(f.name) + "</b><br>" + esc(f.plain) + '<br><span class="k">' + esc(f.src) + "</span>");
+        host.appendChild(b);
+      });
+  })();
+
+  /* ── H4 · the motion contract ───────────────────────────────────── */
+  window.FXREPLAY = window.FXREPLAY || {};
+  window.FXREPLAY.when = buildWhen;
+  window.__rebuildMotion = function () {
+    Object.keys(window.FXREPLAY).forEach(function (k) { window.FXREPLAY[k](); });
+  };
+  buildWhen();
+  var rt = null;
+  window.addEventListener("resize", function () {
+    clearTimeout(rt); rt = setTimeout(buildWhen, 180);
+  });
+})();
+</script>
