@@ -36,7 +36,7 @@ code{ font:600 .95em var(--font-mono); color:var(--ink); }
 .hgrp{ display:inline-flex; align-items:center; gap:4px; }
 .hgrp.habove{ margin-left:auto; }
 .hel.upchip{ padding:5px 7px; } .hupmark{ display:inline-flex; align-items:center; color:var(--muted); cursor:help; }
-#barcfg{ display:grid; grid-template-columns:74px 1fr; gap:7px 8px; align-items:center; margin-top:7px; }
+#barcfg{ display:grid; grid-template-columns:minmax(74px, max-content) minmax(0, 1fr); gap:7px 8px; align-items:center; margin-top:7px; }
 #barcfg .cfl{ line-height:1.9; } #barcfg .cfread{ grid-column:1 / -1; margin-top:4px; font-size:12px; line-height:1.45; }
 #barcfg .ib:not(.on){ opacity:.5; } #barcfg .ib.on{ opacity:1; }
 /* ══ THE PART BUTTONS — every face driven by TABCFG (operator 2026-09-11) ═════════════════════
@@ -122,8 +122,18 @@ code{ font:600 .95em var(--font-mono); color:var(--ink); }
 .rtb.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
 .rtab[hidden]{ display:none; }
 .nht{ font:600 12px/1 var(--font-mono); color:var(--muted); text-transform:none; letter-spacing:0; }
-.cfgrp{ margin-top:9px; display:grid; grid-template-columns:74px 1fr; gap:8px; align-items:start; }
-.cfl{ font:700 12px/1.9 var(--font-mono); text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+.cfgrp{ margin-top:9px; display:grid; grid-template-columns:minmax(74px, max-content) minmax(0, 1fr); gap:8px; align-items:start; }
+.cfl{ font:700 12px/1.9 var(--font-mono); text-transform:uppercase; letter-spacing:.08em; color:var(--muted);
+  white-space:nowrap; }
+/* ══ THE REGION TAG (operator 2026-09-17: "labels at the end that say whether the setup changes the middle
+   panel, the portrait panel, or the command panel"). One 14px glyph per region the control reaches, in the
+   muted ink, right after the label's words; the words say WHAT, the tag says WHERE. A label that would grow
+   past the column drops its letter-spacing first — the tag is never shrunk. ══ */
+.cfl .rgts{ display:inline-flex; align-items:center; gap:3px; margin-left:6px; vertical-align:-3px; }
+.cfl .rgt{ display:inline-flex; color:var(--muted); opacity:.55; cursor:help; }
+.cfl .rgt:hover{ opacity:1; color:var(--ink); }
+.cfl .rgt svg{ display:block; }
+.cfl.tight{ letter-spacing:0; }
 .ibwrap{ display:flex; flex-wrap:wrap; gap:4px; align-items:center; }
 .ib{ display:inline-flex; align-items:center; justify-content:center; min-width:30px; height:26px; padding:0 6px;
   color:var(--muted); background:var(--chip-bg); border:1px solid var(--line); border-radius:6px; cursor:pointer; }
@@ -467,7 +477,7 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 .hel.hname.sh-none{ background:none; border:none; }
 /* ── the per-element editor in the rail ── */
 .elned{ grid-column:1 / -1; margin-top:9px; padding-top:8px; border-top:1px solid var(--line);
-  display:grid; grid-template-columns:74px 1fr; gap:6px 8px; align-items:center; }
+  display:grid; grid-template-columns:minmax(74px, max-content) minmax(0, 1fr); gap:6px 8px; align-items:center; }
 .elned .ednhd{ grid-column:1 / -1; display:flex; align-items:center; gap:7px; }
 .elned .ednhd b{ font:800 12px/1 var(--font-mono); text-transform:uppercase; letter-spacing:.06em; color:var(--ink); }
 .elned .ednhd .ednn{ margin-left:auto; font:600 12px/1 var(--font-mono); color:var(--muted); }
@@ -593,7 +603,7 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 /* THE FRAME DIALS (operator 2026-09-17: the FRAME block dissolved into the regions it sizes). Each set
    is wrapped in .frdials so it can sit inside a region block — beside that region's other controls, or
    inside one of its folds — and still lay out as the two-column rail it always was. */
-.frdials{ display:grid; grid-template-columns:88px 1fr; gap:7px 8px; align-items:center; margin-top:7px; grid-column:1 / -1; }
+.frdials{ display:grid; grid-template-columns:minmax(88px, max-content) minmax(0, 1fr); gap:7px 8px; align-items:center; margin-top:7px; grid-column:1 / -1; }
 .frdials .cfl.sub{ padding-left:12px; opacity:.72; font-size:12px; }
 .frdials .cfl{ line-height:1.9; }
 .frdials .cfsub{ grid-column:1 / -1; }
@@ -939,7 +949,7 @@ html, body{ height:100%; }
 :is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cffoldhd svg{ transition:transform .15s; }
 :is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cffold.open .cffoldhd svg{ transform:rotate(180deg); }
 :is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cffoldhd:hover{ color:var(--ink); }
-:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cffoldbody{ display:none; grid-template-columns:88px 1fr; gap:7px 8px; align-items:center; padding:4px 9px 9px; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cffoldbody{ display:none; grid-template-columns:minmax(88px, max-content) minmax(0, 1fr); gap:7px 8px; align-items:center; padding:4px 9px 9px; }
 :is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cffold.open .cffoldbody{ display:grid; }
 
 /* ══ THE SORT, in the title row after a divider (operator 2026-09-13). Text, ground and opacity are variables

@@ -2761,23 +2761,6 @@
 
   function uniq(a){ var o = {}, r = []; a.forEach(function(x){ if (x != null && !o[x]) { o[x] = 1; r.push(x); } }); return r; }
 
-  /* ── the ENTITY card (choice 3): the owning entity's endpoints. The feed carries the COUNT
-     (feedwide.entity_counts.endpoints) and names ONE of them — this door. The rest are HATCHED:
-     measured to exist, never named here. ── */
-  function entVerbs(F, S){
-    var n = ((F.feedwide || {}).entity_counts || {}).endpoints || 1, L = [], I = F.identity;
-    L.push({ cmd: "ent-self", ico: "endpoint", verb: I.label, state: "lit", col: S.KINDCOL.endpoint, label: I.path,
-      card: function(){ return cmdc({ title: I.label, value: "the bench", icon: "endpoint", color: S.KINDCOL.endpoint,
-        rows: [["entity", I.entity], ["cluster", I.cluster], ["status", String(I.status)]],
-        plain: "the door on the bench — the one endpoint of this entity the lab's feed names" }); },
-      cap: function(){ return I.label + " — the door on the bench"; }, act: null });
-    for (var i = 1; i < n; i++) L.push({ cmd: "ent-" + i, ico: "endpoint", verb: "another " + I.entity + " endpoint", state: "hatched", col: S.KINDCOL.endpoint,
-      card: function(){ return cmdc({ title: "another " + I.entity + " endpoint", value: "unnamed here", icon: "endpoint", color: S.KINDCOL.endpoint,
-        rows: [["entity holds", n + " endpoints"], ["the feed names", "1 — the bench's own"], ["hatched", "measured to exist, never named — the console reads the roster from adoption.json"]],
-        plain: "one of this entity's other doors — the lab knows how many there are, not which" }); },
-      cap: function(){ return I.entity + " holds " + n + " endpoints; the lab's feed names one"; }, act: null });
-    return L; }
-
   /* ── LAYOUT 1 · the CARD: a 3×5 grid of SC2 command squares ── */
   function cmdGrid(host, list, F, S, corner, rowNames){ var C = cmdCfg(), COLS = 5, SLOTS = 15;
     var g = E("div", { class: "cmdgrid" + (rowNames ? " named" : "") });
@@ -2796,8 +2779,10 @@
     host.append(g); return g; }
   function renderCmdCard(host, F, S){ var C = cmdCfg(), fm = FRM(F);
     var mode = C.mode === "path" ? "path" : "cmd";
-    /* the grouping only reshapes the KIND card's verbs; the entity card is its own roster */
-    var V = (C.scope === "entity") ? "rows" : (C.verbs || "rows");
+    /* THE CARD IS THE ENDPOINT KIND'S, full stop (operator 2026-09-17: "we are working just on the
+       setup for this API endpoint — the entity one we will work on separately, a completely different
+       setup"). The entity roster and its `scope` pick were deleted, not hidden. */
+    var V = C.verbs || "rows";
     var grp = V === "g2" ? g2Group(C.grp) : null;
     var list, corner, rowNames = null, right;
     if (mode === "path") { var cells = pathCells(F);
@@ -2810,13 +2795,11 @@
         corner = backGroupDef(grp); right = g2Word(grp) + " · " + list.length + " VERBS"; }
       else { list = G2GROUPS.map(function(g){ return groupCellDef(g, byCmd, F, S); });
         corner = clearDef(); right = list.length + " GROUPS"; } }
-    else { list = C.scope === "entity" ? entVerbs(F, S) : cmdVerbs(F, S); corner = cornerOf(list);
+    else { list = cmdVerbs(F, S); corner = cornerOf(list);
       if (V === "g1") rowNames = G1ROWS;
       right = (list.length + 1) + " verbs"; }
     cmdHead(host, F, S, right);
     cmdGrid(host, list, F, S, corner, rowNames);
-    if (C.scope === "both" && mode === "cmd") { host.append(E("div", { class: "cmdsub" }, esc("the owning entity · " + (((F.feedwide || {}).entity_counts || {}).endpoints || 1) + " endpoints")));
-      var el2 = entVerbs(F, S); cmdGrid(host, el2, F, S, cornerOf(el2)); }
     cmdTip(host, F, S); }
   /* the FLAG a path's own exit is gated by — never every switch it crossed, or the chip would ride
      all fourteen cells; the switch's own `refs` name the two exits the rate limiter can produce */

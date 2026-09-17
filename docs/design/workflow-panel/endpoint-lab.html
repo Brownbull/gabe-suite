@@ -2064,7 +2064,7 @@
       /* 2026-09-17: the five dials that reach the MIDDLE and the PORTRAIT left this block, and this
          line with them — they are in COPYTXT.middle and COPYTXT.portrait now. The region's own size
          arrived from the dissolved frame block. */
-      return "command · layout " + C.layout + " · verbs " + C.verbs + " · scope " + C.scope
+      return "command · layout " + C.layout + " · verbs " + C.verbs
         + " · grouping " + C.group + " · names " + C.names + " · success " + C.success + " · sub-paths " + C.sub
         + " · wrong-question " + C.wrong
         + " · hotkeys " + W.keys[C.keys] + " · cells " + C.size + "px " + C.face + " · tooltip " + W.tip[C.tip]
@@ -2180,14 +2180,57 @@
      glyph, the region it affects in words, and a copy button writing that region's line. A topic block
      (Data · Schemas · Functions) is the MIDDLE read when that topic is open: it wears the middle's
      glyph and keeps its own topic glyph beside the name, so the three stay apart at a glance.      ══ */
-  var RGICO = { bench: function(){ return labIco("bench", 13, "var(--accent)"); },
-                head: function(){ return labIco("bars", 13, "var(--accent)"); },
-                tabs: function(){ return labIco("rgbtns", 13, "var(--accent)"); },
-                middle: function(){ return labIco("rgmid", 13, "var(--accent)"); },
-                portrait: function(){ return labIco("rgport", 13, "var(--accent)"); },
-                command: function(){ return labIco("rggrid", 13, "var(--accent)"); } };
+  var RGGLY = { bench: "bench", head: "bars", tabs: "rgbtns", middle: "rgmid", portrait: "rgport", command: "rggrid" };
+  var RGICO = {}; Object.keys(RGGLY).forEach(function(k){
+    RGICO[k] = function(sz, col){ return labIco(RGGLY[k], sz || 13, col || "var(--accent)"); }; });
   var RGWORD = { bench: "the bench", head: "the head bar", tabs: "the part buttons",
                  middle: "the middle panel", portrait: "the portrait", command: "the command panel" };
+  /* ══ A REGION TAG AFTER EVERY CONTROL'S NAME (operator 2026-09-17: "labels at the end that say whether
+     the setup changes the middle panel, the portrait panel, or the command panel — clarity about each
+     one of the controls"). The DEFAULT is the block's own region, because the rail is grouped by region.
+     REGION_OF is the explicit override for the controls that DRAW in a region other than their block's —
+     the rule is what a control draws, not where a side effect ripples. Every control carries at least one
+     tag, including the ones that agree with their block: the operator asked for no exceptions.       ══ */
+  var REGION_OF = {
+    cmdlayout: ["command", "bench"],              /* `strip` draws the path cells under the part buttons, INSIDE the bench */
+    cmdside:   ["command", "bench", "portrait"],  /* it moves the region across the row, past both of them */
+    cmdladder: ["command", "portrait"],           /* `inside the portrait` draws the ladder down the portrait's edge */
+    cmdshow:   ["command", "head", "bench"],      /* the path chip rides the head bar, the strip rides the bench */
+    cmdrows:   ["middle", "command"],             /* the per-path facts go to one, the other, or both */
+    cmdjoin:   ["middle", "command"],             /* the marks in the middle AND the card's tests badge */
+    cmdport:   ["portrait"] };                    /* the portrait, and nothing else */
+  function rgTagNode(r){ var g = el("i", { class: "rgt" });
+    g.dataset.rg = r; g.innerHTML = RGICO[r](14, "currentColor");
+    hoverBind(g, hcard({ title: RGWORD[r], value: "changes", icon: "shape",
+      plain: RGWORD[r] + " is what this control changes" }));
+    return g; }
+  /* the control that PAIRS with a label is the next element in the row; its data-* names are what the
+     override map is keyed on (railKit and every local pick write the name onto each button) */
+  function ctlNames(node){ var out = {}; if (!node) return out;
+    function take(n){ if (!n.attributes) return;
+      for (var i = 0; i < n.attributes.length; i++) { var a2 = n.attributes[i].name;
+        if (a2.indexOf("data-") === 0) out[a2.slice(5)] = 1; } }
+    take(node); [].forEach.call(node.querySelectorAll("*"), take); return out; }
+  function tagRegions(){
+    [].forEach.call(document.querySelectorAll("#rt-controls .cfl:not([data-rg])"), function(lbl){
+      var blk = lbl.closest(".barblk"); if (!blk) return;
+      var names = ctlNames(lbl.nextElementSibling), regs = [], seen = {};
+      Object.keys(names).forEach(function(n){ (REGION_OF[n] || []).forEach(function(r){ if (!seen[r]) { seen[r] = 1; regs.push(r); } }); });
+      if (!regs.length) regs = [blk.dataset.region || "bench"];
+      lbl.dataset.rg = regs.join(" ");
+      var t = el("span", { class: "rgts" });
+      regs.forEach(function(r){ t.append(rgTagNode(r)); });
+      lbl.append(t);
+      /* the TAG never shrinks — the label's letter-spacing goes first (operator 2026-09-17) */
+      lbl.classList.remove("tight");
+      if (lbl.getBoundingClientRect().width > 150) lbl.classList.add("tight"); });
+    return document.querySelectorAll("#rt-controls .cfl[data-rg]").length; }
+  window.tagRegions = tagRegions;
+  /* the rail is rebuilt by ten different drawers; one observer catches every one of them rather than
+     ten call sites that can each be forgotten. The data-rg guard makes the append terminal. */
+  (function(){ var host = document.getElementById("rt-controls");
+    if (!host || !window.MutationObserver) return;
+    new MutationObserver(function(){ tagRegions(); }).observe(host, { childList: true, subtree: true }); })();
   var RAILBLK = [
     ["blk-bench", "bench", "bench", "the bench's box, density, clock and outer line"],
     ["blk-head", "head", "head", "the head bar's verbosity, piles, order and its own box"],
@@ -2350,7 +2393,6 @@
     grp: null,             /*      g2's level: null = the five groups, else the group whose verbs are open */
     only: null,            /*      the kind filter R and T set */
     rows: "command",       /* 2  · command · parts · both */
-    scope: "kind",         /* 3  · kind · entity · both */
     group: "request",      /* 4  · request order · kind · status */
     names: "drawn",        /* 5  · drawn · detail · exception · phase·status */
     success: "shown",      /* 6  · shown (generated) · hidden */
@@ -2508,11 +2550,6 @@
         function(o){ return labIco(o[0] === "path" ? "eye" : "eyeoff", 15); }, "matrix"); });
 
     K.group("map", "map", CMD.group + " · " + CMD.names + " · " + CMD.sub, "every choice §6 left open that shapes the command region itself", function(){
-      P("scope", "cmdscope", "scope",
-        [["kind", "the endpoint KIND's card — the fifteen verbs", "kind card"],
-         ["entity", "the owning entity's endpoints as cells; the feed names one of the four", "entity card"],
-         ["both", "the verbs, then the entity's doors under them", "both"]],
-        function(o){ return o[0] === "kind" ? S.icon("endpoint", 15) : o[0] === "entity" ? S.icon("entity", 15) : S.icon("layers", 15); }, "card");
       P("grouping", "cmdgroup", "group",
         [["request", "the order a request meets them — stage first, then how far it got", "request order"],
          ["kind", "success, refusal, framework, validation, uncaught — each block together", "by kind"],
@@ -2586,7 +2623,8 @@
       "how wide the command region stands and how far it sits from the portrait — the frame block's own dials, now in the region they size", function(){
       frameDials(box, "command"); });
 
-    box.append(el("div", { class: "cfread" }, "the region, the strip, the ladder and the matrix are what would SHIP. Everything in this block is the lab's own.")); }
+    box.append(el("div", { class: "cfread" }, "the region, the strip, the ladder and the matrix are what would SHIP. Everything in this block is the lab's own."));
+    box.append(el("div", { class: "cfread" }, "this lab is the API endpoint kind — an entity has its own setup, later.")); }
   window.drawCmdCfg = drawCmdCfg;
 
   /* ══ THE MIDDLE BLOCK (operator 2026-09-17: "I don't know which ones are affecting the mid panel, the
@@ -2666,6 +2704,7 @@
   drawTabs(); drawTabCfg(); applyFrame(); drawMidCfg(); drawPortCfg(); drawCmdCfg(); drawFrameCfg();
   applyData(); drawDataCfg(); drawSchCfg(); drawFnCfg();
   drawCmd(); drawHead();
+  tagRegions();
   var first = (location.hash || "#data").slice(1); show(order.indexOf(first) >= 0 ? first : "data");
   window.__eplabReady = true;
 })();

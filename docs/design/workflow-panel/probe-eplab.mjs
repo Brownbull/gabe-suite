@@ -76,7 +76,7 @@ ok(await p.evaluate(() => window.COPYTXT.data()) ===
 // the COMMAND panel boots on ITS default line (2026-09-17: the by-part card is the default grouping)
 // ── THE THREE REGION LINES (operator 2026-09-17): the rail is grouped by region, so the picks that
 //    reach the MIDDLE and the PORTRAIT left the command line and took their own.
-const CMDBOOT = 'command · layout card · verbs g2 · scope kind · grouping request · names drawn · success shown'
+const CMDBOOT = 'command · layout card · verbs g2 · grouping request · names drawn · success shown'
   + ' · sub-paths split · wrong-question blank · hotkeys QWERT grid'
   + ' · cells 64px valley · tooltip lab hover card'
   + ' · card side right of portrait · ladder in the region · walking one-clock replay · rate-limit chip shown'
@@ -1851,7 +1851,7 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
 // samples at uneven gaps. A bare `> 0` is not an assert here.
 {
   const resetCmd = () => p.evaluate(() => {
-    Object.assign(window.CMD, { layout: "card", verbs: "rows", mode: "cmd", grp: null, only: null, rows: "command", scope: "kind",
+    Object.assign(window.CMD, { layout: "card", verbs: "rows", mode: "cmd", grp: null, only: null, rows: "command",
       group: "request", names: "drawn", success: "shown", sub: "split", middle: "dim", portrait: "path",
       wrong: "blank", keys: "grid", size: 64, face: "valley", tip: "hover", join: "exact", keep: "kept",
       side: "right", ladder: "cmd", walk: "replay", flag: "shown", colour: "kind", matrix: "path" });
@@ -1933,9 +1933,7 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
   ok(await p.evaluate(() => window.CMD.mode) === 'cmd' && await p.evaluate(() => window.SEL.path) === N.firstRun, 'Back returns to the verbs and KEEPS the path in force — cancel is not clear');
   { const last = await p.$eval('#cmd .cmdgrid .cmdcell:last-child', e => ({ cmd: e.dataset.cmd, hot: (e.querySelector('.chot') || {}).textContent }));
     ok(last.cmd === 'clear' && last.hot === 'B', 'on the verb card the bottom-right cell is CLEAR, lettered B', JSON.stringify(last)); }
-  await p.evaluate(() => { window.clearPath(); window.CMD.scope = 'entity'; window.drawCmd(); }); await p.waitForTimeout(160);
-  ok(await p.$eval('#cmd .cmdgrid .cmdcell:last-child', e => e.dataset.cmd) === 'clear', 'on the entity card the bottom-right cell is CLEAR too');
-  await p.evaluate(() => { window.CMD.scope = 'kind'; window.CMD.mode = 'path'; window.CMD.sub = 'merged'; window.drawCmd(); }); await p.waitForTimeout(160);
+  await p.evaluate(() => { window.clearPath(); window.CMD.mode = 'path'; window.CMD.sub = 'merged'; window.drawCmd(); }); await p.waitForTimeout(160);
   { const blank = await p.$eval('#cmd .cmdcell.st-blank', e => ({ svg: e.querySelectorAll('svg').length, dis: e.disabled, bg: getComputedStyle(e).backgroundImage }));
     ok(blank.svg === 0 && blank.dis === true && blank.bg === 'none', 'a blank cell draws nothing and cannot be clicked — it only holds the place', JSON.stringify(blank)); }
   await p.evaluate(() => { window.CMD.wrong = 'collapsed'; window.drawCmd(); }); await p.waitForTimeout(140);
@@ -2096,7 +2094,7 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
     await p.evaluate(() => { window.CMD.flag = 'shown'; window.drawCmd(); }); await p.waitForTimeout(140); }
 
   // a control the OPEN layout does not use is drawn DASHED, and its card says why (law 10)
-  { const na = await p.$$eval('#blk-command .ib.na', els => els.map(e => e.getAttribute('data-cmdladder') || e.getAttribute('data-cmdwalk') || e.getAttribute('data-cmdscope') || e.getAttribute('data-cmdwrong') || e.getAttribute('data-cmdmatrix') || e.getAttribute('data-cmdside') || e.getAttribute('data-cmdverbs') || '?'));
+  { const na = await p.$$eval('#blk-command .ib.na', els => els.map(e => e.getAttribute('data-cmdladder') || e.getAttribute('data-cmdwalk') || e.getAttribute('data-cmdwrong') || e.getAttribute('data-cmdmatrix') || e.getAttribute('data-cmdside') || e.getAttribute('data-cmdverbs') || '?'));
     ok(na.length > 0, 'in the strip layout the card-only and ladder-only dials are marked unusable', na.join(','));
     ok(await p.$eval('#blk-command .ib.na', e => getComputedStyle(e).borderTopStyle) === 'dashed', 'and they are drawn DASHED, not hidden');
     await p.evaluate(() => window.railFoldAll('cmd', true)); await p.waitForTimeout(160);
@@ -2210,15 +2208,14 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
     await p.waitForTimeout(170);
     ok(await fpOf() !== before, `pick ${key}=${val} changes the picture — ${why}`); }
   await resetCmd(); await p.evaluate(id => { window.CMD.mode = 'path'; window.selectPath(id); }, N.firstRun); await p.waitForTimeout(200);
-  { const before = await fpOf();
-    await p.evaluate(() => { window.CMD.scope = 'entity'; window.CMD.mode = 'cmd'; window.drawCmd(); }); await p.waitForTimeout(180);
-    ok(await fpOf() !== before, 'pick scope=entity changes the picture — the entity\'s doors take the grid');
-    const ent = await p.evaluate(() => ({ cells: document.querySelectorAll('#cmd .cmdcell[data-cmd^="ent"]').length,
-      hatched: document.querySelectorAll('#cmd .cmdcell.st-hatched').length, want: window.LABEP.feedwide.entity_counts.endpoints }));
-    ok(ent.cells === ent.want && ent.hatched === ent.want - 1, 'the entity card draws one cell per endpoint the entity holds, and hatches the ones the feed never names', JSON.stringify(ent));
-    await p.evaluate(() => { window.CMD.scope = 'both'; window.drawCmd(); }); await p.waitForTimeout(160);
-    ok((await p.$$('#cmd .cmdgrid')).length === 2, 'both draws the verbs and the entity\'s doors, one grid each');
-    await p.evaluate(() => { window.CMD.scope = 'kind'; window.drawCmd(); }); await p.waitForTimeout(140); }
+  // THE ENTITY CARD LEFT THIS LAB (operator 2026-09-17: "we are working just on the setup for this API
+  // endpoint — the entity one we will work on separately, a completely different setup"). Deleted, not
+  // hidden: no pick, no renderer branch, no roster.
+  { ok((await p.$$('[data-cmdscope]')).length === 0, 'the scope pick is gone from the rail');
+    ok((await p.$$('#cmd .cmdcell[data-cmd^="ent-"]')).length === 0, 'and no entity cell can be drawn on the card');
+    ok(await p.evaluate(() => window.CMD.scope === undefined), 'CMD carries no scope at all');
+    ok(/this lab is the API endpoint kind/.test(await p.$eval('#cmdcfg', e => e.innerText)),
+      'the block says so in one plain line', (await p.$eval('#cmdcfg', e => e.innerText)).slice(-90)); }
   // `on part switch` is a behaviour, not a redraw — it is proved by switching parts
   { await p.evaluate(id => { window.CMD.keep = 'cleared'; window.selectPath(id); window.showTab('data'); }, N.firstRun); await p.waitForTimeout(200);
     await p.click('#tabs .tab[data-tab="security"]'); await p.waitForTimeout(200);
@@ -2646,11 +2643,14 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
   { const live = await p.evaluate(() => { const n = new Set();
       document.querySelectorAll('#rt-controls *').forEach(e => { for (const a of e.attributes) if (a.name.startsWith('data-')) n.add(a.name); });
       return [...n].sort(); });
+    // one control was DELETED on purpose since that recording: the entity-card scope pick (2026-09-17)
+    const RAILCTL_REMOVED = ['data-cmdscope'];
     const lost = RAILCTL_9b163fc.filter(a => live.indexOf(a) < 0);
     const added = live.filter(a => RAILCTL_9b163fc.indexOf(a) < 0);
-    ok(lost.length === 0, `not one of the ${RAILCTL_9b163fc.length} controls the rail carried before the regroup was dropped`, lost.join(','));
-    ok(added.join(',') === 'data-frame,data-region',
-      'and the only two things added are structure tags, not controls — the block\'s region and the frame-dial wrapper', added.join(',')); }
+    ok(lost.join(',') === RAILCTL_REMOVED.join(','),
+      `of the ${RAILCTL_9b163fc.length} controls the rail carried before the regroup, the only one gone is the entity card's scope pick — deleted by ruling, not mislaid`, lost.join(','));
+    ok(added.join(',') === 'data-frame,data-region,data-rg',
+      'and the only things added are structure tags, not controls — the block\'s region, the frame-dial wrapper and each label\'s region tag', added.join(',')); }
 
   // every block says which region it reaches, in a glyph and in words
   { const hd = await p.$$eval('#rt-controls .barblk', els => els.map(e => ({ id: e.id, region: e.dataset.region,
@@ -2727,6 +2727,78 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
     ok(Math.round(await p.$eval('#cmd', e => e.getBoundingClientRect().width)) === 280, 'the command width sizes the command region, from the COMMAND block');
     ok(/region 280px/.test(await p.evaluate(() => window.COPYTXT.command())), 'and the command line carries it');
     await p.evaluate(() => { window.FRAME.cmdW = 360; window.applyFrame(); window.drawCmdCfg(); }); await p.waitForTimeout(160); }
+
+
+  // ── A REGION TAG AFTER EVERY CONTROL'S NAME (operator 2026-09-17: "labels at the end that say whether
+  //    the setup changes the middle panel, the portrait panel, or the command panel — clarity about each
+  //    one of the controls"). Every row, no exceptions; the override map where a control draws elsewhere. ──
+  { const t = await p.evaluate(() => { const ls = [...document.querySelectorAll('#rt-controls .cfl')];
+      return { labels: ls.length, tagged: ls.filter(e => e.querySelector('.rgts .rgt')).length,
+        untagged: ls.filter(e => !e.querySelector('.rgts .rgt')).map(e => e.textContent.trim()).slice(0, 6),
+        glyphs: ls.every(e => [...e.querySelectorAll('.rgt')].every(g => g.querySelector('svg') && g.querySelector('svg').childElementCount > 0)),
+        regions: [...new Set(ls.map(e => e.dataset.rg).join(' ').split(' '))].filter(Boolean).sort().join(',') }; });
+    ok(t.labels > 100 && t.tagged === t.labels,
+      `every one of the ${t.labels} control rows on the rail carries a region tag — no exceptions`, t.untagged.join(' | '));
+    ok(t.glyphs, 'each tag is a drawn glyph, not a word');
+    ok(t.regions === 'bench,command,head,middle,portrait,tabs', 'and the tags name only the six regions', t.regions); }
+  { const sz = await p.$$eval('#rt-controls .cfl .rgt svg', els => [...new Set(els.map(e => e.getAttribute('width')))]);
+    ok(sz.join(',') === '14', 'every tag is drawn at 14px', sz.join(','));
+    const muted = await p.evaluate(() => { const d = document.createElement('i'); d.style.color = 'var(--muted)';
+      document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; });
+    ok(await p.$eval('#rt-controls .cfl .rgt', e => getComputedStyle(e).color) === muted, 'in the muted ink');
+    const tag = await p.$('#midcfg .cfl[data-rg] .rgt'); await tag.hover(); await p.waitForTimeout(170);
+    const h = await p.$eval('#hover', e => e.innerText);
+    ok(/is what this control changes/.test(h) && /the (middle panel|command panel|portrait|bench|head bar|part buttons)/.test(h),
+      'and answers a hover with one plain line naming the region it changes', h.replace(/\s+/g, ' ').slice(0, 70));
+    await p.mouse.move(5, 1030); }
+
+  // the override map, spot-checked where it says a control reaches past its own block
+  { const rg = await p.evaluate(() => { const o = {};
+      const labOf = n => { let e = n; while (e && e !== document.body) { const pv = e.previousElementSibling;
+        if (pv && pv.classList && pv.classList.contains('cfl')) return pv; e = e.parentElement; } return null; };
+      ['cmdlayout', 'cmdside', 'cmdladder', 'cmdshow', 'cmdrows', 'cmdjoin', 'cmdport', 'cmdmiddle', 'dstgaxis', 'casemode', 'variant'].forEach(k => {
+        const b2 = document.querySelector('[data-' + k + ']'), l = b2 && labOf(b2);
+        o[k] = l ? l.dataset.rg : null; });
+      return o; });
+    ok(rg.cmdlayout === 'command bench', 'cmdlayout is tagged command AND bench — `strip` draws the path cells inside the bench', rg.cmdlayout);
+    ok(rg.cmdjoin === 'middle command', 'test join is tagged middle AND command — the marks in the middle and the card\'s tests badge', rg.cmdjoin);
+    ok(rg.cmdladder === 'command portrait', 'ladder place is tagged command AND portrait', rg.cmdladder);
+    ok(rg.cmdside === 'command bench portrait', 'card side is tagged with the whole row it moves through', rg.cmdside);
+    ok(rg.cmdshow === 'command head bench', 'sections is tagged with the head bar and the bench — the chip and the strip live there', rg.cmdshow);
+    ok(rg.cmdrows === 'middle command', 'rows is tagged with both places the per-path facts can go', rg.cmdrows);
+    ok(rg.cmdport === 'portrait', 'on select is the portrait and nothing else', rg.cmdport);
+    ok(rg.cmdmiddle === 'middle', 'a control that agrees with its block still carries the one tag', rg.cmdmiddle);
+    ok(rg.dstgaxis === 'middle', 'a topic block\'s dial is the middle', rg.dstgaxis);
+    ok(rg.casemode === 'tabs', 'and a part-button dial stays its own region', rg.casemode);
+    ok(rg.variant === 'middle', 'the part-bar distributions are the middle', rg.variant); }
+
+  // NO LABEL WRAPS at the rail's own width — the letter-spacing gives first, the tag never does
+  { const w = await p.evaluate(() => Math.round(document.getElementById('notes').getBoundingClientRect().width));
+    ok(w === 474, 'the rail is 474px wide', String(w));
+    const bad = await p.evaluate(() => [...document.querySelectorAll('#rt-controls .cfl')]
+      .filter(e => e.getBoundingClientRect().height > 26)
+      .map(e => e.textContent.trim() + '=' + Math.round(e.getBoundingClientRect().height)));
+    ok(bad.length === 0, 'not one label on the rail wraps onto a second line, tags and all', bad.slice(0, 5).join(' | '));
+    const tight = await p.$$eval('#rt-controls .cfl.tight', els => els.map(e => e.textContent.trim()));
+    ok(tight.length > 0 && await p.$$eval('#rt-controls .cfl.tight', els => els.every(e => getComputedStyle(e).letterSpacing === 'normal')),
+      'the long labels drop their letter-spacing to fit — and only those', tight.slice(0, 4).join(' | '));
+    const tagW = await p.$$eval('#rt-controls .cfl .rgt svg', els => [...new Set(els.filter(e => e.getClientRects().length)
+      .map(e => Math.round(e.getBoundingClientRect().width)))]);
+    ok(tagW.join(',') === '14', 'and every drawn tag is still its full 14px, in a tight label as in any other', tagW.join(',')); }
+
+  if (shotsAt) { fs.mkdirSync(shotsAt, { recursive: true });
+    await p.evaluate(() => { window.railTab('controls'); window.railFoldBoot();
+      document.querySelectorAll('.barblk').forEach(x => x.classList.remove('min'));
+      window.railFoldAll('mid', true); });
+    await p.mouse.move(5, 1030); await p.evaluate(() => window.hoverHide()); await p.waitForTimeout(260);
+    await p.evaluate(() => { document.querySelectorAll('#rt-controls .barblk').forEach(x => { x.hidden = x.id !== 'blk-middle'; }); });
+    await p.waitForTimeout(220);
+    await (await p.$('#notes')).screenshot({ path: path.join(shotsAt, 'eplab-rail-tags-middle.png') });
+    await p.evaluate(() => { document.querySelectorAll('#rt-controls .barblk').forEach(x => { x.hidden = x.id !== 'blk-command'; });
+      window.railFoldBoot(); });
+    await p.waitForTimeout(240);
+    await (await p.$('#notes')).screenshot({ path: path.join(shotsAt, 'eplab-rail-tags-command.png') });
+    await p.evaluate(() => document.querySelectorAll('#rt-controls .barblk').forEach(x => { x.hidden = false; })); }
 
   if (shotsAt) { fs.mkdirSync(shotsAt, { recursive: true });
     // the rail as it BOOTS: every block open so the grouping reads, every fold back to its boot state
