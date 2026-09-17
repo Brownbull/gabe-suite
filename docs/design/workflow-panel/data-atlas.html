@@ -321,6 +321,20 @@
   .chip .s { font-variant-numeric: tabular-nums; opacity: .8; }
   .chip.new { border-color: var(--accent); color: var(--accent); cursor: default; padding: 5px 12px; }
 
+  /* ── the card's own control, same shape as a chip (Replay wears it too) ── */
+  .cardhead { display: flex; align-items: center; gap: 8px; }
+  .cardhead .sp { margin-left: auto; }
+  .ib {
+    font-size: var(--fs-min); letter-spacing: 0; line-height: 1.3; font-family: inherit;
+    border: 1px solid var(--rule); background: var(--raised); color: var(--muted);
+    border-radius: 999px; padding: 3px 10px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .ib:hover { border-color: var(--accent); color: var(--accent); }
+  .ib[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .ib svg { width: 13px; height: 13px; flex: 0 0 auto; fill: none; stroke: currentColor;
+            stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
   /* ── one legend row, drawn not described ── */
   .lg { display: flex; flex-wrap: wrap; gap: 12px; font-size: var(--fs-min); color: var(--muted); letter-spacing: 0; align-items: center; }
   .lg span { display: inline-flex; align-items: center; gap: 5px; }
@@ -424,6 +438,41 @@
   .jrow .jb { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ink-soft); border-radius: 3px; }
   .jrow .jn { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
 
+  /* ══ 1t · WHEN TRANSPOSED — stages down, tables across ══════════════ */
+  .when[data-t="1"] { --wlab: 120px; }
+  .when[data-t="1"] .whead { height: 232px; align-items: flex-end; }
+  .when[data-t="1"] .whead .wtr { display: flex; height: 100%; align-items: flex-end; }
+  .wch { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column;
+         align-items: center; justify-content: flex-end; gap: 5px; cursor: help; }
+  .wch .t { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap;
+            font-size: var(--fs-min); letter-spacing: 0; color: var(--ink-soft); }
+  .wch .sw { width: 9px; height: 9px; border-radius: 2px; flex: 0 0 auto; }
+  .wch .sw.hollow { background: transparent !important; border: 1px dashed var(--muted); }
+  .when[data-t="1"] .wlanes { height: 560px; display: flex; flex-direction: column; }
+  .wvr { display: flex; align-items: stretch; min-height: 0; }
+  .wvr .wlab { padding-right: 10px; }
+  .when[data-t="1"] .wrules { flex-direction: column; }
+  .when[data-t="1"] .wrules i { border-left: 0; border-top: 1px solid var(--rule-soft); }
+  .when[data-t="1"] .wrules i:first-child { border-top: 0; }
+  .wvcols { position: absolute; inset: 0; display: flex; }
+  .wvcols i { flex: 1 1 0; min-width: 0; border-left: 1px solid var(--rule-soft); }
+  .wvcols i:first-child { border-left: 0; }
+  .wvcols i[data-hollow="1"] { border-left-style: dashed; border-right: 1px dashed var(--rule-soft); }
+  .when[data-t="1"] .wover { left: var(--wlab); right: 0; }
+  .when[data-t="1"] .wbead { top: 0; bottom: auto; left: 0; right: 0; width: auto; height: 2px; }
+  .when[data-t="1"] .wbead::after { left: -4px; top: -3px; }
+  .wvend { display: flex; align-items: center; border-top: 1px solid var(--rule); padding-top: 5px; margin-top: 4px; }
+  .wvend .wtr { display: flex; }
+  .wec { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 4px;
+         font-size: var(--fs-min); letter-spacing: 0; font-variant-numeric: tabular-nums; color: var(--ink-soft); }
+
+  /* ══ 2t · WHICH TRANSPOSED — paths down, tables across ══════════════ */
+  .mx .hh { display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+            gap: 5px; align-self: end; padding-bottom: 4px; }
+  .mx .hh .sw { width: 9px; height: 9px; border-radius: 2px; }
+  .mx .hh .sw.hollow { background: transparent !important; border: 1px dashed var(--muted); }
+  .mx .rl .s { font-variant-numeric: tabular-nums; color: var(--muted); }
+
   /* ── motion contract: the paused / reduced frame never transitions ── */
   :root[data-motion="off"] .when *, .when[data-still="1"] * { transition: none !important; animation: none !important; }
   @media (prefers-reduced-motion: reduce) { .when * { transition: none !important; } }
@@ -443,16 +492,25 @@
   <section class="sec" data-sec="1">
     <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="19" r="3"></circle><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path><circle cx="18" cy="5" r="3"></circle></svg>When</h2><span class="n">14 paths &middot; 15 lanes</span></div>
     <div class="panel">
-      <div class="chips" id="p-chips" role="group" aria-label="path"></div>
+      <div class="cardhead">
+        <div class="chips" id="p-chips" role="group" aria-label="path"></div>
+        <span class="sp"></span>
+        <button class="ib" type="button" id="when-t" aria-pressed="false" aria-label="rows &harr; columns"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="m16 21 4-4-4-4"></path><path d="M20 17H4"></path></svg></button>
+        <button class="ib" type="button" id="when-replay">Replay</button>
+      </div>
       <div class="when" data-fx="when" id="when"></div>
       <div class="lg" id="when-lg"></div>
-      <p class="cap">one path, stage by stage <button class="chip" type="button" id="when-replay">Replay</button></p>
+      <p class="cap">one path, stage by stage</p>
     </div>
   </section>
 
   <section class="sec" data-sec="2">
-    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M3 9h18"></path><path d="M3 15h18"></path><path d="M9 3v18"></path><path d="M15 3v18"></path></svg>Which</h2><span class="n">15 &times; 14</span></div>
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M3 9h18"></path><path d="M3 15h18"></path><path d="M9 3v18"></path><path d="M15 3v18"></path></svg>Which</h2><span class="n" id="mx-n">15 &times; 14</span></div>
     <div class="panel">
+      <div class="cardhead">
+        <span class="sp"></span>
+        <button class="ib" type="button" id="mx-t" aria-pressed="false" aria-label="rows &harr; columns"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="m16 21 4-4-4-4"></path><path d="M20 17H4"></path></svg></button>
+      </div>
       <div class="mxwrap"><div class="mx" id="mx"></div></div>
       <div class="lg" id="mx-lg"></div>
       <p class="cap">every path at once</p>
@@ -644,6 +702,12 @@ var MOTION = { on: true, finished: true };   /* animations read this before sche
     node.addEventListener("blur", function () { hideTip(tip); });
   }
 
+  /* ── the two orientation toggles, remembered per card ───────────── */
+  function tRead(key) { try { return window.localStorage.getItem(key) === "1"; } catch (e) { return false; } }
+  function tWrite(key, on) { try { window.localStorage.setItem(key, on ? "1" : "0"); } catch (e) {} }
+  var WKEY = "gabe:atlas:when-t", MKEY = "gabe:atlas:which-t";
+  var WHENT = tRead(WKEY), WHICHT = tRead(MKEY);
+
   /* ── shared joins ───────────────────────────────────────────────── */
   var TBL = D.tables.slice();
   var byName = {}; TBL.forEach(function (t) { byName[t.table] = t; });
@@ -691,13 +755,59 @@ var MOTION = { on: true, finished: true };   /* animations read this before sche
 
   var lanes = TBL.map(function (t) { return t.table; });
 
+  /* one touch, one dot — the same glyph and the same words in both orientations */
+  function mkDot(t) {
+    var d = document.createElement("span");
+    d.className = "wdot";
+    var kind = t.table ? (t.op === "read" ? "read" : "write") : "tx";
+    d.setAttribute("data-k", kind);
+    d.setAttribute("data-op", t.op);
+    if (t.cond) d.setAttribute("data-cond", "1");
+    if (t.race) d.setAttribute("data-race", t.race);
+    d.tabIndex = -1;
+    wire(d, whenTip, whenHost, '<b>' + esc(t.table || "transaction") + "</b> &middot; " + esc(t.op)
+      + '<br><span class="k">fate</span> ' + esc(say(t.bucket))
+      + '<br><span class="k">fn</span> ' + esc(t.fn)
+      + (t.race ? '<br><span class="k">race</span> ' + esc(t.race) : "")
+      + (t.cond ? '<br><span class="k">conditional</span>' : ""));
+    return { el: d, kind: kind, t: t };
+  }
+  function endWords(table, f, n) {
+    return '<b>' + esc(table) + "</b> &middot; " + esc(sel.status)
+      + '<br><span class="k">strongest fate</span> ' + esc(say(f === "read" ? null : f))
+      + '<br><span class="k">steps</span> ' + n;
+  }
+  /* the stage's touches, in i order — the spread index is the reveal order */
+  function grouping() {
+    var g = {};
+    sel.touches.forEach(function (t) { (g[t.stage] = g[t.stage] || []).push(t); });
+    return g;
+  }
+
   function buildWhen(play) {
     if (raf) { cancelAnimationFrame(raf); raf = null; }
     var still = !MOTION.on || window.matchMedia("(prefers-reduced-motion: reduce)").matches || (MOTION.finished && play !== true);
     whenHost.setAttribute("data-still", still ? "1" : "0");
+    whenHost.setAttribute("data-t", WHENT ? "1" : "0");
     whenHost.innerHTML = "";
     whenHost.appendChild(whenTip);
+    var b = WHENT ? layoutV() : layoutH();
+    if (still) { b.paint(b.exit, true); return; }
+    var dur = Math.max(1500, 4600 * (b.exit / b.len)), hold = 3200, t0 = null;
+    function frame(now) {
+      if (t0 === null) t0 = now;
+      var el = now - t0;
+      if (el <= dur) b.paint(b.exit * (el / dur), false);
+      else if (el <= dur + hold) b.paint(b.exit, true);
+      else { t0 = now; b.paint(0, false); }
+      raf = requestAnimationFrame(frame);
+    }
+    b.paint(0, false);
+    raf = requestAnimationFrame(frame);
+  }
 
+  /* ── the default read: stages ACROSS, one lane per table ────────── */
+  function layoutH() {
     /* header row */
     var hr = document.createElement("div");
     hr.className = "wrow whead";
@@ -759,8 +869,7 @@ var MOTION = { on: true, finished: true };   /* animations read this before sche
     var trackW = base.width || 1;
     var exitX = geo[sel.exitAt] ? geo[sel.exitAt].x + geo[sel.exitAt].w : trackW;
 
-    var grouped = {};
-    sel.touches.forEach(function (t) { (grouped[t.stage] = grouped[t.stage] || []).push(t); });
+    var grouped = grouping();
 
     var dots = [];
     Object.keys(grouped).forEach(function (st) {
@@ -770,23 +879,11 @@ var MOTION = { on: true, finished: true };   /* animations read this before sche
         var x = g.x + pad + (k + 0.5) * span / list.length;
         var lane = t.table ? rows[t.table] : rows["__tx__"];
         if (!lane) return;
-        var d = document.createElement("span");
-        d.className = "wdot";
-        var kind = t.table ? (t.op === "read" ? "read" : "write") : "tx";
-        d.setAttribute("data-k", kind);
-        d.setAttribute("data-op", t.op);
-        if (t.cond) d.setAttribute("data-cond", "1");
-        if (t.race) d.setAttribute("data-race", t.race);
-        d.style.left = x + "px";
-        d.tabIndex = -1;
-        lane.appendChild(d);
-        var words = '<b>' + esc(t.table || "transaction") + "</b> &middot; " + esc(t.op)
-          + '<br><span class="k">fate</span> ' + esc(say(t.bucket))
-          + '<br><span class="k">fn</span> ' + esc(t.fn)
-          + (t.race ? '<br><span class="k">race</span> ' + esc(t.race) : "")
-          + (t.cond ? '<br><span class="k">conditional</span>' : "");
-        wire(d, whenTip, whenHost, words);
-        dots.push({ el: d, x: x, t: t, kind: kind });
+        var dd = mkDot(t);
+        dd.el.style.left = x + "px";
+        lane.appendChild(dd.el);
+        dd.x = x;
+        dots.push(dd);
       });
     });
     dots.sort(function (a, b) { return a.x - b.x; });
@@ -823,24 +920,148 @@ var MOTION = { on: true, finished: true };   /* animations read this before sche
     }
 
     ends.forEach(function (e) {
-      wire(e.el, whenTip, whenHost, '<b>' + esc(e.table) + "</b> &middot; " + esc(e.status)
-        + '<br><span class="k">strongest fate</span> ' + esc(say(e.f === "read" ? null : e.f))
-        + '<br><span class="k">steps</span> ' + e.n);
+      wire(e.el, whenTip, whenHost, endWords(e.table, e.f, e.n));
     });
 
-    if (still) { paint(exitX, true); return; }
+    return { paint: paint, exit: exitX, len: trackW };
+  }
 
-    var dur = Math.max(1500, 4600 * (exitX / trackW)), hold = 3200, t0 = null;
-    function frame(now) {
-      if (t0 === null) t0 = now;
-      var el = now - t0;
-      if (el <= dur) paint(exitX * (el / dur), false);
-      else if (el <= dur + hold) paint(exitX, true);
-      else { t0 = now; paint(0, false); }
-      raf = requestAnimationFrame(frame);
+  /* ── transposed: stages DOWN, one column per table, the bead walks down ── */
+  function layoutV() {
+    var LANES = [{ key: "__tx__", label: "transaction", color: null, hollow: true, tx: true }]
+      .concat(TBL.map(function (t) {
+        return { key: t.table, label: t.table, color: t.color, hollow: !t.inPanel, t: t };
+      }));
+
+    /* head: one rotated column head per lane */
+    var hr = document.createElement("div");
+    hr.className = "wrow whead";
+    hr.innerHTML = '<span class="wlab"></span><div class="wtr"></div>';
+    var htr = hr.querySelector(".wtr");
+    var heads = [];
+    LANES.forEach(function (L) {
+      var c = document.createElement("span");
+      c.className = "wch";
+      c.innerHTML = '<span class="t">' + esc(L.label) + "</span>"
+        + (L.tx ? "" : '<i class="sw' + (L.hollow ? " hollow" : "") + '" style="background:' + (L.color || "transparent") + '"></i>');
+      htr.appendChild(c); heads.push(c);
+      if (L.hollow && !L.tx) wire(c, whenTip, whenHost, '<b>' + esc(L.label) + "</b><br>not in the Data panel");
+    });
+    whenHost.appendChild(hr);
+
+    /* one row per stage, its height sized by the touches it can carry */
+    var wrap = document.createElement("div");
+    wrap.className = "wlanes";
+    whenHost.appendChild(wrap);
+    var rowOf = {};
+    D.stages.forEach(function (st) {
+      var r = document.createElement("div");
+      r.className = "wrow wvr";
+      r.style.flex = maxAt[st] + " 0 26px";
+      r.innerHTML = '<span class="wlab">' + esc(st) + '</span><div class="wtr"></div>';
+      wrap.appendChild(r); rowOf[st] = r;
+    });
+
+    /* overlay: the stage rules, the lane rules, the bead */
+    var over = document.createElement("div");
+    over.className = "wover";
+    var rules = document.createElement("div");
+    rules.className = "wrules";
+    D.stages.forEach(function (st) {
+      var i = document.createElement("i"); i.style.flex = maxAt[st] + " 0 26px"; rules.appendChild(i);
+    });
+    over.appendChild(rules);
+    var vcols = document.createElement("div");
+    vcols.className = "wvcols";
+    LANES.forEach(function (L) {
+      var i = document.createElement("i");
+      if (L.hollow && !L.tx) i.setAttribute("data-hollow", "1");
+      vcols.appendChild(i);
+    });
+    over.appendChild(vcols);
+    var bead = document.createElement("div");
+    bead.className = "wbead";
+    over.appendChild(bead);
+    wrap.appendChild(over);
+
+    /* the status row, one cell per lane */
+    var er = document.createElement("div");
+    er.className = "wrow wvend";
+    er.innerHTML = '<span class="wlab"></span><div class="wtr"></div>';
+    var etr = er.querySelector(".wtr");
+    var endOf = {};
+    LANES.forEach(function (L) {
+      var c = document.createElement("span"); c.className = "wec";
+      etr.appendChild(c); endOf[L.key] = c;
+    });
+    whenHost.appendChild(er);
+
+    /* measure: the lane centres come from the heads, the stage bands from the rows */
+    var hbase = htr.getBoundingClientRect();
+    var cx = {};
+    LANES.forEach(function (L, i) {
+      var b = heads[i].getBoundingClientRect();
+      cx[L.key] = b.left - hbase.left + b.width / 2;
+    });
+    var wbase = wrap.getBoundingClientRect();
+    var geo = {};
+    D.stages.forEach(function (st) {
+      var b = rowOf[st].getBoundingClientRect();
+      geo[st] = { y: b.top - wbase.top, h: b.height };
+    });
+    var trackH = wbase.height || 1;
+    var exitY = geo[sel.exitAt] ? geo[sel.exitAt].y + geo[sel.exitAt].h : trackH;
+
+    var grouped = grouping();
+    var dots = [];
+    Object.keys(grouped).forEach(function (st) {
+      var list = grouped[st], g = geo[st] || { y: 0, h: trackH }, pad = 7;
+      var span = Math.max(1, g.h - pad * 2);
+      var host = rowOf[st] ? rowOf[st].querySelector(".wtr") : null;
+      if (!host) return;
+      list.forEach(function (t, k) {
+        var key = t.table || "__tx__";
+        if (cx[key] == null) return;
+        var localY = pad + (k + 0.5) * span / list.length;
+        var dd = mkDot(t);
+        dd.el.style.left = cx[key] + "px";
+        dd.el.style.top = localY + "px";
+        host.appendChild(dd.el);
+        dd.x = g.y + localY;
+        dots.push(dd);
+      });
+    });
+    dots.sort(function (a, b) { return a.x - b.x; });
+
+    var ends = [];
+    TBL.forEach(function (t) {
+      var ts = touchesOf(sel, t.table);
+      if (!ts.length) return;
+      var f = strongest(ts);
+      ends.push({ el: endOf[t.table], f: f, status: sel.status, table: t.table, n: ts.length });
+    });
+    ends.forEach(function (e) { wire(e.el, whenTip, whenHost, endWords(e.table, e.f, e.n)); });
+
+    function paint(y, done) {
+      bead.style.top = Math.max(0, Math.min(y, trackH)) + "px";
+      for (var i = 0; i < dots.length; i++) {
+        var d = dots[i];
+        var on = d.x <= y;
+        if (d.el.getAttribute("data-on") !== (on ? "1" : "0")) d.el.setAttribute("data-on", on ? "1" : "0");
+        if (d.kind === "write") {
+          var c = done && on ? FATE[d.t.bucket] || FATE.read : "";
+          d.el.style.backgroundColor = c;
+          d.el.style.borderColor = c || "";
+        }
+      }
+      ends.forEach(function (e) {
+        e.el.innerHTML = done
+          ? '<span class="wmark" style="background:' + (FATE[e.f] || FATE.read) + '"></span>' + e.status
+          : "";
+      });
     }
-    paint(0, false);
-    raf = requestAnimationFrame(frame);
+
+    return { paint: paint, exit: exitY, len: trackH };
   }
 
   /* fate legend, drawn from the buckets the data carries */
@@ -860,44 +1081,92 @@ var MOTION = { on: true, finished: true };   /* animations read this before sche
   })();
 
   document.getElementById("when-replay").addEventListener("click", function () { buildWhen(true); });
+  (function () {
+    var b = document.getElementById("when-t");
+    var tip = tipFor(whenHost.closest(".panel"));
+    b.setAttribute("aria-pressed", String(WHENT));
+    wire(b, tip, whenHost.closest(".panel"), "rows &harr; columns");
+    b.addEventListener("click", function () {
+      WHENT = !WHENT; tWrite(WKEY, WHENT);
+      b.setAttribute("aria-pressed", String(WHENT));
+      buildWhen();
+    });
+  })();
 
   /* ═══ 2 · WHICH ════════════════════════════════════════════════════ */
   (function () {
     var host = document.getElementById("mx");
     var stage = host.closest(".panel");
     var tip = tipFor(stage);
-    host.style.gridTemplateColumns = "250px repeat(" + D.paths.length + ", minmax(34px, 1fr))";
-    var corner = document.createElement("div"); host.appendChild(corner);
-    D.paths.forEach(function (p) {
+
+    function tableHead(t) {
+      var h = document.createElement("div"); h.className = "hh";
+      h.innerHTML = '<span class="h">' + esc(t.table) + '</span><i class="sw'
+        + (t.inPanel ? "" : " hollow") + '" style="background:' + (t.color || "transparent") + '"></i>';
+      return h;
+    }
+    function pathHead(p) {
       var h = document.createElement("div"); h.className = "h";
       h.textContent = p.status + " " + p.name;
-      host.appendChild(h);
-    });
-    TBL.forEach(function (t) {
+      return h;
+    }
+    function tableLabel(t) {
       var rl = document.createElement("div"); rl.className = "rl";
-      rl.innerHTML = '<span class="sw' + (t.inPanel ? "" : " hollow") + '" style="background:' + (t.color || "transparent") + '"></span>' + esc(t.table);
-      host.appendChild(rl);
-      D.paths.forEach(function (p) {
-        var ts = touchesOf(p, t.table), f = strongest(ts);
-        var c = document.createElement("div"); c.className = "c"; c.setAttribute("data-f", f);
-        if (f !== "none") c.style.background = FATE[f];
-        var w = '<b>' + esc(t.table) + "</b> &middot; " + esc(p.status) + " " + esc(p.name);
-        if (!ts.length) w += '<br><span class="k">no step on this path</span>';
-        else {
-          var seen = {};
-          ts.forEach(function (x) { var k = x.op + "|" + say(x.bucket); seen[k] = (seen[k] || 0) + 1; });
-          w += "<br>" + Object.keys(seen).map(function (k) {
-            var pp = k.split("|"); return esc(pp[0]) + " &rarr; " + esc(pp[1]) + " &times;" + seen[k];
-          }).join("<br>");
-        }
-        wire(c, tip, stage, w);
-        host.appendChild(c);
+      rl.innerHTML = '<span class="sw' + (t.inPanel ? "" : " hollow") + '" style="background:'
+        + (t.color || "transparent") + '"></span>' + esc(t.table);
+      return rl;
+    }
+    function pathLabel(p) {
+      var rl = document.createElement("div"); rl.className = "rl";
+      rl.innerHTML = '<span class="s">' + p.status + "</span>&nbsp;" + esc(p.name);
+      return rl;
+    }
+    /* one cell — the strongest fate of this table on this path, either way round */
+    function cell(t, p) {
+      var ts = touchesOf(p, t.table), f = strongest(ts);
+      var c = document.createElement("div"); c.className = "c"; c.setAttribute("data-f", f);
+      if (f !== "none") c.style.background = FATE[f];
+      var w = '<b>' + esc(t.table) + "</b> &middot; " + esc(p.status) + " " + esc(p.name);
+      if (!ts.length) w += '<br><span class="k">no step on this path</span>';
+      else {
+        var seen = {};
+        ts.forEach(function (x) { var k = x.op + "|" + say(x.bucket); seen[k] = (seen[k] || 0) + 1; });
+        w += "<br>" + Object.keys(seen).map(function (k) {
+          var pp = k.split("|"); return esc(pp[0]) + " &rarr; " + esc(pp[1]) + " &times;" + seen[k];
+        }).join("<br>");
+      }
+      wire(c, tip, stage, w);
+      return c;
+    }
+
+    function buildMx() {
+      host.innerHTML = "";
+      var cols = WHICHT ? TBL : D.paths;
+      var rows = WHICHT ? D.paths : TBL;
+      host.style.gridTemplateColumns = "250px repeat(" + cols.length + ", minmax(34px, 1fr))";
+      document.getElementById("mx-n").innerHTML = rows.length + " &times; " + cols.length;
+      host.appendChild(document.createElement("div"));                 /* the corner */
+      cols.forEach(function (c) { host.appendChild(WHICHT ? tableHead(c) : pathHead(c)); });
+      rows.forEach(function (r) {
+        host.appendChild(WHICHT ? pathLabel(r) : tableLabel(r));
+        cols.forEach(function (c) { host.appendChild(WHICHT ? cell(c, r) : cell(r, c)); });
       });
+    }
+    buildMx();
+
+    var b = document.getElementById("mx-t");
+    b.setAttribute("aria-pressed", String(WHICHT));
+    wire(b, tip, stage, "rows &harr; columns");
+    b.addEventListener("click", function () {
+      WHICHT = !WHICHT; tWrite(MKEY, WHICHT);
+      b.setAttribute("aria-pressed", String(WHICHT));
+      buildMx();
     });
+
     var lg = document.getElementById("mx-lg");
-    RANK.forEach(function (b) {
+    RANK.forEach(function (bk) {
       var s = document.createElement("span");
-      s.innerHTML = '<i style="background:' + FATE[b] + '"></i>' + say(b === "read" ? null : b);
+      s.innerHTML = '<i style="background:' + FATE[bk] + '"></i>' + say(bk === "read" ? null : bk);
       lg.appendChild(s);
     });
     var n = document.createElement("span");
