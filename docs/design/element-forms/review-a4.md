@@ -10,6 +10,11 @@ deduped union. The agents wrote nothing; this file is the record.
 - **step 4 · id stability on real code** — gustify rebuilt from a copy with one blank line prepended to every `.py`
   (3,428 files): **4,036 ids · 2,186 distinct · 0 added · 0 dropped**, and all 2,365 `.py` `at` anchors shifted by exactly one line.
   (The runner's "unmoved" line is a set intersection, not a per-row check — a line number another row moved into.)
+- **step 5 · the seven-fix order** — landed in seven commits (`728856f` · `4c98f45` · `16ba773` · `fac5fa2` · `82cd2c5` + V29 `d52651b` · `924a1a3` · `c5da8a2`): 37 fixed · V4 partial · V9b not reproduced · V40a struck, ruled B by the operator (2026-09-16).
+- **step 6 · operator acceptance per arm** — the sheet is generated (`goldens/acceptance.html` via `render-acceptance.py`, 62/62 on the fresh gustify feed); the READ is the operator's, one arm at a time. A wrong CLAIM → its golden id → amend `expected.json`.
+- **step 7 · consumer uptake** — no consumer reads a renamed key (form_drift · gabe-map · review read the built shape); nothing to change.
+- **step 8 · propagate** — `propagate.sh` lands a new generator imported at any indentation (`30d1a3f`); gustify `1e2d8c5a` (`graft-pilot`, 72 files, forms.json v2 head 05007957, 80 endpoints) · gastify `0cba5b93` (`center/propagate-2026-09-04`, 70 files, v2 head bcaea22c, 49 endpoints). An unselected build carries no arm key at all (D12) — the gustify message's `arms: []` wording is wrong, the feed is right.
+- **step 9 · close** — CLAUDE.md carries the pass, facts.json re-recorded (2,966 assertions · 61 batteries), `89d6f93`; final doctor **CLEAN at `89d6f93`** (9m25s after `./install.sh`, vhdx byte-identical). §A4 is closed on the suite side; step 6 stays open until the operator has read the sheet.
 
 ## Tier 1 — WRONG rows in the default (arms-off) feed, live in S20 / FORM DRIFT / gabe-map
 V1 [c1] declared-unproduced counts a 2xx responses={} key as a declared refusal (_a3_paths.py:799 appends every key; :944 subtracts
