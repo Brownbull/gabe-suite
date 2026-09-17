@@ -43,6 +43,7 @@ const N = await p.evaluate(() => {
   const F = window.LABEP, FM = F.forms, T = window.ARR.TILES;
   return { tiles: T.length, paths: FM.paths.length, exits: FM.exits.length, phases: FM.phases.length,
     controls: T.filter(t => t.nature === 'control').length,
+    setters: T.filter(t => t.nature === 'control' && t.sets).length,
     standpoints: T.filter(t => t.nature === 'standpoint').length,
     records: T.filter(t => t.nature === 'record').length,
     readers: T.filter(t => t.reads).length,
@@ -55,7 +56,7 @@ const N = await p.evaluate(() => {
     firstRun: FM.paths.filter(x => x.kind === 'success').sort((a, c) => c.effects.n.committed - a.effects.n.committed)[0].id,
     laneCols: FM.paths.map(x => ({ id: x.id, col: x.kind === 'success' ? FM.phases.length : FM.phases.indexOf(x.phase) })) };
 });
-ok(N.tiles === 18, 'the registry holds every dimension the brief names (18)', String(N.tiles));
+ok(N.tiles === 20, 'the registry holds every dimension the brief names, plus the two the model added (20)', String(N.tiles));
 
 // ── 2 · THE SHELF: the mind map AND the fallback list show every tile ───────────────────
 { const nodes = await p.$$eval('.mnode', e => e.map(x => x.dataset.node));
@@ -84,7 +85,7 @@ ok(N.tiles === 18, 'the registry holds every dimension the brief names (18)', St
 // ── 3 · THE EDGES: sets = controls + the timeline · reads = standpoints + records ───────
 { const sets = await p.$$eval('line[data-edge="sets"]', e => e.map(x => ({ x1: +x.getAttribute('x1'), y1: +x.getAttribute('y1'), x2: +x.getAttribute('x2'), y2: +x.getAttribute('y2'), col: x.getAttribute('stroke'), m: x.getAttribute('marker-end') })));
   const reads = await p.$$eval('line[data-edge="reads"]', e => e.map(x => ({ x1: +x.getAttribute('x1'), y1: +x.getAttribute('y1'), x2: +x.getAttribute('x2'), y2: +x.getAttribute('y2'), col: x.getAttribute('stroke') })));
-  ok(sets.length === N.controls + 1, 'SETS edges = the four control tiles + the timeline', sets.length + ' vs ' + (N.controls + 1));
+  ok(sets.length === N.setters + 1, 'SETS edges = the control tiles that SET the selection + the timeline', sets.length + ' vs ' + (N.setters + 1));
   ok(reads.length === N.standpoints + N.records, 'READS edges = the standpoints + the records', reads.length + ' vs ' + (N.standpoints + N.records));
   const C = await p.evaluate(() => window.ARR.MAPXY.selection);
   const d = (e, x, y) => Math.hypot(e - x, 0) + 0;
@@ -94,7 +95,8 @@ ok(N.tiles === 18, 'the registry holds every dimension the brief names (18)', St
   ok(sets.every(e => e.col === tok.gate), 'SETS is drawn in the station\'s gate token', sets[0] && sets[0].col);
   ok(reads.every(e => e.col === tok.read), 'READS is drawn in the station\'s read token', reads[0] && reads[0].col);
   const walks = await p.$$eval('line[data-edge="walks"]', e => e.map(x => ({ col: x.getAttribute('stroke'), dash: x.getAttribute('stroke-dasharray') })));
-  ok(walks.length === 1 && walks[0].col === tok.call && !!walks[0].dash, 'WALKS is one dashed edge, clock → timeline', JSON.stringify(walks));
+  ok(walks.length === 2 && walks.every(w => w.col === tok.call && !!w.dash),
+    'WALKS is dashed — the clock walks the lanes, the part buttons walk the six parts', JSON.stringify(walks));
   const shows = await p.$$eval('[data-edge^="shows"]', e => e.map(x => x.tagName.toLowerCase()));
   ok(shows.indexOf('ellipse') >= 0, 'the transient reach is ONE faint dashed ring, not eighteen arrows', shows.join(','));
   const lg = await p.$$eval('.maplgd .lgi', e => e.map(x => x.textContent.trim()));
@@ -163,7 +165,7 @@ await p.waitForTimeout(120);
   ok(bad.length === 0, 'every status marker is painted in its kind\'s station colour', bad.join(' ')); }
 
 // ── 8 · CLICKING A LANE SETS THE SELECTION, and the standpoints follow ─────────────────
-await p.evaluate(() => { ['security', 'functions', 'data', 'schemas', 'tests', 'widening'].forEach(k => window.ARR.place(k, 'middle', 'S')); });
+await p.evaluate(() => { ['security', 'functions', 'data', 'schemas', 'tests', 'widening'].forEach(k => { window.ARR.place(k, 'middle', 'S'); window.ARR.view(k, 'path'); }); });
 await p.waitForTimeout(120);
 { await p.click(`.tlane[data-path="${N.consent}"]`);
   await p.waitForTimeout(150);
@@ -323,7 +325,7 @@ const floorNow = async () => p.evaluate(() => {
 
 // ── 15 · THE FOUR STATES, drawn honestly ───────────────────────────────────────────────
 { await p.evaluate(() => { window.ARR.reset(); window.ARR.select(null, null);
-    ['security', 'data', 'schemas'].forEach(k => window.ARR.place(k, 'middle', 'S')); });
+    ['security', 'data', 'schemas'].forEach(k => { window.ARR.place(k, 'middle', 'S'); window.ARR.view(k, 'path'); }); });
   await p.waitForTimeout(140);
   const hollow = await p.$$eval('.ptbody.st-hollow', e => e.length);
   ok(hollow === 3, 'with nothing in force every standpoint is HOLLOW', String(hollow));
@@ -336,7 +338,7 @@ const floorNow = async () => p.evaluate(() => {
   const hat = await p.$eval('.ptbody[data-body="case-record"] .st-hatched', e => e.innerText).catch(() => null);
   ok(hat && hat.includes('unmeasured'), 'what the feed does not carry is HATCHED and says unmeasured', String(hat).replace(/\n/g, ' ').slice(0, 120));
   // DASHED: a test join that is not status+detail is inferred
-  await p.evaluate(() => { window.ARR.reset(); window.ARR.place('tests', 'middle', 'M');
+  await p.evaluate(() => { window.ARR.reset(); window.ARR.place('tests', 'middle', 'M'); window.ARR.view('tests', 'path');
     const pth = window.LABEP.forms.paths.filter(x => (x.tests || []).some(t => t.conf !== 'status+detail')
       && (x.tests || []).some(t => t.conf === 'status+detail'))[0]; window.ARR.select('path', pth.id); });
   await p.waitForTimeout(140);
@@ -350,7 +352,8 @@ const floorNow = async () => p.evaluate(() => {
   ok(/st-blank/.test(blank), 'a control with no question to answer is BLANK, keeping its place', blank); }
 
 // ── 16 · THE CONTROL TILES all set the same selection ──────────────────────────────────
-{ await p.evaluate(() => { window.ARR.reset(); ['command-card', 'path-strip', 'exit-ladder', 'matrix'].forEach(k => window.ARR.place(k, 'middle', 'M')); window.ARR.select(null, null); });
+{ await p.evaluate(() => { window.ARR.reset(); ['command-card', 'path-strip', 'exit-ladder', 'matrix'].forEach(k => window.ARR.place(k, 'middle', 'M'));
+    window.ARR.view('command-card', 'verbs'); window.ARR.select(null, null); });
   await p.waitForTimeout(160);
   const cells = await p.$$eval('.ptbody[data-body="command-card"] .cmdcell', e => e.map(x => x.dataset.cmd));
   ok(cells.length === 15, 'the command card draws the fifteen verbs', cells.length + ': ' + cells.join(','));
@@ -435,6 +438,211 @@ const floorNow = async () => p.evaluate(() => {
   ok(errs2.length === 0, 'with no page error', errs2.slice(0, 2).join(' | '));
   await p2.close();
   await p.evaluate(() => window.ARR.reset()); }
+
+// ── 21 · THE THREE VIEWS ON EVERY STANDPOINT (the operator's model, 2026-09-17) ────────
+{ await p.evaluate(id => { window.ARR.reset(); window.ARR.select('path', id);
+    ['data', 'schemas', 'functions', 'tests', 'widening', 'security'].forEach(k => window.ARR.place(k, 'middle', 'S')); }, N.consent);
+  await p.waitForTimeout(200);
+  const sw = await p.evaluate(() => [].map.call(document.querySelectorAll('.ptile'), t =>
+    ({ k: t.dataset.tile, v: [].map.call(t.querySelectorAll('.ptih .vb'), b => b.dataset.view) })));
+  ok(sw.length === 6 && sw.every(x => x.v.join(',') === 'all,path,time'),
+    'every standpoint tile carries the three-way switch in its header', JSON.stringify(sw.slice(0, 2)));
+  const onNow = await p.$$eval('.ptile[data-tile="data"] .ptih .vb.on', e => e.map(x => x.dataset.view));
+  ok(onNow.join() === 'all', 'and it boots on `all` — the rich view, the door\'s whole set', onNow.join());
+  const sizeBefore = await p.$eval('.ptile[data-tile="data"]', e => Math.round(e.getBoundingClientRect().width) + 'x' + Math.round(e.getBoundingClientRect().height));
+  // the three views draw three different pictures of the SAME what
+  const fp = {};
+  for (const v of ['all', 'path', 'time']) {
+    await p.evaluate(v => window.ARR.view('data', v), v);
+    await p.waitForTimeout(140);
+    fp[v] = await p.$eval('.ptbody[data-body="data"]', e => e.innerText.replace(/\s+/g, ' ').trim()); }
+  ok(fp.all !== fp.path && fp.path !== fp.time && fp.all !== fp.time,
+    'the three views draw three different pictures of the same WHAT', Object.keys(fp).map(k => k + ':' + fp[k].length).join(' '));
+  const sizeAfter = await p.$eval('.ptile[data-tile="data"]', e => Math.round(e.getBoundingClientRect().width) + 'x' + Math.round(e.getBoundingClientRect().height));
+  ok(sizeBefore === sizeAfter, 'and switching the view never changes the tile\'s size', sizeBefore + ' vs ' + sizeAfter);
+  // ALL = every table the door reads or writes
+  await p.evaluate(() => window.ARR.view('data', 'all')); await p.waitForTimeout(140);
+  const allRows = await p.$$eval('.ptbody[data-body="data"] .aline', e => e.length);
+  ok(allRows === await p.evaluate(() => window.LABEP.data.tables.length),
+    'ALL draws one row per table on the door (LABEP.data.tables)', allRows + ' vs ' + await p.evaluate(() => window.LABEP.data.tables.length));
+  // PATH = only the tables the path in force touches
+  await p.evaluate(() => window.ARR.view('data', 'path')); await p.waitForTimeout(140);
+  const pathRows = await p.$$eval('.ptbody[data-body="data"] .aline', e => e.length);
+  const wantPath = await p.evaluate(id => window.LABEP.forms.paths.filter(x => x.id === id)[0].effects.tables.length, N.consent);
+  ok(pathRows === wantPath, 'PATH draws only the tables this ending touches', pathRows + ' vs ' + wantPath);
+  ok(pathRows < allRows, 'which is fewer than the whole door', pathRows + ' < ' + allRows);
+  // TIME = one row per touch, in chain order
+  await p.evaluate(() => window.ARR.view('data', 'time')); await p.waitForTimeout(140);
+  const timeRows = await p.$$eval('.ptbody[data-body="data"] .aline[data-step]', e => e.length);
+  const wantSteps = await p.evaluate(id => window.LABEP.forms.paths.filter(x => x.id === id)[0].effects.steps.length, N.consent);
+  ok(timeRows === wantSteps, 'TIME draws one row per effect step, in the order the request makes them', timeRows + ' vs ' + wantSteps);
+  const ids = await p.$$eval('.ptbody[data-body="data"] .aline[data-step]', e => e.map(x => x.dataset.step));
+  const wantIds = await p.evaluate(id => window.LABEP.forms.paths.filter(x => x.id === id)[0].effects.steps.map(s => s.step), N.consent);
+  ok(ids.join() === wantIds.join(), 'and in the feed\'s own order, step for step');
+  // the other five parts answer all three views without a page error
+  const errsB = errs.length;
+  for (const k of ['schemas', 'functions', 'tests', 'widening', 'security'])
+    for (const v of ['all', 'path', 'time']) {
+      await p.evaluate(a => window.ARR.view(a[0], a[1]), [k, v]);
+      await p.waitForTimeout(60);
+      const txt = await p.$eval(`.ptbody[data-body="${k}"]`, e => e.innerText.trim());
+      ok(txt.length > 0, `${k} draws something in the ${v} view`); }
+  ok(errs.length === errsB, 'no page error in any of the eighteen view renders', errs.slice(errsB, errsB + 3).join(' | '));
+  // TESTS along time is HATCHED, honestly — a case has no inside
+  await p.evaluate(() => window.ARR.view('tests', 'time')); await p.waitForTimeout(140);
+  const hat = await p.$eval('.ptbody[data-body="tests"] .st-hatched', e => e.innerText).catch(() => null);
+  ok(hat && hat.includes('a case proves an ending, it has no time inside'),
+    'TESTS along time is HATCHED and says why in words', String(hat).replace(/\n/g, ' ').slice(0, 90));
+  const hatBg = await p.$eval('.ptbody[data-body="tests"] .st-hatched', e => getComputedStyle(e).backgroundImage);
+  ok(/repeating-linear-gradient/.test(hatBg), 'and it is DRAWN hatched, not just labelled', hatBg.slice(0, 40));
+  // the views ride in the copy line, defaults omitted
+  await p.evaluate(() => { window.ARR.reset(); window.ARR.place('data', 'middle', 'S'); });
+  await p.waitForTimeout(100);
+  ok(await p.evaluate(() => window.ARR.line()) === 'arrange · middle: data S', 'a default view is not written in the line');
+  await p.evaluate(() => window.ARR.view('data', 'time')); await p.waitForTimeout(100);
+  ok(await p.evaluate(() => window.ARR.line()) === 'arrange · middle: data:time S', 'a chosen view rides in the line as tile:view');
+  await p.evaluate(() => window.ARR.load('arrange · middle: data:path S')); await p.waitForTimeout(120);
+  ok(await p.evaluate(() => window.ARR.viewOf('data')) === 'path', 'and the line puts it back');
+  if (shotsAt) { await p.evaluate(id => { window.ARR.reset(); window.ARR.select('path', id);
+      ['all', 'path', 'time'].forEach((v, i) => { window.ARR.place('data', 'middle', 'S'); }); }, N.consent);
+    for (const v of ['all', 'path', 'time']) { await p.evaluate(x => window.ARR.view('data', x), v);
+      await p.mouse.move(5, 1070); await p.waitForTimeout(200);
+      await (await p.$('.ptile[data-tile="data"]')).screenshot({ path: path.join(shotsAt, `arrange-data-${v}.png`) }); } } }
+
+// ── 22 · THE COMMAND TILE IS THE WHAT × PATH MENU ─────────────────────────────────────
+{ await p.evaluate(() => { window.ARR.reset(); window.ARR.place('command-card', 'command', 'L'); window.ARR.select(null, null); });
+  await p.waitForTimeout(180);
+  ok(await p.evaluate(() => window.ARR.viewOf('command-card')) === 'menu', 'the command tile boots on the MENU view');
+  const l1 = await p.$$eval('.ptbody[data-body="command-card"] .cmdcell', e => e.map(x => x.dataset.cmd));
+  ok(l1.length === 15, 'level 1 keeps the fifteen slots of the square', String(l1.length));
+  const groups = l1.filter(c => c.indexOf('g:') === 0);
+  ok(groups.join(',') === 'g:paths,g:data,g:schemas,g:functions,g:tests,g:security,g:widening',
+    'seven groups: PATHS and the six parts, in the operator\'s order', groups.join(','));
+  ok(l1[14] === 'clear', 'and the corner is the fifteenth slot', l1[14]);
+  const blanks = await p.$$eval('.ptbody[data-body="command-card"] .cmdcell.st-blank', e => e.length);
+  ok(blanks === 15 - groups.length - 1, 'the slots between them keep their place, blank', String(blanks));
+  const badges = await p.$$eval('.ptbody[data-body="command-card"] .cmdcell[data-cmd^="g:"]', els => els.map(e => (e.querySelector('.cbadge') || {}).textContent || ''));
+  const wantBadges = await p.evaluate(() => [String(window.LABEP.forms.paths.length)].concat(
+    ['data', 'schemas', 'functions', 'tests', 'security', 'widening'].map(k => String(window.PANELS[k].count(window.LABEP)))));
+  ok(badges.join(',') === wantBadges.join(','), 'every badge is a number the page computes (forms + PANELS[k].count)', badges.join(',') + ' vs ' + wantBadges.join(','));
+  const cols = await p.$$eval('.ptbody[data-body="command-card"] .cmdcell[data-cmd^="g:"]', els => els.map(e => e.style.getPropertyValue('--tc')));
+  const wantCols = await p.evaluate(() => ['var(--accent)'].concat(['data', 'schemas', 'functions', 'tests', 'security', 'widening'].map(k => window.PANELS[k].col)));
+  ok(cols.join(',') === wantCols.join(','), 'and every group wears its part\'s own colour', cols.join(','));
+  const words = await p.$$eval('.ptbody[data-body="command-card"] .cmdcell[data-cmd^="g:"] .clbl', e => e.map(x => x.textContent));
+  ok(words.join(',') === 'PATHS,DATA,SCHEMAS,FUNCTIONS,TESTS,SECURITY,WIDENING', 'the words are the registry\'s own, upper-cased', words.join(','));
+  const hd1 = await p.$eval('.ptbody[data-body="command-card"] .asech', e => e.innerText);
+  ok(hd1.indexOf('7 GROUPS') >= 0, 'the head says how deep you are', hd1);
+  // DATA ▸ drills down — three views + its own verbs + Back; the data tile is NOT placed
+  await p.click('.ptbody[data-body="command-card"] .cmdcell[data-cmd="g:data"]');
+  await p.waitForTimeout(160);
+  const l2 = await p.$$eval('.ptbody[data-body="command-card"] .cmdcell', e => e.map(x => x.dataset.cmd));
+  ok(l2.slice(0, 4).join(',') === 'v:all,v:path,v:time,writes', 'DATA opens its three views and its own verb', l2.slice(0, 5).join(','));
+  ok(l2[14] === 'back', 'and the corner becomes Back', l2[14]);
+  ok(l2.length === 15, 'the square keeps its fifteen slots one level down', String(l2.length));
+  const dashed = await p.$$eval('.ptbody[data-body="command-card"] .cmdcell[data-cmd^="v:"]', els => els.map(e => e.className));
+  ok(dashed.every(c => /st-dashed/.test(c)), 'with the data tile unplaced the view cells are DASHED', dashed[0]);
+  await p.hover('.ptbody[data-body="command-card"] .cmdcell[data-cmd="v:time"]');
+  await p.waitForTimeout(150);
+  const card = await p.$eval('#hover', e => e.innerText);
+  ok(card.includes('place the data tile first'), 'and the card says what to do about it', card.replace(/\n/g, ' ').slice(0, 120));
+  // place the tile and press ALONG TIME
+  await p.evaluate(id => { window.ARR.place('data', 'middle', 'S'); window.ARR.select('path', id); }, N.consent);
+  await p.waitForTimeout(160);
+  await p.evaluate(() => window.ARR.menu('data'));
+  await p.waitForTimeout(160);
+  const lit = await p.$$eval('.ptbody[data-body="command-card"] .cmdcell[data-cmd^="v:"]', els => els.map(e => e.className));
+  ok(lit.every(c => !/st-dashed/.test(c)), 'placed, the view cells go live', lit[0]);
+  await p.click('.ptbody[data-body="command-card"] .cmdcell[data-cmd="v:time"]');
+  await p.waitForTimeout(180);
+  ok(await p.evaluate(() => window.ARR.viewOf('data')) === 'time', 'pressing ALONG TIME switches the placed data tile to the time view');
+  const onCell = await p.$eval('.ptbody[data-body="command-card"] .cmdcell[data-cmd="v:time"]', e => e.className);
+  ok(/\bon\b/.test(onCell), 'and the cell reads as the one in force', onCell);
+  const tRows = await p.$$eval('.ptbody[data-body="data"] .aline[data-step]', e => e.length);
+  ok(tRows === await p.evaluate(id => window.LABEP.forms.paths.filter(x => x.id === id)[0].effects.steps.length, N.consent),
+    'the middle really shows the result — one row per step', String(tRows));
+  if (shotsAt) { await p.mouse.move(5, 1070); await p.waitForTimeout(200);
+    await (await p.$('.ptile[data-tile="command-card"]')).screenshot({ path: path.join(shotsAt, 'arrange-menu-data.png') }); }
+  // Back, then PATHS ▸ — depth never exceeds two below the groups
+  await p.click('.ptbody[data-body="command-card"] .cmdcell[data-cmd="back"]');
+  await p.waitForTimeout(160);
+  ok(await p.evaluate(() => window.CARD.grp) === null, 'Back returns to the seven groups');
+  if (shotsAt) { await p.mouse.move(5, 1070); await p.waitForTimeout(200);
+    await (await p.$('.ptile[data-tile="command-card"]')).screenshot({ path: path.join(shotsAt, 'arrange-menu-groups.png') }); }
+  await p.click('.ptbody[data-body="command-card"] .cmdcell[data-cmd="g:paths"]');
+  await p.waitForTimeout(160);
+  const lp = await p.$$eval('.ptbody[data-body="command-card"] .cmdcell', e => e.map(x => x.dataset.cmd));
+  ok(lp.filter(c => c.indexOf('p:') === 0).length === N.paths, 'PATHS opens one cell per path', String(lp.filter(c => c.indexOf('p:') === 0).length));
+  ok(lp[lp.length - 1] === 'back', 'with Back in the corner', lp[lp.length - 1]);
+  await p.click(`.ptbody[data-body="command-card"] .cmdcell[data-cmd="p:${N.firstRun}"]`);
+  await p.waitForTimeout(160);
+  ok(await p.evaluate(() => window.SEL.id) === N.firstRun, 'and a path cell sets the global selection'); }
+
+// ── 23 · THE THREE PRESETS ────────────────────────────────────────────────────────────
+{ // today — the console as it is built
+  await p.evaluate(() => window.ARR.preset('today'));
+  await p.waitForTimeout(260);
+  const line = await p.evaluate(() => window.ARR.line());
+  ok(line === 'arrange · today · middle: part-buttons L | portrait: thing-record L | command: command-card:verbs L',
+    'TODAY loads the endpoint lab as built, and writes its own line back', line);
+  const btns = await p.$$eval('.ptbody[data-body="part-buttons"] .pbtn', els => els.map(e => e.dataset.part + '=' + e.querySelector('.pbn').textContent));
+  const wantCounts = await p.evaluate(() => ['data', 'schemas', 'functions', 'tests', 'security', 'widening'].map(k => k + '=' + window.PANELS[k].count(window.LABEP)));
+  ok(btns.join(',') === wantCounts.join(','), 'the six part buttons carry the registry\'s own counts', btns.join(','));
+  const host = await p.$$eval('.ptbody[data-body="part-buttons"] .pbhost', e => e.map(x => x.dataset.partBody));
+  ok(host.length === 1, 'exactly one part is visible at a time', host.join(','));
+  const hostRows = await p.$$eval('.ptbody[data-body="part-buttons"] .pbhost .aline', e => e.length);
+  ok(hostRows === await p.evaluate(() => window.LABEP.data.tables.length), 'and it draws that part\'s ALL view', String(hostRows));
+  await p.click('.ptbody[data-body="part-buttons"] .pbtn[data-part="functions"]');
+  await p.waitForTimeout(180);
+  ok((await p.$$eval('.ptbody[data-body="part-buttons"] .pbhost', e => e.map(x => x.dataset.partBody)))[0] === 'functions',
+    'pressing a button swaps the part shown');
+  const verbs = await p.$$eval('.ptbody[data-body="command-card"] .cmdcell', e => e.length);
+  ok(verbs === 15, 'and the command panel holds the fifteen verbs, as today', String(verbs));
+  // the magnifier: click a table in the middle, read it in the portrait
+  await p.click('.ptbody[data-body="part-buttons"] .pbtn[data-part="data"]');
+  await p.waitForTimeout(160);
+  await p.click('.ptbody[data-body="part-buttons"] .pbhost .aline');
+  await p.waitForTimeout(180);
+  const th = await p.evaluate(() => window.__ARRTHING || null);
+  const mag = await p.$eval('.ptbody[data-body="thing-record"]', e => e.innerText.replace(/\n/g, ' '));
+  const t0 = await p.evaluate(() => window.LABEP.data.tables[0]);
+  ok(mag.indexOf(t0.table) === 0 || mag.includes(t0.table), 'the portrait magnifies the table just clicked in the middle', mag.slice(0, 80));
+  ok(mag.includes(t0.model) && mag.includes(String(t0.cols[0][0])), 'with its model and its columns, from LABEP.data.tables', mag.slice(0, 120));
+  if (shotsAt) { await p.mouse.move(5, 1070); await p.waitForTimeout(240);
+    await p.screenshot({ path: path.join(shotsAt, 'arrange-preset-today.png') }); }
+  // proposed — the operator's model
+  await p.evaluate(() => window.ARR.preset('proposed'));
+  await p.waitForTimeout(280);
+  const line2 = await p.evaluate(() => window.ARR.line());
+  ok(line2 === 'arrange · proposed · middle: paths-timeline M · data:path S · functions:path S · security:path S'
+    + ' | portrait: thing-record L | command: command-card L · dial fit',
+    'PROPOSED loads the operator\'s model and writes its own line back', line2);
+  ok(await p.evaluate(() => window.ARR.state().dial) === 'fit', 'and it brings the FIT dial with it');
+  const placed = await p.$$eval('.ptile', e => e.map(x => x.dataset.tile + ' ' + x.dataset.size));
+  ok(placed.join(' · ') === 'paths-timeline M · data:path S · functions:path S · security:path S · thing-record L · command-card L'
+    .replace(/:path/g, ''), 'the tiles are drawn in that order and at those widths', placed.join(' · '));
+  const views = await p.evaluate(() => ['data', 'functions', 'security'].map(k => window.ARR.viewOf(k)).join(','));
+  ok(views === 'path,path,path', 'the three result tiles are on the PATH view', views);
+  ok(await p.evaluate(() => window.ARR.viewOf('command-card')) === 'menu', 'and the command panel is the menu');
+  // the round trip, both grammars
+  for (const nm of ['today', 'proposed']) {
+    await p.evaluate(x => window.ARR.preset(x), nm); await p.waitForTimeout(160);
+    const a = await p.evaluate(() => JSON.stringify(window.ARR.state()));
+    const l = await p.evaluate(() => window.ARR.line());
+    await p.evaluate(() => window.ARR.reset()); await p.waitForTimeout(80);
+    await p.evaluate(x => window.ARR.load(x), l); await p.waitForTimeout(160);
+    ok(await p.evaluate(() => JSON.stringify(window.ARR.state())) === a, `the ${nm} line round trips exactly`);
+    ok(await p.evaluate(() => window.ARR.line()) === l, `and writes itself back byte-identical`); }
+  // the OLD grammar still loads
+  await p.evaluate(l => window.ARR.load(l), 'arrange · middle: paths-timeline L · security S | portrait: path-record L');
+  await p.waitForTimeout(140);
+  ok(await p.evaluate(() => window.ARR.line()) === 'arrange · middle: paths-timeline L · security S | portrait: path-record L · dial fit',
+    'a line written before views and presets existed still loads', await p.evaluate(() => window.ARR.line()));
+  await p.evaluate(() => window.ARR.dial('work'));
+  if (shotsAt) { await p.evaluate(() => window.ARR.preset('proposed'));
+    await p.evaluate(id => window.ARR.select('path', id), N.consent);
+    await p.mouse.move(5, 1070); await p.waitForTimeout(280);
+    await p.screenshot({ path: path.join(shotsAt, 'arrange-preset-proposed.png') }); }
+  await p.evaluate(() => { window.ARR.reset(); window.ARR.dial('work'); }); }
 
 // ── 20 · THE SHOTS ─────────────────────────────────────────────────────────────────────
 if (shotsAt) {
