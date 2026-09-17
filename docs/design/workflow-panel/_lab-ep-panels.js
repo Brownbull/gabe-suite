@@ -948,6 +948,251 @@
     COV.mark("ACCESSES", "data"); COV.mark("PAYLOAD", "data"); COV.mark("CONNECTIONS", "data");
   }
 
+  /* ══ DATA · F "stages" — the topic laid across the door's STANDARD dimension ═══════════════════
+     endpoint-stages.md (operator 2026-09-17): every API door has the same spine, whatever it does —
+     EDGE · GATE · INPUT · HANDLER · EFFECTS · ANSWER, with the UNCAUGHT bay beside it and the CLIENT
+     screen after it. The endings are LABELS: choose one in the command panel and every topic can be
+     read through it. This is the FIRST topic on that spine — the tables.
+
+     Lifted from the WHEN card of data-atlas.html (lanes · axis · touches · fates · the transaction
+     rail) and re-read on the lab's own facts. Two things are deliberately different:
+       · no motion. The lab has ONE clock and the bead already belongs to Functions, so the frame is
+         drawn FINISHED — the artifact's walk is its own.
+       · the columns are the STAGES, not the FastAPI phases the forms feed names. A step the effects
+         arm marks `dependency` happened at the GATE; every other step is the HANDLER's own. EDGE and
+         INPUT touch no table by construction; the bay and the screen are not drawn at all, and the
+         axis says so in one line instead of drawing two columns nobody can read.               ══ */
+  var DSTG = [
+    { key: "EDGE", holds: "no table — the app band refuses or lets through, it stores nothing",
+      plain: "the checks every request meets before it even reaches this door" },
+    { key: "GATE", holds: "every read and write the door's dependencies made before the body was read",
+      plain: "the lock on the door — who may knock, and what the gate sets up on the way in" },
+    { key: "INPUT", holds: "no table — the body is read and shape-checked, never stored",
+      plain: "the body — can it be read at all, and does it fit the shape the door declares" },
+    { key: "HANDLER", holds: "every step the handler runs itself, in the order it runs them",
+      plain: "the door's own work — its guards, the functions it calls, the arms it takes" },
+    { key: "EFFECTS", holds: "one marker per fate a write landed in on this ending",
+      plain: "the writes the door leaves behind — and which of them survive the way it ended" },
+    { key: "ANSWER", holds: "the status this ending answers with",
+      plain: "the reply the caller gets" } ];
+  var DSTGBUCK = ["committed", "maybe_committed", "rolled_back", "uncommitted"];
+  function stgCfg(){ var C = window.DATACFG || {}; return C.stages || { axis: "cols", union: "counts", fate: "station", rail: "shown" }; }
+  /* the stage a step happened at — the effects arm's own `dependency` flag, nothing guessed */
+  function stgOf(st){ return st.dependency ? "GATE" : "HANDLER"; }
+  function stgPaths(F){ var fm = FRM(F); return fm ? (fm.paths || []) : []; }
+  /* the fate palette — read from the station, never pasted; `mono` drops the colour and the FORM
+     still parts the four buckets (fill · dashed · slashed · outline) */
+  function stgFates(S){ var mono = stgCfg().fate === "mono";
+    return { committed:       { col: mono ? "var(--muted)" : S.OPC.read, form: "fill",  word: "committed",
+                                plain: "the change is permanent — the transaction closed" },
+             maybe_committed: { col: mono ? "var(--muted)" : S.OPC.read, form: "dash",  word: "maybe",
+                                plain: "the change may or may not have closed — this ending cannot say" },
+             rolled_back:     { col: mono ? "var(--muted)" : (S.BADGE_COL.role || {}).accessor, form: "slash", word: "rolled back",
+                                plain: "the change was undone — the transaction went back" },
+             uncommitted:     { col: mono ? "var(--muted)" : S.OPC.write, form: "ring", word: "uncommitted",
+                                plain: "the change never closed a transaction — it is gone when the request ends" } }; }
+  /* the ROWS: the tables the panel draws (the channel filter still rules), then the tables only the
+     effects arm knows — drawn HOLLOW, the way the atlas draws them, with the reason on the card */
+  function stgRows(F){
+    var keep = dtables(F.data), have = {}, rows = [];
+    sortTables(keep).forEach(function(t){ have[t.table] = 1; rows.push({ table: t.table, t: t, hollow: false }); });
+    stgPaths(F).forEach(function(p){ ((p.effects || {}).steps || []).forEach(function(s){
+      if (s.table && !have[s.table]) { have[s.table] = 1; rows.push({ table: s.table, t: null, hollow: true }); } }); });
+    return rows; }
+  /* every touch, indexed once: per path (the label read) and across paths (the union read) */
+  function stgIndex(F){
+    var idx = { per: {}, union: {}, uBucket: {}, uStatus: {}, tx: {}, uTx: {}, groups: 0 };
+    stgPaths(F).forEach(function(p){
+      var per = idx.per[p.id] = { t: {}, tx: {}, bucket: {}, status: p.status }, seen = {};
+      ((p.effects || {}).steps || []).forEach(function(s){ var g = stgOf(s);
+        if (!s.table) { (per.tx[g] = per.tx[g] || []).push(s); return; }
+        var byT = per.t[s.table] = per.t[s.table] || {};
+        (byT[g] = byT[g] || []).push(s);
+        /* the FATE is counted per STATEMENT, not per pass: a walk that crosses the same write twice
+           wrote once. This is the rule the bucket chips already use (onPath), so the two agree. */
+        if (s.bucket) { var k2 = s.table + "/" + s.bucket + "/" + s.step; if (seen[k2]) return; seen[k2] = 1;
+          var b = per.bucket[s.table] = per.bucket[s.table] || {}; b[s.bucket] = (b[s.bucket] || 0) + 1; } });
+      Object.keys(per.t).forEach(function(k){ var u = idx.union[k] = idx.union[k] || {};
+        Object.keys(per.t[k]).forEach(function(g){ (u[g] = u[g] || []).push(p); idx.groups++; });
+        var st = idx.uStatus[k] = idx.uStatus[k] || {}; st[p.status] = (st[p.status] || 0) + 1; });
+      Object.keys(per.bucket).forEach(function(k){ var ub = idx.uBucket[k] = idx.uBucket[k] || {};
+        Object.keys(per.bucket[k]).forEach(function(b){ ub[b] = (ub[b] || 0) + 1; }); });
+      Object.keys(per.tx).forEach(function(g){ (idx.uTx[g] = idx.uTx[g] || []).push(p); }); });
+    return idx; }
+  window.STGINDEX = stgIndex;
+  /* one touch = one dot: a read is a small filled dot, a write a ring in its fate, a conditional
+     write dashed, a transaction step a square (commit filled · flush small · savepoint outline ·
+     rollback in the refusal colour) */
+  function stgDot(s, FA, S){
+    var isTx = !s.table, fa = s.bucket ? FA[s.bucket] : null;
+    var d = E("i", { class: "dsd dk-" + (isTx ? "tx" : s.op === "read" ? "read" : "write") + (s.cond ? " cond" : "") + (s.race ? " race" : "") });
+    d.dataset.op = s.op;
+    if (isTx) d.classList.add("op-" + s.op);
+    d.style.setProperty("--fc", fa ? fa.col : (isTx && s.op === "rollback" ? (S.BADGE_COL.role || {}).accessor : "var(--muted)"));
+    if (fa) d.classList.add("fm-" + fa.form);
+    bind(d, function(){ return cmdc({ title: s.table || "transaction", value: s.op, icon: s.table ? "table" : "key",
+      color: fa ? fa.col : "var(--muted)",
+      rows: [["stage", stgOf(s)], ["fate", fa ? fa.word : "a read leaves nothing behind"],
+             ["in", String(s.fn || "—").split("::").pop()], ["at", String(s.at || "—")],
+             s.cond ? ["conditional", "this step only runs on one arm"] : null,
+             s.race ? ["race", "a second request can insert the same key first — " + (s.race.state || "")] : null],
+      plain: s.table ? "one thing the door did to a table, at the point it did it" : "one transaction move — the writes before it are what it decides on" }); });
+    return d; }
+  function stgCount(n, cls, card2){ var i = E("i", { class: "dsn" + (cls ? " " + cls : "") }, esc(String(n)));
+    if (card2) bind(i, card2); return i; }
+  function renderDataStages(box, F, S){
+    var D = F.data, fm = FRM(F), C = stgCfg(), FA = stgFates(S);
+    var p = pathById(F, (window.SEL || {}).path);
+    var keep = dtables(D);
+    dhead(box, F, D, keep, "journey",
+      "the tables laid across the door's stages — where each one is touched, and the fate of the write at the end. "
+      + (p ? "Reading the " + pathWord(p) + " ending: only what that path did." : "No ending is chosen, so every cell counts the endings that touch it — pick one in the command panel to read a single path."));
+    if (!keep.length) { chanEmpty(box, D, S); COV.mark("ACCESSES", "data"); return; }
+    if (!fm) { box.append(E("div", { class: "pempty" }, ico("journey", 15, "var(--muted)"),
+      E("b", null, "the forms feed is " + ((F.forms || {}).state || "absent")),
+      E("span", null, "the stages are read from the element forms — the paths, their steps and the fate of each write. Without that feed there is nothing to lay across them."))); COV.mark("ACCESSES", "data"); return; }
+    var rows = stgRows(F), idx = stgIndex(F), per = p ? idx.per[p.id] : null;
+    var nPaths = stgPaths(F).length;
+    var wrap = E("div", { class: "dstg" }); wrap.dataset.axis = C.axis === "rows" ? "rows" : "cols";
+    var grid = E("div", { class: "dsg" });
+    grid.style.setProperty("--dsn", String(rows.length + (C.rail === "shown" ? 1 : 0)));
+
+    /* ── the CORNER: the axis itself, and what it does NOT draw ── */
+    var corner = E("span", { class: "dsc dscorner" }, E("i", null, esc(C.axis === "rows" ? "stage ↓" : "table ↓")));
+    bind(corner, function(){ return cmdc({ title: "the door's stages", value: DSTG.length + " of 8", icon: "journey", color: S.KINDCOL.model,
+      rows: DSTG.map(function(s){ return [s.key, s.holds]; })
+        .concat([["UNCAUGHT", "the bay — not drawn here: a 500 leaves from wherever it was raised, and touches no table of its own"],
+                 ["CLIENT", "the screen — not drawn here: it reads the answer, it never touches a table"]]),
+      plain: "the six stages of the eight every door has — the 500 bay and the client screen touch no table, so they are not drawn here" }); });
+
+    /* ── the two HEAD rosters, one per orientation ── */
+    function stageHead(s){ var h = E("span", { class: "dsh dsst" }, E("i", null, esc(s.key)));
+      h.dataset.stage = s.key;
+      bind(h, function(){ return cmdc({ title: s.key, value: s.key === "EDGE" || s.key === "INPUT" ? "no table" : "drawn", icon: "journey", color: S.KINDCOL.model,
+        rows: [["holds", s.holds], ["the spine", DSTG.map(function(x){ return x.key; }).join(" → ")]],
+        plain: s.plain }); });
+      return h; }
+    function tableHead(r){ var h = E("span", { class: "dsh dstb" + (r.hollow ? " hollow" : "") }, E("i", null, esc(r.table)));
+      h.dataset.table = r.table;
+      bind(h, function(){ return stgRowCard(r); });
+      return h; }
+    function stgRowCard(r){ var t = r.t, u = idx.union[r.table] || {}, ub = idx.uBucket[r.table] || {};
+      return cmdc({ title: r.table, value: r.hollow ? "not in the Data panel" : (t.rw === "rw" ? "reads + writes" : t.rw === "w" ? "writes" : "reads"),
+        icon: "table", color: r.hollow ? "var(--muted)" : (t.entity_color || "#888"),
+        rows: (r.hollow ? [["hollow", "the effects arm touches it, the panel's own table list does not carry it — drawn with a dashed lane so the gap is visible, never hidden"]]
+                        : [["entity", String(t.entity || "—")], ["model", String(t.model || "—")], ["columns", String((t.cols || []).length)]])
+          .concat([["at the GATE", (u.GATE || []).length + " of " + nPaths + " endings"], ["in the HANDLER", (u.HANDLER || []).length + " of " + nPaths + " endings"]])
+          .concat(DSTGBUCK.filter(function(b){ return ub[b]; }).map(function(b){ return [FA[b].word, ub[b] + " ending(s)"]; })),
+        plain: r.hollow ? "a table this door writes that the Data panel never draws — the stage picture shows it anyway" : "one table, and everywhere on the spine this door meets it" }); }
+
+    /* ── the CELLS, built once and laid out in whichever orientation the axis pick asks for ── */
+    function touchCell(r, s){ var cell = E("span", { class: "dsc dst-" + s.key });
+      cell.dataset.stage = s.key; cell.dataset.tbl = r.table;
+      if (s.key === "EDGE" || s.key === "INPUT") { cell.classList.add("none"); return cell; }
+      if (s.key === "EFFECTS") return effCell(r, cell);
+      if (s.key === "ANSWER") return ansCell(r, cell);
+      if (per) { var list = ((per.t[r.table] || {})[s.key]) || [];
+        if (!list.length) return cell;
+        cell.dataset.n = String(list.length);
+        list.forEach(function(st){ cell.append(stgDot(st, FA, S)); });
+        return cell; }
+      var ps = (idx.union[r.table] || {})[s.key] || [];
+      if (!ps.length) return cell;
+      cell.dataset.n = String(ps.length);
+      if (C.union === "dots") ps.forEach(function(q){ var d = E("i", { class: "dsu" });
+        d.style.setProperty("--fc", pathCol(q, F, S));
+        bind(d, function(){ return cmdc({ title: pathWord(q), value: q.status + " · " + s.key, icon: (CMDKIND[q.kind] || {}).ico || "info", color: pathCol(q, F, S),
+          rows: [["touches", r.table + " at " + s.key], ["steps", String((((idx.per[q.id] || {}).t || {})[r.table] || {})[s.key].length)]],
+          plain: "one ending that meets this table here" }); });
+        cell.append(d); });
+      else cell.append(stgCount(ps.length, null, function(){ return cmdc({ title: r.table + " · " + s.key, value: ps.length + " of " + nPaths + " endings", icon: "journey", color: S.KINDCOL.model,
+        rows: ps.map(function(q){ return [String(q.status), pathWord(q)]; }),
+        plain: "how many of this door's endings touch this table here" }); }));
+      return cell; }
+    function effCell(r, cell){
+      if (per) { var b = per.bucket[r.table] || {};
+        DSTGBUCK.forEach(function(k){ var n = b[k]; if (!n) return;
+          var fa = FA[k], m = E("i", { class: "dsf bk-" + k + " fm-" + fa.form }, esc("×" + n));
+          m.style.setProperty("--fc", fa.col);
+          bind(m, function(){ return cmdc({ title: r.table, value: fa.word + " ×" + n, icon: "table", color: fa.col,
+            rows: [["on", pathWord(p)], ["writes in this bucket", n + " — counted per statement: a walk that crosses the same write twice wrote once"],
+                   ["every bucket here", DSTGBUCK.filter(function(x){ return b[x]; }).map(function(x){ return FA[x].word + " " + b[x]; }).join(" · ")]],
+            plain: fa.plain }); });
+          cell.append(m); });
+        return cell; }
+      var ub = idx.uBucket[r.table] || {};
+      [["committed", "cm"], ["rolled_back", "rb"]].forEach(function(pair){ var n = ub[pair[0]]; if (!n) return;
+        var fa = FA[pair[0]], m = stgCount(n, "u-" + pair[1] + " fm-" + fa.form, function(){ return cmdc({ title: r.table, value: n + " of " + nPaths + " endings", icon: "table", color: fa.col,
+          rows: [["bucket", fa.word], ["the other buckets", DSTGBUCK.filter(function(x){ return ub[x] && x !== pair[0]; }).map(function(x){ return FA[x].word + " " + ub[x]; }).join(" · ") || "none"]],
+          plain: "how many endings leave this table's write in this state" }); });
+        m.style.setProperty("--fc", fa.col); cell.append(m); });
+      return cell; }
+    function ansCell(r, cell){
+      if (per) { if (!per.t[r.table]) return cell;
+        var chip = E("i", { class: "dsa" }, esc(String(p.status)));
+        chip.style.setProperty("--fc", pathCol(p, F, S));
+        bind(chip, function(){ return cmdc({ title: pathWord(p), value: String(p.status), icon: (CMDKIND[p.kind] || {}).ico || "info", color: pathCol(p, F, S),
+          rows: [["ends at", p.phase], ["this table", (((per.t[r.table] || {}).GATE || []).length + ((per.t[r.table] || {}).HANDLER || []).length) + " step(s)"],
+                 ["fate", DSTGBUCK.filter(function(x){ return (per.bucket[r.table] || {})[x]; }).map(function(x){ return FA[x].word; }).join(" · ") || "read only"]],
+          plain: "the answer the caller gets on the ending this row was read through" }); });
+        cell.append(chip); return cell; }
+      var st = idx.uStatus[r.table] || {}, keys = Object.keys(st).sort();
+      keys.forEach(function(k){ var chip = E("i", { class: "dsa u" }, esc(k));
+        bind(chip, function(){ return cmdc({ title: r.table + " · " + k, value: st[k] + " ending(s)", icon: "journey", color: S.KINDCOL.model,
+          rows: keys.map(function(x){ return [x, st[x] + " ending(s)"]; }),
+          plain: "the answers the caller can get on an ending that touched this table" }); });
+        cell.append(chip); });
+      return cell; }
+    /* the TRANSACTION rail — the commit, flush, savepoint and rollback moves that carry no table */
+    function railCell(s){ var cell = E("span", { class: "dsc dst-" + s.key + " dsrailc" });
+      cell.dataset.stage = s.key; cell.dataset.rail = "1";
+      if (s.key === "EDGE" || s.key === "INPUT") { cell.classList.add("none"); return cell; }
+      if (s.key === "EFFECTS" || s.key === "ANSWER") return cell;
+      if (per) { (per.tx[s.key] || []).forEach(function(st){ cell.append(stgDot(st, FA, S)); }); return cell; }
+      var ps = (idx.uTx[s.key] || []);
+      if (!ps.length) return cell;
+      cell.dataset.txn = String(ps.length);
+      cell.append(stgCount(ps.length, "tx", function(){ return cmdc({ title: "transaction · " + s.key, value: ps.length + " of " + nPaths + " endings", icon: "key", color: S.OPC.write,
+        rows: [["moves", "commit · flush · savepoint · rollback"], ["drawn", "one square per move when an ending is chosen"]],
+        plain: "how many endings make a transaction move here" }); }));
+      return cell; }
+    function railLabel(){ var l = E("span", { class: "dsl dsrl" }, E("i", { class: "dsw tx" }), E("b", null, "transaction"));
+      bind(l, function(){ return cmdc({ title: "the transaction", value: (D.commits ? "one commit" : "reads only"), icon: "key", color: S.OPC.write,
+        rows: [["moves", "commit · flush · savepoint · rollback"], ["why it is a lane", "the writes above it are decided HERE — a commit makes them permanent, a rollback undoes them"],
+               ["commit", "one DB transaction — never a git commit"]],
+        plain: "the rail that decides what every write above it is worth" }); });
+      return l; }
+    function rowLabel(r){ var l = E("span", { class: "dsl" + (r.hollow ? " hollow" : "") + ((window.SEL || {}).data === r.table ? " sel" : "") });
+      l.dataset.table = r.table;
+      var sw = E("i", { class: "dsw" }); sw.style.background = r.hollow ? "transparent" : (r.t.entity_color || "#888");
+      l.append(sw, E("b", null, esc(r.table)));
+      bind(l, function(){ return stgRowCard(r); });
+      l.addEventListener("click", function(ev){ ev.stopPropagation(); window.selectIn("data", r.table); });
+      return l; }
+
+    var lines = [];
+    if (C.rail === "shown") lines.push({ label: railLabel, cell: railCell, rail: true });
+    rows.forEach(function(r){ lines.push({ label: function(){ return rowLabel(r); }, cell: function(s){ return touchCell(r, s); }, head: function(){ return tableHead(r); }, r: r }); });
+
+    grid.append(corner);
+    if (C.axis === "rows") {
+      lines.forEach(function(L){ grid.append(L.rail ? E("span", { class: "dsh dstb tx" }, E("i", null, "transaction")) : L.head()); });
+      DSTG.forEach(function(s){ grid.append(stageHead(s));
+        lines.forEach(function(L){ grid.append(L.cell(s)); }); }); }
+    else {
+      DSTG.forEach(function(s){ grid.append(stageHead(s)); });
+      lines.forEach(function(L){ grid.append(L.label());
+        DSTG.forEach(function(s){ grid.append(L.cell(s)); }); }); }
+    wrap.append(grid);
+    box.append(wrap);
+
+    var foot = E("div", { class: "pfoot" });
+    foot.append(legend(DSTGBUCK.map(function(b){ return { t: FA[b].word, swatch: "background:" + (FA[b].form === "ring" ? "transparent" : FA[b].col) + ";border:1.5px solid " + FA[b].col + (FA[b].form === "dash" ? ";border-style:dashed" : "") }; })
+      .concat([{ t: "read", swatch: "background:var(--muted)" }, { t: "not in the Data panel", swatch: "background:transparent;border:1px dashed var(--muted)" }])));
+    box.append(foot);
+    COV.mark("ACCESSES", "data"); COV.mark("CONNECTIONS", "data");
+  }
+
   /* ── THE DATA PORTRAIT — whatever table you clicked, at full detail, beside the picture ── */
   /* the table the middle panel selected, or null — every representation starts here */
   function selTable(F){ var sel = (window.SEL || {}).data;
@@ -2745,8 +2990,11 @@
       var host = e.closest("[data-schema]"), sc = host ? host.getAttribute("data-schema") : null;
       var mine = sc ? (o.fieldIn[sc] || {})[e.getAttribute("data-field")] : o.field[e.getAttribute("data-field")];
       e.classList.add(mine ? "onpath" : "offpath"); });
-    /* DATA — a written table wears its BUCKET chip */
-    if (part === "data") { var BK = { committed: S.OPC.read, maybe_committed: S.OPC.gate, rolled_back: (S.BADGE_COL.role || {}).accessor, uncommitted: "transparent" };
+    /* DATA — a written table wears its BUCKET chip. The Stages distribution draws the fate at its own
+       EFFECTS column, so the chip would say the same thing twice: a card mirrors its thing and never
+       repeats a fact another line carries (the pattern book). The dimming above still applies. */
+    if (part === "data" && (window.PANELVAR ? window.PANELVAR("data") : null) === "stages") { /* the picture already says it */ }
+    else if (part === "data") { var BK = { committed: S.OPC.read, maybe_committed: S.OPC.gate, rolled_back: (S.BADGE_COL.role || {}).accessor, uncommitted: "transparent" };
       var BW = { committed: "committed", maybe_committed: "maybe", rolled_back: "rolled back", uncommitted: "uncommitted" };
       var ORD = ["committed", "maybe_committed", "rolled_back", "uncommitted"];
       [].forEach.call(panelEl.querySelectorAll("[data-table].onpath"), function(e){
@@ -2911,7 +3159,7 @@
   /* ── the registry — icons are STATION icons (words on hover), counts answer A ─────────── */
   window.PANELS = {
     data: { icon: "table", word: "Data", col: S.KINDCOL.model,
-      defaultVariant: "blocks",      /* the operator's default line, 2026-09-12 */
+      defaultVariant: "stages",      /* the operator's model, 2026-09-17: the topic across the door's standard stages */
       portraitSubject: function(F){ var t = selTable(F); return t ? t.table : null; },
       portraits: [ { key: "record", label: "Record", icon: "doc", hint: "everything the feed knows about the table, in rows — the densest honest reading", render: dataPortrait },
                    { key: "shape", label: "Shape", icon: "model", hint: "the drum as the graph draws it, with every field a cell beneath it", render: dataShape },
@@ -2922,7 +3170,8 @@
                   { key: "flow", label: "Flow", hint: "ONE left-to-right axis — request → the whole table field (writes first, entity by dot) → response. Uses the width.", render: renderDataFlow },
                   { key: "ledger", label: "Ledger", hint: "one row per table with every column the feed knows (entity · rw · shape · cols · fk · uq · model). The densest honest form.", render: renderDataLedger },
                   { key: "fields", label: "Fields", hint: "the columns THEMSELVES, named and typed, filtered by channel — written, read, or both. The one distribution where the fields ARE the picture instead of a stack of lines.", render: renderDataFields },
-                  { key: "blocks", label: "Blocks", hint: "one ROW per table — whose entity, how many fields, what kinds — and each field a little coloured square. Click a row to name every field at once.", render: renderDataBlocks } ] },
+                  { key: "blocks", label: "Blocks", hint: "one ROW per table — whose entity, how many fields, what kinds — and each field a little coloured square. Click a row to name every field at once.", render: renderDataBlocks },
+                  { key: "stages", label: "Stages", pathAware: true, hint: "the tables laid across the door's stages — where each is touched, and the fate of the write at the end", render: renderDataStages } ] },
     schemas: { icon: "schema", word: "Schemas", col: S.KINDCOL.schema, hint: "the shapes that cross the door — the request's 7 fields with 6 nested shapes in, the response's 6 with 5 nested out; drawn as lines, the exact fields on hover",
       count: function(F){ return (F.data.schemas.request.cols || []).length + (F.data.schemas.response.cols || []).length; },
       defaultVariant: "blocks",      /* the pattern book's first carry-over, 2026-09-13 */

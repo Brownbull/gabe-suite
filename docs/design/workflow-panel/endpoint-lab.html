@@ -685,7 +685,7 @@
   /* THE DATA RAIL IS A STACK OF FOLDS (operator 2026-09-13: "the pill colour section is perfect — group all the
      other sections this way"). Every group boots closed except the one being tuned; the state lives here so a
      dial click, which rebuilds the rail, never re-folds what the operator opened. */
-  var FOLDS = window.FOLDS = { layout: 0, sections: 0, channels: 0, sort: 0, counts: 0, pills: 0, block: 0, edge: 0, lines: 0, marks: 0, foot: 1, grounds: 0 };
+  var FOLDS = window.FOLDS = { layout: 0, stages: 0, sections: 0, channels: 0, sort: 0, counts: 0, pills: 0, block: 0, edge: 0, lines: 0, marks: 0, foot: 1, grounds: 0 };
   function foldSet(key, open){ FOLDS[key] = open ? 1 : 0;
     var f = document.querySelector('#datacfg .cffold[data-group="' + key + '"]'); if (f) f.classList.toggle("open", !!open); }
   window.pillFold = function(open){ foldSet("pills", open); };
@@ -711,7 +711,13 @@
     sqUqAt: "both", sqUqFlip: 0,                        /* which corners: top-right · bottom-left · both; mirrored = top-left / bottom-right */
     sqUqLen: 40, sqUqW: 1.5, sqUqTip: 10,              /* an arm's length (% of the side) · width at the corner (px) · width at its tip (% of the corner's) */
     foot: { l: ["hint"], r: ["id", "text", "num", "flag", "time", "list", "other", "opt"] },   /* the row under the blocks */
-    footShow: ["icon", "count"] };   /* each part's pieces — icon · text · count, any combination, never none */
+    footShow: ["icon", "count"],   /* each part's pieces — icon · text · count, any combination, never none */
+    /* THE STAGES distribution (operator 2026-09-17, endpoint-stages.md): the tables across the door's
+       standard dimension. Its own four dials, the way every other distribution has its own. */
+    stages: { axis: "cols",      /* the stages as COLUMNS, the tables as rows — or transposed */
+              union: "counts",   /* with no ending chosen: a count per cell, or one dot per ending */
+              fate: "station",   /* the four fates in the station's own colours, or mono (the form still parts them) */
+              rail: "shown" } }; /* the transaction rail — commit · flush · savepoint · rollback */
   /* SCHEMAS' OWN SETTINGS (operator 2026-09-13: "redo the schemas section" with the pattern book). The looks it shares
      with Data — pill colour, chip box/fill/size, field marks, block edge — are read from DATACFG, not copied. */
   var SCHCFG = window.SCHCFG = { dir: { in: 1, out: 1 }, sort: "tree", sortRev: 0,
@@ -737,11 +743,11 @@
     footShow: ["icon", "count"] };
   var FFOLDS = window.FFOLDS = { layout: 0, map: 1, sections: 0, roles: 0, sort: 0, counts: 0, title: 0, lines: 0, foot: 0 };
   var DSEC = [
-    { key: "title",  word: "the title",   icon: "layers", on: ["grounds", "flow", "ledger", "fields", "blocks"],
+    { key: "title",  word: "the title",   icon: "layers", on: ["grounds", "flow", "ledger", "fields", "blocks", "stages"],
       what: "the part's own name and glyph, left of the counts", lost: "which part you are looking at; the counts and the switches stay" },
-    { key: "note",   word: "the note",    icon: "doc",    on: ["grounds", "flow", "ledger", "fields", "blocks"],
+    { key: "note",   word: "the note",    icon: "doc",    on: ["grounds", "flow", "ledger", "fields", "blocks", "stages"],
       what: "the sentence under the title", lost: "how to read the picture, said once in words" },
-    { key: "counts", word: "counts",      icon: "info",   on: ["grounds", "flow", "ledger", "fields", "blocks"],
+    { key: "counts", word: "counts",      icon: "info",   on: ["grounds", "flow", "ledger", "fields", "blocks", "stages"],
       what: "the number beside every name", lost: "how many — the first question the card answers" },
     { key: "shapes", word: "the shapes",  icon: "table",  on: ["grounds", "flow", "ledger"],
       what: "the line stack inside each table — one line per column", lost: "how deep each table is; the names stay",
@@ -756,7 +762,7 @@
       what: "the entity-model row — claim · seeded · derived · proposed", lost: "which model would re-home this door" },
     { key: "ents",   word: "entities",    icon: "entity", on: ["flow"],
       what: "the entities line under the field", lost: "the roster of grounds the dots stand for" },
-    { key: "legend", word: "the legend",  icon: "layers", on: ["grounds", "flow", "ledger", "fields", "blocks"],
+    { key: "legend", word: "the legend",  icon: "layers", on: ["grounds", "flow", "ledger", "fields", "blocks", "stages"],
       what: "the strip of swatches at the foot", lost: "what a colour and a line mean, drawn as they are drawn" } ];
   /* THE LOOK applyData paints (operator 2026-09-13): Data's, unless Schemas is open and keeps its own copy */
   function lookOf(){ var pn = document.getElementById("panel"), tab = pn && pn.dataset.tab;
@@ -926,6 +932,38 @@
       box.append(el("div", { class: "cfl" }, "shown as"), w); }
 
     });
+    /* THE STAGES dials (operator 2026-09-17) — the door's standard dimension is the picture; these
+       four say how it is read. They do nothing outside the Stages distribution, and say so. */
+    { var SG = DATACFG.stages;
+      function spick(label, ds, key, opts, iconFor){
+        var na = live !== "stages", w = el("div", { class: "ibwrap" });
+        opts.forEach(function(o){ var b2 = el("button", { class: "ib" + (SG[key] === o[0] ? " on" : "") + (na ? " na" : "") });
+          b2.dataset[ds] = o[0]; b2.innerHTML = iconFor(o);
+          hoverBind(b2, hcard({ title: o[2] || o[0], value: label, icon: "shape",
+            rows: na ? [["drawn in", "stages — not in " + live + ", so this does nothing right now"]] : null, plain: o[1] }));
+          b2.onclick = function(ev){ ev.stopPropagation(); SG[key] = o[0];
+            applyData(); window.showTab("data"); drawDataCfg(); }; w.append(b2); });
+        box.append(el("div", { class: "cfl" }, label), w); }
+      group("stages", "stages", SG.axis + " · " + SG.union + " · " + SG.fate + " · rail " + SG.rail,
+        "the six stages every API door has — EDGE · GATE · INPUT · HANDLER · EFFECTS · ANSWER — with this door's tables laid across them", function(){
+        spick("axis", "dstgaxis", "axis",
+          [["cols", "the stages run across the top, one row per table — the way a request is read, left to right", "stages as columns"],
+           ["rows", "turned around: one row per stage, one column per table, the names rotated", "stages as rows"]],
+          function(o){ return labIco(o[0] === "cols" ? "bars" : "laycfill", 15); });
+        spick("union", "dstgunion", "union",
+          [["counts", "with no ending chosen, each cell counts the endings that touch that table there", "counts"],
+           ["dots", "one dot per ending instead, each in its own kind colour", "dots"]],
+          function(o){ return labIco(o[0] === "counts" ? "ton" : "sh-circle", 15); });
+        spick("fate colours", "dstgfate", "fate",
+          [["station", "the four fates in the station's own colours — committed, maybe, rolled back, uncommitted", "station colours"],
+           ["mono", "no colour; the marker's FORM still parts the four — filled, dashed, slashed, outline", "mono"]],
+          function(o){ return o[0] === "station" ? sw(S.OPC.read) : sw("var(--muted)"); });
+        spick("rail", "dstgrail", "rail",
+          [["shown", "the transaction lane above the tables — commit, flush, savepoint, rollback", "shown"],
+           ["hidden", "the tables alone", "hidden"]],
+          function(o){ return labIco(o[0] === "shown" ? "eye" : "eyeoff", 15); });
+        box.append(el("div", { class: "cfread" }, "the bay (a 500) and the client screen are the other two stages; neither touches a table, so neither is drawn here — the axis card says so.")); }); }
+
     group("sections", "sections", (DSEC.length - HID.length) + " drawn" + (HID.length ? " · hidden " + HID.join(" ") : ""),
       "one click hides a row — nothing leaves the page", function(){
     { var w = el("div", { class: "ibwrap dsec" });
@@ -2023,6 +2061,7 @@
           + ", standard " + DATACFG.sqBase + "% optional " + DATACFG.sqOptA + "%"
         + " · footer " + (DATACFG.foot.l.join(" ") || "—") + " | " + (DATACFG.foot.r.join(" ") || "—") + ", " + DATACFG.footShow.join(" ")
         + " · grounds by " + DATACFG.order + ", width " + DATACFG.width + ", tiles " + DATACFG.tiles
+        + " · stages axis " + DATACFG.stages.axis + ", union " + DATACFG.stages.union + ", fate " + DATACFG.stages.fate + ", rail " + DATACFG.stages.rail
         + " · drawn " + shown.join(" ") + (hidden.length ? " · hidden " + hidden.join(" ") : " · nothing hidden"); },
     schemas: function(){ var C = SCHCFG, B = C.bk, SEC = ["title", "note", "legend"];
       var drawn = SEC.filter(function(k){ return C.show[k]; }), hidden = SEC.filter(function(k){ return !C.show[k]; });
@@ -2094,7 +2133,7 @@
   document.getElementById("blk-parts").querySelector(".bhi").innerHTML = S.icon("layers", 13, "var(--accent)");
 
   /* ── the variant bar: one panel, several DISTRIBUTIONS — proposals to compare, not settings ── */
-  var VARICO = { shapes: "drill", grounds: "entity", flow: "drill", ledger: "table", fields: "schema", blocks: "layers", levels: "layers", chain: "merge", status: "info", ladder: "up", band: "shield", gauntlet: "drill" };
+  var VARICO = { shapes: "drill", grounds: "entity", flow: "drill", ledger: "table", fields: "schema", blocks: "layers", stages: "journey", levels: "layers", chain: "merge", status: "info", ladder: "up", band: "shield", gauntlet: "drill" };
   function drawVars(){ var PC = document.getElementById("partcfg"); PC.innerHTML = "";
     order.forEach(function(k){ var P = window.PANELS[k];
       var row = E("div", { class: "prow" + (cur === k ? " on" : "") });
@@ -2226,7 +2265,7 @@
      ONE selection runs all four: window.SEL.path · .exit · .case.                          ══ */
   var CMD = window.CMD = {
     layout: "card",        /* 1  · card · strip · ladder · matrix */
-    verbs: "rows",         /* 1b · rows (as built) · g1 (the rows NAMED) · g2 (five groups, one per part) */
+    verbs: "g2",           /* 1b · rows (as built) · g1 (the rows NAMED) · g2 (five groups, one per part) — the operator's model 2026-09-17: position on a TOPIC, then its verbs */
     mode: "cmd",           /*      the card's own state: the verbs, or the paths (Walk a path ▸) */
     grp: null,             /*      g2's level: null = the five groups, else the group whose verbs are open */
     only: null,            /*      the kind filter R and T set */
@@ -2298,7 +2337,16 @@
 
   /* ── the ONE selection, and the four calls that move it ── */
   function cmdPortKey(k){ if (CMD.portrait === "path") portVar[cur] = k; }
-  function cmdRefresh(){ drawCmd(); if (window.CMDKIT) window.CMDKIT.applyPath(PANEL, cur, window.CMDKIT.pathById(F, window.SEL.path)); drawPortrait(); }
+  /* a distribution that DRAWS the label itself — the Data topic across the stages (endpoint-stages.md,
+     2026-09-17) — is RE-RENDERED when the label moves; every other one is marked in place by the
+     post-render projection. The flag rides the variant, so each topic declares it as it lands. */
+  function pathAware(){ var P = window.PANELS[cur]; if (!P) return false;
+    var key = curVar[cur] || P.defaultVariant || P.variants[0].key;
+    var v = (P.variants || []).filter(function(x){ return x.key === key; })[0];
+    return !!(v && v.pathAware); }
+  function cmdRefresh(){ drawCmd();
+    if (pathAware()) { show(cur); return; }
+    if (window.CMDKIT) window.CMDKIT.applyPath(PANEL, cur, window.CMDKIT.pathById(F, window.SEL.path)); drawPortrait(); }
   function selectPath(id){ var p = window.CMDKIT.pathById(F, id);
     window.SEL.path = p ? id : null;
     window.SEL.exit = p && p.exit ? p.exit.id : null;
@@ -2335,7 +2383,9 @@
 
   /* ══ THE RAIL BLOCK — one fold per thing on the region, the map fold BOOTS OPEN ══ */
   var CMDFOLDS = { layout: 0, map: 1, cells: 0, colour: 0, sections: 0 };
-  function cmdRedraw(){ drawCmd(); drawCmdCfg(); if (window.CMDKIT) window.CMDKIT.applyPath(PANEL, cur, window.CMDKIT.pathById(F, window.SEL.path)); drawPortrait(); }
+  function cmdRedraw(){ drawCmd(); drawCmdCfg();
+    if (pathAware()) { show(cur); return; }
+    if (window.CMDKIT) window.CMDKIT.applyPath(PANEL, cur, window.CMDKIT.pathById(F, window.SEL.path)); drawPortrait(); }
   function drawCmdCfg(){ var box = document.getElementById("cmdcfg"); if (!box) return; box.innerHTML = "";
     var K = railKit(box, CMDFOLDS, CMD.layout, cmdRedraw);
     function P(label, ds, key, opts, iconFor, onlyIn){

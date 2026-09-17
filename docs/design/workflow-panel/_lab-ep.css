@@ -1234,6 +1234,81 @@ html, body{ height:100%; }
   box-shadow:none !important; border-style:dotted; }
 .cmdcell.st-blank{ background:none !important; box-shadow:none !important; cursor:default;
   border-color:color-mix(in srgb, var(--line) 60%, transparent); border-style:solid; }
+/* ══ DATA · "stages" — the tables across the door's STANDARD dimension (2026-09-17) ═══════════════
+   EDGE · GATE · INPUT · HANDLER · EFFECTS · ANSWER as one grid. The `axis` pick transposes it by
+   swapping the template and the emit order — the cells themselves are the same nodes either way, so
+   nothing can drift between the two readings. Every drawn character is at the 12px floor. */
+/* the picture is as tall as its table roster, and the panel box is not — so it scrolls INSIDE
+   itself (the command grid does the same) and #panel never overflows. Sideways it never scrolls. */
+.dstg{ --dsl:150px; padding:4px 0 2px; flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; }
+.dstg .dsh, .dstg .dscorner{ position:sticky; top:0; z-index:3; background:var(--chip-bg); }
+.dstg .dsg{ display:grid; gap:3px; align-items:stretch; }
+.dstg[data-axis="cols"] .dsg{ grid-template-columns:var(--dsl) repeat(6, minmax(0, 1fr)); }
+.dstg[data-axis="rows"] .dsg{ grid-template-columns:var(--dsl) repeat(var(--dsn, 15), minmax(0, 1fr)); }
+/* the heads */
+.dstg .dsh{ display:flex; align-items:flex-end; justify-content:center; min-width:0; overflow:hidden;
+  border-bottom:1px solid var(--line); padding:0 2px 4px; }
+.dstg .dsh i{ font:800 12px/1.15 var(--font-mono); letter-spacing:.07em; text-transform:uppercase;
+  color:var(--muted); font-style:normal; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dstg[data-axis="cols"] .dsh.dsst{ min-height:22px; }
+.dstg[data-axis="rows"] .dsh.dsst{ align-items:center; justify-content:flex-end; border-bottom:0;
+  border-right:1px solid var(--line); padding:0 8px 0 2px; }
+.dstg[data-axis="rows"] .dsh.dstb{ height:196px; align-items:flex-end; justify-content:center; }
+.dstg[data-axis="rows"] .dsh.dstb i{ writing-mode:vertical-rl; transform:rotate(180deg); text-transform:none;
+  letter-spacing:0; max-height:186px; }
+.dstg .dsh.dstb.hollow i, .dstg .dsl.hollow b{ color:var(--muted); opacity:.75; }
+.dstg .dsh.dstb.tx i, .dstg .dsl.dsrl b{ color:var(--muted); }
+.dstg .dsh:hover i{ color:var(--ink); }
+/* the corner */
+.dstg .dscorner{ display:flex; align-items:flex-end; border-bottom:1px solid var(--line); padding:0 6px 4px; }
+.dstg .dscorner i{ font:700 12px/1.15 var(--font-mono); color:var(--muted); font-style:normal; letter-spacing:.04em; }
+/* the row labels (cols orientation) */
+.dstg .dsl{ display:flex; align-items:center; gap:6px; min-width:0; padding:0 8px 0 2px; cursor:pointer;
+  border-right:1px solid var(--line); }
+.dstg .dsl b{ font:600 12px/1.2 var(--font-ui); color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dstg .dsl:hover b{ color:var(--accent); }
+.dstg .dsl.sel b{ color:var(--accent); }
+.dstg .dsl .dsw{ width:8px; height:8px; border-radius:2px; flex:0 0 auto; }
+.dstg .dsl.hollow .dsw{ background:transparent !important; border:1px dashed var(--muted); }
+.dstg .dsl .dsw.tx{ background:var(--muted); border-radius:1px; }
+/* the cells */
+.dstg .dsc{ position:relative; display:flex; align-items:center; justify-content:center; flex-wrap:wrap;
+  gap:3px; min-width:0; min-height:24px; padding:3px 4px; border-radius:4px;
+  background:color-mix(in srgb, var(--line) 22%, transparent); }
+.dstg .dsc.none{ background:none; border:1px dashed color-mix(in srgb, var(--line) 70%, transparent); }
+.dstg .dsc.dsrailc{ background:color-mix(in srgb, var(--line) 34%, transparent); }
+.dstg .dsc.dst-EFFECTS{ background:color-mix(in srgb, var(--line) 30%, transparent); }
+.dstg .dsc.dst-ANSWER{ background:none; }
+/* one touch = one dot */
+.dstg .dsd{ display:block; flex:0 0 auto; font-style:normal; --fc:var(--muted); }
+.dstg .dsd.dk-read{ width:5px; height:5px; border-radius:50%; background:var(--muted); }
+.dstg .dsd.dk-write{ width:9px; height:9px; border-radius:50%; background:transparent; border:1.6px solid var(--fc); }
+.dstg .dsd.dk-write.fm-fill{ background:var(--fc); }
+.dstg .dsd.dk-write.fm-dash{ border-style:dashed; }
+.dstg .dsd.dk-write.fm-slash{ background:linear-gradient(135deg, transparent 44%, var(--fc) 44% 56%, transparent 56%); }
+.dstg .dsd.dk-write.cond{ border-style:dashed; }
+.dstg .dsd.dk-tx{ width:7px; height:7px; border-radius:2px; background:var(--muted); }
+.dstg .dsd.dk-tx.op-commit{ background:var(--ink); }
+.dstg .dsd.dk-tx.op-flush{ width:5px; height:5px; }
+.dstg .dsd.dk-tx.op-savepoint{ background:transparent; border:1.5px solid var(--muted); }
+.dstg .dsd.dk-tx.op-rollback{ background:var(--fc); }
+.dstg .dsd.race{ box-shadow:0 0 0 3px color-mix(in srgb, var(--fc) 26%, transparent); }
+/* the union counts, the fate markers, the status chips — all at the floor */
+.dstg .dsn{ font:700 12px/1.2 var(--font-mono); color:var(--muted); font-style:normal; }
+.dstg .dsn.u-cm, .dstg .dsn.u-rb{ color:var(--fc); }
+.dstg .dsn.u-rb::before{ content:"↺"; margin-right:2px; }
+.dstg .dsn.tx{ color:var(--ink); }
+.dstg .dsu{ width:6px; height:6px; border-radius:50%; background:var(--fc); flex:0 0 auto; }
+.dstg .dsf{ display:inline-flex; align-items:center; gap:3px; font:700 12px/1.2 var(--font-mono);
+  color:var(--fc); font-style:normal; padding:0 4px 0 3px; border-radius:3px;
+  border:1.4px solid var(--fc); background:color-mix(in srgb, var(--fc) 16%, transparent); }
+.dstg .dsf.fm-dash{ border-style:dashed; background:none; }
+.dstg .dsf.fm-ring{ background:none; }
+.dstg .dsf.fm-slash{ background:repeating-linear-gradient(135deg, color-mix(in srgb, var(--fc) 26%, transparent) 0 3px, transparent 3px 6px); }
+.dstg .dsa{ font:700 12px/1.2 var(--font-mono); color:var(--fc, var(--muted)); font-style:normal;
+  padding:1px 5px; border-radius:999px; border:1px solid color-mix(in srgb, var(--fc, var(--muted)) 45%, var(--line)); }
+.dstg .dsa.u{ color:var(--muted); }
+
 /* the G1 ROW NAME — a caption ACROSS the row, spanning all five columns, so the grid's template and
    every square's column and width are exactly what they are without it (operator 2026-09-17). Small
    caps in the muted ink, drawn at 12px: the floor, never smaller. */

@@ -65,12 +65,23 @@ ok(tabs.join(',') === 'data,schemas,functions,tests,widening,security', 'SIX tab
 
 // the DATA panel boots on the operator's own default line (2026-09-12)
 ok(await p.evaluate(() => window.COPYTXT.data()) ===
-   'data · shown as blocks · tables all · title counts tables icon, fields icon, ops icon · sort channel, icon, accent on panel 45% · pills each, shape pill, text ink, ground kind 15%'
+   'data · shown as stages · tables all · title counts tables icon, fields icon, ops icon · sort channel, icon, accent on panel 45% · pills each, shape pill, text ink, ground kind 15%'
    + ' · block block (icon on model, chip on, name on, entity both, count badge, model both) · edge left solid 2px · chips count pill 100%, channel pill 90%'
    + ' · lines icon name | — / ent | count rw / model | — · sizes icon 13 rw 11 name 13 ent 12 count 11 model 12'
    + ' · squares 14px gap 4 round as symbol by type, optional marked, unique corners both, arms 40% 1.5px tip 10%, standard 100% optional 50% · footer hint | id text num flag time list other opt, icon count · grounds by size, width flex, tiles stack'
+   + ' · stages axis cols, union counts, fate station, rail shown'
    + ' · drawn counts shapes rw commit ev mdl ents legend · hidden title note',
    'the data panel boots on the operator\'s default line', await p.evaluate(() => window.COPYTXT.data()));
+
+// the COMMAND panel boots on ITS default line (2026-09-17: the by-part card is the default grouping)
+const CMDBOOT = 'command · layout card · verbs g2 · rows command · scope kind · grouping request · names drawn · success shown'
+  + ' · sub-paths split · middle dim .28 · portrait path record · wrong-question blank · hotkeys QWERT grid'
+  + ' · cells 64px valley · tooltip lab hover card · test join exact · on part switch kept'
+  + ' · card side right of portrait · ladder in the region · walking one-clock replay · rate-limit chip shown'
+  + ' · colour by kind · matrix per-path · drawn chip strip region title caption · nothing hidden';
+ok(await p.evaluate(() => window.COPYTXT.command()) === CMDBOOT,
+   'the command panel boots on its default line, word for word — the card grouped BY PART',
+   await p.evaluate(() => window.COPYTXT.command()));
 
 // the head strip carries the station card's head
 const head = await p.$eval('#headstrip', e => e.innerText);
@@ -128,9 +139,13 @@ const floor = async () => p.evaluate(() => { let n = 0, worst = 99, chosen = 0; 
       if (part && (B.size[part] || 12) < 12 && Math.round(fs) === B.size[part]) { chosen++; return; }
       n++; worst = Math.min(worst, fs); } });
   return { under: n, worst, chosen }; });
-{ const fl = await floor();
+{ // the two chips live on the BLOCKS distribution's title row, so the floor is read there and the
+  // panel goes straight back to the distribution it booted on (STAGES, 2026-09-17)
+  await p.evaluate(() => { window.showVariant('data', 'blocks'); window.showTab('data'); }); await p.waitForTimeout(200);
+  const fl = await floor();
   ok(fl.under === 0 && fl.chosen > 0 && await p.evaluate(() => window.DATACFG.bk.size.rw < 12 && window.DATACFG.bk.size.count < 12),
-     'the only text under 12px is the two title chips the operator sized there on purpose — named, not hidden', JSON.stringify(fl)); }
+     'the only text under 12px is the two title chips the operator sized there on purpose — named, not hidden', JSON.stringify(fl));
+  await p.evaluate(() => { window.showVariant('data', window.PANELS.data.defaultVariant); window.showTab('data'); }); await p.waitForTimeout(200); }
 for (const box of ['work', 'dock']) {
   await p.evaluate(() => window.railTab('controls')); await p.click(`#boxes .ib[data-box="${box}"]`);
   for (const t of tabs) {
@@ -410,8 +425,8 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   // THE RAIL IS A STACK OF FOLDS (operator 2026-09-13) — every group closed at boot except the one being tuned
   { const g = await p.$$eval('#datacfg > .cffold', els => els.map(e => ({ k: e.dataset.group, open: e.classList.contains('open'),
       body: getComputedStyle(e.querySelector('.cffoldbody')).display, sum: (e.querySelector('.cffoldhd .sum') || {}).textContent })));
-    ok(g.map(x => x.k).join(',') === 'layout,sections,channels,sort,counts,pills,block,edge,lines,marks,foot,grounds',
-       'the data rail is twelve named groups — the chips inside BLOCK TITLE, the new FOOTER ROW before grounds', g.map(x => x.k).join(','));
+    ok(g.map(x => x.k).join(',') === 'layout,stages,sections,channels,sort,counts,pills,block,edge,lines,marks,foot,grounds',
+       'the data rail is thirteen named groups — STAGES right after layout, the new distribution\'s own four dials', g.map(x => x.k).join(','));
     ok(g.every(x => x.open === (x.k === 'foot') && x.body === (x.k === 'foot' ? 'grid' : 'none')),
        'every group boots folded except FOOTER ROW, the one being tuned', JSON.stringify(g.map(x => x.k + (x.open ? '+' : '-'))));
     ok(g.every(x => x.sum && x.sum.trim().length > 2), 'and every folded header names what its dials are set to', JSON.stringify(g.map(x => x.sum))); }
@@ -1244,7 +1259,7 @@ await p.waitForTimeout(320);
 { await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(80);
   await p.evaluate(() => window.showVariant('data', 'grounds')); await p.waitForTimeout(200);
   const lay = await p.$$eval('#datacfg .ib[data-dlayout]', els => els.map(e => e.dataset.dlayout));
-  ok(lay.join(',') === 'grounds,flow,ledger,fields,blocks', 'the data block carries all five distributions', lay.join(','));
+  ok(lay.join(',') === 'grounds,flow,ledger,fields,blocks,stages', 'the data block carries all six distributions', lay.join(','));
   const secs = await p.$$eval('#datacfg .ib[data-sec]', els => els.map(e => e.dataset.sec));
   ok(secs.join(',') === 'title,note,counts,shapes,rw,commit,ev,mdl,ents,legend', 'ten sections, each its own toggle', secs.join(','));
   ok(await p.$$eval('#datacfg .ib', els => els.every(e => !e.innerText.trim() && (!!e.querySelector('svg') || !!e.querySelector('.chsw')))),
@@ -1713,7 +1728,7 @@ ok(blocks.join(',') === 'command panel,bench,head bar,part buttons,frame,data pa
 const prows = await p.$$eval('#partcfg .prow', els => els.length);
 ok(prows === 6, 'the BARS tab separates the controls per part — one row each', String(prows));
 const varBtns = await p.$$eval('#partcfg .ib', els => els.length);
-ok(varBtns === 18, 'every distribution is an icon button in its part row', String(varBtns));
+ok(varBtns === 19, 'every distribution is an icon button in its part row', String(varBtns));
 const iconOnlyCtl = await p.$$eval('#partcfg .ib, #barcfg .ib, #boxes .ib, #dens .ib, #motionwrap .ib', els => els.every(e => !e.innerText.trim() && !!e.querySelector('svg')));
 ok(iconOnlyCtl, 'every control in the rail is an ICON — its word lives on the hover card');
 const ctl = (await p.$$('#partcfg .ib'))[0]; await ctl.hover(); await p.waitForTimeout(120);
@@ -1844,7 +1859,8 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
     + ' · cells 64px valley · tooltip lab hover card · test join exact · on part switch kept'
     + ' · card side right of portrait · ladder in the region · walking one-clock replay · rate-limit chip shown'
     + ' · colour by kind · matrix per-path · drawn chip strip region title caption · nothing hidden';
-  ok(await p.evaluate(() => window.COPYTXT.command()) === DEFLINE, 'the command panel boots on its default line, word for word', await p.evaluate(() => window.COPYTXT.command()));
+  ok(await p.evaluate(() => window.COPYTXT.command()) === DEFLINE && DEFLINE === CMDBOOT.replace('verbs g2', 'verbs rows'),
+    'this section reads the card on its ROWS grouping — the boot line with one word changed, nothing else', await p.evaluate(() => window.COPYTXT.command()));
   ok(await p.evaluate(() => window.OPENBLK) === 'blk-command', 'the rail opens on the region being worked on');
   { const ords = await p.evaluate(() => ['#notes', '#cmd', '#bench', '#port'].map(s => getComputedStyle(document.querySelector(s)).order).join(','));
     ok(ords === '1,5,3,4', 'the row is renumbered rail 1 · bench 3 · port 4 · cmd-right 5', ords); }
@@ -2377,6 +2393,184 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
     await (await p.$('#port')).screenshot({ path: path.join(shotsAt, 'eplab-cmd-portrait-case.png') }); }
   await resetCmd(); await p.waitForTimeout(160);
   ok(errs.length === errsBefore, 'the command panel raises no page error anywhere in this section', errs.slice(errsBefore, errsBefore + 3).join(' | '));
+}
+
+// ── DATA ACROSS THE STAGES (endpoint-stages.md, the first topic on the standard spine, 2026-09-17) ──
+// The picture IS the label: with an ending in force the panel is re-rendered, not marked, so every
+// assert below reads what the grid DREW and checks it against a number the page computes from the feed.
+{
+  const errsBefore = errs.length;
+  await p.evaluate(() => { window.railTab('controls'); }); await p.click('#boxes .ib[data-box="work"]');
+  await p.evaluate(() => { window.clearPath(); Object.assign(window.DATACFG.stages, { axis: 'cols', union: 'counts', fate: 'station', rail: 'shown' });
+    window.showVariant('data', 'stages'); window.showTab('data'); window.drawDataCfg(); });
+  await p.waitForTimeout(320);
+
+  const G = await p.evaluate(() => { const f = window.LABEP.forms, stg = s => s.dependency ? 'GATE' : 'HANDLER';
+    const groups = new Set(), tx = new Set(), tbl = new Set();
+    f.paths.forEach(x => (x.effects.steps || []).forEach(s => {
+      if (!s.table) { tx.add(x.id + '|' + stg(s)); return; }
+      tbl.add(s.table); groups.add(x.id + '|' + s.table + '|' + stg(s)); }));
+    const panel = window.LABEP.data.tables.map(t => t.table);
+    const cons = f.paths.find(x => x.names.drawn === 'consent required'), fr = f.paths.find(x => x.names.drawn === 'first run');
+    const per = q => { const o = {}; (q.effects.steps || []).forEach(s => { if (!s.table) return;
+        ((o[s.table] = o[s.table] || {})[stg(s)] = (o[s.table] || {})[stg(s)] || []).push(s); }); return o; };
+    return { groups: groups.size, tx: tx.size, rows: new Set(panel.concat([...tbl])).size,
+      extra: [...tbl].filter(t => panel.indexOf(t) < 0), panel: panel.length, paths: f.paths.length,
+      consent: cons.id, consentStatus: String(cons.status), consentRb: (cons.effects.n.rolled_back || 0),
+      firstRun: fr.id, frStatus: String(fr.status), frTables: Object.keys(per(fr)) }; });
+
+  ok(await p.evaluate(() => document.getElementById('panel').dataset.variant) === 'stages',
+    'Data opens on the Stages distribution — the operator\'s model, the topic across the door\'s own spine');
+  ok(await p.evaluate(() => window.PANELS.data.defaultVariant) === 'stages', 'and it is the registry DEFAULT, not a click');
+  { const heads = await p.$$eval('#panel .dsh.dsst', els => els.map(e => e.dataset.stage));
+    ok(heads.join(' → ') === 'EDGE → GATE → INPUT → HANDLER → EFFECTS → ANSWER',
+      'the six drawn stages are the standard spine, in request order', heads.join(' → ')); }
+  { const rows = await p.$$eval('#panel .dsl[data-table]', els => els.map(e => e.dataset.table));
+    ok(rows.length === G.rows && rows.length === G.panel + G.extra.length,
+      `one row per table: the ${G.panel} the panel draws plus the ${G.extra.length} only the effects arm knows`, rows.length + ' vs ' + G.rows);
+    const hollow = await p.$$eval('#panel .dsl.hollow', els => els.map(e => e.dataset.table).sort());
+    ok(hollow.join(',') === G.extra.slice().sort().join(','),
+      'and those two are drawn HOLLOW — measured to be written, never drawn by the panel', hollow.join(',') + ' vs ' + G.extra.join(','));
+    await p.hover('#panel .dsl.hollow'); await p.waitForTimeout(150);
+    ok(/not in the data panel/i.test(await p.$eval('#hover', e => e.innerText)), 'the hover says why',
+      (await p.$eval('#hover', e => e.innerText)).replace(/\s+/g, ' ').slice(0, 90));
+    await p.mouse.move(5, 1030); }
+  { const cells = await p.$$eval('#panel .dsc[data-stage]', els => els.length);
+    ok(cells === (G.rows + 1) * 6, `the grid is ${G.rows} tables + the transaction rail × 6 stages`, String(cells));
+    const none = await p.$$eval('#panel .dsc.none', els => [...new Set(els.map(e => e.dataset.stage))].sort());
+    ok(none.join(',') === 'EDGE,INPUT', 'EDGE and INPUT hold no table at all — drawn empty, not dropped', none.join(',')); }
+  // the axis card says out loud what this picture does NOT draw
+  { await p.hover('#panel .dscorner'); await p.waitForTimeout(160);
+    const h = await p.$eval('#hover', e => e.innerText);
+    ok(/UNCAUGHT/.test(h) && /CLIENT/.test(h) && /touches no table/.test(h),
+      'the axis names the bay and the screen and says in one line why neither is drawn', h.replace(/\s+/g, ' ').slice(0, 120));
+    await p.mouse.move(5, 1030); }
+
+  // ── THE UNION: no label chosen, every cell counts the endings that meet the table there ──
+  { const sum = await p.$$eval('#panel .dsc[data-n]', els => els.reduce((a, e) => a + Number(e.dataset.n), 0));
+    ok(sum === G.groups, `with no ending in force the counts add up to the ${G.groups} (path · table · stage) touches the feed carries`, sum + ' vs ' + G.groups);
+    const txn = await p.$$eval('#panel .dsc[data-rail][data-txn]', els => els.reduce((a, e) => a + Number(e.dataset.txn), 0));
+    ok(txn === G.tx, `and the transaction rail counts its own ${G.tx}, apart from the tables`, txn + ' vs ' + G.tx);
+    const ans = await p.$$eval('#panel .dsc[data-stage="ANSWER"] .dsa.u', els => els.length);
+    ok(ans > 0 && await p.$$eval('#panel .dsc[data-stage="ANSWER"] .dsa.u', els => els.every(e => /^\d{3}$/.test(e.textContent))),
+      'ANSWER carries the set of statuses each table can end under, as chips', String(ans)); }
+
+  // ── THE LABEL: the consent 409 ──
+  await p.evaluate(id => window.selectPath(id), G.consent); await p.waitForTimeout(340);
+  { const eff = await p.$$eval('#panel .dsc[data-tbl="idempotency_keys"][data-stage="EFFECTS"] .dsf', els => els.map(e => e.className.replace(/.*bk-(\w+).*/, '$1') + e.textContent));
+    ok(eff.some(x => /^rolled_back×/.test(x)), 'the consent 409 leaves idempotency_keys with rolled-back writes at EFFECTS', eff.join(' '));
+    const n = Number((eff.find(x => /^rolled_back×/.test(x)) || '×0').split('×')[1]);
+    ok(n === G.consentRb, `and the marker carries the feed's own count of them (${G.consentRb}) — one per statement, the rule the bucket chips already use`, String(n));
+    const col = await p.$eval('#panel .dsc[data-tbl="idempotency_keys"][data-stage="EFFECTS"] .bk-rolled_back', e => getComputedStyle(e).color);
+    const want = await p.evaluate(() => { const d = document.createElement('i'); d.style.color = window.STATION.BADGE_COL.role.accessor;
+      document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; });
+    ok(col === want, 'drawn in the station\'s own red, read and never pasted', col + ' vs ' + want);
+    ok(await p.$eval('#panel .dsc[data-tbl="idempotency_keys"][data-stage="ANSWER"]', e => e.innerText.trim()) === G.consentStatus,
+      'and the row ends on the label\'s status — 409, not the union of every status');
+    ok(Number(await p.$eval('#panel .dsc[data-tbl="users"][data-stage="GATE"]', e => e.dataset.n || 0)) > 0,
+      'users is touched at the GATE — the dependency ran before the body was ever read');
+    ok((await p.$$('#panel .dsc[data-tbl="users"][data-stage="HANDLER"] .dsd')).length === 0,
+      'and the handler never touches it itself');
+    const off = await p.$eval('#panel .dsl[data-table="user_dietary_profile"]', e => getComputedStyle(e).opacity);
+    ok(off === '0.28', 'a table this ending never reaches dims to .28 — the projection still rules the middle', off);
+    ok((await p.$$('#panel .bchip')).length === 0,
+      'and no bucket chip is appended over the picture — the EFFECTS column already says the fate, once'); }
+
+  // ── THE LABEL: the first run ──
+  await p.evaluate(id => window.selectPath(id), G.firstRun); await p.waitForTimeout(340);
+  { const touched = await p.evaluate(() => [...document.querySelectorAll('#panel .dsc[data-n]')]
+      .reduce((o, e) => { (o[e.dataset.tbl] = o[e.dataset.tbl] || []).push(e.dataset.stage); return o; }, {}));
+    const names = Object.keys(touched).sort();
+    ok(names.join(',') === G.frTables.slice().sort().join(','),
+      `the first run touches ${G.frTables.length} tables and every one of them has a GATE or HANDLER cell`, names.length + ' vs ' + G.frTables.length);
+    ok(names.every(t => touched[t].every(s => s === 'GATE' || s === 'HANDLER')), 'and nowhere else — EDGE and INPUT stay empty on every path');
+    const ans = await p.$$eval('#panel .dsc[data-stage="ANSWER"] .dsa', els => [...new Set(els.map(e => e.textContent))]);
+    ok(ans.join(',') === G.frStatus, `ANSWER reads ${G.frStatus} on every touched row, and nothing else`, ans.join(',')); }
+  // Esc gives the union back
+  await p.evaluate(() => document.body.focus()); await p.keyboard.press('Escape'); await p.waitForTimeout(340);
+  { const sum = await p.$$eval('#panel .dsc[data-n]', els => els.reduce((a, e) => a + Number(e.dataset.n), 0));
+    ok(sum === G.groups, 'Esc drops the label and the union comes back whole', sum + ' vs ' + G.groups);
+    ok((await p.$$('#panel .dsc[data-stage="ANSWER"] .dsa.u')).length > 0, 'the status chips are the set again, not one label'); }
+
+  // ── THE RAIL PICKS — each one changes the drawn picture ──
+  const stgFp = () => p.evaluate(() => { const g = document.querySelector('#panel .dsg');
+    return [...g.children].map(e => { const r = e.getBoundingClientRect();
+      const ink = [...e.querySelectorAll('.dsd, .dsf, .dsn, .dsu, .dsa')].map(m => getComputedStyle(m).color + getComputedStyle(m).backgroundColor + getComputedStyle(m).borderTopStyle).join('~');
+      return e.className + '|' + (e.dataset.stage || e.dataset.table || '') + '|' + e.innerText.replace(/\s+/g, ' ')
+        + '|' + Math.round(r.left) + ',' + Math.round(r.top) + '|' + ink; }).join('§'); });
+  { const before = await stgFp(), cellsBefore = (await p.$$('#panel .dsc[data-stage]')).length;
+    await p.click('#datacfg [data-dstgaxis="rows"]'); await p.waitForTimeout(340);
+    ok(await p.evaluate(() => document.querySelector('#panel .dstg').dataset.axis) === 'rows', 'axis rows turns the grid around');
+    ok(await stgFp() !== before, 'and it is a different picture');
+    ok((await p.$$('#panel .dsc[data-stage]')).length === cellsBefore, 'with exactly the same cells — the same nodes, laid the other way',
+      (await p.$$('#panel .dsc[data-stage]')).length + ' vs ' + cellsBefore);
+    const rot = await p.$eval('#panel .dsh.dstb i', e => getComputedStyle(e).writingMode);
+    ok(/vertical/.test(rot), 'the table names are rotated so they still fit — the artifact\'s own answer', rot);
+    const hs = await p.$$eval('#panel .dsh.dsst', els => els.map(e => e.dataset.stage));
+    ok(hs.join(',') === 'EDGE,GATE,INPUT,HANDLER,EFFECTS,ANSWER', 'and the stages are the rows now, still in request order', hs.join(','));
+    await p.click('#datacfg [data-dstgaxis="cols"]'); await p.waitForTimeout(320);
+    ok(await stgFp() === before, 'and turning it back restores the picture exactly'); }
+  { const before = await stgFp();
+    await p.click('#datacfg [data-dstgunion="dots"]'); await p.waitForTimeout(320);
+    ok(await stgFp() !== before, 'union dots changes the picture');
+    const dots = await p.$$eval('#panel .dsc[data-n] .dsu', els => els.length);
+    const want = await p.$$eval('#panel .dsc[data-n]', els => els.reduce((a, e) => a + Number(e.dataset.n), 0));
+    ok(dots === want, 'one dot per ending, and the dots add up to the counts they replaced', dots + ' vs ' + want);
+    await p.click('#datacfg [data-dstgunion="counts"]'); await p.waitForTimeout(300); }
+  { await p.evaluate(id => window.selectPath(id), G.consent); await p.waitForTimeout(340);
+    const before = await stgFp();
+    const colOf = () => p.$eval('#panel .bk-rolled_back', e => getComputedStyle(e).color);
+    const station = await colOf();
+    await p.click('#datacfg [data-dstgfate="mono"]'); await p.waitForTimeout(320);
+    ok(await stgFp() !== before, 'fate mono changes the picture');
+    const mono = await colOf();
+    ok(mono !== station, 'the rolled-back marker loses the station red', station + ' → ' + mono);
+    const forms = await p.$$eval('#panel .dsf', els => [...new Set(els.map(e => (e.className.match(/fm-\w+/) || [''])[0]))]);
+    ok(forms.length > 1, 'and the FORM still parts the buckets — mono is not one marker repeated', forms.join(','));
+    await p.click('#datacfg [data-dstgfate="station"]'); await p.waitForTimeout(320);
+    ok(await stgFp() === before, 'and the station colours come back exactly'); }
+  { const before = await stgFp(), rails = (await p.$$('#panel .dsc[data-rail]')).length;
+    ok(rails === 6, 'the transaction rail is one lane of six cells', String(rails));
+    await p.click('#datacfg [data-dstgrail="hidden"]'); await p.waitForTimeout(320);
+    ok((await p.$$('#panel .dsc[data-rail]')).length === 0 && await stgFp() !== before, 'rail hidden takes the lane off the picture');
+    await p.click('#datacfg [data-dstgrail="shown"]'); await p.waitForTimeout(320);
+    ok(await stgFp() === before, 'and one click brings it back, unchanged'); }
+  // clicking a table opens its record in the portrait, the way every other Data distribution does
+  await p.evaluate(() => window.clearPath()); await p.waitForTimeout(320);
+  { await p.click('#panel .dsl[data-table="households"]'); await p.waitForTimeout(280);
+    ok(await p.evaluate(() => window.SEL.data) === 'households', 'clicking a table row selects it');
+    ok(await p.$eval('#portt', e => e.textContent) === 'households', 'and the portrait opens on that table\'s record');
+    ok(await p.$eval('#panel .dsl[data-table="households"]', e => e.classList.contains('sel')), 'the row it came from is marked');
+    await p.evaluate(() => window.selectIn('data', null)); await p.waitForTimeout(200); }
+  // the floor, in both orientations, with and without a label
+  for (const [axis, label] of [['cols', null], ['cols', 'consent'], ['rows', null], ['rows', 'consent']]) {
+    await p.evaluate(([a, l, id]) => { window.DATACFG.stages.axis = a; if (l) window.selectPath(id); else window.clearPath();
+      window.applyData(); window.showTab('data'); }, [axis, label, G.consent]);
+    await p.mouse.move(5, 1030); await p.waitForTimeout(300);
+    const fl = await p.evaluate(() => { let n = 0, worst = 99;
+      document.querySelectorAll('#panel *').forEach(el => { if (!el.offsetParent) return;
+        const t = el.childNodes && [...el.childNodes].some(c => c.nodeType === 3 && c.textContent.trim()); if (!t) return;
+        const fs2 = parseFloat(getComputedStyle(el).fontSize); if (fs2 < 12) { n++; worst = Math.min(worst, fs2); } });
+      return { under: n, worst }; });
+    ok(fl.under === 0, `nothing in the stages picture goes under 12px — axis ${axis}${label ? ' with a label' : ' on the union'}`, JSON.stringify(fl));
+    const sw = await p.$eval('#panel', e => e.scrollWidth <= e.clientWidth + 1);
+    ok(sw, `and it never scrolls the panel sideways — axis ${axis}`); }
+  if (shotsAt) { fs.mkdirSync(shotsAt, { recursive: true });
+    const shot = async (n2) => { await p.mouse.move(5, 1030); await p.evaluate(() => window.hoverHide()); await p.waitForTimeout(220);
+      await (await p.$('#bench')).screenshot({ path: path.join(shotsAt, n2) }); };
+    await p.evaluate(() => { window.DATACFG.stages.axis = 'cols'; window.clearPath(); window.applyData(); window.showTab('data'); }); await p.waitForTimeout(280);
+    await shot('eplab-stages-union.png');
+    await p.evaluate(id => window.selectPath(id), G.consent); await p.waitForTimeout(320);
+    await shot('eplab-stages-consent409.png');
+    await p.evaluate(() => { window.DATACFG.stages.axis = 'rows'; window.clearPath(); window.applyData(); window.showTab('data'); }); await p.waitForTimeout(320);
+    await shot('eplab-stages-transposed.png');
+    await p.evaluate(() => { window.DATACFG.stages.axis = 'cols'; window.CMD.verbs = 'g2'; window.CMD.grp = null; window.CMD.mode = 'cmd';
+      window.applyData(); window.showTab('data'); window.drawCmd(); }); await p.mouse.move(5, 1030); await p.evaluate(() => window.hoverHide()); await p.waitForTimeout(280);
+    await (await p.$('#cmd')).screenshot({ path: path.join(shotsAt, 'eplab-stages-card-g2.png') }); }
+  await p.evaluate(() => { window.clearPath(); Object.assign(window.DATACFG.stages, { axis: 'cols', union: 'counts', fate: 'station', rail: 'shown' });
+    window.CMD.verbs = 'rows'; window.CMD.grp = null; window.showVariant('data', 'blocks'); window.showTab('data'); window.drawCmdCfg(); window.drawDataCfg(); });
+  await p.waitForTimeout(260);
+  ok(errs.length === errsBefore, 'the stages picture raises no page error anywhere in this section', errs.slice(errsBefore, errsBefore + 3).join(' | '));
 }
 
 // the checks file

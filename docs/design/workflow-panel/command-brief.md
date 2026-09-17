@@ -171,9 +171,13 @@ one more pick in the rail's `layout` fold, directly after the layout pick — CM
 
 | key | what the card shows | depth |
 |---|---|---|
-| `rows` | **the default** — the fifteen verbs in three unnamed rows, exactly as the card was first built. Nothing already ruled moves. | 1 (2 with the path grid) |
+| `rows` | the fifteen verbs in three unnamed rows, exactly as the card was first built. Nothing already ruled moves. | 1 (2 with the path grid) |
 | `g1` | *by what the verb does* — the SAME fifteen cells in the SAME places, with each row NAMED on the card: **CHOOSE · SHOW · GO**. Each name is a caption drawn ACROSS its row (`grid-column: 1 / -1`), never a column beside the grid, so the five-column template — and every square's column, width and order — is untouched. Small caps, muted ink, 12px floor, one hover card per row saying what the row does. | 2 |
-| `g2` | *by part* — five GROUP cells (Q W E R T) + the Clear corner at slot 14, the nine slots between them blank and in place. A group opens its own verbs one level down; PATHS' three walking verbs open the path grid one level below that. | 3 |
+| `g2` | **the default since 2026-09-17** — *by part*: five GROUP cells (Q W E R T) + the Clear corner at slot 14, the nine slots between them blank and in place. A group opens its own verbs one level down; PATHS' three walking verbs open the path grid one level below that. | 3 |
+
+The default moved from `rows` to `g2` when the standard dimension landed (`endpoint-stages.md`): the console
+positions on a TOPIC first (DATA ▸ · SECURITY ▸ · TESTS ▸ · CODE ▸) and on a LABEL second (PATHS ▸), which is
+the same order the middle panel now reads in. `rows` and `g1` stay as picks.
 
 ### G2 — the groups as built
 
