@@ -301,6 +301,24 @@ const floorNow = async () => p.evaluate(() => {
   ok(dimsW === '1500×460', 'the wide dial draws 1500 × 460', dimsW);
   if (shotsAt) await (await p.$('.panel[data-panel="middle"]')).screenshot({ path: path.join(shotsAt, 'arrange-middle-wide.png') });
   await p.evaluate(() => window.ARR.dial('work')); await p.waitForTimeout(200);
+  // ── THE WHOLE SCREEN (operator 2026-09-17: "we still have more width to use") — no column cap, and a FIT dial
+  //    that takes the width the screen leaves after the portrait and the command panel ──
+  { const cap = await p.$eval('.wrap', e => getComputedStyle(e).maxWidth);
+    ok(cap === 'none', 'the page column has no width cap — the screen is the column', cap);
+    const p3 = await b.newPage({ viewport: { width: 2560, height: 1200 } });
+    await p3.goto('file://' + PAGE); await p3.waitForFunction('window.__arrangeReady===true', { timeout: 20000 }).catch(() => {});
+    await p3.evaluate(() => { window.ARR.reset(); window.ARR.dial('work'); }); await p3.waitForTimeout(200);
+    const fitW = await p3.evaluate(() => { const r = document.getElementById('prow'); return r.scrollWidth <= r.clientWidth + 1; });
+    ok(fitW, 'at 2560 wide the three panels sit inside the row at the work size — nothing hides behind a scrollbar');
+    await p3.evaluate(() => window.ARR.dial('fit')); await p3.waitForTimeout(200);
+    const m = await p3.evaluate(() => { const r = document.getElementById('prow'), mid = document.querySelector('.panel[data-panel="middle"]');
+      return { w: mid.getBoundingClientRect().width, want: r.clientWidth - 440 - 360 - 28, label: document.querySelector('#dial .ib[data-dial="fit"] span').textContent,
+               right: Math.max(...[...document.querySelectorAll('.panel')].map(e => e.getBoundingClientRect().right)), edge: r.getBoundingClientRect().right }; });
+    ok(Math.abs(m.w - m.want) <= 2, 'FIT gives the middle the width the screen leaves after the portrait and the command panel', JSON.stringify(m));
+    ok(m.label === 'fit ' + Math.floor(m.want) + '×460', 'the fit dial shows the measured width, not a typed one', m.label);
+    ok(m.right <= m.edge + 1, 'under FIT every panel\'s right edge stays inside the row', m.right + ' vs ' + m.edge);
+    await p3.evaluate(() => window.ARR.dial('work'));
+    await p3.close(); }
   if (shotsAt) await (await p.$('.panel[data-panel="middle"]')).screenshot({ path: path.join(shotsAt, 'arrange-middle-work.png') }); }
 
 // ── 15 · THE FOUR STATES, drawn honestly ───────────────────────────────────────────────
