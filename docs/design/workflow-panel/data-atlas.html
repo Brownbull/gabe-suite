@@ -501,12 +501,14 @@
     <div class="af-divider"></div>
     <!-- Drop this Motion group only if the page has no animation at all. -->
     <div class="af-group" role="radiogroup" aria-label="Motion" id="af-motion"><p class="af-legend">Motion</p></div>
+    <!-- Operator rule 2026-09-17: a page opens on the FINISHED picture; Replay is what runs the walk. -->
+    <div class="af-group" role="radiogroup" aria-label="Animations" id="af-anim"><p class="af-legend">Animations</p></div>
     <p class="af-foot" id="af-foot">—</p>
   </div>
 </div>
 
 <script>
-var MOTION = { on: true };   /* animations read this before scheduling work */
+var MOTION = { on: true, finished: true };   /* animations read this before scheduling work; finished = open on the last frame, play only on Replay */
 
 (function () {
   "use strict";
@@ -521,7 +523,7 @@ var MOTION = { on: true };   /* animations read this before scheduling work */
     { id: "blueprint", label: "Blueprint",       note: "skin F · blue" },
     { id: "mission",   label: "Mission Console", note: "skin B · teal" }
   ];
-  var FKEY = "gabe:artifact:font", SKEY = "gabe:artifact:skin";
+  var FKEY = "gabe:artifact:font", SKEY = "gabe:artifact:skin", AKEY = "gabe:artifact:anim";
 
   var root = document.documentElement;
   var cog = document.getElementById("af-cog"), panel = document.getElementById("af-panel");
@@ -584,8 +586,16 @@ var MOTION = { on: true };   /* animations read this before scheduling work */
   FONTS.forEach(function (f) { opt(fhost, f, f.size + " / " + f.track, applyFont); });
   SKINS.forEach(function (s) { opt(shost, s, s.note, applySkin); });
   [{ id: "on", label: "Playing" }, { id: "off", label: "Paused" }].forEach(function (m) {
-    opt(mhost, m, m.id === "on" ? "loops + replays" : "frozen", function (id) { setMotion(id === "on"); });
+    opt(mhost, m, m.id === "on" ? "loops + replays" : "the finished picture", function (id) { setMotion(id === "on"); });
   });
+  /* Animations: open on the finished picture (default) or play on open. Replay always plays from zero. */
+  var ahost = document.getElementById("af-anim"), ANIMS = [{ id: "finished", label: "Start finished" }, { id: "playing", label: "Start playing" }];
+  function setAnim(id) {
+    MOTION.finished = id !== "playing";
+    write(AKEY, MOTION.finished ? "finished" : "playing"); mark(ahost, MOTION.finished ? "finished" : "playing");
+    if (window.__rebuildMotion) window.__rebuildMotion();
+  }
+  ANIMS.forEach(function (a) { opt(ahost, a, a.id === "finished" ? "the last frame first — Replay runs it" : "runs once on open", setAnim); });
 
   function open(next) { panel.setAttribute("data-open", String(next)); cog.setAttribute("aria-expanded", String(next)); }
   cog.addEventListener("click", function (e) { e.stopPropagation(); open(panel.getAttribute("data-open") !== "true"); });
@@ -597,6 +607,7 @@ var MOTION = { on: true };   /* animations read this before scheduling work */
 
   applyFont(read(FKEY, FONTS, "mono"));
   applySkin(read(SKEY, SKINS, "catalog"));
+  MOTION.finished = read(AKEY, ANIMS, "finished") !== "playing"; mark(ahost, MOTION.finished ? "finished" : "playing");
   setMotion(!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   window.__setSkin = applySkin;
   window.__setMotion = setMotion;
@@ -680,9 +691,9 @@ var MOTION = { on: true };   /* animations read this before scheduling work */
 
   var lanes = TBL.map(function (t) { return t.table; });
 
-  function buildWhen() {
+  function buildWhen(play) {
     if (raf) { cancelAnimationFrame(raf); raf = null; }
-    var still = !MOTION.on || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var still = !MOTION.on || window.matchMedia("(prefers-reduced-motion: reduce)").matches || (MOTION.finished && play !== true);
     whenHost.setAttribute("data-still", still ? "1" : "0");
     whenHost.innerHTML = "";
     whenHost.appendChild(whenTip);
@@ -848,7 +859,7 @@ var MOTION = { on: true };   /* animations read this before scheduling work */
     host.appendChild(tx);
   })();
 
-  document.getElementById("when-replay").addEventListener("click", buildWhen);
+  document.getElementById("when-replay").addEventListener("click", function () { buildWhen(true); });
 
   /* ═══ 2 · WHICH ════════════════════════════════════════════════════ */
   (function () {
@@ -1051,9 +1062,10 @@ var MOTION = { on: true };   /* animations read this before scheduling work */
 
   /* ── H4 · the motion contract ───────────────────────────────────── */
   window.FXREPLAY = window.FXREPLAY || {};
-  window.FXREPLAY.when = buildWhen;
+  window.FXREPLAY.when = function () { buildWhen(true); };          /* Replay: from zero, always */
+  window.FXBUILD = { when: function () { buildWhen(false); } };        /* a rebuild: the option decides — finished by default */
   window.__rebuildMotion = function () {
-    Object.keys(window.FXREPLAY).forEach(function (k) { window.FXREPLAY[k](); });
+    Object.keys(window.FXBUILD).forEach(function (k) { window.FXBUILD[k](); });
   };
   buildWhen();
   var rt = null;
