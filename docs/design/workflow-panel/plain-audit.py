@@ -14,7 +14,7 @@ KEYS = r'(?:plain|lg|happens)'
 for f in files:
     src = Path(f).read_text(encoding="utf-8")
     n = 0
-    for m in re.finditer(KEYS + r'\s*:\s*"((?:[^"\\]|\\.)*)"', src):
+    for m in re.finditer(KEYS + r'"?\s*:\s*"((?:[^"\\]|\\.)*)"', src):   # `plain: "…"` in JS and `"plain": "…"` in JSON
         s = m.group(1); line = src.count("\n", 0, m.start()) + 1
         bad = []
         body = re.sub(r'\.\.\.|…', '', s)
