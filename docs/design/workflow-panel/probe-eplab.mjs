@@ -74,14 +74,30 @@ ok(await p.evaluate(() => window.COPYTXT.data()) ===
    'the data panel boots on the operator\'s default line', await p.evaluate(() => window.COPYTXT.data()));
 
 // the COMMAND panel boots on ITS default line (2026-09-17: the by-part card is the default grouping)
-const CMDBOOT = 'command · layout card · verbs g2 · rows command · scope kind · grouping request · names drawn · success shown'
-  + ' · sub-paths split · middle dim .28 · portrait path record · wrong-question blank · hotkeys QWERT grid'
-  + ' · cells 64px valley · tooltip lab hover card · test join exact · on part switch kept'
+// ── THE THREE REGION LINES (operator 2026-09-17): the rail is grouped by region, so the picks that
+//    reach the MIDDLE and the PORTRAIT left the command line and took their own.
+const CMDBOOT = 'command · layout card · verbs g2 · scope kind · grouping request · names drawn · success shown'
+  + ' · sub-paths split · wrong-question blank · hotkeys QWERT grid'
+  + ' · cells 64px valley · tooltip lab hover card'
   + ' · card side right of portrait · ladder in the region · walking one-clock replay · rate-limit chip shown'
-  + ' · colour by kind · matrix per-path · drawn chip strip region title caption · nothing hidden';
+  + ' · colour by kind · matrix per-path · region 360px, gap 12px · drawn chip strip region title caption · nothing hidden';
 ok(await p.evaluate(() => window.COPYTXT.command()) === CMDBOOT,
-   'the command panel boots on its default line, word for word — the card grouped BY PART',
+   'the command panel boots on its default line, word for word — only what reaches the command region',
    await p.evaluate(() => window.COPYTXT.command()));
+const MIDBOOT = 'middle · part bars data=stages · schemas=shapes · functions=levels · tests=status · widening=ladder · security=band'
+  + ' · label dim .28 · rows command · on part switch kept · test join exact';
+ok(await p.evaluate(() => window.COPYTXT.middle()) === MIDBOOT,
+   'the middle boots on its own line — the part bars and the four dials a chosen ending drives',
+   await p.evaluate(() => window.COPYTXT.middle()));
+const PORTBOOT = 'portrait · on select path record · width 440px, height 560px, outline 1px solid, gap 12px';
+ok(await p.evaluate(() => window.COPYTXT.portrait()) === PORTBOOT,
+   'and the portrait on its own — what it leads with, and how big it stands',
+   await p.evaluate(() => window.COPYTXT.portrait()));
+{ const b2 = await p.evaluate(() => window.COPYTXT.bench()), h2 = await p.evaluate(() => window.COPYTXT.head()),
+        t2 = await p.evaluate(() => window.COPYTXT.tabs());
+  ok(/ · outline 1px solid$/.test(b2), 'the bench line carries the bench outline the FRAME block used to hold', b2);
+  ok(/ · height 45px, outline none, divider none, gap 0px$/.test(h2), 'the head-bar line carries its own height, outline, divider and gap', h2.slice(-70));
+  ok(/ · row height 52px, button 43px, outline none, divider none, gap 0px$/.test(t2), 'and the part-buttons line its row, its button and its lines', t2.slice(-80)); }
 
 // the head strip carries the station card's head
 const head = await p.$eval('#headstrip', e => e.innerText);
@@ -262,7 +278,8 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   ok(dup.length === 0, 'the definition appears once, at the end — never repeated above it', dup.join(' | ').slice(0, 140)); }
 // ── every control block FOLDS AWAY without losing its settings (operator 2026-09-11) ──
 { const blks = await p.$$eval('.barblk', els => els.map(e => e.id));
-  ok(blks.length === 9, 'nine control blocks — the command panel joined schemas and functions (2026-09-17)', blks.join(','));
+  ok(blks.join(',') === 'blk-bench,blk-head,blk-tabs,blk-middle,blk-data,blk-schemas,blk-functions,blk-portrait,blk-command',
+     'nine control blocks, top to bottom = the console left to right, then its parts (operator 2026-09-17)', blks.join(','));
   const before = await p.evaluate(() => window.COPYTXT.tabs());
   await p.click('#blk-tabs .mnb'); await p.waitForTimeout(120);
   ok(await p.$eval('#blk-tabs', e => e.classList.contains('min')), 'a block folds when its chevron is clicked');
@@ -348,14 +365,21 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
 
 // ══ THE FRAME (operator 2026-09-12): each row's height, its own outline, the divider under it and
 //    the gap after it. Measured on the rendered box, never read back off the config. ══
-{ const subs = await p.$$eval('#framecfg .cfsub', els => els.map(e => e.firstChild.textContent.trim()));
-  ok(subs.join(',') === 'the bench,head bar,part buttons,the portrait panel', 'the frame block names the four things it frames', subs.join(','));
-  const labels = await p.$$eval('#framecfg .cfl', els => els.map(e => e.textContent));
-  ok(labels.join(',') === 'outline,pattern,height,outline,pattern,divider,pattern,gap after,row,button,outline,pattern,divider,pattern,gap after,width,height,outline,pattern,gap',
-     'twenty dials: a box height per row, the button, the portrait panel, and every line', labels.join(','));
-  ok(await p.$$eval('#framecfg .sld', els => els.length === 14), 'every RANGE is a dragged bar, not a set of steps');
-  ok(await p.$$eval('#framecfg .ibwrap .ib', els => els.length === 6 * 4), 'and every line pattern is a button drawing that pattern');
-  ok(await p.$$eval('#framecfg .ibwrap .ib svg path', els => els.length >= 5), 'the pattern buttons draw real lines, not words');
+{ // the FRAME block dissolved (operator 2026-09-17): every dial now sits in the REGION it sizes, and
+  // each one is wrapped in .frdials[data-frame] so the sizing dials can still be read as one set.
+  const where = await p.$$eval('.frdials', els => els.map(e => e.dataset.frame + '@' + (e.closest('.barblk') || {}).id));
+  ok(where.join(' ') === 'bench@blk-bench head@blk-head tabs@blk-tabs portrait@blk-portrait command@blk-command',
+     'every frame dial sits in the block of the region it sizes — no FRAME block left to guess at', where.join(' '));
+  const subs = await p.$$eval('.frdials .cfsub', els => els.map(e => e.firstChild.textContent.trim()));
+  ok(subs.join(',') === 'the bench,head bar,part buttons,the portrait panel,the command region',
+     'the five things the frame sizes, each named inside its own region block', subs.join(','));
+  const labels = await p.$$eval('.frdials .cfl', els => els.map(e => e.textContent));
+  ok(labels.join(',') === 'outline,pattern,height,outline,pattern,divider,pattern,gap after,row,button,outline,pattern,divider,pattern,gap after,width,height,outline,pattern,gap,width,gap',
+     'twenty-two dials: a box height per row, the button, the portrait panel, the command region, and every line', labels.join(','));
+  ok(await p.$$eval('.frdials .sld', els => els.length === 16), 'every RANGE is a dragged bar, not a set of steps',
+     String(await p.$$eval('.frdials .sld', els => els.length)));
+  ok(await p.$$eval('.frdials .ibwrap .ib', els => els.length === 6 * 4), 'and every line pattern is a button drawing that pattern');
+  ok(await p.$$eval('.frdials .ibwrap .ib svg path', els => els.length >= 5), 'the pattern buttons draw real lines, not words');
   const boot = await p.evaluate(() => window.COPYTXT.frame());
   // ROW HEIGHT — the box, both ways. Dragging it LEFT must genuinely shrink the row: the defect the
   // operator caught was a fixed padding that already exceeded the minimum the bar was setting.
@@ -1471,7 +1495,9 @@ await p.waitForTimeout(320);
     ok(await p.evaluate(() => { const t = [...document.querySelectorAll('#datacfg .sldt')].find(x => x.getAttribute('aria-label') === 'pill ground opacity'); return !!(t && t.__mark); }),
        'and the bar being dragged is the SAME element — the rail did not rebuild under the hand');
     // the METER: independently recomputed, and it catches exactly the combination the operator saw
-    const meter = async () => { await p.waitForTimeout(120); return p.evaluate(() => ({ read: +document.getElementById('pillread').dataset.ratio, pc: window.pillContrast() })); };
+    const meter = async () => { await p.waitForTimeout(120);
+      await p.waitForFunction(() => +document.getElementById('pillread').dataset.ratio === window.pillContrast().min, { timeout: 4000 }).catch(() => {});
+      return p.evaluate(() => ({ read: +document.getElementById('pillread').dataset.ratio, pc: window.pillContrast() })); };
     { const m = await meter();
       // INDEPENDENT: back to a solid ground, read the two raw computed colours, and do WCAG here in node — none of the
       // page's own contrast functions are used (review F10: the old check called the very code it claimed to check)
@@ -1724,7 +1750,8 @@ for (const t of rtabs) { await p.click(`#railtabs .rtb[data-rt="${t}"]`); await 
   ok(shown.length === 1 && shown[0] === 'rt-' + t, `rail toggle ${t} shows one section, never both`, shown.join(',')); }
 await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(90);
 const blocks = await p.$$eval('#rt-controls .barblk .bhl b', els => els.map(e => e.textContent));
-ok(blocks.join(',') === 'command panel,bench,head bar,part buttons,frame,data panel,schemas panel,functions panel,part bars', 'the controls tab gives every region its own block', blocks.join(','));
+ok(blocks.join(',') === 'bench,head bar,part buttons,middle,data panel,schemas panel,functions panel,portrait,command panel',
+   'the controls tab gives every region its own block, in the console\'s own order', blocks.join(','));
 const prows = await p.$$eval('#partcfg .prow', els => els.length);
 ok(prows === 6, 'the BARS tab separates the controls per part — one row each', String(prows));
 const varBtns = await p.$$eval('#partcfg .ib', els => els.length);
@@ -1759,7 +1786,9 @@ ok(zones.join(',') === 'left,right', 'the rail shows one drop zone per pile, div
 const cpb = await p.$$('.barblk .cpb');
 ok(cpb.length === 9, 'every control block has a COPY button', String(cpb.length));
 const lines = await p.evaluate(() => Object.keys(window.COPYTXT).map(k => window.COPYTXT[k]()));
-ok(lines.length === 9 && lines.every(l => l.length > 20), 'each copy line names that section\'s selections', lines.join(' // ').slice(0, 160));
+ok(lines.length === 11 && lines.every(l => l.length > 20),
+   'eleven copy lines for nine blocks — `parts` and `frame` survive with no button, as the part-bar clause and the whole-frame round trip',
+   lines.join(' // ').slice(0, 160));
 { const headLine = await p.evaluate(() => window.COPYTXT.head());
   ok(/head bar · verbosity .* LEFT .* RIGHT .* off .* styles /.test(headLine), 'the head-bar copy line carries verbosity, both piles, what is off, and the per-element styles', headLine); }
 // ── per-element options: shown · text · container (operator 2026-09-11) ──
@@ -1827,7 +1856,7 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
       wrong: "blank", keys: "grid", size: 64, face: "valley", tip: "hover", join: "exact", keep: "kept",
       side: "right", ladder: "cmd", walk: "replay", flag: "shown", colour: "kind", matrix: "path" });
     window.CMD.show = { chip: 1, strip: 1, region: 1, title: 1, caption: 1 };
-    window.clearPath(); window.drawCmdCfg(); window.drawCmd(); window.drawHead(); });
+    window.clearPath(); window.drawCmdCfg(); window.drawMidCfg(); window.drawPortCfg(); window.drawCmd(); window.drawHead(); });
   await p.evaluate(() => { window.railTab('controls'); window.selectIn('data', null); window.selectIn('schemas', null); window.selectIn('functions', null); });
   await p.click('#boxes .ib[data-box="work"]'); await p.click('#dens .ib[data-dens="normal"]');
   await resetCmd(); await p.waitForTimeout(160);
@@ -1854,18 +1883,15 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
       consentN: f.paths.find(x => x.names.drawn === 'consent required').effects.n,
       labTables: window.LABEP.data.tables.map(t => t.table) }; });
 
-  const DEFLINE = 'command · layout card · verbs rows · rows command · scope kind · grouping request · names drawn · success shown'
-    + ' · sub-paths split · middle dim .28 · portrait path record · wrong-question blank · hotkeys QWERT grid'
-    + ' · cells 64px valley · tooltip lab hover card · test join exact · on part switch kept'
-    + ' · card side right of portrait · ladder in the region · walking one-clock replay · rate-limit chip shown'
-    + ' · colour by kind · matrix per-path · drawn chip strip region title caption · nothing hidden';
+  const DEFLINE = CMDBOOT.replace('verbs g2', 'verbs rows');
   ok(await p.evaluate(() => window.COPYTXT.command()) === DEFLINE && DEFLINE === CMDBOOT.replace('verbs g2', 'verbs rows'),
     'this section reads the card on its ROWS grouping — the boot line with one word changed, nothing else', await p.evaluate(() => window.COPYTXT.command()));
   ok(await p.evaluate(() => window.OPENBLK) === 'blk-command', 'the rail opens on the region being worked on');
   { const ords = await p.evaluate(() => ['#notes', '#cmd', '#bench', '#port'].map(s => getComputedStyle(document.querySelector(s)).order).join(','));
     ok(ords === '1,5,3,4', 'the row is renumbered rail 1 · bench 3 · port 4 · cmd-right 5', ords); }
   { const g = await p.$$eval('#blk-command .cffold', els => els.map(e => e.dataset.group + (e.classList.contains('open') ? ':open' : ':folded')).join(' '));
-    ok(g === 'layout:folded map:open cells:folded colour:folded sections:folded', 'the MAP fold boots open — every §6 choice in front of the operator', g); }
+    ok(g === 'layout:folded map:open cells:folded colour:folded sections:folded size:folded',
+      'the MAP fold boots open — every §6 choice in front of the operator, with the region\'s own size last', g); }
   { const r = await p.$eval('#cmd', e => { const c = getComputedStyle(e); return { w: e.clientWidth, h: e.clientHeight, ml: c.marginLeft }; });
     ok(r.w === 358 && r.ml === '12px', 'the region wears FRAME.cmdW and cmdGap (360 box, 12px gap)', JSON.stringify(r)); }
 
@@ -2073,9 +2099,10 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
   { const na = await p.$$eval('#blk-command .ib.na', els => els.map(e => e.getAttribute('data-cmdladder') || e.getAttribute('data-cmdwalk') || e.getAttribute('data-cmdscope') || e.getAttribute('data-cmdwrong') || e.getAttribute('data-cmdmatrix') || e.getAttribute('data-cmdside') || e.getAttribute('data-cmdverbs') || '?'));
     ok(na.length > 0, 'in the strip layout the card-only and ladder-only dials are marked unusable', na.join(','));
     ok(await p.$eval('#blk-command .ib.na', e => getComputedStyle(e).borderTopStyle) === 'dashed', 'and they are drawn DASHED, not hidden');
+    await p.evaluate(() => window.railFoldAll('cmd', true)); await p.waitForTimeout(160);
     await p.hover('#blk-command .ib.na'); await p.waitForTimeout(150);
     ok((await p.$eval('#hover', e => e.innerText)).includes('does nothing right now'), 'and the card says so out loud');
-    await p.mouse.move(5, 1030); }
+    await p.mouse.move(5, 1030); await p.evaluate(() => window.railFoldBoot()); await p.waitForTimeout(140); }
   // the SC2 card is a FIXED area under the grid, not a floating one (choice 13)
   { await p.evaluate(() => { window.CMD.layout = 'card'; window.CMD.tip = 'sc2'; window.drawCmd(); }); await p.waitForTimeout(200);
     ok(await p.$eval('#cmd .cmdtip', e => getComputedStyle(e).display) !== 'none', 'the SC2 card opens a fixed area under the grid');
@@ -2571,6 +2598,156 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
     window.CMD.verbs = 'rows'; window.CMD.grp = null; window.showVariant('data', 'blocks'); window.showTab('data'); window.drawCmdCfg(); window.drawDataCfg(); });
   await p.waitForTimeout(260);
   ok(errs.length === errsBefore, 'the stages picture raises no page error anywhere in this section', errs.slice(errsBefore, errsBefore + 3).join(' | '));
+}
+
+// ── THE RAIL, GROUPED BY REGION (operator 2026-09-17: "I don't know which ones are affecting the mid
+//    panel, the portrait, or the commands"). The blocks are the console's own order, every header says
+//    which region its dials reach, and NOTHING was dropped on the way: the control roster below was
+//    recorded off the rail of the committed page at 9b163fc (every block open, every fold open) and the
+//    live rail must still carry every one of them. ──
+{
+  const RAILCTL_9b163fc = [
+  'data-band', 'data-bkcount', 'data-bkent', 'data-bkform', 'data-bkicon',
+  'data-bkicon-col', 'data-bkmodel', 'data-bkname', 'data-bkpart', 'data-bkrw',
+  'data-box', 'data-casemode', 'data-chan', 'data-cmdcolour', 'data-cmdface',
+  'data-cmdflag', 'data-cmdgroup', 'data-cmdjoin', 'data-cmdkeep', 'data-cmdkeys',
+  'data-cmdladder', 'data-cmdlayout', 'data-cmdmatrix', 'data-cmdmiddle', 'data-cmdnames',
+  'data-cmdport', 'data-cmdrows', 'data-cmdscope', 'data-cmdshow', 'data-cmdside',
+  'data-cmdsize', 'data-cmdsub', 'data-cmdsuccess', 'data-cmdtip', 'data-cmdverbs',
+  'data-cmdwalk', 'data-cmdwrong', 'data-cnt-box', 'data-cntfields', 'data-cntops',
+  'data-cnttables', 'data-count-pills', 'data-dens', 'data-dlayout', 'data-dstgaxis',
+  'data-dstgfate', 'data-dstgrail', 'data-dstgunion', 'data-el', 'data-fit',
+  'data-flayout', 'data-fn-bk-count', 'data-fn-bk-file', 'data-fn-bk-icon', 'data-fn-bk-name',
+  'data-fn-bk-role', 'data-fn-bk-via', 'data-fn-count-commits', 'data-fn-count-functions', 'data-fn-count-levels',
+  'data-fn-foot-show', 'data-fn-form', 'data-fn-map-handler', 'data-fn-map-inferred', 'data-fn-map-looks',
+  'data-fn-map-pieces', 'data-fn-map-rolecol', 'data-fn-role-sw', 'data-fn-sec', 'data-fn-sort-k',
+  'data-fn-sort-rev', 'data-fnpart', 'data-fold', 'data-foot-show', 'data-fpart',
+  'data-fside', 'data-group', 'data-iconmode', 'data-intensity', 'data-layout',
+  'data-line', 'data-mode', 'data-numshape', 'data-numsize', 'data-order',
+  'data-palette', 'data-part', 'data-pattern', 'data-pill-bg', 'data-pill-ink',
+  'data-pill-shape', 'data-rail-side', 'data-rail-style', 'data-ratio', 'data-rw-box',
+  'data-sch-bk-count', 'data-sch-bk-dir', 'data-sch-bk-ent', 'data-sch-bk-icon', 'data-sch-bk-name',
+  'data-sch-bk-via', 'data-sch-count-fields', 'data-sch-count-nested', 'data-sch-count-shapes', 'data-sch-dir-sw',
+  'data-sch-foot-show', 'data-sch-form', 'data-sch-map-blocks', 'data-sch-map-col', 'data-sch-map-kind',
+  'data-sch-map-looks', 'data-sch-sec', 'data-sch-sort-k', 'data-sch-sort-rev', 'data-schpart',
+  'data-sec', 'data-shape', 'data-shown', 'data-side', 'data-size',
+  'data-slayout', 'data-sline', 'data-sort', 'data-sort-bg', 'data-sort-ink',
+  'data-sort-rev', 'data-sort-show', 'data-sq-enc', 'data-sq-opt', 'data-sq-pal',
+  'data-sq-shape', 'data-sq-uq-at', 'data-sq-uq-flip', 'data-sq-uq-mark', 'data-stop',
+  'data-text', 'data-tiles', 'data-variant', 'data-width'
+ ];
+  // the roster is only complete when every conditional control is drawable: the unique-corner dials
+  // exist while the marks are drawn as corners, which an earlier section turns off
+  await p.evaluate(() => { window.railTab('controls'); window.DATACFG.sqUqMark = 'corners';
+    window.applyData(); window.showTab('data'); window.drawDataCfg(); window.drawMidCfg(); window.drawPortCfg(); window.drawCmdCfg();
+    document.querySelectorAll('.barblk.min').forEach(x => x.classList.remove('min'));
+    document.querySelectorAll('.cffold').forEach(x => x.classList.add('open')); });
+  await p.waitForTimeout(300);
+  { const live = await p.evaluate(() => { const n = new Set();
+      document.querySelectorAll('#rt-controls *').forEach(e => { for (const a of e.attributes) if (a.name.startsWith('data-')) n.add(a.name); });
+      return [...n].sort(); });
+    const lost = RAILCTL_9b163fc.filter(a => live.indexOf(a) < 0);
+    const added = live.filter(a => RAILCTL_9b163fc.indexOf(a) < 0);
+    ok(lost.length === 0, `not one of the ${RAILCTL_9b163fc.length} controls the rail carried before the regroup was dropped`, lost.join(','));
+    ok(added.join(',') === 'data-frame,data-region',
+      'and the only two things added are structure tags, not controls — the block\'s region and the frame-dial wrapper', added.join(',')); }
+
+  // every block says which region it reaches, in a glyph and in words
+  { const hd = await p.$$eval('#rt-controls .barblk', els => els.map(e => ({ id: e.id, region: e.dataset.region,
+      glyph: (e.querySelector('.bhl .bhi svg') || {}).childElementCount || 0,
+      name: (e.querySelector('.bhl b') || {}).textContent,
+      note: (e.querySelector('.bhl .bhn') || {}).textContent,
+      ink: getComputedStyle(e.querySelector('.bhl .bhn')).color,
+      topic: !!e.querySelector('.bhl .bht svg') })));
+    ok(hd.map(x => x.region).join(',') === 'bench,head,tabs,middle,middle,middle,middle,portrait,command',
+      'every block declares its region — the three topic blocks are the MIDDLE, read when that topic is open', hd.map(x => x.region).join(','));
+    ok(hd.every(x => x.glyph > 0), 'and draws that region\'s glyph before its name', JSON.stringify(hd.filter(x => !x.glyph)));
+    ok(hd.every(x => /^affects: /.test(x.note)), 'every header note begins "affects:" — never silent about what it reaches',
+      hd.map(x => x.note).join(' | ').slice(0, 130));
+    const muted = await p.evaluate(() => { const d = document.createElement('i'); d.style.color = 'var(--muted)';
+      document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; });
+    ok(hd.every(x => x.ink === muted), 'drawn in the muted ink, under the block name', hd[0].ink + ' vs ' + muted);
+    ok(hd.filter(x => x.topic).map(x => x.id).join(',') === 'blk-data,blk-schemas,blk-functions',
+      'a topic block keeps its own glyph beside the name, so the three middles stay apart', hd.filter(x => x.topic).map(x => x.id).join(','));
+    const g = await p.$$eval('#rt-controls .barblk .bhl .bhi svg', els => els.map(e => e.innerHTML.length));
+    ok(new Set(g.slice(0, 4).concat(g.slice(7))).size >= 5, 'the six region glyphs are six different drawings', g.join(',')); }
+
+  // the picks that moved really are in their new block, and nowhere else
+  { const at = await p.evaluate(() => { const o = {};
+      ['cmdmiddle', 'cmdrows', 'cmdkeep', 'cmdjoin', 'cmdport', 'cmdlayout', 'cmdverbs', 'cmdcolour'].forEach(k => {
+        o[k] = [...new Set([...document.querySelectorAll('[data-' + k + ']')].map(e => (e.closest('.barblk') || {}).id))].join('+'); });
+      return o; });
+    ok(at.cmdmiddle === 'blk-middle' && at.cmdrows === 'blk-middle' && at.cmdkeep === 'blk-middle' && at.cmdjoin === 'blk-middle',
+      'the four dials a chosen ending drives on the middle sit in the MIDDLE block, once', JSON.stringify(at));
+    ok(at.cmdport === 'blk-portrait', 'what the portrait leads with sits in the PORTRAIT block', at.cmdport);
+    ok(at.cmdlayout === 'blk-command' && at.cmdverbs === 'blk-command' && at.cmdcolour === 'blk-command',
+      'and what shapes the command region stayed where it was', JSON.stringify(at)); }
+
+  // the part bars became the middle block's first group. The roster sweep above forced every fold open
+  // in the DOM, so the rails are rebuilt from their own state before the boot fold state is read.
+  await p.evaluate(() => { window.drawMidCfg(); window.drawPortCfg(); }); await p.waitForTimeout(200);
+  { const f = await p.$$eval('#midcfg .cffold', els => els.map(e => e.dataset.group + (e.classList.contains('open') ? ':open' : ':folded')));
+    ok(f.join(' ') === 'bars:open label:folded', 'the middle block is two folds — the part bars first, open at boot', f.join(' '));
+    ok(await p.evaluate(() => !!document.querySelector('#blk-middle #partcfg')), 'and #partcfg lives inside it now, not in a block of its own');
+    ok((await p.$$('#partcfg .prow')).length === 6, 'with all six part rows still drawn'); }
+  { const f = await p.$$eval('#portcfg .cffold', els => els.map(e => e.dataset.group + (e.classList.contains('open') ? ':open' : ':folded')));
+    ok(f.join(' ') === 'select:open size:folded', 'the portrait block is two folds — what it shows, then how big it stands', f.join(' ')); }
+
+  // a moved pick changes EXACTLY ONE clause of exactly one line (the folds open first — every region
+  // rail folds the way the data rail does now, so a folded pick is genuinely display:none)
+  await p.evaluate(() => { window.railFoldAll('mid', true); window.railFoldAll('port', true); }); await p.waitForTimeout(200);
+  { const read = () => p.evaluate(() => ({ c: window.COPYTXT.command(), m: window.COPYTXT.middle(), p: window.COPYTXT.portrait() }));
+    const BASE = await read();
+    const clauses = t => t.split(' · ');
+    for (const [sel, line, was, now] of [['#midcfg [data-cmdmiddle="filter"]', 'm', 'label dim .28', 'label filter'],
+                                         ['#midcfg [data-cmdkeep="cleared"]', 'm', 'on part switch kept', 'on part switch cleared'],
+                                         ['#portcfg [data-cmdport="split"]', 'p', 'on select path record', 'on select split']]) {
+      const before = await read();
+      await p.click(sel); await p.waitForTimeout(220);
+      const after = await read();
+      const db = clauses(before[line]), da = clauses(after[line]);
+      const diff = db.map((x, i) => x === da[i] ? null : x + ' → ' + da[i]).filter(Boolean);
+      ok(diff.length === 1 && diff[0] === was + ' → ' + now, `${sel} changes exactly one clause of the ${line} line`, diff.join(' | '));
+      const others = Object.keys(before).filter(k => k !== line);
+      ok(others.every(k => before[k] === after[k]), 'and leaves the other two region lines untouched',
+        others.map(k => k + (before[k] === after[k] ? '=' : '≠')).join(' ')); }
+    await p.evaluate(() => { Object.assign(window.CMD, { middle: 'dim', keep: 'kept', portrait: 'path' });
+      window.drawMidCfg(); window.drawPortCfg(); window.drawCmd(); window.showTab('data'); window.drawPortrait(); });
+    await p.waitForTimeout(240);
+    const back = await read();
+    ok(back.c === BASE.c && back.m === BASE.m && back.p === BASE.p,
+      'and all three come back to the lines this section started on — a pick moved, nothing else did',
+      ['c' + (back.c === BASE.c), 'm' + (back.m === BASE.m), 'p' + (back.p === BASE.p)].join(' ')); }
+
+  // the frame dials still reach what they size, from their new homes
+  { await p.evaluate(() => { window.FRAME.portW = 300; window.applyFrame(); }); await p.waitForTimeout(200);
+    ok(Math.round(await p.$eval('#port', e => e.getBoundingClientRect().width)) === 300, 'the portrait width still sizes the portrait, from the PORTRAIT block');
+    ok(/width 300px/.test(await p.evaluate(() => window.COPYTXT.portrait())), 'and its own line says so');
+    await p.evaluate(() => { window.FRAME.portW = 440; window.FRAME.cmdW = 280; window.applyFrame(); window.drawCmdCfg(); }); await p.waitForTimeout(200);
+    ok(Math.round(await p.$eval('#cmd', e => e.getBoundingClientRect().width)) === 280, 'the command width sizes the command region, from the COMMAND block');
+    ok(/region 280px/.test(await p.evaluate(() => window.COPYTXT.command())), 'and the command line carries it');
+    await p.evaluate(() => { window.FRAME.cmdW = 360; window.applyFrame(); window.drawCmdCfg(); }); await p.waitForTimeout(160); }
+
+  if (shotsAt) { fs.mkdirSync(shotsAt, { recursive: true });
+    // the rail as it BOOTS: every block open so the grouping reads, every fold back to its boot state
+    await p.evaluate(() => { window.railTab('controls'); window.railFoldBoot();
+      Object.assign(window.CMD, { verbs: 'g2', grp: null, mode: 'cmd', middle: 'dim', rows: 'command', keep: 'kept', join: 'exact', portrait: 'path' });
+      Object.keys(window.PANELS).forEach(k => window.showVariant(k, window.PANELS[k].defaultVariant || window.PANELS[k].variants[0].key));
+      window.showTab('data');
+      window.drawCmdCfg(); window.drawMidCfg(); window.drawPortCfg(); window.drawCmd();
+      document.querySelectorAll('.barblk').forEach(x => x.classList.remove('min')); });
+    await p.mouse.move(5, 1030); await p.evaluate(() => window.hoverHide()); await p.waitForTimeout(240);
+    for (const [name, ids] of [['top', ['blk-bench', 'blk-head', 'blk-tabs', 'blk-middle']],
+                               ['middle', ['blk-data', 'blk-schemas', 'blk-functions', 'blk-portrait']],
+                               ['bottom', ['blk-command']]]) {
+      await p.evaluate(keep => { document.querySelectorAll('#rt-controls .barblk').forEach(x => { x.hidden = keep.indexOf(x.id) < 0; }); }, ids);
+      await p.waitForTimeout(220);
+      await (await p.$('#notes')).screenshot({ path: path.join(shotsAt, `eplab-rail-${name}.png`) }); }
+    await p.evaluate(() => document.querySelectorAll('#rt-controls .barblk').forEach(x => { x.hidden = false; })); }
+  await p.evaluate(() => { document.querySelectorAll('.barblk').forEach(x => { if (x.id !== window.OPENBLK) x.classList.add('min'); }); });
+  await p.waitForTimeout(140);
+  await p.evaluate(() => document.querySelectorAll('.barblk.min').forEach(x => x.classList.remove('min')));
+  await p.waitForTimeout(140);
 }
 
 // the checks file

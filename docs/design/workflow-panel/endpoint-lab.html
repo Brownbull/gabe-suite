@@ -19,47 +19,54 @@
     <aside id="notes">
       <nav id="railtabs" role="tablist"></nav>
       <section class="rtab" id="rt-controls">
-        <div class="barblk" id="blk-command">
-          <div class="bhl"><span class="bhi"></span><b>command panel</b><span class="bhn">four layouts · every choice</span></div>
-          <div class="blkbody"><div id="cmdcfg"></div></div>
-        </div>
-        <div class="barblk" id="blk-bench">
-          <div class="bhl"><span class="bhi"></span><b>bench</b><span class="bhn">the box this is drawn in</span></div>
+        <!-- THE RAIL IS GROUPED BY REGION (operator 2026-09-17: "I don't know which ones are affecting
+             the mid panel, the portrait, or the commands"). Top to bottom = the console left to right,
+             then its parts: bench → head bar → part buttons → the middle (and one block per topic that
+             draws IN the middle) → the portrait → the command panel. Every header carries its region's
+             glyph and says out loud what it affects. The old FRAME block is gone: each of its dials now
+             sits in the region it sizes, and applyFrame() is still one function. -->
+        <div class="barblk" id="blk-bench" data-region="bench">
+          <div class="bhl"><span class="bhi"></span><b>bench</b><span class="bhn">affects: the bench</span></div>
           <div class="blkbody">
             <div class="cfgrp"><div class="cfl">box</div><div id="boxes" class="ibwrap"></div></div>
             <div class="cfgrp"><div class="cfl">density</div><div id="dens" class="ibwrap"></div></div>
             <div class="cfgrp"><div class="cfl">motion</div><div class="ibwrap" id="motionwrap">
               <button class="ib on" id="mplay"></button><button class="ib" id="mreplay"></button></div></div>
             <div class="cfread" id="boxread">—</div>
+            <div id="framebench"></div>
           </div>
         </div>
-        <div class="barblk" id="blk-head">
-          <div class="bhl"><span class="bhi"></span><b>head bar</b><span class="bhn">10 elements</span></div>
-          <div class="blkbody"><div id="barcfg"></div></div>
+        <div class="barblk" id="blk-head" data-region="head">
+          <div class="bhl"><span class="bhi"></span><b>head bar</b><span class="bhn">affects: the head bar</span></div>
+          <div class="blkbody"><div id="barcfg"></div><div id="framehead"></div></div>
         </div>
-        <div class="barblk" id="blk-tabs">
-          <div class="bhl"><span class="bhi"></span><b>part buttons</b><span class="bhn">the row of six</span></div>
-          <div class="blkbody"><div id="tabcfg"></div></div>
+        <div class="barblk" id="blk-tabs" data-region="tabs">
+          <div class="bhl"><span class="bhi"></span><b>part buttons</b><span class="bhn">affects: the part buttons</span></div>
+          <div class="blkbody"><div id="tabcfg"></div><div id="frametabs"></div></div>
         </div>
-        <div class="barblk" id="blk-frame">
-          <div class="bhl"><span class="bhi"></span><b>frame</b><span class="bhn">heights · lines · spacing</span></div>
-          <div class="blkbody"><div id="framecfg"></div></div>
+        <div class="barblk" id="blk-middle" data-region="middle">
+          <div class="bhl"><span class="bhi"></span><b>middle</b><span class="bhn">affects: the middle panel</span></div>
+          <div class="blkbody"><div id="midcfg"></div></div>
         </div>
-        <div class="barblk" id="blk-data">
-          <div class="bhl"><span class="bhi"></span><b>data panel</b><span class="bhn">sections · layout</span></div>
+        <div class="barblk" id="blk-data" data-region="middle">
+          <div class="bhl"><span class="bhi"></span><b>data panel</b><span class="bhn">affects: the middle panel — when Data is open</span></div>
           <div class="blkbody"><div id="datacfg"></div></div>
         </div>
-        <div class="barblk" id="blk-schemas">
-          <div class="bhl"><span class="bhi"></span><b>schemas panel</b><span class="bhn">sections · layout</span></div>
+        <div class="barblk" id="blk-schemas" data-region="middle">
+          <div class="bhl"><span class="bhi"></span><b>schemas panel</b><span class="bhn">affects: the middle panel — when Schemas is open</span></div>
           <div class="blkbody"><div id="schcfg"></div></div>
         </div>
-        <div class="barblk" id="blk-functions">
-          <div class="bhl"><span class="bhi"></span><b>functions panel</b><span class="bhn">sections · layout</span></div>
+        <div class="barblk" id="blk-functions" data-region="middle">
+          <div class="bhl"><span class="bhi"></span><b>functions panel</b><span class="bhn">affects: the middle panel — when Functions is open</span></div>
           <div class="blkbody"><div id="fncfg"></div></div>
         </div>
-        <div class="barblk" id="blk-parts">
-          <div class="bhl"><span class="bhi"></span><b>part bars</b><span class="bhn">one distribution each</span></div>
-          <div class="blkbody"><div id="partcfg"></div></div>
+        <div class="barblk" id="blk-portrait" data-region="portrait">
+          <div class="bhl"><span class="bhi"></span><b>portrait</b><span class="bhn">affects: the portrait</span></div>
+          <div class="blkbody"><div id="portcfg"></div></div>
+        </div>
+        <div class="barblk" id="blk-command" data-region="command">
+          <div class="bhl"><span class="bhi"></span><b>command panel</b><span class="bhn">affects: the command panel</span></div>
+          <div class="blkbody"><div id="cmdcfg"></div></div>
         </div>
         <div id="varbar" hidden></div>
       </section>
@@ -126,6 +133,12 @@
     play: '<path d="M7 4.5 19 12 7 19.5z"/>', pause: '<path d="M8 4v16M16 4v16"/>',
     replay: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>',
     fold: '<path d="m6 9 6 6 6-6"/>',
+    /* THE REGION GLYPHS (operator 2026-09-17) — one per region of the console, so a rail block says
+       with a picture which part of the page its dials reach. `bench` and `bars` were already here. */
+    rgbtns: '<rect x="2.5" y="8.5" width="5.6" height="7" rx="1.2"/><rect x="9.2" y="8.5" width="5.6" height="7" rx="1.2"/><rect x="15.9" y="8.5" width="5.6" height="7" rx="1.2"/>',
+    rgmid: '<rect x="2.5" y="6.5" width="19" height="11" rx="1.8"/>',
+    rgport: '<rect x="7.5" y="3" width="9" height="18" rx="1.8"/>',
+    rggrid: '<rect x="3" y="3" width="5" height="5" rx="1"/><rect x="9.5" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="3" y="9.5" width="5" height="5" rx="1"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><rect x="16" y="9.5" width="5" height="5" rx="1"/><rect x="3" y="16" width="5" height="5" rx="1"/><rect x="9.5" y="16" width="5" height="5" rx="1"/><rect x="16" y="16" width="5" height="5" rx="1"/>',
     /* the part-button dials — each icon draws the thing it changes */
     intdim: '<rect x="3" y="6" width="18" height="12" rx="2" opacity=".35"/>', intmid: '<rect x="3" y="6" width="18" height="12" rx="2" opacity=".7"/>', intbold: '<rect x="3" y="6" width="18" height="12" rx="2"/>',
     patvalley: '<rect x="3" y="6" width="18" height="12" rx="2"/><rect x="7" y="9" width="10" height="6" rx="1.5" opacity=".35"/>',
@@ -591,7 +604,14 @@
   function lineIco(pat, size){ var o = LINES.filter(function(x){ return x[0] === pat; })[0] || LINES[0];
     return '<svg viewBox="0 0 24 24" width="' + (size || 15) + '" height="' + (size || 15) + '" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">' + o[2] + '</svg>'; }
 
-  function drawFrameCfg(){ var box = document.getElementById("framecfg"); box.innerHTML = "";
+  /* THE FRAME'S DIALS, DISTRIBUTED (operator 2026-09-17: the rail is grouped by REGION, so a dial that
+     sizes the head bar sits in the HEAD BAR block, not in a block of its own). One builder, called once
+     per region into that region's own box; applyFrame() is still ONE function and FRAME is still one
+     object, so nothing about what these dials DO changed — only where they are asked. */
+  function frameDials(host, which){
+    /* every frame dial sits in a marked wrapper, so the dials that size a region can be read apart
+       from the region's other controls wherever they now live */
+    var box = el("div", { class: "frdials" }); box.dataset.frame = which; host.append(box);
     function sub(t, why){ var d = el("div", { class: "cfsub" }, t); if (why) d.append(el("i", {}, why)); box.append(d); }
     /* a dragged bar for anything that is a RANGE — height, thickness, spacing */
     function sld(o){
@@ -613,70 +633,93 @@
         btn.onclick = function(ev){ ev.stopPropagation(); FRAME[key] = o[0]; applyFrame(); drawFrameCfg(); };
         w.append(btn); });
       box.append(el("div", { class: "cfl sub" }, label), w); }
+    var NONE = "every line has NONE — transparent is a setting here, not a missing one.";
 
-    sub("the bench", "the box everything is drawn in");
-    sld({ label: "outline", key: "benchW", min: 0, max: 4, zero: "none", icon: "shape",
-      rows: [["at 0", "the bench has no outer line and sits on the page's own ground"]],
-      plain: "the line drawn around the whole console" });
-    pat("benchS", "the bench's outer line", "the bench outline");
+    if (which === "bench") {
+      sub("the bench", "the box everything is drawn in");
+      sld({ label: "outline", key: "benchW", min: 0, max: 4, zero: "none", icon: "shape",
+        rows: [["at 0", "the bench has no outer line and sits on the page's own ground"]],
+        plain: "the line drawn around the whole console" });
+      pat("benchS", "the bench's outer line", "the bench outline");
+      box.append(el("div", { class: "cfread" }, NONE)); }
 
-    sub("head bar", "the row of chips");
-    sld({ label: "height", key: "headH", min: 24, max: 96, icon: "bars",
-      rows: [["sets", "the row's whole box — the chips centre inside it and the divider sits on its edge"],
-             ["so", "dragging it left closes the space between the chips and the line below them"],
-             ["floor", "a chip is about 26px tall; below that the row stops shrinking"]],
-      plain: "how tall this row stands, edge to edge" });
-    sld({ label: "outline", key: "headBw", min: 0, max: 4, zero: "none", icon: "shape",
-      rows: [["at 0", "the row has no box of its own — only the divider below it separates it"]],
-      plain: "a line drawn around this row alone" });
-    pat("headBs", "the head bar's own box", "the head bar outline");
-    sld({ label: "divider", key: "headDivW", min: 0, max: 4, zero: "none", icon: "shape",
-      rows: [["sits", "between the head bar and the part buttons"]],
-      plain: "the line between this row and the one under it" });
-    pat("headDivS", "the line under the head bar", "the head bar divider");
-    sld({ label: "gap after", key: "headGap", min: 0, max: 32, zero: "none", icon: "shape",
-      rows: [["sets", "the empty space between this row and the part buttons"],
-             ["with a divider", "the line stays on the head bar; the gap opens below it"]],
-      plain: "how far the next row sits" });
+    if (which === "head") {
+      sub("head bar", "the row of chips");
+      sld({ label: "height", key: "headH", min: 24, max: 96, icon: "bars",
+        rows: [["sets", "the row's whole box — the chips centre inside it and the divider sits on its edge"],
+               ["so", "dragging it left closes the space between the chips and the line below them"],
+               ["floor", "a chip is about 26px tall; below that the row stops shrinking"]],
+        plain: "how tall this row stands, edge to edge" });
+      sld({ label: "outline", key: "headBw", min: 0, max: 4, zero: "none", icon: "shape",
+        rows: [["at 0", "the row has no box of its own — only the divider below it separates it"]],
+        plain: "a line drawn around this row alone" });
+      pat("headBs", "the head bar's own box", "the head bar outline");
+      sld({ label: "divider", key: "headDivW", min: 0, max: 4, zero: "none", icon: "shape",
+        rows: [["sits", "between the head bar and the part buttons"]],
+        plain: "the line between this row and the one under it" });
+      pat("headDivS", "the line under the head bar", "the head bar divider");
+      sld({ label: "gap after", key: "headGap", min: 0, max: 32, zero: "none", icon: "shape",
+        rows: [["sets", "the empty space between this row and the part buttons"],
+               ["with a divider", "the line stays on the head bar; the gap opens below it"]],
+        plain: "how far the next row sits" });
+      box.append(el("div", { class: "cfread" }, NONE + " A row can carry its own outline, the divider below it, both, or neither.")); }
 
-    sub("part buttons", "the row of six");
-    sld({ label: "row", key: "tabsRow", min: 24, max: 120, icon: "bars",
-      rows: [["sets", "the row's whole box — the buttons centre inside it"],
-             ["the inset", "half the difference between this and the button height is the space above and below them"],
-             ["at equal", "set it to the button height and the buttons touch both edges — no space before the divider"]],
-      plain: "how tall the row of buttons stands, edge to edge" });
-    sld({ label: "button", key: "tabsH", min: 24, max: 96, icon: "bars",
-      rows: [["sets", "each button's own height"],
-             ["the glyph", "its size is its own dial; a ghost glyph is clipped by this height"]],
-      plain: "how tall each button stands" });
-    sld({ label: "outline", key: "tabsBw", min: 0, max: 4, zero: "none", icon: "shape",
-      rows: [["at 0", "the row has no box of its own — each button still carries its own border"]],
-      plain: "a line drawn around the whole button row" });
-    pat("tabsBs", "the button row's own box", "the button row outline");
-    sld({ label: "divider", key: "tabsDivW", min: 0, max: 4, zero: "none", icon: "shape",
-      rows: [["sits", "between the buttons and the panel they open"]],
-      plain: "the line between the buttons and the panel" });
-    pat("tabsDivS", "the line under the buttons", "the button row divider");
-    sld({ label: "gap after", key: "tabsGap", min: 0, max: 32, zero: "none", icon: "shape",
-      rows: [["sets", "the empty space between the buttons and the panel"]],
-      plain: "how far the panel sits" });
+    if (which === "tabs") {
+      sub("part buttons", "the row of six");
+      sld({ label: "row", key: "tabsRow", min: 24, max: 120, icon: "bars",
+        rows: [["sets", "the row's whole box — the buttons centre inside it"],
+               ["the inset", "half the difference between this and the button height is the space above and below them"],
+               ["at equal", "set it to the button height and the buttons touch both edges — no space before the divider"]],
+        plain: "how tall the row of buttons stands, edge to edge" });
+      sld({ label: "button", key: "tabsH", min: 24, max: 96, icon: "bars",
+        rows: [["sets", "each button's own height"],
+               ["the glyph", "its size is its own dial; a ghost glyph is clipped by this height"]],
+        plain: "how tall each button stands" });
+      sld({ label: "outline", key: "tabsBw", min: 0, max: 4, zero: "none", icon: "shape",
+        rows: [["at 0", "the row has no box of its own — each button still carries its own border"]],
+        plain: "a line drawn around the whole button row" });
+      pat("tabsBs", "the button row's own box", "the button row outline");
+      sld({ label: "divider", key: "tabsDivW", min: 0, max: 4, zero: "none", icon: "shape",
+        rows: [["sits", "between the buttons and the panel they open"]],
+        plain: "the line between the buttons and the panel" });
+      pat("tabsDivS", "the line under the buttons", "the button row divider");
+      sld({ label: "gap after", key: "tabsGap", min: 0, max: 32, zero: "none", icon: "shape",
+        rows: [["sets", "the empty space between the buttons and the panel"]],
+        plain: "how far the panel sits" });
+      box.append(el("div", { class: "cfread" }, NONE)); }
 
-    sub("the portrait panel", "a SEPARATE region, right of the middle section and taller than it");
-    sld({ label: "width", key: "portW", min: 0, max: 720, zero: "off", icon: "shape",
-      rows: [["at 0", "the portrait panel is gone and only the middle section stands"],
-             ["what it holds", "whatever the middle panel selected — in Data, the table you clicked"]],
-      plain: "how wide the second panel stands" });
-    sld({ label: "height", key: "portH", min: 240, max: 900, icon: "bars",
-      rows: [["the console", "this region runs TALLER than the middle section, like the minimap on the other side"],
-             ["roughly square", "so a thing can be DRAWN here instead of listed"]],
-      plain: "how tall the second panel stands" });
-    sld({ label: "outline", key: "portBw", min: 0, max: 4, zero: "none", icon: "shape",
-      rows: [["at 0", "the panel has no line of its own"]], plain: "the line around the second panel" });
-    pat("portBs", "the portrait panel's own box", "the portrait outline");
-    sld({ label: "gap", key: "portGap", min: 0, max: 48, zero: "none", icon: "shape",
-      rows: [["sets", "the space between the middle section and this panel"]],
-      plain: "how far the second panel sits from the bench" });
-    box.append(el("div", { class: "cfread" }, "every line has NONE — transparent is a setting here, not a missing one. A row can carry its own outline, the divider below it, both, or neither.")); }
+    if (which === "portrait") {
+      sub("the portrait panel", "a SEPARATE region, right of the middle section and taller than it");
+      sld({ label: "width", key: "portW", min: 0, max: 720, zero: "off", icon: "shape",
+        rows: [["at 0", "the portrait panel is gone and only the middle section stands"],
+               ["what it holds", "whatever the middle panel selected — in Data, the table you clicked"]],
+        plain: "how wide the second panel stands" });
+      sld({ label: "height", key: "portH", min: 240, max: 900, icon: "bars",
+        rows: [["the console", "this region runs TALLER than the middle section, like the minimap on the other side"],
+               ["roughly square", "so a thing can be DRAWN here instead of listed"]],
+        plain: "how tall the second panel stands" });
+      sld({ label: "outline", key: "portBw", min: 0, max: 4, zero: "none", icon: "shape",
+        rows: [["at 0", "the panel has no line of its own"]], plain: "the line around the second panel" });
+      pat("portBs", "the portrait panel's own box", "the portrait outline");
+      sld({ label: "gap", key: "portGap", min: 0, max: 48, zero: "none", icon: "shape",
+        rows: [["sets", "the space between the middle section and this panel"]],
+        plain: "how far the second panel sits from the bench" }); }
+
+    if (which === "command") {
+      sub("the command region", "the console's ACT half, right of the portrait");
+      sld({ label: "width", key: "cmdW", min: 0, max: 720, zero: "off", icon: "shape",
+        rows: [["at 0", "the command region is gone and the console is read-only"],
+               ["what it holds", "whichever of the four layouts the block above chose"]],
+        plain: "how wide the command region stands" });
+      sld({ label: "gap", key: "cmdGap", min: 0, max: 48, zero: "none", icon: "shape",
+        rows: [["sets", "the space between the portrait and the command region"]],
+        plain: "how far the command region sits from what it acts on" }); } }
+  /* one call redraws every distributed copy — the dials live in five boxes, the function stays one */
+  function drawFrameCfg(){
+    [["framebench", "bench"], ["framehead", "head"], ["frametabs", "tabs"]].forEach(function(pair){
+      var b2 = document.getElementById(pair[0]); if (!b2) return; b2.innerHTML = ""; frameDials(b2, pair[1]); });
+    if (window.drawPortCfg) window.drawPortCfg();
+    if (window.drawCmdCfg) window.drawCmdCfg(); }
   window.drawFrameCfg = drawFrameCfg;
 
   /* ══ THE DATA PANEL (operator 2026-09-12) — which of its sections are drawn, and how the grounds lay
@@ -2018,29 +2061,49 @@
         walk: { replay: "one-clock replay", "static": "static" },
         matrix: { path: "per-path", hook: "with the hook" } };
       var sec = ["chip", "strip", "region", "title", "caption"];
-      return "command · layout " + C.layout + " · verbs " + C.verbs + " · rows " + C.rows + " · scope " + C.scope
+      /* 2026-09-17: the five dials that reach the MIDDLE and the PORTRAIT left this block, and this
+         line with them — they are in COPYTXT.middle and COPYTXT.portrait now. The region's own size
+         arrived from the dissolved frame block. */
+      return "command · layout " + C.layout + " · verbs " + C.verbs + " · scope " + C.scope
         + " · grouping " + C.group + " · names " + C.names + " · success " + C.success + " · sub-paths " + C.sub
-        + " · middle " + W.middle[C.middle] + " · portrait " + W.portrait[C.portrait] + " · wrong-question " + C.wrong
+        + " · wrong-question " + C.wrong
         + " · hotkeys " + W.keys[C.keys] + " · cells " + C.size + "px " + C.face + " · tooltip " + W.tip[C.tip]
-        + " · test join " + W.join[C.join] + " · on part switch " + C.keep + " · card side " + W.side[C.side]
+        + " · card side " + W.side[C.side]
         + " · ladder " + W.ladder[C.ladder] + " · walking " + W.walk[C.walk] + " · rate-limit chip " + C.flag
         + " · colour by " + C.colour + " · matrix " + W.matrix[C.matrix]
+        + " · region " + FRAME.cmdW + "px, gap " + FRAME.cmdGap + "px"
         + " · drawn " + sec.filter(function(k){ return C.show[k]; }).join(" ")
         + (sec.some(function(k){ return !C.show[k]; }) ? " · hidden " + sec.filter(function(k){ return !C.show[k]; }).join(" ") : " · nothing hidden"); },
+    /* THE MIDDLE's own line — the part bars plus the four dials that say what a chosen ending does to
+       the drawn picture (2026-09-17: regrouped by region) */
+    middle: function(){ var C = window.CMD, ln = FRLINE;
+      var W = { middle: { dim: "dim .28", filter: "filter", outline: "outline" },
+                join: { exact: "exact", parsed: "name-parsed dashed", off: "off" } };
+      return "middle · part bars " + order.map(function(k){ return k + "=" + (curVar[k] || window.PANELS[k].variants[0].key); }).join(" · ")
+        + " · label " + W.middle[C.middle] + " · rows " + C.rows + " · on part switch " + C.keep
+        + " · test join " + W.join[C.join]; },
+    /* THE PORTRAIT's own line — what it leads with, and how big it stands */
+    portrait: function(){ var C = window.CMD, ln = FRLINE;
+      var W = { portrait: { path: "path record", keep: "keep selection", split: "split" } };
+      return "portrait · on select " + W.portrait[C.portrait]
+        + " · width " + FRAME.portW + "px, height " + FRAME.portH + "px, outline " + ln(FRAME.portBw, FRAME.portBs) + ", gap " + FRAME.portGap + "px"; },
     bench: function(){ var box = document.querySelector("#boxes .ib.on"), d = window.DENS;
-      return "bench · box " + (box ? box.__label : "?") + " · density " + d + " · motion " + (CLOCK.on ? "playing" : "paused"); },
+      return "bench · box " + (box ? box.__label : "?") + " · density " + d + " · motion " + (CLOCK.on ? "playing" : "paused")
+        + " · outline " + FRLINE(FRAME.benchW, FRAME.benchS); },
     head: function(){ var styled = Object.keys(HEADCFG.style).map(function(k){ var st = window.elStyle(k);
         return k + "(" + st.shape + (st.text === "auto" ? "" : ",text " + st.text) + (st.size === 13 ? "" : ",icon " + st.size) + (st.fit === "bleed" ? "" : ",fit " + st.fit) + ")"; }).join(" ");
       return "head bar · verbosity " + HEADCFG.mode
       + " · LEFT " + (window.headOrder("left").join(" ") || "—")
       + " · RIGHT " + (window.headOrder("right").join(" ") || "—")
       + " · off " + (Object.keys(HEADCFG.off).join(" ") || "—")
-      + " · styles " + (styled || "—"); },
+      + " · styles " + (styled || "—")
+      + " · height " + FRAME.headH + "px, outline " + FRLINE(FRAME.headBw, FRAME.headBs) + ", divider " + FRLINE(FRAME.headDivW, FRAME.headDivS) + ", gap " + FRAME.headGap + "px"; },
     parts: function(){ return "part bars · " + order.map(function(k){ return k + "=" + (curVar[k] || window.PANELS[k].variants[0].key); }).join(" · "); },
     tabs: function(){ return "part buttons · colour " + TABCFG.palette + " · intensity " + TABCFG.intensity + " · pattern " + TABCFG.pattern
       + " · glyph " + TABCFG.iconSize + "px " + TABCFG.iconMode + " at " + TABCFG.iconX + "%"
       + " · titles " + TABCFG.caseMode + " · count " + TABCFG.numSize + "px " + TABCFG.numShape
-      + " · button " + TABCFG.shape + " · row " + TABCFG.layout + " " + TABCFG.width; },
+      + " · button " + TABCFG.shape + " · row " + TABCFG.layout + " " + TABCFG.width
+      + " · row height " + FRAME.tabsRow + "px, button " + FRAME.tabsH + "px, outline " + FRLINE(FRAME.tabsBw, FRAME.tabsBs) + ", divider " + FRLINE(FRAME.tabsDivW, FRAME.tabsDivS) + ", gap " + FRAME.tabsGap + "px"; },
     data: function(){ var shown = DSEC.filter(function(x){ return DATACFG.show[x.key]; }).map(function(x){ return x.key; });
       var hidden = DSEC.filter(function(x){ return !DATACFG.show[x.key]; }).map(function(x){ return x.key; });
       var ch = ["w", "r", "rw"].filter(function(k){ return DATACFG.chan[k]; });
@@ -2093,10 +2156,14 @@
         + " · map pieces " + M.pieces + ", handler " + M.handler + ", roles " + M.roleCol + ", inferred " + M.inferred + ", looks " + M.looks
         + (M.looks === "own" && C.look ? " (" + C.look.sqEnc + " " + C.look.sqSize + "px by " + C.look.sqPal + ", pills " + C.look.pillInk + " on " + C.look.pillBg + " " + C.look.pillAlpha
           + "%, chips " + C.look.bk.rwBox + " " + C.look.bk.rwA + "%, edge " + C.look.bk.railSide + " " + C.look.bk.railW + "px)" : ""); },
-    frame: function(){ function ln(w, st){ return w === 0 || st === "none" ? "none" : w + "px " + st; }
+    /* the FRAME block is gone (2026-09-17) — its dials sit in the regions they size, and each region's
+       own copy line carries its clause. This line survives as the WHOLE frame in one string, which is
+       what a round trip is measured against; no button writes it and no block owns it. */
+    frame: function(){ var ln = FRLINE;
       return "frame · bench outline " + ln(FRAME.benchW, FRAME.benchS)
         + " · head bar " + FRAME.headH + "px, outline " + ln(FRAME.headBw, FRAME.headBs) + ", divider " + ln(FRAME.headDivW, FRAME.headDivS) + ", gap " + FRAME.headGap + "px"
         + " · part buttons row " + FRAME.tabsRow + "px, button " + FRAME.tabsH + "px, outline " + ln(FRAME.tabsBw, FRAME.tabsBs) + ", divider " + ln(FRAME.tabsDivW, FRAME.tabsDivS) + ", gap " + FRAME.tabsGap + "px"; } };
+  function FRLINE(w, st){ return w === 0 || st === "none" ? "none" : w + "px " + st; }
   function copyBtn(kind, what){ var b = el("button", { class: "cpb" }); b.innerHTML = labIco("copy", 13);
     hoverBind(b, function(){ return '<div class="cphd">' + labIco("copy", 15, "var(--accent)") + '<b>copy</b></div><div class="cpsub">' + what + '</div><div class="cpbody">puts this section\'s selections on the clipboard as one line:<br><code>' + window.COPYTXT[kind]().replace(/</g, "&lt;") + '</code></div>'; });
     b.onclick = function(ev){ ev.stopPropagation(); copyText(window.COPYTXT[kind](), b); }; return b; }
@@ -2108,33 +2175,46 @@
     b.onclick = function(ev){ ev.stopPropagation(); blk.classList.toggle("min"); };
     hl.addEventListener("click", function(ev){ if (ev.target.closest(".cpb, .mnb")) return; blk.classList.toggle("min"); });
     hl.append(b); }
-  document.getElementById("blk-command").querySelector(".bhi").innerHTML = S.icon("shield", 13, "var(--accent)");
-  document.getElementById("blk-command").querySelector(".bhl").append(copyBtn("command", "the command panel's layout and every §6 choice"));
-  document.getElementById("blk-bench").querySelector(".bhi").innerHTML = labIco("bench", 13, "var(--accent)");
-  document.getElementById("blk-bench").querySelector(".bhl").append(copyBtn("bench", "the bench's box, density and clock"));
-  document.getElementById("blk-parts").querySelector(".bhl").append(copyBtn("parts", "the distribution chosen for each part"));
-  document.getElementById("blk-tabs").querySelector(".bhi").innerHTML = S.icon("shape", 13, "var(--accent)");
-  document.getElementById("blk-tabs").querySelector(".bhl").append(copyBtn("tabs", "how the five part buttons are drawn"));
-  document.getElementById("blk-frame").querySelector(".bhi").innerHTML = labIco("bars", 13, "var(--accent)");
-  document.getElementById("blk-frame").querySelector(".bhl").append(copyBtn("frame", "the rows' heights, lines and spacing"));
-  document.getElementById("blk-data").querySelector(".bhi").innerHTML = S.icon("table", 13, "var(--accent)");
-  document.getElementById("blk-data").querySelector(".bhl").append(copyBtn("data", "which sections the Data panel draws, and how"));
-  document.getElementById("blk-schemas").querySelector(".bhi").innerHTML = S.icon("schema", 13, "var(--accent)");
-  document.getElementById("blk-schemas").querySelector(".bhl").append(copyBtn("schemas", "which sections the Schemas panel draws, and how"));
-  document.getElementById("blk-functions").querySelector(".bhi").innerHTML = S.icon("function", 13, "var(--accent)");
-  document.getElementById("blk-functions").querySelector(".bhl").append(copyBtn("functions", "which sections the Functions panel draws, and how"));
+  /* ══ THE RAIL, GROUPED BY REGION (operator 2026-09-17) ═══════════════════════════════════════
+     Top to bottom IS the console left to right, then its parts. Every block carries the REGION's own
+     glyph, the region it affects in words, and a copy button writing that region's line. A topic block
+     (Data · Schemas · Functions) is the MIDDLE read when that topic is open: it wears the middle's
+     glyph and keeps its own topic glyph beside the name, so the three stay apart at a glance.      ══ */
+  var RGICO = { bench: function(){ return labIco("bench", 13, "var(--accent)"); },
+                head: function(){ return labIco("bars", 13, "var(--accent)"); },
+                tabs: function(){ return labIco("rgbtns", 13, "var(--accent)"); },
+                middle: function(){ return labIco("rgmid", 13, "var(--accent)"); },
+                portrait: function(){ return labIco("rgport", 13, "var(--accent)"); },
+                command: function(){ return labIco("rggrid", 13, "var(--accent)"); } };
+  var RGWORD = { bench: "the bench", head: "the head bar", tabs: "the part buttons",
+                 middle: "the middle panel", portrait: "the portrait", command: "the command panel" };
+  var RAILBLK = [
+    ["blk-bench", "bench", "bench", "the bench's box, density, clock and outer line"],
+    ["blk-head", "head", "head", "the head bar's verbosity, piles, order and its own box"],
+    ["blk-tabs", "tabs", "tabs", "how the six part buttons are drawn, and the row that holds them"],
+    ["blk-middle", "middle", "middle", "each part's distribution, and what a chosen ending does to the middle"],
+    ["blk-data", "middle", "data", "which sections the Data panel draws, and how", "table"],
+    ["blk-schemas", "middle", "schemas", "which sections the Schemas panel draws, and how", "schema"],
+    ["blk-functions", "middle", "functions", "which sections the Functions panel draws, and how", "function"],
+    ["blk-portrait", "portrait", "portrait", "what the portrait leads with, and how big it stands"],
+    ["blk-command", "command", "command", "the command panel's layout, every §6 choice and its own size"] ];
+  RAILBLK.forEach(function(r){ var blk = document.getElementById(r[0]), hl = blk.querySelector(".bhl");
+    blk.querySelector(".bhi").innerHTML = RGICO[r[1]]();
+    hoverBind(blk.querySelector(".bhi"), function(){ return hcard({ title: RGWORD[r[1]], value: "region", icon: "shape",
+      rows: [["this block sets", r[3]], ["nothing else", "every dial in it reaches " + RGWORD[r[1]] + " and nothing outside it"]],
+      plain: "the part of the console these controls reach" }); });
+    /* a topic block keeps its own glyph, after the name — the region glyph leads, the topic follows */
+    if (r[4]) { var t = el("span", { class: "bht" }); t.innerHTML = S.icon(r[4], 12, "var(--muted)");
+      hl.insertBefore(t, hl.querySelector(".bhn")); }
+    hl.append(copyBtn(r[2], r[3])); });
   /* THE RAIL OPENS ON ONE REGION (operator 2026-09-12): every block folds away except the one being
      worked on. Moving to the next region is this one line. */
   var OPENBLK = window.OPENBLK = "blk-command";   /* the region being worked on (operator 2026-09-17: the COMMAND panel) */
-  ["blk-command", "blk-bench", "blk-head", "blk-tabs", "blk-frame", "blk-data", "blk-schemas", "blk-functions", "blk-parts"].forEach(function(id){
-    foldable(id); if (id !== OPENBLK) document.getElementById(id).classList.add("min"); });
-  document.getElementById("blk-head").querySelector(".bhi").innerHTML = labIco("bars", 13, "var(--accent)");
-  document.getElementById("blk-head").querySelector(".bhl").append(copyBtn("head", "the head bar's verbosity, piles and order"));
-  document.getElementById("blk-parts").querySelector(".bhi").innerHTML = S.icon("layers", 13, "var(--accent)");
+  RAILBLK.forEach(function(r){ foldable(r[0]); if (r[0] !== OPENBLK) document.getElementById(r[0]).classList.add("min"); });
 
   /* ── the variant bar: one panel, several DISTRIBUTIONS — proposals to compare, not settings ── */
   var VARICO = { shapes: "drill", grounds: "entity", flow: "drill", ledger: "table", fields: "schema", blocks: "layers", stages: "journey", levels: "layers", chain: "merge", status: "info", ladder: "up", band: "shield", gauntlet: "drill" };
-  function drawVars(){ var PC = document.getElementById("partcfg"); PC.innerHTML = "";
+  function drawVars(){ var PC = document.getElementById("partcfg"); if (!PC) return; PC.innerHTML = "";
     order.forEach(function(k){ var P = window.PANELS[k];
       var row = E("div", { class: "prow" + (cur === k ? " on" : "") });
       var nm = E("button", { class: "pnm2" }); nm.innerHTML = S.icon(P.icon, 14, P.col) + '<span>' + P.word + '</span>';
@@ -2382,10 +2462,13 @@
     if (K === "B") { ev.preventDefault(); clearPath(); } });
 
   /* ══ THE RAIL BLOCK — one fold per thing on the region, the map fold BOOTS OPEN ══ */
-  var CMDFOLDS = { layout: 0, map: 1, cells: 0, colour: 0, sections: 0 };
-  function cmdRedraw(){ drawCmd(); drawCmdCfg();
+  var CMDFOLDS = { layout: 0, map: 1, cells: 0, colour: 0, sections: 0, size: 0 };
+  /* ONE redraw for every region rail: the command region, the rail that asked, then the middle and the
+     portrait. Which rail rebuilds is the only difference between the three. */
+  function consoleRedraw(railFn){ drawCmd(); if (railFn) railFn();
     if (pathAware()) { show(cur); return; }
     if (window.CMDKIT) window.CMDKIT.applyPath(PANEL, cur, window.CMDKIT.pathById(F, window.SEL.path)); drawPortrait(); }
+  function cmdRedraw(){ consoleRedraw(drawCmdCfg); }
   function drawCmdCfg(){ var box = document.getElementById("cmdcfg"); if (!box) return; box.innerHTML = "";
     var K = railKit(box, CMDFOLDS, CMD.layout, cmdRedraw);
     function P(label, ds, key, opts, iconFor, onlyIn){
@@ -2406,11 +2489,6 @@
          ["g1", "the same fifteen cells, in the same places, with each row NAMED: CHOOSE · SHOW · GO", "g1 · by what it does"],
          ["g2", "five GROUPS, one per part — the verbs sit one level down, the paths two. Depth 3, never more", "g2 · by part"]],
         function(o){ return o[0] === "rows" ? labIco("sh-square", 15) : o[0] === "g1" ? labIco("bars", 15) : S.icon("layers", 15); }, "card");
-      P("rows", "cmdrows", "rows",
-        [["command", "the per-path facts stay in the command region", "command region"],
-         ["parts", "each part draws its own one-line strip instead", "the parts"],
-         ["both", "the region AND a strip on every part", "both"]],
-        function(o){ return o[0] === "command" ? labIco("patflat", 15) : o[0] === "parts" ? labIco("bars", 15) : labIco("laycfill", 15); });
       P("card side", "cmdside", "side",
         [["right", "the region sits right of the portrait — order 5", "right of portrait"],
          ["left", "the region sits left of the bench — order 2", "left of bench"]],
@@ -2429,7 +2507,7 @@
          ["hook", "count the hook too, as the brief's table says — the Widening column then lights for every path", "with the hook"]],
         function(o){ return labIco(o[0] === "path" ? "eye" : "eyeoff", 15); }, "matrix"); });
 
-    K.group("map", "map", CMD.group + " · " + CMD.names + " · " + CMD.middle, "every choice §6 left open, built as an option instead of ruled blind", function(){
+    K.group("map", "map", CMD.group + " · " + CMD.names + " · " + CMD.sub, "every choice §6 left open that shapes the command region itself", function(){
       P("scope", "cmdscope", "scope",
         [["kind", "the endpoint KIND's card — the fifteen verbs", "kind card"],
          ["entity", "the owning entity's endpoints as cells; the feed names one of the four", "entity card"],
@@ -2455,29 +2533,10 @@
         [["split", "every path its own cell — two 429s, two 401s, two 409s", "split"],
          ["merged", "one cell per kind and status; it fans out on hover", "merged"]],
         function(o){ return labIco(o[0] === "split" ? "laycfill" : "patflat", 15); });
-      P("on the middle", "cmdmiddle", "middle",
-        [["dim", "what is not on the path drops to .28 — it stays readable", "dim .28"],
-         ["filter", "what is not on the path leaves the picture", "filter"],
-         ["outline", "what IS on the path is ringed; nothing else changes", "outline"]],
-        function(o){ return labIco(o[0] === "dim" ? "intdim" : o[0] === "filter" ? "toff" : "patglow", 15); });
-      P("portrait", "cmdport", "portrait",
-        [["path", "the record of what you picked leads the portrait", "path record"],
-         ["keep", "the portrait keeps whatever the part had open", "keep selection"],
-         ["split", "the part's own record first, the path's beside it", "split"]],
-        function(o){ return o[0] === "path" ? S.icon("journey", 15) : o[0] === "keep" ? S.icon("doc", 15) : S.icon("merge", 15); });
       P("wrong question", "cmdwrong", "wrong",
         [["blank", "a cell a command cannot use keeps its place, empty", "blank keeps its place"],
          ["collapsed", "the grid closes over it", "collapsed"]],
         function(o){ return labIco(o[0] === "blank" ? "sh-square" : "sh-none", 15); }, "card");
-      P("test join", "cmdjoin", "join",
-        [["exact", "the forms tests arm — each case joined to the exit it proves, with its confidence", "exact"],
-         ["parsed", "the older name-parsed join, drawn dashed because the name is the only evidence", "name-parsed dashed"],
-         ["off", "no test marks at all", "off"]],
-        function(o){ return o[0] === "exact" ? S.icon("test", 15) : o[0] === "parsed" ? labIco("pathatch", 15) : labIco("toff", 15); });
-      P("on part switch", "cmdkeep", "keep",
-        [["kept", "the path stays in force when you open another part", "kept"],
-         ["cleared", "changing part clears it", "cleared"]],
-        function(o){ return labIco(o[0] === "kept" ? "eye" : "eyeoff", 15); });
       P("rate-limit chip", "cmdflag", "flag",
         [["shown", "the flag chip rides the 429 cells, with its caveat", "shown with the caveat"],
          ["hidden", "no flag chip", "hidden"]],
@@ -2523,11 +2582,90 @@
          ["caption", "the caption / card area under the grid", S.icon("info", 15)]],
         function(k){ return !!CMD.show[k]; }, function(k, on){ CMD.show[k] = on ? 0 : 1; }); });
 
+    K.group("size", "size", FRAME.cmdW + "px · gap " + FRAME.cmdGap + "px",
+      "how wide the command region stands and how far it sits from the portrait — the frame block's own dials, now in the region they size", function(){
+      frameDials(box, "command"); });
+
     box.append(el("div", { class: "cfread" }, "the region, the strip, the ladder and the matrix are what would SHIP. Everything in this block is the lab's own.")); }
   window.drawCmdCfg = drawCmdCfg;
 
-  drawTabs(); drawTabCfg(); applyFrame(); drawFrameCfg(); applyData(); drawDataCfg(); drawSchCfg(); drawFnCfg();
-  drawCmdCfg(); drawCmd(); drawHead();
+  /* ══ THE MIDDLE BLOCK (operator 2026-09-17: "I don't know which ones are affecting the mid panel, the
+     portrait, or the commands"). What changes the MIDDLE whatever topic is open: each part's chosen
+     distribution (the old PART BARS block, now this block's first group) and the four dials that decide
+     what a chosen ending does to the drawn picture. They read and write window.CMD exactly as they did
+     on the command block — only the asking moved, so every behaviour and every data-attribute stands. */
+  var MIDFOLDS = { bars: 1, label: 0 };
+  function midRedraw(){ consoleRedraw(drawMidCfg); }
+  function drawMidCfg(){ var box = document.getElementById("midcfg"); if (!box) return; box.innerHTML = "";
+    var K = railKit(box, MIDFOLDS, null, midRedraw);
+    var W = { middle: { dim: "dim .28", filter: "filter", outline: "outline" },
+              join: { exact: "exact", parsed: "name-parsed dashed", off: "off" } };
+    function P(label, ds, key, opts, iconFor){
+      K.pick(label, ds, function(){ return CMD[key]; }, function(v){ CMD[key] = v; }, opts, iconFor); }
+    K.group("bars", "part bars", order.map(function(k){ return (window.PANELVAR && window.PANELVAR(k)) || "—"; }).join(" · "),
+      "which distribution each of the six parts draws when it is the one open in the middle", function(){
+      box.append(el("div", { class: "cfl" }, "distribution"), el("div", { id: "partcfg" })); });
+    drawVars();
+    K.group("label", "the label on the middle", W.middle[CMD.middle] + " · rows " + CMD.rows + " · " + CMD.keep,
+      "a chosen ENDING is a label any topic can wear — these four say what wearing it does to the middle", function(){
+      P("label on the middle", "cmdmiddle", "middle",
+        [["dim", "what is not on the path drops to .28 — it stays readable", "dim .28"],
+         ["filter", "what is not on the path leaves the picture", "filter"],
+         ["outline", "what IS on the path is ringed; nothing else changes", "outline"]],
+        function(o){ return labIco(o[0] === "dim" ? "intdim" : o[0] === "filter" ? "toff" : "patglow", 15); });
+      P("rows", "cmdrows", "rows",
+        [["command", "the per-path facts stay in the command region", "command region"],
+         ["parts", "each part draws its own one-line strip instead", "the parts"],
+         ["both", "the region AND a strip on every part", "both"]],
+        function(o){ return o[0] === "command" ? labIco("patflat", 15) : o[0] === "parts" ? labIco("bars", 15) : labIco("laycfill", 15); });
+      P("on part switch", "cmdkeep", "keep",
+        [["kept", "the path stays in force when you open another part", "kept"],
+         ["cleared", "changing part clears it", "cleared"]],
+        function(o){ return labIco(o[0] === "kept" ? "eye" : "eyeoff", 15); });
+      P("test join", "cmdjoin", "join",
+        [["exact", "the forms tests arm — each case joined to the exit it proves, with its confidence", "exact"],
+         ["parsed", "the older name-parsed join, drawn dashed because the name is the only evidence", "name-parsed dashed"],
+         ["off", "no test marks at all", "off"]],
+        function(o){ return o[0] === "exact" ? S.icon("test", 15) : o[0] === "parsed" ? labIco("pathatch", 15) : labIco("toff", 15); }); });
+    box.append(el("div", { class: "cfread" }, "every dial in this block reaches the MIDDLE PANEL — the one picture in the centre of the bench. The three topic blocks below are the same region, read when that topic is open.")); }
+  window.drawMidCfg = drawMidCfg;
+
+  /* ══ THE PORTRAIT BLOCK — what the portrait shows when something is chosen, and how big it stands ══ */
+  var PORTFOLDS = { select: 1, size: 0 };
+  function portRedraw(){ consoleRedraw(drawPortCfg); }
+  function drawPortCfg(){ var box = document.getElementById("portcfg"); if (!box) return; box.innerHTML = "";
+    var K = railKit(box, PORTFOLDS, null, portRedraw);
+    var W = { portrait: { path: "path record", keep: "keep selection", split: "split" } };
+    K.group("select", "on select", W.portrait[CMD.portrait],
+      "what the portrait leads with once an ending is in force", function(){
+      K.pick("on select", "cmdport", function(){ return CMD.portrait; }, function(v){ CMD.portrait = v; },
+        [["path", "the record of what you picked leads the portrait", "path record"],
+         ["keep", "the portrait keeps whatever the part had open", "keep selection"],
+         ["split", "the part's own record first, the path's beside it", "split"]],
+        function(o){ return o[0] === "path" ? S.icon("journey", 15) : o[0] === "keep" ? S.icon("doc", 15) : S.icon("merge", 15); }); });
+    K.group("size", "size + lines", FRAME.portW + "×" + FRAME.portH + " · gap " + FRAME.portGap + "px",
+      "how wide and tall the portrait stands, its own line and the space before it — the frame block's own dials, now in the region they size", function(){
+      frameDials(box, "portrait"); });
+    box.append(el("div", { class: "cfread" }, "the portrait magnifies whatever the middle selected. At width 0 it is gone and the middle stands alone.")); }
+  window.drawPortCfg = drawPortCfg;
+  /* every region rail folds like the data rail does (the CSS fence now covers all six boxes). These two
+     are the lab's own reach into that state — the probe needs a fold OPEN before it can click inside it,
+     and the boot state back afterwards. */
+  window.railFoldAll = function(which, open){
+    var m = { cmd: [CMDFOLDS, drawCmdCfg], mid: [MIDFOLDS, drawMidCfg], port: [PORTFOLDS, drawPortCfg] };
+    Object.keys(m).forEach(function(k){ if (which !== "all" && which !== k) return;
+      Object.keys(m[k][0]).forEach(function(x){ m[k][0][x] = open ? 1 : 0; }); m[k][1](); }); };
+  window.railFoldBoot = function(){
+    Object.assign(CMDFOLDS, { layout: 0, map: 1, cells: 0, colour: 0, sections: 0, size: 0 });
+    Object.assign(MIDFOLDS, { bars: 1, label: 0 });
+    Object.assign(PORTFOLDS, { select: 1, size: 0 });
+    drawCmdCfg(); drawMidCfg(); drawPortCfg(); };
+
+  /* the rail is built REGION BY REGION, in the order the blocks stand (2026-09-17). drawMidCfg runs
+     before the first show() because it is what creates #partcfg for drawVars to fill. */
+  drawTabs(); drawTabCfg(); applyFrame(); drawMidCfg(); drawPortCfg(); drawCmdCfg(); drawFrameCfg();
+  applyData(); drawDataCfg(); drawSchCfg(); drawFnCfg();
+  drawCmd(); drawHead();
   var first = (location.hash || "#data").slice(1); show(order.indexOf(first) >= 0 ? first : "data");
   window.__eplabReady = true;
 })();

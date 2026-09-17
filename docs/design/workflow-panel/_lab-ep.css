@@ -138,6 +138,10 @@ code{ font:600 .95em var(--font-mono); color:var(--ink); }
 .barblk .bhl{ display:flex; align-items:center; gap:7px; padding-bottom:6px; margin-bottom:2px; border-bottom:1px solid var(--line); }
 .barblk .bhl b{ font:800 12px/1 var(--font-mono); text-transform:uppercase; letter-spacing:.07em; color:var(--ink); }
 .barblk .bhl .bhi{ display:inline-flex; } .barblk .bhl .bhn{ margin-left:auto; font:600 12px/1 var(--font-mono); color:var(--muted); }
+/* a topic block's own glyph, after the name: the REGION glyph leads (it says where the dials reach),
+   the topic follows (it says when). Muted, so the region reads first (operator 2026-09-17). */
+.barblk .bhl .bht{ display:inline-flex; align-items:center; opacity:.8; }
+.barblk .bhl .bht svg{ display:block; }
 .prow{ display:grid; grid-template-columns:132px 1fr; gap:8px; align-items:center; padding:4px 5px; border-radius:6px; border-left:2px solid transparent; }
 .prow.on{ background:var(--panel); border-left-color:var(--accent); }
 .pnm2{ display:inline-flex; align-items:center; gap:6px; font:700 12px/1 var(--font-mono); color:var(--muted);
@@ -586,12 +590,15 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
   margin-bottom:var(--tabs-gap, 0px); }
 #tabs .tab, #bench[class*="box-dock"] #tabs .tab{ height:var(--tabs-h, 46px); }
 /* the rail block: same two-column grid as the head-bar block, so labels line up down the rail */
-#framecfg{ display:grid; grid-template-columns:88px 1fr; gap:7px 8px; align-items:center; margin-top:7px; }
-#framecfg .cfl.sub{ padding-left:12px; opacity:.72; font-size:12px; }
-#framecfg .cfl{ line-height:1.9; }
-#framecfg .cfsub{ grid-column:1 / -1; }
-#framecfg .cfread{ grid-column:1 / -1; margin-top:4px; font-size:12px; line-height:1.45; }
-#framecfg .ib:not(.on){ opacity:.5; } #framecfg .ib.on{ opacity:1; }
+/* THE FRAME DIALS (operator 2026-09-17: the FRAME block dissolved into the regions it sizes). Each set
+   is wrapped in .frdials so it can sit inside a region block — beside that region's other controls, or
+   inside one of its folds — and still lay out as the two-column rail it always was. */
+.frdials{ display:grid; grid-template-columns:88px 1fr; gap:7px 8px; align-items:center; margin-top:7px; grid-column:1 / -1; }
+.frdials .cfl.sub{ padding-left:12px; opacity:.72; font-size:12px; }
+.frdials .cfl{ line-height:1.9; }
+.frdials .cfsub{ grid-column:1 / -1; }
+.frdials .cfread{ grid-column:1 / -1; margin-top:4px; font-size:12px; line-height:1.45; }
+.frdials .ib:not(.on){ opacity:.5; } .frdials .ib.on{ opacity:1; }
 /* a section heading INSIDE a control block — the frame block has three, the tab block uses it too */
 .cfsub{ margin:12px 0 3px; padding-top:8px; border-top:1px dashed var(--line);
   font:800 12px/1.4 var(--font-mono); letter-spacing:.07em; text-transform:uppercase; color:var(--ink);
@@ -616,14 +623,14 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
 #panel[data-tab="data"].dgw-equal .ground{ flex-grow:1 !important; flex-basis:0; }
 #panel[data-tab="data"].dtl-grid .tiles{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); align-content:start; }
 /* a control the OPEN distribution does not draw says so — it stays clickable, it just cannot show here */
-:is(#datacfg, #schcfg, #fncfg){ display:grid; grid-template-columns:88px 1fr; gap:7px 8px; align-items:center; margin-top:7px; }
-:is(#datacfg, #schcfg, #fncfg) .cfl{ line-height:1.9; }
-:is(#datacfg, #schcfg, #fncfg) .cfsub{ grid-column:1 / -1; }
-:is(#datacfg, #schcfg, #fncfg) .cfread{ grid-column:1 / -1; margin-top:4px; font-size:12px; line-height:1.45; }
-:is(#datacfg, #schcfg, #fncfg) .ib:not(.on){ opacity:.5; }
-:is(#datacfg, #schcfg, #fncfg) .ib.on{ opacity:1; }
-:is(#datacfg, #schcfg, #fncfg) .dsec .ib.na{ opacity:.22; border-style:dashed; }
-:is(#datacfg, #schcfg, #fncfg) .dsec .ib.na.on{ opacity:.34; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg){ display:grid; grid-template-columns:88px 1fr; gap:7px 8px; align-items:center; margin-top:7px; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cfl{ line-height:1.9; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cfsub{ grid-column:1 / -1; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cfread{ grid-column:1 / -1; margin-top:4px; font-size:12px; line-height:1.45; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .ib:not(.on){ opacity:.5; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .ib.on{ opacity:1; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .dsec .ib.na{ opacity:.22; border-style:dashed; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .dsec .ib.na.on{ opacity:.34; }
 
 /* ══ DATA · FIELDS (operator 2026-09-12) — the columns named, not abstracted. One card per table, its
    fields listed under it; the card's left rail is the entity colour, the name's tint the channel. ══ */
@@ -924,16 +931,16 @@ html, body{ height:100%; }
 #panel.pshape-rect .sechd .dcp{ border-radius:3px; }
 #panel.pshape-square .sechd .dcp{ border-radius:0; }
 /* THE FOLD — settled dials put away inside a block, one click brings them back */
-:is(#datacfg, #schcfg, #fncfg) .cffold{ grid-column:1 / -1; border:1px dashed var(--line); border-radius:8px; }
-:is(#datacfg, #schcfg, #fncfg) .cffoldhd{ width:100%; display:flex; align-items:center; gap:7px; padding:5px 9px; background:none; border:0; cursor:pointer;
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cffold{ grid-column:1 / -1; border:1px dashed var(--line); border-radius:8px; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cffoldhd{ width:100%; display:flex; align-items:center; gap:7px; padding:5px 9px; background:none; border:0; cursor:pointer;
   color:var(--muted); font:700 12px/1.5 var(--font-mono); text-transform:uppercase; letter-spacing:.05em; }
-:is(#datacfg, #schcfg, #fncfg) .cffoldhd b{ color:var(--ink); font-weight:700; }
-:is(#datacfg, #schcfg, #fncfg) .cffoldhd .sum{ margin-left:auto; text-transform:none; letter-spacing:0; font-weight:600; }
-:is(#datacfg, #schcfg, #fncfg) .cffoldhd svg{ transition:transform .15s; }
-:is(#datacfg, #schcfg, #fncfg) .cffold.open .cffoldhd svg{ transform:rotate(180deg); }
-:is(#datacfg, #schcfg, #fncfg) .cffoldhd:hover{ color:var(--ink); }
-:is(#datacfg, #schcfg, #fncfg) .cffoldbody{ display:none; grid-template-columns:88px 1fr; gap:7px 8px; align-items:center; padding:4px 9px 9px; }
-:is(#datacfg, #schcfg, #fncfg) .cffold.open .cffoldbody{ display:grid; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cffoldhd b{ color:var(--ink); font-weight:700; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cffoldhd .sum{ margin-left:auto; text-transform:none; letter-spacing:0; font-weight:600; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cffoldhd svg{ transition:transform .15s; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cffold.open .cffoldhd svg{ transform:rotate(180deg); }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cffoldhd:hover{ color:var(--ink); }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cffoldbody{ display:none; grid-template-columns:88px 1fr; gap:7px 8px; align-items:center; padding:4px 9px 9px; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cffold.open .cffoldbody{ display:grid; }
 
 /* ══ THE SORT, in the title row after a divider (operator 2026-09-13). Text, ground and opacity are variables
    set by classes on #panel, like the pills; the active order wears the accent ring whatever its colours. ══ */
@@ -959,11 +966,11 @@ html, body{ height:100%; }
 #panel.sshow-icon .sechd .srb .srw{ display:none; }
 #panel.sshow-text .sechd .srb .sri{ display:none; }
 /* ten folds stacked in the data rail: a little air between them */
-:is(#datacfg, #schcfg, #fncfg) .cffold + .cffold{ margin-top:1px; }
-:is(#datacfg, #schcfg, #fncfg) .cffoldhd .fi{ display:inline-flex; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cffold + .cffold{ margin-top:1px; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cffoldhd .fi{ display:inline-flex; }
 /* a fold's NAME never wraps; its summary takes the rest of the line and wraps on the right if it must */
-:is(#datacfg, #schcfg, #fncfg) .cffoldhd b{ white-space:nowrap; flex:none; }
-:is(#datacfg, #schcfg, #fncfg) .cffoldhd .sum{ min-width:0; text-align:right; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cffoldhd b{ white-space:nowrap; flex:none; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .cffoldhd .sum{ min-width:0; text-align:right; }
 
 /* ══ THE BLOCK EDGE (operator 2026-09-13) — the entity's colour moves to any side, or goes, with its own
    pattern and thickness. The old fixed 3px left rail is reset first; one side then takes the colour. ══ */
@@ -1061,17 +1068,17 @@ html, body{ height:100%; }
 :is(#panel .blk, #port .rctab) .sq.opt{ opacity:var(--sq-opt-a, .5); }
 :is(#panel.sq-noopt .blk, #port.sq-noopt .rctab) .sq.opt{ opacity:var(--sq-base, 1); }
 /* the rail's bar: the two stops drawn where they sit */
-:is(#datacfg, #schcfg, #fncfg) .sqscale{ position:relative; height:30px; margin:4px 6px 0; cursor:help;
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .sqscale{ position:relative; height:30px; margin:4px 6px 0; cursor:help;
   background:linear-gradient(90deg, color-mix(in srgb, var(--accent) 8%, transparent), var(--accent)) center 9px / 100% 4px no-repeat; }
-:is(#datacfg, #schcfg, #fncfg) .sqscale i{ position:absolute; top:5px; width:12px; height:12px; margin-left:-6px; border-radius:3px; background:var(--ink); }
-:is(#datacfg, #schcfg, #fncfg) .sqscale i.st-opt{ opacity:.45; }
-:is(#datacfg, #schcfg, #fncfg) .sqscale i b{ position:absolute; top:15px; left:50%; transform:translateX(-50%); font:600 12px/1 var(--font-mono); color:var(--muted); white-space:nowrap; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .sqscale i{ position:absolute; top:5px; width:12px; height:12px; margin-left:-6px; border-radius:3px; background:var(--ink); }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .sqscale i.st-opt{ opacity:.45; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .sqscale i b{ position:absolute; top:15px; left:50%; transform:translateX(-50%); font:600 12px/1 var(--font-mono); color:var(--muted); white-space:nowrap; }
 /* the optional stop is drawn paler through its FILL, not its opacity — so its label stays readable */
-:is(#datacfg, #schcfg, #fncfg) .sqscale i.st-opt{ opacity:1; background:color-mix(in srgb, var(--ink) 45%, transparent); }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .sqscale i.st-opt{ opacity:1; background:color-mix(in srgb, var(--ink) 45%, transparent); }
 /* a stop at either end anchors its label inward instead of centring it off the edge */
-:is(#datacfg, #schcfg, #fncfg) .sqscale i.edge-r b{ left:auto; right:-2px; transform:none; }
-:is(#datacfg, #schcfg, #fncfg) .sqscale i.edge-l b{ left:-2px; transform:none; }
-:is(#datacfg, #schcfg, #fncfg) .sqscale{ margin-bottom:6px; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .sqscale i.edge-r b{ left:auto; right:-2px; transform:none; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .sqscale i.edge-l b{ left:-2px; transform:none; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .sqscale{ margin-bottom:6px; }
 
 /* ══ THE UNIQUE CORNERS (operator 2026-09-13) — pseudo-elements, so the mark keeps its own shape. Each is ONE L drawn as a
    clip-path polygon, its corner at the top-right of its box: both arms run the box's side (--uq-len of the frame, 3px
@@ -1089,12 +1096,12 @@ html, body{ height:100%; }
 :is(#panel.uqm-corners.uqc-top-right .blk, #panel.uqm-corners.uqc-both .blk, #port.uqm-corners.uqc-top-right .rctab, #port.uqm-corners.uqc-both .rctab) .sq.uq::before,
 :is(#panel.uqm-corners.uqc-bottom-left .blk, #panel.uqm-corners.uqc-both .blk, #port.uqm-corners.uqc-bottom-left .rctab, #port.uqm-corners.uqc-both .rctab) .sq.uq::after{ content:""; }
 /* the rail's corner icons: accent L's — but an ON button is filled with the accent, so there they take its ink */
-:is(#datacfg, #schcfg, #fncfg) .ib .uqL{ stroke:var(--accent); }
-:is(#datacfg, #schcfg, #fncfg) .ib.on .uqL{ stroke:currentColor; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .ib .uqL{ stroke:var(--accent); }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .ib.on .uqL{ stroke:currentColor; }
 /* the bar's stops are handles now */
-:is(#datacfg, #schcfg, #fncfg) .sqscale i[data-stop]{ width:14px; height:14px; margin-left:-7px; top:4px; cursor:grab; touch-action:none; }
-:is(#datacfg, #schcfg, #fncfg) .sqscale i[data-stop].drag{ cursor:grabbing; outline:1.5px solid var(--accent); outline-offset:2px; }
-:is(#datacfg, #schcfg, #fncfg) .sqscale i[data-stop] b{ top:18px; pointer-events:none; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .sqscale i[data-stop]{ width:14px; height:14px; margin-left:-7px; top:4px; cursor:grab; touch-action:none; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .sqscale i[data-stop].drag{ cursor:grabbing; outline:1.5px solid var(--accent); outline-offset:2px; }
+:is(#datacfg, #schcfg, #fncfg, #cmdcfg, #midcfg, #portcfg) .sqscale i[data-stop] b{ top:18px; pointer-events:none; }
 
 /* ══ THE RECORD (operator 2026-09-13) — the portrait's record mirrors the block card: the table glyph and name, then
    icon · label · value rows (an info icon at the end where a value needs explaining), then the fields as a table with
