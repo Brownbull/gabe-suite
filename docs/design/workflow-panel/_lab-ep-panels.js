@@ -1541,9 +1541,9 @@
      travels OUT (the door writes it — write orange) */
   var SCHDIR = {
     in: { key: "in", word: "in", long: "the request", chip: "IN", icon: "down", col: function(S){ return S.OPC.read; },
-      plain: "what the caller sends in — the door reads it" },
+      plain: "the body the caller sends in — the door reads it" },
     out: { key: "out", word: "out", long: "the response", chip: "OUT", icon: "up", col: function(S){ return S.OPC.write; },
-      plain: "what the door sends back — it writes it" } };
+      plain: "the body the door sends back — it writes it" } };
   function schCfg(){ return window.SCHCFG || {}; }
   function schDirOn(d){ var c = schCfg().dir || { in: 1, out: 1 }; return !!c[d]; }
   /* every shape, flat: each body, then the shapes it carries in the order its fields name them */
@@ -2393,14 +2393,14 @@
     L.push({ cmd: "findings", ico: "alert", verb: "Show findings", state: (fm.findings || []).length ? "lit" : "hollow", badge: (fm.findings || []).length, col: (S.BADGE_COL.role || {}).accessor,
       card: function(){ return cmdc({ title: "show findings", value: (fm.findings || []).length, icon: "alert", color: (S.BADGE_COL.role || {}).accessor,
         rows: (fm.findings || []).map(function(f){ return [f.id, f.slot + (f.status ? " · " + f.status : "") + (f.n ? " · " + f.n : "")]; }),
-        plain: "what the forms pass found wrong with the way this door answers" }); },
+        plain: "the faults the forms pass found in the way this door answers" }); },
       cap: function(){ return (fm.findings || []).map(function(f){ return f.id; }).join(" · "); }, act: go("security", null) });
     L.push({ cmd: "declared", ico: "info", verb: "Declared vs produced", state: (K1.produced || []).length ? "lit" : "hollow", badge: (K1.produced || []).length,
       card: function(){ return cmdc({ title: "declared vs produced", value: (K1.declared || []).length + " declared · " + (K1.produced || []).length + " produced", icon: "info",
         rows: [["declares", ((fm.declared || {}).success || {}).status ? String(fm.declared.success.status) : "—"],
                ["declares refusals", (fm.declared || {}).refusals && fm.declared.refusals.length ? fm.declared.refusals.join(" · ") : "none"],
                ["produces", (K1.produced || []).join(" · ")], ["K1", String(K1.state)]],
-        plain: "what the door promises against what it actually answers — the gap a client cannot plan for" }); },
+        plain: "the door's promise beside what it actually answers — the gap a client cannot plan for" }); },
       cap: function(){ return "declares " + (((fm.declared || {}).success || {}).status || "—") + " · produces " + (K1.produced || []).join(" · "); },
       act: go("tests", null) });
     L.push({ cmd: "tests", ico: "test", verb: "Tests for this exit", state: testN ? "lit" : "hollow", badge: testN, col: testCol(),
@@ -2466,11 +2466,11 @@
     { key: "paths", word: "PATHS", part: null, ico: "journey", badge: "walk", verbs: ["walk", "refusals", "success", "prev", "next"],
       plain: "every way a request through this door can end, and the two ways to step between them" },
     { key: "data", part: "data", badge: "writes", verbs: ["writes"],
-      plain: "what this door changes in the database, and whether the change survived" },
+      plain: "the changes this door makes in the database, and whether each survived" },
     { key: "security", part: "security", badge: "pre", verbs: ["pre", "gates", "findings"],
       plain: "everything the request has to get past, and what the forms pass found wrong with it" },
     { key: "tests", part: "tests", badge: "tests", verbs: ["tests", "untested", "declared"],
-      plain: "what proves this door answers the way it says it does" },
+      plain: "the proof that this door answers the way it says it does" },
     { key: "code", word: "CODE", part: "functions", badge: null, verbs: ["handler", "up"],
       plain: "where this door is written, and the level it hangs from" } ];
   function g2Group(k){ for (var i = 0; i < G2GROUPS.length; i++) if (G2GROUPS[i].key === k) return G2GROUPS[i]; return null; }
@@ -2696,7 +2696,7 @@
       c.insertAdjacentHTML("beforeend", ico(P.icon, 13, P.col));
       bind(c, function(){ return cmdc({ title: P.word, value: "one column", icon: P.icon, color: P.col,
         rows: [["lit", "the part has facts for that path"], ["hollow", "measured, and the path gives it nothing"]],
-        plain: "what this part knows about one way the request ends" }); });
+        plain: "one part's knowledge of one way the request ends" }); });
       hd.append(c); });
     m.append(hd);
     var sel = (window.SEL || {}).path;
@@ -2776,7 +2776,7 @@
       bind(strip, function(){ return cmdc({ title: "on this path", value: f.n, icon: (CMDKIND[p.kind] || {}).ico, color: pathCol(p, F, S),
         rows: [["path", pathWord(p)], ["part", window.PANELS[part].word], ["middle", C.middle]],
         fields: f.words.length ? f.words : null,
-        plain: "what this part has for the one ending you picked" }); });
+        plain: "one part's facts for the one ending you picked" }); });
       var hd = panelEl.querySelector(".phd");
       if (hd && hd.nextSibling) panelEl.insertBefore(strip, hd.nextSibling); else panelEl.insertBefore(strip, panelEl.firstChild); } }
 

@@ -405,11 +405,11 @@ window.hcard = function(o){
 
 /* ── the palette: natures, path kinds, buckets — every colour a station token ─────────── */
 var NAT = {
-  global:     { word: "global",     col: "var(--accent)",        ico: "star",     lg: "what is in force right now — pick it once, every tile follows" },
-  temporal:   { word: "temporal",   col: S.OPC.call,             ico: "journey",  lg: "reads left to right in request order" },
-  standpoint: { word: "standpoint", col: S.OPC.read,             ico: "layers",   lg: "what this part sees on the selected path; dims when nothing is selected" },
-  control:    { word: "control",    col: S.OPC.gate,             ico: "key",      lg: "the ACT half: press it to change what is in force" },
-  transient:  { word: "transient",  col: S.KINDCOL.external,     ico: "info",     lg: "lives only while you hover or until the next click" },
+  global:     { word: "global",     col: "var(--accent)",        ico: "star",     lg: "the thing in force right now — pick it once, every tile follows" },
+  temporal:   { word: "temporal",   col: S.OPC.call,             ico: "journey",  lg: "a line of time — it reads left to right in request order" },
+  standpoint: { word: "standpoint", col: S.OPC.read,             ico: "layers",   lg: "one part's view of the path in force — empty until something is picked" },
+  control:    { word: "control",    col: S.OPC.gate,             ico: "key",      lg: "a button that changes what is in force — it never shows a part's facts" },
+  transient:  { word: "transient",  col: S.KINDCOL.external,     ico: "info",     lg: "a card that lives only while you hover — gone at the next click" },
   record:     { word: "record",     col: S.KINDCOL.schema,       ico: "doc",      lg: "everything the feed knows about what is in force, in rows" } };
 var KCOL = { success: S.OPC.read, refusal: S.OPC.gate, framework: S.KINDCOL.external,
              validation: S.OPC.schema, uncaught: S.BADGE_COL.role.accessor };
@@ -974,10 +974,10 @@ function VERBS(){
     { cmd: "gates", hot: "D", ico: "key", verb: "Show gates", badge: gateN, col: S.OPC.gate, state: gateN ? "lit" : "hollow",
       plain: "every check the request has to get past before the work runs", act: go(gateN + " gates" + (c.path ? " on this path" : " in the feed")) },
     { cmd: "findings", hot: "F", ico: "alert", verb: "Show findings", badge: (FM.findings || []).length, col: S.BADGE_COL.role.accessor, state: "lit",
-      plain: "what the forms pass found wrong with the way this door answers",
+      plain: "the faults the forms pass found in the way this door answers",
       act: go((FM.findings || []).map(function(f){ return f.id; }).join(" · ")) },
     { cmd: "declared", hot: "G", ico: "info", verb: "Declared vs produced", badge: (K1.produced || []).length, state: "lit",
-      plain: "what the door promises against what it actually answers",
+      plain: "the door's promise beside what it actually answers",
       act: go("declares " + ((FM.declared.success || {}).status) + " · produces " + (K1.produced || []).join(" · ")) },
     { cmd: "tests", hot: "Z", ico: "test", verb: "Tests for this exit", badge: testN, col: S.OPC.read, state: testN ? "lit" : "hollow",
       plain: "the cases that prove this ending — and how sure the join is",
