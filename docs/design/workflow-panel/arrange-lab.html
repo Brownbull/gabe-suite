@@ -1,0 +1,1500 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The ARRANGE lab — every dimension as a tile</title>
+<!-- the station's own tokens + card chrome, injected at boot (never restyled here) -->
+<style id="stationvars"></style>
+<style>
+/* ══════════════════════════════════════════════════════════════════════════════════════════
+   THE ARRANGE LAB. The console's three regions are DROP ZONES at their real proportions; every
+   dimension the endpoint lab knows is a TILE on a shelf drawn as a 2D MIND MAP. Nothing typed by
+   hand that window.LABEP / window.STATION carries. Sequential-Procedural: left→right in request
+   order, top→bottom. Centred column. 12px floor inside every panel.
+   ══════════════════════════════════════════════════════════════════════════════════════════ */
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; background:var(--bg); color:var(--ink); font-family:var(--font-ui); }
+.wrap{ max-width:1960px; margin:0 auto; padding:16px 20px 44px; }
+
+/* ── the lede ─────────────────────────────────────────────────────────────────────────── */
+.lede h1{ display:flex; align-items:center; gap:9px; margin:0 0 5px; font:800 21px/1.2 var(--font-ui); letter-spacing:.01em; }
+.lede h1 .ico{ flex:none; }
+.lede .plain{ margin:0 0 6px; font:500 13.5px/1.55 var(--font-ui); color:var(--muted); max-width:940px; }
+.lede .ledemeta{ display:flex; gap:14px; flex-wrap:wrap; font:600 12px/1.4 var(--font-mono); color:var(--edge); }
+
+/* ── the top bar: the middle dial on the left, the arrangement tools on the right ──────── */
+.topbar{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:12px 0 8px;
+  padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--nav-bg); }
+.tbgrp{ display:flex; align-items:center; gap:5px; }
+.tbl{ font:700 12px/1 var(--font-mono); text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-right:3px; }
+.tbright{ margin-left:auto; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.ib{ display:inline-flex; align-items:center; justify-content:center; gap:5px; min-width:30px; height:26px; padding:0 8px;
+  font:700 12px/1 var(--font-mono); color:var(--muted); background:var(--chip-bg); border:1px solid var(--line);
+  border-radius:6px; cursor:pointer; }
+.ib svg{ display:block; flex:none; }
+.ib:hover{ color:var(--ink); border-color:var(--accent); }
+.ib.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
+.pastebox{ height:26px; width:330px; padding:0 8px; font:600 12px/1 var(--font-mono); color:var(--ink);
+  background:var(--chip-bg); border:1px solid var(--line); border-radius:6px; }
+.pastebox:focus{ outline:none; border-color:var(--accent); }
+#copyout{ margin:0 0 10px; padding:8px 11px; border:1px solid var(--accent); border-radius:9px;
+  background:color-mix(in srgb, var(--accent) 9%, var(--nav-bg)); font:600 12px/1.6 var(--font-mono);
+  color:var(--ink); word-break:break-word; }
+#copyout .cohd{ display:block; font:700 12px/1.4 var(--font-mono); text-transform:uppercase; letter-spacing:.07em; color:var(--accent); margin-bottom:3px; }
+
+/* ── the stage: shelf | zones ─────────────────────────────────────────────────────────── */
+.stage{ display:flex; gap:16px; align-items:flex-start; }
+.shelf{ flex:none; width:476px; }
+.zones{ flex:1 1 auto; min-width:0; }
+
+/* ── THE MIND MAP (the shelf) ─────────────────────────────────────────────────────────── */
+.shbox{ border:1px solid var(--line); border-radius:12px; background:var(--panel); padding:9px 10px 10px; }
+.shhd{ display:flex; align-items:center; gap:6px; font:800 12px/1 var(--font-mono); text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin-bottom:3px; }
+.shhd .n{ margin-left:auto; font-weight:700; color:var(--ink); }
+.shnote{ font:500 12px/1.45 var(--font-ui); color:var(--muted); margin-bottom:7px; }
+.mapwrap{ position:relative; width:456px; height:650px; margin:0 auto; }
+.mapedges{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.mnode{ position:absolute; transform:translate(-50%,-50%); width:74px; display:flex; flex-direction:column;
+  align-items:center; gap:3px; cursor:grab; user-select:none; }
+.mnode:active{ cursor:grabbing; }
+.mnode .mring{ width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  border:2px solid var(--tc); background:color-mix(in srgb, var(--tc) 13%, var(--panel));
+  box-shadow:0 0 0 3px var(--panel); transition:transform .12s, box-shadow .12s; }
+.mnode:hover .mring{ transform:scale(1.09); box-shadow:0 0 0 3px var(--panel), 0 0 13px -2px var(--tc); }
+.mnode .mlbl{ font:700 12px/1.15 var(--font-mono); color:var(--ink); text-align:center; letter-spacing:-.01em; }
+.mnode .mtag{ font:600 12px/1.15 var(--font-ui); color:var(--tc); }
+.mnode.centre .mring{ width:46px; height:46px; }
+.mnode.placed{ opacity:.42; }
+.mnode.placed .mring{ border-style:dashed; }
+.mnode.dragging{ opacity:.3; }
+.maplgd{ display:flex; flex-wrap:wrap; gap:11px; margin-top:6px; padding-top:7px; border-top:1px solid var(--line); }
+.maplgd .lgi{ display:inline-flex; align-items:center; gap:5px; font:600 12px/1 var(--font-ui); color:var(--muted); cursor:help; }
+.maplgd .lgi svg{ display:block; flex:none; }
+
+/* ── the compact list under the map (the fallback, and the way to drag by name) ────────── */
+.shlist{ margin-top:10px; }
+.natgrp{ margin-top:8px; border:1px solid var(--line); border-radius:9px; padding:6px 8px 7px; background:var(--chip-bg); }
+.natgrp .nathd{ display:flex; align-items:center; gap:6px; }
+.natgrp .natdot{ width:9px; height:9px; border-radius:50%; background:var(--tc); flex:none; }
+.natgrp .natw{ font:800 12px/1 var(--font-mono); text-transform:uppercase; letter-spacing:.07em; color:var(--tc); }
+.natgrp .natn{ margin-left:auto; font:700 12px/1 var(--font-mono); color:var(--muted); }
+.natgrp .natlg{ font:500 12px/1.4 var(--font-ui); color:var(--muted); margin:3px 0 5px; }
+.shitems{ display:flex; flex-wrap:wrap; gap:4px; }
+.shitem{ display:inline-flex; align-items:center; gap:5px; padding:3px 7px; border:1px solid color-mix(in srgb, var(--tc) 36%, var(--line));
+  border-radius:7px; background:var(--panel); font:600 12px/1.25 var(--font-mono); color:var(--ink); cursor:grab; }
+.shitem:hover{ border-color:var(--tc); }
+.shitem .shsz{ font:700 12px/1 var(--font-mono); color:var(--muted); }
+.shitem.placed{ opacity:.42; border-style:dashed; }
+.shitem.dragging{ opacity:.3; }
+
+/* ── THE HEAD BAR STRIP (identity — never a drop zone) ─────────────────────────────────── */
+.headbar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:7px 11px; margin-bottom:8px;
+  border:1px solid var(--line); border-radius:10px; background:var(--nav-bg); }
+.headbar .hbm{ display:inline-flex; align-items:center; gap:5px; padding:2px 8px; border-radius:999px;
+  font:800 12px/1.35 var(--font-mono); letter-spacing:.05em; border:1px solid currentColor; }
+.headbar .hbp{ font:700 13px/1.3 var(--font-mono); color:var(--ink); }
+.headbar .hbs{ font:700 12px/1.3 var(--font-mono); color:var(--ok); border:1px solid var(--line); border-radius:999px; padding:1px 8px; background:var(--chip-bg); }
+.headbar .hbf{ margin-left:auto; font:600 12px/1.3 var(--font-mono); color:var(--muted); }
+.headbar .hbe{ font:600 12px/1.3 var(--font-mono); color:var(--muted); }
+
+/* ── THE PANEL ROW (the drop zones at the lab's own numbers) ───────────────────────────── */
+.prow{ display:flex; gap:14px; align-items:flex-start; overflow-x:auto; padding-bottom:8px; }
+.panel{ flex:none; border:1px solid var(--line); border-radius:12px; background:var(--panel);
+  display:flex; flex-direction:column; min-height:0; overflow:hidden; }
+.panel.over{ border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
+.panel > .phd{ flex:none; display:flex; align-items:center; gap:7px; padding:6px 10px; border-bottom:1px solid var(--line); background:var(--nav-bg); }
+.panel > .phd .pnm{ font:800 12px/1 var(--font-mono); text-transform:uppercase; letter-spacing:.07em; color:var(--muted); }
+.panel > .phd .pdim{ font:600 12px/1 var(--font-mono); color:var(--edge); }
+.panel > .phd .pcount{ margin-left:auto; font:700 12px/1 var(--font-mono); color:var(--muted); }
+.panel > .phd .povf{ font:800 12px/1.3 var(--font-mono); color:#fff; background:var(--red); border-radius:999px; padding:1px 7px; }
+.ptiles{ flex:1 1 auto; min-height:0; display:flex; flex-wrap:wrap; align-content:flex-start;
+  overflow-y:auto; overflow-x:hidden; }
+.ptiles.empty{ display:flex; align-items:center; justify-content:center; }
+.pempty{ width:calc(100% - 16px); margin:8px; padding:16px 10px; border:1px dashed var(--line); border-radius:10px;
+  text-align:center; font:600 12px/1.5 var(--font-mono); color:var(--muted); }
+
+/* a TILE: S = a third of the panel, M = a half, L = the full width. Measured, never guessed —
+   the slots have no gap so a third is exactly a third (the probe measures ±2px). */
+.ptile{ flex:none; min-width:0; border:1px solid var(--line); background:var(--panel-bg);
+  display:flex; flex-direction:column; max-height:100%; overflow:hidden; }
+.ptile.size-S{ flex-basis:33.3333%; width:33.3333%; }
+.ptile.size-M{ flex-basis:50%; width:50%; }
+.ptile.size-L{ flex-basis:100%; width:100%; }
+.ptile.dragging{ opacity:.35; }
+.ptile.flash{ animation:arrflash .9s ease 1; }
+@keyframes arrflash{ 0%{ box-shadow:inset 0 0 0 0 transparent; border-color:var(--line); }
+  22%{ box-shadow:inset 0 0 0 2px var(--tc); border-color:var(--tc); }
+  100%{ box-shadow:inset 0 0 0 0 transparent; border-color:var(--line); } }
+.ptih{ flex:none; display:flex; align-items:center; gap:5px; padding:4px 6px; border-bottom:1px solid var(--line);
+  background:color-mix(in srgb, var(--tc) 9%, var(--nav-bg)); cursor:grab; }
+.ptih .nbadge{ width:9px; height:9px; border-radius:50%; background:var(--tc); flex:none; }
+.ptih .ptin{ font:700 12px/1.2 var(--font-mono); color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ptih .ptig{ display:inline-flex; flex:none; }
+.ptih .ptib2{ margin-left:auto; display:flex; gap:3px; flex:none; }
+.ptih button{ font:700 12px/1 var(--font-mono); color:var(--muted); background:var(--chip-bg);
+  border:1px solid var(--line); border-radius:5px; padding:2px 5px; cursor:pointer; }
+.ptih button:hover{ color:var(--ink); border-color:var(--tc); }
+.ptbody{ flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; padding:6px 7px 7px; }
+
+/* the FOUR STATES, on a tile body or any block inside one */
+.st-hollow{ background:none !important; box-shadow:none !important; }
+.st-dashed{ border-style:dashed !important; }
+.st-hatched{ background:repeating-linear-gradient(45deg, color-mix(in srgb, var(--tc) 12%, transparent) 0 5px, transparent 5px 10px), var(--panel) !important;
+  border-style:dotted !important; }
+.st-blank{ background:none !important; box-shadow:none !important; opacity:.5; cursor:default !important; }
+.nowt{ display:flex; flex-direction:column; gap:3px; align-items:flex-start; padding:9px 8px;
+  border:1px solid var(--line); border-radius:8px; }
+.nowt b{ font:700 12px/1.3 var(--font-mono); color:var(--muted); }
+.nowt span{ font:500 12px/1.45 var(--font-ui); color:var(--edge); }
+
+/* shared little primitives inside tiles (12px floor everywhere) */
+.arow{ display:flex; align-items:baseline; gap:7px; font:500 12px/1.5 var(--font-ui); }
+.arow .ak{ flex:none; width:82px; color:var(--muted); font-family:var(--font-mono); }
+.arow .av{ min-width:0; color:var(--ink); word-break:break-word; }
+.asec{ margin-top:6px; }
+.asec:first-child{ margin-top:0; }
+.asech{ display:flex; align-items:center; gap:5px; font:800 12px/1.4 var(--font-mono); text-transform:uppercase;
+  letter-spacing:.06em; color:var(--muted); margin-bottom:3px; }
+.asech .n{ margin-left:auto; font-weight:700; color:var(--ink); }
+.achip{ display:inline-flex; align-items:center; gap:4px; padding:1px 6px; margin:0 3px 3px 0; border-radius:6px;
+  border:1px solid color-mix(in srgb, var(--tc) 42%, var(--line)); background:var(--chip-bg);
+  font:700 12px/1.45 var(--font-mono); color:var(--tc); }
+.achip.mut{ color:var(--muted); border-color:var(--line); }
+.achip.dash{ border-style:dashed; }
+.achip.hollow{ background:none; }
+.aline{ display:flex; align-items:center; gap:6px; padding:2px 3px; border-radius:5px; font:600 12px/1.5 var(--font-mono); color:var(--ink); }
+.aline .amut{ color:var(--muted); font-weight:500; font-family:var(--font-ui); }
+.aline .agrow{ margin-left:auto; flex:none; }
+.aline.pick{ cursor:pointer; }
+.aline.pick:hover{ background:var(--hov-bg); }
+.aline.on{ background:color-mix(in srgb, var(--accent) 16%, transparent); }
+.acap{ font:500 12px/1.45 var(--font-ui); color:var(--muted); }
+.amono{ font-family:var(--font-mono); }
+
+/* ── the TIMELINE (the operator's ask) ─────────────────────────────────────────────────── */
+.tl{ display:flex; flex-direction:column; gap:2px; }
+.tlhead, .tlane{ display:grid; grid-template-columns:104px repeat(8, minmax(0,1fr)); align-items:center; gap:2px; }
+.tlhead .tlc{ font:700 12px/1.35 var(--font-mono); color:var(--muted); text-align:center; overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap; cursor:help; border-bottom:1px solid var(--line); padding-bottom:2px; }
+.tlhead .tlc.ret{ color:var(--ok); }
+.tlhead .tlsp{ font:700 12px/1.35 var(--font-mono); color:var(--edge); }
+.tlane{ cursor:pointer; border-radius:5px; }
+.tlane:hover{ background:var(--hov-bg); }
+.tlane.on{ background:color-mix(in srgb, var(--accent) 15%, transparent); }
+/* the bar and its marker share ONE row and overlap on purpose — the marker sits at the right edge
+   of the column where the path leaves, over the bar's tail (grid lets explicitly placed items stack). */
+.tlane > *{ grid-row:1; }
+.tlane .tlnm{ grid-column:1 / 2; font:600 12px/1.5 var(--font-ui); color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tlane .tlbar{ position:relative; height:9px; border-radius:5px; background:color-mix(in srgb, var(--tc) 34%, transparent);
+  border:1px solid color-mix(in srgb, var(--tc) 58%, transparent); }
+.tlane .tlbead{ position:absolute; top:50%; left:0; width:7px; height:7px; margin-top:-3.5px; border-radius:50%;
+  background:var(--tc); box-shadow:0 0 6px -1px var(--tc); animation:tlwalk 3.4s linear infinite; }
+@keyframes tlwalk{ 0%{ left:0; } 100%{ left:calc(100% - 7px); } }
+.tlane .tlmk{ justify-self:end; z-index:1; display:inline-flex; align-items:center; gap:3px; padding:0 5px; border-radius:5px;
+  border:1px solid var(--tc); color:var(--tc); background:var(--chip-bg); font:800 12px/1.5 var(--font-mono); }
+body.clock-paused *{ animation-play-state:paused !important; }
+@media (prefers-reduced-motion: reduce){
+  .ptile.flash{ animation:none !important; }
+  .tlane .tlbead{ animation-duration:.001s !important; animation-iteration-count:1 !important; animation-fill-mode:forwards !important; } }
+
+/* ── the SC2 command card (the look lifted: same rim, same glyph ghost, same valley face) ─ */
+.cmdgrid{ display:grid; grid-template-columns:repeat(5, var(--cz,58px)); gap:5px; justify-content:start; }
+.cmdcell{ position:relative; width:var(--cz,58px); height:var(--cz,58px); padding:0; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; overflow:hidden;
+  color:var(--muted); font:700 12px/1 var(--font-ui);
+  border:1px solid color-mix(in srgb, var(--tc) 34%, var(--line)); border-radius:7px;
+  --i:.10; --ir:.28; transition:border-color .12s, color .12s;
+  background:
+    radial-gradient(78% 165% at 50% 50%, transparent 18%, color-mix(in srgb, var(--tc) calc(var(--i) * 100%), transparent) 62%, color-mix(in srgb, var(--tc) calc(var(--ir) * 100%), transparent) 100%),
+    linear-gradient(180deg, rgba(255,255,255,.05), transparent 52%), var(--panel);
+  box-shadow: inset 0 0 13px -3px color-mix(in srgb, var(--tc) 45%, transparent), inset 0 1px 0 rgba(255,255,255,.05); }
+.cmdcell:hover{ color:var(--ink); border-color:color-mix(in srgb, var(--tc) 62%, var(--line)); }
+.cmdcell.on{ color:var(--ink); border-color:var(--tc); --i:.20; --ir:.50; }
+.cmdcell .cg{ display:inline-flex; color:color-mix(in srgb, var(--tc) 78%, var(--muted)); z-index:1; }
+.cmdcell.on .cg{ color:var(--tc); }
+.cmdcell .cgh{ position:absolute; right:-14%; top:50%; transform:translateY(-50%); display:inline-flex;
+  color:var(--tc); opacity:.17; pointer-events:none; }
+.cmdcell .chot{ position:absolute; left:4px; top:3px; z-index:2; font:800 12px/1 var(--font-mono);
+  color:color-mix(in srgb, var(--tc) 60%, var(--muted)); font-style:normal; }
+.cmdcell .cbadge{ position:absolute; right:4px; top:3px; z-index:2; padding:0 4px; border-radius:999px;
+  background:var(--chip-bg); border:1px solid color-mix(in srgb, var(--tc) 40%, var(--line));
+  font:700 12px/1.35 var(--font-mono); color:var(--muted); }
+.cmdcell .clbl{ position:absolute; left:3px; right:3px; bottom:2px; z-index:2; text-align:center;
+  font:600 12px/1.15 var(--font-ui); color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cmdcell .cg svg, .cmdcell .cgh svg{ display:block; }
+.cmdcell.st-hatched{ box-shadow:none !important; }
+
+/* ── the path strip · the exit ladder · the matrix ─────────────────────────────────────── */
+.pstrip{ display:flex; flex-wrap:wrap; gap:3px; }
+.pscell{ display:flex; flex-direction:column; align-items:flex-start; gap:1px; padding:3px 6px; min-width:78px;
+  border:1px solid color-mix(in srgb, var(--tc) 40%, var(--line)); border-left-width:3px; border-radius:6px;
+  background:var(--chip-bg); cursor:pointer; }
+.pscell:hover{ border-color:var(--tc); }
+.pscell.on{ background:color-mix(in srgb, var(--tc) 18%, var(--chip-bg)); }
+.pscell b{ font:800 12px/1.3 var(--font-mono); color:var(--tc); }
+.pscell span{ font:500 12px/1.3 var(--font-ui); color:var(--muted); max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.exlad{ display:flex; flex-direction:column; gap:2px; }
+.exrung{ display:grid; grid-template-columns:92px 1fr; gap:6px; align-items:center; padding:2px 3px;
+  border-left:2px solid var(--line); }
+.exrung .exn{ font:700 12px/1.4 var(--font-mono); color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.exrung.foot{ border-left-color:var(--ok); } .exrung.foot .exn{ color:var(--ok); }
+.exrung .exs{ display:flex; flex-wrap:wrap; gap:3px; }
+.exchip{ display:inline-flex; align-items:center; gap:4px; padding:1px 6px; border-radius:6px; cursor:pointer;
+  border:1px solid color-mix(in srgb, var(--tc) 46%, var(--line)); background:var(--chip-bg);
+  font:700 12px/1.45 var(--font-mono); color:var(--tc); }
+.exchip:hover{ border-color:var(--tc); }
+.exchip.on{ background:color-mix(in srgb, var(--tc) 22%, var(--chip-bg)); color:var(--ink); }
+.exrung.above{ opacity:1; } .exrung.below{ opacity:.34; }
+.cmx{ display:grid; gap:2px; }
+.cmxh{ font:700 12px/1.2 var(--font-mono); color:var(--muted); text-align:center; cursor:help; }
+.cmxr{ font:700 12px/1.2 var(--font-mono); color:var(--muted); cursor:pointer; white-space:nowrap; }
+.cmxc{ width:26px; height:26px; border-radius:5px; border:1px solid color-mix(in srgb, var(--tc) 40%, var(--line));
+  background:color-mix(in srgb, var(--tc) 22%, transparent); cursor:pointer; }
+.cmxc:hover{ border-color:var(--tc); }
+.cmxc.lit{ background:color-mix(in srgb, var(--tc) 42%, transparent); }
+.cmxc.hollow{ background:none; }
+.cmxc.on{ box-shadow:inset 0 0 0 2px var(--accent); }
+
+/* ── the docked hover card + the caption ───────────────────────────────────────────────── */
+.dock{ border:1px solid var(--line); border-radius:8px; padding:6px 8px; background:var(--chip-bg); }
+.dock .cphd{ font:800 12.5px/1.2 var(--font-ui); display:flex; align-items:center; gap:6px; }
+
+/* ── the hover card (the station's .jdcolpop, the lab's rows + plain line, floored at 12px) ─ */
+#hover{ font-size:12px; max-width:392px; }
+#hover .cprow{ display:flex; gap:8px; font-size:12px; margin:1px 0; }
+#hover .cprow .cpk{ flex:none; width:96px; color:var(--muted); font:500 12px/1.5 var(--font-mono); }
+#hover .cprow .cpv{ min-width:0; color:var(--ink); font-size:12px; word-break:break-word; }
+#hover .cprow.stack{ display:block; margin-top:5px; }
+#hover .cprow.stack .cpk{ display:block; width:auto; margin-bottom:2px; }
+#hover .cprow.stack .cpv{ display:block; font-weight:600; line-height:1.45; }
+#hover .cphd .cphv{ margin-left:auto; font:700 12px/1 var(--font-mono); text-transform:uppercase; letter-spacing:.04em; opacity:.9; }
+#hover .cpgrp{ margin-top:8px; padding-top:7px; border-top:1px solid var(--line); }
+#hover .cpgrp:first-of-type{ border-top:none; padding-top:2px; }
+#hover .cpgrl{ font:700 12px/1.4 var(--font-mono); text-transform:uppercase; letter-spacing:.05em;
+  color:color-mix(in srgb, var(--accent) 70%, var(--muted)); margin-bottom:2px; }
+#hover .cpplain{ font:500 12.5px/1.5 var(--font-ui); color:var(--ink); }
+#hover .cpul{ margin:0; padding-left:15px; }
+#hover .cpul li{ font:500 12px/1.5 var(--font-ui); color:var(--muted); margin:1px 0; }
+#hover .cpsub, #hover .cpclick, #hover .cpbody{ font-size:12px; }
+#hover .cpend{ margin-top:9px; padding-top:7px; border-top:1px solid var(--line); }
+#hover .cpend .cpclarify{ font:400 12px/1.45 var(--font-mono); color:var(--muted); }
+#hover .cpnat{ display:inline-flex; align-items:center; gap:5px; font:800 12px/1.4 var(--font-mono);
+  text-transform:uppercase; letter-spacing:.06em; }
+
+/* ── THE 12px FLOOR over the lifted station card chrome (it sets .sechd/.cnt 10px, .pchip 11px) ── */
+.panel .sechd, .panel .sechd .cnt, .panel .pchip, .panel .sublbl, .panel .kv, .panel .ttag{ font-size:12px; }
+.shbox .sechd, .shbox .pchip{ font-size:12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="lede">
+    <h1><span id="ledeglyph"></span>The ARRANGE lab</h1>
+    <p class="plain">Every dimension this door knows is a tile; the console's three regions are the drop zones at their real size. Drag a tile in, give it a width, and copy the one line that captures the arrangement.</p>
+    <div class="ledemeta"><span id="ledebench"></span><span id="ledehead"></span><span id="ledesrc"></span></div>
+  </header>
+
+  <div class="topbar">
+    <div class="tbgrp"><span class="tbl">middle</span><span id="dial"></span></div>
+    <div class="tbgrp"><span class="tbl">clock</span><span id="clockbar"></span></div>
+    <div class="tbright">
+      <button class="ib" id="btncopy">COPY</button>
+      <input class="pastebox" id="paste" placeholder="paste an arrange line here…" spellcheck="false">
+      <button class="ib" id="btnload">LOAD</button>
+      <button class="ib" id="btnreset">RESET</button>
+      <button class="ib" id="btnfirst">the operator's first cut</button>
+    </div>
+  </div>
+  <div id="copyout" hidden></div>
+
+  <div class="stage">
+    <aside class="shelf">
+      <div class="shbox">
+        <div class="shhd"><span id="shglyph"></span>the dimensions<span class="n" id="shn"></span></div>
+        <div class="shnote">The map is fixed, not physics: what SETS the selection stands left and above, what READS it stands right and below, and the thing in force sits in the middle. Drag a node into a panel.</div>
+        <div class="mapwrap" id="mapwrap"><svg class="mapedges" id="mapedges" viewBox="0 0 456 650" preserveAspectRatio="none"></svg></div>
+        <div class="maplgd" id="maplgd"></div>
+      </div>
+      <div class="shlist" id="shlist"></div>
+    </aside>
+
+    <section class="zones">
+      <div class="headbar" id="headbar" data-drop="no"></div>
+      <div class="prow" id="prow"></div>
+    </section>
+  </div>
+</div>
+<div id="hover" class="jdcolpop" hidden></div>
+
+<script src="_station.js"></script>
+<script src="_lab-ep.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   ONE API drives the UI and the probe alike: window.ARR.{place,remove,select,line,load,reset,
+   firstCut}. Nothing below types a count, a name, a status or a colour that window.LABEP or
+   window.STATION carries.
+   ═══════════════════════════════════════════════════════════════════════════════════════════ */
+(function(){
+"use strict";
+var S = window.STATION, F = window.LABEP, FM = F.forms, I = F.identity;
+document.getElementById("stationvars").textContent = S.CSSVARS + "\n" + S.CARDCSS;
+
+/* ── small DOM helpers ───────────────────────────────────────────────────────────────── */
+function el(t, a){ var e = document.createElement(t), k = [].slice.call(arguments, 2);
+  for (var p in (a || {})) { if (p === "class") e.className = a[p]; else if (p === "html") e.innerHTML = a[p]; else if (a[p] != null) e.setAttribute(p, a[p]); }
+  k.forEach(function f(c){ if (c == null) return; if (Array.isArray(c)) c.forEach(f); else if (typeof c === "string") e.append(document.createTextNode(c)); else e.append(c); });
+  return e; }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]; }); }
+function uniq(a){ return a.filter(function(v, i){ return a.indexOf(v) === i; }); }
+function sum(a){ return a.reduce(function(x, y){ return x + y; }, 0); }
+
+/* ── the hover card: the station's .jdcolpop shape, the four sections the operator asked for ── */
+var HV = document.getElementById("hover");
+window.hoverShow = function(anchor, html){
+  HV.innerHTML = html; HV.hidden = false;
+  var r = anchor.getBoundingClientRect(), w = HV.offsetWidth, h = HV.offsetHeight;
+  var x = Math.min(window.innerWidth - w - 8, Math.max(8, r.right + 8)), y = r.top;
+  if (y + h > window.innerHeight - 8) y = Math.max(8, window.innerHeight - h - 8);
+  HV.style.left = x + "px"; HV.style.top = y + "px";
+  LAST.card = html; drawDocks(); };
+window.hoverHide = function(){ HV.hidden = true; };
+window.hoverBind = function(e, fn){
+  e.addEventListener("mouseenter", function(){ window.hoverShow(e, typeof fn === "function" ? fn() : fn); });
+  e.addEventListener("mouseleave", window.hoverHide);
+  return e; };
+function cprow(r){ if (!r) return "";
+  var v = String(r[1] == null ? "" : r[1]), stacked = r[2] === "stack" || v.replace(/<[^>]+>/g, "").length > 34;
+  return '<div class="cprow' + (stacked ? " stack" : "") + '"><span class="cpk">' + r[0] + '</span><span class="cpv">' + v + "</span></div>"; }
+function grp(label, html){ return '<div class="cpgrp"><div class="cpgrl">' + label + "</div>" + html + "</div>"; }
+window.hcard = function(o){
+  var h = '<div class="cphd">' + (o.icon ? S.icon(o.icon, 15, o.color) : "")
+    + '<b' + (o.color ? ' style="color:' + o.color + '"' : "") + ">" + esc(o.title) + "</b>"
+    + (o.value ? '<span class="cphv"' + (o.color ? ' style="color:' + o.color + '"' : "") + ">" + esc(o.value) + "</span>" : "") + "</div>";
+  if (o.sub) h += '<div class="cpsub">' + esc(o.sub) + "</div>";
+  (o.groups || []).forEach(function(g){ h += grp(g[0], g[1]); });
+  (o.rows || []).forEach(function(r){ h += cprow(r); });
+  if (o.body) h += '<div class="cpbody">' + o.body + "</div>";
+  if (o.clarify) h += '<div class="cpend"><div class="cpclarify">' + esc(o.clarify) + "</div></div>";
+  return h; };
+
+/* ── the palette: natures, path kinds, buckets — every colour a station token ─────────── */
+var NAT = {
+  global:     { word: "global",     col: "var(--accent)",        ico: "star",     lg: "what is in force right now — pick it once, every tile follows" },
+  temporal:   { word: "temporal",   col: S.OPC.call,             ico: "journey",  lg: "reads left to right in request order" },
+  standpoint: { word: "standpoint", col: S.OPC.read,             ico: "layers",   lg: "what this part sees on the selected path; dims when nothing is selected" },
+  control:    { word: "control",    col: S.OPC.gate,             ico: "key",      lg: "the ACT half: press it to change what is in force" },
+  transient:  { word: "transient",  col: S.KINDCOL.external,     ico: "info",     lg: "lives only while you hover or until the next click" },
+  record:     { word: "record",     col: S.KINDCOL.schema,       ico: "doc",      lg: "everything the feed knows about what is in force, in rows" } };
+var KCOL = { success: S.OPC.read, refusal: S.OPC.gate, framework: S.KINDCOL.external,
+             validation: S.OPC.schema, uncaught: S.BADGE_COL.role.accessor };
+function kcol(k){ return KCOL[k] || "var(--muted)"; }
+var BUCKET = { committed: { w: "committed", col: "var(--ok)", cls: "" },
+               maybe_committed: { w: "maybe", col: "var(--ok)", cls: "dash" },
+               rolled_back: { w: "rolled back", col: "var(--red)", cls: "" },
+               uncommitted: { w: "uncommitted", col: "var(--muted)", cls: "hollow" } };
+var RETURN_COL = (FM.phases || []).length;   /* the 8th column: the return, after the 7 stages */
+
+/* ── the selection (global) ───────────────────────────────────────────────────────────── */
+var SEL = window.SEL = { kind: null, id: null };
+function pathById(id){ return (FM.paths || []).filter(function(p){ return p.id === id; })[0] || null; }
+function exitById(id){ return (FM.exits || []).filter(function(x){ return x.id === id; })[0] || null; }
+function caseRow(cid){
+  var out = null;
+  (FM.paths || []).forEach(function(p){ (p.tests || []).forEach(function(t){ if (t.case === cid && !out) out = t; }); });
+  if (!out) (FM.exits || []).forEach(function(x){ (x.tests || []).forEach(function(t){ if (t.case === cid && !out) out = t; }); });
+  return out; }
+/* one resolver — a path in force resolves its exit; an exit resolves its first path; a case
+   resolves the exit it proves and that exit's first path. Standpoints read THIS. */
+function ctx(){
+  var p = null, x = null, c = null;
+  if (SEL.kind === "path") { p = pathById(SEL.id); x = p ? exitById(p.exit.id) || p.exit : null; }
+  else if (SEL.kind === "exit") { x = exitById(SEL.id); p = x && (x.paths || []).length ? pathById(x.paths[0]) : null; }
+  else if (SEL.kind === "case") { c = SEL.id;
+    (FM.exits || []).forEach(function(e){ if (!x && (e.tests || []).some(function(t){ return t.case === c; })) x = e; });
+    if (x && (x.paths || []).length) p = pathById(x.paths[0]); }
+  return { path: p, exit: x, cse: c }; }
+
+/* ── the clock (ONE clock: play · pause · replay; reduced motion = the finished frame) ─── */
+var CLOCK = window.CLOCK = { state: "play",
+  play: function(){ CLOCK.state = "play"; document.body.classList.remove("clock-paused"); drawClockBar(); },
+  pause: function(){ CLOCK.state = "pause"; document.body.classList.add("clock-paused"); drawClockBar(); },
+  replay: function(){ CLOCK.state = "play"; document.body.classList.remove("clock-paused");
+    document.querySelectorAll(".tlbead").forEach(function(b){ b.style.animation = "none"; void b.offsetWidth; b.style.animation = ""; });
+    drawClockBar(); } };
+var LABICO = { play: '<path d="M7 4.5 19 12 7 19.5z"/>', pause: '<path d="M8 4v16M16 4v16"/>',
+  replay: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>',
+  dock: '<rect x="3" y="7" width="18" height="10" rx="2"/>', work: '<rect x="3" y="5" width="18" height="14" rx="2"/>',
+  wide: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M8 5v14M16 5v14" opacity=".5"/>' };
+function labico(n, sz, col){ return '<svg viewBox="0 0 24 24" width="' + (sz || 13) + '" height="' + (sz || 13) + '" fill="none" stroke="' + (col || "currentColor") + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + LABICO[n] + "</svg>"; }
+
+/* ══ THE TILE REGISTRY ═══════════════════════════════════════════════════════════════════
+   key · name · nature · station glyph · default size · reads (follows the selection, so it
+   flashes) · sets (changes it) · the plain line · the live "on this door" example computed from
+   LABEP · two or three "use it when" lines · the LABEP keys it reads · its renderer.          */
+var T = [];
+function tile(o){ T.push(o); return o; }
+function n(v){ return String(v); }
+
+/* ---- global -------------------------------------------------------------------------- */
+tile({ key: "selection", nature: "global", ico: "star", size: "M", reads: true, sets: false,
+  plain: "the one thing every other tile is looking at — a path, an exit or a case",
+  door: function(){ return FM.paths.length + " paths · " + FM.exits.length + " exits · " + F.tests.cases.length + " cases — one in force at a time"; },
+  use: ["you check what every other tile is following", "you clear the board and start again"],
+  keys: "LABEP.forms.paths · .exits · LABEP.tests.cases",
+  render: renderSelection });
+
+/* ---- temporal ------------------------------------------------------------------------ */
+tile({ key: "paths-timeline", nature: "temporal", ico: "journey", size: "L", reads: true, sets: true,
+  plain: "one lane per way a request can end, each running left to right until the stage where it leaves",
+  door: function(){ return FM.paths.length + " paths over " + FM.phases.length + " stages, the longest " + FM.counts.steps_max + " steps"; },
+  use: ["you compare how far each ending gets", "you spot endings that leave before the body is read", "you pick the path the rest of the board follows"],
+  keys: "LABEP.forms.paths[].phase · .kind · .status · forms.phases · forms.stages",
+  render: renderTimeline });
+tile({ key: "clock", nature: "temporal", ico: "nav", size: "S", reads: false, sets: false,
+  plain: "the one clock every moving thing on the page runs on",
+  door: function(){ return "one clock · the bead walks " + FM.paths.length + " lanes · now " + CLOCK.state; },
+  use: ["you replay the walk", "you freeze the picture to read it"],
+  keys: "window.CLOCK (no facts — the lab's own motion contract)",
+  render: renderClock });
+
+/* ---- standpoint ---------------------------------------------------------------------- */
+tile({ key: "security", nature: "standpoint", ico: "shield", size: "S", reads: true, sets: false,
+  plain: "every check the request had to get past, and which one stopped it",
+  door: function(){ var c = ctx(), g = c.path ? (c.path.chain || []).filter(function(s){ return s.kind === "gate"; }) : [];
+    return F.security.guards.length + " deps · " + F.security.asgi.length + " app lanes"
+      + (c.path ? "; on " + c.path.names.drawn + " " + g.filter(function(s){ return s.hit === false; }).length + " gates passed, "
+        + g.filter(function(s){ return s.hit === true; }).length + " fired" : "; " + sum(FM.paths.map(function(p){ return p.n.gates || 0; })) + " gate crossings over " + FM.paths.length + " paths"); },
+  use: ["you want to know why a request was refused before the handler ran", "you check which gate a 401 comes from", "you see whether the rate limiter is even active"],
+  keys: "LABEP.security.asgi · .guards · forms.paths[].chain (kind gate · hit) · .switches",
+  render: renderSecurity });
+tile({ key: "functions", nature: "standpoint", ico: "function", size: "S", reads: true, sets: false,
+  plain: "the handler and everything it calls on the path in force, in the order it happens",
+  door: function(){ var cs = 0, co = 0, ca = 0;
+    FM.paths.forEach(function(p){ (p.chain || []).forEach(function(s){ if (s.kind === "call") cs++; else if (s.kind === "collapsed") co++; else if (s.kind === "catch") ca++; }); });
+    return F.functions.handler.name + " · " + F.functions.handler.behind.fns + " behind; the chains name " + cs + " calls, " + co + " collapsed, " + ca + " catches"; },
+  use: ["you want the call the 409 was raised in", "you check what the handler delegates", "you see which call a catch translates"],
+  keys: "LABEP.functions.handler · .walk (role) · forms.paths[].chain (call · collapsed · catch)",
+  render: renderFunctions });
+tile({ key: "data", nature: "standpoint", ico: "table", size: "S", reads: true, sets: false,
+  plain: "the tables this ending touches, and whether what it wrote survived",
+  door: function(){ var fr = firstRun();
+    return fr ? fr.effects.tables.length + " tables on the first run, " + fr.effects.n.committed + " commits · " + F.data.tables.length + " tables on the door" : F.data.tables.length + " tables on the door"; },
+  use: ["you ask what a refusal still wrote", "you check which writes roll back", "you find the table a race sits on"],
+  keys: "LABEP.forms.paths[].effects.steps (table · op · bucket) · .n · LABEP.data.tables",
+  render: renderData });
+tile({ key: "schemas", nature: "standpoint", ico: "schema", size: "S", reads: true, sets: false,
+  plain: "the shape going in and the shape coming back on this ending",
+  door: function(){ var rq = F.data.schemas.request, rs = F.data.schemas.response;
+    return rq.name + " " + rq.cols.length + " fields in · " + rs.name + " " + rs.cols.length + " fields out"; },
+  use: ["you want the exact body a client gets on this exit", "you check what the request had to carry to get this far"],
+  keys: "LABEP.data.schemas.request/.response · forms.exits[].response (model · fields · media)",
+  render: renderSchemas });
+tile({ key: "tests", nature: "standpoint", ico: "test", size: "S", reads: true, sets: true,
+  plain: "the cases that assert this ending, and how sure the join is",
+  door: function(){ var joins = sum(FM.exits.map(function(x){ return (x.tests || []).length; }));
+    var cs = uniq(FM.exits.reduce(function(a, x){ return a.concat((x.tests || []).map(function(t){ return t.case; })); }, []));
+    return joins + " case joins over " + FM.exits.length + " exits · " + cs.length + " distinct cases · " + FM.exits.filter(function(x){ return !(x.tests || []).length; }).length + " exits untested"; },
+  use: ["you ask which case proves this ending", "you find exits no test reaches", "you check whether a join is exact or guessed"],
+  keys: "LABEP.forms.exits[].tests (case · conf · name · file · line · state)",
+  render: renderTests });
+tile({ key: "widening", nature: "standpoint", ico: "web", size: "S", reads: true, sets: false,
+  plain: "where this ending surfaces on the screen — hook, screen, route, app",
+  door: function(){ var names = [FM.frontend.hook.piece.split("#")[1]].concat(F.widening.chain.map(function(lv){ return lv[0].name; }));
+    return names.join(" → ") + "; " + FM.frontend.reason_sites.length + " reason site reads " + FM.frontend.reason_sites.map(function(r){ return r.value; }).join(" · "); },
+  use: ["you follow the ending into the screen that shows it", "you check whether the client can tell two refusals apart"],
+  keys: "LABEP.widening.chain · forms.frontend.hook · .reason_sites · .findings",
+  render: renderWidening });
+
+/* ---- control ------------------------------------------------------------------------- */
+tile({ key: "command-card", nature: "control", ico: "key", size: "L", reads: false, sets: true,
+  plain: "the fifteen verbs as one keyboard square — Walk opens the paths, the corner always cancels",
+  door: function(){ return VERBS().length + " verbs · Walk opens " + FM.paths.length + " paths · the corner is slot 15"; },
+  use: ["you drive by keyboard, SC2 style", "you jump straight to the refusals or the successes"],
+  keys: "every badge from LABEP.forms (paths · refusals · writes · preconditions · gates · findings · tests)",
+  render: renderCommandCard });
+tile({ key: "path-strip", nature: "control", ico: "nav", size: "M", reads: false, sets: true,
+  plain: "every path as one cell, in the order the request meets them",
+  door: function(){ return FM.paths.length + " cells in request order · " + Object.keys(FM.counts.by_kind).map(function(k){ return FM.counts.by_kind[k] + " " + k; }).join(" · "); },
+  use: ["you flip through the endings quickly", "you keep every ending visible while you read a part"],
+  keys: "LABEP.forms.paths[].names.drawn · .status · .kind",
+  render: renderStrip });
+tile({ key: "exit-ladder", nature: "control", ico: "layers", size: "S", reads: false, sets: true,
+  plain: "the stages as rungs, every ending hung on the rung it leaves from",
+  door: function(){ return FM.exits.length + " exits on " + FM.phases.length + " stages + the return"; },
+  use: ["you read the endings by stage instead of by path", "you see which stage answers most often"],
+  keys: "LABEP.forms.stages (phase → exit ids) · forms.exits[].status · .via",
+  render: renderLadder });
+tile({ key: "matrix", nature: "control", ico: "merge", size: "M", reads: false, sets: true,
+  plain: "path against part — a lit cell means that part has facts for that ending",
+  door: function(){ return FM.paths.length + " × " + PARTS.length + " = " + (FM.paths.length * PARTS.length) + " cells, " + matrixLit() + " lit"; },
+  use: ["you find which part is worth opening for this ending", "you spot the endings nothing can say anything about"],
+  keys: "forms.paths[].effects.tables · .exit.response · .chain · .tests · frontend.reason_sites",
+  render: renderMatrix });
+
+/* ---- transient ----------------------------------------------------------------------- */
+tile({ key: "hover-card", nature: "transient", ico: "info", size: "S", reads: false, sets: false,
+  plain: "the last hover card, kept where you can read it twice",
+  door: function(){ return LAST.card ? "holding the last card" : "nothing hovered yet"; },
+  use: ["you keep the last explanation in view", "you read a card the mouse moved away from"],
+  keys: "the page's own last hover card (no facts of its own)",
+  render: renderHoverDock });
+tile({ key: "caption", nature: "transient", ico: "doc", size: "S", reads: true, sets: false,
+  plain: "one line about the last thing you touched",
+  door: function(){ return LAST.cap || "nothing touched yet"; },
+  use: ["you want the short version without opening a card", "you check what the last click actually did"],
+  keys: "the page's own last caption (no facts of its own)",
+  render: renderCaption });
+
+/* ---- record -------------------------------------------------------------------------- */
+tile({ key: "path-record", nature: "record", ico: "doc", size: "L", reads: true, sets: true,
+  plain: "one path in full — its chain, what it wrote, what proves it",
+  door: function(){ return "up to " + FM.counts.steps_max + " chain steps · " + FM.counts.catches + " catches · " + FM.counts.branches + " branches across the paths"; },
+  use: ["you read everything at once", "you follow the chain step by step without switching tiles"],
+  keys: "LABEP.forms.paths[] (chain · effects · tests · switches · n)",
+  render: renderPathRecord });
+tile({ key: "exit-record", nature: "record", ico: "endpoint", size: "M", reads: true, sets: true,
+  plain: "one exit in full — what it answers with and which paths end there",
+  door: function(){ return FM.exits.length + " exits · " + FM.counts.produced + " produced · " + FM.counts.framework + " framework · " + FM.counts.returns + " returns"; },
+  use: ["you read everything at once", "you check the media type and headers a client gets"],
+  keys: "LABEP.forms.exits[] (status · via · pred · response · paths · tests)",
+  render: renderExitRecord });
+tile({ key: "case-record", nature: "record", ico: "test", size: "S", reads: true, sets: false,
+  plain: "one case in full — where it lives and which ending it proves",
+  door: function(){ return F.tests.cases.length + " cases name this door · " + FM.tests.act + " act calls joined"; },
+  use: ["you read everything at once", "you open the file the case is written in"],
+  keys: "LABEP.forms.exits[].tests · LABEP.tests.cases · forms.tests",
+  render: renderCaseRecord });
+
+var TKEY = {}; T.forEach(function(t){ TKEY[t.key] = t; });
+
+/* ══ the numbers the tiles share ═════════════════════════════════════════════════════════ */
+var PARTS = ["data", "schemas", "functions", "tests", "widening", "security"];
+var PARTICO = { data: "table", schemas: "schema", functions: "function", tests: "test", widening: "web", security: "shield" };
+function firstRun(){ return (FM.paths || []).filter(function(p){ return p.kind === "success"; })
+  .sort(function(a, b){ return b.effects.n.committed - a.effects.n.committed; })[0] || null; }
+function laneEndCol(p){ return p.kind === "success" ? RETURN_COL : (FM.phases || []).indexOf(p.phase); }
+function partHas(p, part){
+  if (part === "data") return (p.effects.tables || []).length > 0;
+  if (part === "schemas") return !!(p.exit && p.exit.response);
+  if (part === "functions") return (p.chain || []).some(function(s){ return s.kind === "call" || s.kind === "collapsed" || s.kind === "catch"; });
+  if (part === "tests") return (p.tests || []).length > 0;
+  if (part === "widening") return (FM.frontend.reason_sites || []).some(function(r){ return r.value === p.status; }) || !!FM.frontend.hook;
+  if (part === "security") return ((p.n.gates || 0) + (p.switches || []).length) > 0;
+  return false; }
+function matrixLit(){ var k = 0; (FM.paths || []).forEach(function(p){ PARTS.forEach(function(q){ if (partHas(p, q)) k++; }); }); return k; }
+function fnRole(fnId){
+  var want = String(fnId || "").replace("::", "#"), out = null;
+  (F.functions.walk || []).forEach(function(lv){ (lv || []).forEach(function(f){ if (!out && f.id === want) out = f; }); });
+  if (!out && F.functions.handler && F.functions.handler.id === want) out = F.functions.handler;
+  return out; }
+function roleCol(r){ return (S.BADGE_COL.role || {})[r] || "var(--muted)"; }
+function tableRec(t){ return (F.data.tables || []).filter(function(x){ return x.table === t; })[0] || null; }
+
+/* ══ the tile renderers — each draws REAL content from the feed ══════════════════════════ */
+var LAST = { card: "", cap: "" };
+function cap(s){ LAST.cap = s; drawDocks(); }
+function nothing(body, words, why){
+  body.classList.add("st-hollow");
+  body.append(el("div", { class: "nowt" }, el("b", {}, words), el("span", {}, why))); }
+function sec(title, count, ico, col){
+  return el("div", { class: "asech" },
+    el("span", { class: "ptig", html: S.icon(ico || "info", 12, col || "var(--muted)") }),
+    title, count == null ? null : el("span", { class: "n" }, n(count))); }
+function row(k, v){ return el("div", { class: "arow" }, el("span", { class: "ak" }, k), el("span", { class: "av" }, v)); }
+
+function renderSelection(body){
+  var c = ctx();
+  var head = el("div", { class: "asec" });
+  if (!SEL.kind) {
+    head.append(el("div", { class: "nowt" }, el("b", {}, "nothing in force"),
+      el("span", {}, "pick a lane on the timeline, a cell on the strip, a rung on the ladder or Walk on the card")));
+    body.append(head);
+  } else {
+    var col = c.path ? kcol(c.path.kind) : c.exit ? kcol(c.exit.kind) : "var(--accent)";
+    body.style.setProperty("--tc", col);
+    var title = SEL.kind === "path" ? c.path.names.drawn : SEL.kind === "exit" ? c.exit.status + " · " + c.exit.phase : SEL.id;
+    head.append(el("div", { class: "aline", style: "color:" + col },
+      el("span", { class: "ptig", html: S.icon(SEL.kind === "case" ? "test" : "endpoint", 13, col) }),
+      el("b", {}, title), el("span", { class: "achip", style: "--tc:" + col }, SEL.kind)));
+    if (c.path) { head.append(row("status", c.path.status + " · " + c.path.kind)); head.append(row("leaves at", c.path.phase)); }
+    if (c.exit) head.append(row("exit", (c.exit.detail || c.exit.id) + " · " + c.exit.row));
+    if (c.cse) head.append(row("case", c.cse));
+    head.append(row("followed by", T.filter(function(t){ return t.reads; }).length + " tiles that read the selection"));
+    body.append(head);
+  }
+  var clearBtn = el("button", { class: "ib" + (SEL.kind ? "" : " st-blank"), style: "margin-top:6px" }, "Clear");
+  if (SEL.kind) clearBtn.addEventListener("click", function(){ ARR.select(null, null); });
+  window.hoverBind(clearBtn, function(){ return hcard({ title: "clear", value: "Esc", icon: "skip", color: "var(--accent)",
+    groups: [["what happens here", '<div class="cpplain">puts everything back: no path in force, every standpoint hollow again</div>'],
+             ["state", SEL.kind ? "clearing " + SEL.kind + " " + SEL.id : "BLANK — the wrong question: there is nothing to clear"]] }); });
+  body.append(clearBtn); }
+
+function renderTimeline(body){
+  var c = ctx(), phases = FM.phases || [];
+  var wrap = el("div", { class: "tl" });
+  var head = el("div", { class: "tlhead" }, el("span", { class: "tlsp" }, "path"));
+  phases.concat(["return"]).forEach(function(ph, i){
+    var isRet = i === RETURN_COL;
+    var stage = (FM.stages || []).filter(function(s){ return s.phase === ph; })[0];
+    var h = el("span", { class: "tlc" + (isRet ? " ret" : ""), "data-col": n(i) }, ph);
+    window.hoverBind(h, function(){ return hcard({ title: ph, value: isRet ? "the return" : "stage " + (i + 1) + " of " + phases.length,
+      icon: isRet ? "target" : "angle", color: isRet ? S.OPC.read : S.OPC.gate,
+      groups: [["what happens here", '<div class="cpplain">' + (isRet ? "the work finished and the answer is written back" : "the stage of the request where this column's endings leave") + "</div>"],
+               ["on this door", isRet ? FM.paths.filter(function(p){ return p.kind === "success"; }).length + " success paths end here · " + (FM.declared.response_model || {}).name
+                 : (stage ? stage.exits.length + " exit(s) leave here" : "no exit leaves here") + " · "
+                   + FM.paths.filter(function(p){ return p.phase === ph; }).length + " path(s) end here"]] }); });
+    head.append(h); });
+  wrap.append(head);
+  (FM.paths || []).forEach(function(p){
+    var end = laneEndCol(p), col = kcol(p.kind);
+    var lane = el("div", { class: "tlane" + (c.path && c.path.id === p.id ? " on" : ""), "data-path": p.id, "data-col": n(end), style: "--tc:" + col });
+    lane.append(el("span", { class: "tlnm" }, p.names.drawn));
+    /* the bar runs through the column where the path leaves; the MARKER sits at that column's right
+       edge, over the bar's tail — never one column further on, which would misname the stage. */
+    var bar = el("div", { class: "tlbar", style: "grid-column: 2 / " + (end + 3) });
+    bar.append(el("i", { class: "tlbead" }));
+    lane.append(bar);
+    var mk = el("span", { class: "tlmk", style: "grid-column: " + (end + 2) + " / " + (end + 3) }, n(p.status));
+    lane.append(mk);
+    lane.addEventListener("click", function(){ ARR.select("path", p.id); cap(p.names.drawn + " — " + p.status + " " + p.kind + ", leaves at " + p.phase); });
+    window.hoverBind(lane, function(){ return hcard({ title: p.names.drawn, value: p.status + " · " + p.kind, icon: "journey", color: col,
+      groups: [["what happens here", '<div class="cpplain">' + esc(p.names.detail || "the request ends here with no written reason") + "</div>"],
+               ["on this door", cprow(["leaves at", p.phase + " — column " + (end + 1) + " of " + (RETURN_COL + 1)])
+                 + cprow(["steps", p.n.steps + " · " + p.n.gates + " gates · " + p.n.calls + " calls · " + p.n.catches + " catches"])
+                 + cprow(["writes", p.effects.n.committed + " committed · " + p.effects.n.rolled_back + " rolled back · " + p.effects.n.uncommitted + " uncommitted"])
+                 + cprow(["tests", (p.tests || []).length ? p.tests.map(function(t){ return t.case; }).join(" · ") : "none — measured zero"])]],
+      clarify: "click the lane to put this path in force" }); });
+    wrap.append(lane); });
+  body.append(wrap); }
+
+function renderClock(body){
+  var bar = el("div", { class: "tbgrp" });
+  [["play", "play"], ["pause", "pause"], ["replay", "replay"]].forEach(function(o){
+    var b = el("button", { class: "ib" + (CLOCK.state === o[0] ? " on" : ""), html: labico(o[1], 13) });
+    b.addEventListener("click", function(){ CLOCK[o[0]](); drawPanels(); cap("the clock is " + CLOCK.state); });
+    window.hoverBind(b, function(){ return hcard({ title: o[0], icon: "nav", color: "var(--accent)",
+      groups: [["what happens here", '<div class="cpplain">' + ({ play: "everything that moves runs on this one clock",
+        pause: "every animation freezes exactly where it is", replay: "every bead goes back to the start and walks again" })[o[0]] + "</div>"],
+        ["on this door", "the bead walks " + FM.paths.length + " lanes · now " + CLOCK.state]] }); });
+    bar.append(b); });
+  body.append(bar);
+  body.append(el("div", { class: "acap", style: "margin-top:6px" }, "one clock — the timeline's beads, and the flash a selection makes, run on it"));
+  body.append(row("state", CLOCK.state));
+  body.append(row("reduced motion", "the finished frame, no flash")); }
+
+function renderSecurity(body){
+  var c = ctx();
+  if (!c.path) { nothing(body, "nothing in force", "a standpoint shows what its part sees on the path in force"); return; }
+  var gates = (c.path.chain || []).filter(function(s){ return s.kind === "gate"; });
+  var fired = gates.filter(function(s){ return s.hit === true; }), passed = gates.filter(function(s){ return s.hit === false; });
+  body.append(sec("app band", F.security.asgi.length, "layers", S.OPC.gate));
+  F.security.asgi.slice().sort(function(a, b){ return a.order - b.order; }).forEach(function(m){
+    var mine = gates.filter(function(s){ return String(s.sub || "").indexOf(m.name) >= 0; });
+    var hit = mine.some(function(s){ return s.hit === true; });
+    var ln = el("div", { class: "aline" },
+      el("span", { class: "ptig", html: S.icon("layers", 12, S.OPC.gate) }), m.name,
+      el("span", { class: "agrow achip " + (mine.length ? "" : "mut hollow"), style: "--tc:" + (hit ? "var(--red)" : "var(--ok)") },
+        mine.length ? (hit ? "fired" : "passed") : "no gate"));
+    window.hoverBind(ln, function(){ return hcard({ title: m.name, value: "order " + m.order, icon: "layers", color: S.OPC.gate,
+      groups: [["what happens here", '<div class="cpplain">an app lane every request crosses before the door is reached</div>'],
+               ["on this door", cprow(["scope", m.scope]) + cprow(["gates", m.gates + " endpoints"]) + cprow(["at", m.file + ":" + m.line])
+                 + cprow(["on this path", mine.length ? mine.length + " gate(s), " + (hit ? "one FIRED" : "all passed") : "no gate of its own"])]] }); });
+    body.append(ln); });
+  body.append(sec("the door's deps", F.security.guards.length, "key", S.OPC.gate));
+  F.security.guards.forEach(function(g){
+    var file = String(g.fn || "").split("::")[0];
+    var mine = gates.filter(function(s){ return file && String(s.at || "").indexOf(file) === 0; });
+    var hit = mine.some(function(s){ return s.hit === true; });
+    var ln = el("div", { class: "aline" },
+      el("span", { class: "ptig", html: S.icon("key", 12, g.gate ? S.OPC.gate : "var(--muted)") }), g.name,
+      el("span", { class: "amut" }, g.via),
+      el("span", { class: "agrow achip " + (mine.length ? "" : "mut hollow"), style: "--tc:" + (hit ? "var(--red)" : "var(--ok)") },
+        mine.length ? (hit ? "fired" : "passed") : g.gate ? "no gate here" : "cannot refuse"));
+    window.hoverBind(ln, function(){ return hcard({ title: g.name, value: g.gate ? "gate" : "dependency", icon: "key", color: S.OPC.gate,
+      groups: [["what happens here", '<div class="cpplain">' + (g.gate ? "a dependency that can refuse the request outright" : "a dependency the handler needs, which never refuses") + "</div>"],
+               ["on this door", cprow(["via", g.via]) + cprow(["feed-wide", g.feedwide + " endpoints use it"])
+                 + cprow(["on this path", mine.length ? mine.map(function(s){ return s.status + " " + (s.sub || s.label); }).join(" · ") : "no gate of its own"])]] }); });
+    body.append(ln); });
+  body.append(sec("gates crossed", gates.length, "shield", fired.length ? "var(--red)" : "var(--ok)"));
+  body.append(el("div", { class: "acap" }, passed.length + " passed · " + fired.length + " fired"));
+  gates.forEach(function(s){
+    var col = s.hit ? "var(--red)" : "var(--ok)";
+    var ln = el("div", { class: "aline", style: "--tc:" + col },
+      el("span", { class: "achip", style: "--tc:" + col }, n(s.status)), s.sub || s.label,
+      el("span", { class: "agrow amut" }, s.hit ? "fired" : "passed"));
+    window.hoverBind(ln, function(){ return hcard({ title: s.label, value: s.hit ? "FIRED" : "passed", icon: "shield", color: col,
+      groups: [["what happens here", '<div class="cpplain">' + (s.hit ? "this check is the one that stopped the request" : "the request satisfied this check and went on") + "</div>"],
+               ["on this door", cprow(["phase", s.phase || "—"]) + cprow(["at", s.at || "the framework, no line"]) + (s.cond ? cprow(["condition", s.cond, "stack"]) : "")]] }); });
+    body.append(ln); });
+  var sw = (c.path.switches || []);
+  if (sw.length) { body.append(sec("switches crossed", sw.length, "merge", S.OPC.call));
+    sw.forEach(function(w){ body.append(el("div", { class: "aline" },
+      el("span", { class: "achip mut" }, w.kind), Object.keys(w.settings || {}).join(", ") || w.via)); }); } }
+
+function renderFunctions(body){
+  var c = ctx();
+  if (!c.path) { nothing(body, "nothing in force", "a standpoint shows what its part sees on the path in force"); return; }
+  var h = F.functions.handler;
+  body.append(sec("handler", h.lines + " lines", "function", roleCol(h.role)));
+  body.append(el("div", { class: "aline", style: "--tc:" + roleCol(h.role) },
+    el("span", { class: "ptig", html: S.icon("function", 12, roleCol(h.role)) }), h.name,
+    el("span", { class: "agrow amut" }, h.role + " · " + h.behind.fns + " behind")));
+  var steps = (c.path.chain || []).filter(function(s){ return s.kind === "call" || s.kind === "collapsed" || s.kind === "catch"; });
+  body.append(sec("on this path", steps.length, "journey", S.OPC.call));
+  if (!steps.length) { body.append(el("div", { class: "nowt st-hollow" }, el("b", {}, "no call of its own"),
+    el("span", {}, "this ending leaves before the handler delegates anything"))); return; }
+  steps.forEach(function(s){
+    var rec = fnRole(s.fn), col = roleCol(rec ? rec.role : "pure");
+    var cls = "aline" + (s.kind === "collapsed" ? " st-dashed" : "");
+    var ln = el("div", { class: cls, style: "--tc:" + col + (s.kind === "collapsed" ? ";border:1px solid var(--line)" : "") },
+      el("span", { class: "ptig", html: S.icon(s.kind === "catch" ? "alert" : "function", 12, s.kind === "catch" ? "var(--red)" : col) }),
+      s.label, el("span", { class: "agrow amut" }, s.kind === "catch" ? s.catch_kind : s.kind === "collapsed" ? s.reason : (rec ? rec.role : "call")));
+    window.hoverBind(ln, function(){ return hcard({ title: s.label, value: s.kind, icon: s.kind === "catch" ? "alert" : "function", color: s.kind === "catch" ? "var(--red)" : col,
+      groups: [["what happens here", '<div class="cpplain">' + ({ call: "the handler hands the work to this function",
+        collapsed: "the call was not walked — it has one return, so it decides nothing",
+        catch: "an exception is caught here and turned into an answer" })[s.kind] + "</div>"],
+        ["on this door", cprow(["fn", s.fn || "—", "stack"]) + cprow(["at", s.at || "—"])
+          + (rec ? cprow(["role", rec.role + " · " + rec.lines + " lines" + (rec.commits ? " · commits" : "")]) : cprow(["role", "unmeasured — not on the walk"]))
+          + (s.kind === "catch" ? cprow(["answers", (s.answers || []).join(" · ")]) : "")
+          + (s.kind === "collapsed" ? cprow(["reason", s.reason]) : "")]],
+      clarify: s.kind === "collapsed" ? "DASHED — inferred: the call was collapsed, not walked" : null }); });
+    body.append(ln); }); }
+
+function renderData(body){
+  var c = ctx();
+  if (!c.path) { nothing(body, "nothing in force", "a standpoint shows what its part sees on the path in force"); return; }
+  var tables = c.path.effects.tables || [], steps = c.path.effects.steps || [];
+  if (!tables.length) { nothing(body, "no table touched", "measured zero — this ending leaves before any data is read or written"); return; }
+  body.append(sec("tables", tables.length, "table", S.OPC.write));
+  tables.forEach(function(tb){
+    var mine = steps.filter(function(s){ return s.table === tb; });
+    var rec = tableRec(tb), ecol = rec ? rec.entity_color : "var(--muted)";
+    var buckets = {}; mine.forEach(function(s){ if (s.bucket) buckets[s.bucket] = (buckets[s.bucket] || 0) + 1; });
+    var ops = uniq(mine.map(function(s){ return s.op; }));
+    var ln = el("div", { class: "aline", style: "--tc:" + ecol },
+      el("span", { class: "ptig", html: S.icon("table", 12, ecol) }), tb);
+    var chips = el("span", { class: "agrow" });
+    var any = false;
+    Object.keys(BUCKET).forEach(function(b){ if (!buckets[b]) return; any = true;
+      chips.append(el("span", { class: "achip " + BUCKET[b].cls, style: "--tc:" + BUCKET[b].col }, BUCKET[b].w + " " + buckets[b])); });
+    if (!any) chips.append(el("span", { class: "achip mut hollow" }, ops.join(" ") || "read"));
+    ln.append(chips);
+    window.hoverBind(ln, function(){ return hcard({ title: tb, value: rec ? rec.model : "table", icon: "table", color: ecol,
+      groups: [["what happens here", '<div class="cpplain">what this ending does to one table, and whether the change survived</div>'],
+               ["on this door", cprow(["ops", ops.join(" · ")]) + cprow(["steps", mine.length + " of " + steps.length + " on this path"])
+                 + Object.keys(buckets).map(function(b){ return cprow([BUCKET[b].w, n(buckets[b])]); }).join("")
+                 + (rec ? cprow(["entity", rec.entity + " · " + rec.rw]) + cprow(["columns", rec.cols.length + " · " + rec.fks.length + " fk"]) : "")
+                 + (mine.some(function(s){ return s.race; }) ? cprow(["race", mine.filter(function(s){ return s.race; }).map(function(s){ return s.race.state; }).join(" · ")]) : "")]] }); });
+    body.append(ln); });
+  var nn = c.path.effects.n;
+  body.append(sec("buckets", null, "info", S.OPC.write));
+  var lg = el("div", {});
+  Object.keys(BUCKET).forEach(function(b){ lg.append(el("span", { class: "achip " + BUCKET[b].cls, style: "--tc:" + BUCKET[b].col }, BUCKET[b].w + " " + nn[b])); });
+  body.append(lg);
+  body.append(el("div", { class: "acap" }, "commit = the database transaction, never git · dependency " + c.path.effects.dependency)); }
+
+function renderSchemas(body){
+  var c = ctx();
+  if (!c.path && !c.exit) { nothing(body, "nothing in force", "a standpoint shows what its part sees on the path in force"); return; }
+  var rq = F.data.schemas.request;
+  var passed = c.path ? (c.path.chain || []).some(function(s){ return s.kind === "gate" && s.exit_kind === "validation" && s.hit === false; }) : false;
+  body.append(sec("request", rq.cols.length, "schema", S.KINDCOL.schema));
+  var rqb = el("div", { class: "asec" + (passed ? "" : " st-hollow"), style: "--tc:" + S.KINDCOL.schema + ";border:1px solid var(--line);border-radius:8px;padding:5px 6px" });
+  rqb.append(el("div", { class: "aline", style: "--tc:" + S.KINDCOL.schema },
+    el("span", { class: "ptig", html: S.icon("schema", 12, S.KINDCOL.schema) }), rq.name,
+    el("span", { class: "agrow amut" }, passed ? "validated" : "never validated on this path")));
+  if (passed) rq.cols.forEach(function(cl){ rqb.append(el("div", { class: "arow" },
+    el("span", { class: "ak" }, cl[0]), el("span", { class: "av amono" }, cl[1]))); });
+  else rqb.append(el("div", { class: "acap" }, "measured zero — this ending leaves before the body is validated"));
+  window.hoverBind(rqb, function(){ return hcard({ title: rq.name, value: rq.cols.length + " fields", icon: "schema", color: S.KINDCOL.schema,
+    groups: [["what happens here", '<div class="cpplain">the shape a client has to send for the work to start</div>'],
+             ["on this door", cprow(["file", rq.file + ":" + rq.flines]) + cprow(["nested", (rq.nested || []).length + " shapes"]) + cprow(["doc", rq.doc, "stack"])]] }); });
+  body.append(rqb);
+  var x = c.exit;
+  body.append(sec("response", x && x.response && x.response.fields ? x.response.fields.length : null, "endpoint", kcol(x ? x.kind : "success")));
+  if (!x || !x.response) { body.append(el("div", { class: "nowt st-hollow" }, el("b", {}, "no body recorded"), el("span", {}, "measured zero"))); return; }
+  var r = x.response, rcol = kcol(x.kind);
+  var rb = el("div", { class: "asec", style: "--tc:" + rcol + ";border:1px solid var(--line);border-radius:8px;padding:5px 6px" });
+  rb.append(el("div", { class: "aline", style: "--tc:" + rcol },
+    el("span", { class: "ptig", html: S.icon("endpoint", 12, rcol) }), r.model || (r.status + " body"),
+    el("span", { class: "agrow amut" }, r.media)));
+  (r.fields || Object.keys(r.body || {})).forEach(function(f){ rb.append(el("div", { class: "arow" },
+    el("span", { class: "ak" }, f), el("span", { class: "av amono" }, r.model ? (((F.data.schemas.response.cols || []).filter(function(cl){ return cl[0] === f; })[0] || [, "—"])[1]) : String((r.body || {})[f])))); });
+  if (r.headers) Object.keys(r.headers).forEach(function(k){ rb.append(el("div", { class: "arow" },
+    el("span", { class: "ak" }, "header"), el("span", { class: "av amono" }, k))); });
+  window.hoverBind(rb, function(){ return hcard({ title: r.model || (x.status + " body"), value: r.media, icon: "endpoint", color: rcol,
+    groups: [["what happens here", '<div class="cpplain">the exact body this ending hands back</div>'],
+             ["on this door", cprow(["status", n(r.status)]) + cprow(["source", r.source, "stack"])
+               + cprow(["fields", (r.fields || Object.keys(r.body || {})).join(" · "), "stack"])]] }); });
+  body.append(rb); }
+
+function renderTests(body){
+  var c = ctx();
+  if (!c.exit) { nothing(body, "nothing in force", "a standpoint shows what its part sees on the path in force"); return; }
+  var ts = (c.exit.tests || []).length ? c.exit.tests : (c.path ? c.path.tests || [] : []);
+  body.append(sec("cases proving " + c.exit.status, ts.length, "test", ts.length ? S.OPC.read : "var(--muted)"));
+  if (!ts.length) { body.append(el("div", { class: "nowt st-hollow" }, el("b", {}, "no case asserts this ending"),
+    el("span", {}, "measured zero — " + (c.exit.row === "framework" ? "FastAPI answers it, no case names it" : "nothing proves a client ever sees it")))); return; }
+  ts.forEach(function(t){
+    var exact = t.conf === "status+detail", col = t.state === "pass" ? "var(--ok)" : "var(--red)";
+    var ln = el("div", { class: "aline pick" + (SEL.kind === "case" && SEL.id === t.case ? " on" : "") + (exact ? "" : " st-dashed"),
+      style: "--tc:" + col + (exact ? "" : ";border:1px solid var(--line)") },
+      el("span", { class: "achip", style: "--tc:" + col }, t.case), el("span", { class: "amut" }, t.conf));
+    ln.addEventListener("click", function(){ ARR.select("case", t.case); cap(t.case + " — " + t.conf + " · " + t.name); });
+    window.hoverBind(ln, function(){ return hcard({ title: t.case, value: t.state, icon: "test", color: col,
+      groups: [["what happens here", '<div class="cpplain">a case that asserts this ending, and how sure the join to it is</div>'],
+               ["on this door", cprow(["name", t.name, "stack"]) + cprow(["at", t.file + ":" + t.line, "stack"])
+                 + cprow(["corpus", t.corpus]) + cprow(["join", t.conf])]],
+      clarify: exact ? null : "DASHED — inferred: the join is " + t.conf + ", not status+detail" }); });
+    body.append(ln); }); }
+
+function renderWidening(body){
+  var c = ctx();
+  if (!c.path && !c.exit) { nothing(body, "nothing in force", "a standpoint shows what its part sees on the path in force"); return; }
+  var hk = FM.frontend.hook, st = c.path ? c.path.status : c.exit.status;
+  body.append(sec("the chain", F.widening.chain.length + 1, "web", S.KINDCOL.hook));
+  var hookName = hk.piece.split("#")[1];
+  var hl = el("div", { class: "aline", style: "--tc:" + S.KINDCOL.hook },
+    el("span", { class: "ptig", html: S.icon("web", 12, S.KINDCOL.hook) }), hookName,
+    el("span", { class: "agrow amut" }, (hk.calls[0] || {}).kind || "hook"));
+  window.hoverBind(hl, function(){ return hcard({ title: hookName, value: "hook", icon: "web", color: S.KINDCOL.hook,
+    groups: [["what happens here", '<div class="cpplain">the piece of the frontend that actually calls this door</div>'],
+             ["on this door", cprow(["at", hk.at, "stack"])
+               + cprow(["fetch", (((hk.calls[0] || {}).fetch || [])[0] || {}).method + " " + (((hk.calls[0] || {}).fetch || [])[0] || {}).path, "stack"])
+               + cprow(["invalidates", ((hk.calls[0] || {}).invalidates || []).map(function(i){ return i.key.join("."); }).join(" · ")])
+               + cprow(["seeds", ((hk.calls[0] || {}).seeds || []).map(function(i){ return i.key.join("."); }).join(" · ") || "none"])]] }); });
+  body.append(hl);
+  (F.widening.chain || []).forEach(function(lv){ (lv || []).forEach(function(pc){
+    var col = S.KINDCOL[pc.kind] || "var(--muted)";
+    var ln = el("div", { class: "aline", style: "--tc:" + col },
+      el("span", { class: "ptig", html: S.icon(pc.kind === "route" ? "nav" : "component", 12, col) }), pc.name,
+      el("span", { class: "agrow amut" }, pc.rel + " " + pc.to));
+    window.hoverBind(ln, function(){ return hcard({ title: pc.name, value: pc.kind, icon: "web", color: col,
+      groups: [["what happens here", '<div class="cpplain">one step further out — the piece that holds the one before it</div>'],
+               ["on this door", cprow(["home", pc.home]) + cprow(["relation", pc.rel + " → " + pc.to])
+                 + (pc.feClass ? cprow(["class", pc.feClass]) : "") + (pc.fed2w != null ? cprow(["to a write", pc.fed2w + " hop(s)"]) : "")]] }); });
+    body.append(ln); }); });
+  var sites = (FM.frontend.reason_sites || []).filter(function(r){ return r.value === st; });
+  body.append(sec("reason site for " + st, sites.length, "alert", sites.length ? "var(--red)" : "var(--muted)"));
+  if (!sites.length) { body.append(el("div", { class: "nowt st-hollow" }, el("b", {}, "the client never reads " + st),
+    el("span", {}, "measured zero — no branch on the screen tests for this status"))); }
+  else sites.forEach(function(r){
+    var find = (FM.frontend.findings || []).filter(function(f){ return f.site === r.id; })[0];
+    var ln = el("div", { class: "aline", style: "--tc:var(--red)" },
+      el("span", { class: "achip", style: "--tc:var(--red)" }, r.op + " " + r.value), r.at.split("/").pop());
+    if (find) ln.append(el("span", { class: "agrow achip", style: "--tc:var(--red)" }, find.id));
+    window.hoverBind(ln, function(){ return hcard({ title: "reads " + r.value, value: r.branch === "none" ? "no branch" : r.branch, icon: "alert", color: "var(--red)",
+      groups: [["what happens here", '<div class="cpplain">the place on the screen that decides what to say when the door answers with this code</div>'],
+               ["on this door", cprow(["at", r.at, "stack"]) + cprow(["piece", r.piece.split("#")[1] || r.piece, "stack"])
+                 + (find ? cprow(["finding", find.id + " — " + (find.details || []).join(" · "), "stack"]) : "")]] }); });
+    body.append(ln); }); }
+
+/* ---- the fifteen verbs: every badge computed, none typed ------------------------------ */
+function VERBS(){
+  var c = ctx(), paths = FM.paths || [], exits = FM.exits || [];
+  var refus = paths.filter(function(p){ return p.kind === "refusal"; }), succ = paths.filter(function(p){ return p.kind === "success"; });
+  var untested = exits.filter(function(e){ return !(e.tests || []).length; });
+  var writes = c.path ? (c.path.effects.writes || []) : uniq(paths.reduce(function(a, p){ return a.concat(p.effects.writes || []); }, []));
+  var gateN = c.path ? (c.path.n.gates || 0) : uniq(paths.reduce(function(a, p){ return a.concat((p.chain || []).filter(function(s){ return s.kind === "gate"; }).map(function(s){ return s.ref; })); }, [])).length;
+  var testN = c.exit ? (c.exit.tests || []).length : sum(exits.map(function(e){ return (e.tests || []).length; }));
+  var K1 = (FM.slots || {}).K1 || {};
+  function go(word){ return function(){ cap(word); }; }
+  return [
+    { cmd: "walk", hot: "Q", ico: "journey", verb: "Walk a path", badge: paths.length, col: "var(--accent)", state: "lit",
+      plain: "one cell per way a request through this door can end", act: function(){ CARD.mode = CARD.mode === "path" ? "cmd" : "path"; CARD.only = null; drawPanels(); } },
+    { cmd: "prev", hot: "W", ico: "up", verb: "Previous exit", state: "lit", plain: "step back one ending, the way the request meets them",
+      act: function(){ stepExit(-1); } },
+    { cmd: "next", hot: "E", ico: "down", verb: "Next exit", badge: exits.length, state: "lit", plain: "step forward one ending, the way the request meets them",
+      act: function(){ stepExit(1); } },
+    { cmd: "refusals", hot: "R", ico: "shield", verb: "Show refusals", badge: refus.length, col: kcol("refusal"), state: "lit",
+      plain: "every ending someone wrote on purpose to stop the request",
+      act: function(){ CARD.mode = "path"; CARD.only = CARD.only === "refusal" ? null : "refusal"; drawPanels(); } },
+    { cmd: "success", hot: "T", ico: "target", verb: "Show success", badge: succ.length, col: kcol("success"), state: "lit",
+      plain: "the ways the work finished — all three generated, none drawn by hand",
+      act: function(){ CARD.mode = "path"; CARD.only = CARD.only === "success" ? null : "success"; drawPanels(); } },
+    { cmd: "writes", hot: "A", ico: "table", verb: "Show writes", badge: writes.length, col: S.OPC.write, state: writes.length ? "lit" : "hollow",
+      plain: "the tables this ending changes, and whether the change survived", act: go(writes.length + " tables written" + (c.path ? " on " + c.path.names.drawn : " across every path")) },
+    { cmd: "pre", hot: "S", ico: "angle", verb: "Show preconditions", badge: (FM.preconditions || []).length, col: S.OPC.gate, state: "lit",
+      plain: "the tests the handler runs before it will do the work", act: go((FM.preconditions || []).length + " preconditions before the work runs") },
+    { cmd: "gates", hot: "D", ico: "key", verb: "Show gates", badge: gateN, col: S.OPC.gate, state: gateN ? "lit" : "hollow",
+      plain: "every check the request has to get past before the work runs", act: go(gateN + " gates" + (c.path ? " on this path" : " in the feed")) },
+    { cmd: "findings", hot: "F", ico: "alert", verb: "Show findings", badge: (FM.findings || []).length, col: S.BADGE_COL.role.accessor, state: "lit",
+      plain: "what the forms pass found wrong with the way this door answers",
+      act: go((FM.findings || []).map(function(f){ return f.id; }).join(" · ")) },
+    { cmd: "declared", hot: "G", ico: "info", verb: "Declared vs produced", badge: (K1.produced || []).length, state: "lit",
+      plain: "what the door promises against what it actually answers",
+      act: go("declares " + ((FM.declared.success || {}).status) + " · produces " + (K1.produced || []).join(" · ")) },
+    { cmd: "tests", hot: "Z", ico: "test", verb: "Tests for this exit", badge: testN, col: S.OPC.read, state: testN ? "lit" : "hollow",
+      plain: "the cases that prove this ending — and how sure the join is",
+      act: go(testN + " cases prove " + (c.exit ? c.exit.status : "the exits")) },
+    { cmd: "untested", hot: "X", ico: "swords", verb: "Untested exits", badge: untested.length, col: S.BADGE_COL.role.accessor, state: "lit",
+      plain: "endings no case has ever asserted", act: go(untested.length + " exits no case asserts") },
+    { cmd: "handler", hot: "C", ico: "file", verb: "Open the handler", state: "lit",
+      plain: "the file and line this door is written at", act: go(I.file + ":" + I.flines) },
+    { cmd: "up", hot: "V", ico: "layers", verb: "Up to entity", state: "hatched",
+      plain: "one step out of this door — the levels above it are named here",
+      act: go((I.above || []).map(function(a){ return a.label; }).join(" ↑ ") + " — hatched, the lab has no graph") },
+    { cmd: "clear", hot: "B", ico: "skip", verb: "Clear", col: "var(--accent)", state: "lit",
+      plain: "put everything back — no path in force, every part unmarked", act: function(){ ARR.select(null, null); } }]; }
+var CARD = { mode: "cmd", only: null };
+function stepExit(d){
+  var c = ctx(), ids = (FM.exits || []).map(function(x){ return x.id; });
+  var i = c.exit ? ids.indexOf(c.exit.id) : (d > 0 ? -1 : 0);
+  var j = (i + d + ids.length) % ids.length;
+  ARR.select("exit", ids[j]);
+  var x = exitById(ids[j]); cap("exit " + x.status + " · " + x.phase + (x.detail ? " · " + x.detail : "")); }
+
+function cell(o){
+  var c = el("button", { class: "cmdcell st-" + (o.state === "lit" ? "lit" : o.state) + (o.on ? " on" : ""),
+    style: "--tc:" + (o.col || "var(--muted)"), "data-cmd": o.cmd });
+  c.append(el("i", { class: "chot" }, o.hot));
+  if (o.badge != null) c.append(el("span", { class: "cbadge" }, n(o.badge)));
+  c.insertAdjacentHTML("beforeend", '<span class="cgh">' + S.icon(o.ico, 34, "currentColor") + "</span>");
+  c.insertAdjacentHTML("beforeend", '<span class="cg">' + S.icon(o.ico, 17, "currentColor") + "</span>");
+  if (o.label) c.append(el("span", { class: "clbl" }, o.label));
+  return c; }
+function renderCommandCard(body){
+  var c = ctx();
+  var grid = el("div", { class: "cmdgrid" });
+  if (CARD.mode === "path") {
+    var list = (FM.paths || []).filter(function(p){ return !CARD.only || p.kind === CARD.only; });
+    body.append(el("div", { class: "asech" }, (CARD.only ? CARD.only.toUpperCase() + " · " : "") + list.length + " PATHS"));
+    list.forEach(function(p){
+      var cc = cell({ cmd: "p:" + p.id, hot: n(p.status), ico: "journey", col: kcol(p.kind), state: "lit",
+        label: p.names.drawn, on: !!(c.path && c.path.id === p.id) });
+      cc.addEventListener("click", function(){ ARR.select("path", p.id); cap(p.names.drawn + " — " + p.status + " " + p.kind); });
+      window.hoverBind(cc, function(){ return hcard({ title: p.names.drawn, value: p.status + " · " + p.kind, icon: "journey", color: kcol(p.kind),
+        groups: [["what happens here", '<div class="cpplain">' + esc(p.names.detail || "the request ends here with no written reason") + "</div>"],
+                 ["on this door", cprow(["leaves at", p.phase]) + cprow(["steps", n(p.n.steps)]) + cprow(["tests", n((p.tests || []).length)])]] }); });
+      grid.append(cc); });
+    var back = cell({ cmd: "back", hot: "B", ico: "up", col: "var(--accent)", state: "lit" });
+    back.addEventListener("click", function(){ CARD.mode = "cmd"; CARD.only = null; drawPanels(); cap("back to the verbs — the path stays in force"); });
+    window.hoverBind(back, function(){ return hcard({ title: "back", value: "B", icon: "up", color: "var(--accent)",
+      groups: [["what happens here", '<div class="cpplain">one level up — the verb card again, nothing cleared</div>'],
+               ["place", "bottom-right — the corner keeps its place in every mode"]] }); });
+    grid.append(back);
+  } else {
+    VERBS().forEach(function(v){
+      var cc = cell({ cmd: v.cmd, hot: v.hot, ico: v.ico, col: v.col || "var(--muted)", badge: v.badge, state: v.state,
+        on: v.cmd === "walk" && CARD.mode === "path" });
+      if (v.state !== "hatched") cc.addEventListener("click", v.act);
+      window.hoverBind(cc, function(){ return hcard({ title: v.verb, value: v.badge != null ? n(v.badge) : v.hot, icon: v.ico, color: v.col || "var(--accent)",
+        groups: [["what happens here", '<div class="cpplain">' + esc(v.plain) + "</div>"],
+                 ["on this door", cprow(["hotkey", v.hot]) + cprow(["state", v.state === "hatched" ? "HATCHED — unmeasured: the lab has no graph to walk to" : v.state])
+                   + (v.badge != null ? cprow(["count", n(v.badge)]) : "")]] }); });
+      grid.append(cc); });
+  }
+  body.append(grid); }
+
+function renderStrip(body){
+  var c = ctx(), st = el("div", { class: "pstrip" });
+  (FM.paths || []).forEach(function(p){
+    var col = kcol(p.kind);
+    var cc = el("div", { class: "pscell" + (c.path && c.path.id === p.id ? " on" : ""), style: "--tc:" + col, "data-path": p.id },
+      el("b", {}, n(p.status)), el("span", {}, p.names.drawn));
+    cc.addEventListener("click", function(){ ARR.select("path", p.id); cap(p.names.drawn + " — " + p.status + " " + p.kind); });
+    window.hoverBind(cc, function(){ return hcard({ title: p.names.drawn, value: p.status + " · " + p.kind, icon: "nav", color: col,
+      groups: [["what happens here", '<div class="cpplain">' + esc(p.names.detail || "the request ends here with no written reason") + "</div>"],
+               ["on this door", cprow(["leaves at", p.phase]) + cprow(["order", "cell " + ((FM.paths || []).indexOf(p) + 1) + " of " + FM.paths.length])]] }); });
+    st.append(cc); });
+  body.append(st); }
+
+function renderLadder(body){
+  var c = ctx(), lad = el("div", { class: "exlad" });
+  var selPhase = c.exit ? c.exit.phase : null;
+  var order = (FM.phases || []).concat(["return"]);
+  var selIdx = c.exit ? (c.exit.row === "return" ? RETURN_COL : order.indexOf(c.exit.phase)) : -1;
+  order.forEach(function(ph, i){
+    var isRet = i === RETURN_COL;
+    var exits = (FM.exits || []).filter(function(x){ return isRet ? x.row === "return" : (x.phase === ph && x.row !== "return"); });
+    var cls = "exrung" + (isRet ? " foot" : "") + (selIdx >= 0 ? (i <= selIdx ? " above" : " below") : "");
+    var rung = el("div", { class: cls, "data-rung": ph });
+    rung.append(el("span", { class: "exn" }, ph));
+    var hold = el("span", { class: "exs" });
+    exits.forEach(function(x){
+      var col = kcol(x.kind);
+      var ch = el("span", { class: "exchip" + (c.exit && c.exit.id === x.id ? " on" : ""), style: "--tc:" + col, "data-exit": x.id },
+        n(x.status), el("i", { class: "amut", style: "font-style:normal" }, x.via || x.row));
+      ch.addEventListener("click", function(){ ARR.select("exit", x.id); cap("exit " + x.status + " · " + x.phase + (x.detail ? " · " + x.detail : "")); });
+      window.hoverBind(ch, function(){ return hcard({ title: x.detail || (x.status + " " + x.kind), value: x.status + " · " + x.row, icon: "endpoint", color: col,
+        groups: [["what happens here", '<div class="cpplain">one ending, hung on the stage it leaves from</div>'],
+                 ["on this door", cprow(["phase", x.phase]) + cprow(["via", x.via || "—"]) + cprow(["at", x.at || "the framework, no line", "stack"])
+                   + cprow(["paths", n((x.paths || []).length)]) + cprow(["tests", n((x.tests || []).length)])]] }); });
+      hold.append(ch); });
+    if (!exits.length) hold.append(el("span", { class: "achip mut hollow" }, "no exit"));
+    rung.append(hold); lad.append(rung); });
+  body.append(lad); }
+
+function renderMatrix(body){
+  var c = ctx();
+  var g = el("div", { class: "cmx", style: "grid-template-columns:46px repeat(" + PARTS.length + ", 26px)" });
+  g.append(el("span", {}));
+  PARTS.forEach(function(q){
+    var h = el("span", { class: "cmxh", html: S.icon(PARTICO[q], 13, "var(--muted)") });
+    window.hoverBind(h, function(){ return hcard({ title: q, value: "part", icon: PARTICO[q], color: S.OPC.read,
+      groups: [["what happens here", '<div class="cpplain">one column per part of the element — lit when that part has facts for the ending in the row</div>'],
+               ["on this door", cprow(["lit", (FM.paths || []).filter(function(p){ return partHas(p, q); }).length + " of " + FM.paths.length + " paths"])]] }); });
+    g.append(h); });
+  (FM.paths || []).forEach(function(p){
+    var col = kcol(p.kind);
+    var lb = el("span", { class: "cmxr", style: "color:" + col }, n(p.status));
+    lb.addEventListener("click", function(){ ARR.select("path", p.id); cap(p.names.drawn); });
+    window.hoverBind(lb, function(){ return hcard({ title: p.names.drawn, value: p.status + " · " + p.kind, icon: "journey", color: col,
+      groups: [["what happens here", '<div class="cpplain">one row per ending — the parts that can say something about it are lit</div>'],
+               ["on this door", cprow(["lit", PARTS.filter(function(q){ return partHas(p, q); }).join(" · ")])]] }); });
+    g.append(lb);
+    PARTS.forEach(function(q){
+      var lit = partHas(p, q);
+      var cc = el("span", { class: "cmxc " + (lit ? "lit" : "hollow") + (c.path && c.path.id === p.id ? " on" : ""),
+        style: "--tc:" + col, "data-cell": p.id + "|" + q });
+      cc.addEventListener("click", function(){ ARR.select("path", p.id); cap(q + " on " + p.names.drawn + " — " + (lit ? "has facts" : "measured zero")); });
+      window.hoverBind(cc, function(){ return hcard({ title: q + " × " + p.names.drawn, value: lit ? "lit" : "hollow", icon: PARTICO[q], color: lit ? col : "var(--muted)",
+        groups: [["what happens here", '<div class="cpplain">' + (lit ? "this part has facts for this ending" : "measured zero — this part has nothing to say about this ending") + "</div>"],
+                 ["on this door", cprow(["rule", { data: "effects.tables non-empty", schemas: "exit.response present", functions: "the chain has a call, a collapsed call or a catch",
+                   tests: "tests non-empty", widening: "a reason site with this status, or the hook", security: "gates + switches > 0" }[q], "stack"])]] }); });
+      g.append(cc); }); });
+  body.append(g); }
+
+function renderHoverDock(body){
+  if (!LAST.card) { nothing(body, "nothing hovered yet", "measured zero — the last card lands here as soon as you hover anything"); return; }
+  body.append(el("div", { class: "dock jdcolpop", style: "position:static;max-width:none;pointer-events:auto;box-shadow:none", html: LAST.card })); }
+function renderCaption(body){
+  if (!LAST.cap) { nothing(body, "nothing touched yet", "measured zero — one line about the last thing you touched lands here"); return; }
+  body.append(el("div", { class: "aline" }, el("span", { class: "ptig", html: S.icon("doc", 12, "var(--muted)") }), LAST.cap)); }
+
+function renderPathRecord(body){
+  var c = ctx();
+  if (!c.path) { nothing(body, "nothing in force", "a record shows everything the feed knows about what is in force"); return; }
+  var p = c.path, col = kcol(p.kind);
+  body.style.setProperty("--tc", col);
+  body.append(el("div", { class: "aline", style: "--tc:" + col },
+    el("span", { class: "ptig", html: S.icon("journey", 13, col) }), el("b", { style: "color:" + col }, p.names.drawn),
+    el("span", { class: "agrow achip", style: "--tc:" + col }, p.status + " · " + p.kind)));
+  body.append(row("stage", p.phase));
+  body.append(row("detail", p.names.detail || "no written reason"));
+  body.append(row("exit", p.exit.id + " · " + p.exit.row + (p.exit.via ? " · " + p.exit.via : "")));
+  body.append(row("at", p.exit.at || "the framework, no line"));
+  body.append(row("state", p.state + (p.partial ? " · partial" : "")));
+  body.append(sec("chain", p.n.steps, "nav", S.OPC.call));
+  var tb = el("div", {});
+  (p.chain || []).forEach(function(s){
+    var scol = s.kind === "gate" ? (s.hit ? "var(--red)" : S.OPC.gate) : s.kind === "exit" ? kcol(s.exit_kind) : s.kind === "catch" ? "var(--red)" : S.OPC.call;
+    var ln = el("div", { class: "aline" + (s.kind === "collapsed" ? " st-dashed" : ""), style: "--tc:" + scol + (s.kind === "collapsed" ? ";border:1px solid var(--line)" : "") },
+      el("span", { class: "ak", style: "width:22px;color:var(--edge)" }, n(s.i)),
+      el("span", { class: "ptig", html: S.icon({ step: "layers", switch: "merge", gate: "shield", branch: "drill", call: "function", collapsed: "function", catch: "alert", exit: "endpoint" }[s.kind] || "info", 12, scol) }),
+      el("span", { style: "overflow:hidden;text-overflow:ellipsis;white-space:nowrap" }, s.label),
+      el("span", { class: "agrow amut" }, s.hit === true ? "fired" : s.hit === false ? "passed" : (s.sub || s.kind)));
+    window.hoverBind(ln, function(){ return hcard({ title: s.label, value: s.kind, icon: "nav", color: scol,
+      groups: [["what happens here", '<div class="cpplain">step ' + s.i + " of " + p.n.steps + " on this path</div>"],
+               ["on this door", cprow(["phase", s.phase || "—"]) + cprow(["sub", s.sub || "—", "stack"]) + cprow(["at", s.at || "—", "stack"])
+                 + (s.hit != null ? cprow(["hit", s.hit ? "FIRED" : "passed"]) : "") + (s.cond ? cprow(["condition", s.cond, "stack"]) : "")]] }); });
+    tb.append(ln); });
+  body.append(tb);
+  body.append(sec("effects", (p.effects.tables || []).length + " tables", "table", S.OPC.write));
+  var bl = el("div", {});
+  Object.keys(BUCKET).forEach(function(b){ bl.append(el("span", { class: "achip " + BUCKET[b].cls, style: "--tc:" + BUCKET[b].col }, BUCKET[b].w + " " + p.effects.n[b])); });
+  body.append(bl);
+  body.append(el("div", { class: "acap" }, (p.effects.tables || []).join(" · ") || "no table touched"));
+  body.append(sec("tests", (p.tests || []).length, "test", (p.tests || []).length ? S.OPC.read : "var(--muted)"));
+  if (!(p.tests || []).length) body.append(el("div", { class: "acap" }, "measured zero — no case asserts this path"));
+  (p.tests || []).forEach(function(t){
+    var ln = el("div", { class: "aline pick" }, el("span", { class: "achip", style: "--tc:var(--ok)" }, t.case),
+      el("span", { class: "amut" }, t.conf), el("span", { class: "agrow amut" }, t.name));
+    ln.addEventListener("click", function(){ ARR.select("case", t.case); });
+    body.append(ln); });
+  if ((p.switches || []).length) { body.append(sec("switches", p.switches.length, "merge", S.OPC.call));
+    p.switches.forEach(function(w){ body.append(el("div", { class: "aline" }, el("span", { class: "achip mut" }, w.kind),
+      el("span", { class: "amut" }, w.via || Object.keys(w.settings || {}).join(", ")))); }); } }
+
+function renderExitRecord(body){
+  var c = ctx();
+  if (!c.exit) { nothing(body, "nothing in force", "a record shows everything the feed knows about what is in force"); return; }
+  var x = c.exit, col = kcol(x.kind);
+  body.style.setProperty("--tc", col);
+  body.append(el("div", { class: "aline", style: "--tc:" + col },
+    el("span", { class: "ptig", html: S.icon("endpoint", 13, col) }), el("b", { style: "color:" + col }, x.detail || (x.status + " " + x.kind)),
+    el("span", { class: "agrow achip", style: "--tc:" + col }, x.status + " · " + x.row)));
+  body.append(row("phase", x.phase));
+  body.append(row("via", x.via || "—"));
+  body.append(row("at", x.at || "the framework, no line"));
+  body.append(row("pred", x.pred || "—"));
+  body.append(row("state", x.state + " · form " + (x.form || "—")));
+  if (x.code) body.append(row("code", x.code));
+  if (x.response) { body.append(sec("response", x.response.media, "schema", S.KINDCOL.schema));
+    body.append(row("model", x.response.model || "no model — a plain body"));
+    body.append(row("fields", (x.response.fields || Object.keys(x.response.body || {})).join(" · ")));
+    if (x.response.headers) body.append(row("headers", Object.keys(x.response.headers).join(" · ")));
+    body.append(row("source", x.response.source)); }
+  body.append(sec("paths ending here", (x.paths || []).length, "journey", col));
+  (x.paths || []).forEach(function(pid){ var p = pathById(pid); if (!p) return;
+    var ln = el("div", { class: "aline pick" }, el("span", { class: "achip", style: "--tc:" + kcol(p.kind) }, n(p.status)), p.names.drawn);
+    ln.addEventListener("click", function(){ ARR.select("path", pid); }); body.append(ln); });
+  body.append(sec("tests", (x.tests || []).length, "test", (x.tests || []).length ? S.OPC.read : "var(--muted)"));
+  if (!(x.tests || []).length) body.append(el("div", { class: "acap" }, "measured zero — nothing asserts this exit"));
+  (x.tests || []).forEach(function(t){ body.append(el("div", { class: "aline" },
+    el("span", { class: "achip", style: "--tc:var(--ok)" }, t.case), el("span", { class: "amut" }, t.conf))); }); }
+
+function renderCaseRecord(body){
+  var c = ctx();
+  if (!c.cse) { nothing(body, "nothing in force", "pick a case in the tests tile or a path record"); return; }
+  var t = caseRow(c.cse), reg = (F.tests.cases || []).filter(function(r){ return r.cid === c.cse; })[0];
+  body.append(el("div", { class: "aline", style: "--tc:var(--ok)" },
+    el("span", { class: "ptig", html: S.icon("test", 13, "var(--ok)") }), el("b", {}, c.cse),
+    el("span", { class: "agrow achip", style: "--tc:var(--ok)" }, (t || reg || {}).state || "unknown")));
+  if (t) { body.append(row("name", t.name)); body.append(row("at", t.file + ":" + t.line)); body.append(row("corpus", t.corpus)); body.append(row("join", t.conf)); }
+  else if (reg) { body.append(row("name", reg.name)); body.append(row("corpus", reg.corpus)); body.append(row("status in name", reg.status || "no code in the name")); }
+  var proves = (FM.exits || []).filter(function(x){ return (x.tests || []).some(function(q){ return q.case === c.cse; }); });
+  body.append(sec("proves", proves.length, "endpoint", proves.length ? S.OPC.read : "var(--muted)"));
+  proves.forEach(function(x){ var ln = el("div", { class: "aline pick" },
+    el("span", { class: "achip", style: "--tc:" + kcol(x.kind) }, n(x.status)), x.detail || x.phase);
+    ln.addEventListener("click", function(){ ARR.select("exit", x.id); }); body.append(ln); });
+  /* HATCHED, honestly: this feed's tests block carries the corpus tallies, not per-case call rows */
+  body.append(sec("the calls it makes", null, "web", "var(--muted)"));
+  var hat = el("div", { class: "nowt st-hatched", style: "--tc:var(--muted)" },
+    el("b", {}, "unmeasured"),
+    el("span", {}, "forms.tests carries act " + FM.tests.act + " · arranged_by " + FM.tests.arranged_by.length
+      + " · helper_arranged " + FM.tests.helper_arranged.length + " — no per-case call rows, so the method, path and headers this case sends cannot be drawn"));
+  window.hoverBind(hat, function(){ return hcard({ title: "the calls it makes", value: "hatched", icon: "web", color: "var(--muted)",
+    groups: [["what happens here", '<div class="cpplain">what the case actually sends and asserts — the row this tile would draw</div>'],
+             ["kind", "HATCHED — unmeasured: the feed does not carry it, so nothing is drawn rather than guessed"],
+             ["on this door", cprow(["forms.tests", "act " + FM.tests.act + " · unjoined " + (FM.tests.unjoined || []).length])]] }); });
+  body.append(hat); }
+
+/* ══ PANELS ══════════════════════════════════════════════════════════════════════════════ */
+var DIALS = [{ key: "dock", w: 826, h: 264, ico: "dock" }, { key: "work", w: 1100, h: 420, ico: "work" }, { key: "wide", w: 1500, h: 460, ico: "wide" }];
+var ZONES = [{ key: "middle", w: function(){ return dial().w; }, h: function(){ return dial().h; } },
+             { key: "portrait", w: function(){ return 440; }, h: function(){ return 560; } },
+             { key: "command", w: function(){ return 360; }, h: function(){ return 560; } }];
+var STATE = { dial: "work", zones: { middle: [], portrait: [], command: [] } };
+function dial(){ return DIALS.filter(function(d){ return d.key === STATE.dial; })[0] || DIALS[1]; }
+function placedIn(key){ var z = null; Object.keys(STATE.zones).forEach(function(k){ if (STATE.zones[k].some(function(s){ return s.key === key; })) z = k; }); return z; }
+
+function drawPanels(){
+  var prow = document.getElementById("prow");
+  prow.innerHTML = "";
+  ZONES.forEach(function(Z){
+    var slots = STATE.zones[Z.key], w = Z.w(), h = Z.h();
+    var panel = el("div", { class: "panel", "data-panel": Z.key, style: "width:" + w + "px;height:" + h + "px" });
+    var hd = el("div", { class: "phd" },
+      el("span", { class: "pnm" }, Z.key),
+      el("span", { class: "pdim" }, w + " × " + h),
+      el("span", { class: "pcount" }, slots.length + " tile" + (slots.length === 1 ? "" : "s")));
+    panel.append(hd);
+    var tiles = el("div", { class: "ptiles" + (slots.length ? "" : " empty"), "data-tiles": Z.key });
+    if (!slots.length) tiles.append(el("div", { class: "pempty" }, "drop a tile"));
+    slots.forEach(function(sl, idx){
+      var t = TKEY[sl.key]; if (!t) return;
+      var nat = NAT[t.nature];
+      var box = el("div", { class: "ptile size-" + sl.size, "data-tile": t.key, "data-size": sl.size, style: "--tc:" + nat.col, draggable: "true" });
+      var hh = el("div", { class: "ptih" },
+        el("span", { class: "nbadge" }),
+        el("span", { class: "ptig", html: S.icon(t.ico, 12, nat.col) }),
+        el("span", { class: "ptin" }, t.key));
+      var btns = el("div", { class: "ptib2" });
+      var sz = el("button", { class: "szc", title: "size" }, sl.size);
+      sz.addEventListener("click", function(ev){ ev.stopPropagation();
+        var order = ["S", "M", "L"], nx = order[(order.indexOf(sl.size) + 1) % 3];
+        ARR.place(t.key, Z.key, nx, idx); });
+      var rm = el("button", { class: "rmv", title: "remove" }, "×");
+      rm.addEventListener("click", function(ev){ ev.stopPropagation(); ARR.remove(t.key); });
+      btns.append(sz, rm); hh.append(btns);
+      window.hoverBind(hh, function(){ return tileCard(t); });
+      hh.addEventListener("dragstart", function(ev){ startDrag(ev, t.key, box); });
+      box.addEventListener("dragstart", function(ev){ startDrag(ev, t.key, box); });
+      box.addEventListener("dragend", function(){ box.classList.remove("dragging"); });
+      var bd = el("div", { class: "ptbody", "data-body": t.key });
+      try { t.render(bd); } catch (e) { bd.append(el("div", { class: "nowt" }, el("b", {}, "render error"), el("span", {}, String(e && e.message || e)))); }
+      box.append(hh, bd);
+      tiles.append(box); });
+    panel.append(tiles);
+    wireDrop(panel, tiles, Z.key);
+    prow.append(panel); });
+  measure();
+  drawMap(); drawList(); }
+
+/* The badge itself makes the head taller, which makes the excess bigger — so it is DRAWN first and
+   the number is read back with it in place. A panel that fits loses the badge and is re-read. */
+function measure(){
+  document.querySelectorAll(".panel").forEach(function(panel){
+    var tiles = panel.querySelector(".ptiles"), hd = panel.querySelector(".phd");
+    var badge = hd.querySelector(".povf");
+    function excess(){ return tiles.scrollHeight - tiles.clientHeight; }
+    if (excess() <= 0) { if (!badge) return; badge.remove(); if (excess() <= 0) return; badge = null; }
+    if (!badge) { badge = el("span", { class: "povf" }, "overflow +" + excess() + "px");
+      window.hoverBind(badge, function(){ return hcard({ title: "overflow", value: badge.textContent.replace("overflow ", ""), icon: "alert", color: "var(--red)",
+        groups: [["what happens here", '<div class="cpplain">what was dropped here does not fit — the panel scrolls, it never clips silently</div>'],
+                 ["on this door", cprow(["needs", tiles.scrollHeight + "px"]) + cprow(["has", tiles.clientHeight + "px"])
+                   + cprow(["excess", excess() + "px"])]] }); });
+      hd.append(badge); }
+    for (var i = 0; i < 3; i++) { var want = "overflow +" + excess() + "px";
+      if (badge.textContent === want) break; badge.textContent = want; } }); }
+
+/* ── drag and drop (HTML5) ────────────────────────────────────────────────────────────── */
+var DRAG = { key: null };
+function startDrag(ev, key, node){
+  DRAG.key = key;
+  try { ev.dataTransfer.setData("text/plain", key); ev.dataTransfer.effectAllowed = "move"; } catch (e) {}
+  if (node) node.classList.add("dragging"); }
+function dropIndex(tiles, ev){
+  var kids = [].slice.call(tiles.querySelectorAll(".ptile"));
+  for (var i = 0; i < kids.length; i++) { var r = kids[i].getBoundingClientRect();
+    if (ev.clientY < r.top + r.height / 2 && ev.clientX < r.right) return i;
+    if (ev.clientY < r.bottom && ev.clientX < r.left + r.width / 2) return i; }
+  return kids.length; }
+function wireDrop(panel, tiles, zone){
+  panel.addEventListener("dragover", function(ev){ ev.preventDefault(); panel.classList.add("over"); });
+  panel.addEventListener("dragleave", function(){ panel.classList.remove("over"); });
+  panel.addEventListener("drop", function(ev){ ev.preventDefault(); panel.classList.remove("over");
+    var key = DRAG.key || (ev.dataTransfer && ev.dataTransfer.getData("text/plain"));
+    if (!key || !TKEY[key]) return;
+    var cur = STATE.zones[zone].filter(function(s){ return s.key === key; })[0];
+    ARR.place(key, zone, cur ? cur.size : TKEY[key].size, dropIndex(tiles, ev));
+    DRAG.key = null; }); }
+
+/* ══ THE MIND MAP — a fixed 2D layout computed from NATURE, no physics ══════════════════
+   selection at the CENTRE · the four controls LEFT (they SET it) · the six standpoints RIGHT
+   in request order (they READ it) · the two temporal tiles TOP · the three records BOTTOM-RIGHT ·
+   the two transients BOTTOM, reached by one faint dashed ring instead of eighteen arrows.   */
+var MAPXY = {
+  "clock":          [86, 46],   "paths-timeline": [228, 116],
+  "command-card":   [56, 186],  "path-strip":     [56, 256],  "exit-ladder": [56, 326], "matrix": [56, 396],
+  "selection":      [228, 290],
+  "security":       [400, 96],  "functions":      [400, 166], "data":        [400, 236],
+  "schemas":        [400, 306], "tests":          [400, 376], "widening":    [400, 446],
+  "path-record":    [268, 528], "exit-record":    [338, 578], "case-record": [406, 528],
+  "hover-card":     [92, 530],  "caption":        [166, 582] };
+var EDGEK = { sets: { col: S.OPC.gate, dash: "", w: 1.6, word: "sets what is in force" },
+              reads: { col: S.OPC.read, dash: "", w: 1.6, word: "reads what is in force" },
+              walks: { col: S.OPC.call, dash: "5 4", w: 1.6, word: "walks it — the one clock" },
+              shows: { col: S.KINDCOL.external, dash: "2 5", w: 1.2, word: "shows the last thing touched" } };
+function edgePath(a, b, shrinkA, shrinkB){
+  var dx = b[0] - a[0], dy = b[1] - a[1], L = Math.sqrt(dx * dx + dy * dy) || 1;
+  var ux = dx / L, uy = dy / L;
+  return [a[0] + ux * shrinkA, a[1] + uy * shrinkA, b[0] - ux * shrinkB, b[1] - uy * shrinkB]; }
+function drawMap(){
+  var wrap = document.getElementById("mapwrap"), svg = document.getElementById("mapedges");
+  [].slice.call(wrap.querySelectorAll(".mnode")).forEach(function(n0){ n0.remove(); });
+  var NS = "http://www.w3.org/2000/svg";
+  svg.innerHTML = '<defs>'
+    + Object.keys(EDGEK).map(function(k){ return '<marker id="ah-' + k + '" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">'
+        + '<path d="M0 0 10 5 0 10z" fill="' + EDGEK[k].col + '"/></marker>'; }).join("")
+    + "</defs>";
+  function line(kind, a, b, sa, sb){
+    var p = edgePath(a, b, sa, sb), e = document.createElementNS(NS, "line");
+    e.setAttribute("x1", p[0]); e.setAttribute("y1", p[1]); e.setAttribute("x2", p[2]); e.setAttribute("y2", p[3]);
+    e.setAttribute("stroke", EDGEK[kind].col); e.setAttribute("stroke-width", EDGEK[kind].w);
+    if (EDGEK[kind].dash) e.setAttribute("stroke-dasharray", EDGEK[kind].dash);
+    e.setAttribute("marker-end", "url(#ah-" + kind + ")");
+    e.setAttribute("data-edge", kind); e.setAttribute("opacity", kind === "shows" ? ".5" : ".85");
+    svg.append(e); }
+  var C = MAPXY["selection"];
+  T.forEach(function(t){
+    var a = MAPXY[t.key]; if (!a || t.key === "selection") return;
+    if (t.nature === "control" || t.key === "paths-timeline") line("sets", a, C, 24, 28);
+    else if (t.nature === "standpoint" || t.nature === "record") line("reads", C, a, 28, 24); });
+  line("walks", MAPXY["clock"], MAPXY["paths-timeline"], 24, 24);
+  /* the transient ring: ONE faint dashed ellipse standing for "everything shows up here", and
+     one dashed arrow from the ring into hover-card, then on to the caption — never spaghetti. */
+  var ring = document.createElementNS(NS, "ellipse");
+  ring.setAttribute("cx", C[0]); ring.setAttribute("cy", C[1] + 18); ring.setAttribute("rx", 188); ring.setAttribute("ry", 232);
+  ring.setAttribute("fill", "none"); ring.setAttribute("stroke", EDGEK.shows.col); ring.setAttribute("stroke-width", "1");
+  ring.setAttribute("stroke-dasharray", "2 6"); ring.setAttribute("opacity", ".38"); ring.setAttribute("data-edge", "shows-ring");
+  svg.append(ring);
+  line("shows", [C[0] - 152, C[1] + 194], MAPXY["hover-card"], 6, 24);
+  line("shows", MAPXY["hover-card"], MAPXY["caption"], 24, 24);
+  T.forEach(function(t){
+    var xy = MAPXY[t.key]; if (!xy) return;
+    var nat = NAT[t.nature], where = placedIn(t.key);
+    var node = el("div", { class: "mnode" + (t.key === "selection" ? " centre" : "") + (where ? " placed" : ""),
+      style: "left:" + xy[0] + "px;top:" + xy[1] + "px;--tc:" + nat.col, "data-node": t.key, draggable: "true" });
+    node.append(el("div", { class: "mring", html: S.icon(t.ico, t.key === "selection" ? 22 : 18, nat.col) }));
+    node.append(el("div", { class: "mlbl" }, t.key));
+    if (where) node.append(el("div", { class: "mtag" }, "in " + where));
+    node.addEventListener("dragstart", function(ev){ startDrag(ev, t.key, node); });
+    node.addEventListener("dragend", function(){ node.classList.remove("dragging"); });
+    node.addEventListener("click", function(){ cap(t.key + " — " + nat.word + " · " + t.door()); });
+    window.hoverBind(node, function(){ return tileCard(t); });
+    wrap.append(node); });
+  /* the shelf is also a drop zone: dragging a node back to the map takes it out of its panel */
+  wrap.ondragover = function(ev){ ev.preventDefault(); };
+  wrap.ondrop = function(ev){ ev.preventDefault();
+    var key = DRAG.key || (ev.dataTransfer && ev.dataTransfer.getData("text/plain"));
+    if (key && TKEY[key]) ARR.remove(key); DRAG.key = null; };
+  document.getElementById("shn").textContent = T.length + " dimensions";
+  var lgd = document.getElementById("maplgd"); lgd.innerHTML = "";
+  Object.keys(EDGEK).forEach(function(k){
+    var E = EDGEK[k];
+    var li = el("span", { class: "lgi", html: '<svg width="34" height="10" viewBox="0 0 34 10"><line x1="1" y1="5" x2="27" y2="5" stroke="' + E.col
+      + '" stroke-width="' + E.w + '"' + (E.dash ? ' stroke-dasharray="' + E.dash + '"' : "") + ' opacity="' + (k === "shows" ? ".5" : ".85")
+      + '"/><path d="M27 1.5 33 5 27 8.5z" fill="' + E.col + '" opacity="' + (k === "shows" ? ".5" : ".85") + '"/></svg>' }, k);
+    window.hoverBind(li, function(){ return hcard({ title: k, value: "edge", icon: "link", color: E.col,
+      groups: [["what happens here", '<div class="cpplain">' + E.word + "</div>"],
+               ["on this map", cprow(["drawn", document.querySelectorAll('[data-edge="' + k + '"]').length + " edge(s)"])]] }); });
+    lgd.append(li); }); }
+
+/* ── the compact list under the map: the fallback, and the way to drag by name ─────────── */
+function drawList(){
+  var host = document.getElementById("shlist"); host.innerHTML = "";
+  Object.keys(NAT).forEach(function(k){
+    var mine = T.filter(function(t){ return t.nature === k; }); if (!mine.length) return;
+    var g = el("div", { class: "natgrp", style: "--tc:" + NAT[k].col, "data-nat": k });
+    g.append(el("div", { class: "nathd" }, el("span", { class: "natdot" }), el("span", { class: "natw" }, NAT[k].word),
+      el("span", { class: "natn" }, mine.length + "")));
+    g.append(el("div", { class: "natlg" }, NAT[k].lg));
+    var items = el("div", { class: "shitems" });
+    mine.forEach(function(t){
+      var where = placedIn(t.key);
+      var it = el("div", { class: "shitem" + (where ? " placed" : ""), "data-item": t.key, draggable: "true" },
+        el("span", { class: "ptig", html: S.icon(t.ico, 12, NAT[k].col) }), t.key,
+        el("span", { class: "shsz" }, where ? "in " + where : t.size));
+      it.addEventListener("dragstart", function(ev){ startDrag(ev, t.key, it); });
+      it.addEventListener("dragend", function(){ it.classList.remove("dragging"); });
+      it.addEventListener("click", function(){ if (where) ARR.remove(t.key); else ARR.place(t.key, "middle", t.size); });
+      window.hoverBind(it, function(){ return tileCard(t); });
+      items.append(it); });
+    g.append(items); host.append(g); }); }
+
+/* ── ONE card shape for a dimension, in the operator's four sections ───────────────────── */
+function tileCard(t){
+  var nat = NAT[t.nature], where = placedIn(t.key);
+  return hcard({ title: t.key, value: nat.word, icon: t.ico, color: nat.col,
+    groups: [
+      ["what happens here", '<div class="cpplain">' + esc(t.plain) + "</div>"],
+      ["kind", '<div class="cpnat" style="color:' + nat.col + '">' + S.icon(nat.ico, 12, nat.col) + nat.word + '</div><div class="cpul"><li>' + esc(nat.lg) + "</li></div>"],
+      ["on this door", '<div class="cpplain" style="font-family:var(--font-mono);font-size:12px">' + esc(t.door()) + "</div>"],
+      ["use it when", '<ul class="cpul">' + t.use.map(function(u){ return "<li>" + esc(u) + "</li>"; }).join("") + "</ul>"]],
+    rows: [["size", t.size + (where ? " · placed in " + where : " · on the shelf")]],
+    clarify: "reads " + t.keys }); }
+
+/* ══ THE ONE API ═════════════════════════════════════════════════════════════════════════ */
+var SIZES = ["S", "M", "L"];
+var ARR = window.ARR = {
+  TILES: T, ZONES: ZONES.map(function(z){ return z.key; }), NATURES: NAT, MAPXY: MAPXY,
+  laneEndCol: laneEndCol, matrixLit: matrixLit, partHas: partHas, ctx: ctx,
+  place: function(tileKey, panel, size, index){
+    if (!TKEY[tileKey]) return false;
+    if (!STATE.zones[panel]) return false;
+    size = SIZES.indexOf(size) >= 0 ? size : TKEY[tileKey].size;
+    Object.keys(STATE.zones).forEach(function(k){ STATE.zones[k] = STATE.zones[k].filter(function(s){ return s.key !== tileKey; }); });
+    var list = STATE.zones[panel], at = (index == null || index < 0 || index > list.length) ? list.length : index;
+    list.splice(at, 0, { key: tileKey, size: size });
+    save(); drawPanels(); return true; },
+  remove: function(tileKey){
+    var had = !!placedIn(tileKey);
+    Object.keys(STATE.zones).forEach(function(k){ STATE.zones[k] = STATE.zones[k].filter(function(s){ return s.key !== tileKey; }); });
+    save(); drawPanels(); return had; },
+  select: function(kind, id){
+    SEL.kind = kind || null; SEL.id = kind ? id : null;
+    if (!kind) { CARD.only = null; cap("cleared — nothing in force"); }
+    drawPanels(); flash(); return { kind: SEL.kind, id: SEL.id }; },
+  line: function(){
+    var parts = ZONES.map(function(Z){ var l = STATE.zones[Z.key];
+      return l.length ? Z.key + ": " + l.map(function(s){ return s.key + " " + s.size; }).join(" · ") : null; }).filter(Boolean);
+    return "arrange · " + (parts.length ? parts.join(" | ") : "empty"); },
+  load: function(line){
+    if (typeof line !== "string") return false;
+    var body = line.replace(/^\s*arrange\s*·\s*/, "").trim();
+    Object.keys(STATE.zones).forEach(function(k){ STATE.zones[k] = []; });
+    if (body && body !== "empty") body.split("|").forEach(function(seg){
+      var m = seg.split(":"); if (m.length < 2) return;
+      var zone = m[0].trim(); if (!STATE.zones[zone]) return;
+      m.slice(1).join(":").split("·").forEach(function(one){
+        var w = one.trim().split(/\s+/); if (!w[0] || !TKEY[w[0]]) return;
+        var sz = SIZES.indexOf(w[1]) >= 0 ? w[1] : TKEY[w[0]].size;
+        Object.keys(STATE.zones).forEach(function(k){ STATE.zones[k] = STATE.zones[k].filter(function(s){ return s.key !== w[0]; }); });
+        STATE.zones[zone].push({ key: w[0], size: sz }); }); });
+    save(); drawPanels(); return true; },
+  reset: function(){ Object.keys(STATE.zones).forEach(function(k){ STATE.zones[k] = []; }); save(); drawPanels(); return true; },
+  firstCut: function(){ return ARR.load(FIRSTCUT); },
+  dial: function(k){ if (DIALS.some(function(d){ return d.key === k; })) { STATE.dial = k; save(); drawDial(); drawPanels(); } return STATE.dial; },
+  state: function(){ return JSON.parse(JSON.stringify({ dial: STATE.dial, zones: STATE.zones, sel: SEL })); } };
+var FIRSTCUT = "arrange · middle: paths-timeline L · security S · functions S · data S | portrait: path-record L | command: command-card L";
+ARR.FIRSTCUT = FIRSTCUT;
+
+function flash(){
+  document.querySelectorAll(".ptile").forEach(function(box){
+    var t = TKEY[box.dataset.tile]; if (!t || !t.reads) return;
+    box.classList.remove("flash"); void box.offsetWidth; box.classList.add("flash");
+    box.addEventListener("animationend", function h(){ box.classList.remove("flash"); box.removeEventListener("animationend", h); }); }); }
+
+/* ── localStorage, wrapped both ways (the page boots with storage blocked) ─────────────── */
+var LSKEY = "arrange-lab.v1";
+function save(){ try { window.localStorage.setItem(LSKEY, JSON.stringify({ dial: STATE.dial, line: ARR.line() })); } catch (e) {} }
+function restore(){ try { var raw = window.localStorage.getItem(LSKEY); if (!raw) return false;
+    var o = JSON.parse(raw); if (o && o.dial) STATE.dial = o.dial;
+    if (o && o.line) { ARR.load(o.line); return true; } } catch (e) {} return false; }
+
+/* ── the docked transients redraw on their own, without a full panel redraw ────────────── */
+function drawDocks(){
+  document.querySelectorAll('.ptbody[data-body="hover-card"]').forEach(function(b){ b.innerHTML = ""; b.className = "ptbody"; renderHoverDock(b); });
+  document.querySelectorAll('.ptbody[data-body="caption"]').forEach(function(b){ b.innerHTML = ""; b.className = "ptbody"; renderCaption(b); }); }
+
+/* ══ the chrome: lede · head bar · dial · clock bar · the buttons ════════════════════════ */
+function drawHeadBar(){
+  var hb = document.getElementById("headbar"); hb.innerHTML = "";
+  var mcol = S.METHOD[I.method] || "var(--muted)";
+  hb.append(el("span", { class: "hbm", style: "color:" + mcol }, el("span", { class: "ptig", html: S.icon("endpoint", 12, mcol) }), I.method));
+  hb.append(el("span", { class: "hbp" }, I.path));
+  hb.append(el("span", { class: "hbs" }, I.status));
+  hb.append(el("span", { class: "hbe" }, I.entity));
+  hb.append(el("span", { class: "hbf" }, I.file + ":" + I.flines));
+  window.hoverBind(hb, function(){ return hcard({ title: I.label, value: I.entity, icon: "endpoint", color: S.KINDCOL.endpoint,
+    groups: [["what happens here", '<div class="cpplain">' + (S.LRDEF.endpoint || "one door of the API") + "</div>"],
+             ["kind", "the HEAD BAR — identity only, and never a drop zone"],
+             ["on this door", cprow(["file", I.file + ":" + I.flines, "stack"]) + cprow(["signature", I.sig.lines + " lines · " + (I.sig.async ? "async · " : "") + "→ " + I.sig.returns])
+               + cprow(["declares", I.status]) + cprow(["risk", I.risk.conflict + " · " + I.risk.behind + " behind"])]] }); }); }
+function drawDial(){
+  var d = document.getElementById("dial"); d.innerHTML = "";
+  DIALS.forEach(function(o){
+    var b = el("button", { class: "ib" + (STATE.dial === o.key ? " on" : ""), html: labico(o.ico, 13) + "<span>" + o.w + "×" + o.h + "</span>" });
+    b.addEventListener("click", function(){ ARR.dial(o.key); });
+    window.hoverBind(b, function(){ return hcard({ title: o.key, value: o.w + " × " + o.h, icon: "shape", color: "var(--accent)",
+      groups: [["what happens here", '<div class="cpplain">the middle region at one of the console\'s three real sizes</div>'],
+               ["on this door", cprow(["dock", "826 × 264 — the console at 1440 wide"]) + cprow(["work", "1100 × 420 — the lab's working size"])
+                 + cprow(["wide", "1500 × 460"])]] }); });
+    d.append(b); }); }
+function drawClockBar(){
+  var c = document.getElementById("clockbar"); c.innerHTML = "";
+  [["play", "play"], ["pause", "pause"], ["replay", "replay"]].forEach(function(o){
+    var b = el("button", { class: "ib" + (CLOCK.state === o[0] ? " on" : ""), html: labico(o[1], 13) });
+    b.addEventListener("click", function(){ CLOCK[o[0]](); drawPanels(); });
+    c.append(b); }); }
+
+function copyLine(){
+  var line = ARR.line(), out = document.getElementById("copyout");
+  out.hidden = false; out.innerHTML = '<span class="cohd">the arrangement, as one line — paste it back to restore it</span>';
+  out.append(document.createTextNode(line));
+  try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(line); } catch (e) {}
+  try { document.getElementById("paste").value = line; } catch (e) {}
+  return line; }
+
+/* ══ BOOT ════════════════════════════════════════════════════════════════════════════════ */
+document.getElementById("ledeglyph").innerHTML = S.icon("endpoint", 19, S.KINDCOL.endpoint);
+document.getElementById("shglyph").innerHTML = S.icon("merge", 13, "var(--accent)");
+document.getElementById("ledebench").textContent = I.label + " · " + I.entity;
+document.getElementById("ledehead").textContent = "feed " + (F.head || "?");
+document.getElementById("ledesrc").textContent = FM.paths.length + " paths · " + FM.exits.length + " exits · " + T.length + " dimensions";
+drawHeadBar(); drawDial(); drawClockBar();
+document.getElementById("btncopy").addEventListener("click", copyLine);
+document.getElementById("btnload").addEventListener("click", function(){ ARR.load(document.getElementById("paste").value); });
+document.getElementById("paste").addEventListener("keydown", function(ev){ if (ev.key === "Enter") ARR.load(this.value); });
+document.getElementById("btnreset").addEventListener("click", function(){ ARR.reset(); });
+document.getElementById("btnfirst").addEventListener("click", function(){ ARR.firstCut(); });
+window.hoverBind(document.getElementById("btnfirst"), function(){ return hcard({ title: "the operator's first cut", value: "a starting point", icon: "star", color: "var(--accent)",
+  groups: [["what happens here", '<div class="cpplain">places the arrangement the operator described in words — a starting point, not a ruling</div>'],
+           ["the line", '<div class="cpplain" style="font-family:var(--font-mono);font-size:12px">' + esc(FIRSTCUT) + "</div>"]] }); });
+window.hoverBind(document.getElementById("btncopy"), function(){ return hcard({ title: "copy", value: "one line", icon: "doc", color: "var(--accent)",
+  groups: [["what happens here", '<div class="cpplain">writes the arrangement as one line you can paste back — the line is the source of truth, the browser store is only a convenience</div>'],
+           ["now", '<div class="cpplain" style="font-family:var(--font-mono);font-size:12px">' + esc(ARR.line()) + "</div>"]] }); });
+document.addEventListener("keydown", function(ev){
+  if (/^(INPUT|TEXTAREA)$/.test((ev.target || {}).tagName || "")) return;
+  if (ev.key === "Escape") ARR.select(null, null); });
+document.addEventListener("click", function(){ window.hoverHide(); });
+if (!restore()) drawPanels(); else drawPanels();
+window.addEventListener("resize", measure);
+window.__arrangeReady = true;
+})();
+</script>
+</body>
+</html>
