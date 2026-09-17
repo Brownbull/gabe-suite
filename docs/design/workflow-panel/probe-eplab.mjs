@@ -247,7 +247,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
   ok(dup.length === 0, 'the definition appears once, at the end — never repeated above it', dup.join(' | ').slice(0, 140)); }
 // ── every control block FOLDS AWAY without losing its settings (operator 2026-09-11) ──
 { const blks = await p.$$eval('.barblk', els => els.map(e => e.id));
-  ok(blks.length === 8, 'eight control blocks — schemas and functions have their own since 2026-09-13', blks.join(','));
+  ok(blks.length === 9, 'nine control blocks — the command panel joined schemas and functions (2026-09-17)', blks.join(','));
   const before = await p.evaluate(() => window.COPYTXT.tabs());
   await p.click('#blk-tabs .mnb'); await p.waitForTimeout(120);
   ok(await p.$eval('#blk-tabs', e => e.classList.contains('min')), 'a block folds when its chevron is clicked');
@@ -1709,7 +1709,7 @@ for (const t of rtabs) { await p.click(`#railtabs .rtb[data-rt="${t}"]`); await 
   ok(shown.length === 1 && shown[0] === 'rt-' + t, `rail toggle ${t} shows one section, never both`, shown.join(',')); }
 await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(90);
 const blocks = await p.$$eval('#rt-controls .barblk .bhl b', els => els.map(e => e.textContent));
-ok(blocks.join(',') === 'bench,head bar,part buttons,frame,data panel,schemas panel,functions panel,part bars', 'the controls tab gives every region its own block', blocks.join(','));
+ok(blocks.join(',') === 'command panel,bench,head bar,part buttons,frame,data panel,schemas panel,functions panel,part bars', 'the controls tab gives every region its own block', blocks.join(','));
 const prows = await p.$$eval('#partcfg .prow', els => els.length);
 ok(prows === 6, 'the BARS tab separates the controls per part — one row each', String(prows));
 const varBtns = await p.$$eval('#partcfg .ib', els => els.length);
@@ -1742,10 +1742,11 @@ const zones = await p.$$eval('#barcfg .dzone', els => els.map(e => e.dataset.sid
 ok(zones.join(',') === 'left,right', 'the rail shows one drop zone per pile, divided', zones.join(','));
 // a copy button per control block, each producing a readable line
 const cpb = await p.$$('.barblk .cpb');
-ok(cpb.length === 8, 'every control block has a COPY button', String(cpb.length));
+ok(cpb.length === 9, 'every control block has a COPY button', String(cpb.length));
 const lines = await p.evaluate(() => Object.keys(window.COPYTXT).map(k => window.COPYTXT[k]()));
-ok(lines.length === 8 && lines.every(l => l.length > 20), 'each copy line names that section\'s selections', lines.join(' // ').slice(0, 160));
-ok(/head bar · verbosity .* LEFT .* RIGHT .* off .* styles /.test(lines[1]), 'the head-bar copy line carries verbosity, both piles, what is off, and the per-element styles', lines[1]);
+ok(lines.length === 9 && lines.every(l => l.length > 20), 'each copy line names that section\'s selections', lines.join(' // ').slice(0, 160));
+{ const headLine = await p.evaluate(() => window.COPYTXT.head());
+  ok(/head bar · verbosity .* LEFT .* RIGHT .* off .* styles /.test(headLine), 'the head-bar copy line carries verbosity, both piles, what is off, and the per-element styles', headLine); }
 // ── per-element options: shown · text · container (operator 2026-09-11) ──
 await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(80);
 await p.click('#barcfg .dzone .ib[data-el="status"]'); await p.waitForTimeout(100);
@@ -1800,6 +1801,433 @@ await p.click('.elned .ib[data-shown="off"]'); await p.waitForTimeout(100);
 ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 0, 'the editor hides the element');
 await p.click('.elned .ib[data-shown="on"]'); await p.waitForTimeout(100);
 ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings it back');
+// ── THE COMMAND PANEL (Phase 6 slice 1, 2026-09-17) ──
+// Every assert below reads the DRAWN thing: a computed style, a count that equals a number the page
+// itself computes from window.LABEP.forms, a fingerprint that must differ after a pick, or two clock
+// samples at uneven gaps. A bare `> 0` is not an assert here.
+{
+  const resetCmd = () => p.evaluate(() => {
+    Object.assign(window.CMD, { layout: "card", mode: "cmd", only: null, rows: "command", scope: "kind",
+      group: "request", names: "drawn", success: "shown", sub: "split", middle: "dim", portrait: "path",
+      wrong: "blank", keys: "grid", size: 64, face: "valley", tip: "hover", join: "exact", keep: "kept",
+      side: "right", ladder: "cmd", walk: "replay", flag: "shown", colour: "kind", matrix: "path" });
+    window.CMD.show = { chip: 1, strip: 1, region: 1, title: 1, caption: 1 };
+    window.clearPath(); window.drawCmdCfg(); window.drawCmd(); window.drawHead(); });
+  await p.evaluate(() => { window.railTab('controls'); window.selectIn('data', null); window.selectIn('schemas', null); window.selectIn('functions', null); });
+  await p.click('#boxes .ib[data-box="work"]'); await p.click('#dens .ib[data-dens="normal"]');
+  await resetCmd(); await p.waitForTimeout(160);
+  const errsBefore = errs.length;
+
+  // the numbers the page computes from the feed — nothing below is typed by hand
+  const N = await p.evaluate(() => { const f = window.LABEP.forms, u = a => [...new Set(a)];
+    const cases = a => u(a.map(t => t.case));
+    return {
+      paths: f.paths.length, exits: f.exits.length, stages: f.stages.length,
+      refusal: f.paths.filter(x => x.kind === 'refusal').length,
+      success: f.paths.filter(x => x.kind === 'success').length,
+      findings: f.findings.length, pre: f.preconditions.length,
+      untested: f.exits.filter(e => !e.tests.length).length,
+      merged: u(f.paths.map(x => x.kind + '|' + x.status)).length,
+      noSuccess: f.paths.filter(x => x.kind !== 'success').length,
+      firstRun: f.paths.find(x => x.names.drawn === 'first run').id,
+      consent: f.paths.find(x => x.names.drawn === 'consent required').id,
+      consentExit: f.paths.find(x => x.names.drawn === 'consent required').exit.id,
+      frTables: f.paths.find(x => x.names.drawn === 'first run').effects.tables,
+      frSteps: f.paths.find(x => x.names.drawn === 'first run').n.steps,
+      frCases: cases(f.paths.find(x => x.names.drawn === 'first run').tests),
+      consentCases: cases(f.paths.find(x => x.names.drawn === 'consent required').tests),
+      consentN: f.paths.find(x => x.names.drawn === 'consent required').effects.n,
+      labTables: window.LABEP.data.tables.map(t => t.table) }; });
+
+  const DEFLINE = 'command · layout card · rows command · scope kind · grouping request · names drawn · success shown'
+    + ' · sub-paths split · middle dim .28 · portrait path record · wrong-question blank · hotkeys QWERT grid'
+    + ' · cells 64px valley · tooltip lab hover card · test join exact · on part switch kept'
+    + ' · card side right of portrait · ladder in the region · walking one-clock replay · rate-limit chip shown'
+    + ' · colour by kind · matrix per-path · drawn chip strip region title caption · nothing hidden';
+  ok(await p.evaluate(() => window.COPYTXT.command()) === DEFLINE, 'the command panel boots on its default line, word for word', await p.evaluate(() => window.COPYTXT.command()));
+  ok(await p.evaluate(() => window.OPENBLK) === 'blk-command', 'the rail opens on the region being worked on');
+  { const ords = await p.evaluate(() => ['#notes', '#cmd', '#bench', '#port'].map(s => getComputedStyle(document.querySelector(s)).order).join(','));
+    ok(ords === '1,5,3,4', 'the row is renumbered rail 1 · bench 3 · port 4 · cmd-right 5', ords); }
+  { const g = await p.$$eval('#blk-command .cffold', els => els.map(e => e.dataset.group + (e.classList.contains('open') ? ':open' : ':folded')).join(' '));
+    ok(g === 'layout:folded map:open cells:folded colour:folded sections:folded', 'the MAP fold boots open — every §6 choice in front of the operator', g); }
+  { const r = await p.$eval('#cmd', e => { const c = getComputedStyle(e); return { w: e.clientWidth, h: e.clientHeight, ml: c.marginLeft }; });
+    ok(r.w === 358 && r.ml === '12px', 'the region wears FRAME.cmdW and cmdGap (360 box, 12px gap)', JSON.stringify(r)); }
+
+  // ── the CARD: 15 cells, a hover card per cell, the letters and the badges ──
+  ok((await p.$$('#cmd .cmdcell')).length === 15, 'the card draws the 3×5 grid — fifteen command squares');
+  { const hot = await p.$$eval('#cmd .cmdcell .chot', els => els.map(e => e.textContent).join(''));
+    ok(hot === 'QWERTASDFGZXCVB', 'the QWERT grid letters are drawn in the cells, in place', hot); }
+  { const cells = await p.$$('#cmd .cmdcell');
+    for (let i = 0; i < cells.length; i++) { await p.mouse.move(5, 1030); await cells[i].hover(); await p.waitForTimeout(90);
+      const c = await p.evaluate(() => { const h = document.getElementById('hover');
+        return { open: !h.hidden, title: (h.querySelector('.cphd b') || {}).textContent || '', plain: (h.querySelector('.cpplain') || {}).textContent || '' }; });
+      ok(c.open && c.title.length > 2 && c.plain.length > 15, `cell ${i + 1} answers a hover with a card that names its verb and ends on the plain line`, JSON.stringify(c)); }
+    await p.mouse.move(5, 1030); }
+  { const badges = await p.$$eval('#cmd .cmdcell', els => els.map(e => ((e.querySelector('.chot') || {}).textContent || '') + '=' + ((e.querySelector('.cbadge') || {}).textContent || '')).join(' '));
+    ok(badges.includes('Q=' + N.paths), 'Walk a path ▸ badges the number of paths the feed carries', badges);
+    ok(badges.includes('R=' + N.refusal), 'the refusals badge is the feed\'s refusal count — the 500 is counted apart', badges);
+    ok(badges.includes('T=' + N.success), 'the success badge is the feed\'s success count', badges);
+    ok(badges.includes('S=' + N.pre), 'the preconditions badge is the feed\'s row count', badges);
+    ok(badges.includes('F=' + N.findings), 'the findings badge is the feed\'s finding count', badges);
+    ok(badges.includes('X=' + N.untested), 'the untested-exits badge counts the exits with no case', badges); }
+  { const h = await p.$$eval('#cmd .cmdcell.st-hatched', els => els.map(e => (e.querySelector('.chot') || {}).textContent).join(','));
+    ok(h === 'V', 'exactly one cell is HATCHED — Up to entity, which the lab cannot walk to', h);
+    await p.hover('#cmd .cmdcell[data-cmd="up"]'); await p.waitForTimeout(110);
+    ok((await p.$eval('#hover', e => e.innerText)).includes('no graph'), 'and its card says WHY it is hatched');
+    await p.mouse.move(5, 1030); }
+  { const st = await p.$eval('#cmd .cmdcell.st-hatched', e => getComputedStyle(e).backgroundImage);
+    ok(/repeating-linear-gradient/.test(st), 'hatched is drawn as ruling, not as a word', st.slice(0, 60)); }
+
+  // ── Walk a path ▸ swaps the grid, and the wrong-question cell keeps its place ──
+  await p.click('#cmd .cmdcell[data-cmd="walk"]'); await p.waitForTimeout(160);
+  ok((await p.$$('#cmd .cmdcell[data-path]')).length === N.paths, 'Walk a path ▸ draws exactly one cell per path the feed carries');
+  ok((await p.$$('#cmd .cmdcell')).length === 15, 'the grid keeps its fifteen places — the fifteenth is the wrong question, blank');
+  ok((await p.$$('#cmd .cmdcell.st-blank')).length === 15 - N.paths, 'the blank cells are the slots no path fills');
+  { const blank = await p.$eval('#cmd .cmdcell.st-blank', e => ({ svg: e.querySelectorAll('svg').length, dis: e.disabled, bg: getComputedStyle(e).backgroundImage }));
+    ok(blank.svg === 0 && blank.dis === true && blank.bg === 'none', 'a blank cell draws nothing and cannot be clicked — it only holds the place', JSON.stringify(blank)); }
+  await p.evaluate(() => { window.CMD.wrong = 'collapsed'; window.drawCmd(); }); await p.waitForTimeout(140);
+  ok((await p.$$('#cmd .cmdcell')).length === N.paths, 'collapsed closes the grid over the wrong question — the count drops to the paths');
+  await p.evaluate(() => { window.CMD.wrong = 'blank'; window.drawCmd(); }); await p.waitForTimeout(140);
+  { const nm = await p.$$eval('#cmd .cmdcell[data-path] .clbl', els => els.map(e => e.textContent));
+    const want = await p.evaluate(() => window.CMDKIT.paths(window.LABEP).map(c => window.CMDKIT.pathName(c.lead)));
+    ok(nm.join('|') === want.join('|'), 'each path cell is labelled by the name the `names` pick chose', nm.join('|').slice(0, 120)); }
+
+  // ── one selection, six projections ──
+  await p.evaluate(id => window.selectPath(id), N.firstRun); await p.waitForTimeout(220);
+  ok(await p.evaluate(() => window.SEL.path) === N.firstRun, 'clicking a path cell puts it in force on window.SEL.path');
+  { const chip = await p.$('#headstrip .hel.pathchip');
+    ok(chip !== null, 'the head bar grows a chip on the RIGHT pile while a path is in force');
+    ok(await p.$eval('#headstrip .hel.pathchip', e => e.innerText.trim()) === 'first run', 'the chip carries the path\'s name, the way the `names` pick draws it');
+    const col = await p.evaluate(() => { const s = document.querySelector('#headstrip .hel.pathchip svg');
+      return { drawn: s.getAttribute('stroke'), want: window.CMDKIT.kindCol('success', window.STATION) }; });
+    ok(col.drawn === col.want, 'and the glyph is stroked in the path KIND\'s own station colour', JSON.stringify(col));
+    ok((await p.$$('#headstrip .hpile.right .hel')).length === 5, 'the chip rides the right pile beside the file and the UP trio'); }
+  { const pv = await p.$$eval('#portvars .ptv', els => els.map(e => e.dataset.pvar));
+    ok(pv[0] === 'cmd-path' && pv[1] === 'cmd-exit', 'the portrait is LENT the Path and Exit records, and the path record leads', pv.join(','));
+    ok(await p.$eval('#portt', e => e.textContent) === 'first run', 'the portrait names the path as its subject');
+    ok((await p.$$('#portbody .ptchain .ptcr')).length === N.frSteps, `the path record draws all ${N.frSteps} chain steps, in order`); }
+
+  const fpOf = () => p.evaluate(() => { const parts = [];
+    ['#cmd', '#pathstrip', '#panel', '#headstrip', '#portbody', '#portvars', '#cmd .cmdtip'].forEach(sel => { const e = document.querySelector(sel);
+      if (!e) { parts.push(sel + ':none'); return; } const cs = getComputedStyle(e);
+      parts.push(sel + ':' + cs.order + ':' + cs.display + ':' + (e.getAttribute('class') || '') + ':' + e.querySelectorAll('*').length + ':' + (e.innerText || '').replace(/\s+/g, ' ').slice(0, 1200)); });
+    parts.push([...document.querySelectorAll('#portvars .ptv')].map(e => e.dataset.pvar).join('>'));
+    parts.push([...document.querySelectorAll('#cmd .cmdcell, #cmd .excell, #cmd .cmxc')].slice(0, 24)
+      .map(e => { const c = getComputedStyle(e), g = e.querySelector('.cg');
+        return c.borderTopColor + c.borderTopStyle + c.width + c.opacity + c.backgroundImage.slice(0, 70) + c.boxShadow.slice(0, 40)
+          + (g ? getComputedStyle(g).color : ''); }).join(','));
+    return parts.join('§'); });
+
+  // DATA — the tables the path touches are marked, the rest are dimmed to .28, and a written table
+  // wears its bucket chip
+  await p.click('#tabs .tab[data-tab="data"]'); await p.waitForTimeout(220);
+  { const seen = await p.$$eval('#panel [data-table]', els => els.map(e => ({ t: e.dataset.table, on: e.classList.contains('onpath'), off: e.classList.contains('offpath') })));
+    const wantOn = N.labTables.filter(t => N.frTables.indexOf(t) >= 0).length;
+    const wantOff = N.labTables.length - wantOn;
+    ok(seen.filter(x => x.on).length === wantOn, `Data marks the ${wantOn} drawn tables the first-run path touches`, String(seen.filter(x => x.on).length));
+    ok(seen.filter(x => x.off).length === wantOff, `and leaves ${wantOff} off the path`, String(seen.filter(x => x.off).length));
+    ok((await p.$$('#panel .bchip')).length > 0 && await p.$$eval('#panel .bchip', els => els.every(e => /committed|maybe|rolled back|uncommitted/.test(e.textContent))),
+      'every bucket chip says which of the four buckets its write landed in'); }
+  await p.evaluate(id => window.selectPath(id), N.consent); await p.waitForTimeout(240);
+  { const chips = await p.$$eval('#panel [data-table] .bchip', els => els.map(e => (e.closest('[data-table]').dataset.table) + '=' + e.textContent));
+    const rolled = chips.filter(c => /rolled back/.test(c));
+    ok(rolled.length === 1 && rolled[0] === 'idempotency_keys=rolled back ×' + N.consentN.rolled_back,
+      `the consent 409 shows its ${N.consentN.rolled_back} rolled-back writes, on idempotency_keys and nowhere else`, chips.join(' '));
+    ok(chips.indexOf('idempotency_keys=maybe ×' + N.consentN.maybe_committed) >= 0,
+      'the same table also wears its maybe-committed write — one chip per bucket, never one per table', chips.join(' '));
+    const drawnT = await p.$$eval('#panel [data-table]', els => els.map(e => e.dataset.table));
+    ok(chips.filter(c => /committed ×/.test(c) && !/maybe/.test(c)).length === 0 && drawnT.indexOf('users') < 0,
+      'the one committed write is the auth dependency\'s, on `users` — a table this panel never draws, so no chip claims it', chips.join(' '));
+    await p.evaluate(() => { window.showPortraitVar('cmd-path'); });await p.waitForTimeout(160);
+    ok((await p.$$eval('#portbody .pttbl i', els => els.map(e => e.textContent))).indexOf('users') >= 0,
+      'the path record names it instead — the write is never lost, only undrawable here');
+    const col = await p.$eval('#panel .bchip.bk-rolled_back', e => getComputedStyle(e).color);
+    const want = await p.evaluate(() => { const S = window.STATION; const d = document.createElement('i'); d.style.color = S.BADGE_COL.role.accessor; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; });
+    ok(col === want, 'and it is drawn in the station\'s own red — read, never pasted', col + ' vs ' + want);
+    const off = await p.$eval('#panel [data-table].offpath', e => getComputedStyle(e).opacity);
+    ok(off === '0.28', 'what is off the path drops to .28 — dimmed, still readable', off); }
+
+  // TESTS — the exact join marks the C-ids the forms arm proved
+  await p.click('#tabs .tab[data-tab="tests"]'); await p.waitForTimeout(220);
+  { const marked = await p.$$eval('#panel [data-case].onpath', els => [...new Set(els.map(e => e.dataset.case))].sort());
+    const drawn = await p.$$eval('#panel [data-case]', els => [...new Set(els.map(e => e.dataset.case))]);
+    const want = N.consentCases.filter(c => drawn.indexOf(c) >= 0).sort();
+    ok(marked.join(',') === want.join(','), 'Tests marks exactly the consent 409\'s cases that this panel draws', marked.join(',') + ' vs ' + want.join(','));
+    ok(N.consentCases.length === 4 && want.length === 2, 'the other two are service-raises cases the panel does not draw — the record names all four', N.consentCases.join(',')); }
+  await p.evaluate(id => window.selectPath(id), N.firstRun); await p.waitForTimeout(220);
+  { const marked = await p.$$eval('#panel [data-case].onpath', els => [...new Set(els.map(e => e.dataset.case))].sort());
+    ok(marked.join(',') === N.frCases.slice().sort().join(','), `the first run marks its ${N.frCases.length} C-ids`, marked.join(',')); }
+  { const before = await fpOf();
+    await p.evaluate(() => { window.CMD.join = 'parsed'; window.drawCmd(); window.CMDKIT.applyPath(document.getElementById('panel'), 'tests', window.CMDKIT.pathById(window.LABEP, window.SEL.path)); }); await p.waitForTimeout(160);
+    ok(await fpOf() !== before, 'the name-parsed join draws a different set of marks');
+    ok(await p.$eval('#panel [data-case].onpath', e => getComputedStyle(e).outlineStyle) === 'dashed', 'and it is drawn DASHED — the name is the only evidence');
+    await p.evaluate(() => { window.CMD.join = 'off'; window.CMDKIT.applyPath(document.getElementById('panel'), 'tests', window.CMDKIT.pathById(window.LABEP, window.SEL.path)); }); await p.waitForTimeout(140);
+    ok((await p.$$('#panel [data-case].onpath')).length === 0, 'join off marks nothing at all');
+    await p.evaluate(() => { window.CMD.join = 'exact'; window.CMDKIT.applyPath(document.getElementById('panel'), 'tests', window.CMDKIT.pathById(window.LABEP, window.SEL.path)); }); await p.waitForTimeout(140); }
+
+  // FUNCTIONS · SCHEMAS · WIDENING · SECURITY
+  await p.click('#tabs .tab[data-tab="functions"]'); await p.waitForTimeout(220);
+  { const r = await p.evaluate(() => { const p2 = window.CMDKIT.pathById(window.LABEP, window.SEL.path);
+      const want = Object.keys(window.CMDKIT.onPath(window.LABEP, p2).fn);
+      const drawn = [...document.querySelectorAll('#panel [data-fn]')].map(e => e.dataset.fn);
+      return { want: want.filter(f => drawn.indexOf(f) >= 0).sort(), on: [...document.querySelectorAll('#panel [data-fn].onpath')].map(e => e.dataset.fn).sort() }; });
+    ok(r.on.join(',') === r.want.join(',') && r.on.length >= 3, 'Functions marks the handler and every function the chain calls or collapses', JSON.stringify(r)); }
+  await p.click('#tabs .tab[data-tab="schemas"]'); await p.waitForTimeout(220);
+  { const on = await p.$$eval('#panel [data-schema].onpath', els => els.map(e => e.dataset.schema));
+    const want = await p.evaluate(() => { const p2 = window.CMDKIT.pathById(window.LABEP, window.SEL.path);
+      return Object.keys(window.CMDKIT.onPath(window.LABEP, p2).schema); });
+    ok(want.indexOf('MeResponse') >= 0 && on.indexOf('MeResponse') >= 0, 'Schemas marks the exit\'s response model', on.join(','));
+    ok(want.indexOf('SetupCompleteRequest') >= 0 && on.indexOf('SetupCompleteRequest') >= 0, 'and the request shape, because this path passed the validation gate', on.join(','));
+    const marked = await p.$$eval('#panel [data-field].onpath', els => els.map(e => (e.closest('[data-schema]') || { dataset: {} }).dataset.schema + '/' + e.dataset.field));
+    ok(marked.length === 6 && marked.every(m => m.indexOf('MeResponse/') === 0),
+      'the response\'s six fields are marked INSIDE their own shape — `preferences` in another shape stays off', marked.join(' ')); }
+  await p.click('#tabs .tab[data-tab="security"]'); await p.waitForTimeout(220);
+  { const marks = await p.$$eval('#panel .gatemark', els => els.map(e => (e.parentElement.dataset.dep || e.parentElement.dataset.lane) + '=' + e.textContent));
+    ok(marks.length === 6 && marks.every(m => /=passed$/.test(m)), 'on a success path every gate the request crossed reads PASSED, none lit', marks.join(' ')); }
+  await p.evaluate(() => { const f = window.LABEP.forms; window.selectPath(f.paths.find(x => x.names.drawn === 'rate limit (sensitive)').id); }); await p.waitForTimeout(220);
+  { const marks = await p.$$eval('#panel .gatemark', els => els.map(e => (e.parentElement.dataset.dep || e.parentElement.dataset.lane) + '=' + e.textContent));
+    const fired = marks.filter(m => /=fired$/.test(m));
+    ok(fired.length === 1 && /RateLimit/.test(fired[0]), 'on the 429 the rate-limit lane is the one that FIRED', marks.join(' '));
+    const col = await p.$eval('#panel .gatemark.gm-fired', e => getComputedStyle(e).color);
+    const want = await p.evaluate(() => { const d = document.createElement('i'); d.style.color = window.CMDKIT.kindCol('refusal', window.STATION); document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; });
+    ok(col === want, 'and it is lit in the refusal colour', col + ' vs ' + want); }
+  await p.click('#tabs .tab[data-tab="widening"]'); await p.evaluate(id => window.selectPath(id), N.consent); await p.waitForTimeout(240);
+  { const on = await p.$$eval('#panel [data-rung].onpath', els => els.map(e => e.dataset.rung));
+    ok(on.indexOf('useCompleteSetup') >= 0, 'Widening marks the hook that fetches this door on every path', on.join(','));
+    ok(on.indexOf('SetupScreen') >= 0, 'and on the 409 it marks the screen whose site reads the status — the reason-collapsed finding', on.join(',')); }
+
+  // Esc clears everything
+  await p.evaluate(() => document.body.focus());
+  await p.keyboard.press('Escape'); await p.waitForTimeout(220);
+  { const st = await p.evaluate(() => ({ sel: window.SEL, chip: !!document.querySelector('#headstrip .hel.pathchip'),
+      on: document.querySelectorAll('#panel .onpath, #panel .offpath').length, mode: window.CMD.mode }));
+    ok(!st.sel.path && !st.sel.exit && !st.sel.case && !st.chip && st.on === 0 && st.mode === 'cmd',
+      'Esc clears the path, the exit, the case, the head chip, every mark and the card\'s path mode', JSON.stringify(st)); }
+
+  // ── the STRIP ──
+  await p.evaluate(() => { window.CMD.layout = 'strip'; window.drawCmd(); window.drawCmdCfg(); }); await p.waitForTimeout(200);
+  ok((await p.$$('#pathstrip .pscell')).length === N.paths, 'the strip draws one cell per path');
+  { const r = await p.evaluate(() => { const s = document.getElementById('pathstrip'), t = document.getElementById('tabs'), b = document.getElementById('bench');
+      return { below: s.getBoundingClientRect().top >= t.getBoundingClientRect().bottom - 1, inside: b.contains(s), h: Math.round(s.getBoundingClientRect().height), sw: s.scrollWidth <= s.clientWidth + 1 }; });
+    ok(r.below && r.inside && r.h >= 70, 'it sits under the part buttons, inside the bench', JSON.stringify(r));
+    ok(r.sw, 'and it never scrolls the bench sideways — the cells share the width instead of claiming a minimum each');
+    const wid = await p.$$eval('#pathstrip .pscell', els => [...new Set(els.map(e => Math.round(e.getBoundingClientRect().width)))]);
+    ok(wid.length === 1, 'every cell is the same width, whatever its name', wid.join(','));
+    await p.evaluate(() => window.railTab('controls')); await p.click('#boxes .ib[data-box="dock"]'); await p.waitForTimeout(220);
+    ok(await p.$eval('#pathstrip', e => e.scrollWidth <= e.clientWidth + 1), 'it still fits at the dock box (826 wide)',
+      await p.$eval('#pathstrip', e => e.scrollWidth + ' > ' + e.clientWidth));
+    { const fl = await p.evaluate(() => { let n2 = 0, worst = 99;
+        document.querySelectorAll('#pathstrip *').forEach(el => { if (!el.offsetParent) return;
+          const t = [...el.childNodes].some(c => c.nodeType === 3 && c.textContent.trim()); if (!t) return;
+          const fs = parseFloat(getComputedStyle(el).fontSize); if (fs < 12) { n2++; worst = Math.min(worst, fs); } });
+        return { under: n2, worst }; });
+      ok(fl.under === 0, 'and holds the 12px floor at the dock width too', JSON.stringify(fl)); }
+    await p.click('#boxes .ib[data-box="work"]'); await p.waitForTimeout(200); }
+  { const before = await p.$$eval('#pathstrip .pscell', els => els.map(e => e.dataset.path).join(','));
+    await p.evaluate(() => { window.CMD.group = 'status'; window.drawCmd(); }); await p.waitForTimeout(160);
+    const after = await p.$$eval('#pathstrip .pscell', els => els.map(e => e.dataset.path).join(','));
+    ok(after !== before && after.split(',').length === before.split(',').length, 'grouping by status reorders the same cells', after.slice(0, 60));
+    await p.evaluate(() => { window.CMD.group = 'kind'; window.drawCmd(); }); await p.waitForTimeout(160);
+    ok(await p.$$eval('#pathstrip .pscell', els => els.map(e => e.dataset.path).join(',')) !== after, 'and grouping by kind reorders them again');
+    await p.evaluate(() => { window.CMD.group = 'request'; window.drawCmd(); }); await p.waitForTimeout(140); }
+  { await p.evaluate(() => { window.CMD.sub = 'merged'; window.drawCmd(); }); await p.waitForTimeout(160);
+    ok((await p.$$('#pathstrip .pscell')).length === N.merged, `merged folds the sub-paths into ${N.merged} cells, one per kind and status`);
+    await p.evaluate(() => { window.CMD.sub = 'split'; window.CMD.success = 'hidden'; window.drawCmd(); }); await p.waitForTimeout(160);
+    ok((await p.$$('#pathstrip .pscell')).length === N.noSuccess, 'hiding the success paths leaves the refusals');
+    await p.evaluate(() => { window.CMD.success = 'shown'; window.drawCmd(); }); await p.waitForTimeout(140); }
+  { const flags = await p.$$eval('#pathstrip .pscell .cflag', els => els.length);
+    ok(flags === 2, 'the rate-limit flag chip rides only the two cells its own switch names', String(flags));
+    await p.evaluate(() => { window.CMD.flag = 'hidden'; window.drawCmd(); }); await p.waitForTimeout(140);
+    ok((await p.$$('#pathstrip .cflag')).length === 0, 'and hiding it takes it off the picture');
+    await p.evaluate(() => { window.CMD.flag = 'shown'; window.drawCmd(); }); await p.waitForTimeout(140); }
+
+  // a control the OPEN layout does not use is drawn DASHED, and its card says why (law 10)
+  { const na = await p.$$eval('#blk-command .ib.na', els => els.map(e => e.getAttribute('data-cmdladder') || e.getAttribute('data-cmdwalk') || e.getAttribute('data-cmdscope') || e.getAttribute('data-cmdwrong') || e.getAttribute('data-cmdmatrix') || e.getAttribute('data-cmdside') || '?'));
+    ok(na.length > 0, 'in the strip layout the card-only and ladder-only dials are marked unusable', na.join(','));
+    ok(await p.$eval('#blk-command .ib.na', e => getComputedStyle(e).borderTopStyle) === 'dashed', 'and they are drawn DASHED, not hidden');
+    await p.hover('#blk-command .ib.na'); await p.waitForTimeout(150);
+    ok((await p.$eval('#hover', e => e.innerText)).includes('does nothing right now'), 'and the card says so out loud');
+    await p.mouse.move(5, 1030); }
+  // the SC2 card is a FIXED area under the grid, not a floating one (choice 13)
+  { await p.evaluate(() => { window.CMD.layout = 'card'; window.CMD.tip = 'sc2'; window.drawCmd(); }); await p.waitForTimeout(200);
+    ok(await p.$eval('#cmd .cmdtip', e => getComputedStyle(e).display) !== 'none', 'the SC2 card opens a fixed area under the grid');
+    await p.hover('#cmd .cmdcell[data-cmd="refusals"]'); await p.waitForTimeout(180);
+    ok((await p.$eval('#cmd .cmdtip', e => e.innerText)).length > 20, 'and hovering a cell fills it instead of a floating card');
+    ok(await p.$eval('#hover', e => e.hidden) === true, 'the floating card stays shut while the fixed one is in use');
+    await p.evaluate(() => { window.CMD.tip = 'caption'; window.drawCmd(); }); await p.waitForTimeout(160);
+    await p.hover('#cmd .cmdcell[data-cmd="refusals"]'); await p.waitForTimeout(180);
+    { const cap = await p.$eval('#cmd .cmdtip .capl', e => e.innerText);
+      ok(cap.length > 8 && cap.split('\n').length === 1, 'the caption block is ONE line, nothing more', cap); }
+    await p.evaluate(() => { window.CMD.tip = 'hover'; window.CMD.layout = 'strip'; window.drawCmd(); }); await p.waitForTimeout(160);
+    ok(await p.$eval('#cmd .cmdtip', e => getComputedStyle(e).display) === 'none', 'and the lab hover card leaves the area away'); }
+
+  // ── the LADDER ──
+  await p.evaluate(() => { window.CMD.layout = 'ladder'; window.drawCmd(); window.drawCmdCfg(); }); await p.waitForTimeout(220);
+  ok((await p.$$('#cmd .exrung')).length === N.stages + 1, `the ladder draws the ${N.stages} stages plus the success return at the foot`);
+  ok((await p.$$('#cmd .excell')).length === N.exits, `every one of the ${N.exits} exits hangs on the rung it leaves from`);
+  ok((await p.$$('#cmd .exrung.foot .excell')).length === 1, 'the return is the only thing on the foot rung');
+  { await p.click(`#cmd .excell[data-exit="${N.consentExit}"]`); await p.waitForTimeout(220);
+    const r = await p.$$eval('#cmd .exrung', els => els.map(e => ({ c: e.className, o: getComputedStyle(e).opacity })));
+    const here = r.findIndex(x => /here/.test(x.c));
+    ok(here > 0, 'clicking the consent 409 marks the rung it leaves from', String(here));
+    ok(r.slice(0, here).every(x => x.o === '1'), 'the rungs above it stay lit — the request got that far');
+    ok(r.slice(here + 1).every(x => x.o === '0.32'), 'and the rungs below it dim — the request never reached them', r.map(x => x.o).join(','));
+    ok(await p.evaluate(() => window.SEL.exit) === N.consentExit, 'and the exit is in force on window.SEL.exit'); }
+  { const a = await p.$eval('#cmd .cmdbead', e => e.getBoundingClientRect().top);
+    await p.waitForTimeout(350); const b2 = await p.$eval('#cmd .cmdbead', e => e.getBoundingClientRect().top);
+    await p.waitForTimeout(900); const c2 = await p.$eval('#cmd .cmdbead', e => e.getBoundingClientRect().top);
+    ok(a !== b2 && b2 !== c2, 'the replay bead walks the ladder on the shared clock — two samples at uneven gaps differ', [a, b2, c2].join(' / '));
+    await p.evaluate(() => window.CLOCK.play(false)); await p.waitForTimeout(160);
+    const d1 = await p.$eval('#cmd .cmdbead', e => e.getBoundingClientRect().top); await p.waitForTimeout(420);
+    ok(await p.$eval('#cmd .cmdbead', e => e.getBoundingClientRect().top) === d1, 'pausing the ONE clock freezes it');
+    await p.evaluate(() => window.CLOCK.play(true)); await p.waitForTimeout(140);
+    await p.evaluate(() => { window.CMD.walk = 'static'; window.drawCmd(); }); await p.waitForTimeout(200);
+    ok(await p.$eval('#cmd .cmdbead', e => getComputedStyle(e).animationName) === 'none', 'static takes the animation off and rests the bead on the rung');
+    await p.evaluate(() => { window.CMD.walk = 'replay'; window.drawCmd(); }); await p.waitForTimeout(140); }
+  { await p.evaluate(() => { window.CMD.ladder = 'portrait'; window.drawCmd(); }); await p.waitForTimeout(200);
+    const r = await p.evaluate(() => { const l = document.getElementById('portlad'), pt = document.getElementById('port');
+      return { hidden: document.getElementById('cmd').hidden, w: Math.round(l.getBoundingClientRect().width), left: Math.round(l.getBoundingClientRect().left - pt.getBoundingClientRect().left), rungs: l.querySelectorAll('.exrung').length }; });
+    ok(r.hidden && r.w === 28 && r.left <= 1 && r.rungs === N.stages + 1, 'the ladder can move into the portrait\'s left edge as a 28px tick rail', JSON.stringify(r));
+    await p.evaluate(() => { window.CMD.ladder = 'left'; window.drawCmd(); }); await p.waitForTimeout(180);
+    ok(await p.$eval('#cmd', e => getComputedStyle(e).order) === '2', 'or to the other side of the bench — one order value');
+    await p.evaluate(() => { window.CMD.ladder = 'cmd'; window.drawCmd(); }); await p.waitForTimeout(160); }
+
+  // ── the MATRIX ──
+  await p.evaluate(() => { window.CMD.layout = 'matrix'; window.clearPath(); window.drawCmd(); window.drawCmdCfg(); }); await p.waitForTimeout(220);
+  { const r = await p.evaluate(() => ({ rows: document.querySelectorAll('#cmd .cmxrow:not(.cmxhd)').length,
+      cols: document.querySelectorAll('#cmd .cmxhd .cmxh').length, cells: document.querySelectorAll('#cmd .cmxc').length,
+      lit: document.querySelectorAll('#cmd .cmxc.st-lit').length, hollow: document.querySelectorAll('#cmd .cmxc.st-hollow').length,
+      want: (function(){ const F2 = window.LABEP, parts = ['data', 'schemas', 'functions', 'tests', 'widening', 'security'];
+        let n = 0; window.CMDKIT.paths(F2).forEach(c => parts.forEach(k => { if (window.CMDKIT.partFacts(F2, c.lead, k).n) n++; })); return n; })(),
+      size: Math.round(document.querySelector('#cmd .cmxc').getBoundingClientRect().width) }));
+    ok(r.rows === N.paths && r.cols === 6, `the matrix is ${N.paths} paths × 6 parts`, JSON.stringify(r));
+    ok(r.cells === N.paths * 6, 'one cell per pair', String(r.cells));
+    ok(r.size === 28, 'each cell is 28px, as the plan asked', String(r.size));
+    ok(r.lit === r.want && r.lit + r.hollow === r.cells, 'the lit count equals the number the page computes from the feed', r.lit + ' vs ' + r.want); }
+  { const before = await p.$$eval('#cmd .cmxc', els => els.map(e => e.className).join(','));
+    await p.evaluate(() => { window.CMD.matrix = 'hook'; window.drawCmd(); }); await p.waitForTimeout(180);
+    const after = await p.$$eval('#cmd .cmxc.st-lit[data-part="widening"]', els => els.length);
+    ok(after === N.paths, 'counting the hook lights the Widening column for every path — which is why per-path is the default', String(after));
+    await p.evaluate(() => { window.CMD.matrix = 'path'; window.drawCmd(); }); await p.waitForTimeout(160);
+    ok(await p.$$eval('#cmd .cmxc', els => els.map(e => e.className).join(',')) === before, 'and switching back restores the picture exactly'); }
+
+  // ── COLOUR (backlog B13), measured on the drawn cells ──
+  await p.evaluate(() => { window.CMD.layout = 'card'; window.CMD.mode = 'path'; window.drawCmd(); }); await p.waitForTimeout(200);
+  { const pick = async () => p.evaluate(() => { const F2 = window.LABEP;
+      const s = F2.forms.paths.find(x => x.kind === 'success').id, r = F2.forms.paths.find(x => x.kind === 'refusal').id;
+      const c = id => { const e = document.querySelector('#cmd .cmdcell[data-path="' + id + '"] .cg'); return e ? getComputedStyle(e).color : null; };
+      return { s: c(s), r: c(r) }; });
+    const byKind = await pick();
+    ok(byKind.s && byKind.r && byKind.s !== byKind.r, 'colour by kind draws a success cell and a refusal cell in different colours', JSON.stringify(byKind));
+    await p.evaluate(() => { window.CMD.colour = 'mono'; window.drawCmd(); }); await p.waitForTimeout(160);
+    const mono = await pick();
+    ok(mono.s === mono.r, 'mono makes them equal — the glyph carries the kind on its own', JSON.stringify(mono));
+    const other = async () => p.evaluate(() => { const F2 = window.LABEP;
+      const c = k => { const id = F2.forms.paths.find(x => x.kind === k).id;
+        const e = document.querySelector('#cmd .cmdcell[data-path="' + id + '"] .cg'); return e ? getComputedStyle(e).color : null; };
+      return { framework: c('framework'), validation: c('validation'), uncaught: c('uncaught'), refusal: c('refusal') }; });
+    await p.evaluate(() => { window.CMD.colour = 'kind'; window.drawCmd(); }); await p.waitForTimeout(160);
+    const kindOther = await other();
+    await p.evaluate(() => { window.CMD.colour = 'status'; window.drawCmd(); }); await p.waitForTimeout(160);
+    const byStatus = await pick(), statusOther = await other();
+    ok(byStatus.s !== byStatus.r, 'by status still parts 2xx from 4xx', JSON.stringify(byStatus));
+    ok(kindOther.framework !== kindOther.refusal && statusOther.framework === statusOther.refusal,
+      'by status a framework 4xx reads the SAME as a written 4xx — which is the whole difference between the two rules', JSON.stringify({ kindOther, statusOther }));
+    ok(kindOther.uncaught !== statusOther.uncaught, 'and the 500 changes hands: the uncaught red becomes the 5xx colour', kindOther.uncaught + ' → ' + statusOther.uncaught);
+    await p.evaluate(() => { window.CMD.colour = 'phase'; window.drawCmd(); }); await p.waitForTimeout(160);
+    const ramp = await p.$$eval('#cmd .cmdcell[data-path] .cg', els => [...new Set(els.map(e => getComputedStyle(e).color))]);
+    ok(ramp.length === await p.evaluate(() => [...new Set(window.CMDKIT.paths(window.LABEP).map(c => c.lead.phase))].length),
+      'the phase ramp draws one colour per stage the paths end in', ramp.join(' '));
+    await p.evaluate(() => { window.CMD.colour = 'kind'; window.drawCmd(); }); await p.waitForTimeout(140); }
+
+  // ── EVERY PICK CHANGES THE PICTURE (law 8) ──
+  await p.evaluate(id => { window.CMD.layout = 'card'; window.CMD.mode = 'path'; window.showTab('data'); window.selectPath(id); }, N.consent);
+  await p.waitForTimeout(240);
+  for (const [key, val, why] of [['rows', 'parts', 'the parts draw their own strip'], ['names', 'detail', 'the cells wear the detail text'],
+      ['names', 'exception', 'the cells wear the exception class'], ['names', 'phase', 'the cells wear stage · status'],
+      ['middle', 'filter', 'what is off the path leaves'], ['middle', 'outline', 'only what is on the path is ringed'],
+      ['portrait', 'split', 'the part\'s own record comes first'], ['size', 76, 'the squares grow'], ['size', 52, 'the squares shrink'],
+      ['face', 'flat', 'the valley goes flat'], ['keys', 'mnemonic', 'the letters become mnemonics'], ['keys', 'off', 'the letters go'],
+      ['tip', 'sc2', 'a fixed card opens under the grid'], ['tip', 'caption', 'one caption line replaces it'],
+      ['side', 'left', 'the region crosses the row']]) {
+    const before = await fpOf();
+    await p.evaluate(([k, v]) => { window.CMD[k] = v; window.drawCmd(); window.CMDKIT.applyPath(document.getElementById('panel'), 'data', window.CMDKIT.pathById(window.LABEP, window.SEL.path)); window.drawPortrait(); }, [key, val]);
+    await p.waitForTimeout(170);
+    ok(await fpOf() !== before, `pick ${key}=${val} changes the picture — ${why}`); }
+  await resetCmd(); await p.evaluate(id => { window.CMD.mode = 'path'; window.selectPath(id); }, N.firstRun); await p.waitForTimeout(200);
+  { const before = await fpOf();
+    await p.evaluate(() => { window.CMD.scope = 'entity'; window.CMD.mode = 'cmd'; window.drawCmd(); }); await p.waitForTimeout(180);
+    ok(await fpOf() !== before, 'pick scope=entity changes the picture — the entity\'s doors take the grid');
+    const ent = await p.evaluate(() => ({ cells: document.querySelectorAll('#cmd .cmdcell[data-cmd^="ent"]').length,
+      hatched: document.querySelectorAll('#cmd .cmdcell.st-hatched').length, want: window.LABEP.feedwide.entity_counts.endpoints }));
+    ok(ent.cells === ent.want && ent.hatched === ent.want - 1, 'the entity card draws one cell per endpoint the entity holds, and hatches the ones the feed never names', JSON.stringify(ent));
+    await p.evaluate(() => { window.CMD.scope = 'both'; window.drawCmd(); }); await p.waitForTimeout(160);
+    ok((await p.$$('#cmd .cmdgrid')).length === 2, 'both draws the verbs and the entity\'s doors, one grid each');
+    await p.evaluate(() => { window.CMD.scope = 'kind'; window.drawCmd(); }); await p.waitForTimeout(140); }
+  // `on part switch` is a behaviour, not a redraw — it is proved by switching parts
+  { await p.evaluate(id => { window.CMD.keep = 'cleared'; window.selectPath(id); window.showTab('data'); }, N.firstRun); await p.waitForTimeout(200);
+    await p.click('#tabs .tab[data-tab="security"]'); await p.waitForTimeout(200);
+    ok(await p.evaluate(() => window.SEL.path) === null, 'on part switch `cleared` drops the path when another part opens');
+    await p.evaluate(id => { window.CMD.keep = 'kept'; window.selectPath(id); window.showTab('data'); }, N.firstRun); await p.waitForTimeout(200);
+    await p.click('#tabs .tab[data-tab="security"]'); await p.waitForTimeout(200);
+    ok(await p.evaluate(() => window.SEL.path) === N.firstRun, 'and `kept` holds it across every part'); }
+  // sections: hiding is display:none, and one click brings it back
+  { await p.evaluate(() => { window.CMD.show.chip = 0; window.CMD.show.region = 0; window.drawCmd(); window.drawHead(); }); await p.waitForTimeout(180);
+    ok(await p.$eval('#cmd', e => getComputedStyle(e).display) === 'none' && (await p.$$('#headstrip .pathchip')).length === 0,
+      'a hidden section is display:none — it never leaves the page');
+    await p.evaluate(() => { window.CMD.show.chip = 1; window.CMD.show.region = 1; window.drawCmd(); window.drawHead(); }); await p.waitForTimeout(180);
+    ok(await p.$eval('#cmd', e => getComputedStyle(e).display) !== 'none' && (await p.$$('#headstrip .pathchip')).length === 1, 'and one click brings it back'); }
+
+  // ── the HOTKEYS read the letter the cell drew ──
+  await resetCmd(); await p.waitForTimeout(180);
+  await p.evaluate(() => document.body.focus());
+  await p.keyboard.press('q'); await p.waitForTimeout(200);
+  ok((await p.$$('#cmd .cmdcell[data-path]')).length === N.paths, 'Q walks the paths from the keyboard');
+  await p.keyboard.press('b'); await p.waitForTimeout(200);
+  ok(await p.evaluate(() => window.CMD.mode) === 'cmd', 'B clears, the same as Esc — even in the path grid, where no cell carries the letter');
+  { await p.evaluate(() => { const i = document.createElement('input'); i.id = '__t'; document.body.append(i); i.focus(); });
+    await p.keyboard.press('q'); await p.waitForTimeout(160);
+    ok((await p.$$('#cmd .cmdcell[data-path]')).length === 0, 'a hotkey never fires while an input has focus');
+    await p.evaluate(() => { document.getElementById('__t').remove(); document.body.focus(); }); }
+
+  // ── THE FLOOR, inside the command region, at the smallest cell ──
+  const cmdFloor = async () => p.evaluate(() => { let n = 0, worst = 99;
+    document.querySelectorAll('#cmd *, #pathstrip *').forEach(el => { if (!el.offsetParent) return;
+      const t = el.childNodes && [...el.childNodes].some(c => c.nodeType === 3 && c.textContent.trim()); if (!t) return;
+      const fs = parseFloat(getComputedStyle(el).fontSize); if (fs < 12) { n++; worst = Math.min(worst, fs); } });
+    return { under: n, worst }; });
+  for (const z of [64, 76, 52]) { await p.evaluate(s => { window.CMD.size = s; window.CMD.mode = 'path'; window.drawCmd(); }, z); await p.waitForTimeout(180);
+    const fl = await cmdFloor();
+    ok(fl.under === 0, `no text in the command region goes under 12px at cell size ${z}`, JSON.stringify(fl));
+    const w = await p.$eval('#cmd .cmdcell', e => Math.round(e.getBoundingClientRect().width));
+    ok(w === z, `and the square really is ${z}px`, String(w)); }
+  await p.evaluate(() => { window.CMD.size = 64; window.CMD.mode = 'cmd'; window.drawCmd(); }); await p.waitForTimeout(140);
+  for (const L of ['card', 'strip', 'ladder', 'matrix']) {
+    await p.evaluate(l => { window.CMD.layout = l; window.drawCmd(); }, L); await p.mouse.move(5, 1030); await p.waitForTimeout(220);
+    const d = await p.$eval('#cmd', e => ({ w: e.clientWidth, sw: e.scrollWidth, h: e.clientHeight, sh: e.scrollHeight }));
+    ok(d.sw <= d.w + 1, `the ${L} layout never scrolls the region sideways`, JSON.stringify(d));
+    const fl = await cmdFloor(); ok(fl.under === 0, `and it holds the 12px floor`, JSON.stringify(fl));
+    if (shotsAt) { fs.mkdirSync(shotsAt, { recursive: true }); await p.mouse.move(5, 1030); await p.waitForTimeout(140);
+      await (await p.$(L === 'strip' ? '#bench' : '#cmd')).screenshot({ path: path.join(shotsAt, `eplab-cmd-${L}.png`) }); } }
+  await resetCmd(); await p.waitForTimeout(160);
+  if (shotsAt) { await p.evaluate(() => { window.CMD.mode = 'path'; window.drawCmd(); }); await p.mouse.move(5, 1030); await p.waitForTimeout(200);
+    await (await p.$('#cmd')).screenshot({ path: path.join(shotsAt, 'eplab-cmd-card-paths.png') });
+    await p.evaluate(id => window.selectPath(id), N.firstRun); await p.waitForTimeout(200);
+    for (const t of tabs) { await p.evaluate(k => window.showTab(k), t); await p.mouse.move(5, 1030); await p.waitForTimeout(240);
+      await (await p.$('#bench')).screenshot({ path: path.join(shotsAt, `eplab-cmd-path-${t}.png`) }); }
+    await p.evaluate(() => { window.showTab('data'); window.showPortraitVar('cmd-path'); }); await p.mouse.move(5, 1030); await p.waitForTimeout(220);
+    await (await p.$('#port')).screenshot({ path: path.join(shotsAt, 'eplab-cmd-portrait-path.png') });
+    await p.evaluate(id => window.selectPath(id), N.consent); await p.mouse.move(5, 1030); await p.waitForTimeout(240);
+    await (await p.$('#port')).screenshot({ path: path.join(shotsAt, 'eplab-cmd-portrait-consent.png') });
+    await p.evaluate(() => window.showPortraitVar('cmd-exit')); await p.mouse.move(5, 1030); await p.waitForTimeout(220);
+    await (await p.$('#port')).screenshot({ path: path.join(shotsAt, 'eplab-cmd-portrait-exit.png') });
+    await p.evaluate(() => { const e = window.CMDKIT.exitById(window.LABEP, window.SEL.exit); window.selectCase(e.tests[0].case); window.showPortraitVar('cmd-case'); });
+    await p.mouse.move(5, 1030); await p.waitForTimeout(220);
+    await (await p.$('#port')).screenshot({ path: path.join(shotsAt, 'eplab-cmd-portrait-case.png') }); }
+  await resetCmd(); await p.waitForTimeout(160);
+  ok(errs.length === errsBefore, 'the command panel raises no page error anywhere in this section', errs.slice(errsBefore, errsBefore + 3).join(' | '));
+}
+
 // the checks file
 if (checksFile) {
   const checks = JSON.parse(fs.readFileSync(checksFile, 'utf8'));

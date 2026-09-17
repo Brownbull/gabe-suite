@@ -19,6 +19,10 @@
     <aside id="notes">
       <nav id="railtabs" role="tablist"></nav>
       <section class="rtab" id="rt-controls">
+        <div class="barblk" id="blk-command">
+          <div class="bhl"><span class="bhi"></span><b>command panel</b><span class="bhn">four layouts · every choice</span></div>
+          <div class="blkbody"><div id="cmdcfg"></div></div>
+        </div>
         <div class="barblk" id="blk-bench">
           <div class="bhl"><span class="bhi"></span><b>bench</b><span class="bhn">the box this is drawn in</span></div>
           <div class="blkbody">
@@ -68,6 +72,9 @@
     <section id="bench" class="box-work" aria-label="the console's middle region, boxed — only what would be built">
       <div id="headstrip"></div>
       <nav id="tabs" role="tablist"></nav>
+      <!-- the PATH STRIP: one cell per way a request ends, under the part buttons. It ships with the
+           `strip` layout; every other layout leaves it hidden (display:none, never removed). -->
+      <div id="pathstrip" hidden></div>
       <div id="panel" role="tabpanel"></div>
     </section>
     <!-- THE PORTRAIT PANEL — a SEPARATE region of the console, right of the middle section and TALLER
@@ -75,8 +82,14 @@
          listed. It holds whatever the middle panel selected, in several representations. -->
     <section id="port" aria-label="the portrait panel — the selected thing, drawn">
       <header id="porthd"><span class="pti"></span><b id="portt">portrait</b><span class="ptsub" id="portsub">—</span><nav id="portvars"></nav></header>
+      <div id="portlad" hidden></div>
       <div id="portbody"></div>
     </section>
+    <!-- THE COMMAND PANEL (Phase 6 slice 1, 2026-09-17) — the console's ACT half. It holds whichever
+         LAYOUT is chosen (card · strip · ladder · matrix); every dial lives in the rail's blk-command.
+         `order` renumbered for it: rail 1 · cmd-left 2 · bench 3 · port 4 · cmd-right 5, so choice 16
+         (card side) is ONE order value. -->
+    <section id="cmd" aria-label="the command panel — every way a request through this door ends"></section>
   </div>
 </div>
 <div id="hover" class="jdcolpop" hidden></div>
@@ -469,7 +482,8 @@
   function drawHead(){ HS.innerHTML = "";
     ["left", "right"].forEach(function(side){ var pile = el("span", { class: "hpile " + side });
       window.headOrder(side).forEach(function(k){ var e = BYKEY[k]; if (!e) return; var n = e.build(); if (n) pile.append(n); });
-      HS.append(pile); }); }
+      HS.append(pile); });
+    if (window.__cmdChip) window.__cmdChip(HS); }
   window.drawHead = drawHead;
 
   /* the rail's SECOND section — this bar's own controls (operator 2026-09-11) */
@@ -551,16 +565,21 @@
     benchW: 1, benchS: "solid",
     headH: 45, headBw: 0, headBs: "solid", headDivW: 1, headDivS: "none", headGap: 0,
     tabsRow: 52, tabsH: 43, tabsBw: 0, tabsBs: "solid", tabsDivW: 1, tabsDivS: "none", tabsGap: 0,
-    portW: 440, portH: 560, portBw: 1, portBs: "solid", portGap: 12 };
+    portW: 440, portH: 560, portBw: 1, portBs: "solid", portGap: 12,
+    cmdW: 360, cmdGap: 12 };
   var FRVAR = { benchW: "--bench-bw", benchS: "--bench-bs",
     headH: "--head-h", headBw: "--head-bw", headBs: "--head-bs", headDivW: "--head-divw", headDivS: "--head-divs", headGap: "--head-gap",
     portW: "--port-w", portH: "--port-h", portBw: "--port-bw", portBs: "--port-bs", portGap: "--port-gap",
+    cmdW: "--cmd-w", cmdGap: "--cmd-gap",
     tabsRow: "--tabs-row", tabsH: "--tabs-h", tabsBw: "--tabs-bw", tabsBs: "--tabs-bs", tabsDivW: "--tabs-divw", tabsDivS: "--tabs-divs", tabsGap: "--tabs-gap" };
-  function applyFrame(){ var b = document.getElementById("bench"), pt = document.getElementById("port");
+  function applyFrame(){ var b = document.getElementById("bench"), pt = document.getElementById("port"), cm = document.getElementById("cmd");
     Object.keys(FRVAR).forEach(function(k){ var v = FRAME[k];
       b.style.setProperty(FRVAR[k], typeof v === "number" ? v + "px" : v);
-      if (pt) pt.style.setProperty(FRVAR[k], typeof v === "number" ? v + "px" : v); });
-    if (pt) pt.hidden = FRAME.portW === 0; }
+      if (pt) pt.style.setProperty(FRVAR[k], typeof v === "number" ? v + "px" : v);
+      if (cm) cm.style.setProperty(FRVAR[k], typeof v === "number" ? v + "px" : v); });
+    if (pt) pt.hidden = FRAME.portW === 0;
+    if (cm && window.CMD) cm.hidden = FRAME.cmdW === 0 || !window.CMD.show.region
+      || (window.CMD.layout === "ladder" && window.CMD.ladder === "portrait"); }
   window.applyFrame = applyFrame;
   /* the line options ARE lines — each button draws the pattern it sets (the legend law) */
   var LINES = [
@@ -1949,6 +1968,27 @@
       if (!ok && navigator.clipboard) { navigator.clipboard.writeText(txt).then(function(){ done(true); }, function(){ done(false); }); return; }
       done(ok); } catch (e) { done(false); } }
   window.COPYTXT = {
+    /* THE COMMAND PANEL's own line — every §6 choice, in the order the rail asks them (2026-09-17) */
+    command: function(){ var C = window.CMD, W = {
+        middle: { dim: "dim .28", filter: "filter", outline: "outline" },
+        portrait: { path: "path record", keep: "keep selection", split: "split" },
+        keys: { grid: "QWERT grid", mnemonic: "mnemonic letter", off: "off" },
+        tip: { hover: "lab hover card", sc2: "SC2 card", caption: "caption block" },
+        join: { exact: "exact", parsed: "name-parsed dashed", off: "off" },
+        side: { right: "right of portrait", left: "left of bench" },
+        ladder: { cmd: "in the region", left: "left of bench", portrait: "inside the portrait edge" },
+        walk: { replay: "one-clock replay", "static": "static" },
+        matrix: { path: "per-path", hook: "with the hook" } };
+      var sec = ["chip", "strip", "region", "title", "caption"];
+      return "command · layout " + C.layout + " · rows " + C.rows + " · scope " + C.scope
+        + " · grouping " + C.group + " · names " + C.names + " · success " + C.success + " · sub-paths " + C.sub
+        + " · middle " + W.middle[C.middle] + " · portrait " + W.portrait[C.portrait] + " · wrong-question " + C.wrong
+        + " · hotkeys " + W.keys[C.keys] + " · cells " + C.size + "px " + C.face + " · tooltip " + W.tip[C.tip]
+        + " · test join " + W.join[C.join] + " · on part switch " + C.keep + " · card side " + W.side[C.side]
+        + " · ladder " + W.ladder[C.ladder] + " · walking " + W.walk[C.walk] + " · rate-limit chip " + C.flag
+        + " · colour by " + C.colour + " · matrix " + W.matrix[C.matrix]
+        + " · drawn " + sec.filter(function(k){ return C.show[k]; }).join(" ")
+        + (sec.some(function(k){ return !C.show[k]; }) ? " · hidden " + sec.filter(function(k){ return !C.show[k]; }).join(" ") : " · nothing hidden"); },
     bench: function(){ var box = document.querySelector("#boxes .ib.on"), d = window.DENS;
       return "bench · box " + (box ? box.__label : "?") + " · density " + d + " · motion " + (CLOCK.on ? "playing" : "paused"); },
     head: function(){ var styled = Object.keys(HEADCFG.style).map(function(k){ var st = window.elStyle(k);
@@ -2029,6 +2069,8 @@
     b.onclick = function(ev){ ev.stopPropagation(); blk.classList.toggle("min"); };
     hl.addEventListener("click", function(ev){ if (ev.target.closest(".cpb, .mnb")) return; blk.classList.toggle("min"); });
     hl.append(b); }
+  document.getElementById("blk-command").querySelector(".bhi").innerHTML = S.icon("shield", 13, "var(--accent)");
+  document.getElementById("blk-command").querySelector(".bhl").append(copyBtn("command", "the command panel's layout and every §6 choice"));
   document.getElementById("blk-bench").querySelector(".bhi").innerHTML = labIco("bench", 13, "var(--accent)");
   document.getElementById("blk-bench").querySelector(".bhl").append(copyBtn("bench", "the bench's box, density and clock"));
   document.getElementById("blk-parts").querySelector(".bhl").append(copyBtn("parts", "the distribution chosen for each part"));
@@ -2044,8 +2086,8 @@
   document.getElementById("blk-functions").querySelector(".bhl").append(copyBtn("functions", "which sections the Functions panel draws, and how"));
   /* THE RAIL OPENS ON ONE REGION (operator 2026-09-12): every block folds away except the one being
      worked on. Moving to the next region is this one line. */
-  var OPENBLK = window.OPENBLK = "blk-functions";   /* the region being worked on (operator 2026-09-13: Functions, next) */
-  ["blk-bench", "blk-head", "blk-tabs", "blk-frame", "blk-data", "blk-schemas", "blk-functions", "blk-parts"].forEach(function(id){
+  var OPENBLK = window.OPENBLK = "blk-command";   /* the region being worked on (operator 2026-09-17: the COMMAND panel) */
+  ["blk-command", "blk-bench", "blk-head", "blk-tabs", "blk-frame", "blk-data", "blk-schemas", "blk-functions", "blk-parts"].forEach(function(id){
     foldable(id); if (id !== OPENBLK) document.getElementById(id).classList.add("min"); });
   document.getElementById("blk-head").querySelector(".bhi").innerHTML = labIco("bars", 13, "var(--accent)");
   document.getElementById("blk-head").querySelector(".bhl").append(copyBtn("head", "the head bar's verbosity, piles and order"));
@@ -2071,7 +2113,10 @@
     for (var p in (a || {})) { if (p === "class") e.className = a[p]; else if (p === "html") e.innerHTML = a[p]; else e.setAttribute(p, a[p]); }
     k.forEach(function(c){ if (c != null) e.append(c); }); return e; }
 
-  function show(k){ cur = k;
+  function show(k){ var wasOn = cur; cur = k;
+    /* choice 15 — a path in force is KEPT across a part switch, or cleared with it */
+    if (window.CMD && wasOn && wasOn !== k && window.CMD.keep === "cleared" && window.SEL && window.SEL.path) {
+      window.SEL.path = null; window.SEL.exit = null; window.SEL["case"] = null; if (window.drawCmd) window.drawCmd(); }
     if (TABS.children.length) drawTabs();   /* FOCUS colour depends on which part is open, so the row redraws */
     [].forEach.call(TABS.children, function(b){ b.classList.toggle("on", b.dataset.tab === k); });
     var P = window.PANELS[k]; if (!curVar[k]) curVar[k] = P.defaultVariant || P.variants[0].key;
@@ -2083,24 +2128,38 @@
     if (window.drawDataCfg && k === "data") window.drawDataCfg();   /* which sections THIS distribution draws */
     if (window.drawSchCfg && k === "schemas") window.drawSchCfg();
     if (window.drawFnCfg && k === "functions") window.drawFnCfg();
+    /* THE PROJECTION runs LAST, over the drawn panel — it marks what is on the path and treats the
+       rest per choice 8 (dim .28 · filter · outline). A post-render pass, never a second renderer. */
+    if (window.CMDKIT) window.CMDKIT.applyPath(PANEL, k, window.CMDKIT.pathById(F, (window.SEL || {}).path));
     drawPortrait();
     readBox(); }
   /* THE PORTRAIT (operator 2026-09-12): a panel publishes `portrait(box, F, S)` and the stage draws it
      beside the picture. Selection is one call — the panel says what was picked, the portrait reads it. */
   var PORT = document.getElementById("portbody"), PORTV = document.getElementById("portvars");
   var portVar = {};                                   /* which representation each part's portrait wears */
+  function cmdSubject(key){ var SL = window.SEL || {};
+    if (key === "cmd-path") { var p = window.CMDKIT.pathById(F, SL.path); return p ? window.CMDKIT.pathWord(p) : null; }
+    if (key === "cmd-exit") { var e = window.CMDKIT.exitById(F, SL.exit); return e ? (e.status + (e.detail ? " " + e.detail : "")) : null; }
+    if (key === "cmd-case") return SL["case"] || null;
+    return null; }
   function drawPortrait(){ if (!PORT) return; PORT.innerHTML = ""; PORTV.innerHTML = "";
-    var P = window.PANELS[cur], vs = (P && P.portraits) || null;
+    var P = window.PANELS[cur], own = (P && P.portraits) || null;
+    /* choice 9 — the command panel LENDS every part its three records while something is selected:
+       `path record` puts them first, `split` keeps the part's own first, `keep selection` lends none. */
+    var lent = (window.CMDKIT && window.CMD && window.CMD.portrait !== "keep") ? window.CMDKIT.portraits(F) : [];
+    var vs = lent.length ? (window.CMD.portrait === "path" ? lent.concat(own || []) : (own || []).concat(lent)) : own;
+    if (vs && !vs.length) vs = null;
     document.getElementById("portt").textContent = vs ? P.word.toLowerCase() : "portrait";
     if (!vs) { document.getElementById("portsub").textContent = "—";
       PORT.append(el("div", { class: "ptidle" }, el("b", {}, "nothing to select here yet"),
         el("span", {}, "this part draws no portrait of its own. Data does: click a table and it is drawn here, four ways.")));
       return; }
-    if (!portVar[cur]) portVar[cur] = vs[0].key;
+    if (!portVar[cur] || !vs.some(function(v){ return v.key === portVar[cur]; })) portVar[cur] = vs[0].key;
     /* the header names the SUBJECT — what is drawn — not the part it came from */
-    var subj = P.portraitSubject ? P.portraitSubject(F) : null;
+    var lentNow = vs.filter(function(v){ return v.key === portVar[cur] && /^cmd-/.test(v.key); })[0];
+    var subj = lentNow ? cmdSubject(portVar[cur]) : (P.portraitSubject ? P.portraitSubject(F) : null);
     document.getElementById("portt").textContent = subj || P.word.toLowerCase();
-    document.getElementById("porthd").querySelector(".pti").innerHTML = S.icon(subj ? (P.portraitIcon || "model") : P.icon, 14, subj ? "var(--accent)" : P.col);
+    document.getElementById("porthd").querySelector(".pti").innerHTML = S.icon(lentNow ? lentNow.icon : (subj ? (P.portraitIcon || "model") : P.icon), 14, (subj || lentNow) ? "var(--accent)" : P.col);
     vs.forEach(function(v){ var b = el("button", { class: "ptv" + (portVar[cur] === v.key ? " on" : "") });
       b.dataset.pvar = v.key; b.innerHTML = S.icon(v.icon, 14);
       hoverBind(b, hcard({ title: v.label, value: "a way of drawing it", icon: v.icon, plain: v.hint }));
@@ -2159,7 +2218,256 @@
       try { v.render(ghost, F, S); } catch (e) { console.warn("prewalk " + k + "/" + v.key, e); } }); });
     ghost.remove(); })();
 
+  /* ══ THE COMMAND PANEL (Phase 6 slice 1, 2026-09-17) ═══════════════════════════════════════
+     The console's ACT half, on the real door. FOUR layouts are built, none is chosen: the
+     operator decides by looking (2026-09-14: "I want to be able to see all of them"). The
+     region, the strip, the ladder and the matrix ARE what would ship; every dial below lives
+     in the rail's blk-command, never on the bench.
+     ONE selection runs all four: window.SEL.path · .exit · .case.                          ══ */
+  var CMD = window.CMD = {
+    layout: "card",        /* 1  · card · strip · ladder · matrix */
+    mode: "cmd",           /*      the card's own state: the verbs, or the paths (Walk a path ▸) */
+    only: null,            /*      the kind filter R and T set */
+    rows: "command",       /* 2  · command · parts · both */
+    scope: "kind",         /* 3  · kind · entity · both */
+    group: "request",      /* 4  · request order · kind · status */
+    names: "drawn",        /* 5  · drawn · detail · exception · phase·status */
+    success: "shown",      /* 6  · shown (generated) · hidden */
+    sub: "split",          /* 7  · split · merged */
+    middle: "dim",         /* 8  · dim .28 · filter · outline */
+    portrait: "path",      /* 9  · path record · keep selection · split */
+    wrong: "blank",        /* 10 · blank keeps its place · collapsed */
+    keys: "grid",          /* 11 · QWERT grid · mnemonic letter · off */
+    size: 64,              /* 12 · 64 · 76 · 52 */
+    face: "valley",        /* 12 · the part buttons' valley, or flat */
+    tip: "hover",          /* 13 · lab hover card · SC2 card · caption block */
+    join: "exact",         /* 14 · exact (forms) · name-parsed dashed · off */
+    keep: "kept",          /* 15 · kept · cleared, on a part switch */
+    side: "right",         /* 16 · right of portrait · left of bench */
+    ladder: "cmd",         /* 17 · in the region · left of bench · inside the portrait edge */
+    walk: "replay",        /* 18 · one-clock replay · static */
+    flag: "shown",         /* 19 · the rate-limit chip, with its caveat */
+    colour: "kind",        /* B13 · kind · status · phase · mono */
+    matrix: "path",        /*      the matrix's fill: per-path, or with the hook counted on every path */
+    show: { chip: 1, strip: 1, region: 1, title: 1, caption: 1 } };
+  window.SEL = window.SEL || {};
+  var CMDEL = document.getElementById("cmd"), PSTRIP = document.getElementById("pathstrip"), PORTLAD = document.getElementById("portlad");
+
+  /* the region's PLACE is one `order` value (choice 16 / 17) */
+  function cmdPlace(){ var left = CMD.layout === "ladder" ? CMD.ladder === "left" : CMD.side === "left";
+    CMDEL.classList.toggle("side-left", !!left);
+    CMDEL.classList.toggle("no-title", !CMD.show.title);
+    CMDEL.classList.toggle("no-caption", !CMD.show.caption); }
+  function drawCmd(){ if (!CMDEL) return;
+    var inPort = CMD.layout === "ladder" && CMD.ladder === "portrait";
+    cmdPlace();
+    CMDEL.hidden = FRAME.cmdW === 0 || !CMD.show.region || inPort;
+    if (!CMDEL.hidden) window.CMDKIT.render(CMDEL, F, S);
+    else CMDEL.innerHTML = "";
+    if (PORTLAD) { PORTLAD.hidden = !inPort; PORTLAD.innerHTML = "";
+      if (inPort) { PORTLAD.className = "ticks"; window.CMDKIT.render(PORTLAD, F, S); } }
+    drawStrip(); if (window.__cmdChip) window.__cmdChip(HS); }
+  window.drawCmd = drawCmd;
+  function drawStrip(){ if (!PSTRIP) return; PSTRIP.innerHTML = "";
+    var on = CMD.layout === "strip" && !!CMD.show.strip;
+    PSTRIP.hidden = !on;
+    if (on) window.CMDKIT.strip(PSTRIP, F, S); }
+
+  /* the HEAD CHIP: while a path is in force it rides the RIGHT pile, the kind glyph in the path's
+     colour and the name the `names` pick chose (choice 5). drawHead() rebuilds the bar, so it calls
+     back here every time rather than the chip being appended once. */
+  window.__cmdChip = function(host){
+    var old = host.querySelector(".hel.pathchip"); if (old) old.remove();
+    if (!CMD.show.chip || !window.CMDKIT) return;
+    var p = window.CMDKIT.pathById(F, window.SEL.path); if (!p) return;
+    var pile = host.querySelector(".hpile.right"); if (!pile) return;
+    var col = window.CMDKIT.pathCol(p, F, S), nm = window.CMDKIT.pathName(p);
+    var c = el("span", { class: "hel pathchip sh-rect fit-bleed" });
+    c.dataset.el = "path";
+    c.style.setProperty("--gz", "13px"); c.style.setProperty("--d", "27px");
+    c.insertAdjacentHTML("beforeend", S.icon(window.CMDKIT.kindIco(p.kind), 13, col));
+    c.append(el("span", { class: "hval" }, nm || window.CMDKIT.pathWord(p)));
+    hoverBind(c, function(){ return hcard({ title: window.CMDKIT.pathWord(p), value: p.names.phase_status, icon: window.CMDKIT.kindIco(p.kind), color: col,
+      rows: [["in force", "every part is projected onto this one ending"], ["named by", CMD.names],
+             ["steps", String(p.n.steps)], ["clear", "Esc, or the Clear cell"]],
+      plain: "the way this request ends, held across every part until you clear it" }); });
+    c.onclick = function(ev){ ev.stopPropagation(); hoverHide(); clearPath(); };
+    pile.append(c); };
+
+  /* ── the ONE selection, and the four calls that move it ── */
+  function cmdPortKey(k){ if (CMD.portrait === "path") portVar[cur] = k; }
+  function cmdRefresh(){ drawCmd(); if (window.CMDKIT) window.CMDKIT.applyPath(PANEL, cur, window.CMDKIT.pathById(F, window.SEL.path)); drawPortrait(); }
+  function selectPath(id){ var p = window.CMDKIT.pathById(F, id);
+    window.SEL.path = p ? id : null;
+    window.SEL.exit = p && p.exit ? p.exit.id : null;
+    window.SEL["case"] = null; cmdPortKey("cmd-path"); cmdRefresh(); }
+  function selectExit(id){ window.SEL.exit = id; window.SEL["case"] = null; cmdPortKey("cmd-exit"); cmdRefresh(); }
+  function selectCase(cid){ window.SEL["case"] = cid; cmdPortKey("cmd-case"); cmdRefresh(); }
+  function clearPath(){ window.SEL.path = null; window.SEL.exit = null; window.SEL["case"] = null;
+    if (/^cmd-/.test(portVar[cur] || "")) delete portVar[cur];
+    CMD.only = null; CMD.mode = "cmd"; cmdRefresh(); }
+  function stepExit(d){ var ex = ((F.forms || {}).exits) || []; if (!ex.length) return;
+    var ids = ex.map(function(e){ return e.id; }), i = ids.indexOf(window.SEL.exit);
+    i = (i < 0 ? (d > 0 ? -1 : 0) : i) + d;
+    if (i < 0) i = ids.length - 1; if (i >= ids.length) i = 0;
+    selectExit(ids[i]); }
+  window.selectPath = selectPath; window.selectExit = selectExit; window.selectCase = selectCase;
+  window.clearPath = clearPath; window.stepExit = stepExit;
+
+  /* ── the HOTKEYS read the letter the cell DREW, so the key and the picture can never disagree.
+        keydown only when no input has focus (choice 11; Esc always clears). ── */
+  document.addEventListener("keydown", function(ev){
+    var a = document.activeElement;
+    if (a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable)) return;
+    if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    if (ev.key === "Escape") { clearPath(); return; }
+    if (CMD.keys === "off" || !CMDEL || CMDEL.hidden) return;
+    var K = String(ev.key || "").toUpperCase();
+    if (K.length !== 1) return;
+    var hit = [].slice.call(CMDEL.querySelectorAll(".cmdcell")).filter(function(c){
+      var h = c.querySelector(".chot"); return h && h.textContent === K; })[0];
+    if (hit) { ev.preventDefault(); hit.click(); return; }
+    if (K === "B") { ev.preventDefault(); clearPath(); } });
+
+  /* ══ THE RAIL BLOCK — one fold per thing on the region, the map fold BOOTS OPEN ══ */
+  var CMDFOLDS = { layout: 0, map: 1, cells: 0, colour: 0, sections: 0 };
+  function cmdRedraw(){ drawCmd(); drawCmdCfg(); if (window.CMDKIT) window.CMDKIT.applyPath(PANEL, cur, window.CMDKIT.pathById(F, window.SEL.path)); drawPortrait(); }
+  function drawCmdCfg(){ var box = document.getElementById("cmdcfg"); if (!box) return; box.innerHTML = "";
+    var K = railKit(box, CMDFOLDS, CMD.layout, cmdRedraw);
+    function P(label, ds, key, opts, iconFor, onlyIn){
+      K.pick(label, ds, function(){ return CMD[key]; }, function(v){ CMD[key] = v; }, opts, iconFor, onlyIn); }
+    function sw2(bg){ return '<i class="chsw" style="background:' + bg + '"></i>'; }
+
+    K.group("layout", "layout", CMD.layout, "which of the four pictures the command region draws", function(){
+      P("layout", "cmdlayout", "layout",
+        [["card", "a 3×5 grid of command squares — the SC2 card, the fewest regions", "card"],
+         ["strip", "one cell per path under the part buttons, the card still beside — paths always visible", "strip"],
+         ["ladder", "the stages in request order, every exit hung where it leaves — shows WHERE a path ends", "ladder"],
+         ["matrix", "path × part — every cell says whether that part has anything for that path", "matrix"]],
+        function(o){ return o[0] === "card" ? labIco("patvalley", 15) : o[0] === "strip" ? labIco("bars", 15)
+          : o[0] === "ladder" ? S.icon("layers", 15) : labIco("laycfill", 15); });
+      P("rows", "cmdrows", "rows",
+        [["command", "the per-path facts stay in the command region", "command region"],
+         ["parts", "each part draws its own one-line strip instead", "the parts"],
+         ["both", "the region AND a strip on every part", "both"]],
+        function(o){ return o[0] === "command" ? labIco("patflat", 15) : o[0] === "parts" ? labIco("bars", 15) : labIco("laycfill", 15); });
+      P("card side", "cmdside", "side",
+        [["right", "the region sits right of the portrait — order 5", "right of portrait"],
+         ["left", "the region sits left of the bench — order 2", "left of bench"]],
+        function(o){ return labIco(o[0] === "right" ? "posright" : "posleft", 15); }, "card");
+      P("ladder place", "cmdladder", "ladder",
+        [["cmd", "in the command region, full width", "in the region"],
+         ["left", "left of the bench — order 2", "left of bench"],
+         ["portrait", "a 28px tick rail down the portrait's left edge; the region goes away", "inside the portrait"]],
+        function(o){ return labIco(o[0] === "cmd" ? "posright" : o[0] === "left" ? "posleft" : "posmidleft", 15); }, "ladder");
+      P("walking", "cmdwalk", "walk",
+        [["replay", "the bead walks the stages on the ONE shared clock — pause freezes it", "one-clock replay"],
+         ["static", "no bead moves; it rests on the selected exit's rung", "static"]],
+        function(o){ return labIco(o[0] === "replay" ? "play" : "pause", 15); }, "ladder");
+      P("matrix fill", "cmdmatrix", "matrix",
+        [["path", "count only what VARIES per path — the hook fetches on every one, so it is left out", "per-path"],
+         ["hook", "count the hook too, as the brief's table says — the Widening column then lights for every path", "with the hook"]],
+        function(o){ return labIco(o[0] === "path" ? "eye" : "eyeoff", 15); }, "matrix"); });
+
+    K.group("map", "map", CMD.group + " · " + CMD.names + " · " + CMD.middle, "every choice §6 left open, built as an option instead of ruled blind", function(){
+      P("scope", "cmdscope", "scope",
+        [["kind", "the endpoint KIND's card — the fifteen verbs", "kind card"],
+         ["entity", "the owning entity's endpoints as cells; the feed names one of the four", "entity card"],
+         ["both", "the verbs, then the entity's doors under them", "both"]],
+        function(o){ return o[0] === "kind" ? S.icon("endpoint", 15) : o[0] === "entity" ? S.icon("entity", 15) : S.icon("layers", 15); }, "card");
+      P("grouping", "cmdgroup", "group",
+        [["request", "the order a request meets them — stage first, then how far it got", "request order"],
+         ["kind", "success, refusal, framework, validation, uncaught — each block together", "by kind"],
+         ["status", "by the HTTP code, lowest first", "by status"]],
+        function(o){ return o[0] === "request" ? labIco("bars", 15) : o[0] === "kind" ? S.icon("shape", 15) : S.icon("info", 15); });
+      P("names", "cmdnames", "names",
+        [["drawn", "the short name the feed drew for each ending", "drawn"],
+         ["detail", "the detail text the client actually receives", "detail"],
+         ["exception", "the exception class — a dash where the refusal is raised inline", "exception"],
+         ["phase", "stage · status, the coordinates rather than a name", "phase·status"]],
+        function(o){ return o[0] === "drawn" ? labIco("ton", 15) : o[0] === "detail" ? S.icon("doc", 15)
+          : o[0] === "exception" ? S.icon("alert", 15) : S.icon("layers", 15); });
+      P("success", "cmdsuccess", "success",
+        [["shown", "the three success paths ride with the rest — all three are GENERATED now", "shown"],
+         ["hidden", "refusals only", "hidden"]],
+        function(o){ return labIco(o[0] === "shown" ? "eye" : "eyeoff", 15); });
+      P("sub-paths", "cmdsub", "sub",
+        [["split", "every path its own cell — two 429s, two 401s, two 409s", "split"],
+         ["merged", "one cell per kind and status; it fans out on hover", "merged"]],
+        function(o){ return labIco(o[0] === "split" ? "laycfill" : "patflat", 15); });
+      P("on the middle", "cmdmiddle", "middle",
+        [["dim", "what is not on the path drops to .28 — it stays readable", "dim .28"],
+         ["filter", "what is not on the path leaves the picture", "filter"],
+         ["outline", "what IS on the path is ringed; nothing else changes", "outline"]],
+        function(o){ return labIco(o[0] === "dim" ? "intdim" : o[0] === "filter" ? "toff" : "patglow", 15); });
+      P("portrait", "cmdport", "portrait",
+        [["path", "the record of what you picked leads the portrait", "path record"],
+         ["keep", "the portrait keeps whatever the part had open", "keep selection"],
+         ["split", "the part's own record first, the path's beside it", "split"]],
+        function(o){ return o[0] === "path" ? S.icon("journey", 15) : o[0] === "keep" ? S.icon("doc", 15) : S.icon("merge", 15); });
+      P("wrong question", "cmdwrong", "wrong",
+        [["blank", "a cell a command cannot use keeps its place, empty", "blank keeps its place"],
+         ["collapsed", "the grid closes over it", "collapsed"]],
+        function(o){ return labIco(o[0] === "blank" ? "sh-square" : "sh-none", 15); }, "card");
+      P("test join", "cmdjoin", "join",
+        [["exact", "the forms tests arm — each case joined to the exit it proves, with its confidence", "exact"],
+         ["parsed", "the older name-parsed join, drawn dashed because the name is the only evidence", "name-parsed dashed"],
+         ["off", "no test marks at all", "off"]],
+        function(o){ return o[0] === "exact" ? S.icon("test", 15) : o[0] === "parsed" ? labIco("pathatch", 15) : labIco("toff", 15); });
+      P("on part switch", "cmdkeep", "keep",
+        [["kept", "the path stays in force when you open another part", "kept"],
+         ["cleared", "changing part clears it", "cleared"]],
+        function(o){ return labIco(o[0] === "kept" ? "eye" : "eyeoff", 15); });
+      P("rate-limit chip", "cmdflag", "flag",
+        [["shown", "the flag chip rides the 429 cells, with its caveat", "shown with the caveat"],
+         ["hidden", "no flag chip", "hidden"]],
+        function(o){ return labIco(o[0] === "shown" ? "eye" : "eyeoff", 15); });
+      box.append(el("div", { class: "cfread" }, "every option here is BUILT — none of them is a ruling. Pick, look, then say which one." )); });
+
+    K.group("cells", "cells", CMD.size + "px " + CMD.face + " · " + CMD.keys, "how big a command square is, what its face does, and where its letter goes", function(){
+      P("size", "cmdsize", "size",
+        [[64, "the default square", "64px"], [76, "roomier — the name gets a whole line", "76px"], [52, "tight; the name drops to the card and the 12px floor is measured here", "52px"]],
+        function(o){ return el("span", { class: "numz", style: "font-size:" + (o[0] === 52 ? 11 : o[0] === 64 ? 13 : 15) + "px" }, String(o[0])).outerHTML; });
+      P("face", "cmdface", "face",
+        [["valley", "the part buttons' own face — strongest at the rim, falling away toward the middle", "valley"],
+         ["flat", "one even wash", "flat"]],
+        function(o){ return labIco(o[0] === "valley" ? "patvalley" : "patflat", 15); });
+      P("hotkeys", "cmdkeys", "keys",
+        [["grid", "Q W E R T / A S D F G / Z X C V B — the letter is the cell's POSITION", "QWERT grid"],
+         ["mnemonic", "the first free letter of the verb", "mnemonic letter"],
+         ["off", "no letters drawn, no keydown", "off"]],
+        function(o){ return o[0] === "off" ? labIco("toff", 15) : el("span", { class: "numz" }, o[0] === "grid" ? "Q" : "W").outerHTML; });
+      P("tooltip", "cmdtip", "tip",
+        [["hover", "the lab's floating hover card — the plain line last", "lab hover card"],
+         ["sc2", "a fixed card under the grid, the way the original console did it", "SC2 card"],
+         ["caption", "one line under the grid, nothing more", "caption block"]],
+        function(o){ return o[0] === "hover" ? S.icon("info", 15) : o[0] === "sc2" ? labIco("patflat", 15) : labIco("bars", 15); }); });
+
+    K.group("colour", "colour", "by " + CMD.colour, "what the colour of a path carries — backlog B13, as a switch instead of a ruling", function(){
+      P("colour by", "cmdcolour", "colour",
+        [["kind", "success · refusal · framework · validation · uncaught, each in its station colour", "by kind"],
+         ["status", "2xx · 4xx · 5xx — the rule the tests panel already uses", "by status"],
+         ["phase", "a ramp across the seven stages, early to late", "by phase"],
+         ["mono", "no colour; the glyph carries the kind", "mono"]],
+        function(o){ return o[0] === "kind" ? sw2(window.CMDKIT.kindCol("refusal", S)) : o[0] === "status" ? sw2(S.OPC.read)
+          : o[0] === "phase" ? sw2(S.KINDCOL.route) : sw2("var(--muted)"); });
+      box.append(el("div", { class: "cfread" }, "the five kind colours are read from the station: success " + S.OPC.read + " · refusal " + S.OPC.gate
+        + " · framework " + S.KINDCOL.external + " · validation " + S.OPC.schema + " · uncaught " + (S.BADGE_COL.role || {}).accessor + ".")); });
+
+    K.group("sections", "sections", Object.keys(CMD.show).filter(function(k){ return CMD.show[k]; }).join(" ") || "nothing", "what the command panel draws — hiding is display:none, one click brings it back", function(){
+      K.toggles("drawn", "cmdshow",
+        [["chip", "the path chip on the head bar's right pile", S.icon("endpoint", 15)],
+         ["strip", "the path strip under the part buttons", labIco("bars", 15)],
+         ["region", "the command region itself", labIco("patvalley", 15)],
+         ["title", "the region's title row", labIco("ton", 15)],
+         ["caption", "the caption / card area under the grid", S.icon("info", 15)]],
+        function(k){ return !!CMD.show[k]; }, function(k, on){ CMD.show[k] = on ? 0 : 1; }); });
+
+    box.append(el("div", { class: "cfread" }, "the region, the strip, the ladder and the matrix are what would SHIP. Everything in this block is the lab's own.")); }
+  window.drawCmdCfg = drawCmdCfg;
+
   drawTabs(); drawTabCfg(); applyFrame(); drawFrameCfg(); applyData(); drawDataCfg(); drawSchCfg(); drawFnCfg();
+  drawCmdCfg(); drawCmd(); drawHead();
   var first = (location.hash || "#data").slice(1); show(order.indexOf(first) >= 0 ? first : "data");
   window.__eplabReady = true;
 })();

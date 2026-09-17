@@ -21,6 +21,8 @@
   function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function ico(n, size, col, cls){ return S.icon(n, size || 13, col, cls); }
   var RWC = { r: S.RW.r, w: S.RW.w, rw: S.RW.rw };
+  /* the Tests part's colour, read from its registry row at call time — one source, never a pasted hex */
+  function testCol(){ var P = window.PANELS && window.PANELS.tests; return (P && P.col) || S.OPC.read; }
   function rwChip(rw){ return '<i class="jdrw jdrw-' + rw + '" style="--rwc:' + RWC[rw] + '">' + (rw === "rw" ? "RW" : rw.toUpperCase()) + '</i>'; }
   function trust(tr){ return tr === "inferred" ? '<span class="ttag inferred" title="inferred — a graft-call / web-bridge floor (kind-level, not per-edge proof)">inferred</span>' : '<span class="ttag structural" title="structural — an exact archmap / FK join">structural</span>'; }
   function sechd(icon, label, count, ok, col){ return '<div class="sechd">' + ico(icon, 13, col) + '<span>' + esc(label) + '</span>' + (count != null ? '<span class="cnt' + (ok ? " ok" : "") + '">' + esc(count) + '</span>' : "") + '</div>'; }
@@ -91,6 +93,7 @@
         var fkSet = {}; (t.fks || []).forEach(function(f){ fkSet[Array.isArray(f) ? f[0] : f] = (Array.isArray(f) && f[1]) ? f[1] : true; });
         var uqSet = {}; (t.uqs || []).forEach(function(u){ (Array.isArray(u) ? u : [u]).forEach(function(c){ uqSet[c] = 1; }); });
         var tile = E("div", { class: "tile rw-" + t.rw });
+        tile.dataset.table = t.table;
         tile.append(E("div", { class: "tnm" }, rwChip(t.rw), E("b", null, esc(t.table)), E("span", { class: "tc" }, String(t.cols.length))));
         tile.append(shapeStack(t.table, t.cols, { color: ec, fkSet: fkSet, uqSet: uqSet, more: t.cols_more, cls: "tbars" }));
         bind(tile, card({ title: t.table, icon: "model", color: S.KINDCOL.model, sub: "model " + t.model + " · entity " + t.entity,
@@ -161,6 +164,7 @@
     if (!sc.present) { col.append(E("div", { class: "wempty" }, sc.why || "— not carried by the feed")); return col; }
     var main = E("div", { class: "schm" }, E("div", { class: "snm" }, ico("schema", 12, S.KINDCOL.schema), esc(sc.name)),
       shapeStack(sc.name, sc.cols || [], { color: S.KINDCOL.schema, nestSet: nest }));
+    main.dataset.schema = sc.name;
     bind(main, card({ title: sc.name, icon: "schema", color: S.KINDCOL.schema, sub: (dir === "in" ? "request body" : "response body") + " · entity " + sc.entity,
       rows: [["fields", String((sc.cols || []).length)], ["nested", String((sc.nested || []).length) + " shapes"], ["file", String(sc.file || "—")],
              sc.doc ? ["doc", sc.doc.slice(0, 90)] : null],
@@ -172,6 +176,7 @@
       sc.nested.forEach(function(n){
         var t = E("div", { class: "nestcard" }, E("div", { class: "snm" }, ico("schema", 11, S.KINDCOL.schema), esc(n.name), E("span", { class: "tc" }, String(n.cols.length))),
           shapeStack(n.name, n.cols, { color: S.KINDCOL.schema, cls: "tbars" }));
+        t.dataset.schema = n.name;
         bind(t, card({ title: n.name, icon: "schema", color: S.KINDCOL.schema, sub: "nested in " + sc.name + " · " + n.cols.length + " fields",
           fields: n.cols.map(function(c){ return c[0] + " · " + c[1]; }), station: "schema:" + n.name }));
         nb.append(t); });
@@ -216,6 +221,7 @@
       var dir = pair[0], sc = pair[1]; if (!sc.present) return;
       var hd = E("div", { class: "lschm" }, ico("schema", 13, S.KINDCOL.schema), E("b", null, esc(sc.name)),
         E("span", { class: "ls" }, (dir === "in" ? "request" : "response") + " · " + (sc.cols || []).length + " fields · " + (sc.nested || []).length + " nested · " + sc.entity));
+      hd.dataset.schema = sc.name;
       bind(hd, card({ title: sc.name, icon: "schema", color: S.KINDCOL.schema, sub: dir === "in" ? "request body" : "response body",
         rows: [["file", String(sc.file || "—")]], fields: (sc.cols || []).map(function(c){ return c[0] + " · " + c[1]; }) }));
       body.append(hd);
@@ -224,11 +230,11 @@
       (sc.cols || []).forEach(function(c){
         var base = String(c[1]).replace(/\s*\|\s*None$/, "").replace(/^(list|List|Optional)\[(.*)\]$/, "$2");
         var n = nestOf[base];
-        rows.push({ cells: [dir === "in" ? "→" : "←", "<b>" + esc(c[0]) + "</b>", esc(c[1]), n ? n.cols.length + " fields" : "—"],
+        rows.push({ tag: { schema: sc.name, field: c[0] }, cells: [dir === "in" ? "→" : "←", "<b>" + esc(c[0]) + "</b>", esc(c[1]), n ? n.cols.length + " fields" : "—"],
           card: card({ title: c[0], icon: n ? "schema" : "table", color: n ? S.KINDCOL.schema : null, sub: String(c[1]),
             rows: [["in", sc.name], n ? ["a nested shape", n.name + " · " + n.cols.length + " fields"] : null],
             fields: n ? n.cols.map(function(x){ return x[0] + " · " + x[1]; }) : null }) });
-        if (n) n.cols.forEach(function(x){ rows.push({ cls: "sub", cells: ["", "<span class='nsub'>" + esc(x[0]) + "</span>", esc(x[1]), ""],
+        if (n) n.cols.forEach(function(x){ rows.push({ cls: "sub", tag: { schema: n.name, field: x[0] }, cells: ["", "<span class='nsub'>" + esc(x[0]) + "</span>", esc(x[1]), ""],
           card: card({ title: x[0], sub: String(x[1]), rows: [["in", n.name], ["nested in", sc.name]] }) }); }); });
       ledger(body, ["dir", "field", "type", "nested"], rows, { grid: "28px 1fr 190px 74px" }); });
     box.append(body);
@@ -257,6 +263,7 @@
       E("div", { class: "fsig", html: esc(F.identity.gsig || "—") }),
       E("div", { class: "fmeta" }, (F.identity.sig ? ((F.identity.sig.async ? "async · " : "") + F.identity.sig.lines + " lines · → " + (F.identity.sig.returns || "—")) : "—")
         + " · " + (F.identity.doc ? "documented" : "no docstring in the feed")));
+    hc.dataset.fn = h.name || "";
     bind(hc, card({ title: h.name, icon: "function", color: S.KINDCOL["function"], sub: "the handler · role " + (h.role || "—") + " · entity " + (h.entity || "—"),
       rows: [["signature", (F.identity.sig || {}).async ? "async" : "sync"], ["body", ((F.identity.sig || {}).lines || "?") + " lines"], ["returns", (F.identity.sig || {}).returns || "—"],
              ["file", h.file + (F.identity.flines ? ":" + F.identity.flines : "")], ["fan-in", F.identity.fanin + " caller (graph in-degree)"], ["docstring", F.identity.doc ? "present" : "— none in the feed"]],
@@ -278,6 +285,7 @@
       level.slice(0, 9).forEach(function(f){
         var chip = E("span", { class: "fchip" + (f.conf === "inferred" ? " inf" : "") + (f.god ? " god" : ""), style: "border-left-color:" + (RC[f.role] || "#8794ab") },
           E("b", null, esc(f.name)), f.lines ? E("span", { class: "ln" }, f.lines + "L") : null, f.commits ? E("i", { class: "cdot" }) : null);
+        chip.dataset.fn = f.name;
         bind(chip, card({ title: f.name, icon: "function", color: RC[f.role] || S.KINDCOL["function"], sub: (f.role || "—") + " · " + (f.entity || "—") + " · hop " + f.conf,
           rows: [["file", f.file], ["lines", f.lines != null ? String(f.lines) : "— not measured"], ["reached by", f.via || h.name],
                  ["commits", f.commits ? "yes — a DB transaction boundary" : "no"], f.ops && f.ops.length ? ["tables", f.ops.map(function(o){ return o.rw + ":" + o.table; }).join(" · ")] : null,
@@ -332,6 +340,7 @@
       var stack = E("div", { class: "tstack" });
       cids.slice(0, 10).forEach(function(cid){ var c = T.cases.filter(function(x){ return x.cid === cid; })[0] || { cid: cid, state: "unknown" };
         var chip = E("span", { class: "pchip st-" + (c.state || "unknown") }, ico(c.state === "pass" ? "test" : c.state === "fail" ? "alert" : "info", 11), esc(cid));
+        chip.dataset["case"] = cid;
         bind(chip, card({ title: cid, icon: "test", color: c.state === "pass" ? "var(--ok)" : "var(--muted)", sub: (c.corpus || "api") + " · " + (c.state === "pass" ? "passing" : c.state),
           rows: [["name", c.name || "—"], ["asserts", isCode ? "HTTP " + k : "no status in the name"], ["corpus", c.corpus || "api"]] }));
         stack.append(chip); });
@@ -409,6 +418,7 @@
     var ladder = E("div", { class: "ladder" });
     rungs.slice().reverse().forEach(function(r, i){
       var rr = E("div", { class: "rung" + (r.self ? " self" : "") , style: "--rc:" + r.col });
+      rr.dataset.rung = r.name; rr.dataset.rkind = r.kind;
       rr.append(E("span", { class: "rk", html: ico(r.kind === "endpoint" ? "endpoint" : r.kind === "route" ? "nav" : r.kind === "hook" ? "merge" : "web", 14, r.col) }));
       rr.append(E("div", { class: "rt" }, E("b", null, esc(r.name)), E("span", { class: "rs" }, esc(r.sub))));
       rr.append(E("span", { class: "rn" }, String(rungs.length - i)));
@@ -466,6 +476,7 @@
     var lanes = E("div", { class: "lanes" });
     SEC.asgi.forEach(function(m){
       var lane = E("div", { class: "lane" }, E("span", { class: "lo" }, String(m.order)), ico("shield", 13, S.OPC.gate), E("b", null, esc(m.name)), E("span", { class: "lg2" }, m.gates + " gated"));
+      lane.dataset.lane = m.name;
       bind(lane, card({ title: m.name, icon: "shield", color: S.OPC.gate, sub: "ASGI middleware · order " + m.order + " · scope " + m.scope,
         rows: [["runs", "before every handler, in order " + m.order], ["gates", m.gates + " endpoints"], ["file", m.file + ":" + m.line], ["tie to this door", "— measured at APP scope only; no per-endpoint wire exists"]],
         body: "H — posture: the band is LIT because it is measured; the tie to this one door is not, so no wire is drawn." }));
@@ -482,6 +493,7 @@
         ico(isGate ? "key" : "link", 14, isGate ? S.OPC.gate : "var(--muted)"),
         E("div", { class: "tt" }, E("b", null, esc(g.name)), E("span", { class: "ts" }, g.via + (isGate ? " · gate" : ""))),
         E("span", { class: "tw" }, pct + "%"));
+      t.dataset.dep = g.name;
       bind(t, card({ title: g.name, icon: isGate ? "key" : "link", color: isGate ? S.OPC.gate : null, sub: g.via + (isGate ? " · a GATE" : " · a dependency"),
         rows: [["runs", "before the handler body"], ["feed-wide", g.feedwide + " of " + FW.endpoints + " endpoints use it (" + pct + "%)"],
                g.fn_rec ? ["function", g.fn_rec.name + " · " + (g.fn_rec.role || "—") + (g.fn_rec.lines ? " · " + g.fn_rec.lines + " lines" : "")] : null,
@@ -546,6 +558,7 @@
     var hd = E("div", { class: "lrow lhd", style: "grid-template-columns:" + opt.grid });
     cols.forEach(function(c){ hd.append(E("span", null, c)); }); t.append(hd);
     rows.forEach(function(r){ var row = E("div", { class: "lrow" + (r.cls ? " " + r.cls : ""), style: "grid-template-columns:" + opt.grid });
+      if (r.tag) for (var tk in r.tag) { if (r.tag[tk] != null) row.setAttribute("data-" + tk, r.tag[tk]); }
       r.cells.forEach(function(c){ row.append(typeof c === "string" ? E("span", { html: c }) : c); });
       if (r.card) bind(row, r.card); t.append(row); });
     box.append(t); return t; }
@@ -568,6 +581,7 @@
       var tile = E("div", { class: "tile rw-" + t.rw, style: "--ec:" + (t.entity_color || "#888") },
         E("div", { class: "tnm" }, '<i class="pdot" style="background:' + (t.entity_color || "#888") + '"></i>', rwChip(t.rw), E("b", null, esc(t.table)), E("span", { class: "tc" }, String(t.cols.length))),
         shapeStack(t.table, t.cols, { color: t.entity_color, fkSet: fkSet, uqSet: uqSet, more: t.cols_more, cls: "tbars" }));
+      tile.dataset.table = t.table;
       bind(tile, card({ title: t.table, icon: "model", color: S.KINDCOL.model, sub: "model " + t.model + " · entity " + t.entity,
         rows: [["here", t.rw === "rw" ? "reads + writes" : t.rw === "w" ? "writes" : "reads", RWC[t.rw]], ["columns", String(t.cols.length)], ["file", String(t.file || "—")]],
         fields: t.cols.map(function(c){ return c[0] + " · " + c[1]; }), station: t.id }));
@@ -596,7 +610,7 @@
     var rows = TS.slice().sort(function(a, b){ return (a.entity || "").localeCompare(b.entity || "") || b.cols.length - a.cols.length; }).map(function(t){
       var fkSet = {}; (t.fks || []).forEach(function(f){ fkSet[Array.isArray(f) ? f[0] : f] = true; });
       var uqSet = {}; (t.uqs || []).forEach(function(u){ (Array.isArray(u) ? u : [u]).forEach(function(c){ uqSet[c] = 1; }); });
-      return { cells: ['<i class="pdot" style="background:' + (t.entity_color || "#888") + '"></i>' + esc(t.entity || "—"), rwChip(t.rw), "<b>" + esc(t.table) + "</b>",
+      return { tag: { table: t.table }, cells: ['<i class="pdot" style="background:' + (t.entity_color || "#888") + '"></i>' + esc(t.entity || "—"), rwChip(t.rw), "<b>" + esc(t.table) + "</b>",
           shapeStack(t.table, t.cols, { color: t.entity_color, fkSet: fkSet, uqSet: uqSet, cls: "inline" }),
           String(t.cols.length), String((t.fks || []).length || "—"), String((t.uqs || []).length || "—"), esc(t.model)],
         card: card({ title: t.table, icon: "model", color: S.KINDCOL.model, sub: "model " + t.model + " · entity " + t.entity,
@@ -628,6 +642,7 @@
       var fkSet = {}; (t.fks || []).forEach(function(f){ fkSet[Array.isArray(f) ? f[0] : f] = (Array.isArray(f) && f[1]) ? f[1] : true; });
       var uqSet = {}; (t.uqs || []).forEach(function(u){ (Array.isArray(u) ? u : [u]).forEach(function(c){ uqSet[c] = 1; }); });
       var fc = E("div", { class: "fcard rw-" + t.rw, style: "--ec:" + (t.entity_color || "#888") });
+      fc.dataset.table = t.table;
       var fh = E("div", { class: "fhd" }, '<i class="pdot" style="background:' + (t.entity_color || "#888") + '"></i>',
         rwChip(t.rw), E("b", null, esc(t.table)), E("span", { class: "tc" }, String(t.cols.length)));
       bind(fh, card({ title: t.table, icon: "model", color: S.KINDCOL.model, sub: "model " + t.model + " · entity " + t.entity,
@@ -1315,6 +1330,7 @@
       var lst = E("div", { class: "fclist" });
       lvl.forEach(function(f){ var chip = E("span", { class: "fchip" + (f.conf === "inferred" ? " inf" : "") + (f.god ? " god" : ""), style: "border-left-color:" + (RC[f.role] || "#8794ab") },
           E("b", null, esc(f.name)), f.lines ? E("span", { class: "ln" }, f.lines + "L") : null, f.commits ? E("i", { class: "cdot" }) : null);
+        chip.dataset.fn = f.name;
         bind(chip, card({ title: f.name, icon: "function", color: RC[f.role] || S.KINDCOL["function"], sub: (f.role || "—") + " · " + (f.entity || "—") + " · " + f.conf + " hop",
           rows: [["file", f.file], ["lines", f.lines != null ? String(f.lines) : "—"], ["reached by", f.via || h.name], ["commits", f.commits ? "yes" : "no"],
                  f.ops && f.ops.length ? ["tables", f.ops.map(function(o){ return o.rw + ":" + o.table; }).join(" · ")] : null], station: f.id }));
@@ -1324,6 +1340,7 @@
       var el = E("button", { class: "snode" + (nd.lvl === openLvl ? " on" : "") + (nd.lvl < 0 ? " root" : "") },
         E("b", null, esc(nd.name)), E("span", { class: "sn" }, String(nd.n)),
         nd.commits ? E("i", { class: "cdot" }) : null);
+      if (nd.lvl < 0) el.dataset.fn = h.name || "";
       if (nd.lvl >= 0) { el.onclick = function(ev){ ev.stopPropagation(); openLvl = nd.lvl; [].forEach.call(spine.querySelectorAll(".snode"), function(x){ x.classList.remove("on"); }); el.classList.add("on"); drawDetail(nd.lvl); }; }
       bind(el, nd.lvl < 0
         ? card({ title: h.name, icon: "function", color: S.KINDCOL["function"], sub: "the handler · " + (h.role || "—"),
@@ -1351,10 +1368,11 @@
     var body = E("div", { class: "lbody" });
     var hrow = E("div", { class: "lschm" }, ico("function", 13, S.KINDCOL["function"]), E("b", null, esc(FN.handler.name)),
       E("span", { class: "ls" }, "the handler · " + (FN.handler.role || "—") + " · " + ((F.identity.sig || {}).lines || "?") + " lines · → " + ((F.identity.sig || {}).returns || "—") + " · " + (F.identity.doc ? "documented" : "no docstring")));
+    hrow.dataset.fn = FN.handler.name;
     bind(hrow, card({ title: FN.handler.name, icon: "function", color: S.KINDCOL["function"], sub: "the handler", body: "<code>" + esc(F.identity.gsig || "") + "</code>" }));
     body.append(hrow);
     var rows = all.map(function(f){
-      return { cls: f.conf === "inferred" ? "inf" : "", cells: ["L" + f.__lv, "<b>" + esc(f.name) + "</b>",
+      return { cls: f.conf === "inferred" ? "inf" : "", tag: { fn: f.name }, cells: ["L" + f.__lv, "<b>" + esc(f.name) + "</b>",
           '<i class="rdot" style="background:' + (RC[f.role] || "#8794ab") + '"></i>' + esc(f.role || "—"),
           f.lines != null ? f.lines + "L" : "—", f.conf === "inferred" ? '<span class="ttag inferred">inferred</span>' : '<span class="ttag structural">extracted</span>',
           f.commits ? '<i class="cdot"></i>' : "—", esc((f.ops || []).map(function(o){ return o.rw + ":" + o.table; }).join(" · ") || "—")],
@@ -1376,7 +1394,7 @@
     var body = E("div", { class: "tlbody" });
     var left = E("div", { class: "lbody" });
     var rows = T.cases.slice().sort(function(a, b){ return (a.status || "zzz").localeCompare(b.status || "zzz") || a.cid.localeCompare(b.cid); }).map(function(c){
-      return { cells: ["<b>" + esc(c.cid) + "</b>", c.status ? '<span class="stc" style="color:' + (c.status[0] === "2" ? S.OPC.read : c.status[0] === "4" ? S.OPC.gate : S.OPC.write) + '">' + c.status + "</span>" : "—",
+      return { tag: { "case": c.cid }, cells: ["<b>" + esc(c.cid) + "</b>", c.status ? '<span class="stc" style="color:' + (c.status[0] === "2" ? S.OPC.read : c.status[0] === "4" ? S.OPC.gate : S.OPC.write) + '">' + c.status + "</span>" : "—",
           esc(c.corpus || "api"), '<span class="pchip st-' + (c.state || "unknown") + '">' + ico(c.state === "pass" ? "test" : "info", 11) + (c.state || "unknown") + "</span>", esc(c.name || "—")],
         card: card({ title: c.cid, icon: "test", sub: (c.corpus || "api") + " · " + (c.state || "unknown"), rows: [["name", c.name || "—"], ["asserts", c.status ? "HTTP " + c.status : "no status in the name"]] }) }; });
     T.case_files.forEach(function(f){ rows.push({ cls: "filecov", cells: ["<b>" + esc(f.name) + "</b>", "—", esc(f.corpus || "web"), '<span class="pchip filecov">' + ico("file", 11) + "file coverage</span>", "reaches the door, names no case"],
@@ -1425,6 +1443,7 @@
       var el = E("div", { class: "wst" + (st.self ? " self" : ""), style: "--rc:" + st.col },
         E("span", { class: "wi", html: ico(st.kind === "endpoint" ? "endpoint" : st.kind === "route" ? "nav" : st.kind === "hook" ? "merge" : "web", 16, st.col) }),
         E("b", null, esc(st.name)), E("span", { class: "ws" }, esc(st.sub)));
+      el.dataset.rung = st.name; el.dataset.rkind = st.kind;
       bind(el, card({ title: st.name, icon: st.kind === "endpoint" ? "endpoint" : "web", color: st.col, sub: st.kind + (st.home ? " · home " + st.home : ""),
         rows: [["relation", st.sub], st.feClass ? ["class", st.feClass] : null, st.id ? ["file", String(st.id).replace(/^fe:/, "")] : null], station: st.id }));
       flow.append(el);
@@ -1455,15 +1474,17 @@
     function stop(o){ var el = E("div", { class: "gst " + (o.cls || ""), style: o.col ? "--gc:" + o.col : "" },
         E("span", { class: "gi", html: ico(o.icon, 16, o.col || "var(--muted)") }), E("b", null, esc(o.title)),
         E("span", { class: "gs" }, esc(o.sub)));
+      if (o.lane) el.dataset.lane = o.lane;
+      if (o.dep) el.dataset.dep = o.dep;
       if (o.card) bind(el, o.card); lane.append(el); return el; }
     stop({ icon: "down", title: "request", sub: F.identity.method + " " + F.identity.path, col: S.OPC.read,
       card: card({ title: "the request arrives", icon: "down", sub: F.identity.method + " " + F.identity.path, rows: [["body", (F.data.schemas.request.name || "—") + " · " + (F.data.schemas.request.cols || []).length + " fields"]] }) });
     lane.append(E("i", { class: "sarr", html: ico("drill", 13, "var(--muted)") }));
-    SEC.asgi.forEach(function(m){ stop({ icon: "shield", title: m.name.replace(/Middleware$/, ""), sub: "app · order " + m.order + " · " + m.gates + " gated", col: S.OPC.gate, cls: "app",
+    SEC.asgi.forEach(function(m){ stop({ lane: m.name, icon: "shield", title: m.name.replace(/Middleware$/, ""), sub: "app · order " + m.order + " · " + m.gates + " gated", col: S.OPC.gate, cls: "app",
       card: card({ title: m.name, icon: "shield", color: S.OPC.gate, sub: "ASGI middleware · scope " + m.scope,
         rows: [["order", String(m.order)], ["gates", m.gates + " of " + FW.endpoints + " endpoints"], ["file", m.file + ":" + m.line], ["tie to this door", "— measured at APP scope only"]] }) });
       lane.append(E("i", { class: "sarr", html: ico("drill", 13, "var(--muted)") })); });
-    SEC.guards.forEach(function(g){ stop({ icon: g.gate ? "key" : "link", title: g.name, sub: g.via + (g.gate ? " · GATE" : " · resource") + " · " + Math.round(100 * g.feedwide / FW.endpoints) + "% of doors", col: g.gate ? S.OPC.gate : "var(--muted)", cls: g.gate ? "gate" : "",
+    SEC.guards.forEach(function(g){ stop({ dep: g.name, icon: g.gate ? "key" : "link", title: g.name, sub: g.via + (g.gate ? " · GATE" : " · resource") + " · " + Math.round(100 * g.feedwide / FW.endpoints) + "% of doors", col: g.gate ? S.OPC.gate : "var(--muted)", cls: g.gate ? "gate" : "",
       card: card({ title: g.name, icon: g.gate ? "key" : "link", color: g.gate ? S.OPC.gate : null, sub: g.via,
         rows: [["decides", g.gate ? "yes — it can refuse" : "no — it supplies"], ["feed-wide", g.feedwide + " of " + FW.endpoints], g.fn_rec ? ["function", g.fn_rec.name + " · " + (g.fn_rec.role || "—")] : null] }) });
       lane.append(E("i", { class: "sarr", html: ico("drill", 13, "var(--muted)") })); });
@@ -1724,7 +1745,7 @@
     var bodiesOnly = schMap().blocks === "bodies";
     schSorted(bodiesOnly ? list.filter(function(x){ return x.top; }) : list).forEach(function(s){
       var blk = E("div", { class: "blk sch dir-" + s.dir + (sel === s.name ? " sel" : ""), style: "--ec:" + s.entity_color });
-      blk.dataset.table = s.name;
+      blk.dataset.table = s.name; blk.dataset.schema = s.name;
       var hd = E("div", { class: "bkhd" }), ti = E("div", { class: "bkti" });
       schLines(s, S).forEach(function(line){ var ln = E("div", { class: "bkln" }), L = E("div", { class: "bkcol l" }), R = E("div", { class: "bkcol r" });
         function put(into, ns){ ns.forEach(function(n){ if (typeof n === "string") into.insertAdjacentHTML("beforeend", n); else into.append(n); }); }
@@ -1738,13 +1759,14 @@
       if (bodiesOnly && s.top) { var kids = list.filter(function(x){ return x.parent === s.name; }).sort(function(a, b){ return a.seq - b.seq; });
         if (kids.length) { var nr = E("div", { class: "snest" });
           kids.forEach(function(k){ var ch = E("span", { class: "snc" + (sel === k.name ? " sel" : "") }, ico("schema", 12, schIconCol(k, S)), E("b", null, esc(k.name)), E("span", { class: "n" }, String(k.cols.length)));
-            ch.dataset.table = k.name;
+            ch.dataset.table = k.name; ch.dataset.schema = k.name;
             bind(ch, function(){ return schCard(k, F, S); });
             ch.addEventListener("click", function(ev){ ev.stopPropagation(); if (portOn) window.selectIn("schemas", k.name); });
             nr.append(ch); });
           blk.append(nr); } }
       var fl = E("div", { class: "flds bkfl" });
-      s.cols.forEach(function(c){ fl.append(E("div", { class: "fld" }, schNode(c, s, S), E("span", { class: "fn" }, esc(c[0])), schNest(F, c), E("span", { class: "ft" }, esc(c[1] || "—")))); });
+      s.cols.forEach(function(c){ var fr = E("div", { class: "fld" }, schNode(c, s, S), E("span", { class: "fn" }, esc(c[0])), schNest(F, c), E("span", { class: "ft" }, esc(c[1] || "—")));
+        fr.dataset.field = c[0]; fl.append(fr); });
       blk.append(fl);
       /* ONE hover and ONE click for the whole block, as in Data */
       bind(blk, function(){ return schCard(s, F, S); });
@@ -2025,7 +2047,7 @@
     var body = E("div", { class: "bkbody form-" + B.form });
     sortedOf(list, FNSORTS, C.sort || "walk", !!C.sortRev).forEach(function(x){
       var blk = E("div", { class: "blk fn role-" + x.role + (x.conf === "inferred" && M.inferred === "dashed" ? " dashed" : "") + (sel === x.name ? " sel" : ""), style: "--ec:" + x.entity_color });
-      blk.dataset.table = x.name; blk.dataset.conf = x.conf;
+      blk.dataset.table = x.name; blk.dataset.fn = x.name; blk.dataset.conf = x.conf;
       var hd = E("div", { class: "bkhd" }), ti = E("div", { class: "bkti" });
       fnLines(x, S).forEach(function(line){ var ln = E("div", { class: "bkln" }), L = E("div", { class: "bkcol l" }), R = E("div", { class: "bkcol r" });
         function put(into, ns){ ns.forEach(function(n){ if (typeof n === "string") into.insertAdjacentHTML("beforeend", n); else into.append(n); }); }
@@ -2119,6 +2141,674 @@
     box.append(b);
     COV.mark("CODE BEHIND", "functions"); COV.mark("SIGNATURE", "functions"); COV.mark("DOCSTRING", "functions"); }
 
+  /* ══════════════════════════════════════════════════════════════════════════════════════
+     THE COMMAND PANEL (Phase 6 slice 1, 2026-09-17) — the console's ACT half.
+
+     THE THING IS A PATH: one way a request through this door ends. Its pieces are its chain
+     steps; its facts are status · kind · phase · the effect buckets · the tests that prove it ·
+     the switches it crossed. The second thing is an EXIT (the row an ending lands on), the
+     third a TEST CASE (a case that proves an exit).
+
+     Four LAYOUTS are built, not chosen (operator 2026-09-14: "I want to be able to see all of
+     them and then decide"): card · strip · ladder · matrix. Every §6 choice is a rail pick in
+     blk-command. Nothing here is typed by hand — every count, name, status and colour is read
+     from F.forms or window.STATION.
+     ══════════════════════════════════════════════════════════════════════════════════════ */
+  function cmdCfg(){ return window.CMD || {}; }
+  /* the shell's hcard carries the PLAIN LINE last (the card law) but escapes nothing and draws no
+     field list — this wrapper escapes every value and renders the fields in the local card's markup */
+  function fieldsHtml(list){ return '<div class="cpsep"></div><div class="cpf">'
+    + list.map(function(f){ return '<div class="cpfn2">' + esc(f) + "</div>"; }).join("") + "</div>"; }
+  function cmdc(o){ var q = {}, k;
+    for (k in o) if (k !== "fields") q[k] = o[k];
+    q.title = esc(o.title == null ? "" : o.title);
+    if (o.value != null) q.value = esc(o.value);
+    if (o.sub) q.sub = esc(o.sub);
+    q.rows = (o.rows || []).filter(Boolean).map(function(r){ return [esc(r[0]), esc(r[1]), r[2]]; });
+    if (o.fields && o.fields.length) q.body = (o.body || "") + fieldsHtml(o.fields);
+    return window.hcard(q); }
+  function FRM(F){ var f = F && F.forms; return f && f.state === "present" ? f : null; }
+  /* the five path KINDS — glyph, word and the reader-side line, one place */
+  var CMDKIND = {
+    success:    { ico: "target",   word: "success",    plain: "the way the door answers when the work went right" },
+    refusal:    { ico: "shield",   word: "refusal",    plain: "the door says no on purpose — code someone wrote to stop this request" },
+    framework:  { ico: "external", word: "framework",  plain: "FastAPI answered before your code ran" },
+    validation: { ico: "schema",   word: "validation", plain: "the body did not match the shape the door declares" },
+    uncaught:   { ico: "alert",    word: "uncaught",   plain: "something raised and nothing caught it — the caller gets a 500" } };
+  /* COLOUR IS READ, NEVER PASTED: the five kind colours are station tokens (ep-brief.md) */
+  function kindCol(k, S){ return k === "success" ? S.OPC.read : k === "refusal" ? S.OPC.gate
+    : k === "framework" ? S.KINDCOL.external : k === "validation" ? S.OPC.schema
+    : k === "uncaught" ? (S.BADGE_COL.role || {}).accessor : "var(--muted)"; }
+  function statusCol(st, S){ var d = String(st).charAt(0); return d === "2" ? S.OPC.read : d === "4" ? S.OPC.gate : S.OPC.write; }
+  function hexTriple(c){ var h = String(c).replace("#", "");
+    if (h.length === 3) h = h.charAt(0) + h.charAt(0) + h.charAt(1) + h.charAt(1) + h.charAt(2) + h.charAt(2);
+    return [parseInt(h.slice(0, 2), 16) || 0, parseInt(h.slice(2, 4), 16) || 0, parseInt(h.slice(4, 6), 16) || 0]; }
+  function mixHex(a, b, t){ var A = hexTriple(a), B = hexTriple(b);
+    return "#" + [0, 1, 2].map(function(i){ var v = Math.round(A[i] + (B[i] - A[i]) * t).toString(16); return v.length < 2 ? "0" + v : v; }).join(""); }
+  /* the PHASE ramp: one interpolation between two station tokens — early (route blue) to late (write orange) */
+  function phaseCol(ph, F, S){ var PH = (FRM(F) || {}).phases || [], i = PH.indexOf(ph);
+    if (i < 0) return "var(--muted)"; return mixHex(S.KINDCOL.route, S.OPC.write, PH.length > 1 ? i / (PH.length - 1) : 0); }
+  function pathCol(p, F, S){ var C = cmdCfg();
+    return C.colour === "mono" ? "var(--muted)" : C.colour === "status" ? statusCol(p.status, S)
+      : C.colour === "phase" ? phaseCol(p.phase, F, S) : kindCol(p.kind, S); }
+  /* choice 5 — all four names ride path.names; a name the feed does not carry is drawn as a dash,
+     never invented, and the card says which name is missing */
+  function pathName(p){ var C = cmdCfg(), N = p.names || {};
+    var v = C.names === "detail" ? N.detail : C.names === "exception" ? N.exception
+      : C.names === "phase" ? N.phase_status : N.drawn;
+    return v == null || String(v) === "" ? null : String(v); }
+  function pathWord(p){ return pathName(p) || (p.names || {}).drawn || p.id; }
+
+  /* ── the CELLS the walk draws: choice 6 (success shown/hidden) · 7 (split/merged) · 4 (grouping) ── */
+  function pathCells(F){ var C = cmdCfg(), fm = FRM(F); if (!fm) return [];
+    var all = (fm.paths || []).slice();
+    if (C.success === "hidden") all = all.filter(function(p){ return p.kind !== "success"; });
+    var cells;
+    if (C.sub === "merged") { var by = {}, ord = [];
+      all.forEach(function(p){ var k = p.kind + "|" + p.status; if (!by[k]) { by[k] = []; ord.push(k); } by[k].push(p); });
+      cells = ord.map(function(k){ return { lead: by[k][0], members: by[k], id: by[k][0].id }; }); }
+    else cells = all.map(function(p){ return { lead: p, members: [p], id: p.id }; });
+    var PH = fm.phases || [], kinds = [];
+    (fm.paths || []).forEach(function(p){ if (kinds.indexOf(p.kind) < 0) kinds.push(p.kind); });
+    function grp(c){ return C.group === "kind" ? kinds.indexOf(c.lead.kind) : C.group === "status" ? c.lead.status : 0; }
+    cells.sort(function(a, b){
+      var d = grp(a) - grp(b); if (d) return d;
+      d = PH.indexOf(a.lead.phase) - PH.indexOf(b.lead.phase); if (d) return d;
+      d = ((a.lead.n || {}).steps || 0) - ((b.lead.n || {}).steps || 0); if (d) return d;
+      return String(a.id).localeCompare(String(b.id)); });
+    return cells; }
+  function pathById(F, id){ var fm = FRM(F); if (!fm) return null;
+    return (fm.paths || []).filter(function(p){ return p.id === id; })[0] || null; }
+  function exitById(F, id){ var fm = FRM(F); if (!fm) return null;
+    return (fm.exits || []).filter(function(e){ return e.id === id; })[0] || null; }
+  function selPath(F){ return pathById(F, (window.SEL || {}).path); }
+  function selExit(F){ var S0 = window.SEL || {}; if (S0.exit) return exitById(F, S0.exit);
+    var p = selPath(F); return p ? p.exit : null; }
+
+  /* ── WHAT IS ON THE PATH, per part — the one place the projection's rule lives ── */
+  function onPath(F, p){
+    var out = { table: {}, schema: {}, field: {}, fieldIn: {}, fn: {}, "case": {}, rung: {}, lane: {}, dep: {}, bucket: {}, gate: {}, sw: {} };
+    if (!p) return out;
+    (p.effects.tables || []).forEach(function(t){ out.table[t] = 1; });
+    var seenStep = {};
+    (p.effects.steps || []).forEach(function(s){ if (!s.table || !s.bucket) return;
+      var key = s.table + "/" + s.bucket + "/" + s.step; if (seenStep[key]) return; seenStep[key] = 1;
+      var b = out.bucket[s.table] || (out.bucket[s.table] = {}); b[s.bucket] = (b[s.bucket] || 0) + 1; });
+    var ex = p.exit || {}, resp = ex.response || {};
+    if (resp.model) { out.schema[resp.model] = 1; var fi = out.fieldIn[resp.model] = {};
+      (resp.fields || []).forEach(function(f){ out.field[f] = 1; fi[f] = 1; }); }
+    /* the request shape rides every path that PASSED the validation gate */
+    var passedVal = (p.chain || []).some(function(c){ return c.phase === "validation" && c.kind === "gate" && c.hit === false; });
+    var req = ((F.data || {}).schemas || {}).request;
+    if (passedVal && req && req.name) out.schema[req.name] = 1;
+    /* the handler is on the path only when the request REACHED it — a middleware 429 or a validation
+       422 never ran a line of it, and marking it there would be a lie the picture tells every time */
+    var ranHandler = (p.chain || []).some(function(c){ return c.kind === "call" || c.kind === "collapsed"
+      || c.kind === "branch" || (c.kind === "gate" && c.phase === "handler"); });
+    var HN = ((F.functions || {}).handler || {}).name; if (HN && ranHandler) out.fn[HN] = "handler";
+    (p.chain || []).forEach(function(c){
+      if (c.fn && (c.kind === "call" || c.kind === "collapsed" || c.kind === "catch")) out.fn[String(c.fn).split("::").pop()] = c.kind === "catch" ? (c.catch_kind || "catch") : c.kind;
+      if (c.kind === "gate") { out.gate[c.ref || c.i] = c.hit === true ? "fired" : "passed";
+        if (c.sub) { out.dep[String(c.sub).replace(/^except\s+/, "")] = c.hit === true ? "fired" : "passed"; out.lane[String(c.sub)] = c.hit === true ? "fired" : "passed"; } }
+      if (c.kind === "step" && c.sub === "middleware") out.lane[c.label] = "passed";
+      if (c.kind === "switch") out.sw[c.ref] = c.switch_kind || "switch"; });
+    /* the door's own deps: a gate the chain crossed names its dependency by the `sub` it carries */
+    var G = ((F.security || {}).guards || []);
+    G.forEach(function(g){ if (out.dep[g.name] || out.dep[g.via]) out.dep[g.name] = out.dep[g.name] || out.dep[g.via]; });
+    if ((p.effects || {}).dependency === "ran") G.forEach(function(g){ if (!out.dep[g.name]) out.dep[g.name] = "passed"; });
+    var J = cmdCfg().join || "exact";
+    if (J === "exact") (p.tests || []).forEach(function(t){ out["case"][t.case] = t.conf || "joined"; });
+    else if (J === "parsed") (((F.tests || {}).by_status || {})[String(p.status)] || []).forEach(function(cid){ out["case"][cid] = "name-parsed"; });
+    /* WIDENING: the hook fetches on every path; a reason site whose value is this status is the
+       client branch that reads it; the guard's 401 effects ride a 401 */
+    var FE = ((FRM(F) || {}).frontend) || {};
+    if (FE.hook && FE.hook.piece) out.rung[String(FE.hook.piece).split("#").pop()] = "fetches";
+    (FE.reason_sites || []).forEach(function(r){ if (String(r.value) === String(p.status)) out.rung[String(r.piece).split("/").pop().replace(/\.tsx?#.*$/, "").replace(/#.*$/, "")] = "reads";
+      if (String(r.value) === String(p.status)) out.rung[String(r.piece).split("#").pop()] = "reads"; });
+    if (String(p.status) === "401" && FE.guard) (FE.guard.effects || []).forEach(function(e){ out.rung[e.call] = "effect"; });
+    return out; }
+
+  /* what this path gives each PART — the matrix's fill and the "on this path" strip read the same rule */
+  function partFacts(F, p, part){
+    var o = onPath(F, p), fm = FRM(F) || {}, FE = fm.frontend || {}, n = 0, words = [];
+    if (part === "data") { n = (p.effects.tables || []).length;
+      words = [(p.effects.n.committed || 0) + " committed", (p.effects.n.rolled_back || 0) + " rolled back", (p.effects.n.uncommitted || 0) + " uncommitted", (p.effects.n.maybe_committed || 0) + " maybe"]
+        .filter(function(w){ return w.charAt(0) !== "0"; }); }
+    else if (part === "schemas") { var r = (p.exit || {}).response || {}; n = (r.model ? 1 : 0) + (Object.keys(o.schema).length - (r.model ? 1 : 0));
+      n = Object.keys(o.schema).length; words = Object.keys(o.schema); }
+    else if (part === "functions") { n = Object.keys(o.fn).length; words = Object.keys(o.fn); }
+    else if (part === "tests") { n = Object.keys(o["case"]).length; words = Object.keys(o["case"]).map(function(c){ return c + " · " + o["case"][c]; }); }
+    else if (part === "widening") { var sites = (FE.reason_sites || []).filter(function(r2){ return String(r2.value) === String(p.status); });
+      var eff = String(p.status) === "401" && FE.guard ? (FE.guard.effects || []).length : 0;
+      n = sites.length + eff; words = sites.map(function(s){ return String(s.piece).split("#").pop() + " reads " + s.reads; })
+        .concat(eff ? (FE.guard.effects || []).map(function(e){ return e.call; }) : []);
+      if (cmdCfg().matrix === "hook") { n += FE.hook ? 1 : 0; if (FE.hook) words.push(String(FE.hook.piece).split("#").pop() + " fetches"); } }
+    else if (part === "security") { n = (p.n.gates || 0) + (p.switches || []).length;
+      words = [(p.n.gates || 0) + " gate(s) crossed", (p.switches || []).length + " switch(es)"]; }
+    return { n: n, words: words }; }
+
+  /* ── THE CELL: a station glyph · the hotkey letter · a count badge. The verb lives on the card. ── */
+  var GRIDKEYS = "QWERTASDFGZXCVB";
+  function hotLetters(list){ var C = cmdCfg(), used = {}, out = [];
+    list.forEach(function(o, i){
+      if (C.keys === "off") { out.push(null); return; }
+      if (C.keys !== "mnemonic") { out.push(GRIDKEYS.charAt(i) || null); return; }
+      var m = String(o.verb || "").toUpperCase().replace(/[^A-Z]/g, ""), pick = null;
+      for (var j = 0; j < m.length; j++) if (!used[m.charAt(j)]) { pick = m.charAt(j); break; }
+      if (pick) used[pick] = 1; out.push(pick); });
+    return out; }
+  function tipBind(el, cardFn, capFn){ var C = cmdCfg();
+    if (C.tip === "hover" || !C.tip) { bind(el, cardFn); return el; }
+    el.addEventListener("mouseenter", function(){ var host = document.querySelector("#cmd .cmdtip"); if (!host) return;
+      host.innerHTML = C.tip === "caption" ? '<span class="capl">' + (capFn ? capFn() : "") + "</span>" : cardFn(); });
+    el.addEventListener("focus", function(){ var host = document.querySelector("#cmd .cmdtip"); if (!host) return;
+      host.innerHTML = C.tip === "caption" ? '<span class="capl">' + (capFn ? capFn() : "") + "</span>" : cardFn(); });
+    return el; }
+  function cellNode(o, F, S){ var C = cmdCfg(), z = C.size || 64;
+    var el = E("button", { class: "cmdcell sc2f face-" + (C.face || "valley") + " st-" + (o.state || "lit") + (o.on ? " on" : "") });
+    el.style.setProperty("--tc", o.col || "var(--muted)");
+    el.style.setProperty("--cz", z + "px");
+    if (o.cmd) el.dataset.cmd = o.cmd;
+    if (o.path) el.dataset.path = o.path;
+    if (o.exit) el.dataset.exit = o.exit;
+    if (o.state === "blank") { el.setAttribute("aria-hidden", "true"); el.disabled = true; return el; }
+    el.insertAdjacentHTML("beforeend", '<i class="cgh">' + ico(o.ico, Math.round(z * 1.9), "currentColor") + "</i>");
+    el.insertAdjacentHTML("beforeend", '<span class="cg">' + ico(o.ico, Math.round(z * 0.30), "currentColor") + "</span>");
+    if (o.hot) el.append(E("i", { class: "chot" }, esc(o.hot)));
+    if (o.badge != null) el.append(E("span", { class: "cbadge" }, esc(String(o.badge))));
+    if (o.label && z >= 64) el.append(E("span", { class: "clbl" }, esc(o.label)));
+    if (o.flag) { var fg = E("i", { class: "cflag" }); fg.insertAdjacentHTML("beforeend", ico("swords", 11, "currentColor"));
+      bind(fg, function(){ return flagCard(o.flag, F, S); }); el.classList.add("hasflag"); el.append(fg); }
+    tipBind(el, o.card, o.cap);
+    if (o.act) el.addEventListener("click", function(ev){ ev.stopPropagation(); o.act(); });
+    return el; }
+
+  /* ── the 15 VERBS of the kind card (path-map-status.md §6, the entity command card) ── */
+  function cmdVerbs(F, S){
+    var fm = FRM(F), C = cmdCfg(), sel = selPath(F), ex = selExit(F), cells = pathCells(F);
+    var paths = (fm.paths || []), exits = (fm.exits || []);
+    var refus = paths.filter(function(p){ return p.kind === "refusal"; }), succ = paths.filter(function(p){ return p.kind === "success"; });
+    var untested = exits.filter(function(e){ return !(e.tests || []).length; });
+    var writes = sel ? (sel.effects.writes || []) : uniq(paths.reduce(function(a, p){ return a.concat(p.effects.writes || []); }, []));
+    var gateN = sel ? (sel.n.gates || 0) : uniq(paths.reduce(function(a, p){ return a.concat((p.chain || []).filter(function(c){ return c.kind === "gate"; }).map(function(c){ return c.ref; })); }, [])).length;
+    var testN = ex ? uniq((ex.tests || []).map(function(t){ return t.case; })).length : uniq(exits.reduce(function(a, e){ return a.concat((e.tests || []).map(function(t){ return t.case; })); }, [])).length;
+    var K1 = (fm.slots || {}).K1 || {}, U7 = (fm.slots || {}).U7 || {};
+    function go(part, id){ return function(){ if (part) window.showTab(part); if (id) window.selectIn(part, id); }; }
+    var L = [];
+    L.push({ cmd: "walk", ico: "journey", verb: "Walk a path", state: "lit", badge: cells.length, col: "var(--accent)",
+      card: function(){ return cmdc({ title: "Walk a path ▸", value: cells.length + " of " + paths.length, icon: "journey", color: "var(--accent)",
+        rows: [["swaps", "the grid to one cell per path"], ["shown", cells.length + (C.sub === "merged" ? " merged cells" : " paths")],
+               ["grouped by", C.group], ["named by", C.names]],
+        plain: "one cell per way a request through this door can end — pick one and the whole console follows it" }); },
+      cap: function(){ return "walk a path — " + cells.length + " ways this door can end"; },
+      act: function(){ window.CMD.mode = window.CMD.mode === "path" ? "cmd" : "path"; window.drawCmd(); } });
+    L.push({ cmd: "prev", ico: "up", verb: "Previous exit", state: exits.length ? "lit" : "hollow",
+      card: function(){ return cmdc({ title: "previous exit", value: ex ? ex.status + " · " + ex.phase : "none open", icon: "up",
+        rows: [["order", "request order — " + (fm.stages || []).length + " stages"], ["now", ex ? ex.id : "—"]],
+        plain: "step back one ending, the way the request meets them" }); },
+      cap: function(){ return "previous exit in request order"; }, act: function(){ window.stepExit(-1); } });
+    L.push({ cmd: "next", ico: "down", verb: "Next exit", state: exits.length ? "lit" : "hollow",
+      card: function(){ return cmdc({ title: "next exit", value: exits.length + " exits", icon: "down",
+        rows: [["order", "request order"], ["now", ex ? ex.id : "—"]],
+        plain: "step forward one ending, the way the request meets them" }); },
+      cap: function(){ return "next exit in request order"; }, act: function(){ window.stepExit(1); } });
+    L.push({ cmd: "refusals", ico: "shield", verb: "Show refusals", state: refus.length ? "lit" : "hollow", badge: refus.length, col: kindCol("refusal", S),
+      card: function(){ return cmdc({ title: "show refusals", value: refus.length, icon: "shield", color: kindCol("refusal", S),
+        rows: [["written refusals", String(refus.length)], ["framework", String(paths.filter(function(p){ return p.kind === "framework"; }).length) + " — FastAPI answered first"],
+               ["validation", String(paths.filter(function(p){ return p.kind === "validation"; }).length)], ["uncaught", String(paths.filter(function(p){ return p.kind === "uncaught"; }).length) + " — shown apart, it is not a refusal"],
+               ["U7 rows", String(U7.rows == null ? "unknown" : U7.rows)]],
+        plain: "every ending someone wrote on purpose to stop the request" }); },
+      cap: function(){ return refus.length + " written refusals · the 500 is counted apart"; },
+      act: function(){ window.CMD.mode = "path"; window.CMD.only = window.CMD.only === "refusal" ? null : "refusal"; window.drawCmd(); } });
+    L.push({ cmd: "success", ico: "target", verb: "Show success", state: succ.length ? "lit" : "hollow", badge: succ.length, col: kindCol("success", S),
+      card: function(){ return cmdc({ title: "show success", value: succ.length, icon: "target", color: kindCol("success", S),
+        rows: [["paths", succ.map(function(p){ return p.names.drawn; }).join(" · ")], ["all", "GENERATED — the drawn-by-hand source is gone"],
+               ["declared", (fm.declared || {}).response_model ? fm.declared.response_model.name + " · " + fm.declared.success.status : "—"]],
+        plain: "the ways the work finished — all three come from the feed now, none is drawn by hand" }); },
+      cap: function(){ return succ.length + " success paths, all generated"; },
+      act: function(){ window.CMD.mode = "path"; window.CMD.only = window.CMD.only === "success" ? null : "success"; window.drawCmd(); } });
+    L.push({ cmd: "writes", ico: "table", verb: "Show writes", state: writes.length ? "lit" : "hollow", badge: writes.length, col: S.OPC.write,
+      card: function(){ return cmdc({ title: "show writes", value: writes.length + " table(s)", icon: "table", color: S.OPC.write,
+        rows: [["scope", sel ? "this path — " + pathWord(sel) : "every path"],
+               sel ? ["committed", String(sel.effects.n.committed)] : null,
+               sel ? ["rolled back", String(sel.effects.n.rolled_back)] : null,
+               sel ? ["uncommitted", String(sel.effects.n.uncommitted)] : null,
+               ["commit", "one DB transaction — never a git commit"]],
+        fields: writes, plain: "the tables this ending changes, and whether the change survived" }); },
+      cap: function(){ return writes.length + " tables written" + (sel ? " on " + pathWord(sel) : " across every path"); },
+      act: go("data", writes[0] || null) });
+    L.push({ cmd: "pre", ico: "angle", verb: "Show preconditions", state: (fm.preconditions || []).length ? "lit" : "hollow", badge: (fm.preconditions || []).length, col: S.OPC.gate,
+      card: function(){ return cmdc({ title: "show preconditions", value: (fm.preconditions || []).length, icon: "angle", color: S.OPC.gate,
+        rows: (fm.preconditions || []).map(function(x){ return [String(x.status), x.pred]; }),
+        plain: "the tests the handler runs before it will do the work" }); },
+      cap: function(){ return (fm.preconditions || []).length + " preconditions before the work runs"; },
+      act: go("security", null) });
+    L.push({ cmd: "gates", ico: "key", verb: "Show gates", state: gateN ? "lit" : "hollow", badge: gateN, col: S.OPC.gate,
+      card: function(){ return cmdc({ title: "show gates", value: gateN, icon: "key", color: S.OPC.gate,
+        rows: [["scope", sel ? "crossed on " + pathWord(sel) : "every gate in the feed"],
+               ["deps", ((F.security || {}).guards || []).length + " · " + ((F.security || {}).gates || []).length + " can refuse"],
+               ["app band", ((F.security || {}).asgi || []).length + " ASGI lanes, app scope"]],
+        plain: "every check the request has to get past before the work runs" }); },
+      cap: function(){ return gateN + " gates" + (sel ? " on this path" : " in the feed"); }, act: go("security", null) });
+    L.push({ cmd: "findings", ico: "alert", verb: "Show findings", state: (fm.findings || []).length ? "lit" : "hollow", badge: (fm.findings || []).length, col: (S.BADGE_COL.role || {}).accessor,
+      card: function(){ return cmdc({ title: "show findings", value: (fm.findings || []).length, icon: "alert", color: (S.BADGE_COL.role || {}).accessor,
+        rows: (fm.findings || []).map(function(f){ return [f.id, f.slot + (f.status ? " · " + f.status : "") + (f.n ? " · " + f.n : "")]; }),
+        plain: "what the forms pass found wrong with the way this door answers" }); },
+      cap: function(){ return (fm.findings || []).map(function(f){ return f.id; }).join(" · "); }, act: go("security", null) });
+    L.push({ cmd: "declared", ico: "info", verb: "Declared vs produced", state: (K1.produced || []).length ? "lit" : "hollow", badge: (K1.produced || []).length,
+      card: function(){ return cmdc({ title: "declared vs produced", value: (K1.declared || []).length + " declared · " + (K1.produced || []).length + " produced", icon: "info",
+        rows: [["declares", ((fm.declared || {}).success || {}).status ? String(fm.declared.success.status) : "—"],
+               ["declares refusals", (fm.declared || {}).refusals && fm.declared.refusals.length ? fm.declared.refusals.join(" · ") : "none"],
+               ["produces", (K1.produced || []).join(" · ")], ["K1", String(K1.state)]],
+        plain: "what the door promises against what it actually answers — the gap a client cannot plan for" }); },
+      cap: function(){ return "declares " + (((fm.declared || {}).success || {}).status || "—") + " · produces " + (K1.produced || []).join(" · "); },
+      act: go("tests", null) });
+    L.push({ cmd: "tests", ico: "test", verb: "Tests for this exit", state: testN ? "lit" : "hollow", badge: testN, col: testCol(),
+      card: function(){ return cmdc({ title: "tests for this exit", value: testN + " case(s)", icon: "test", color: testCol(),
+        rows: [["exit", ex ? ex.status + " · " + ex.phase : "no exit open — counting every exit"],
+               ["join", C.join === "exact" ? "exact — the forms tests arm" : C.join === "parsed" ? "name-parsed, dashed" : "off"]],
+        fields: ex ? (ex.tests || []).map(function(t){ return t.case + " · " + t.conf; }) : null,
+        plain: "the cases that prove this ending — and how sure the join is" }); },
+      cap: function(){ return testN + " cases prove " + (ex ? ex.status : "the exits"); }, act: go("tests", null) });
+    L.push({ cmd: "untested", ico: "swords", verb: "Untested exits", state: untested.length ? "lit" : "hollow", badge: untested.length, col: (S.BADGE_COL.role || {}).accessor,
+      card: function(){ return cmdc({ title: "untested exits", value: untested.length + " of " + exits.length, icon: "swords", color: (S.BADGE_COL.role || {}).accessor,
+        rows: untested.map(function(e){ return [String(e.status), e.phase + (e.via ? " · " + e.via : "")]; }),
+        plain: "endings no case has ever asserted — nothing proves the client sees what the door sends" }); },
+      cap: function(){ return untested.length + " exits no case asserts"; }, act: go("tests", null) });
+    L.push({ cmd: "handler", ico: "file", verb: "Open the handler", state: "lit",
+      card: function(){ return cmdc({ title: "open the handler", value: (F.functions.handler || {}).name, icon: "file",
+        rows: [["file", F.identity.file + ":" + F.identity.flines], ["lines", String((F.identity.sig || {}).lines)], ["in the lab", "opens Functions with the handler selected"]],
+        plain: "the file and line this door is written at — where you go to change it" }); },
+      cap: function(){ return F.identity.file + ":" + F.identity.flines; },
+      act: go("functions", (F.functions.handler || {}).name) });
+    L.push({ cmd: "up", ico: "layers", verb: "Up to entity", state: "hatched",
+      card: function(){ return cmdc({ title: "up to entity", value: (F.identity.above || []).length + " levels", icon: "layers",
+        rows: (F.identity.above || []).map(function(a){ return [a.kind, a.label]; }).concat([["hatched", "the console transports to those levels in the graph — the lab has no graph to walk to"]]),
+        plain: "one step out of this door — the three levels above it are named here" }); },
+      cap: function(){ return (F.identity.above || []).map(function(a){ return a.label; }).join(" ↑ ") + " — hatched, the lab has no graph"; },
+      act: null });
+    L.push({ cmd: "clear", ico: "skip", verb: "Clear", state: "lit", col: "var(--accent)",
+      card: function(){ return cmdc({ title: "clear", value: "Esc", icon: "skip", color: "var(--accent)",
+        rows: [["clears", "the path, the exit and the case"], ["key", "Esc, or B"]],
+        plain: "put everything back — no path in force, every part unmarked" }); },
+      cap: function(){ return "clear the selection — Esc"; }, act: function(){ window.clearPath(); } });
+    return L; }
+  function uniq(a){ var o = {}, r = []; a.forEach(function(x){ if (x != null && !o[x]) { o[x] = 1; r.push(x); } }); return r; }
+
+  /* ── the ENTITY card (choice 3): the owning entity's endpoints. The feed carries the COUNT
+     (feedwide.entity_counts.endpoints) and names ONE of them — this door. The rest are HATCHED:
+     measured to exist, never named here. ── */
+  function entVerbs(F, S){
+    var n = ((F.feedwide || {}).entity_counts || {}).endpoints || 1, L = [], I = F.identity;
+    L.push({ cmd: "ent-self", ico: "endpoint", verb: I.label, state: "lit", col: S.KINDCOL.endpoint, label: I.path,
+      card: function(){ return cmdc({ title: I.label, value: "the bench", icon: "endpoint", color: S.KINDCOL.endpoint,
+        rows: [["entity", I.entity], ["cluster", I.cluster], ["status", String(I.status)]],
+        plain: "the door on the bench — the one endpoint of this entity the lab's feed names" }); },
+      cap: function(){ return I.label + " — the door on the bench"; }, act: null });
+    for (var i = 1; i < n; i++) L.push({ cmd: "ent-" + i, ico: "endpoint", verb: "another " + I.entity + " endpoint", state: "hatched", col: S.KINDCOL.endpoint,
+      card: function(){ return cmdc({ title: "another " + I.entity + " endpoint", value: "unnamed here", icon: "endpoint", color: S.KINDCOL.endpoint,
+        rows: [["entity holds", n + " endpoints"], ["the feed names", "1 — the bench's own"], ["hatched", "measured to exist, never named — the console reads the roster from adoption.json"]],
+        plain: "one of this entity's other doors — the lab knows how many there are, not which" }); },
+      cap: function(){ return I.entity + " holds " + n + " endpoints; the lab's feed names one"; }, act: null });
+    return L; }
+
+  /* ── LAYOUT 1 · the CARD: a 3×5 grid of SC2 command squares ── */
+  function cmdGrid(host, list, F, S){ var C = cmdCfg(), SLOTS = 15;
+    var g = E("div", { class: "cmdgrid" });
+    g.style.setProperty("--cz", (C.size || 64) + "px");
+    var n = C.wrong === "collapsed" ? list.length : Math.max(SLOTS, Math.ceil(list.length / SLOTS) * SLOTS);
+    var hots = hotLetters(list);
+    for (var i = 0; i < n; i++) { var o = list[i], d;
+      if (o) { d = {}; for (var k in o) d[k] = o[k]; d.hot = hots[i]; g.append(cellNode(d, F, S)); }
+      else g.append(cellNode({ state: "blank", ico: "info" }, F, S)); }
+    host.append(g); return g; }
+  function renderCmdCard(host, F, S){ var C = cmdCfg(), fm = FRM(F);
+    var mode = C.mode === "path" ? "path" : "cmd";
+    var list;
+    if (mode === "path") { var cells = pathCells(F);
+      if (C.only) cells = cells.filter(function(c){ return c.lead.kind === C.only; });
+      list = cells.map(function(c){ return pathCellDef(c, F, S); }); }
+    else list = C.scope === "entity" ? entVerbs(F, S) : cmdVerbs(F, S);
+    cmdHead(host, F, S, mode === "path" ? (list.length + " paths") : (list.length + " verbs"));
+    cmdGrid(host, list, F, S);
+    if (C.scope === "both" && mode === "cmd") { host.append(E("div", { class: "cmdsub" }, esc("the owning entity · " + (((F.feedwide || {}).entity_counts || {}).endpoints || 1) + " endpoints")));
+      cmdGrid(host, entVerbs(F, S), F, S); }
+    cmdTip(host, F, S); }
+  /* the FLAG a path's own exit is gated by — never every switch it crossed, or the chip would ride
+     all fourteen cells; the switch's own `refs` name the two exits the rate limiter can produce */
+  function flagOf(p){ return (p.switches || []).filter(function(s){
+    return s.kind === "flag" && (s.refs || []).indexOf((p.exit || {}).id) >= 0; })[0] || null; }
+  function flagCard(sw, F, S){ var st = sw.settings || {};
+    return cmdc({ title: "rate limit", value: "flag", icon: "swords", color: S.OPC.gate,
+      rows: Object.keys(st).map(function(k){ return [k, st[k].default + " · " + st[k].env]; })
+        .concat([["when", sw.expr || "—"], ["caveat", "ACTIVE only when rate_limit_enabled is true or the app is production — the measured default is False"]]),
+      plain: "a setting decides whether this refusal can happen at all — off by default here" }); }
+  function pathCellDef(c, F, S){ var p = c.lead, C = cmdCfg(), K = CMDKIND[p.kind] || { ico: "info", word: p.kind, plain: p.kind };
+    var sel = (window.SEL || {}).path, nm = pathName(p);
+    return { cmd: null, path: p.id, exit: (p.exit || {}).id, ico: K.ico, verb: pathWord(p), label: nm || "—", flag: C.flag === "shown" ? flagOf(p) : null,
+      col: pathCol(p, F, S), badge: p.status, state: p.partial ? "dashed" : "lit", on: sel === p.id || c.members.some(function(m){ return m.id === sel; }),
+      card: function(){ return pathCard(c, F, S); },
+      cap: function(){ return esc(pathWord(p) + " · " + p.names.phase_status + " · " + p.n.steps + " steps"); },
+      act: function(){ window.selectPath(p.id); } }; }
+  function pathCard(c, F, S){ var p = c.lead, K = CMDKIND[p.kind] || {}, C = cmdCfg();
+    var rows = [["status", String(p.status)], ["kind", K.word || p.kind], ["stage", p.phase],
+      ["steps", String(p.n.steps) + " · " + p.n.gates + " gates · " + p.n.calls + " calls · " + p.n.catches + " catches"],
+      ["writes", p.effects.tables.length ? p.effects.tables.length + " table(s) touched · " + p.effects.n.committed + " committed" : "none"],
+      ["tests", (p.tests || []).length ? uniq(p.tests.map(function(t){ return t.case; })).join(" · ") : "none"]];
+    if (C.names !== "drawn") rows.unshift(["drawn name", p.names.drawn]);
+    if (c.members.length > 1) rows.push(["merged", c.members.length + " sub-paths: " + c.members.map(function(m){ return m.names.drawn; }).join(" · ")]);
+    if (C.names === "exception" && !p.names.exception) rows.push(["exception", "— none: this refusal is raised inline, not as a class"]);
+    return cmdc({ title: pathWord(p), value: p.names.phase_status, icon: K.ico, color: pathCol(p, F, S),
+      rows: rows, plain: K.plain }); }
+  function cmdHead(host, F, S, right){ var C = cmdCfg(), fm = FRM(F);
+    if (!C.show || C.show.title === 0) return;
+    var h = E("div", { class: "cmdhd" }, sechd("shape", "Command", right, false, "var(--accent)"));
+    var src = fm ? (fm.counts.paths + " paths · " + fm.counts.exits + " exits") : "the forms feed is " + ((F.forms || {}).state || "absent");
+    h.append(E("span", { class: "cmdsrc" }, esc(src)));
+    bind(h, function(){ return cmdc({ title: "the command panel", value: C.layout, icon: "shape", color: "var(--accent)",
+      rows: [["layout", C.layout], ["paths", String((fm || {}).counts ? fm.counts.paths : 0)], ["exits", String((fm || {}).counts ? fm.counts.exits : 0)],
+             ["source", (fm && fm.source ? fm.source.path : "—")]],
+      plain: "the half of the console you ACT with — one cell per thing you can do to this door" }); });
+    host.append(h); }
+  function cmdTip(host, F, S){ var C = cmdCfg();
+    var t = E("div", { class: "cmdtip tip-" + (C.tip || "hover") });
+    if (C.tip === "caption") t.append(E("span", { class: "capl" }, esc("hover a cell — its one line lands here")));
+    host.append(t); }
+
+  /* ── LAYOUT 2 · the STRIP: one cell per path, under the part buttons, inside the bench ── */
+  function renderCmdStrip(host, F, S){ var C = cmdCfg(), cells = pathCells(F);
+    if (C.only) cells = cells.filter(function(c){ return c.lead.kind === C.only; });
+    var sel = (window.SEL || {}).path;
+    var wrap = E("div", { class: "pstrip" });
+    cells.forEach(function(c){ var p = c.lead, K = CMDKIND[p.kind] || {}, nm = pathName(p);
+      var el = E("button", { class: "pscell" + (sel === p.id || c.members.some(function(m){ return m.id === sel; }) ? " on" : "") + " st-" + (p.partial ? "dashed" : "lit") });
+      el.style.setProperty("--tc", pathCol(p, F, S));
+      el.dataset.path = p.id;
+      var hd = E("div", { class: "pshd" });
+      hd.insertAdjacentHTML("beforeend", '<span class="psi">' + ico(K.ico || "info", 15, "currentColor") + "</span>");
+      hd.append(E("b", null, esc(String(p.status))));
+      var sw = cmdCfg().flag === "shown" ? flagOf(p) : null;
+      if (sw) { var fg = E("i", { class: "cflag" }); fg.insertAdjacentHTML("beforeend", ico("swords", 11, "currentColor"));
+        bind(fg, function(){ return flagCard(sw, F, S); }); hd.append(fg); }
+      el.append(hd);
+      el.append(E("span", { class: "psn" }, esc(nm || "—")));
+      tipBind(el, function(){ return pathCard(c, F, S); }, function(){ return esc(pathWord(p)); });
+      el.addEventListener("click", function(ev){ ev.stopPropagation(); window.selectPath(p.id); });
+      wrap.append(el); });
+    host.append(wrap); return wrap; }
+
+  /* ── LAYOUT 3 · the EXIT LADDER: the stages in request order, the return at the foot ── */
+  function renderCmdLadder(host, F, S){ var fm = FRM(F), C = cmdCfg();
+    cmdHead(host, F, S, (fm ? (fm.stages || []).length : 0) + " stages");
+    if (!fm) { host.append(E("div", { class: "cmdempty" }, esc("the forms feed is " + ((F.forms || {}).state || "absent")))); return; }
+    var selEx = (window.SEL || {}).exit, byId = {};
+    (fm.exits || []).forEach(function(e){ byId[e.id] = e; });
+    var rungs = (fm.stages || []).map(function(st){ return { phase: st.phase, exits: (st.exits || []).map(function(id){ return byId[id]; }).filter(function(e){ return e && e.row !== "return"; }) }; });
+    var foot = (fm.exits || []).filter(function(e){ return e.row === "return"; });
+    var all = rungs.concat([{ phase: "return", exits: foot, foot: true }]);
+    var at = -1;
+    all.forEach(function(r, i){ if (r.exits.some(function(e){ return e.id === selEx; })) at = i; });
+    var lad = E("div", { class: "exlad" });
+    all.forEach(function(r, i){
+      var cls = "exrung" + (r.foot ? " foot" : "") + (at < 0 ? "" : i < at ? " above" : i > at ? " below" : " here");
+      var rr = E("div", { class: cls });
+      rr.dataset.rung = r.phase;
+      rr.style.setProperty("--tc", r.foot ? S.OPC.read : phaseCol(r.phase, F, S));
+      rr.append(E("span", { class: "exn" }, esc(String(i + 1))));
+      rr.append(E("b", null, esc(r.phase)));
+      var hold = E("div", { class: "exhold" });
+      r.exits.forEach(function(e){
+        var el = E("button", { class: "excell" + (selEx === e.id ? " on" : "") + " st-" + (e.state === "default" ? "dashed" : "lit") });
+        el.dataset.exit = e.id;
+        el.style.setProperty("--tc", C.colour === "mono" ? "var(--muted)" : C.colour === "phase" ? phaseCol(e.phase, F, S) : C.colour === "status" ? statusCol(e.status, S) : kindCol(e.kind, S));
+        el.insertAdjacentHTML("beforeend", ico((CMDKIND[e.kind] || {}).ico || "info", 13, "currentColor"));
+        el.append(E("b", null, esc(String(e.status))));
+        if ((e.tests || []).length) el.append(E("i", { class: "extst" }, esc(String(uniq(e.tests.map(function(t){ return t.case; })).length))));
+        tipBind(el, function(){ return exitCard(e, F, S); }, function(){ return esc(e.status + " " + (e.detail || e.kind)); });
+        el.addEventListener("click", function(ev){ ev.stopPropagation(); window.selectExit(e.id); });
+        hold.append(el); });
+      if (!r.exits.length) hold.append(E("i", { class: "exnone" }, esc("— nothing leaves here")));
+      rr.append(hold);
+      bind(rr, function(){ return cmdc({ title: r.phase, value: r.exits.length + " exit(s)", icon: "layers", color: rr.style.getPropertyValue("--tc"),
+        rows: [["stage", r.foot ? "the success return, at the foot" : "stage " + (i + 1) + " of " + (fm.stages || []).length],
+               ["leaves here", r.exits.map(function(e){ return String(e.status); }).join(" · ") || "nothing"]],
+        plain: r.foot ? "where the work finishes and the answer goes back" : "one step of the request — everything that can end it here" }); });
+      lad.append(rr); });
+    if (C.walk === "replay") lad.append(E("i", { class: "cmdbead" }));
+    else if (at >= 0) lad.append(E("i", { class: "cmdbead static", style: "top:calc(" + at + " * var(--rungh, 24px))" }));
+    host.append(lad); cmdTip(host, F, S); }
+  function exitCard(e, F, S){ var r = e.response || {};
+    return cmdc({ title: String(e.status) + (e.detail ? " " + e.detail : ""), value: e.kind, icon: (CMDKIND[e.kind] || {}).ico || "info", color: kindCol(e.kind, S),
+      rows: [["stage", e.phase], ["row", e.row], ["via", e.via || "—"], ["pred", e.pred || "—"], ["state", e.state],
+             ["response", (r.media || "—") + (r.model ? " · " + r.model : "")],
+             ["paths", (e.paths || []).length + " end here"], ["tests", (e.tests || []).length ? uniq(e.tests.map(function(t){ return t.case; })).join(" · ") : "none"]],
+      plain: (CMDKIND[e.kind] || {}).plain || "one way the request ends" }); }
+
+  /* ── LAYOUT 4 · the MATRIX: path × part, one 28px cell each ── */
+  var CMDPARTS = ["data", "schemas", "functions", "tests", "widening", "security"];
+  function renderCmdMatrix(host, F, S){ var fm = FRM(F), C = cmdCfg();
+    var cells = pathCells(F); if (C.only) cells = cells.filter(function(c){ return c.lead.kind === C.only; });
+    cmdHead(host, F, S, cells.length + " × " + CMDPARTS.length);
+    if (!fm) { host.append(E("div", { class: "cmdempty" }, esc("the forms feed is absent"))); return; }
+    var m = E("div", { class: "cmx" });
+    var hd = E("div", { class: "cmxrow cmxhd" }, E("span", { class: "cmxl" }, ""));
+    CMDPARTS.forEach(function(k){ var P = window.PANELS[k];
+      var c = E("span", { class: "cmxh" }); c.dataset.part = k;
+      c.insertAdjacentHTML("beforeend", ico(P.icon, 13, P.col));
+      bind(c, function(){ return cmdc({ title: P.word, value: "one column", icon: P.icon, color: P.col,
+        rows: [["lit", "the part has facts for that path"], ["hollow", "measured, and the path gives it nothing"]],
+        plain: "what this part knows about one way the request ends" }); });
+      hd.append(c); });
+    m.append(hd);
+    var sel = (window.SEL || {}).path;
+    cells.forEach(function(cl){ var p = cl.lead, K = CMDKIND[p.kind] || {};
+      var row = E("div", { class: "cmxrow" + (sel === p.id ? " on" : "") }); row.dataset.path = p.id;
+      var lb = E("span", { class: "cmxl" });
+      lb.insertAdjacentHTML("beforeend", ico(K.ico || "info", 12, pathCol(p, F, S)));
+      lb.append(E("b", null, esc(String(p.status))), E("span", null, esc(pathName(p) || "—")));
+      tipBind(lb, function(){ return pathCard(cl, F, S); }, function(){ return esc(pathWord(p)); });
+      lb.addEventListener("click", function(ev){ ev.stopPropagation(); window.selectPath(p.id); });
+      row.append(lb);
+      CMDPARTS.forEach(function(k){ var f = partFacts(F, p, k);
+        var cell = E("span", { class: "cmxc st-" + (f.n ? "lit" : "hollow") });
+        cell.dataset.part = k; cell.dataset.path = p.id;
+        cell.style.setProperty("--tc", window.PANELS[k].col);
+        if (f.n) cell.append(E("i", null, esc(String(f.n))));
+        tipBind(cell, function(){ return cmdc({ title: window.PANELS[k].word, value: f.n ? f.n + " on this path" : "measured zero", icon: window.PANELS[k].icon, color: window.PANELS[k].col,
+          rows: [["path", pathWord(p)], ["state", f.n ? "lit — the part has facts" : "hollow — measured, and this path gives it nothing"]],
+          fields: f.words.length ? f.words : null,
+          plain: "how much this part has to say about this one ending" }); }, function(){ return esc(window.PANELS[k].word + " · " + (f.n || "nothing") + " on " + pathWord(p)); });
+        cell.addEventListener("click", function(ev){ ev.stopPropagation(); window.selectPath(p.id); window.showTab(k); });
+        row.append(cell); });
+      m.append(row); });
+    host.append(m); cmdTip(host, F, S); }
+
+  /* ══ THE PROJECTION — what a chosen path does to the middle panel (choice 8) ══════════════
+     A post-render pass: mark what is ON the path, and treat the rest per the pick — dim .28 ·
+     filter (display:none) · outline (only the path is ringed, the rest untouched). ══ */
+  var PROJKEY = { data: "table", schemas: "schema", functions: "fn", tests: "case", widening: "rung", security: "dep" };
+  function applyPath(panelEl, part, p){
+    if (!panelEl) return;
+    if (!part) p = null;
+    [].forEach.call(panelEl.querySelectorAll(".onpath, .offpath"), function(e){ e.classList.remove("onpath", "offpath"); });
+    [].forEach.call(panelEl.querySelectorAll(".bchip, .opstrip, .gatemark"), function(e){ e.remove(); });
+    panelEl.classList.remove("proj-dim", "proj-filter", "proj-outline", "join-parsed");
+    if (!p) return;
+    var C = cmdCfg(), S = window.STATION, F = window.LABEP, o = onPath(F, p);
+    panelEl.classList.add("proj-" + (C.middle || "dim"));
+    panelEl.classList.toggle("join-parsed", part === "tests" && C.join === "parsed");
+    var keys = part === "security" ? ["dep", "lane"] : [PROJKEY[part]];
+    keys.forEach(function(key){
+      [].forEach.call(panelEl.querySelectorAll("[data-" + key + "]"), function(e){
+        var v = e.getAttribute("data-" + key);
+        e.classList.add(o[key][v] ? "onpath" : "offpath"); }); });
+    if (part === "schemas") [].forEach.call(panelEl.querySelectorAll("[data-field]"), function(e){
+      var host = e.closest("[data-schema]"), sc = host ? host.getAttribute("data-schema") : null;
+      var mine = sc ? (o.fieldIn[sc] || {})[e.getAttribute("data-field")] : o.field[e.getAttribute("data-field")];
+      e.classList.add(mine ? "onpath" : "offpath"); });
+    /* DATA — a written table wears its BUCKET chip */
+    if (part === "data") { var BK = { committed: S.OPC.read, maybe_committed: S.OPC.gate, rolled_back: (S.BADGE_COL.role || {}).accessor, uncommitted: "transparent" };
+      var BW = { committed: "committed", maybe_committed: "maybe", rolled_back: "rolled back", uncommitted: "uncommitted" };
+      var ORD = ["committed", "maybe_committed", "rolled_back", "uncommitted"];
+      [].forEach.call(panelEl.querySelectorAll("[data-table].onpath"), function(e){
+        var t = e.getAttribute("data-table"), b = o.bucket[t]; if (!b) return;
+        ORD.forEach(function(k){ var n = b[k]; if (!n) return;
+          var chip = E("i", { class: "bchip bk-" + k }, esc(BW[k] + " ×" + n));
+          chip.style.setProperty("--bc", BK[k] || "var(--muted)");
+          bind(chip, function(){ return cmdc({ title: t, value: BW[k] + " ×" + n, icon: "table", color: BK[k],
+            rows: [["on", pathWord(p)], ["writes in this bucket", String(n)],
+                   ["the table's buckets", ORD.filter(function(x){ return b[x]; }).map(function(x){ return BW[x] + " " + b[x]; }).join(" · ")]],
+            plain: k === "committed" ? "the change is permanent — the transaction closed" : k === "rolled_back" ? "the change was undone — the transaction went back"
+              : k === "uncommitted" ? "the change never closed a transaction — it is gone when the request ends" : "the change may or may not have closed — the path cannot say" }); });
+          e.append(chip); }); }); }
+    /* SECURITY — a gate that FIRED is lit in the refusal colour; a gate the path passed reads as passed */
+    if (part === "security") [].forEach.call(panelEl.querySelectorAll("[data-dep], [data-lane]"), function(e){
+      var v = e.getAttribute("data-dep") || e.getAttribute("data-lane"), st = o.dep[v] || o.lane[v]; if (!st) return;
+      var mk = E("i", { class: "gatemark gm-" + st }, esc(st === "fired" ? "fired" : "passed"));
+      mk.style.setProperty("--bc", st === "fired" ? kindCol("refusal", S) : "var(--muted)");
+      e.append(mk); });
+    /* choice 2 — each part ALSO draws a one-line "on this path" strip under its title */
+    if (C.rows === "parts" || C.rows === "both") {
+      var f = partFacts(F, p, part);
+      var strip = E("div", { class: "opstrip" });
+      strip.insertAdjacentHTML("beforeend", ico((CMDKIND[p.kind] || {}).ico || "info", 12, pathCol(p, F, S)));
+      strip.append(E("b", null, esc(pathWord(p))), E("span", { class: "opn" }, esc(f.n + " on this path")),
+        E("span", { class: "opw" }, esc(f.words.join(" · ") || "nothing")));
+      bind(strip, function(){ return cmdc({ title: "on this path", value: f.n, icon: (CMDKIND[p.kind] || {}).ico, color: pathCol(p, F, S),
+        rows: [["path", pathWord(p)], ["part", window.PANELS[part].word], ["middle", C.middle]],
+        fields: f.words.length ? f.words : null,
+        plain: "what this part has for the one ending you picked" }); });
+      var hd = panelEl.querySelector(".phd");
+      if (hd && hd.nextSibling) panelEl.insertBefore(strip, hd.nextSibling); else panelEl.insertBefore(strip, panelEl.firstChild); } }
+
+  /* ══ THE THREE PORTRAITS — Path · Exit · Case, on the card law (a record mirrors its thing) ══ */
+  function ptRow(k, v, col){ return '<div class="ptrow"><span class="k">' + esc(k) + '</span><span class="v"' + (col ? ' style="color:' + col + '"' : "") + ">" + esc(v) + "</span></div>"; }
+  function ptSec(t){ return '<div class="ptsec">' + esc(t) + "</div>"; }
+  function pathPortrait(box, F, S){ var p = selPath(F);
+    if (!p) { box.append(E("div", { class: "ptidle" }, E("b", null, "no path in force"), E("span", null, "pick a cell in the command panel and this becomes its record."))); return; }
+    var K = CMDKIND[p.kind] || {}, col = pathCol(p, F, S), b = E("div", { class: "ptbody ptrec" });
+    b.insertAdjacentHTML("beforeend", '<div class="ptttl">' + ico(K.ico || "info", 15, col) + "<b>" + esc(pathWord(p)) + "</b></div>");
+    b.insertAdjacentHTML("beforeend", ptRow("status", String(p.status), col) + ptRow("kind", K.word || p.kind) + ptRow("stage", p.phase)
+      + ptRow("exit", (p.exit || {}).detail || (p.exit || {}).kind || "—") + ptRow("via", (p.exit || {}).via || "—")
+      + ptRow("at", (p.exit || {}).at || "—"));
+    b.insertAdjacentHTML("beforeend", ptSec("the chain · " + p.n.steps + " steps"));
+    var tb = E("div", { class: "ptchain" });
+    (p.chain || []).forEach(function(c){
+      var ci = c.kind === "gate" ? "shield" : c.kind === "call" ? "function" : c.kind === "collapsed" ? "merge" : c.kind === "catch" ? "skip"
+        : c.kind === "switch" ? "layers" : c.kind === "branch" ? "angle" : c.kind === "exit" ? "up" : "drill";
+      var r = E("div", { class: "ptcr k-" + c.kind + (c.hit === true ? " hit" : "") });
+      r.dataset.step = String(c.i);
+      r.insertAdjacentHTML("beforeend", '<span class="ptci">' + String(c.i) + "</span>");
+      r.insertAdjacentHTML("beforeend", '<span class="ptcg">' + ico(ci, 12, c.hit === true ? kindCol("refusal", S) : "var(--muted)") + "</span>");
+      r.append(E("b", null, esc(String(c.label || c.kind))));
+      r.append(E("span", { class: "ptcs" }, esc(String(c.sub || ""))));
+      if (c.hit === true) r.append(E("i", { class: "ptcf" }, "fired"));
+      bind(r, function(){ return cmdc({ title: String(c.label || c.kind), value: c.kind, icon: ci,
+        rows: [["step", String(c.i)], ["stage", c.phase || "—"], ["at", c.at || "—"], c.hit != null ? ["fired", c.hit ? "yes — this is the one that ended it" : "no — the request passed it"] : null,
+               c.cond ? ["condition", String(c.cond).slice(0, 160)] : null, c.fn ? ["function", String(c.fn)] : null],
+        plain: c.kind === "gate" ? "a check that can end the request right here" : c.kind === "switch" ? "a setting or a binding that changes what happens next"
+          : c.kind === "branch" ? "a fork in the handler — this path took one arm" : c.kind === "catch" ? "where the raise was caught and turned into an answer"
+          : c.kind === "exit" ? "the ending itself" : "one step the request runs through" }); });
+      tb.append(r); });
+    b.append(tb);
+    var eff = p.effects, n = eff.n;
+    b.insertAdjacentHTML("beforeend", ptSec("effects · " + (eff.tables || []).length + " tables"));
+    var bl = E("div", { class: "ptbk" });
+    [["committed", n.committed, S.OPC.read], ["maybe", n.maybe_committed, S.OPC.gate], ["rolled back", n.rolled_back, (S.BADGE_COL.role || {}).accessor], ["uncommitted", n.uncommitted, "var(--muted)"]]
+      .forEach(function(x){ var c = E("span", { class: "ptbc" + (x[1] ? "" : " zero") }, esc(x[0] + " " + x[1]));
+        c.style.setProperty("--bc", x[2]); bl.append(c); });
+    b.append(bl);
+    b.insertAdjacentHTML("beforeend", '<div class="pttbl">' + (eff.tables || []).map(function(t){ return '<i data-table="' + esc(t) + '">' + esc(t) + "</i>"; }).join("") + "</div>");
+    b.insertAdjacentHTML("beforeend", ptSec("tests · " + uniq((p.tests || []).map(function(t){ return t.case; })).length));
+    var tl = E("div", { class: "pttests" });
+    uniq((p.tests || []).map(function(t){ return t.case; })).forEach(function(cid){
+      var t = (p.tests || []).filter(function(x){ return x.case === cid; })[0];
+      var c = E("button", { class: "ptcase" }, esc(cid + " · " + t.conf));
+      c.dataset["case"] = cid;
+      c.addEventListener("click", function(ev){ ev.stopPropagation(); window.selectCase(cid); });
+      bind(c, function(){ return cmdc({ title: cid, value: t.conf, icon: "test", rows: [["name", t.name], ["file", t.file + ":" + t.line], ["state", t.state]],
+        plain: "a case that proves this ending — and how sure the join is" }); });
+      tl.append(c); });
+    if (!(p.tests || []).length) tl.append(E("i", { class: "ptnone" }, "— no case asserts this ending"));
+    b.append(tl);
+    if ((p.switches || []).length) { b.insertAdjacentHTML("beforeend", ptSec("switches · " + p.switches.length));
+      var sw = E("div", { class: "ptsw" });
+      p.switches.forEach(function(s){ var c = E("span", { class: "ptswc" }, esc(s.kind + " · " + (s.via || s.port || s.fn || "—")));
+        bind(c, function(){ return cmdc({ title: s.kind + " switch", value: s.via || s.port || "—", icon: "layers",
+          rows: [["scope", s.scope || "—"], ["expr", s.expr || "—"], ["settings", Object.keys(s.settings || {}).join(" · ") || "—"]],
+          plain: "something outside the code decides which way this goes" }); });
+        sw.append(c); });
+      b.append(sw); }
+    box.append(b); }
+  function exitPortrait(box, F, S){ var e = selExit(F);
+    if (!e) { box.append(E("div", { class: "ptidle" }, E("b", null, "no exit in force"), E("span", null, "pick a rung's exit, or a path — its exit lands here."))); return; }
+    var r = e.response || {}, b = E("div", { class: "ptbody ptrec" });
+    b.insertAdjacentHTML("beforeend", '<div class="ptttl">' + ico((CMDKIND[e.kind] || {}).ico || "info", 15, kindCol(e.kind, S)) + "<b>" + esc(String(e.status) + (e.detail ? " " + e.detail : "")) + "</b></div>");
+    b.insertAdjacentHTML("beforeend", ptRow("stage", e.phase) + ptRow("row", e.row) + ptRow("code", e.code || "—") + ptRow("via", e.via || "—")
+      + ptRow("pred", e.pred || "—") + ptRow("form", (e.form || "—") + " · " + e.state) + ptRow("at", e.at || "—"));
+    b.insertAdjacentHTML("beforeend", ptSec("response"));
+    b.insertAdjacentHTML("beforeend", ptRow("media", r.media || "—") + ptRow("model", r.model || "—")
+      + ptRow("body", r.body ? Object.keys(r.body).join(" · ") : "—") + ptRow("fields", (r.fields || []).join(" · ") || "—"));
+    b.insertAdjacentHTML("beforeend", ptSec("paths that end here · " + (e.paths || []).length));
+    var pl = E("div", { class: "pttbl" });
+    (e.paths || []).forEach(function(id){ var p = pathById(F, id); if (!p) return;
+      var c = E("button", { class: "ptpath" }, esc(pathWord(p)));
+      c.dataset.path = id;
+      c.addEventListener("click", function(ev){ ev.stopPropagation(); window.selectPath(id); });
+      pl.append(c); });
+    b.append(pl);
+    b.insertAdjacentHTML("beforeend", ptSec("tests · " + uniq((e.tests || []).map(function(t){ return t.case; })).length));
+    var tl = E("div", { class: "pttests" });
+    uniq((e.tests || []).map(function(t){ return t.case; })).forEach(function(cid){ var t = e.tests.filter(function(x){ return x.case === cid; })[0];
+      var c = E("button", { class: "ptcase" }, esc(cid + " · " + t.conf)); c.dataset["case"] = cid;
+      c.addEventListener("click", function(ev){ ev.stopPropagation(); window.selectCase(cid); }); tl.append(c); });
+    if (!(e.tests || []).length) tl.append(E("i", { class: "ptnone" }, "— no case asserts this exit"));
+    b.append(tl); box.append(b); }
+  function caseRefs(F, cid){ var fm = FRM(F), out = []; if (!fm) return out;
+    (fm.exits || []).forEach(function(e){ (e.tests || []).forEach(function(t){ if (t.case === cid) out.push({ exit: e, t: t }); }); });
+    return out; }
+  function casePortrait(box, F, S){ var cid = (window.SEL || {})["case"];
+    if (!cid) { box.append(E("div", { class: "ptidle" }, E("b", null, "no case in force"), E("span", null, "click a C-id on the path or exit record."))); return; }
+    var refs = caseRefs(F, cid), t = refs.length ? refs[0].t : null;
+    var lab = (F.tests.cases || []).filter(function(c){ return c.cid === cid; })[0] || null;
+    var b = E("div", { class: "ptbody ptrec" });
+    b.insertAdjacentHTML("beforeend", '<div class="ptttl">' + ico("test", 15, testCol()) + "<b>" + esc(cid) + "</b></div>");
+    b.insertAdjacentHTML("beforeend", ptRow("name", (t && t.name) || (lab && lab.name) || "—") + ptRow("file", t ? t.file + ":" + t.line : "—")
+      + ptRow("corpus", (t && t.corpus) || (lab && lab.corpus) || "—") + ptRow("state", (t && t.state) || (lab && lab.state) || "—"));
+    b.insertAdjacentHTML("beforeend", ptSec("proves · " + refs.length + " exit(s)"));
+    var l = E("div", { class: "pttbl" });
+    refs.forEach(function(r){ var c = E("button", { class: "ptpath" }, esc(r.exit.status + " " + (r.exit.detail || r.exit.kind) + " · " + r.t.conf));
+      c.dataset.exit = r.exit.id;
+      c.addEventListener("click", function(ev){ ev.stopPropagation(); window.selectExit(r.exit.id); });
+      bind(c, function(){ return exitCard(r.exit, F, S); }); l.append(c); });
+    if (!refs.length) l.append(E("i", { class: "ptnone" }, "— the forms tests arm joins this case to no exit"));
+    b.append(l); box.append(b); }
+
+  window.CMDKIT = {
+    render: function(host, F, S){ var C = cmdCfg(), L = C.layout || "card";
+      host.innerHTML = "";
+      if (L === "ladder") renderCmdLadder(host, F, S);
+      else if (L === "matrix") renderCmdMatrix(host, F, S);
+      else renderCmdCard(host, F, S); },
+    strip: renderCmdStrip,
+    applyPath: applyPath,
+    paths: pathCells,
+    pathById: pathById,
+    exitById: exitById,
+    pathWord: pathWord,
+    pathName: pathName,
+    pathCol: pathCol,
+    kindCol: kindCol,
+    kindIco: function(k){ return (CMDKIND[k] || {}).ico || "info"; },
+    partFacts: partFacts,
+    onPath: onPath,
+    portraits: function(F){ var S0 = window.SEL || {}, out = [];
+      if (S0.path) out.push({ key: "cmd-path", label: "Path", icon: "journey", hint: "one way the request ends, step by step — what it wrote, what proved it", render: pathPortrait });
+      if (S0.path || S0.exit) out.push({ key: "cmd-exit", label: "Exit", icon: "up", hint: "the row an ending lands on — its response, the paths that reach it, its cases", render: exitPortrait });
+      if (S0["case"]) out.push({ key: "cmd-case", label: "Case", icon: "test", hint: "one test — what it calls, and the exits it proves", render: casePortrait });
+      return out; } };
+
+
   /* ── the registry — icons are STATION icons (words on hover), counts answer A ─────────── */
   window.PANELS = {
     data: { icon: "table", word: "Data", col: S.KINDCOL.model,
@@ -2142,7 +2832,7 @@
       variants: [ { key: "shapes", label: "Shapes", hint: "the two shapes side by side as stacks, each nested shape given its own stack below its parent.", render: renderSchemas },
                   { key: "fields", label: "Fields", hint: "every field of both shapes as rows, nested fields indented under the one that carries them.", render: renderSchemaFields },
                   { key: "blocks", label: "Blocks", hint: "one block per shape — the bodies and every nested shape — each field a mark, its kind read from the declared type. Click a block for its record.", render: renderSchemaBlocks } ] },
-    functions: { icon: "function", word: "Functions", col: S.KINDCOL["function"], hint: "the handler and the call tree behind it — reach 5 · 29 behind; the levels walk 3·16·5·1 with the confidence of each hop; ONE bead walks it",
+    functions: { icon: "function", word: "Functions", col: S.KINDCOL["function"], hint: "the handler and the call tree behind it — reach " + window.LABEP.functions.behind.depth + " · " + window.LABEP.functions.behind.fns + " behind; the levels walk " + window.LABEP.functions.walk_levels.join("·") + " with the confidence of each hop; ONE bead walks it",
       count: function(F){ return F.functions.behind.fns; },
       defaultVariant: "blocks",      /* the pattern book's second carry-over, 2026-09-13 */
       portraitSubject: function(F){ var x = fnSel(F); return x ? x.name : null; }, portraitIcon: "function",

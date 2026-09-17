@@ -10,7 +10,7 @@ code{ font:600 .95em var(--font-mono); color:var(--ink); }
 #lede .ltitle b{ color:var(--accent); }
 #lede .lsub{ margin-top:6px; color:var(--muted); font-size:12px; max-width:1100px; }
 #row{ display:flex; gap:16px; align-items:flex-start; }
-#bench{ order:2; } #notes{ order:1; }
+#bench{ order:3; } #notes{ order:1; }
 #bench{ flex:none; background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
 #bench{ width:var(--bw,1100px); } #panel{ height:var(--bh,420px); }
 #panel{ position:relative; overflow:hidden; background:var(--chip-bg); }
@@ -61,14 +61,14 @@ code{ font:600 .95em var(--font-mono); color:var(--ink); }
 /* the fill pattern × the intensity */
 #tabs .tab{ --i:.13; --ir:.34; }
 #tabs.int-dim .tab{ --i:.06; --ir:.18; } #tabs.int-bold .tab{ --i:.26; --ir:.62; }
-#tabs.pat-valley .tab{ background:
+#tabs.pat-valley .tab, .sc2f.face-valley{ background:
   radial-gradient(78% 165% at 50% 50%, transparent 18%, color-mix(in srgb, var(--tc) calc(var(--i) * 100%), transparent) 62%, color-mix(in srgb, var(--tc) calc(var(--ir) * 100%), transparent) 100%),
   linear-gradient(180deg, rgba(255,255,255,.05), transparent 52%), var(--panel); }
-#tabs.pat-flat .tab{ background:color-mix(in srgb, var(--tc) calc(var(--i) * 100%), var(--panel)); }
+#tabs.pat-flat .tab, .sc2f.face-flat{ background:color-mix(in srgb, var(--tc) calc(var(--i) * 100%), var(--panel)); }
 #tabs.pat-glow .tab{ background:linear-gradient(180deg, color-mix(in srgb, var(--tc) calc(var(--ir) * 100%), transparent), transparent 70%), var(--panel); }
 #tabs.pat-hatch .tab{ background:repeating-linear-gradient(45deg, color-mix(in srgb, var(--tc) calc(var(--i) * 100%), transparent) 0 6px, transparent 6px 12px), var(--panel); }
 #tabs.pat-none .tab{ background:var(--panel); }
-#tabs.pat-valley .tab{ box-shadow: inset 0 0 13px -3px color-mix(in srgb, var(--tc) 45%, transparent), inset 0 1px 0 rgba(255,255,255,.05); }
+#tabs.pat-valley .tab, .sc2f.face-valley{ box-shadow: inset 0 0 13px -3px color-mix(in srgb, var(--tc) 45%, transparent), inset 0 1px 0 rgba(255,255,255,.05); }
 /* the glyph: inline, a clipped watermark, or one that bleeds past the edges */
 #tabs .tab .tabi{ display:inline-flex; color:color-mix(in srgb, var(--tc) 72%, var(--muted)); flex:none; }
 #tabs.ic-ghost .tab .tabi, #tabs.ic-bleed .tab .tabi{ position:absolute; right:4px; top:50%; transform:translateY(-50%);
@@ -85,11 +85,11 @@ code{ font:600 .95em var(--font-mono); color:var(--ink); }
 #tabs.nsh-circle .tab .tabn{ border-radius:50%; min-width:calc(var(--nz,12px) + 12px); height:calc(var(--nz,12px) + 12px); display:inline-flex; align-items:center; justify-content:center; padding:0; }
 #tabs .tab:hover{ color:var(--ink); border-color:color-mix(in srgb, var(--tc) 62%, var(--line)); }
 #tabs .tab.on{ color:var(--ink); border-color:var(--tc); }
-#tabs.pat-valley .tab.on{ background:
+#tabs.pat-valley .tab.on, .sc2f.face-valley.on{ background:
   radial-gradient(78% 165% at 50% 50%, transparent 12%, color-mix(in srgb, var(--tc) calc(var(--i) * 190%), transparent) 58%, color-mix(in srgb, var(--tc) calc(var(--ir) * 170%), transparent) 100%),
   linear-gradient(180deg, rgba(255,255,255,.07), transparent 52%), var(--panel);
   box-shadow: inset 0 0 17px -3px color-mix(in srgb, var(--tc) 72%, transparent), inset 0 1px 0 rgba(255,255,255,.09); }
-#tabs.pat-flat .tab.on{ background:color-mix(in srgb, var(--tc) calc(var(--i) * 210%), var(--panel)); }
+#tabs.pat-flat .tab.on, .sc2f.face-flat.on{ background:color-mix(in srgb, var(--tc) calc(var(--i) * 210%), var(--panel)); }
 #tabs .tab.on .tabi{ color:var(--tc); opacity:1; }
 #tabs.ic-ghost .tab.on .tabi, #tabs.ic-bleed .tab.on .tabi{ opacity:.3; }
 #tabs .tab.on .tabn{ color:var(--ink); border-color:var(--tc); }
@@ -794,7 +794,9 @@ body[data-dens="air"] .lrow{ padding:5px 9px; } body[data-dens="air"] .dfgrid{ g
    scrolls sideways on its own once the row is wider than the window. */
 /* the rail declares order:1 and the bench order:2, so a new region MUST declare its own — without it
    the portrait panel inherits order 0 and renders FIRST, at the far left of the row */
-#port{ order:3; }
+#port{ order:4; }
+/* the COMMAND region is one `order` value away from the other side of the row (choice 16 / 17) */
+#cmd{ order:5; } #cmd.side-left{ order:2; }
 
 /* the title is LINES of parts (operator 2026-09-12) — drag a part to another line and the block stacks */
 .bkti{ display:flex; flex-direction:column; gap:2px; min-width:0; }
@@ -1172,3 +1174,212 @@ html, body{ height:100%; }
 /* a key has its own column now, and unique its own corners — the row's old side bar and dashed underline would say it twice */
 .rctab .fld.fk{ box-shadow:none; }
 .rctab .fld.uq .fn{ border-bottom:0; }
+
+/* ══ THE COMMAND PANEL (Phase 6 slice 1, 2026-09-17) ═══════════════════════════════════════════
+   The console's ACT half. The region holds whichever LAYOUT is chosen; the path strip lives inside
+   the bench, under the part buttons. Every size here is absolute on purpose — the 12px legibility
+   floor is MEASURED at the smallest cell (52px), never authored away.
+   THE FOUR STATES (law 5): dashed = inferred · hatched = unmeasured · hollow = measured zero ·
+   blank = wrong question, and a blank KEEPS ITS PLACE.                                        ══ */
+#cmd{ flex:none; width:var(--cmd-w, 360px); height:var(--port-h, 560px); margin-left:var(--cmd-gap, 12px);
+  display:flex; flex-direction:column; overflow:hidden; background:var(--panel); border-radius:12px;
+  border:var(--port-bw, 1px) var(--port-bs, solid) var(--line); }
+#cmd.side-left{ margin-left:0; margin-right:var(--cmd-gap, 12px); }
+#cmd[hidden], #pathstrip[hidden], #portlad[hidden]{ display:none; }
+#cmd .cmdhd{ flex:none; display:flex; align-items:center; gap:8px; padding:7px 10px; min-height:34px;
+  border-bottom:1px solid var(--line); background:var(--nav-bg); }
+#cmd.no-title .cmdhd{ display:none; }
+#cmd .cmdhd .sechd{ flex:none; }
+#cmd .cmdsrc{ margin-left:auto; font:600 12px/1.2 var(--font-mono); color:var(--muted); white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis; }
+#cmd .cmdgrid, #cmd .exlad, #cmd .cmx{ flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; }
+#cmd .cmdsub{ flex:none; padding:5px 10px 2px; font:700 12px/1.3 var(--font-mono); color:var(--muted);
+  text-transform:uppercase; letter-spacing:.05em; }
+#cmd .cmdempty{ flex:1; display:flex; align-items:center; padding:14px; color:var(--muted); font-size:12px; }
+
+/* ── the GRID: five columns of command squares, the SC2 face ── */
+.cmdgrid{ display:grid; grid-template-columns:repeat(5, var(--cz, 64px)); gap:6px; padding:8px 10px; align-content:start; }
+.cmdcell{ position:relative; width:var(--cz, 64px); height:var(--cz, 64px); padding:0; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; overflow:hidden;
+  color:var(--muted); font:700 12px/1 var(--font-ui);
+  border:1px solid color-mix(in srgb, var(--tc) 34%, var(--line)); border-radius:7px;
+  --i:.10; --ir:.28; transition:border-color .12s, color .12s; }
+.cmdcell:hover{ color:var(--ink); border-color:color-mix(in srgb, var(--tc) 62%, var(--line)); }
+.cmdcell.on{ color:var(--ink); border-color:var(--tc); --i:.20; --ir:.50; }
+.cmdcell .cg{ display:inline-flex; color:color-mix(in srgb, var(--tc) 78%, var(--muted)); z-index:1; }
+.cmdcell.on .cg{ color:var(--tc); }
+/* the GLYPH GHOST — the part buttons' own watermark, clipped to the square */
+.cmdcell .cgh{ position:absolute; right:-14%; top:50%; transform:translateY(-50%); display:inline-flex;
+  color:var(--tc); opacity:.17; pointer-events:none; }
+.cmdcell.on .cgh{ opacity:.3; }
+/* the HOTKEY letter sits in the corner; it is drawn at 12px, the floor */
+.cmdcell .chot{ position:absolute; left:4px; top:3px; z-index:2; font:800 12px/1 var(--font-mono);
+  color:color-mix(in srgb, var(--tc) 60%, var(--muted)); font-style:normal; }
+.cmdcell.on .chot{ color:var(--tc); }
+/* the COUNT badge — 12px, never smaller (law 7) */
+.cmdcell .cbadge{ position:absolute; right:4px; top:3px; z-index:2; padding:1px 5px; border-radius:999px;
+  background:var(--chip-bg); border:1px solid color-mix(in srgb, var(--tc) 40%, var(--line));
+  font:700 12px/1.3 var(--font-mono); color:var(--muted); }
+.cmdcell.on .cbadge{ color:var(--ink); border-color:var(--tc); }
+/* the NAME, on a path cell, at the floor and clipped — the card always carries it whole */
+.cmdcell .clbl{ position:absolute; left:3px; right:3px; bottom:3px; z-index:2; text-align:center;
+  font:600 12px/1.15 var(--font-ui); color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cmdcell.on .clbl{ color:var(--ink); }
+.cmdcell .cg svg, .cmdcell .cgh svg{ display:block; }
+/* THE FOUR STATES */
+.cmdcell.st-dashed{ border-style:dashed; }
+.cmdcell.st-hollow{ background:none !important; box-shadow:none !important; }
+.cmdcell.st-hatched{ background:repeating-linear-gradient(45deg,
+  color-mix(in srgb, var(--tc) 12%, transparent) 0 5px, transparent 5px 10px), var(--panel) !important;
+  box-shadow:none !important; border-style:dotted; }
+.cmdcell.st-blank{ background:none !important; box-shadow:none !important; cursor:default;
+  border-color:color-mix(in srgb, var(--line) 60%, transparent); border-style:solid; }
+/* the tooltip area: the SC2 card, or one caption line, or nothing at all under the hover card */
+.cmdtip{ flex:none; border-top:1px solid var(--line); background:var(--chip-bg); padding:7px 10px;
+  max-height:172px; overflow-y:auto; font-size:12px; color:var(--muted); }
+.cmdtip.tip-hover{ display:none; }
+#cmd.no-caption .cmdtip{ display:none; }
+.cmdtip .capl{ font:600 12px/1.4 var(--font-mono); color:var(--ink); }
+.cmdtip .cphd{ margin-bottom:4px; }
+
+/* ── the PATH STRIP inside the bench, under the part buttons ── */
+/* LAW 9 — nothing inside the bench scrolls sideways. The fourteen cells SHARE the width instead of
+   claiming a minimum each: the names ellipsise, and the whole name is always on the card. */
+#pathstrip{ display:flex; align-items:stretch; gap:5px; padding:7px 12px; min-height:72px;
+  border-bottom:1px solid var(--line); background:var(--nav-bg); overflow:hidden; }
+.pstrip{ display:flex; align-items:stretch; gap:5px; flex:1 1 auto; min-width:0; }
+.pscell{ flex:1 1 0; min-width:0; max-width:170px; padding:6px 7px; cursor:pointer;
+  display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:3px;
+  background:var(--chip-bg); border:1px solid color-mix(in srgb, var(--tc) 34%, var(--line)); border-radius:7px;
+  color:var(--muted); font:700 12px/1 var(--font-mono); overflow:hidden; }
+.pscell .pshd{ display:flex; align-items:center; gap:4px; width:100%; min-width:0; }
+.pscell:hover{ color:var(--ink); border-color:color-mix(in srgb, var(--tc) 62%, var(--line)); }
+.pscell.on{ color:var(--ink); border-color:var(--tc); background:color-mix(in srgb, var(--tc) 14%, var(--panel)); }
+.pscell.st-dashed{ border-style:dashed; }
+.pscell .psi{ display:inline-flex; color:var(--tc); } .pscell .psi svg{ display:block; }
+.pscell b{ color:var(--tc); font:800 12px/1 var(--font-mono); }
+.pscell .psn{ font:600 12px/1.2 var(--font-ui); color:inherit; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+
+/* ── the EXIT LADDER: the stages in request order, the return at the foot ── */
+.exlad{ position:relative; display:flex; flex-direction:column; gap:3px; padding:8px 10px; --rungh:52px; }
+.exrung{ position:relative; display:flex; align-items:center; gap:7px; min-height:44px; padding:5px 7px 5px 9px;
+  border-left:3px solid var(--tc); border-radius:5px; background:color-mix(in srgb, var(--tc) 7%, var(--panel));
+  font:700 12px/1.2 var(--font-mono); color:var(--ink); }
+.exrung.foot{ border-left-width:5px; }
+.exrung .exn{ flex:none; width:15px; color:var(--muted); font:700 12px/1 var(--font-mono); }
+.exrung > b{ flex:none; width:82px; color:var(--tc); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.exrung .exhold{ display:flex; align-items:center; gap:4px; flex-wrap:wrap; min-width:0; }
+.exrung.above{ opacity:1; } .exrung.below{ opacity:.32; } .exrung.here{ box-shadow:inset 0 0 0 1px var(--tc); }
+.exnone{ color:var(--muted); font:400 12px/1.2 var(--font-ui); font-style:normal; }
+.excell{ display:inline-flex; align-items:center; gap:3px; padding:2px 6px; cursor:pointer;
+  background:var(--chip-bg); border:1px solid color-mix(in srgb, var(--tc) 40%, var(--line)); border-radius:5px;
+  color:var(--tc); font:700 12px/1.4 var(--font-mono); }
+.excell svg{ display:block; }
+.excell:hover{ border-color:var(--tc); } .excell.on{ background:color-mix(in srgb, var(--tc) 22%, var(--panel)); color:var(--ink); }
+.excell.st-dashed{ border-style:dashed; }
+.excell .extst{ font-style:normal; color:var(--muted); font:700 12px/1.4 var(--font-mono); }
+.cmdbead{ position:absolute; left:2px; top:0; width:9px; height:9px; border-radius:50%; background:var(--accent);
+  box-shadow:0 0 9px var(--accent); animation:cmdWalk 4.4s linear infinite; }
+.cmdbead.static{ animation:none; }
+@keyframes cmdWalk{ 0%{ top:6px; } 92%,100%{ top:calc(100% - 15px); } }
+/* the 28px TICK RAIL down the portrait's left edge (choice 17) */
+#portlad.ticks{ position:absolute; left:0; top:38px; bottom:0; width:28px; z-index:3; overflow:hidden;
+  background:color-mix(in srgb, var(--panel) 90%, var(--bg)); border-right:1px solid var(--line); }
+#portlad.ticks .cmdhd, #portlad.ticks .cmdtip{ display:none; }
+#portlad.ticks .exlad{ padding:4px 2px; gap:2px; }
+#portlad.ticks .exrung{ min-height:18px; padding:2px; border-left-width:3px; }
+#portlad.ticks .exrung > b, #portlad.ticks .exrung .exn, #portlad.ticks .exnone{ display:none; }
+#portlad.ticks .excell{ padding:0 2px; font-size:12px; }
+#portlad.ticks .excell b, #portlad.ticks .excell .extst{ display:none; }
+#port{ position:relative; }
+
+/* ── the MATRIX: path × part, one 28px cell each ── */
+.cmx{ display:flex; flex-direction:column; gap:2px; padding:8px 10px; }
+.cmxrow{ display:flex; align-items:center; gap:2px; }
+.cmxl{ flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:4px; padding:0 4px; height:28px;
+  cursor:pointer; background:none; border:0; color:var(--muted); font:700 12px/1 var(--font-mono); text-align:left; }
+.cmxl svg{ display:block; flex:none; }
+.cmxl b{ flex:none; color:var(--ink); }
+.cmxl span{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font:600 12px/1.2 var(--font-ui); }
+.cmxrow.on .cmxl{ color:var(--ink); }
+.cmxh{ flex:none; width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; cursor:help; }
+.cmxc{ flex:none; width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
+  border:1px solid color-mix(in srgb, var(--tc) 32%, var(--line)); border-radius:4px;
+  font:700 12px/1 var(--font-mono); color:var(--muted); }
+.cmxc i{ font-style:normal; }
+.cmxc.st-lit{ background:color-mix(in srgb, var(--tc) 22%, var(--panel)); color:var(--ink); border-color:color-mix(in srgb, var(--tc) 55%, var(--line)); }
+.cmxc.st-hollow{ background:none; }
+.cmxc.st-hatched{ background:repeating-linear-gradient(45deg, color-mix(in srgb, var(--tc) 14%, transparent) 0 4px, transparent 4px 8px); border-style:dotted; }
+.cmxc:hover{ border-color:var(--tc); }
+.cmxrow.cmxhd{ position:sticky; top:0; z-index:2; background:var(--panel); padding-bottom:2px; }
+
+/* ══ THE PROJECTION (choice 8) — what a chosen path does to the middle panel ══════════════════ */
+#panel.proj-dim .offpath{ opacity:.28; }
+#panel.proj-filter .offpath{ display:none; }
+#panel.proj-outline .onpath{ outline:1px solid var(--accent); outline-offset:1px; border-radius:4px; }
+#panel.proj-dim .onpath, #panel.proj-filter .onpath{ outline:1px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset:1px; border-radius:4px; }
+/* the BUCKET chip on a written table — committed · maybe · rolled back · uncommitted */
+.bchip{ display:inline-flex; align-items:center; margin-left:5px; padding:0 6px; border-radius:999px;
+  font:700 12px/1.5 var(--font-mono); font-style:normal; color:var(--bc);
+  border:1px solid color-mix(in srgb, var(--bc) 55%, var(--line));
+  background:color-mix(in srgb, var(--bc) 14%, transparent); }
+.bchip.bk-uncommitted{ background:none; border-style:solid; color:var(--muted); }
+.bchip.bk-maybe_committed{ border-style:dashed; }
+/* a gate the path crossed says whether it FIRED */
+.gatemark{ display:inline-flex; align-items:center; margin-left:5px; padding:0 5px; border-radius:4px;
+  font:700 12px/1.5 var(--font-mono); font-style:normal; color:var(--bc);
+  border:1px solid color-mix(in srgb, var(--bc) 50%, var(--line)); }
+/* the ONE-LINE "on this path" strip a part draws under its title (choice 2) */
+.opstrip{ display:flex; align-items:center; gap:7px; padding:4px 13px; border-bottom:1px solid var(--line);
+  background:color-mix(in srgb, var(--accent) 7%, var(--chip-bg)); font:600 12px/1.4 var(--font-mono); color:var(--muted); }
+.opstrip svg{ display:block; flex:none; }
+.opstrip b{ flex:none; color:var(--ink); }
+.opstrip .opn{ flex:none; color:var(--accent); }
+.opstrip .opw{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* ══ THE THREE LENT PORTRAITS — Path · Exit · Case ══ */
+.ptttl{ display:flex; align-items:center; gap:7px; padding-bottom:6px; margin-bottom:4px; border-bottom:1px solid var(--line); }
+.ptttl svg{ display:block; } .ptttl b{ font:800 13px/1.2 var(--font-mono); color:var(--ink); }
+.ptchain{ display:flex; flex-direction:column; gap:1px; }
+.ptcr{ display:flex; align-items:baseline; gap:6px; padding:2px 4px; border-radius:4px;
+  font:600 12px/1.35 var(--font-mono); color:var(--muted); cursor:help; }
+.ptcr:nth-child(odd){ background:color-mix(in srgb, var(--line) 26%, transparent); }
+.ptcr .ptci{ flex:none; width:18px; color:var(--muted); font:700 12px/1.35 var(--font-mono); }
+.ptcr .ptcg{ flex:none; display:inline-flex; align-self:center; } .ptcr .ptcg svg{ display:block; }
+.ptcr b{ flex:0 1 auto; min-width:0; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ptcr .ptcs{ flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; }
+.ptcr.hit{ background:color-mix(in srgb, var(--red) 16%, transparent); }
+.ptcr .ptcf{ flex:none; font-style:normal; color:var(--red); font:700 12px/1.35 var(--font-mono); }
+.ptbk{ display:flex; flex-wrap:wrap; gap:4px; margin:4px 0; }
+.ptbc{ padding:1px 7px; border-radius:999px; font:700 12px/1.5 var(--font-mono); color:var(--bc);
+  border:1px solid color-mix(in srgb, var(--bc) 50%, var(--line)); background:color-mix(in srgb, var(--bc) 12%, transparent); }
+.ptbc.zero{ color:var(--muted); background:none; border-color:var(--line); }
+.pttbl{ display:flex; flex-wrap:wrap; gap:4px; }
+.pttbl i, .ptpath{ font-style:normal; padding:1px 6px; border-radius:4px; background:var(--chip-bg);
+  border:1px solid var(--line); font:600 12px/1.5 var(--font-mono); color:var(--muted); }
+.ptpath{ cursor:pointer; } .ptpath:hover{ color:var(--ink); border-color:var(--accent); }
+.pttests{ display:flex; flex-wrap:wrap; gap:4px; }
+.ptcase{ cursor:pointer; padding:1px 6px; border-radius:4px; background:var(--chip-bg); border:1px solid var(--line);
+  font:600 12px/1.5 var(--font-mono); color:var(--muted); }
+.ptcase:hover{ color:var(--ink); border-color:var(--accent); }
+.ptnone{ font-style:normal; color:var(--muted); font:400 12px/1.5 var(--font-ui); }
+.ptsw{ display:flex; flex-wrap:wrap; gap:4px; }
+.ptswc{ padding:1px 6px; border-radius:4px; background:var(--chip-bg); border:1px solid var(--line);
+  font:600 12px/1.5 var(--font-mono); color:var(--muted); cursor:help; }
+
+/* ══ THE RAIL BLOCK — fenced to #blk-command so nothing here reaches another block ══ */
+#blk-command .cffold{ margin-top:4px; }
+#blk-command .cfread{ font-size:12px; line-height:1.6; }
+#blk-command .ibwrap .ib.na{ border-style:dashed; opacity:.55; }
+#blk-command .chsw{ display:inline-block; width:14px; height:12px; border-radius:3px; }
+#blk-command .numz{ font:800 12px/1 var(--font-mono); }
+/* the RATE-LIMIT FLAG chip (choice 19): it rides only the cells the flag's own switch names */
+.cflag{ position:absolute; left:3px; bottom:3px; z-index:2; display:inline-flex; color:var(--gold, #eab308); cursor:help; }
+.cflag svg{ display:block; }
+.pscell .cflag{ position:static; margin-left:auto; }
+/* a NAME-PARSED test join is the weaker signal — the mark says so (law 5: dashed = inferred) */
+#panel.join-parsed .onpath{ outline-style:dashed; }
+/* the station's section head runs small; inside the command region it sits ON the 12px floor */
+#cmd .cmdhd .sechd, #cmd .cmdhd .sechd span, #cmd .cmdhd .sechd .cnt{ font-size:12px; }
+/* a cell carrying the flag chip gives it room — the name starts after it, never under it */
+.cmdcell.hasflag .clbl{ left:17px; text-align:left; }
