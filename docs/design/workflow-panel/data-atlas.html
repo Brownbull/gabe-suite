@@ -335,6 +335,17 @@
   .ib svg { width: 13px; height: 13px; flex: 0 0 auto; fill: none; stroke: currentColor;
             stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
+  /* ── what the reader takes from the figure — computed, never typed ── */
+  .takeaway { display: flex; flex-direction: column; gap: 4px; }
+  .takeaway .th { display: flex; align-items: center; gap: 6px;
+                  font-size: var(--fs-min); letter-spacing: .06em; color: var(--muted); }
+  .takeaway .th svg { width: 13px; height: 13px; flex: 0 0 auto; fill: none; stroke: currentColor;
+                      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .takeaway p { display: flex; gap: 8px; align-items: baseline;
+                font-size: var(--fs-xs); letter-spacing: 0; color: var(--ink-soft); max-width: 88ch; }
+  .takeaway p::before { content: ""; flex: 0 0 auto; width: 6px; height: 6px; border-radius: 50%;
+                        border: 1.5px solid var(--ink-soft); transform: translateY(-1px); }
+
   /* ── one legend row, drawn not described ── */
   .lg { display: flex; flex-wrap: wrap; gap: 12px; font-size: var(--fs-min); color: var(--muted); letter-spacing: 0; align-items: center; }
   .lg span { display: inline-flex; align-items: center; gap: 5px; }
@@ -473,13 +484,101 @@
   .mx .hh .sw.hollow { background: transparent !important; border: 1px dashed var(--muted); }
   .mx .rl .s { font-variant-numeric: tabular-nums; color: var(--muted); }
 
+  /* ══ 6 · THE ROBOT — the door as a machine on end, wearing armour ════
+        §1 geometry · §6 the five plate shapes · §8 the one replayable pass */
+  .tip.wide { max-width: 44ch; }
+
+  .robot { --spine: 26px; --lab: 116px; --track: 272px; --read: 60px; --bay: 26px; --row: 34px;
+           position: relative;
+           width: calc(var(--spine) + var(--lab) + var(--track) + var(--read) + 12px + var(--bay)); }
+  .chassis { display: flex; align-items: stretch; gap: 12px; }
+  .rbody { position: relative; padding: 18px 0;
+           flex: 0 0 calc(var(--spine) + var(--lab) + var(--track) + var(--read)); }
+  .spine { position: absolute; left: 0; top: 18px; width: var(--spine); overflow: visible; }
+  .segs { padding-left: var(--spine); }
+  .seg { position: relative; display: flex; align-items: center; height: var(--row); }
+  .seg .ord { position: absolute; left: calc(-1 * var(--spine)); width: 13px; text-align: left;
+              font-size: var(--fs-min); letter-spacing: 0; color: var(--muted);
+              font-variant-numeric: tabular-nums; cursor: help; }
+  .seg .ord.lit { color: var(--ink); }
+  .seg .lab, .screen .lab { flex: 0 0 var(--lab); font-size: var(--fs-min); letter-spacing: .06em;
+                            color: var(--ink-soft); cursor: help; white-space: nowrap; padding-left: 7px; }
+  .plates { display: flex; gap: 3px; flex: 0 1 auto; max-width: var(--track); }
+  .readout { flex: 0 0 var(--read); margin-left: auto; text-align: right; display: block;
+             font-size: var(--fs-min); letter-spacing: 0; color: var(--muted);
+             font-variant-numeric: tabular-nums; cursor: help; }
+  .seg.hot .lab, .seg.hot .ord, .seg.hot .readout { color: var(--ink); }
+
+  /* a plate is one condition — constant size, so a slab's LENGTH is the count */
+  .plate { width: 22px; height: 26px; border-radius: 4px; flex: 0 0 auto; display: block;
+           box-sizing: border-box; position: relative; opacity: 0; cursor: crosshair;
+           transition: opacity .18s linear; }
+  .plate[data-on="1"] { opacity: 1; }
+  .plate.hot { box-shadow: 0 0 0 2px var(--accent); }
+  .plate[data-state="covered"] { background: var(--good); border: 0; }
+  .plate[data-state="covered"]::after { content: ""; position: absolute; left: 50%; top: 50%;
+      width: 2px; height: 2px; margin: -1px 0 0 -1px; border-radius: 50%;
+      background: color-mix(in srgb, var(--good) 65%, var(--ink)); }
+  .plate[data-state="partial"] { border: 1px solid var(--ink-soft);
+      background: linear-gradient(to top, var(--warning) 50%, transparent 50%); }
+  .plate[data-state="untested"] { background: none; border: 1px solid var(--ink-soft); }
+  .plate[data-state="unmeasured"] { border: 1px dashed var(--muted);
+      background: repeating-linear-gradient(45deg, var(--muted) 0 1px, transparent 1px 3px); }
+  .plate[data-state="gap"] { background: none; border: 1.5px solid var(--critical); }
+  .plate[data-state="gap"]::after { content: ""; position: absolute; inset: 0;
+      background: linear-gradient(to top right, transparent calc(50% - .7px),
+                  var(--critical) calc(50% - .7px) calc(50% + .7px), transparent calc(50% + .7px)); }
+  .plate.mini { width: 11px; height: 13px; border-radius: 2px; display: inline-block; vertical-align: -2px; }
+  .plate.mini.zero { opacity: .38; }
+  .lg .plate { width: 22px; height: 26px; border-radius: 4px; }
+  .slab { width: 22px; height: 26px; border-radius: 4px; flex: 0 0 auto;
+          border: 1px dotted var(--muted); box-sizing: border-box; }
+
+  /* the 500 bay — not a step, possible at any step */
+  .bay { flex: 0 0 var(--bay); display: flex; flex-direction: column; }
+  .bay .bname { height: 18px; font-size: var(--fs-min); letter-spacing: .06em; color: var(--muted);
+                white-space: nowrap; cursor: help; }
+  .bay .bbox { flex: 1; border: 1px dotted var(--muted); border-radius: 4px; position: relative;
+               display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
+  .bay .tick { position: absolute; left: -7px; width: 6px; height: 1px; background: var(--muted); opacity: .6; }
+  .bay .bread { height: 18px; font-size: var(--fs-min); letter-spacing: 0; color: var(--muted);
+                font-variant-numeric: tabular-nums; cursor: help; }
+
+  /* the answer leaving the machine, and the screen that reads it */
+  .gapline { height: 18px; position: relative; margin-left: var(--spine); opacity: 0; }
+  .gapline[data-on="1"] { opacity: 1; }
+  .gapline::before { content: ""; position: absolute; left: -9px; top: 0; bottom: 0;
+                     border-left: 1px dotted var(--muted); }
+  .screen { margin-left: var(--spine); box-sizing: border-box; height: var(--row);
+            width: calc(var(--lab) + var(--track) + var(--read) + 20px);
+            border: 1px dashed var(--muted); border-radius: 6px; padding: 0 9px;
+            display: flex; align-items: center; }
+
+  @keyframes rstamp { from { transform: scale(1.18); opacity: 0; } to { transform: none; opacity: 1; } }
+  .stamp { animation: rstamp .12s ease-out both; }
+
+  /* the legend lights the picture; a row keeps its own plates full */
+  .robot[data-lit="covered"]    .plate[data-on="1"]:not([data-state="covered"]),
+  .robot[data-lit="partial"]    .plate[data-on="1"]:not([data-state="partial"]),
+  .robot[data-lit="untested"]   .plate[data-on="1"]:not([data-state="untested"]),
+  .robot[data-lit="unmeasured"] .plate[data-on="1"]:not([data-state="unmeasured"]),
+  .robot[data-lit="gap"]        .plate[data-on="1"]:not([data-state="gap"]) { opacity: .3; }
+  .seg.dim .plate, .bay.dim .plate, .screen.dim .plate { opacity: .55; }
+
+  /* the one display option — plates (default) ↔ track */
+  .robot[data-t="1"] .seg .plates, .robot[data-t="1"] .screen .plates { flex: 0 0 var(--track); width: var(--track); }
+  .robot[data-t="1"] .seg .plate, .robot[data-t="1"] .screen .plate { width: auto; flex: 1 1 0; min-width: 18px; }
+
   /* ── motion contract: the paused / reduced frame never transitions ── */
   :root[data-motion="off"] .when *, .when[data-still="1"] * { transition: none !important; animation: none !important; }
-  @media (prefers-reduced-motion: reduce) { .when * { transition: none !important; } }
+  :root[data-motion="off"] .robot *, .robot[data-still="1"] * { transition: none !important; animation: none !important; }
+  @media (prefers-reduced-motion: reduce) { .when *, .robot * { transition: none !important; } }
 </style>
 
 <script type="application/json" id="ATLAS">{"head": "05007957", "door": "POST /setup/complete", "entity": "auth", "stages": ["middleware", "security", "dependency", "body-parse", "validation", "handler", "uncaught", "return"], "tables": [{"table": "consent_records", "model": "ConsentRecord", "entity": "legal-consent", "color": "#0f766e", "rw": "r", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "user_id", "type": "uuid.UUID", "flag": ""}, {"name": "policy_version", "type": "str", "flag": ""}, {"name": "accepted_at", "type": "datetime", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}], "fks": [{"col": "user_id", "to": "users.id"}], "uqs": [], "file": "apps/api/models/consent.py", "inPanel": true}, {"table": "households", "model": "Household", "entity": "auth", "color": "#5a53a8", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "name", "type": "str", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}], "fks": [], "uqs": [], "file": "apps/api/models/household.py", "inPanel": true}, {"table": "household_format_preferences", "model": "HouseholdFormatPreferences", "entity": "settings", "color": "#8e4585", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "household_id", "type": "uuid.UUID", "flag": ""}, {"name": "country", "type": "str", "flag": ""}, {"name": "units", "type": "str", "flag": ""}, {"name": "currency", "type": "str", "flag": ""}, {"name": "default_servings", "type": "int", "flag": ""}, {"name": "auto_discount_servings", "type": "bool", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}, {"name": "updated_at", "type": "datetime", "flag": ""}], "fks": [{"col": "household_id", "to": "households.id"}], "uqs": ["household_id"], "file": "apps/api/models/preferences.py", "inPanel": true}, {"table": "idempotency_keys", "model": "IdempotencyKey", "entity": "auth", "color": "#5a53a8", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "key", "type": "str", "flag": ""}, {"name": "operation", "type": "str", "flag": ""}, {"name": "owner_scope", "type": "str", "flag": ""}, {"name": "status", "type": "str", "flag": ""}, {"name": "result_ref", "type": "str | None", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}, {"name": "completed_at", "type": "datetime | None", "flag": ""}], "fks": [], "uqs": ["key", "operation", "owner_scope"], "file": "apps/api/models/idempotency.py", "inPanel": true}, {"table": "locations", "model": "Location", "entity": "pantry", "color": "#b45309", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "household_id", "type": "uuid.UUID", "flag": ""}, {"name": "name", "type": "str", "flag": ""}, {"name": "is_principal", "type": "bool", "flag": ""}, {"name": "color", "type": "str | None", "flag": ""}, {"name": "icon", "type": "str | None", "flag": ""}, {"name": "order", "type": "int | None", "flag": ""}, {"name": "active", "type": "bool", "flag": ""}, {"name": "type", "type": "str | None", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}], "fks": [{"col": "household_id", "to": "households.id"}], "uqs": [], "file": "apps/api/models/location.py", "inPanel": true}, {"table": "memberships", "model": "Membership", "entity": "auth", "color": "#5a53a8", "rw": "r", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "household_id", "type": "uuid.UUID", "flag": ""}, {"name": "user_id", "type": "uuid.UUID", "flag": ""}, {"name": "role", "type": "str", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}], "fks": [{"col": "household_id", "to": "households.id"}, {"col": "user_id", "to": "users.id"}], "uqs": ["household_id", "user_id"], "file": "apps/api/models/household.py", "inPanel": true}, {"table": "setup_completion_state", "model": "SetupCompletionState", "entity": "auth", "color": "#5a53a8", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "user_id", "type": "uuid.UUID", "flag": ""}, {"name": "completed", "type": "bool", "flag": ""}, {"name": "completed_at", "type": "datetime | None", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}, {"name": "updated_at", "type": "datetime", "flag": ""}], "fks": [{"col": "user_id", "to": "users.id"}], "uqs": ["user_id"], "file": "apps/api/models/setup.py", "inPanel": true}, {"table": "subscription_entitlement", "model": "SubscriptionEntitlement", "entity": "auth", "color": "#5a53a8", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "user_id", "type": "uuid.UUID", "flag": ""}, {"name": "tier", "type": "str", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}, {"name": "updated_at", "type": "datetime", "flag": ""}], "fks": [{"col": "user_id", "to": "users.id"}], "uqs": ["user_id"], "file": "apps/api/models/subscription.py", "inPanel": true}, {"table": "user_dietary_profile", "model": "UserDietaryProfile", "entity": "allergen", "color": "#3f6d4c", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "user_id", "type": "uuid.UUID", "flag": ""}, {"name": "allergens", "type": "list[str]", "flag": ""}, {"name": "preferences", "type": "list[str]", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}, {"name": "updated_at", "type": "datetime", "flag": ""}], "fks": [{"col": "user_id", "to": "users.id"}], "uqs": ["user_id"], "file": "apps/api/models/preferences.py", "inPanel": true}, {"table": "user_exploration_preferences", "model": "UserExplorationPreferences", "entity": "settings", "color": "#8e4585", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "user_id", "type": "uuid.UUID", "flag": ""}, {"name": "explore_regions", "type": "list[str]", "flag": ""}, {"name": "curiosity_techniques", "type": "list[str]", "flag": ""}, {"name": "comfort_techniques", "type": "list[str]", "flag": ""}, {"name": "comfort_time", "type": "list[str]", "flag": ""}, {"name": "skill_complexity_cap", "type": "int | None", "flag": ""}, {"name": "preference_tastes", "type": "list[str]", "flag": ""}, {"name": "preference_textures", "type": "list[str]", "flag": ""}, {"name": "preference_temperature", "type": "str | None", "flag": ""}], "fks": [{"col": "user_id", "to": "users.id"}], "uqs": ["user_id"], "file": "apps/api/models/preferences.py", "inPanel": true}, {"table": "user_format_preferences", "model": "UserFormatPreferences", "entity": "settings", "color": "#8e4585", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "user_id", "type": "uuid.UUID", "flag": ""}, {"name": "language", "type": "str", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}, {"name": "updated_at", "type": "datetime", "flag": ""}], "fks": [{"col": "user_id", "to": "users.id"}], "uqs": ["user_id"], "file": "apps/api/models/preferences.py", "inPanel": true}, {"table": "user_notification_preferences", "model": "UserNotificationPreferences", "entity": "settings", "color": "#8e4585", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "user_id", "type": "uuid.UUID", "flag": ""}, {"name": "cooking", "type": "bool", "flag": ""}, {"name": "shopping", "type": "bool", "flag": ""}, {"name": "pantry", "type": "bool", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}, {"name": "updated_at", "type": "datetime", "flag": ""}], "fks": [{"col": "user_id", "to": "users.id"}], "uqs": ["user_id"], "file": "apps/api/models/preferences.py", "inPanel": true}, {"table": "user_privacy_permissions", "model": "UserPrivacyPermissions", "entity": "settings", "color": "#8e4585", "rw": "rw", "cols": [{"name": "id", "type": "uuid.UUID", "flag": ""}, {"name": "user_id", "type": "uuid.UUID", "flag": ""}, {"name": "share_shopping_data", "type": "bool", "flag": ""}, {"name": "share_culinary_preferences", "type": "bool", "flag": ""}, {"name": "allow_reminders", "type": "bool", "flag": ""}, {"name": "created_at", "type": "datetime", "flag": ""}, {"name": "updated_at", "type": "datetime", "flag": ""}], "fks": [{"col": "user_id", "to": "users.id"}], "uqs": ["user_id"], "file": "apps/api/models/preferences.py", "inPanel": true}, {"table": "users", "model": null, "entity": null, "color": null, "rw": null, "cols": [], "fks": [], "uqs": [], "file": null, "inPanel": false}, {"table": "ai_spend_log", "model": null, "entity": null, "color": null, "rw": null, "cols": [], "fks": [], "uqs": [], "file": null, "inPanel": false}], "paths": [{"id": "p:51719726e3", "status": 429, "kind": "refusal", "phase": "middleware", "name": "rate limit (sensitive)", "detail": "Rate limit exceeded. Try again shortly.", "steps": 4, "exitAt": "middleware", "n": {"committed": 0, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": [], "writes": [], "touches": [], "dependencyRan": "not-run"}, {"id": "p:da0a053b53", "status": 429, "kind": "refusal", "phase": "middleware", "name": "rate limit (global)", "detail": "Rate limit exceeded. Try again shortly.", "steps": 5, "exitAt": "middleware", "n": {"committed": 0, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": [], "writes": [], "touches": [], "dependencyRan": "not-run"}, {"id": "p:57de16a71b", "status": 422, "kind": "framework", "phase": "body-parse", "name": "json_invalid (framework)", "detail": "JSON decode error", "steps": 7, "exitAt": "body-parse", "n": {"committed": 0, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": [], "writes": [], "touches": [], "dependencyRan": "not-run"}, {"id": "p:201d91702d", "status": 400, "kind": "framework", "phase": "body-parse", "name": "body (framework)", "detail": "There was an error parsing the body", "steps": 7, "exitAt": "body-parse", "n": {"committed": 0, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": [], "writes": [], "touches": [], "dependencyRan": "not-run"}, {"id": "p:e8c672a046", "status": 401, "kind": "refusal", "phase": "security", "name": "Not authenticated", "detail": "Not authenticated", "steps": 9, "exitAt": "security", "n": {"committed": 0, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": [], "writes": [], "touches": [], "dependencyRan": "not-run"}, {"id": "p:ec6c43e906", "status": 401, "kind": "refusal", "phase": "dependency", "name": "invalid token", "detail": "invalid token", "steps": 12, "exitAt": "dependency", "n": {"committed": 0, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": [], "writes": [], "touches": [], "dependencyRan": "unknown"}, {"id": "p:a90ffd3af4", "status": 422, "kind": "validation", "phase": "validation", "name": "validation", "detail": null, "steps": 12, "exitAt": "validation", "n": {"committed": 1, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": ["households", "locations", "memberships", "users"], "writes": ["users"], "touches": [{"i": 0, "table": "users", "op": "read", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": false, "race": null}, {"i": 1, "table": "users", "op": "add", "bucket": "committed", "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": "uncaught"}, {"i": 2, "table": null, "op": "flush", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": null}, {"i": 3, "table": null, "op": "commit", "bucket": null, "fn": "build_auth_context", "stage": "dependency", "cond": false, "race": null}, {"i": 4, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": false, "race": null}, {"i": 5, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": true, "race": null}, {"i": 6, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "dependency", "cond": true, "race": null}], "dependencyRan": "ran"}, {"id": "p:fd1039c2ca", "status": 400, "kind": "refusal", "phase": "handler", "name": "Idempotency-Key required", "detail": "Idempotency-Key required", "steps": 14, "exitAt": "handler", "n": {"committed": 1, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": ["households", "locations", "memberships", "users"], "writes": ["users"], "touches": [{"i": 0, "table": "users", "op": "read", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": false, "race": null}, {"i": 1, "table": "users", "op": "add", "bucket": "committed", "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": "uncaught"}, {"i": 2, "table": null, "op": "flush", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": null}, {"i": 3, "table": null, "op": "commit", "bucket": null, "fn": "build_auth_context", "stage": "dependency", "cond": false, "race": null}, {"i": 4, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": false, "race": null}, {"i": 5, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": true, "race": null}, {"i": 6, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "dependency", "cond": true, "race": null}], "dependencyRan": "ran"}, {"id": "p:2adb89467d", "status": 409, "kind": "refusal", "phase": "handler", "name": "setup in progress", "detail": "setup in progress", "steps": 18, "exitAt": "handler", "n": {"committed": 1, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 5}, "tables": ["households", "idempotency_keys", "locations", "memberships", "users"], "writes": ["idempotency_keys", "users"], "touches": [{"i": 0, "table": "users", "op": "read", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": false, "race": null}, {"i": 1, "table": "users", "op": "add", "bucket": "committed", "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": "uncaught"}, {"i": 2, "table": null, "op": "flush", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": null}, {"i": 3, "table": null, "op": "commit", "bucket": null, "fn": "build_auth_context", "stage": "dependency", "cond": false, "race": null}, {"i": 4, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": false, "race": null}, {"i": 5, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": true, "race": null}, {"i": 6, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "dependency", "cond": true, "race": null}, {"i": 7, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_lookup", "stage": "handler", "cond": false, "race": null}, {"i": 8, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 9, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 10, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 11, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 12, "table": null, "op": "flush", "bucket": null, "fn": "_outcome_for", "stage": "handler", "cond": true, "race": null}, {"i": 13, "table": null, "op": "savepoint", "bucket": null, "fn": "claim", "stage": "handler", "cond": true, "race": null}, {"i": 14, "table": "idempotency_keys", "op": "add", "bucket": "uncommitted", "fn": "claim", "stage": "handler", "cond": true, "race": "handled"}, {"i": 15, "table": null, "op": "flush", "bucket": null, "fn": "claim", "stage": "handler", "cond": true, "race": null}, {"i": 16, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_lookup", "stage": "handler", "cond": true, "race": null}, {"i": 17, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 18, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 19, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 20, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 21, "table": null, "op": "flush", "bucket": null, "fn": "_outcome_for", "stage": "handler", "cond": true, "race": null}], "dependencyRan": "ran"}, {"id": "p:5c8ba607f9", "status": 409, "kind": "refusal", "phase": "handler", "name": "consent required", "detail": "consent required", "steps": 21, "exitAt": "handler", "n": {"committed": 1, "maybe_committed": 1, "rolled_back": 5, "uncommitted": 0}, "tables": ["consent_records", "households", "idempotency_keys", "locations", "memberships", "setup_completion_state", "users"], "writes": ["idempotency_keys", "users"], "touches": [{"i": 0, "table": "users", "op": "read", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": false, "race": null}, {"i": 1, "table": "users", "op": "add", "bucket": "committed", "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": "uncaught"}, {"i": 2, "table": null, "op": "flush", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": null}, {"i": 3, "table": null, "op": "commit", "bucket": null, "fn": "build_auth_context", "stage": "dependency", "cond": false, "race": null}, {"i": 4, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": false, "race": null}, {"i": 5, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": true, "race": null}, {"i": 6, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "dependency", "cond": true, "race": null}, {"i": 7, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_lookup", "stage": "handler", "cond": false, "race": null}, {"i": 8, "table": "idempotency_keys", "op": "update", "bucket": "rolled_back", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 9, "table": "idempotency_keys", "op": "update", "bucket": "rolled_back", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 10, "table": "idempotency_keys", "op": "update", "bucket": "rolled_back", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 11, "table": "idempotency_keys", "op": "update", "bucket": "rolled_back", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 12, "table": null, "op": "flush", "bucket": null, "fn": "_outcome_for", "stage": "handler", "cond": true, "race": null}, {"i": 13, "table": null, "op": "savepoint", "bucket": null, "fn": "claim", "stage": "handler", "cond": true, "race": null}, {"i": 14, "table": "idempotency_keys", "op": "add", "bucket": "rolled_back", "fn": "claim", "stage": "handler", "cond": true, "race": "handled"}, {"i": 15, "table": null, "op": "flush", "bucket": null, "fn": "claim", "stage": "handler", "cond": true, "race": null}, {"i": 16, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_lookup", "stage": "handler", "cond": true, "race": null}, {"i": 17, "table": "idempotency_keys", "op": "update", "bucket": "rolled_back", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 18, "table": "idempotency_keys", "op": "update", "bucket": "rolled_back", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 19, "table": "idempotency_keys", "op": "update", "bucket": "rolled_back", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 20, "table": "idempotency_keys", "op": "update", "bucket": "rolled_back", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 21, "table": null, "op": "flush", "bucket": null, "fn": "_outcome_for", "stage": "handler", "cond": true, "race": null}, {"i": 22, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "handler", "cond": false, "race": null}, {"i": 23, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "handler", "cond": true, "race": null}, {"i": 24, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "handler", "cond": true, "race": null}, {"i": 25, "table": "setup_completion_state", "op": "read", "bucket": null, "fn": "complete_setup", "stage": "handler", "cond": false, "race": null}, {"i": 26, "table": "consent_records", "op": "read", "bucket": null, "fn": "latest_consent", "stage": "handler", "cond": false, "race": null}, {"i": 27, "table": null, "op": "rollback", "bucket": null, "fn": "complete_setup", "stage": "handler", "cond": false, "race": null}, {"i": 28, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_discard_claim", "stage": "handler", "cond": false, "race": null}, {"i": 29, "table": "idempotency_keys", "op": "delete", "bucket": "maybe_committed", "fn": "_discard_claim", "stage": "handler", "cond": true, "race": null}, {"i": 30, "table": null, "op": "commit", "bucket": null, "fn": "_discard_claim", "stage": "handler", "cond": true, "race": null}], "dependencyRan": "ran"}, {"id": "p:bba821f362", "status": 200, "kind": "success", "phase": "handler", "name": "replay", "detail": "await _me_response_from_result(ctx, result, session, settings)", "steps": 18, "exitAt": "return", "n": {"committed": 1, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 5}, "tables": ["ai_spend_log", "household_format_preferences", "households", "idempotency_keys", "locations", "memberships", "setup_completion_state", "subscription_entitlement", "user_dietary_profile", "user_exploration_preferences", "user_format_preferences", "user_notification_preferences", "user_privacy_permissions", "users"], "writes": ["idempotency_keys", "users"], "touches": [{"i": 0, "table": "users", "op": "read", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": false, "race": null}, {"i": 1, "table": "users", "op": "add", "bucket": "committed", "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": "uncaught"}, {"i": 2, "table": null, "op": "flush", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": null}, {"i": 3, "table": null, "op": "commit", "bucket": null, "fn": "build_auth_context", "stage": "dependency", "cond": false, "race": null}, {"i": 4, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": false, "race": null}, {"i": 5, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": true, "race": null}, {"i": 6, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "dependency", "cond": true, "race": null}, {"i": 7, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_lookup", "stage": "handler", "cond": false, "race": null}, {"i": 8, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 9, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 10, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 11, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 12, "table": null, "op": "flush", "bucket": null, "fn": "_outcome_for", "stage": "handler", "cond": true, "race": null}, {"i": 13, "table": null, "op": "savepoint", "bucket": null, "fn": "claim", "stage": "handler", "cond": true, "race": null}, {"i": 14, "table": "idempotency_keys", "op": "add", "bucket": "uncommitted", "fn": "claim", "stage": "handler", "cond": true, "race": "handled"}, {"i": 15, "table": null, "op": "flush", "bucket": null, "fn": "claim", "stage": "handler", "cond": true, "race": null}, {"i": 16, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_lookup", "stage": "handler", "cond": true, "race": null}, {"i": 17, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 18, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 19, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 20, "table": "idempotency_keys", "op": "update", "bucket": "uncommitted", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 21, "table": null, "op": "flush", "bucket": null, "fn": "_outcome_for", "stage": "handler", "cond": true, "race": null}, {"i": 22, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "handler", "cond": false, "race": null}, {"i": 23, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "handler", "cond": true, "race": null}, {"i": 24, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "handler", "cond": true, "race": null}, {"i": 25, "table": "household_format_preferences", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 26, "table": "user_format_preferences", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 27, "table": "user_dietary_profile", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 28, "table": "user_exploration_preferences", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 29, "table": "user_privacy_permissions", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 30, "table": "user_notification_preferences", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 31, "table": "subscription_entitlement", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 32, "table": "setup_completion_state", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 33, "table": "ai_spend_log", "op": "read", "bucket": null, "fn": "credits_used_this_month", "stage": "handler", "cond": false, "race": null}], "dependencyRan": "ran"}, {"id": "p:1ac75d260a", "status": 200, "kind": "success", "phase": "handler", "name": "already done", "detail": "await _me_response_from_result(ctx, result, session, settings)", "steps": 20, "exitAt": "return", "n": {"committed": 9, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": ["ai_spend_log", "household_format_preferences", "households", "idempotency_keys", "locations", "memberships", "setup_completion_state", "subscription_entitlement", "user_dietary_profile", "user_exploration_preferences", "user_format_preferences", "user_notification_preferences", "user_privacy_permissions", "users"], "writes": ["idempotency_keys", "users"], "touches": [{"i": 0, "table": "users", "op": "read", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": false, "race": null}, {"i": 1, "table": "users", "op": "add", "bucket": "committed", "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": "uncaught"}, {"i": 2, "table": null, "op": "flush", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": null}, {"i": 3, "table": null, "op": "commit", "bucket": null, "fn": "build_auth_context", "stage": "dependency", "cond": false, "race": null}, {"i": 4, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": false, "race": null}, {"i": 5, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": true, "race": null}, {"i": 6, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "dependency", "cond": true, "race": null}, {"i": 7, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_lookup", "stage": "handler", "cond": false, "race": null}, {"i": 8, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 9, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 10, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 11, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 12, "table": null, "op": "flush", "bucket": null, "fn": "_outcome_for", "stage": "handler", "cond": true, "race": null}, {"i": 13, "table": null, "op": "savepoint", "bucket": null, "fn": "claim", "stage": "handler", "cond": true, "race": null}, {"i": 14, "table": "idempotency_keys", "op": "add", "bucket": "committed", "fn": "claim", "stage": "handler", "cond": true, "race": "handled"}, {"i": 15, "table": null, "op": "flush", "bucket": null, "fn": "claim", "stage": "handler", "cond": true, "race": null}, {"i": 16, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_lookup", "stage": "handler", "cond": true, "race": null}, {"i": 17, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 18, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 19, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 20, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 21, "table": null, "op": "flush", "bucket": null, "fn": "_outcome_for", "stage": "handler", "cond": true, "race": null}, {"i": 22, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "handler", "cond": false, "race": null}, {"i": 23, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "handler", "cond": true, "race": null}, {"i": 24, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "handler", "cond": true, "race": null}, {"i": 25, "table": "setup_completion_state", "op": "read", "bucket": null, "fn": "complete_setup", "stage": "handler", "cond": false, "race": null}, {"i": 26, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "handler", "cond": false, "race": null}, {"i": 27, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "handler", "cond": true, "race": null}, {"i": 28, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "handler", "cond": true, "race": null}, {"i": 29, "table": "household_format_preferences", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 30, "table": "user_format_preferences", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 31, "table": "user_dietary_profile", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 32, "table": "user_exploration_preferences", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 33, "table": "user_privacy_permissions", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 34, "table": "user_notification_preferences", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 35, "table": "subscription_entitlement", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 36, "table": "setup_completion_state", "op": "read", "bucket": null, "fn": "_load_setup_result", "stage": "handler", "cond": false, "race": null}, {"i": 37, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "complete", "stage": "handler", "cond": false, "race": null}, {"i": 38, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "complete", "stage": "handler", "cond": false, "race": null}, {"i": 39, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "complete", "stage": "handler", "cond": false, "race": null}, {"i": 40, "table": null, "op": "flush", "bucket": null, "fn": "complete", "stage": "handler", "cond": false, "race": null}, {"i": 41, "table": null, "op": "commit", "bucket": null, "fn": "complete_setup", "stage": "handler", "cond": false, "race": null}, {"i": 42, "table": "ai_spend_log", "op": "read", "bucket": null, "fn": "credits_used_this_month", "stage": "handler", "cond": false, "race": null}], "dependencyRan": "ran"}, {"id": "p:0f099873d5", "status": 200, "kind": "success", "phase": "handler", "name": "first run", "detail": "await _me_response_from_result(ctx, result, session, settings)", "steps": 22, "exitAt": "return", "n": {"committed": 45, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": ["ai_spend_log", "consent_records", "household_format_preferences", "households", "idempotency_keys", "locations", "memberships", "setup_completion_state", "subscription_entitlement", "user_dietary_profile", "user_exploration_preferences", "user_format_preferences", "user_notification_preferences", "user_privacy_permissions", "users"], "writes": ["household_format_preferences", "households", "idempotency_keys", "locations", "memberships", "setup_completion_state", "subscription_entitlement", "user_dietary_profile", "user_exploration_preferences", "user_format_preferences", "user_notification_preferences", "user_privacy_permissions", "users"], "touches": [{"i": 0, "table": "users", "op": "read", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": false, "race": null}, {"i": 1, "table": "users", "op": "add", "bucket": "committed", "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": "uncaught"}, {"i": 2, "table": null, "op": "flush", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": null}, {"i": 3, "table": null, "op": "commit", "bucket": null, "fn": "build_auth_context", "stage": "dependency", "cond": false, "race": null}, {"i": 4, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": false, "race": null}, {"i": 5, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": true, "race": null}, {"i": 6, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "dependency", "cond": true, "race": null}, {"i": 7, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_lookup", "stage": "handler", "cond": false, "race": null}, {"i": 8, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 9, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 10, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 11, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 12, "table": null, "op": "flush", "bucket": null, "fn": "_outcome_for", "stage": "handler", "cond": true, "race": null}, {"i": 13, "table": null, "op": "savepoint", "bucket": null, "fn": "claim", "stage": "handler", "cond": true, "race": null}, {"i": 14, "table": "idempotency_keys", "op": "add", "bucket": "committed", "fn": "claim", "stage": "handler", "cond": true, "race": "handled"}, {"i": 15, "table": null, "op": "flush", "bucket": null, "fn": "claim", "stage": "handler", "cond": true, "race": null}, {"i": 16, "table": "idempotency_keys", "op": "read", "bucket": null, "fn": "_lookup", "stage": "handler", "cond": true, "race": null}, {"i": 17, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 18, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 19, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 20, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "_reclaim", "stage": "handler", "cond": true, "race": null}, {"i": 21, "table": null, "op": "flush", "bucket": null, "fn": "_outcome_for", "stage": "handler", "cond": true, "race": null}, {"i": 22, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "handler", "cond": false, "race": null}, {"i": 23, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "handler", "cond": true, "race": null}, {"i": 24, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "handler", "cond": true, "race": null}, {"i": 25, "table": "setup_completion_state", "op": "read", "bucket": null, "fn": "complete_setup", "stage": "handler", "cond": false, "race": null}, {"i": 26, "table": "consent_records", "op": "read", "bucket": null, "fn": "latest_consent", "stage": "handler", "cond": false, "race": null}, {"i": 27, "table": "memberships", "op": "read", "bucket": null, "fn": "ensure_principal_household", "stage": "handler", "cond": false, "race": null}, {"i": 28, "table": "households", "op": "read", "bucket": null, "fn": "ensure_principal_household", "stage": "handler", "cond": true, "race": null}, {"i": 29, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "handler", "cond": true, "race": null}, {"i": 30, "table": "locations", "op": "add", "bucket": "committed", "fn": "ensure_principal_household", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 31, "table": null, "op": "flush", "bucket": null, "fn": "ensure_principal_household", "stage": "handler", "cond": true, "race": null}, {"i": 32, "table": "households", "op": "add", "bucket": "committed", "fn": "ensure_principal_household", "stage": "handler", "cond": true, "race": null}, {"i": 33, "table": null, "op": "flush", "bucket": null, "fn": "ensure_principal_household", "stage": "handler", "cond": true, "race": null}, {"i": 34, "table": "memberships", "op": "add", "bucket": "committed", "fn": "ensure_principal_household", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 35, "table": "locations", "op": "add", "bucket": "committed", "fn": "ensure_principal_household", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 36, "table": null, "op": "flush", "bucket": null, "fn": "ensure_principal_household", "stage": "handler", "cond": true, "race": null}, {"i": 37, "table": "households", "op": "update", "bucket": "committed", "fn": "complete_setup", "stage": "handler", "cond": false, "race": null}, {"i": 38, "table": null, "op": "flush", "bucket": null, "fn": "complete_setup", "stage": "handler", "cond": false, "race": null}, {"i": 39, "table": "household_format_preferences", "op": "read", "bucket": null, "fn": "_upsert_format_prefs", "stage": "handler", "cond": false, "race": null}, {"i": 40, "table": "household_format_preferences", "op": "add", "bucket": "committed", "fn": "_upsert_format_prefs", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 41, "table": "household_format_preferences", "op": "update", "bucket": "committed", "fn": "_upsert_format_prefs", "stage": "handler", "cond": false, "race": null}, {"i": 42, "table": "household_format_preferences", "op": "update", "bucket": "committed", "fn": "_upsert_format_prefs", "stage": "handler", "cond": false, "race": null}, {"i": 43, "table": "household_format_preferences", "op": "update", "bucket": "committed", "fn": "_upsert_format_prefs", "stage": "handler", "cond": false, "race": null}, {"i": 44, "table": "household_format_preferences", "op": "update", "bucket": "committed", "fn": "_upsert_format_prefs", "stage": "handler", "cond": false, "race": null}, {"i": 45, "table": null, "op": "flush", "bucket": null, "fn": "_upsert_format_prefs", "stage": "handler", "cond": false, "race": null}, {"i": 46, "table": "user_format_preferences", "op": "read", "bucket": null, "fn": "_upsert_user_format", "stage": "handler", "cond": false, "race": null}, {"i": 47, "table": "user_format_preferences", "op": "add", "bucket": "committed", "fn": "_upsert_user_format", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 48, "table": "user_format_preferences", "op": "update", "bucket": "committed", "fn": "_upsert_user_format", "stage": "handler", "cond": false, "race": null}, {"i": 49, "table": null, "op": "flush", "bucket": null, "fn": "_upsert_user_format", "stage": "handler", "cond": false, "race": null}, {"i": 50, "table": "user_dietary_profile", "op": "read", "bucket": null, "fn": "_upsert_dietary", "stage": "handler", "cond": false, "race": null}, {"i": 51, "table": "user_dietary_profile", "op": "add", "bucket": "committed", "fn": "_upsert_dietary", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 52, "table": "user_dietary_profile", "op": "update", "bucket": "committed", "fn": "_upsert_dietary", "stage": "handler", "cond": false, "race": null}, {"i": 53, "table": "user_dietary_profile", "op": "update", "bucket": "committed", "fn": "_upsert_dietary", "stage": "handler", "cond": false, "race": null}, {"i": 54, "table": null, "op": "flush", "bucket": null, "fn": "_upsert_dietary", "stage": "handler", "cond": false, "race": null}, {"i": 55, "table": "user_exploration_preferences", "op": "read", "bucket": null, "fn": "upsert_exploration_preferences", "stage": "handler", "cond": false, "race": null}, {"i": 56, "table": "user_exploration_preferences", "op": "add", "bucket": "committed", "fn": "upsert_exploration_preferences", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 57, "table": "user_exploration_preferences", "op": "update", "bucket": "committed", "fn": "upsert_exploration_preferences", "stage": "handler", "cond": false, "race": null}, {"i": 58, "table": "user_exploration_preferences", "op": "update", "bucket": "committed", "fn": "upsert_exploration_preferences", "stage": "handler", "cond": false, "race": null}, {"i": 59, "table": "user_exploration_preferences", "op": "update", "bucket": "committed", "fn": "upsert_exploration_preferences", "stage": "handler", "cond": false, "race": null}, {"i": 60, "table": "user_exploration_preferences", "op": "update", "bucket": "committed", "fn": "upsert_exploration_preferences", "stage": "handler", "cond": false, "race": null}, {"i": 61, "table": "user_exploration_preferences", "op": "update", "bucket": "committed", "fn": "upsert_exploration_preferences", "stage": "handler", "cond": false, "race": null}, {"i": 62, "table": "user_exploration_preferences", "op": "update", "bucket": "committed", "fn": "upsert_exploration_preferences", "stage": "handler", "cond": false, "race": null}, {"i": 63, "table": "user_exploration_preferences", "op": "update", "bucket": "committed", "fn": "upsert_exploration_preferences", "stage": "handler", "cond": false, "race": null}, {"i": 64, "table": "user_exploration_preferences", "op": "update", "bucket": "committed", "fn": "upsert_exploration_preferences", "stage": "handler", "cond": false, "race": null}, {"i": 65, "table": null, "op": "flush", "bucket": null, "fn": "upsert_exploration_preferences", "stage": "handler", "cond": false, "race": null}, {"i": 66, "table": "user_privacy_permissions", "op": "read", "bucket": null, "fn": "_upsert_privacy", "stage": "handler", "cond": false, "race": null}, {"i": 67, "table": "user_privacy_permissions", "op": "add", "bucket": "committed", "fn": "_upsert_privacy", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 68, "table": "user_privacy_permissions", "op": "update", "bucket": "committed", "fn": "_upsert_privacy", "stage": "handler", "cond": false, "race": null}, {"i": 69, "table": "user_privacy_permissions", "op": "update", "bucket": "committed", "fn": "_upsert_privacy", "stage": "handler", "cond": false, "race": null}, {"i": 70, "table": "user_privacy_permissions", "op": "update", "bucket": "committed", "fn": "_upsert_privacy", "stage": "handler", "cond": false, "race": null}, {"i": 71, "table": null, "op": "flush", "bucket": null, "fn": "_upsert_privacy", "stage": "handler", "cond": false, "race": null}, {"i": 72, "table": "user_notification_preferences", "op": "read", "bucket": null, "fn": "_upsert_notifications", "stage": "handler", "cond": false, "race": null}, {"i": 73, "table": "user_notification_preferences", "op": "add", "bucket": "committed", "fn": "_upsert_notifications", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 74, "table": "user_notification_preferences", "op": "update", "bucket": "committed", "fn": "_upsert_notifications", "stage": "handler", "cond": false, "race": null}, {"i": 75, "table": "user_notification_preferences", "op": "update", "bucket": "committed", "fn": "_upsert_notifications", "stage": "handler", "cond": false, "race": null}, {"i": 76, "table": "user_notification_preferences", "op": "update", "bucket": "committed", "fn": "_upsert_notifications", "stage": "handler", "cond": false, "race": null}, {"i": 77, "table": null, "op": "flush", "bucket": null, "fn": "_upsert_notifications", "stage": "handler", "cond": false, "race": null}, {"i": 78, "table": "subscription_entitlement", "op": "read", "bucket": null, "fn": "_upsert_subscription", "stage": "handler", "cond": false, "race": null}, {"i": 79, "table": "subscription_entitlement", "op": "add", "bucket": "committed", "fn": "_upsert_subscription", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 80, "table": null, "op": "flush", "bucket": null, "fn": "_upsert_subscription", "stage": "handler", "cond": true, "race": null}, {"i": 81, "table": "setup_completion_state", "op": "read", "bucket": null, "fn": "_stamp_completion", "stage": "handler", "cond": false, "race": null}, {"i": 82, "table": "setup_completion_state", "op": "add", "bucket": "committed", "fn": "_stamp_completion", "stage": "handler", "cond": true, "race": "uncaught"}, {"i": 83, "table": "setup_completion_state", "op": "update", "bucket": "committed", "fn": "_stamp_completion", "stage": "handler", "cond": false, "race": null}, {"i": 84, "table": "setup_completion_state", "op": "update", "bucket": "committed", "fn": "_stamp_completion", "stage": "handler", "cond": false, "race": null}, {"i": 85, "table": null, "op": "flush", "bucket": null, "fn": "_stamp_completion", "stage": "handler", "cond": false, "race": null}, {"i": 86, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "complete", "stage": "handler", "cond": false, "race": null}, {"i": 87, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "complete", "stage": "handler", "cond": false, "race": null}, {"i": 88, "table": "idempotency_keys", "op": "update", "bucket": "committed", "fn": "complete", "stage": "handler", "cond": false, "race": null}, {"i": 89, "table": null, "op": "flush", "bucket": null, "fn": "complete", "stage": "handler", "cond": false, "race": null}, {"i": 90, "table": null, "op": "commit", "bucket": null, "fn": "complete_setup", "stage": "handler", "cond": false, "race": null}, {"i": 91, "table": "ai_spend_log", "op": "read", "bucket": null, "fn": "credits_used_this_month", "stage": "handler", "cond": false, "race": null}], "dependencyRan": "ran"}, {"id": "p:3ee19bd271", "status": 500, "kind": "uncaught", "phase": "uncaught", "name": "uncaught", "detail": null, "steps": 12, "exitAt": "uncaught", "n": {"committed": 1, "maybe_committed": 0, "rolled_back": 0, "uncommitted": 0}, "tables": ["households", "locations", "memberships", "users"], "writes": ["users"], "touches": [{"i": 0, "table": "users", "op": "read", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": false, "race": null}, {"i": 1, "table": "users", "op": "add", "bucket": "committed", "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": "uncaught"}, {"i": 2, "table": null, "op": "flush", "bucket": null, "fn": "resolve_or_create_user", "stage": "dependency", "cond": true, "race": null}, {"i": 3, "table": null, "op": "commit", "bucket": null, "fn": "build_auth_context", "stage": "dependency", "cond": false, "race": null}, {"i": 4, "table": "memberships", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": false, "race": null}, {"i": 5, "table": "households", "op": "read", "bucket": null, "fn": "load_household_context", "stage": "dependency", "cond": true, "race": null}, {"i": 6, "table": "locations", "op": "read", "bucket": null, "fn": "get_principal_location", "stage": "dependency", "cond": true, "race": null}], "dependencyRan": "ran"}], "provisions": [{"table": "users", "op": "add", "state": "committed", "committed_at": "apps/api/auth/context.py:79", "at": "apps/api/services/ownership.py:49"}], "claims": [{"table": "idempotency_keys", "model": "IdempotencyKey", "unique": ["key", "operation", "owner_scope"], "race": "handled", "idioms": ["begin_nested"], "constraint": "uq_idempotency_key_op_owner"}], "races": [{"path": "validation", "table": "users", "state": "uncaught"}, {"path": "Idempotency-Key required", "table": "users", "state": "uncaught"}, {"path": "setup in progress", "table": "users", "state": "uncaught"}, {"path": "setup in progress", "table": "idempotency_keys", "state": "handled"}, {"path": "consent required", "table": "users", "state": "uncaught"}, {"path": "consent required", "table": "idempotency_keys", "state": "handled"}, {"path": "replay", "table": "users", "state": "uncaught"}, {"path": "replay", "table": "idempotency_keys", "state": "handled"}, {"path": "already done", "table": "users", "state": "uncaught"}, {"path": "already done", "table": "idempotency_keys", "state": "handled"}, {"path": "first run", "table": "users", "state": "uncaught"}, {"path": "first run", "table": "idempotency_keys", "state": "handled"}, {"path": "first run", "table": "locations", "state": "uncaught"}, {"path": "first run", "table": "memberships", "state": "uncaught"}, {"path": "first run", "table": "household_format_preferences", "state": "uncaught"}, {"path": "first run", "table": "user_format_preferences", "state": "uncaught"}, {"path": "first run", "table": "user_dietary_profile", "state": "uncaught"}, {"path": "first run", "table": "user_exploration_preferences", "state": "uncaught"}, {"path": "first run", "table": "user_privacy_permissions", "state": "uncaught"}, {"path": "first run", "table": "user_notification_preferences", "state": "uncaught"}, {"path": "first run", "table": "subscription_entitlement", "state": "uncaught"}, {"path": "first run", "table": "setup_completion_state", "state": "uncaught"}, {"path": "uncaught", "table": "users", "state": "uncaught"}], "commits": true, "idempotent": true, "idempotency_table": "idempotency_keys", "ops": 24, "entities": ["allergen", "auth", "legal-consent", "pantry", "settings"], "counts": {"tables": 15, "inPanel": 13, "paths": 14, "stepsMax": 92}}</script>
-<script type="application/json" id="PLAIN">{"tree_plain": "every table the door reads or writes, on the door as a whole", "fields": [{"name": "table", "plain": "a database table — where the data actually lives", "src": "data.tables[].table", "joins": ["forms effects.steps.table (WHEN it is touched)", "forms.repeat.claims.table", "forms.auth.provisions.table", "data.tables.fks (→ table.col)"], "flags": ["key"]}, {"name": "model", "plain": "the class that maps the table — the code's name for it", "src": "data.tables[].model", "joins": ["schemas nested shapes (from_attributes)", "forms effects.steps.model", "feed models{} (columns · constraints · drift)"], "flags": ["key", "feed"]}, {"name": "entity + colour", "plain": "the business area that owns the table — the ground it sits on", "src": "data.tables[].entity · entity_color", "joins": ["identity.entity", "data.entities (the grounds)"], "flags": ["key"]}, {"name": "channel R · W · RW", "plain": "read, written or both — the UNION over every path, never one path", "src": "data.tables[].rw · data.reads · data.writes · data.both · data.ops", "joins": ["forms effects.steps.op (per path, per step)"], "flags": []}, {"name": "columns", "plain": "the fields with their types — the table's shape", "src": "data.tables[].cols · cols_more", "joins": ["feed models{} (nullability · defaults)", "schemas cols (the mirror)"], "flags": []}, {"name": "foreign keys", "plain": "which column points at which other table — the joins", "src": "data.tables[].fks", "joins": ["data.tables.table"], "flags": []}, {"name": "unique keys", "plain": "the latches the database refuses to duplicate", "src": "data.tables[].uqs", "joins": ["forms effects.steps.race (an insert that can lose)", "forms.repeat.claims.unique"], "flags": []}, {"name": "DB commit", "plain": "whether the door commits — the transaction pulse, on the door as a whole", "src": "data.commits · security.commits", "joins": ["forms effects buckets (per path: committed · maybe · rolled back · uncommitted)"], "flags": []}, {"name": "idempotent write", "plain": "the door writes idempotency_keys — replays are recognised", "src": "security.idempotent · security.idempotency_table", "joins": ["forms.repeat"], "flags": []}, {"name": "effects along the path", "plain": "one row per read and write in the order the request makes them, with the bucket each write fell in", "src": "forms.paths[].effects.steps (step · table · op · bucket · fn · at · cond · race · dependency)", "joins": ["data.tables.table", "functions (fn)", "forms.exits (the bucket depends on the ending)"], "flags": ["new"]}, {"name": "effect buckets", "plain": "committed · maybe committed · rolled back · uncommitted — what a write's fate was on this ending", "src": "forms.paths[].effects.n · effects.writes · effects.tables", "joins": ["forms.paths (the ending decides)"], "flags": ["new", "state"]}, {"name": "race", "plain": "an insert on a unique key that can lose to a concurrent one — handled by a savepoint or uncaught", "src": "forms effects.steps.race · forms.repeat.claims.race", "joins": ["data.tables.uqs"], "flags": ["new", "state"]}, {"name": "provisions", "plain": "what the auth dependency creates before the handler runs — the user row, committed", "src": "forms.auth.provisions (table · op · step · committed_at)", "joins": ["data.tables.table", "security.guards"], "flags": ["new"]}], "joins": [{"key": "entity slug", "where": "identity · data.tables · schemas · functions · tests.journeys · home_ev · above", "plain": "the business-area key — the grounds, the faces, the home"}, {"key": "table name", "where": "data.tables · effects.steps · repeat.claims · auth.provisions · idempotency_table · fks", "plain": "the data key — WHAT is touched and WHEN"}, {"key": "file:line (`at`)", "where": "identity · handler · guards · asgi · exits · preconditions · effects.steps · catches · reason sites · hook · guard", "plain": "the source anchor — every fact can be opened"}, {"key": "step id (st:)", "where": "effects.steps · auth.provisions.step · catches.commits · catches.writes", "plain": "the write key — one read or write, its fate"}, {"key": "schema name", "where": "schemas.request/response · exits.response.model · nested · mirrors", "plain": "the shape key"}]}</script>
+<script type="application/json" id="PLAIN">{"tree_plain": "every table the door reads or writes, on the door as a whole", "fields": [{"name": "table", "plain": "a database table — where the data actually lives", "src": "data.tables[].table", "joins": ["forms effects.steps.table (WHEN it is touched)", "forms.repeat.claims.table", "forms.auth.provisions.table", "data.tables.fks (→ table.col)"], "flags": ["key"]}, {"name": "model", "plain": "the class that maps the table — the code's name for it", "src": "data.tables[].model", "joins": ["schemas nested shapes (from_attributes)", "forms effects.steps.model", "feed models{} (columns · constraints · drift)"], "flags": ["key", "feed"]}, {"name": "entity + colour", "plain": "the business area that owns the table — the ground it sits on", "src": "data.tables[].entity · entity_color", "joins": ["identity.entity", "data.entities (the grounds)"], "flags": ["key"]}, {"name": "channel R · W · RW", "plain": "read, written or both — the UNION over every path, never one path", "src": "data.tables[].rw · data.reads · data.writes · data.both · data.ops", "joins": ["forms effects.steps.op (per path, per step)"], "flags": []}, {"name": "columns", "plain": "the fields with their types — the table's shape", "src": "data.tables[].cols · cols_more", "joins": ["feed models{} (nullability · defaults)", "schemas cols (the mirror)"], "flags": []}, {"name": "foreign keys", "plain": "which column points at which other table — the joins", "src": "data.tables[].fks", "joins": ["data.tables.table"], "flags": []}, {"name": "unique keys", "plain": "the latches the database refuses to duplicate", "src": "data.tables[].uqs", "joins": ["forms effects.steps.race (an insert that can lose)", "forms.repeat.claims.unique"], "flags": []}, {"name": "DB commit", "plain": "whether the door commits — the transaction pulse, on the door as a whole", "src": "data.commits · security.commits", "joins": ["forms effects buckets (per path: committed · maybe · rolled back · uncommitted)"], "flags": []}, {"name": "idempotent write", "plain": "the door writes idempotency_keys — replays are recognised", "src": "security.idempotent · security.idempotency_table", "joins": ["forms.repeat"], "flags": []}, {"name": "effects along the path", "plain": "one row per read and write in the order the request makes them, with the bucket each write fell in", "src": "forms.paths[].effects.steps (step · table · op · bucket · fn · at · cond · race · dependency)", "joins": ["data.tables.table", "functions (fn)", "forms.exits (the bucket depends on the ending)"], "flags": ["new"]}, {"name": "effect buckets", "plain": "committed · maybe committed · rolled back · uncommitted — what a write's fate was on this ending", "src": "forms.paths[].effects.n · effects.writes · effects.tables", "joins": ["forms.paths (the ending decides)"], "flags": ["new", "state"]}, {"name": "race", "plain": "an insert on a unique key that can lose to a concurrent one — handled by a savepoint or uncaught", "src": "forms effects.steps.race · forms.repeat.claims.race", "joins": ["data.tables.uqs"], "flags": ["new", "state"]}, {"name": "provisions", "plain": "the user row the auth dependency creates before the handler runs — already committed", "src": "forms.auth.provisions (table · op · step · committed_at)", "joins": ["data.tables.table", "security.guards"], "flags": ["new"]}], "joins": [{"key": "entity slug", "where": "identity · data.tables · schemas · functions · tests.journeys · home_ev · above", "plain": "the business-area key — the grounds, the faces, the home"}, {"key": "table name", "where": "data.tables · effects.steps · repeat.claims · auth.provisions · idempotency_table · fks", "plain": "the data key — WHAT is touched and WHEN"}, {"key": "file:line (`at`)", "where": "identity · handler · guards · asgi · exits · preconditions · effects.steps · catches · reason sites · hook · guard", "plain": "the source anchor — every fact can be opened"}, {"key": "step id (st:)", "where": "effects.steps · auth.provisions.step · catches.commits · catches.writes", "plain": "the write key — one read or write, its fate"}, {"key": "schema name", "where": "schemas.request/response · exits.response.model · nested · mirrors", "plain": "the shape key"}]}</script>
+
+<script type="application/json" id="ROBOT">{"door": "POST /setup/complete", "head": "05007957", "levels": [{"key": "edge", "slot": ["K3 rate", "U3 guards"], "name": "EDGE", "plain": "the checks every request meets before it reaches this door — the same ones guard every door in the app", "stage": "middleware", "conds": [{"id": "x:8437446a6c", "label": "429 Rate limit exceeded. Try again shortly.", "sub": "RateLimitMiddleware", "slot": "K3", "cov": {"state": "untested", "cases": []}, "kind": "exit"}, {"id": "x:a7992af811", "label": "429 Rate limit exceeded. Try again shortly.", "sub": "RateLimitMiddleware", "slot": "K3", "cov": {"state": "untested", "cases": []}, "kind": "exit"}, {"id": "sw:12b96f1a5a", "label": "flag environment · rate_limit_enabled", "sub": "decides whether the limiter runs at all", "slot": "U8", "cov": {"state": "unmeasured", "cases": []}, "kind": "switch"}], "tally": {"untested": 2, "unmeasured": 1}}, {"key": "gate", "slot": ["K2 auth", "U3 guards", "U8 switches"], "name": "GATE", "plain": "the lock on the door — it decides who may knock, and it writes a row when it lets someone in", "stage": "security · dependency", "conds": [{"id": "x:9fd81887a2", "label": "401 Not authenticated", "sub": "HTTPBearer bearer_scheme", "slot": "K2", "cov": {"state": "untested", "cases": []}, "kind": "exit"}, {"id": "x:18e726cdeb", "label": "401 invalid token", "sub": "except InvalidTokenError", "slot": "K2", "cov": {"state": "untested", "cases": []}, "kind": "exit"}, {"id": "sw:967c49ad34:0", "label": "verifier FirebaseTokenVerifier", "sub": "settings.auth_provider is ProviderMode.REAL", "slot": "U8", "cov": {"state": "unmeasured", "cases": []}, "kind": "switch-arm"}, {"id": "sw:967c49ad34:1", "label": "verifier MockTokenVerifier", "sub": "not (settings.auth_provider is ProviderMode.REAL)", "slot": "U8", "cov": {"state": "unmeasured", "cases": []}, "kind": "switch-arm"}, {"id": "prov:0", "label": "provision add users", "sub": "committed at apps/api/auth/context.py:79", "slot": "K2", "cov": {"state": "unmeasured", "cases": []}, "kind": "effect"}], "tally": {"untested": 2, "unmeasured": 3}}, {"key": "input", "slot": ["schema cases", "K1 declared"], "name": "INPUT", "plain": "the body — can it be read, does it fit the shape", "stage": "body-parse · validation", "conds": [{"id": "x:ae1bc4dc59", "label": "400 There was an error parsing the body", "sub": "", "slot": "K1", "cov": {"state": "untested", "cases": []}, "kind": "exit"}, {"id": "x:fdb1ae15e9", "label": "422 JSON decode error", "sub": "", "slot": "K1", "cov": {"state": "untested", "cases": []}, "kind": "exit"}, {"id": "x:1b256011f1", "label": "422 pydantic error type", "sub": "", "slot": "schema", "cov": {"state": "partial", "cases": ["C1051", "C1052"], "conf": ["status"]}, "kind": "exit"}], "tally": {"untested": 2, "partial": 1}}, {"key": "handler", "slot": ["U3 guards", "U7 refusals", "U6 paths", "U11 failure"], "name": "HANDLER", "plain": "the door’s own decisions — its guards, the calls it makes, the arms it takes, the exceptions it catches", "stage": "handler", "conds": [{"id": "x:13ce9b79e0", "label": "400 Idempotency-Key required", "sub": "key is None", "slot": "U7", "cov": {"state": "covered", "cases": ["C1048"], "conf": ["status+detail"]}, "kind": "exit"}, {"id": "x:f2caf456bd", "label": "409 setup in progress", "sub": "except SetupInProgressError", "slot": "U7", "cov": {"state": "covered", "cases": ["C1057", "C1061"], "conf": ["ambiguous of 2", "service raises"]}, "kind": "exit"}, {"id": "x:a086031223", "label": "409 consent required", "sub": "except ConsentRequiredError", "slot": "U7", "cov": {"state": "covered", "cases": ["C1055", "C1057", "C1065", "C1067"], "conf": ["status+detail", "ambiguous of 2", "service raises"]}, "kind": "exit"}, {"id": "b:777606a0cc", "label": "arm replay", "sub": "claimed.outcome is ClaimOutcome.REPLAY", "slot": "U6", "cov": {"state": "partial", "cases": ["C1049", "C1050", "C1056", "C1057", "C389", "C390", "C391", "C392"], "conf": ["status"]}, "kind": "branch"}, {"id": "b:ea440a25b4", "label": "arm already done", "sub": "existing is not None and prior is not None and prior.completed", "slot": "U6", "cov": {"state": "partial", "cases": ["C1049", "C1050", "C1056", "C1057", "C389", "C390", "C391", "C392"], "conf": ["status"]}, "kind": "branch"}, {"id": "b:b31ca62e66", "label": "arm first run", "sub": "the fall-through", "slot": "U6", "cov": {"state": "partial", "cases": ["C1049", "C1050", "C1056", "C1057", "C389", "C390", "C391", "C392"], "conf": ["status"]}, "kind": "branch"}, {"id": "c:f3f296ea81", "label": "catch SetupInProgressError", "sub": "translate → 409", "slot": "U11", "cov": {"state": "covered", "cases": ["C1057", "C1061"], "conf": ["ambiguous of 2", "service raises"]}, "kind": "catch"}, {"id": "c:3be4248d42", "label": "catch ConsentRequiredError", "sub": "translate → 409", "slot": "U11", "cov": {"state": "covered", "cases": ["C1057", "C1061"], "conf": ["ambiguous of 2", "service raises"]}, "kind": "catch"}, {"id": "c:10b6b2a3ba", "label": "catch InvalidTokenError", "sub": "translate → 401", "slot": "U11", "cov": {"state": "unmeasured", "cases": []}, "kind": "catch"}, {"id": "c:0dec997c32", "label": "catch IntegrityError", "sub": "pass-through", "slot": "U11", "cov": {"state": "unmeasured", "cases": []}, "kind": "catch"}, {"id": "c:64e98bd00d", "label": "catch Exception", "sub": "pass-through", "slot": "U11", "cov": {"state": "unmeasured", "cases": []}, "kind": "catch"}], "tally": {"covered": 5, "partial": 3, "unmeasured": 3}}, {"key": "effects", "slot": ["U9 effects", "U12 repeat"], "name": "EFFECTS", "plain": "the writes the door leaves behind — which survive each ending and which are rolled back", "stage": "handler → exit", "conds": [{"id": "eff:commit", "label": "commit on success", "sub": "replay 1 · already done 9 · first run 45", "slot": "U9", "cov": {"state": "unmeasured", "cases": []}, "kind": "effect"}, {"id": "eff:rollback", "label": "rollback on refusal", "sub": "consent required 5", "slot": "U9", "cov": {"state": "unmeasured", "cases": []}, "kind": "effect"}, {"id": "eff:refusal-writes", "label": "a refusal that still writes", "sub": "p:5c8ba607f9", "slot": "U9", "cov": {"state": "gap", "cases": []}, "kind": "finding"}, {"id": "claim:0", "label": "claim idempotency_keys (handled)", "sub": "begin_nested · uq_idempotency_key_op_owner", "slot": "U12", "cov": {"state": "unmeasured", "cases": []}, "kind": "race"}], "tally": {"unmeasured": 3, "gap": 1}}, {"key": "answer", "slot": ["K4 responses", "K1 declared"], "name": "ANSWER", "plain": "the reply the caller gets — one body per ending, beside what the door promised to return", "stage": "exit", "conds": [{"id": "r:406d313dde", "label": "200 MeResponse", "sub": "6 fields", "slot": "K4", "cov": {"state": "partial", "cases": ["C1049", "C1050", "C1056", "C1057", "C389", "C390", "C391", "C392"], "conf": ["status"]}, "kind": "exit"}, {"id": "k1", "label": "declared vs produced", "sub": "declares 200 · produces 200 400 401 409 422 429 500", "slot": "K1", "cov": {"state": "gap", "cases": []}, "kind": "contract"}], "tally": {"partial": 1, "gap": 1}}, {"key": "uncaught", "slot": ["U11 failure"], "name": "UNCAUGHT", "plain": "the 500 — anything nobody caught, possible at any step", "stage": "anywhere", "conds": [{"id": "x:17b6cdc4d4", "label": "500 uncaught", "sub": "starlette ServerErrorMiddleware", "slot": "U11", "cov": {"state": "untested", "cases": []}, "kind": "exit"}], "tally": {"untested": 1}}, {"key": "client", "slot": ["frontend reason"], "name": "CLIENT", "plain": "the screen that reads the answer — can it tell the endings apart", "stage": "after the exit", "conds": [{"id": "r-56477c4fb6", "label": "reads status 409", "sub": "setupErrorMessage", "slot": "reason", "cov": {"state": "gap", "cases": []}, "kind": "client"}, {"id": "rf:r-56477c4fb6", "label": "reason-collapsed 409", "sub": "consent required vs setup in progress", "slot": "reason", "cov": {"state": "gap", "cases": []}, "kind": "finding"}], "tally": {"gap": 2}}], "states": {"covered": "a case proves it — the status and the detail, or the service raise", "partial": "a case reaches the status only — or it could be proving a different ending with the same status", "untested": "no case reaches it", "unmeasured": "no test can assert it today — effects, switch arms, provisions, races", "gap": "a hole the forms found in the contract or the screen — the fix is code, not another test"}, "cases": {"C1051": {"name": "test_setup_complete_blank_name_422_C1051", "file": "apps/api/tests/test_setup_routes.py", "state": "pass"}, "C1052": {"name": "test_setup_complete_too_many_allergens_422_C1052", "file": "apps/api/tests/test_setup_routes.py", "state": "pass"}, "C1048": {"name": "test_setup_complete_missing_key_400_C1048", "file": "apps/api/tests/test_setup_routes.py", "state": "pass"}, "C1057": {"name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057", "file": "apps/api/tests/test_setup_routes.py", "state": "pass"}, "C1061": {"name": "test_complete_setup_in_progress_raises_C1061", "file": "apps/api/tests/test_setup_service.py", "state": "pass"}, "C1055": {"name": "test_setup_complete_without_consent_409_C1055", "file": "apps/api/tests/test_setup_routes.py", "state": "pass"}, "C1065": {"name": "test_complete_setup_without_consent_raises_C1065", "file": "apps/api/tests/test_setup_service.py", "state": "pass"}, "C1067": {"name": "test_complete_setup_stale_consent_version_raises_C1067", "file": "apps/api/tests/test_setup_service.py", "state": "pass"}, "C1049": {"name": "test_setup_complete_success_then_me_reads_back_C1049", "file": "apps/api/tests/test_setup_routes.py", "state": "pass"}, "C1050": {"name": "test_setup_complete_replay_identical_count_one_C1050", "file": "apps/api/tests/test_setup_routes.py", "state": "pass"}, "C1056": {"name": "test_setup_complete_with_consent_200_C1056", "file": "apps/api/tests/test_setup_routes.py", "state": "pass"}, "C389": {"name": "test_setup_complete_with_exploration_creates_row_C389", "file": "apps/api/tests/test_exploration_preferences.py", "state": "pass"}, "C390": {"name": "test_setup_complete_folds_in_path_a_plus_C390", "file": "apps/api/tests/test_exploration_preferences.py", "state": "pass"}, "C391": {"name": "test_setup_complete_without_exploration_creates_empty_row_C391", "file": "apps/api/tests/test_exploration_preferences.py", "state": "pass"}, "C392": {"name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392", "file": "apps/api/tests/test_exploration_preferences.py", "state": "pass"}}}</script>
 
 <div class="artifact-page">
 
@@ -500,6 +599,7 @@
       </div>
       <div class="when" data-fx="when" id="when"></div>
       <div class="lg" id="when-lg"></div>
+      <div class="takeaway" id="tk1"></div>
       <p class="cap">one path, stage by stage</p>
     </div>
   </section>
@@ -513,6 +613,7 @@
       </div>
       <div class="mxwrap"><div class="mx" id="mx"></div></div>
       <div class="lg" id="mx-lg"></div>
+      <div class="takeaway" id="tk2"></div>
       <p class="cap">every path at once</p>
     </div>
   </section>
@@ -523,6 +624,7 @@
       <div class="chips" id="t-chips" role="group" aria-label="table"></div>
       <div class="tree" id="tree"></div>
       <div class="lg" id="tree-lg"></div>
+      <div class="takeaway" id="tk3"></div>
       <p class="cap">one table, everything known</p>
     </div>
   </section>
@@ -531,6 +633,7 @@
     <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>The joins</h2><span class="n">5 keys</span></div>
     <div class="panel">
       <div id="joins"></div>
+      <div class="takeaway" id="tk4"></div>
       <p class="cap">what hangs off a table</p>
     </div>
   </section>
@@ -539,7 +642,23 @@
     <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.13-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.13a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.13 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.13a.5.5 0 0 1-.96 0z"></path><path d="M20 3v4"></path><path d="M22 5h-4"></path><path d="M4 17v2"></path><path d="M5 18H3"></path></svg>Not shown yet</h2><span class="n">5 fields</span></div>
     <div class="panel">
       <div class="chips" id="new-chips"></div>
+      <div class="takeaway" id="tk5"></div>
       <p class="cap">what the command panel will select and the middle will show</p>
+    </div>
+  </section>
+
+  <section class="sec" data-sec="6">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>The robot</h2><span class="n" id="robot-n"></span></div>
+    <div class="panel">
+      <div class="cardhead">
+        <span class="sp"></span>
+        <button class="ib" type="button" id="robot-t" aria-pressed="false" aria-label="plates &harr; track"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="m16 21 4-4-4-4"></path><path d="M20 17H4"></path></svg></button>
+        <button class="ib" type="button" id="robot-replay">Replay</button>
+      </div>
+      <div class="robot" data-fx="robot" id="robot"></div>
+      <div class="lg" id="robot-lg"></div>
+      <div class="takeaway" id="tk6"></div>
+      <p class="cap" id="robot-cap" tabindex="0">one door, part by part</p>
     </div>
   </section>
 </div>
@@ -684,6 +803,17 @@ var MOTION = { on: true, finished: true };   /* animations read this before sche
   var RANK = ["rolled_back", "committed", "maybe_committed", "uncommitted", "read"];
   var say = function (b) { return b ? b.replace(/_/g, " ") : "read"; };
   var esc = function (s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); };
+
+  /* ── `take from this` — each pointer one plain line, every number READ ── */
+  var CORNER = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 10 5 5-5 5"></path>'
+             + '<path d="M4 4v7a4 4 0 0 0 4 4h12"></path></svg>';
+  function takeaway(id, lines) {
+    var h = document.getElementById(id);
+    if (!h) return;
+    h.innerHTML = '<span class="th">' + CORNER + "take from this</span>"
+      + lines.map(function (t) { return "<p>" + t + "</p>"; }).join("");
+  }
+  var DASH = " &mdash; ";
 
   /* ── tip (static pattern library) ───────────────────────────────── */
   function tipFor(stage) { var t = document.createElement("div"); t.className = "tip"; stage.appendChild(t); return t; }
@@ -1080,6 +1210,30 @@ var MOTION = { on: true, finished: true };   /* animations read this before sche
     host.appendChild(tx);
   })();
 
+  (function () {
+    var first = D.paths.filter(function (p) { return p.name === "first run"; })[0] || D.paths[0];
+    var firstStage = first.touches.length ? first.touches[0].stage : "";
+    var depN = first.touches.filter(function (t) { return t.stage === firstStage; }).length;
+    var stagesOf = {};
+    D.paths.forEach(function (p) {
+      p.touches.forEach(function (t) { if (t.table) { (stagesOf[t.table] = stagesOf[t.table] || {})[t.stage] = 1; } });
+    });
+    var lateStage = D.stages[D.stages.indexOf(firstStage) + 3] || "handler";
+    var only = Object.keys(stagesOf).filter(function (k) {
+      var ks = Object.keys(stagesOf[k]); return ks.length === 1 && ks[0] === lateStage;
+    });
+    var worst = D.paths.slice().sort(function (a, b) { return (b.n.rolled_back || 0) - (a.n.rolled_back || 0); })[0];
+    var rb = {}; worst.touches.forEach(function (t) { if (t.bucket === "rolled_back") rb[t.table] = (rb[t.table] || 0) + 1; });
+    var rbT = Object.keys(rb).sort(function (a, b) { return rb[b] - rb[a]; })[0];
+    takeaway("tk1", [
+      "the first touch happens at the " + esc(firstStage) + " stage, before the body is read" + DASH
+        + depN + " of " + first.touches.length + " touches on " + esc(first.name) + " land there",
+      only.length + " tables are touched only when the request reaches the " + esc(lateStage),
+      "a refusal after the " + esc(lateStage) + " still wrote" + DASH + rb[rbT] + " writes on " + esc(rbT)
+        + " are rolled back on the " + esc(worst.name) + " ending"
+    ]);
+  })();
+
   document.getElementById("when-replay").addEventListener("click", function () { buildWhen(true); });
   (function () {
     var b = document.getElementById("when-t");
@@ -1172,6 +1326,33 @@ var MOTION = { on: true, finished: true };   /* animations read this before sche
     var n = document.createElement("span");
     n.innerHTML = '<i style="background:transparent;border:1px dashed var(--rule)"></i>never';
     lg.appendChild(n);
+
+    var quiet = D.paths.filter(function (p) { return !p.touches.length; });
+    /* the status two endings share, where they write one table to different fates */
+    var byStatus = {};
+    D.paths.forEach(function (p) { (byStatus[p.status] = byStatus[p.status] || []).push(p); });
+    var pair = null, shared = null;
+    Object.keys(byStatus).forEach(function (st) {
+      if (pair || byStatus[st].length !== 2) return;
+      var a = byStatus[st][0], b = byStatus[st][1];
+      TBL.forEach(function (t) {
+        if (pair) return;
+        var fa = strongest(touchesOf(a, t.table)), fb = strongest(touchesOf(b, t.table));
+        if (fa !== "none" && fb !== "none" && fa !== fb && fa !== "read" && fb !== "read") {
+          pair = { st: st, a: a, b: b, fa: fa, fb: fb }; shared = t.table;
+        }
+      });
+    });
+    var off = TBL.filter(function (t) { return !t.inPanel; }).map(function (t) { return t.table; });
+    var lines = [
+      "nothing before the " + esc(D.stages[5]) + " touches a table" + DASH + quiet.length + " of "
+        + D.paths.length + " endings leave the database untouched"
+    ];
+    if (pair) lines.push("the two " + esc(pair.st) + "s write the same table and neither keeps it" + DASH
+      + esc(shared) + " is " + esc(say(pair.fa)) + " on " + esc(pair.a.name) + " and " + esc(say(pair.fb))
+      + " on " + esc(pair.b.name));
+    lines.push(off.map(esc).join(" and ") + " are touched by the door and never drawn by the Data panel");
+    takeaway("tk2", lines);
   })();
 
   /* ═══ 3 · THE TABLE ════════════════════════════════════════════════ */
@@ -1264,6 +1445,17 @@ var MOTION = { on: true, finished: true };   /* animations read this before sche
         wire(n, tip, stage, "<b>" + esc(n.getAttribute("data-s")) + " " + esc(n.getAttribute("data-p")) + "</b><br>"
           + (f === "none" ? "no step" : esc(say(f === "read" ? null : f)) + ' &middot; <span class="k">' + n.getAttribute("data-n") + " steps</span>"));
       });
+      var hitN = hit.length, claimL = claim
+        ? "a race on a unique key is handled here by " + esc(claim.idioms.join(" &middot; ")) + DASH
+          + esc(claim.race) + ", not left to a 500"
+        : "no unique-key race on " + esc(t.table) + DASH + "nothing to handle";
+      takeaway("tk3", [
+        "above the ring is what the Data panel draws today; below it is what only the paths can say",
+        esc(t.table) + " is touched on " + hitN + " of " + D.paths.length + " endings" + DASH
+          + "the fate dots say which kept the write",
+        claimL
+      ]);
+
       host.querySelectorAll('.newring, [data-ring="1"]').forEach(function (n) {
         wire(n, tip, stage, "below this ring the Data panel shows <b>nothing</b>");
       });
@@ -1313,6 +1505,14 @@ var MOTION = { on: true, finished: true };   /* animations read this before sche
       wire(d.querySelector(".jt"), tip, stage, w);
       host.appendChild(d);
     });
+    var longest = rows.slice().sort(function (a, b) { return b.places.length - a.places.length; })[0];
+    var tkey = rows.filter(function (r) { return /table/.test(r.j.key); })[0] || rows[1] || longest;
+    takeaway("tk4", [
+      "the " + esc(longest.j.key) + " key reaches " + longest.places.length + " places" + DASH
+        + "every fact can be opened where it is written",
+      "the " + esc(tkey.j.key) + " is what ties WHEN, WHICH and the tree together" + DASH
+        + tkey.places.length + " places name it"
+    ]);
   })();
 
   /* ═══ 5 · NOT SHOWN YET ════════════════════════════════════════════ */
@@ -1320,8 +1520,15 @@ var MOTION = { on: true, finished: true };   /* animations read this before sche
     var host = document.getElementById("new-chips");
     var stage = host.parentNode; stage.style.position = "relative";
     var tip = tipFor(stage);
-    P.fields.filter(function (f) { return f.flags.indexOf("new") >= 0 || f.flags.indexOf("feed") >= 0; })
-      .forEach(function (f) {
+    var shownNot = P.fields.filter(function (f) { return f.flags.indexOf("new") >= 0 || f.flags.indexOf("feed") >= 0; });
+    var feeds = shownNot.filter(function (f) { return f.flags.indexOf("feed") >= 0; });
+    takeaway("tk5", [
+      shownNot.length + " fields the forms carry are drawn nowhere in the lab today" + DASH
+        + "they are what the command panel will select and the middle will show",
+      feeds.map(function (f) { return esc(f.name); }).join(" and ") + (feeds.length === 1 ? " is " : " are ")
+        + "marked feed" + DASH + "in the arms-on feed but not in the lab's facts yet"
+    ]);
+    shownNot.forEach(function (f) {
         var b = document.createElement("span");
         b.className = "chip new"; b.tabIndex = 0; b.textContent = f.name;
         wire(b, tip, stage, "<b>" + esc(f.name) + "</b><br>" + esc(f.plain) + '<br><span class="k">' + esc(f.src) + "</span>");
@@ -1329,10 +1536,435 @@ var MOTION = { on: true, finished: true };   /* animations read this before sche
       });
   })();
 
+  /* ═══ 6 · THE ROBOT ════════════════════════════════════════════════
+     The door as a machine on end, wearing armour: one plate per condition,
+     read top to bottom in the order a request meets the parts. Every mark
+     reads its key in ROBOT — no label, count, state, stage, slot, case id
+     or plain line is typed here (spec §10.7). */
+  var buildRobot = null;
+  (function () {
+    var R = JSON.parse(document.getElementById("ROBOT").textContent);
+    var host = document.getElementById("robot");
+    var panel = host.closest(".panel");
+    var rtip = tipFor(panel);
+    var headN = document.getElementById("robot-n");
+
+    /* constants of the STANDARD for this endpoint kind — not this door's data */
+    var ROSTER = ["edge", "gate", "input", "handler", "effects", "answer", "uncaught", "client"];
+    var BAY_STAGE = "anywhere", SCREEN_STAGE = "after the exit";
+    var FAMILY = { exit: "out", contract: "out", branch: "choice", "switch": "choice",
+                   "switch-arm": "choice", "catch": "catch", effect: "write", race: "write",
+                   finding: "flag", client: "flag" };
+    var MISSRANK = ["gap", "untested", "unmeasured", "partial"];
+    var STATES = Object.keys(R.states);              /* legend order = the JSON's key order */
+    var LIMITS = ["armour is evidence, not defence &mdash; a solid plate says a test proves the condition",
+                  "plates are independent &mdash; a bare plate exposes nothing beside it",
+                  "a hatched plate is armour nobody can fit today, not armour nobody fitted"];
+    var ROBOTT = tRead("gabe:atlas:robot-t");
+    var rraf = null, rtimers = [];
+
+    /* ── the roster guard: never drop a row ─────────────────────────── */
+    var byKey = {}; R.levels.forEach(function (l) { byKey[l.key] = l; });
+    var order = R.levels.slice();
+    ROSTER.forEach(function (k, i) {
+      if (byKey[k]) return;
+      var g = { key: k, name: k.toUpperCase(), plain: null, slot: [], conds: [], tally: {}, ghost: true,
+                stage: k === "uncaught" ? BAY_STAGE : (k === "client" ? SCREEN_STAGE : null) };
+      var at = order.length;
+      for (var j = 0; j < order.length; j++) {
+        var ri = ROSTER.indexOf(order[j].key);
+        if (ri > i) { at = j; break; }
+      }
+      order.splice(at, 0, g);
+    });
+    var BAY = order.filter(function (l) { return l.stage === BAY_STAGE; })[0] || null;
+    var SCREEN = order.filter(function (l) { return l.stage === SCREEN_STAGE; })[0] || null;
+    var ROWS = order.filter(function (l) { return l !== BAY && l !== SCREEN; });
+
+    /* ── the readings every card and the head share ─────────────────── */
+    function cov(l) { return (l.tally && l.tally.covered) || 0; }
+    function allConds() {
+      var out = []; order.forEach(function (l) { l.conds.forEach(function (c) { out.push(c); }); });
+      return out;
+    }
+    function stateCount(w) {
+      return allConds().filter(function (c) { return c.cov.state === w; }).length;
+    }
+    function caseUnion(l) {
+      var seen = [], have = {};
+      l.conds.forEach(function (c) {
+        (c.cov.cases || []).forEach(function (id) { if (!have[id]) { have[id] = 1; seen.push(id); } });
+      });
+      return seen;
+    }
+    function missing(l) {
+      for (var r = 0; r < MISSRANK.length; r++) {
+        for (var i = 0; i < l.conds.length; i++) {
+          if (l.conds[i].cov.state === MISSRANK[r]) return l.conds[i];
+        }
+      }
+      return null;
+    }
+    function statusOf(label) { var m = /^(\d{3})\b/.exec(label || ""); return m ? m[1] : null; }
+
+    /* ── the cards (§3 · §4 · §5) — six rows, numbers first, plain last ── */
+    function rule() { return '<span style="display:block;border-top:1px solid var(--muted);opacity:.5;margin:5px 0 4px"></span>'; }
+    function miniRow(l) {
+      return STATES.map(function (w) {
+        var n = (l.tally && l.tally[w]) || 0;
+        return n + ' <i class="plate mini' + (n ? "" : " zero") + '" data-state="' + w + '" data-on="1"></i>';
+      }).join(" &middot; ");
+    }
+    function partCard(l) {
+      var n = l.conds.length, ids = caseUnion(l), m = missing(l);
+      var r1 = "<b>" + esc(l.name) + "</b> &middot; " + (l.ghost ? "not emitted" : cov(l) + " of " + n + " covered");
+      var r3 = l.stage
+        ? esc(l.stage) + (l.slot.length ? " &middot; " + l.slot.map(function (x) { return esc(x.split(" ")[0]); }).join(" ") : "")
+        : "&mdash;";
+      if (n && !l.conds.some(function (c) { return c.kind === "exit"; })) r3 += " &middot; ends nothing";
+      var r4 = m ? "missing &middot; " + esc(m.label) + " (" + esc(m.cov.state) + ")" : "missing &middot; &mdash;";
+      var r5 = ids.length
+        ? ids.length + " cases &middot; " + ids.slice(0, 3).map(esc).join(" ") + (ids.length > 3 ? " +" + (ids.length - 3) : "")
+        : "0 cases";
+      return r1 + "<br>" + miniRow(l) + '<br><span class="k">' + r3 + "</span><br>" + r4 + '<br><span class="k">' + r5
+        + "</span>" + rule() + (l.plain ? esc(l.plain) : "&mdash;");
+    }
+    function condCard(c) {
+      var st = statusOf(c.label);
+      var r1 = (st ? "<b>" + st + "</b> &middot; " : "") + esc(c.cov.state) + " &middot; "
+        + (c.cov.cases || []).length + " cases"
+        + (c.cov.conf && c.cov.conf.length ? " &middot; " + c.cov.conf.map(esc).join(" &middot; ") : "");
+      var body = st ? c.label.replace(/^\d{3}\s*/, "") : c.label;
+      var r3 = c.sub ? '<span class="k">' + esc(c.sub) + "</span><br>" : "";
+      var r4 = esc(FAMILY[c.kind] || c.kind) + " &middot; " + esc(c.kind) + " &middot; " + esc(c.slot);
+      var cs = c.cov.cases || [], first = cs.length ? R.cases[cs[0]] : null;
+      var r5 = first ? esc(first.name) + " &middot; " + esc(first.state) + (cs.length > 1 ? " +" + (cs.length - 1) : "")
+                     : "&mdash;";
+      return r1 + "<br>" + esc(body) + "<br>" + r3 + '<span class="k">' + r4 + "</span><br>" + r5
+        + rule() + esc(R.states[c.cov.state] || "");
+    }
+
+    /* ── §5 · the card opens BESIDE the chassis, never over the row ──── */
+    var chassisEl = null;
+    function placeRobot(anchor, html, above) {
+      var sb = panel.getBoundingClientRect(), ab = anchor.getBoundingClientRect();
+      rtip.className = "tip wide";
+      rtip.innerHTML = html;
+      rtip.setAttribute("data-show", "true");
+      var cw = rtip.offsetWidth, ch = rtip.offsetHeight, x, y;
+      var right = chassisEl ? chassisEl.getBoundingClientRect().right - sb.left : 0;
+      var bn = host.querySelector(".bname");
+      if (bn) right = Math.max(right, bn.getBoundingClientRect().right - sb.left);
+      if (sb.width >= right + cw + 16) { x = right + 16; y = ab.top - sb.top; }
+      else {
+        x = Math.min(Math.max(0, ab.left - sb.left), sb.width - cw - 4);
+        y = above ? ab.top - sb.top - ch - 8 : ab.bottom - sb.top + 8;
+      }
+      rtip.style.left = Math.max(0, Math.min(x, sb.width - cw - 4)) + "px";
+      rtip.style.top = Math.max(0, Math.min(y, sb.height - ch)) + "px";
+    }
+    function wireR(node, html, above, onIn, onOut) {
+      function show() { placeRobot(node, typeof html === "function" ? html() : html, above); if (onIn) onIn(); }
+      function hide() { hideTip(rtip); if (onOut) onOut(); }
+      node.addEventListener("mouseenter", show);
+      node.addEventListener("mouseleave", hide);
+      node.addEventListener("focus", show);
+      node.addEventListener("blur", hide);
+    }
+
+    function el(tag, cls, txt) {
+      var n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (txt != null) n.textContent = txt;
+      return n;
+    }
+    function svgEl(tag, attrs) {
+      var n = document.createElementNS("http://www.w3.org/2000/svg", tag);
+      for (var k in attrs) n.setAttribute(k, attrs[k]);
+      return n;
+    }
+    function plateFor(c) {
+      var p = el("i", "plate");
+      p.setAttribute("data-state", c.cov.state);
+      p.setAttribute("data-id", c.id);
+      p.tabIndex = 0;
+      wireR(p, function () { return condCard(c); }, false,
+        function () { p.classList.add("hot"); var sg = p.closest(".seg"); if (sg) sg.classList.add("hot"); },
+        function () { p.classList.remove("hot"); var sg = p.closest(".seg"); if (sg) sg.classList.remove("hot"); });
+      return p;
+    }
+    function platesOf(l, above) {
+      var box = el("div", "plates");
+      if (!l.conds.length) { box.appendChild(el("i", "slab")); return box; }
+      l.conds.forEach(function (c) { box.appendChild(plateFor(c)); });
+      return box;
+    }
+    function readoutOf(l, cls) {
+      var r = el("span", cls || "readout");
+      r.setAttribute("data-v", cov(l) + "/" + l.conds.length);
+      wireR(r, function () { return partCard(l); }, true);
+      return r;
+    }
+    function dimOthers(keep, on) {
+      host.querySelectorAll(".seg, .bay, .screen").forEach(function (n) {
+        if (n !== keep) n.classList.toggle("dim", on);
+      });
+    }
+
+    /* ── the figure ─────────────────────────────────────────────────── */
+    buildRobot = function (play) {
+      if (rraf) { cancelAnimationFrame(rraf); rraf = null; }
+      rtimers.forEach(clearTimeout); rtimers = [];
+      var still = !MOTION.on || window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        || (MOTION.finished && play !== true);
+      host.setAttribute("data-still", still ? "1" : "0");
+      host.setAttribute("data-t", ROBOTT ? "1" : "0");
+      host.removeAttribute("data-lit");
+      host.innerHTML = "";
+
+      var H = ROWS.length * 34;
+      var chassis = el("div", "chassis");
+      var body = el("div", "rbody");
+      chassis.appendChild(body);
+      chassisEl = chassis;
+
+      /* the spine: sockets, nodes, stubs, and the bead that falls through them */
+      var sv = svgEl("svg", { "class": "spine", viewBox: "0 0 26 " + H, width: 26, height: H, "aria-hidden": "true" });
+      sv.appendChild(svgEl("line", { x1: 17, y1: -12, x2: 17, y2: H + 12, stroke: "var(--ink-soft)", "stroke-width": 2 }));
+      sv.appendChild(svgEl("circle", { cx: 17, cy: -12, r: 3.5, fill: "var(--ink-soft)" }));
+      sv.appendChild(svgEl("circle", { cx: 17, cy: H + 12, r: 3.5, fill: "var(--ink-soft)" }));
+      var nodeY = ROWS.map(function (_, i) { return i * 34 + 17; });
+      nodeY.forEach(function (y) {
+        sv.appendChild(svgEl("line", { x1: 21.5, y1: y, x2: 26, y2: y, stroke: "var(--ink-soft)", "stroke-width": 1 }));
+        sv.appendChild(svgEl("circle", { cx: 17, cy: y, r: 4.5, fill: "var(--card)",
+                                         stroke: "var(--ink-soft)", "stroke-width": 1.5 }));
+      });
+      body.appendChild(sv);
+
+      /* one row per numbered part */
+      var segs = el("div", "segs");
+      var rowEls = [];
+      ROWS.forEach(function (l, i) {
+        var sg = el("div", "seg");
+        sg.setAttribute("data-key", l.key);
+        var ord = el("span", "ord", String(i + 1));
+        var lab = el("span", "lab", l.name);
+        var pl = platesOf(l);
+        var rd = readoutOf(l);
+        sg.appendChild(ord); sg.appendChild(lab); sg.appendChild(pl); sg.appendChild(rd);
+        [ord, lab].forEach(function (n) {
+          wireR(n, function () { return partCard(l); }, i >= ROWS.length - 1,
+            function () { sg.classList.add("hot"); dimOthers(sg, true); },
+            function () { sg.classList.remove("hot"); dimOthers(sg, false); });
+        });
+        segs.appendChild(sg);
+        rowEls.push({ l: l, sg: sg, ord: ord, rd: rd, plates: [].slice.call(pl.querySelectorAll(".plate")) });
+      });
+      body.appendChild(segs);
+
+      /* the 500 bay — not a step; possible at any step */
+      var bayEls = null;
+      if (BAY) {
+        var bay = el("div", "bay");
+        var bn = el("span", "bname", BAY.name);
+        var bb = el("div", "bbox");
+        var ticks = [];
+        nodeY.forEach(function (y) {
+          var tk = el("i", "tick");
+          tk.style.top = y + "px";
+          bb.appendChild(tk); ticks.push(tk);
+        });
+        var bp = platesOf(BAY);
+        bp.style.flexDirection = "column";
+        bb.appendChild(bp);
+        var br = readoutOf(BAY, "bread");
+        [bn, br].forEach(function (n) {
+          wireR(n, function () { return partCard(BAY); }, true,
+            function () { bay.classList.add("hot"); dimOthers(bay, true); },
+            function () { bay.classList.remove("hot"); dimOthers(bay, false); });
+        });
+        bay.appendChild(bn); bay.appendChild(bb); bay.appendChild(br);
+        chassis.appendChild(bay);
+        bayEls = { bay: bay, ticks: ticks, rd: br, plates: [].slice.call(bp.querySelectorAll(".plate")) };
+      }
+      host.appendChild(chassis);
+
+      /* the answer leaving the machine, and the screen that reads it */
+      var gapEl = null, scrEls = null;
+      if (SCREEN) {
+        gapEl = el("div", "gapline");
+        host.appendChild(gapEl);
+        var sc = el("div", "screen");
+        var slab = el("span", "lab", SCREEN.name);
+        var sp = platesOf(SCREEN);
+        var sr = readoutOf(SCREEN, "readout");
+        sc.appendChild(slab); sc.appendChild(sp); sc.appendChild(sr);
+        [slab, sr].forEach(function (n) {
+          wireR(n, function () { return partCard(SCREEN); }, true,
+            function () { sc.classList.add("hot"); dimOthers(sc, true); },
+            function () { sc.classList.remove("hot"); dimOthers(sc, false); });
+        });
+        host.appendChild(sc);
+        scrEls = { sc: sc, rd: sr, plates: [].slice.call(sp.querySelectorAll(".plate")) };
+      }
+
+      /* ── the finished frame ───────────────────────────────────────── */
+      function stampHead() {
+        headN.innerHTML = order.length + " parts &middot; " + allConds().length + " conditions &middot; "
+          + order.reduce(function (a, l) { return a + cov(l); }, 0) + " covered";
+      }
+      function fill(r, animate) {
+        r.textContent = r.getAttribute("data-v");
+        if (animate) { r.classList.remove("stamp"); void r.offsetWidth; r.classList.add("stamp"); }
+      }
+      function finished() {
+        rowEls.forEach(function (r) {
+          r.ord.classList.add("lit");
+          r.plates.forEach(function (p) { p.setAttribute("data-on", "1"); });
+          fill(r.rd, false);
+        });
+        if (bayEls) { bayEls.plates.forEach(function (p) { p.setAttribute("data-on", "1"); });
+                      bayEls.ticks.forEach(function (t) { t.style.opacity = ".6"; }); fill(bayEls.rd, false); }
+        if (gapEl) gapEl.setAttribute("data-on", "1");
+        if (scrEls) { scrEls.plates.forEach(function (p) { p.setAttribute("data-on", "1"); }); fill(scrEls.rd, false); }
+        stampHead();
+      }
+      if (still) { finished(); return; }
+
+      /* ── §8 · one replayable pass: the bead falls through the armour ── */
+      rowEls.forEach(function (r) { r.plates.forEach(function (p) { p.setAttribute("data-on", "0"); }); r.rd.textContent = ""; });
+      if (bayEls) { bayEls.plates.forEach(function (p) { p.setAttribute("data-on", "0"); }); bayEls.rd.textContent = ""; }
+      if (scrEls) { scrEls.plates.forEach(function (p) { p.setAttribute("data-on", "0"); }); scrEls.rd.textContent = ""; }
+      if (gapEl) gapEl.setAttribute("data-on", "0");
+      headN.innerHTML = "";
+
+      var bead = svgEl("circle", { cx: 17, cy: -12, r: 3, fill: "var(--accent)", "class": "bead" });
+      sv.appendChild(bead);
+
+      var FALL = 150, TRAVEL = 90, EXIT = 180, GAPW = 180;
+      var plan = [], t = FALL;
+      rowEls.forEach(function (r, i) {
+        var dwell = 55 * r.plates.length + 120;
+        plan.push({ at: t, dwell: dwell, r: r, i: i });
+        t += dwell + TRAVEL;
+      });
+      var leaveY = t - TRAVEL + EXIT;
+      function later(fn, ms) { rtimers.push(setTimeout(fn, ms)); }
+
+      plan.forEach(function (st) {
+        later(function () {
+          st.r.ord.classList.add("lit");
+          st.r.plates.forEach(function (p, k) { later(function () { p.setAttribute("data-on", "1"); }, 55 * k); });
+          if (st.i === 0 && bayEls) bayEls.plates.forEach(function (p) { p.setAttribute("data-on", "1"); });
+          if (bayEls && bayEls.ticks[st.i]) {
+            var tk = bayEls.ticks[st.i];
+            tk.style.opacity = "1";
+            later(function () { tk.style.opacity = ".6"; }, 200);
+          }
+        }, st.at);
+        later(function () { fill(st.r.rd, true); }, st.at + st.dwell);
+      });
+      later(function () { if (bayEls) fill(bayEls.rd, true); }, leaveY);
+      later(function () { if (gapEl) gapEl.setAttribute("data-on", "1"); }, leaveY + 40);
+      if (scrEls) {
+        scrEls.plates.forEach(function (p, k) {
+          later(function () { p.setAttribute("data-on", "1"); }, leaveY + GAPW + 55 * k);
+        });
+        later(function () { fill(scrEls.rd, true); }, leaveY + GAPW + 55 * scrEls.plates.length);
+      }
+      later(stampHead, leaveY + GAPW + 55 * ((scrEls ? scrEls.plates.length : 0) + 1));
+
+      var total = leaveY + GAPW + 55 * ((scrEls ? scrEls.plates.length : 0) + 1) + 140;
+      var t0 = null;
+      function beadAt(ms) {
+        if (ms <= FALL) return -12 + (nodeY[0] + 12) * (ms / FALL);
+        for (var i = 0; i < plan.length; i++) {
+          var st = plan[i];
+          if (ms <= st.at + st.dwell) return nodeY[i];
+          if (i + 1 < plan.length && ms < plan[i + 1].at) {
+            var f = (ms - st.at - st.dwell) / TRAVEL;
+            return nodeY[i] + (nodeY[i + 1] - nodeY[i]) * f;
+          }
+        }
+        var last = nodeY[nodeY.length - 1];
+        var f2 = Math.min(1, (ms - (plan[plan.length - 1].at + plan[plan.length - 1].dwell)) / EXIT);
+        return last + (H + 12 - last) * f2;
+      }
+      function frame(now) {
+        if (t0 === null) t0 = now;
+        var ms = now - t0;
+        bead.setAttribute("cy", beadAt(Math.min(ms, leaveY)).toFixed(2));
+        if (ms >= leaveY) bead.setAttribute("opacity", String(Math.max(0, 1 - (ms - leaveY) / 240)));
+        if (ms < total) rraf = requestAnimationFrame(frame);
+        else { rraf = null; if (bead.parentNode) bead.parentNode.removeChild(bead); }
+      }
+      rraf = requestAnimationFrame(frame);
+    };
+
+    /* ── the legend: five real plates, the word beside each ─────────── */
+    (function () {
+      var lg = document.getElementById("robot-lg");
+      STATES.forEach(function (w) {
+        var sp = document.createElement("span");
+        var p = el("i", "plate");
+        p.setAttribute("data-state", w); p.setAttribute("data-on", "1"); p.tabIndex = 0;
+        sp.appendChild(p);
+        sp.appendChild(document.createTextNode(w));
+        wireR(p, function () {
+          return "<b>" + esc(w) + "</b> &middot; " + stateCount(w) + " of " + allConds().length
+            + rule() + esc(R.states[w]);
+        }, true,
+          function () { host.setAttribute("data-lit", w); },
+          function () { host.removeAttribute("data-lit"); });
+        lg.appendChild(sp);
+      });
+      wireR(document.getElementById("robot-cap"),
+        LIMITS.join("<br>"), true);
+    })();
+
+    (function () {
+      var conds = allConds(), nCov = conds.filter(function (c) { return c.cov.state === "covered"; }).length;
+      var armour = order.filter(function (l) { return cov(l) > 0; }).map(function (l) { return l.name; });
+      var bare = order.filter(function (l) {
+        return cov(l) === 0 && l.conds.length && l.conds.some(function (c) { return c.cov.state === "untested"; });
+      }).slice(0, 2);
+      var sts = bare.map(function (l) {
+        var seen = [];
+        l.conds.forEach(function (c) { var m = statusOf(c.label); if (m && seen.indexOf(m) < 0) seen.push(m); });
+        return seen[0];
+      }).filter(Boolean);
+      takeaway("tk6", [
+        "only the " + esc((armour[0] || "").toLowerCase()) + " is wearing armour" + DASH + nCov + " of "
+          + conds.length + " conditions are proven, all of them in the " + esc(armour.join(" and ")) + " row",
+        bare.map(function (l) { return esc(l.name); }).join(" and ") + " are untested end to end" + DASH
+          + "no case reaches a " + sts.join(" or a "),
+        "hatching is not a defect" + DASH + stateCount("unmeasured")
+          + " conditions cannot be asserted by any test today (effects, switch arms, provisions, races)"
+      ]);
+    })();
+
+    document.getElementById("robot-replay").addEventListener("click", function () { buildRobot(true); });
+    (function () {
+      var b = document.getElementById("robot-t");
+      b.setAttribute("aria-pressed", String(ROBOTT));
+      wireR(b, "plates &harr; track", true);
+      b.addEventListener("click", function () {
+        ROBOTT = !ROBOTT; tWrite("gabe:atlas:robot-t", ROBOTT);
+        b.setAttribute("aria-pressed", String(ROBOTT));
+        buildRobot();
+      });
+    })();
+    buildRobot();
+    var rrt = null;
+    window.addEventListener("resize", function () { clearTimeout(rrt); rrt = setTimeout(function () { buildRobot(); }, 180); });
+  })();
+
   /* ── H4 · the motion contract ───────────────────────────────────── */
   window.FXREPLAY = window.FXREPLAY || {};
   window.FXREPLAY.when = function () { buildWhen(true); };          /* Replay: from zero, always */
   window.FXBUILD = { when: function () { buildWhen(false); } };        /* a rebuild: the option decides — finished by default */
+  window.FXREPLAY.robot = function () { buildRobot(true); };        /* after the FXBUILD literal above */
+  window.FXBUILD.robot = function () { buildRobot(false); };
   window.__rebuildMotion = function () {
     Object.keys(window.FXBUILD).forEach(function (k) { window.FXBUILD[k](); });
   };
