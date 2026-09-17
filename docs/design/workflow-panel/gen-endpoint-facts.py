@@ -47,8 +47,187 @@ def load_workflows() -> list:
     return json.loads(r.stdout) if r.returncode == 0 and r.stdout else []
 
 
+PHASES = ("middleware", "security", "dependency", "body-parse", "validation", "handler", "uncaught")   # _a3_forms.PHASES + the body-parse split
+
+
+def _short_detail(d):
+    """`{'detail': 'Rate limit exceeded. Try again shortly.'}` → the sentence; a plain string stays."""
+    if not d:
+        return None
+    m = re.match(r"^\{'detail': '(.*)'\}$", str(d))
+    return m.group(1) if m else str(d)
+
+
+def forms_slice(fj: dict, ID: str, ep: dict) -> dict:
+    """The door's forms RESOLVED for a renderer: every chain ref replaced by the record it names, every effect step by its
+    table and op, every test ref by the case it names. Nothing invented — a ref the feed cannot resolve is kept as the
+    bare id with `unresolved: True`. Arms that are off leave their keys absent (D12), and the slice says which arms were on."""
+    steps = fj.get("steps") or {}
+    test_cases = fj.get("test_cases") or {}
+    fe = fj.get("frontend") or {}
+    produced = ep.get("produced") or []
+    returns = ep.get("returns") or []
+    frame = ep.get("framework_exits") or []
+    rows = {}
+    for r in produced:
+        rows[r["id"]] = dict(r, row="produced")
+    for r in frame:
+        rows[r["id"]] = dict(r, row="framework")
+    for r in returns:
+        rows[r["id"]] = dict(r, row="return")
+    pre = {g["id"]: g for g in (ep.get("preconditions") or [])}
+    branches = {b["id"]: b for b in (ep.get("branches") or [])}
+    switches = {w["id"]: w for w in (ep.get("switches") or [])}
+    catches = {c["id"]: c for c in ((ep.get("failure") or {}).get("catches") or [])}
+    responses = ep.get("responses") or {}
+
+    def case_rec(t):
+        c = test_cases.get(t.get("case")) or {}
+        return {"case": t.get("case"), "conf": t.get("conf"), "line": t.get("line"),
+                "name": c.get("name"), "file": c.get("file"), "state": c.get("state"), "corpus": c.get("corpus")}
+
+    def exit_rec(ref):
+        r = rows.get(ref)
+        if not r:
+            return {"id": ref, "unresolved": True}
+        kind = "success" if r["row"] == "return" else ("framework" if r["row"] == "framework" else
+                ("uncaught" if r.get("phase") == "uncaught" else ("validation" if r.get("phase") == "validation" else "refusal")))
+        return {"id": ref, "kind": kind, "row": r["row"], "status": r.get("status"), "phase": r.get("phase") or ("handler" if r["row"] == "return" else None),
+                "at": r.get("at"), "detail": _short_detail(r.get("detail")), "code": r.get("code"), "via": r.get("via"),
+                "pred": r.get("pred"), "state": r.get("state"), "form": r.get("form"), "split": r.get("split"),
+                "reason": r.get("reason"), "tests": [case_rec(t) for t in (r.get("tests") or [])],
+                "response": responses.get(ref)}
+
+    def switch_rec(ref):
+        w = switches.get(ref)
+        if not w:
+            return {"id": ref, "unresolved": True}
+        o = {"id": ref, "kind": w.get("kind"), "changes_exit": w.get("changes_exit"), "scope": w.get("scope"), "via": w.get("via")}
+        if w.get("kind") == "binding":
+            o.update({"port": w.get("port"), "fn": w.get("fn"), "anchor": w.get("anchor"),
+                      "branches": [{"impl": b.get("impl"), "pred": b.get("pred"), "binding": b.get("binding"), "ends": b.get("ends")} for b in (w.get("branches") or [])],
+                      "proves": w.get("proves")})
+        elif w.get("kind") == "value":
+            o.update({"anchor": w.get("anchor"), "chain": w.get("chain"), "branches": w.get("branches"), "depth": w.get("depth"),
+                      "settings": sorted({b.get("setting") for b in (w.get("branches") or []) if b.get("setting")})})
+        elif w.get("kind") == "flag":
+            o.update({"settings": w.get("settings"), "expr": w.get("expr"), "when": w.get("when"), "refs": w.get("refs"), "settings_class": w.get("settings_class")})
+        return o
+
+    def step_rec(c, i):
+        k = c.get("kind"); o = {"i": i, "kind": k, "phase": c.get("phase"), "hit": c.get("hit"), "at": c.get("at"), "ref": c.get("ref")}
+        if k == "step":
+            o["label"] = c.get("call"); o["sub"] = "middleware" if c.get("phase") == "middleware" else c.get("phase")
+        elif k == "gate":
+            x = exit_rec(c["ref"]); o["status"] = x.get("status"); o["label"] = (str(x.get("status") or "?") + " " + (x.get("detail") or x.get("code") or x.get("reason") or "")).strip()
+            o["sub"] = x.get("via") or x.get("pred"); o["split"] = c.get("split"); o["cond"] = c.get("cond"); o["exit_kind"] = x.get("kind")
+        elif k == "switch":
+            w = switch_rec(c["ref"]); o["label"] = w.get("kind")
+            st = w.get("settings"); o["sub"] = w.get("port") or (", ".join(sorted(st)) if isinstance(st, dict) else ", ".join(st) if isinstance(st, list) else None) or w.get("via")
+            o["switch_kind"] = w.get("kind")
+        elif k == "branch":
+            b = branches.get(c.get("ref")) or {}; o["label"] = b.get("pred") or "fall-through"; o["sub"] = "branch"
+        elif k in ("call", "collapsed"):
+            fn = c.get("fn") or ""; o["label"] = c.get("call") or fn.split("::")[-1]; o["fn"] = fn; o["reason"] = c.get("reason"); o["sub"] = fn.split("::")[0]
+        elif k == "catch":
+            ct = catches.get(c.get("ref")) or next((v for v in catches.values() if v.get("at") == c.get("at")), {})
+            o["label"] = c.get("cls") or ", ".join(ct.get("types") or []) or "catch"; o["sub"] = c.get("op") or ct.get("outcome")
+            o["answers"] = ct.get("answers"); o["fn"] = ct.get("fn"); o["ref"] = ct.get("id"); o["catch_kind"] = c.get("op") or ct.get("outcome")
+        elif k == "exit":
+            x = exit_rec(c["ref"]); o["label"] = str(x.get("status") or "?"); o["sub"] = x.get("kind"); o["status"] = x.get("status"); o["exit_kind"] = x.get("kind")
+        return o
+
+    def eff_rec(p):
+        e = p.get("effects") or {}
+        buckets = {b: set(e.get(b) or []) for b in ("committed", "maybe_committed", "rolled_back", "uncommitted")}
+        out = []
+        for st in (e.get("steps") or []):
+            sid = st.get("step") if isinstance(st, dict) else st
+            rec = steps.get(sid) or {}
+            bucket = next((b for b, ids in buckets.items() if sid in ids), None)
+            out.append({"step": sid, "table": rec.get("table"), "op": rec.get("op"), "model": rec.get("model"), "fn": rec.get("fn"),
+                        "at": rec.get("at"), "cond": rec.get("cond"), "race": rec.get("race"),
+                        "dependency": bool(st.get("dependency")) if isinstance(st, dict) else False,
+                        "via": st.get("via") if isinstance(st, dict) else None, "bucket": bucket})
+        return {"dependency": e.get("dependency"), "steps": out, "may_follow_commits": e.get("may_follow_commits"),
+                "n": {b: len(ids) for b, ids in buckets.items()},
+                "tables": sorted({o["table"] for o in out if o.get("table")}),
+                "writes": sorted({o["table"] for o in out if o.get("table") and o.get("op") in ("add", "update", "delete", "insert", "upsert", "merge", "bulk_insert", "execute", "write")})}
+
+    def drawn_name(p, x):
+        tok = (p.get("names") or {}).get("token"); det = _short_detail((p.get("names") or {}).get("detail"))
+        if x.get("kind") == "success":
+            return {"fall-through": "first run", "REPLAY": "replay", "completed": "already done"}.get(tok, "success")
+        if x.get("kind") == "uncaught":
+            return "uncaught"
+        if x.get("kind") == "framework":
+            return (x.get("reason") or x.get("code") or "body") + " (framework)"
+        if x.get("kind") == "validation":
+            return "validation"
+        pred = x.get("pred") or ""
+        if x.get("status") == 429:
+            return "rate limit " + ("(sensitive)" if "_sensitive" in pred else "(global)" if "_global" in pred else "")
+        return (det or x.get("via") or str(x.get("status"))).strip()
+
+    paths = []
+    for p in (ep.get("paths") or []):
+        x = exit_rec((p.get("exit") or {}).get("id"))
+        chain = [step_rec(c, i) for i, c in enumerate(p.get("chain") or [])]
+        names = dict(p.get("names") or {})
+        names["drawn"] = drawn_name(p, x); names["detail"] = _short_detail(names.get("detail"))
+        names["phase_status"] = f"{p.get('phase')} · {p.get('status')}"
+        paths.append({"id": p["id"], "status": p.get("status"), "kind": x.get("kind"), "phase": p.get("phase"), "state": p.get("state"),
+                      "names": names, "exit": x, "chain": chain, "effects": eff_rec(p),
+                      "switches": [switch_rec(w) for w in (p.get("switches") or [])],
+                      "tests": [case_rec(t) for t in (p.get("tests") or [])],
+                      "partial": p.get("partial"), "proven_by": p.get("proven_by"), "anywhere": p.get("anywhere"),
+                      "n": {"steps": len(chain), "gates": sum(1 for c in chain if c["kind"] == "gate"), "catches": sum(1 for c in chain if c["kind"] == "catch"),
+                            "branches": sum(1 for c in chain if c["kind"] == "branch"), "calls": sum(1 for c in chain if c["kind"] in ("call", "collapsed"))}})
+    # exits in request order: every produced / framework / return row, with the paths that end there
+    by_exit = {}
+    for p in paths:
+        by_exit.setdefault(p["exit"]["id"], []).append(p["id"])
+    exits = []
+    for rid in list(rows):
+        if rows[rid]["row"] == "return" and rows[rid].get("status") is None:
+            continue   # a callee's own return arm — carried in `branches` / `returns`, never an exit of the door
+        x = exit_rec(rid); x["paths"] = by_exit.get(rid, [])
+        exits.append(x)
+    exits.sort(key=lambda x: (PHASES.index(x["phase"]) if x.get("phase") in PHASES else len(PHASES), x.get("status") or 0))
+    stage_of = {}
+    for x in exits:
+        stage_of.setdefault(x.get("phase"), []).append(x["id"])
+    fe_pieces = fe.get("pieces") or {}
+    def fe_named(sub):
+        return {k: v for k, v in fe_pieces.items() if sub in k}
+    hook = next((v | {"piece": k} for k, v in fe_pieces.items() if v.get("form") == "hook" and any(c.get("endpoint") == ID for c in (v.get("calls") or []))), None)
+    reason_sites = [s for s in ((fe.get("reasons") or {}).get("sites") or []) if ID in (s.get("endpoints") or [])]
+    fe_findings = [f for f in ((fj.get("arm_findings") or {}).get("frontend") or []) if f.get("endpoint") == ID]
+    guard = fe_pieces.get("fe:apps/web/src/routes/RequireSetup.tsx#RequireSetup")
+    frontend = {"hook": hook, "reason_sites": reason_sites, "findings": fe_findings,
+                "guard": (guard | {"piece": "fe:apps/web/src/routes/RequireSetup.tsx#RequireSetup"}) if guard else None,
+                "screens": {k: v for k, v in fe_named("InitialSetupScreen.tsx").items()},
+                "client": fe.get("client"), "present": bool(fe)}
+    return {"paths": paths, "exits": exits, "stages": [{"phase": ph, "exits": stage_of.get(ph, [])} for ph in PHASES],
+            "preconditions": [dict(g, exit_rec=exit_rec(g.get("exit"))) for g in (ep.get("preconditions") or [])],
+            "branches": list(branches.values()), "switches": [switch_rec(i) for i in switches],
+            "collapsed": ep.get("collapsed") or [], "returns": returns,
+            "repeat": ep.get("repeat"), "auth": ep.get("auth"), "rate": ep.get("rate"), "responses": responses,
+            "failure": ep.get("failure"), "findings": ep.get("findings") or [], "arm_findings": ep.get("arm_findings") or {},
+            "declared": ep.get("declared"), "framework_exits": frame, "tests": ep.get("tests"), "slots": ep.get("slots"),
+            "frontend": frontend, "phases": list(PHASES),
+            "counts": {"paths": len(paths), "exits": len(exits), "produced": len(produced), "returns": len(returns), "framework": len(frame),
+                       "switches": len(switches), "preconditions": len(pre), "catches": len(catches), "branches": len(branches),
+                       "by_kind": dict(collections.Counter(p["kind"] for p in paths)),
+                       "by_status": {str(k): v for k, v in sorted(collections.Counter(p["status"] for p in paths).items(), key=lambda kv: (kv[0] is None, kv[0]))},
+                       "steps_max": max((p["n"]["steps"] for p in paths), default=0)}}
+
+
 def main() -> int:
-    target = sys.argv[1] if len(sys.argv) > 1 else "POST /setup/complete"
+    argv = list(sys.argv[1:]); forms_path = None
+    if "--forms" in argv:
+        i = argv.index("--forms"); forms_path = Path(argv[i + 1]).expanduser(); del argv[i:i + 2]
+    target = argv[0] if argv else "POST /setup/complete"
     ID = "endpoint:" + target
     c4 = parse_js(EX / "c4-graph.js")
     lv = json.loads((EX / "levels.json").read_text(encoding="utf-8"))
@@ -338,7 +517,7 @@ def main() -> int:
 
     # the ELEMENT FORMS block for this door, raw (amendment 1 Slice 1) — no panel reads it yet; the state words are the
     # suite's (mapquery.forms_block): not_emitted = no file · absent = the pass ran and said why · present
-    _fp = EX / "forms.json"
+    _fp = forms_path or (EX / "forms.json")
     if not _fp.is_file():
         forms_block = {"state": "not_emitted", "reason": "no forms.json in the example feed — run regen-example.sh", "endpoint": None}
     else:
@@ -347,7 +526,12 @@ def main() -> int:
             if _fj.get("present"):
                 _fe = (_fj.get("endpoints") or {}).get(ID)
                 forms_block = {"state": "present", "reason": None if _fe else f"{ID} has no form in forms.json", "endpoint": _fe,
-                               "head": _fj.get("head"), "version": _fj.get("version")}
+                               "head": _fj.get("head"), "version": _fj.get("version"),
+                               "source": {"path": str(_fp.relative_to(REPO)) if _fp.is_relative_to(REPO) else str(_fp).replace(str(Path.home()), "~"),
+                                          "arms_on": sorted(a for a, v in (_fj.get("arms") or {}).items() if isinstance(v, dict) and v.get("present")),
+                                          "note": "an arms-on build of the same twin (scripts/forms-dryrun.sh writes one to ~/.cache/gabe-map-baselines/.check/<target>/forms.json)" if forms_path else "the example feed as committed (arms off by default)"}}
+                if _fe:
+                    forms_block.update(forms_slice(_fj, ID, _fe))
             else:
                 forms_block = {"state": "absent", "reason": _fj.get("reason") or "forms.json holds no forms", "endpoint": None}
         except Exception as _exc:  # noqa: BLE001

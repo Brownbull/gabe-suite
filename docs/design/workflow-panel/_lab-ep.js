@@ -6,6 +6,117 @@ window.LABEP = {
   "state": "present",
   "reason": null,
   "endpoint": {
+   "arm_findings": {
+    "effects": [
+     {
+      "endpoint": "endpoint:POST /setup/complete",
+      "id": "refusal-writes",
+      "paths": [
+       "p:5c8ba607f9"
+      ],
+      "slot": "U9"
+     }
+    ]
+   },
+   "auth": {
+    "gates": [
+     {
+      "fn": "apps/api/auth/context.py::get_auth_context",
+      "name": "get_auth_context"
+     }
+    ],
+    "provisions": [
+     {
+      "at": "apps/api/services/ownership.py:49",
+      "committed_at": "apps/api/auth/context.py:79",
+      "cond": true,
+      "op": "add",
+      "state": "committed",
+      "step": "st:ba597dd4f4",
+      "table": "users"
+     }
+    ],
+    "requires": [],
+    "schemes": [
+     {
+      "at": "apps/api/auth/context.py:23",
+      "carrier": "header",
+      "exit": "x:9fd81887a2",
+      "header": "Authorization",
+      "name": "bearer_scheme",
+      "scheme": "HTTPBearer",
+      "state": "default",
+      "status": 401
+     }
+    ],
+    "state": "defined"
+   },
+   "branches": [
+    {
+     "after": [],
+     "call": "complete_setup",
+     "fn": "apps/api/services/setup.py::complete_setup",
+     "id": "b:777606a0cc",
+     "pred": "claimed.outcome is ClaimOutcome.REPLAY",
+     "return": "r:3215864731",
+     "site": "apps/api/api/setup.py:196",
+     "token": "REPLAY",
+     "why": [
+      "contributes-rows",
+      "commit-differs"
+     ]
+    },
+    {
+     "after": [
+      "not (claimed.outcome is ClaimOutcome.REPLAY)",
+      "not (claimed.outcome is ClaimOutcome.IN_PROGRESS)"
+     ],
+     "call": "complete_setup",
+     "fn": "apps/api/services/setup.py::complete_setup",
+     "id": "b:ea440a25b4",
+     "pred": "existing is not None and prior is not None and prior.completed",
+     "return": "r:14d0c00171",
+     "site": "apps/api/api/setup.py:196",
+     "token": "completed",
+     "why": [
+      "contributes-rows",
+      "commit-differs"
+     ]
+    },
+    {
+     "after": [
+      "not (claimed.outcome is ClaimOutcome.REPLAY)",
+      "not (claimed.outcome is ClaimOutcome.IN_PROGRESS)",
+      "not (existing is not None and prior is not None and prior.completed)",
+      "not (latest is None or latest.policy_version != CONSENT_POLICY_VERSION)"
+     ],
+     "call": "complete_setup",
+     "fn": "apps/api/services/setup.py::complete_setup",
+     "id": "b:b31ca62e66",
+     "pred": null,
+     "return": "r:53302531e6",
+     "site": "apps/api/api/setup.py:196",
+     "token": "fall-through",
+     "why": [
+      "contributes-rows",
+      "commit-differs"
+     ]
+    }
+   ],
+   "collapsed": [
+    {
+     "call": "get_idempotency_key",
+     "fn": "apps/api/middleware/idempotency.py::get_idempotency_key",
+     "reason": "one return",
+     "site": "apps/api/api/setup.py:191"
+    },
+    {
+     "call": "_me_response_from_result",
+     "fn": "apps/api/api/setup.py::_me_response_from_result",
+     "reason": "one return",
+     "site": "apps/api/api/setup.py:204"
+    }
+   ],
    "declared": {
     "refusals": [],
     "response_model": {
@@ -18,6 +129,317 @@ window.LABEP = {
     }
    },
    "entity": "auth",
+   "failure": {
+    "catches": [
+     {
+      "actions": [
+       {
+        "at": 200,
+        "call": "HTTPException(status.HTTP_409_CONFLICT, 'setup in progress')",
+        "op": "raise"
+       }
+      ],
+      "answers": [
+       409
+      ],
+      "at": "apps/api/api/setup.py:199",
+      "commits": [
+       "st:07fb369254",
+       "st:b87d2e4c3a"
+      ],
+      "fn": "apps/api/api/setup.py::setup_complete",
+      "id": "c:f3f296ea81",
+      "outcome": "translate",
+      "paths": [
+       "p:0f099873d5",
+       "p:1ac75d260a",
+       "p:2adb89467d",
+       "p:5c8ba607f9",
+       "p:bba821f362"
+      ],
+      "types": [
+       "SetupInProgressError"
+      ],
+      "writes": [
+       "st:f0d4172d3b",
+       "st:9b6870a647",
+       "st:7cc3a75a8e",
+       "st:15a3f75493",
+       "st:4d0ee3df2a",
+       "st:07278f8b63",
+       "st:4bc0fc1137",
+       "st:222729711a",
+       "st:a9bf302767",
+       "st:1c0280047e",
+       "st:e5fd2b50ea",
+       "st:43c8056202",
+       "st:d245511503",
+       "st:8c4f90e357",
+       "st:d97a46993d",
+       "st:7297a4e711",
+       "st:fe64b59347",
+       "st:39e2840854",
+       "st:9be8b42058",
+       "st:e623e476f8",
+       "st:f0654d0780",
+       "st:5651165c03",
+       "st:cb7e89cece",
+       "st:3fb9f4edbe",
+       "st:a8b7865a19",
+       "st:57945cb1d8",
+       "st:52bbe4ca63",
+       "st:cdaed79626",
+       "st:3bdeb48734",
+       "st:bc1c15c55e",
+       "st:e202380457",
+       "st:7705d7c36b",
+       "st:d891375de0",
+       "st:a0fb1b8ed5",
+       "st:26f6505da0",
+       "st:c45ea7a722",
+       "st:94314df61f",
+       "st:c74e63b797",
+       "st:381e17c978",
+       "st:129ff47f42",
+       "st:cc87d22194",
+       "st:24395b6742",
+       "st:4c4c61d22b",
+       "st:806f4618fa"
+      ]
+     },
+     {
+      "actions": [
+       {
+        "at": 202,
+        "call": "HTTPException(status.HTTP_409_CONFLICT, 'consent required')",
+        "op": "raise"
+       }
+      ],
+      "answers": [
+       409
+      ],
+      "at": "apps/api/api/setup.py:201",
+      "commits": [
+       "st:07fb369254",
+       "st:b87d2e4c3a"
+      ],
+      "fn": "apps/api/api/setup.py::setup_complete",
+      "id": "c:3be4248d42",
+      "outcome": "translate",
+      "paths": [
+       "p:0f099873d5",
+       "p:1ac75d260a",
+       "p:2adb89467d",
+       "p:5c8ba607f9",
+       "p:bba821f362"
+      ],
+      "types": [
+       "ConsentRequiredError"
+      ],
+      "writes": [
+       "st:f0d4172d3b",
+       "st:9b6870a647",
+       "st:7cc3a75a8e",
+       "st:15a3f75493",
+       "st:4d0ee3df2a",
+       "st:07278f8b63",
+       "st:4bc0fc1137",
+       "st:222729711a",
+       "st:a9bf302767",
+       "st:1c0280047e",
+       "st:e5fd2b50ea",
+       "st:43c8056202",
+       "st:d245511503",
+       "st:8c4f90e357",
+       "st:d97a46993d",
+       "st:7297a4e711",
+       "st:fe64b59347",
+       "st:39e2840854",
+       "st:9be8b42058",
+       "st:e623e476f8",
+       "st:f0654d0780",
+       "st:5651165c03",
+       "st:cb7e89cece",
+       "st:3fb9f4edbe",
+       "st:a8b7865a19",
+       "st:57945cb1d8",
+       "st:52bbe4ca63",
+       "st:cdaed79626",
+       "st:3bdeb48734",
+       "st:bc1c15c55e",
+       "st:e202380457",
+       "st:7705d7c36b",
+       "st:d891375de0",
+       "st:a0fb1b8ed5",
+       "st:26f6505da0",
+       "st:c45ea7a722",
+       "st:94314df61f",
+       "st:c74e63b797",
+       "st:381e17c978",
+       "st:129ff47f42",
+       "st:cc87d22194",
+       "st:24395b6742",
+       "st:4c4c61d22b",
+       "st:806f4618fa"
+      ]
+     },
+     {
+      "actions": [
+       {
+        "at": 99,
+        "call": "HTTPException(status.HTTP_401_UNAUTHORIZED, 'invalid token')",
+        "op": "raise"
+       }
+      ],
+      "answers": [
+       401
+      ],
+      "at": "apps/api/auth/context.py:98",
+      "commits": [
+       "st:925411811a"
+      ],
+      "fn": "apps/api/auth/context.py::get_auth_context",
+      "id": "c:10b6b2a3ba",
+      "outcome": "translate",
+      "paths": [
+       "p:0f099873d5",
+       "p:1ac75d260a",
+       "p:2adb89467d",
+       "p:3ee19bd271",
+       "p:5c8ba607f9",
+       "p:a90ffd3af4",
+       "p:bba821f362",
+       "p:ec6c43e906",
+       "p:fd1039c2ca"
+      ],
+      "types": [
+       "InvalidTokenError"
+      ],
+      "writes": [
+       "st:ba597dd4f4"
+      ]
+     },
+     {
+      "actions": [
+       {
+        "at": 142,
+        "call": "_lookup",
+        "op": "call"
+       },
+       {
+        "at": 144,
+        "op": "pass-through"
+       },
+       {
+        "at": 145,
+        "op": "return"
+       },
+       {
+        "at": 145,
+        "call": "_outcome_for",
+        "op": "call"
+       }
+      ],
+      "answers": [],
+      "at": "apps/api/services/idempotency.py:141",
+      "commits": [],
+      "fn": "apps/api/services/idempotency.py::claim",
+      "id": "c:0dec997c32",
+      "outcome": "pass-through",
+      "paths": [
+       "p:0f099873d5",
+       "p:1ac75d260a",
+       "p:2adb89467d",
+       "p:5c8ba607f9",
+       "p:bba821f362"
+      ],
+      "types": [
+       "IntegrityError"
+      ],
+      "writes": [
+       "st:4d0ee3df2a"
+      ]
+     },
+     {
+      "actions": [
+       {
+        "at": 404,
+        "call": "session.rollback",
+        "op": "rollback"
+       },
+       {
+        "at": 406,
+        "call": "_discard_claim",
+        "op": "call",
+        "suppressed": true
+       },
+       {
+        "at": 407,
+        "op": "pass-through"
+       }
+      ],
+      "answers": [],
+      "at": "apps/api/services/setup.py:403",
+      "commits": [
+       "st:07fb369254",
+       "st:b87d2e4c3a"
+      ],
+      "fn": "apps/api/services/setup.py::complete_setup",
+      "id": "c:64e98bd00d",
+      "outcome": "pass-through",
+      "paths": [
+       "p:0f099873d5",
+       "p:1ac75d260a",
+       "p:5c8ba607f9"
+      ],
+      "types": [
+       "Exception"
+      ],
+      "writes": [
+       "st:07278f8b63",
+       "st:4bc0fc1137",
+       "st:222729711a",
+       "st:a9bf302767",
+       "st:1c0280047e",
+       "st:e5fd2b50ea",
+       "st:43c8056202",
+       "st:d245511503",
+       "st:8c4f90e357",
+       "st:d97a46993d",
+       "st:7297a4e711",
+       "st:fe64b59347",
+       "st:39e2840854",
+       "st:9be8b42058",
+       "st:e623e476f8",
+       "st:f0654d0780",
+       "st:5651165c03",
+       "st:cb7e89cece",
+       "st:3fb9f4edbe",
+       "st:a8b7865a19",
+       "st:57945cb1d8",
+       "st:52bbe4ca63",
+       "st:cdaed79626",
+       "st:3bdeb48734",
+       "st:bc1c15c55e",
+       "st:e202380457",
+       "st:7705d7c36b",
+       "st:d891375de0",
+       "st:a0fb1b8ed5",
+       "st:26f6505da0",
+       "st:c45ea7a722",
+       "st:94314df61f",
+       "st:c74e63b797",
+       "st:381e17c978",
+       "st:129ff47f42",
+       "st:cc87d22194",
+       "st:24395b6742",
+       "st:4c4c61d22b",
+       "st:806f4618fa"
+      ]
+     }
+    ],
+    "state": "defined"
+   },
    "file": "apps/api/api/setup.py",
    "findings": [
     {
@@ -45,16 +467,2958 @@ window.LABEP = {
      ]
     }
    ],
+   "framework_exits": [
+    {
+     "body": "json",
+     "code": "json_invalid",
+     "detail": "JSON decode error",
+     "form": "object",
+     "id": "x:fdb1ae15e9",
+     "phase": "body-parse",
+     "source": "fastapi/routing.py:427",
+     "state": "default",
+     "status": 422
+    },
+    {
+     "body": "json",
+     "detail": "There was an error parsing the body",
+     "form": "text",
+     "id": "x:ae1bc4dc59",
+     "phase": "body-parse",
+     "source": "fastapi/routing.py:447",
+     "state": "default",
+     "status": 400
+    }
+   ],
    "full_path": "/api/v1/setup/complete",
    "handler": "apps/api/api/setup.py::setup_complete",
    "levels_id": "apps/api/api/setup.py#setup_complete",
    "line": 183,
    "method": "POST",
    "path": "/setup/complete",
+   "paths": [
+    {
+     "chain": [
+      {
+       "call": "CORSMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "kind": "switch",
+       "phase": "middleware",
+       "ref": "sw:12b96f1a5a"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:117",
+       "cond": "settings.rate_limit_enabled or settings.is_production ∧ path starts /api/v1/cooking/sessions or path starts /api/v1/pantry/items/batch or path starts /api/v1/pantry/reset/apply or path starts /api/v1/pantry/resolve-batch or path starts /api/v1/recipe-creation or path starts /api/v1/setup/complete or path starts /api/v1/shopping/items ∧ not self._sensitive.allow(key, now)",
+       "hit": true,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:8437446a6c"
+      },
+      {
+       "kind": "exit",
+       "ref": "x:8437446a6c"
+      }
+     ],
+     "effects": {
+      "committed": [],
+      "dependency": "not-run",
+      "maybe_committed": [],
+      "rolled_back": [],
+      "steps": [],
+      "uncommitted": []
+     },
+     "exit": {
+      "id": "x:8437446a6c",
+      "kind": "refusal"
+     },
+     "id": "p:51719726e3",
+     "names": {
+      "detail": "{'detail': 'Rate limit exceeded. Try again shortly.'}",
+      "exception": null,
+      "stage": "middleware",
+      "token": null
+     },
+     "phase": "middleware",
+     "state": "defined",
+     "status": 429,
+     "switches": [
+      "sw:12b96f1a5a"
+     ]
+    },
+    {
+     "chain": [
+      {
+       "call": "CORSMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "kind": "switch",
+       "phase": "middleware",
+       "ref": "sw:12b96f1a5a"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:117",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:8437446a6c"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:121",
+       "cond": "settings.rate_limit_enabled or settings.is_production ∧ not self._global.allow(gkey, now)",
+       "hit": true,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:a7992af811"
+      },
+      {
+       "kind": "exit",
+       "ref": "x:a7992af811"
+      }
+     ],
+     "effects": {
+      "committed": [],
+      "dependency": "not-run",
+      "maybe_committed": [],
+      "rolled_back": [],
+      "steps": [],
+      "uncommitted": []
+     },
+     "exit": {
+      "id": "x:a7992af811",
+      "kind": "refusal"
+     },
+     "id": "p:da0a053b53",
+     "names": {
+      "detail": "{'detail': 'Rate limit exceeded. Try again shortly.'}",
+      "exception": null,
+      "stage": "middleware",
+      "token": null
+     },
+     "phase": "middleware",
+     "state": "defined",
+     "status": 429,
+     "switches": [
+      "sw:12b96f1a5a"
+     ]
+    },
+    {
+     "chain": [
+      {
+       "call": "CORSMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "kind": "switch",
+       "phase": "middleware",
+       "ref": "sw:12b96f1a5a"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:117",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:8437446a6c"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:121",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:a7992af811"
+      },
+      {
+       "call": "IdempotencyMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "hit": true,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:fdb1ae15e9",
+       "split": "body-parse"
+      },
+      {
+       "kind": "exit",
+       "ref": "x:fdb1ae15e9"
+      }
+     ],
+     "effects": {
+      "committed": [],
+      "dependency": "not-run",
+      "maybe_committed": [],
+      "rolled_back": [],
+      "steps": [],
+      "uncommitted": []
+     },
+     "exit": {
+      "id": "x:fdb1ae15e9",
+      "kind": "framework"
+     },
+     "id": "p:57de16a71b",
+     "names": {
+      "detail": "JSON decode error",
+      "exception": null,
+      "stage": "body-parse",
+      "token": null
+     },
+     "phase": "body-parse",
+     "split": "body-parse",
+     "state": "defined",
+     "status": 422,
+     "switches": [
+      "sw:12b96f1a5a"
+     ]
+    },
+    {
+     "chain": [
+      {
+       "call": "CORSMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "kind": "switch",
+       "phase": "middleware",
+       "ref": "sw:12b96f1a5a"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:117",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:8437446a6c"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:121",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:a7992af811"
+      },
+      {
+       "call": "IdempotencyMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "hit": true,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:ae1bc4dc59",
+       "split": "body-parse"
+      },
+      {
+       "kind": "exit",
+       "ref": "x:ae1bc4dc59"
+      }
+     ],
+     "effects": {
+      "committed": [],
+      "dependency": "not-run",
+      "maybe_committed": [],
+      "rolled_back": [],
+      "steps": [],
+      "uncommitted": []
+     },
+     "exit": {
+      "id": "x:ae1bc4dc59",
+      "kind": "framework"
+     },
+     "id": "p:201d91702d",
+     "names": {
+      "detail": "There was an error parsing the body",
+      "exception": null,
+      "stage": "body-parse",
+      "token": null
+     },
+     "phase": "body-parse",
+     "split": "body-parse",
+     "state": "defined",
+     "status": 400,
+     "switches": [
+      "sw:12b96f1a5a"
+     ]
+    },
+    {
+     "chain": [
+      {
+       "call": "CORSMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "kind": "switch",
+       "phase": "middleware",
+       "ref": "sw:12b96f1a5a"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:117",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:8437446a6c"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:121",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:a7992af811"
+      },
+      {
+       "call": "IdempotencyMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:fdb1ae15e9",
+       "split": "body-parse"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:ae1bc4dc59",
+       "split": "body-parse"
+      },
+      {
+       "at": "apps/api/auth/context.py:23",
+       "hit": true,
+       "kind": "gate",
+       "phase": "security",
+       "ref": "x:9fd81887a2"
+      },
+      {
+       "kind": "exit",
+       "ref": "x:9fd81887a2"
+      }
+     ],
+     "effects": {
+      "committed": [],
+      "dependency": "not-run",
+      "maybe_committed": [],
+      "rolled_back": [],
+      "steps": [],
+      "uncommitted": []
+     },
+     "exit": {
+      "id": "x:9fd81887a2",
+      "kind": "refusal"
+     },
+     "id": "p:e8c672a046",
+     "names": {
+      "detail": "Not authenticated",
+      "exception": null,
+      "stage": "security",
+      "token": null
+     },
+     "phase": "security",
+     "state": "defined",
+     "status": 401,
+     "switches": [
+      "sw:12b96f1a5a"
+     ]
+    },
+    {
+     "chain": [
+      {
+       "call": "CORSMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "kind": "switch",
+       "phase": "middleware",
+       "ref": "sw:12b96f1a5a"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:117",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:8437446a6c"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:121",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:a7992af811"
+      },
+      {
+       "call": "IdempotencyMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:fdb1ae15e9",
+       "split": "body-parse"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:ae1bc4dc59",
+       "split": "body-parse"
+      },
+      {
+       "at": "apps/api/auth/context.py:23",
+       "hit": false,
+       "kind": "gate",
+       "phase": "security",
+       "ref": "x:9fd81887a2"
+      },
+      {
+       "kind": "switch",
+       "phase": "dependency",
+       "ref": "sw:967c49ad34"
+      },
+      {
+       "at": "apps/api/auth/context.py:99",
+       "hit": true,
+       "kind": "gate",
+       "phase": "dependency",
+       "ref": "x:18e726cdeb"
+      },
+      {
+       "at": "apps/api/auth/context.py:98",
+       "cls": "InvalidTokenError",
+       "kind": "catch",
+       "op": "translate"
+      },
+      {
+       "kind": "exit",
+       "ref": "x:18e726cdeb"
+      }
+     ],
+     "effects": {
+      "committed": [],
+      "dependency": "unknown",
+      "maybe_committed": [],
+      "rolled_back": [],
+      "steps": [],
+      "uncommitted": []
+     },
+     "exit": {
+      "id": "x:18e726cdeb",
+      "kind": "refusal"
+     },
+     "id": "p:ec6c43e906",
+     "names": {
+      "detail": "invalid token",
+      "exception": "InvalidTokenError",
+      "stage": "dependency",
+      "token": null
+     },
+     "phase": "dependency",
+     "proven_by": "sw:967c49ad34",
+     "state": "defined",
+     "status": 401,
+     "switches": [
+      "sw:12b96f1a5a",
+      "sw:967c49ad34"
+     ]
+    },
+    {
+     "cases": [
+      "case:schema:SetupCompleteRequest/__model__/extra_forbidden",
+      "case:schema:SetupCompleteRequest/household_name/missing",
+      "case:schema:SetupCompleteRequest/household_name/string_too_short",
+      "case:schema:SetupCompleteRequest/household_name/string_too_long",
+      "case:schema:HouseholdFormatInput/household_format.__model__/extra_forbidden",
+      "case:schema:HouseholdFormatInput/household_format.country/value_error/_check_country.0",
+      "case:schema:HouseholdFormatInput/household_format.currency/value_error/_check_currency.0",
+      "case:schema:HouseholdFormatInput/household_format.units/value_error/_check_units.0",
+      "case:schema:HouseholdFormatInput/household_format.default_servings/value_error/_check_servings.0",
+      "case:schema:UserFormatInput/user_format.__model__/extra_forbidden",
+      "case:schema:UserFormatInput/user_format.language/value_error/_check_language.0",
+      "case:schema:DietaryProfileInput/dietary.__model__/extra_forbidden",
+      "case:schema:DietaryProfileInput/dietary.allergens/value_error/_check_allergens.0",
+      "case:schema:DietaryProfileInput/dietary.allergens/value_error/_check_allergens.1",
+      "case:schema:DietaryProfileInput/dietary.allergens/value_error/_check_allergens.2",
+      "case:schema:DietaryProfileInput/dietary.preferences/value_error/_check_preferences.0",
+      "case:schema:DietaryProfileInput/dietary.preferences/value_error/_check_preferences.1",
+      "case:schema:ExplorationPreferencesInput/exploration.__model__/extra_forbidden",
+      "case:schema:ExplorationPreferencesInput/exploration.explore_regions/value_error/_check_explore_regions.0",
+      "case:schema:ExplorationPreferencesInput/exploration.explore_regions/value_error/_check_explore_regions.1",
+      "case:schema:ExplorationPreferencesInput/exploration.explore_regions/value_error/_check_explore_regions.2",
+      "case:schema:ExplorationPreferencesInput/exploration.curiosity_techniques/value_error/_check_curiosity_techniques.0",
+      "case:schema:ExplorationPreferencesInput/exploration.curiosity_techniques/value_error/_check_curiosity_techniques.1",
+      "case:schema:ExplorationPreferencesInput/exploration.curiosity_techniques/value_error/_check_curiosity_techniques.2",
+      "case:schema:ExplorationPreferencesInput/exploration.comfort_techniques/value_error/_check_comfort_techniques.0",
+      "case:schema:ExplorationPreferencesInput/exploration.comfort_techniques/value_error/_check_comfort_techniques.1",
+      "case:schema:ExplorationPreferencesInput/exploration.comfort_techniques/value_error/_check_comfort_techniques.2",
+      "case:schema:ExplorationPreferencesInput/exploration.comfort_time/value_error/_check_comfort_time.0",
+      "case:schema:ExplorationPreferencesInput/exploration.comfort_time/value_error/_check_comfort_time.1",
+      "case:schema:ExplorationPreferencesInput/exploration.comfort_time/value_error/_check_comfort_time.2",
+      "case:schema:ExplorationPreferencesInput/exploration.skill_complexity_cap/value_error/_check_skill_complexity_cap.0",
+      "case:schema:ExplorationPreferencesInput/exploration.preference_tastes/value_error/_check_preference_tastes.0",
+      "case:schema:ExplorationPreferencesInput/exploration.preference_tastes/value_error/_check_preference_tastes.1",
+      "case:schema:ExplorationPreferencesInput/exploration.preference_tastes/value_error/_check_preference_tastes.2",
+      "case:schema:ExplorationPreferencesInput/exploration.preference_textures/value_error/_check_preference_textures.0",
+      "case:schema:ExplorationPreferencesInput/exploration.preference_textures/value_error/_check_preference_textures.1",
+      "case:schema:ExplorationPreferencesInput/exploration.preference_textures/value_error/_check_preference_textures.2",
+      "case:schema:ExplorationPreferencesInput/exploration.preference_temperature/value_error/_check_preference_temperature.0",
+      "case:schema:PrivacyPermissionsInput/privacy.__model__/extra_forbidden",
+      "case:schema:NotificationPreferencesInput/notifications.__model__/extra_forbidden",
+      "case:schema:SetupCompleteRequest/household_name/value_error/_strip_name.0",
+      "case:framework:body/missing"
+     ],
+     "chain": [
+      {
+       "call": "CORSMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "kind": "switch",
+       "phase": "middleware",
+       "ref": "sw:12b96f1a5a"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:117",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:8437446a6c"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:121",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:a7992af811"
+      },
+      {
+       "call": "IdempotencyMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:fdb1ae15e9",
+       "split": "body-parse"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:ae1bc4dc59",
+       "split": "body-parse"
+      },
+      {
+       "at": "apps/api/auth/context.py:23",
+       "hit": false,
+       "kind": "gate",
+       "phase": "security",
+       "ref": "x:9fd81887a2"
+      },
+      {
+       "kind": "switch",
+       "phase": "dependency",
+       "ref": "sw:967c49ad34"
+      },
+      {
+       "at": "apps/api/auth/context.py:99",
+       "hit": false,
+       "kind": "gate",
+       "phase": "dependency",
+       "ref": "x:18e726cdeb"
+      },
+      {
+       "hit": true,
+       "kind": "gate",
+       "phase": "validation",
+       "ref": "x:1b256011f1",
+       "split": "own-params"
+      },
+      {
+       "kind": "exit",
+       "ref": "x:1b256011f1"
+      }
+     ],
+     "effects": {
+      "committed": [
+       "st:ba597dd4f4"
+      ],
+      "dependency": "ran",
+      "maybe_committed": [],
+      "rolled_back": [],
+      "steps": [
+       {
+        "dependency": true,
+        "step": "st:c79e53a27f",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:ba597dd4f4",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:f5b6b3e9b3",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:925411811a",
+        "via": "apps/api/auth/context.py::build_auth_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:fdb7bb7853",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:200eb54837",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:61aa8a44cc",
+        "via": "apps/api/services/ownership.py::get_principal_location"
+       }
+      ],
+      "uncommitted": []
+     },
+     "exit": {
+      "id": "x:1b256011f1",
+      "kind": "framework"
+     },
+     "id": "p:a90ffd3af4",
+     "names": {
+      "detail": null,
+      "exception": null,
+      "stage": "validation",
+      "token": null
+     },
+     "phase": "validation",
+     "split": "own-params",
+     "state": "defined",
+     "status": 422,
+     "switches": [
+      "sw:12b96f1a5a",
+      "sw:967c49ad34"
+     ],
+     "tests": [
+      {
+       "case": "C1051",
+       "conf": "status",
+       "line": 74
+      },
+      {
+       "case": "C1052",
+       "conf": "status",
+       "line": 83
+      }
+     ]
+    },
+    {
+     "chain": [
+      {
+       "call": "CORSMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "kind": "switch",
+       "phase": "middleware",
+       "ref": "sw:12b96f1a5a"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:117",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:8437446a6c"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:121",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:a7992af811"
+      },
+      {
+       "call": "IdempotencyMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:fdb1ae15e9",
+       "split": "body-parse"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:ae1bc4dc59",
+       "split": "body-parse"
+      },
+      {
+       "at": "apps/api/auth/context.py:23",
+       "hit": false,
+       "kind": "gate",
+       "phase": "security",
+       "ref": "x:9fd81887a2"
+      },
+      {
+       "kind": "switch",
+       "phase": "dependency",
+       "ref": "sw:967c49ad34"
+      },
+      {
+       "at": "apps/api/auth/context.py:99",
+       "hit": false,
+       "kind": "gate",
+       "phase": "dependency",
+       "ref": "x:18e726cdeb"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "validation",
+       "ref": "x:1b256011f1",
+       "split": "own-params"
+      },
+      {
+       "at": "apps/api/api/setup.py:191",
+       "call": "get_idempotency_key",
+       "fn": "apps/api/middleware/idempotency.py::get_idempotency_key",
+       "kind": "collapsed",
+       "reason": "one return"
+      },
+      {
+       "at": "apps/api/api/setup.py:193",
+       "cond": "key is None",
+       "hit": true,
+       "kind": "gate",
+       "phase": "handler",
+       "ref": "x:13ce9b79e0"
+      },
+      {
+       "kind": "exit",
+       "ref": "x:13ce9b79e0"
+      }
+     ],
+     "effects": {
+      "committed": [
+       "st:ba597dd4f4"
+      ],
+      "dependency": "ran",
+      "maybe_committed": [],
+      "rolled_back": [],
+      "steps": [
+       {
+        "dependency": true,
+        "step": "st:c79e53a27f",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:ba597dd4f4",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:f5b6b3e9b3",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:925411811a",
+        "via": "apps/api/auth/context.py::build_auth_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:fdb7bb7853",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:200eb54837",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:61aa8a44cc",
+        "via": "apps/api/services/ownership.py::get_principal_location"
+       }
+      ],
+      "uncommitted": []
+     },
+     "exit": {
+      "id": "x:13ce9b79e0",
+      "kind": "refusal"
+     },
+     "id": "p:fd1039c2ca",
+     "names": {
+      "detail": "Idempotency-Key required",
+      "exception": null,
+      "stage": "handler",
+      "token": "key"
+     },
+     "phase": "handler",
+     "state": "defined",
+     "status": 400,
+     "switches": [
+      "sw:12b96f1a5a",
+      "sw:967c49ad34"
+     ],
+     "tests": [
+      {
+       "case": "C1048",
+       "conf": "status+detail",
+       "line": 23
+      }
+     ]
+    },
+    {
+     "chain": [
+      {
+       "call": "CORSMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "kind": "switch",
+       "phase": "middleware",
+       "ref": "sw:12b96f1a5a"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:117",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:8437446a6c"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:121",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:a7992af811"
+      },
+      {
+       "call": "IdempotencyMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:fdb1ae15e9",
+       "split": "body-parse"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:ae1bc4dc59",
+       "split": "body-parse"
+      },
+      {
+       "at": "apps/api/auth/context.py:23",
+       "hit": false,
+       "kind": "gate",
+       "phase": "security",
+       "ref": "x:9fd81887a2"
+      },
+      {
+       "kind": "switch",
+       "phase": "dependency",
+       "ref": "sw:967c49ad34"
+      },
+      {
+       "at": "apps/api/auth/context.py:99",
+       "hit": false,
+       "kind": "gate",
+       "phase": "dependency",
+       "ref": "x:18e726cdeb"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "validation",
+       "ref": "x:1b256011f1",
+       "split": "own-params"
+      },
+      {
+       "at": "apps/api/api/setup.py:191",
+       "call": "get_idempotency_key",
+       "fn": "apps/api/middleware/idempotency.py::get_idempotency_key",
+       "kind": "collapsed",
+       "reason": "one return"
+      },
+      {
+       "at": "apps/api/api/setup.py:193",
+       "hit": false,
+       "kind": "gate",
+       "phase": "handler",
+       "ref": "x:13ce9b79e0"
+      },
+      {
+       "at": "apps/api/api/setup.py:196",
+       "call": "complete_setup",
+       "fn": "apps/api/services/setup.py::complete_setup",
+       "kind": "call"
+      },
+      {
+       "at": "apps/api/services/setup.py:346",
+       "hit": false,
+       "kind": "branch",
+       "ref": "b:777606a0cc"
+      },
+      {
+       "at": "apps/api/services/setup.py:348",
+       "hit": true,
+       "kind": "gate",
+       "phase": "handler",
+       "ref": "x:f2caf456bd"
+      },
+      {
+       "at": "apps/api/api/setup.py:199",
+       "cls": "SetupInProgressError",
+       "kind": "catch",
+       "op": "translate"
+      },
+      {
+       "kind": "exit",
+       "ref": "x:f2caf456bd"
+      }
+     ],
+     "effects": {
+      "committed": [
+       "st:ba597dd4f4"
+      ],
+      "dependency": "ran",
+      "maybe_committed": [],
+      "rolled_back": [],
+      "steps": [
+       {
+        "dependency": true,
+        "step": "st:c79e53a27f",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:ba597dd4f4",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:f5b6b3e9b3",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:925411811a",
+        "via": "apps/api/auth/context.py::build_auth_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:fdb7bb7853",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:200eb54837",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:61aa8a44cc",
+        "via": "apps/api/services/ownership.py::get_principal_location"
+       },
+       {
+        "step": "st:c6aff0cdc2",
+        "via": "apps/api/services/idempotency.py::_lookup"
+       },
+       {
+        "step": "st:f0d4172d3b",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:9b6870a647",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:7cc3a75a8e",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:15a3f75493",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:8c8b6c5a08",
+        "via": "apps/api/services/idempotency.py::_outcome_for"
+       },
+       {
+        "step": "st:3bea18b560",
+        "via": "apps/api/services/idempotency.py::claim"
+       },
+       {
+        "step": "st:4d0ee3df2a",
+        "via": "apps/api/services/idempotency.py::claim"
+       },
+       {
+        "step": "st:93d18ca18c",
+        "via": "apps/api/services/idempotency.py::claim"
+       },
+       {
+        "step": "st:63a86044ef",
+        "via": "apps/api/services/idempotency.py::_lookup"
+       },
+       {
+        "step": "st:f0d4172d3b",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:9b6870a647",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:7cc3a75a8e",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:15a3f75493",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:8c8b6c5a08",
+        "via": "apps/api/services/idempotency.py::_outcome_for"
+       }
+      ],
+      "uncommitted": [
+       "st:f0d4172d3b",
+       "st:9b6870a647",
+       "st:7cc3a75a8e",
+       "st:15a3f75493",
+       "st:4d0ee3df2a"
+      ]
+     },
+     "exit": {
+      "id": "x:f2caf456bd",
+      "kind": "refusal"
+     },
+     "id": "p:2adb89467d",
+     "names": {
+      "detail": "setup in progress",
+      "exception": "SetupInProgressError",
+      "stage": "handler",
+      "token": null
+     },
+     "phase": "handler",
+     "state": "defined",
+     "status": 409,
+     "switches": [
+      "sw:12b96f1a5a",
+      "sw:967c49ad34"
+     ],
+     "tests": [
+      {
+       "case": "C1057",
+       "conf": "ambiguous of 2",
+       "line": 158
+      },
+      {
+       "case": "C1061",
+       "conf": "service raises",
+       "line": 128
+      }
+     ]
+    },
+    {
+     "chain": [
+      {
+       "call": "CORSMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "kind": "switch",
+       "phase": "middleware",
+       "ref": "sw:12b96f1a5a"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:117",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:8437446a6c"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:121",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:a7992af811"
+      },
+      {
+       "call": "IdempotencyMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:fdb1ae15e9",
+       "split": "body-parse"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:ae1bc4dc59",
+       "split": "body-parse"
+      },
+      {
+       "at": "apps/api/auth/context.py:23",
+       "hit": false,
+       "kind": "gate",
+       "phase": "security",
+       "ref": "x:9fd81887a2"
+      },
+      {
+       "kind": "switch",
+       "phase": "dependency",
+       "ref": "sw:967c49ad34"
+      },
+      {
+       "at": "apps/api/auth/context.py:99",
+       "hit": false,
+       "kind": "gate",
+       "phase": "dependency",
+       "ref": "x:18e726cdeb"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "validation",
+       "ref": "x:1b256011f1",
+       "split": "own-params"
+      },
+      {
+       "at": "apps/api/api/setup.py:191",
+       "call": "get_idempotency_key",
+       "fn": "apps/api/middleware/idempotency.py::get_idempotency_key",
+       "kind": "collapsed",
+       "reason": "one return"
+      },
+      {
+       "at": "apps/api/api/setup.py:193",
+       "hit": false,
+       "kind": "gate",
+       "phase": "handler",
+       "ref": "x:13ce9b79e0"
+      },
+      {
+       "at": "apps/api/api/setup.py:196",
+       "call": "complete_setup",
+       "fn": "apps/api/services/setup.py::complete_setup",
+       "kind": "call"
+      },
+      {
+       "at": "apps/api/services/setup.py:346",
+       "hit": false,
+       "kind": "branch",
+       "ref": "b:777606a0cc"
+      },
+      {
+       "at": "apps/api/services/setup.py:348",
+       "hit": false,
+       "kind": "gate",
+       "phase": "handler",
+       "ref": "x:f2caf456bd"
+      },
+      {
+       "at": "apps/api/services/setup.py:362",
+       "hit": false,
+       "kind": "branch",
+       "ref": "b:ea440a25b4"
+      },
+      {
+       "at": "apps/api/services/setup.py:374",
+       "hit": true,
+       "kind": "gate",
+       "phase": "handler",
+       "ref": "x:a086031223"
+      },
+      {
+       "at": "apps/api/services/setup.py:403",
+       "cls": "Exception",
+       "kind": "catch",
+       "op": "pass-through"
+      },
+      {
+       "at": "apps/api/api/setup.py:201",
+       "cls": "ConsentRequiredError",
+       "kind": "catch",
+       "op": "translate"
+      },
+      {
+       "kind": "exit",
+       "ref": "x:a086031223"
+      }
+     ],
+     "effects": {
+      "committed": [
+       "st:ba597dd4f4"
+      ],
+      "dependency": "ran",
+      "maybe_committed": [
+       "st:5768e71cd4"
+      ],
+      "rolled_back": [
+       "st:f0d4172d3b",
+       "st:9b6870a647",
+       "st:7cc3a75a8e",
+       "st:15a3f75493",
+       "st:4d0ee3df2a"
+      ],
+      "steps": [
+       {
+        "dependency": true,
+        "step": "st:c79e53a27f",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:ba597dd4f4",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:f5b6b3e9b3",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:925411811a",
+        "via": "apps/api/auth/context.py::build_auth_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:fdb7bb7853",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:200eb54837",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:61aa8a44cc",
+        "via": "apps/api/services/ownership.py::get_principal_location"
+       },
+       {
+        "step": "st:c6aff0cdc2",
+        "via": "apps/api/services/idempotency.py::_lookup"
+       },
+       {
+        "step": "st:f0d4172d3b",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:9b6870a647",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:7cc3a75a8e",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:15a3f75493",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:8c8b6c5a08",
+        "via": "apps/api/services/idempotency.py::_outcome_for"
+       },
+       {
+        "step": "st:3bea18b560",
+        "via": "apps/api/services/idempotency.py::claim"
+       },
+       {
+        "step": "st:4d0ee3df2a",
+        "via": "apps/api/services/idempotency.py::claim"
+       },
+       {
+        "step": "st:93d18ca18c",
+        "via": "apps/api/services/idempotency.py::claim"
+       },
+       {
+        "step": "st:63a86044ef",
+        "via": "apps/api/services/idempotency.py::_lookup"
+       },
+       {
+        "step": "st:f0d4172d3b",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:9b6870a647",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:7cc3a75a8e",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:15a3f75493",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:8c8b6c5a08",
+        "via": "apps/api/services/idempotency.py::_outcome_for"
+       },
+       {
+        "step": "st:fdb7bb7853",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "step": "st:200eb54837",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "step": "st:61aa8a44cc",
+        "via": "apps/api/services/ownership.py::get_principal_location"
+       },
+       {
+        "step": "st:66639991ec",
+        "via": "apps/api/services/setup.py::complete_setup"
+       },
+       {
+        "step": "st:bfdef91eea",
+        "via": "apps/api/services/consent.py::latest_consent"
+       },
+       {
+        "step": "st:e2a6433d13",
+        "via": "apps/api/services/setup.py::complete_setup"
+       },
+       {
+        "step": "st:5d68c1638a",
+        "via": "apps/api/services/setup.py::_discard_claim"
+       },
+       {
+        "step": "st:5768e71cd4",
+        "via": "apps/api/services/setup.py::_discard_claim"
+       },
+       {
+        "step": "st:13847a504a",
+        "via": "apps/api/services/setup.py::_discard_claim"
+       }
+      ],
+      "uncommitted": []
+     },
+     "exit": {
+      "id": "x:a086031223",
+      "kind": "refusal"
+     },
+     "id": "p:5c8ba607f9",
+     "names": {
+      "detail": "consent required",
+      "exception": "ConsentRequiredError",
+      "stage": "handler",
+      "token": null
+     },
+     "phase": "handler",
+     "state": "defined",
+     "status": 409,
+     "switches": [
+      "sw:12b96f1a5a",
+      "sw:967c49ad34"
+     ],
+     "tests": [
+      {
+       "case": "C1055",
+       "conf": "status+detail",
+       "line": 121
+      },
+      {
+       "case": "C1057",
+       "conf": "ambiguous of 2",
+       "line": 158
+      },
+      {
+       "case": "C1065",
+       "conf": "service raises",
+       "line": 217
+      },
+      {
+       "case": "C1067",
+       "conf": "service raises",
+       "line": 247
+      }
+     ]
+    },
+    {
+     "chain": [
+      {
+       "call": "CORSMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "kind": "switch",
+       "phase": "middleware",
+       "ref": "sw:12b96f1a5a"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:117",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:8437446a6c"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:121",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:a7992af811"
+      },
+      {
+       "call": "IdempotencyMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:fdb1ae15e9",
+       "split": "body-parse"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:ae1bc4dc59",
+       "split": "body-parse"
+      },
+      {
+       "at": "apps/api/auth/context.py:23",
+       "hit": false,
+       "kind": "gate",
+       "phase": "security",
+       "ref": "x:9fd81887a2"
+      },
+      {
+       "kind": "switch",
+       "phase": "dependency",
+       "ref": "sw:967c49ad34"
+      },
+      {
+       "at": "apps/api/auth/context.py:99",
+       "hit": false,
+       "kind": "gate",
+       "phase": "dependency",
+       "ref": "x:18e726cdeb"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "validation",
+       "ref": "x:1b256011f1",
+       "split": "own-params"
+      },
+      {
+       "at": "apps/api/api/setup.py:191",
+       "call": "get_idempotency_key",
+       "fn": "apps/api/middleware/idempotency.py::get_idempotency_key",
+       "kind": "collapsed",
+       "reason": "one return"
+      },
+      {
+       "at": "apps/api/api/setup.py:193",
+       "hit": false,
+       "kind": "gate",
+       "phase": "handler",
+       "ref": "x:13ce9b79e0"
+      },
+      {
+       "at": "apps/api/api/setup.py:196",
+       "call": "complete_setup",
+       "fn": "apps/api/services/setup.py::complete_setup",
+       "kind": "call"
+      },
+      {
+       "at": "apps/api/services/setup.py:346",
+       "hit": true,
+       "kind": "branch",
+       "ref": "b:777606a0cc"
+      },
+      {
+       "kind": "switch",
+       "phase": "handler",
+       "ref": "sw:f52e70d831"
+      },
+      {
+       "at": "apps/api/api/setup.py:204",
+       "call": "_me_response_from_result",
+       "fn": "apps/api/api/setup.py::_me_response_from_result",
+       "kind": "collapsed",
+       "reason": "one return"
+      },
+      {
+       "kind": "exit",
+       "ref": "r:406d313dde"
+      }
+     ],
+     "effects": {
+      "committed": [
+       "st:ba597dd4f4"
+      ],
+      "dependency": "ran",
+      "maybe_committed": [],
+      "rolled_back": [],
+      "steps": [
+       {
+        "dependency": true,
+        "step": "st:c79e53a27f",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:ba597dd4f4",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:f5b6b3e9b3",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:925411811a",
+        "via": "apps/api/auth/context.py::build_auth_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:fdb7bb7853",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:200eb54837",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:61aa8a44cc",
+        "via": "apps/api/services/ownership.py::get_principal_location"
+       },
+       {
+        "step": "st:c6aff0cdc2",
+        "via": "apps/api/services/idempotency.py::_lookup"
+       },
+       {
+        "step": "st:f0d4172d3b",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:9b6870a647",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:7cc3a75a8e",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:15a3f75493",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:8c8b6c5a08",
+        "via": "apps/api/services/idempotency.py::_outcome_for"
+       },
+       {
+        "step": "st:3bea18b560",
+        "via": "apps/api/services/idempotency.py::claim"
+       },
+       {
+        "step": "st:4d0ee3df2a",
+        "via": "apps/api/services/idempotency.py::claim"
+       },
+       {
+        "step": "st:93d18ca18c",
+        "via": "apps/api/services/idempotency.py::claim"
+       },
+       {
+        "step": "st:63a86044ef",
+        "via": "apps/api/services/idempotency.py::_lookup"
+       },
+       {
+        "step": "st:f0d4172d3b",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:9b6870a647",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:7cc3a75a8e",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:15a3f75493",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:8c8b6c5a08",
+        "via": "apps/api/services/idempotency.py::_outcome_for"
+       },
+       {
+        "step": "st:fdb7bb7853",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "step": "st:200eb54837",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "step": "st:61aa8a44cc",
+        "via": "apps/api/services/ownership.py::get_principal_location"
+       },
+       {
+        "step": "st:3d8941af09",
+        "via": "apps/api/services/setup.py::_load_setup_result"
+       },
+       {
+        "step": "st:1a572ca3fa",
+        "via": "apps/api/services/setup.py::_load_setup_result"
+       },
+       {
+        "step": "st:3e4e2e6f76",
+        "via": "apps/api/services/setup.py::_load_setup_result"
+       },
+       {
+        "step": "st:f418771e9b",
+        "via": "apps/api/services/setup.py::_load_setup_result"
+       },
+       {
+        "step": "st:0435d252bf",
+        "via": "apps/api/services/setup.py::_load_setup_result"
+       },
+       {
+        "step": "st:43c78fa3a7",
+        "via": "apps/api/services/setup.py::_load_setup_result"
+       },
+       {
+        "step": "st:4224af6803",
+        "via": "apps/api/services/setup.py::_load_setup_result"
+       },
+       {
+        "step": "st:a757b623da",
+        "via": "apps/api/services/setup.py::_load_setup_result"
+       },
+       {
+        "step": "st:c389b6f86f",
+        "via": "apps/api/services/ai_credits.py::credits_used_this_month"
+       }
+      ],
+      "uncommitted": [
+       "st:f0d4172d3b",
+       "st:9b6870a647",
+       "st:7cc3a75a8e",
+       "st:15a3f75493",
+       "st:4d0ee3df2a"
+      ]
+     },
+     "exit": {
+      "id": "r:406d313dde",
+      "kind": "success"
+     },
+     "id": "p:bba821f362",
+     "names": {
+      "detail": "await _me_response_from_result(ctx, result, session, settings)",
+      "exception": null,
+      "stage": "handler",
+      "token": "REPLAY"
+     },
+     "phase": "handler",
+     "state": "defined",
+     "status": 200,
+     "switches": [
+      "sw:12b96f1a5a",
+      "sw:967c49ad34",
+      "sw:f52e70d831"
+     ],
+     "tests": [
+      {
+       "case": "C1049",
+       "conf": "status",
+       "line": 35
+      },
+      {
+       "case": "C1050",
+       "conf": "status",
+       "line": 65
+      },
+      {
+       "case": "C1050",
+       "conf": "status",
+       "line": 66
+      },
+      {
+       "case": "C1056",
+       "conf": "status",
+       "line": 141
+      },
+      {
+       "case": "C1057",
+       "conf": "status",
+       "line": 166
+      },
+      {
+       "case": "C389",
+       "conf": "status",
+       "line": 756
+      },
+      {
+       "case": "C390",
+       "conf": "status",
+       "line": 778
+      },
+      {
+       "case": "C391",
+       "conf": "status",
+       "line": 804
+      },
+      {
+       "case": "C392",
+       "conf": "status",
+       "line": 824
+      },
+      {
+       "case": "C392",
+       "conf": "status",
+       "line": 825
+      }
+     ]
+    },
+    {
+     "chain": [
+      {
+       "call": "CORSMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "kind": "switch",
+       "phase": "middleware",
+       "ref": "sw:12b96f1a5a"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:117",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:8437446a6c"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:121",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:a7992af811"
+      },
+      {
+       "call": "IdempotencyMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:fdb1ae15e9",
+       "split": "body-parse"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:ae1bc4dc59",
+       "split": "body-parse"
+      },
+      {
+       "at": "apps/api/auth/context.py:23",
+       "hit": false,
+       "kind": "gate",
+       "phase": "security",
+       "ref": "x:9fd81887a2"
+      },
+      {
+       "kind": "switch",
+       "phase": "dependency",
+       "ref": "sw:967c49ad34"
+      },
+      {
+       "at": "apps/api/auth/context.py:99",
+       "hit": false,
+       "kind": "gate",
+       "phase": "dependency",
+       "ref": "x:18e726cdeb"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "validation",
+       "ref": "x:1b256011f1",
+       "split": "own-params"
+      },
+      {
+       "at": "apps/api/api/setup.py:191",
+       "call": "get_idempotency_key",
+       "fn": "apps/api/middleware/idempotency.py::get_idempotency_key",
+       "kind": "collapsed",
+       "reason": "one return"
+      },
+      {
+       "at": "apps/api/api/setup.py:193",
+       "hit": false,
+       "kind": "gate",
+       "phase": "handler",
+       "ref": "x:13ce9b79e0"
+      },
+      {
+       "at": "apps/api/api/setup.py:196",
+       "call": "complete_setup",
+       "fn": "apps/api/services/setup.py::complete_setup",
+       "kind": "call"
+      },
+      {
+       "at": "apps/api/services/setup.py:346",
+       "hit": false,
+       "kind": "branch",
+       "ref": "b:777606a0cc"
+      },
+      {
+       "at": "apps/api/services/setup.py:348",
+       "hit": false,
+       "kind": "gate",
+       "phase": "handler",
+       "ref": "x:f2caf456bd"
+      },
+      {
+       "at": "apps/api/services/setup.py:362",
+       "hit": true,
+       "kind": "branch",
+       "ref": "b:ea440a25b4"
+      },
+      {
+       "kind": "switch",
+       "phase": "handler",
+       "ref": "sw:f52e70d831"
+      },
+      {
+       "at": "apps/api/api/setup.py:204",
+       "call": "_me_response_from_result",
+       "fn": "apps/api/api/setup.py::_me_response_from_result",
+       "kind": "collapsed",
+       "reason": "one return"
+      },
+      {
+       "kind": "exit",
+       "ref": "r:406d313dde"
+      }
+     ],
+     "effects": {
+      "committed": [
+       "st:ba597dd4f4",
+       "st:f0d4172d3b",
+       "st:9b6870a647",
+       "st:7cc3a75a8e",
+       "st:15a3f75493",
+       "st:4d0ee3df2a",
+       "st:07278f8b63",
+       "st:4bc0fc1137",
+       "st:222729711a"
+      ],
+      "dependency": "ran",
+      "maybe_committed": [],
+      "rolled_back": [],
+      "steps": [
+       {
+        "dependency": true,
+        "step": "st:c79e53a27f",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:ba597dd4f4",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:f5b6b3e9b3",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:925411811a",
+        "via": "apps/api/auth/context.py::build_auth_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:fdb7bb7853",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:200eb54837",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:61aa8a44cc",
+        "via": "apps/api/services/ownership.py::get_principal_location"
+       },
+       {
+        "step": "st:c6aff0cdc2",
+        "via": "apps/api/services/idempotency.py::_lookup"
+       },
+       {
+        "step": "st:f0d4172d3b",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:9b6870a647",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:7cc3a75a8e",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:15a3f75493",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:8c8b6c5a08",
+        "via": "apps/api/services/idempotency.py::_outcome_for"
+       },
+       {
+        "step": "st:3bea18b560",
+        "via": "apps/api/services/idempotency.py::claim"
+       },
+       {
+        "step": "st:4d0ee3df2a",
+        "via": "apps/api/services/idempotency.py::claim"
+       },
+       {
+        "step": "st:93d18ca18c",
+        "via": "apps/api/services/idempotency.py::claim"
+       },
+       {
+        "step": "st:63a86044ef",
+        "via": "apps/api/services/idempotency.py::_lookup"
+       },
+       {
+        "step": "st:f0d4172d3b",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:9b6870a647",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:7cc3a75a8e",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:15a3f75493",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:8c8b6c5a08",
+        "via": "apps/api/services/idempotency.py::_outcome_for"
+       },
+       {
+        "step": "st:fdb7bb7853",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "step": "st:200eb54837",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "step": "st:61aa8a44cc",
+        "via": "apps/api/services/ownership.py::get_principal_location"
+       },
+       {
+        "step": "st:66639991ec",
+        "via": "apps/api/services/setup.py::complete_setup"
+       },
+       {
+        "step": "st:fdb7bb7853",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "step": "st:200eb54837",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "step": "st:61aa8a44cc",
+        "via": "apps/api/services/ownership.py::get_principal_location"
+       },
+       {
+        "step": "st:3d8941af09",
+        "via": "apps/api/services/setup.py::_load_setup_result"
+       },
+       {
+        "step": "st:1a572ca3fa",
+        "via": "apps/api/services/setup.py::_load_setup_result"
+       },
+       {
+        "step": "st:3e4e2e6f76",
+        "via": "apps/api/services/setup.py::_load_setup_result"
+       },
+       {
+        "step": "st:f418771e9b",
+        "via": "apps/api/services/setup.py::_load_setup_result"
+       },
+       {
+        "step": "st:0435d252bf",
+        "via": "apps/api/services/setup.py::_load_setup_result"
+       },
+       {
+        "step": "st:43c78fa3a7",
+        "via": "apps/api/services/setup.py::_load_setup_result"
+       },
+       {
+        "step": "st:4224af6803",
+        "via": "apps/api/services/setup.py::_load_setup_result"
+       },
+       {
+        "step": "st:a757b623da",
+        "via": "apps/api/services/setup.py::_load_setup_result"
+       },
+       {
+        "step": "st:07278f8b63",
+        "via": "apps/api/services/idempotency.py::complete"
+       },
+       {
+        "step": "st:4bc0fc1137",
+        "via": "apps/api/services/idempotency.py::complete"
+       },
+       {
+        "step": "st:222729711a",
+        "via": "apps/api/services/idempotency.py::complete"
+       },
+       {
+        "step": "st:840f0b8ac7",
+        "via": "apps/api/services/idempotency.py::complete"
+       },
+       {
+        "step": "st:07fb369254",
+        "via": "apps/api/services/setup.py::complete_setup"
+       },
+       {
+        "step": "st:c389b6f86f",
+        "via": "apps/api/services/ai_credits.py::credits_used_this_month"
+       }
+      ],
+      "uncommitted": []
+     },
+     "exit": {
+      "id": "r:406d313dde",
+      "kind": "success"
+     },
+     "id": "p:1ac75d260a",
+     "names": {
+      "detail": "await _me_response_from_result(ctx, result, session, settings)",
+      "exception": null,
+      "stage": "handler",
+      "token": "completed"
+     },
+     "phase": "handler",
+     "state": "defined",
+     "status": 200,
+     "switches": [
+      "sw:12b96f1a5a",
+      "sw:967c49ad34",
+      "sw:f52e70d831"
+     ],
+     "tests": [
+      {
+       "case": "C1049",
+       "conf": "status",
+       "line": 35
+      },
+      {
+       "case": "C1050",
+       "conf": "status",
+       "line": 65
+      },
+      {
+       "case": "C1050",
+       "conf": "status",
+       "line": 66
+      },
+      {
+       "case": "C1056",
+       "conf": "status",
+       "line": 141
+      },
+      {
+       "case": "C1057",
+       "conf": "status",
+       "line": 166
+      },
+      {
+       "case": "C389",
+       "conf": "status",
+       "line": 756
+      },
+      {
+       "case": "C390",
+       "conf": "status",
+       "line": 778
+      },
+      {
+       "case": "C391",
+       "conf": "status",
+       "line": 804
+      },
+      {
+       "case": "C392",
+       "conf": "status",
+       "line": 824
+      },
+      {
+       "case": "C392",
+       "conf": "status",
+       "line": 825
+      }
+     ]
+    },
+    {
+     "chain": [
+      {
+       "call": "CORSMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "kind": "switch",
+       "phase": "middleware",
+       "ref": "sw:12b96f1a5a"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:117",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:8437446a6c"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:121",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:a7992af811"
+      },
+      {
+       "call": "IdempotencyMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:fdb1ae15e9",
+       "split": "body-parse"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:ae1bc4dc59",
+       "split": "body-parse"
+      },
+      {
+       "at": "apps/api/auth/context.py:23",
+       "hit": false,
+       "kind": "gate",
+       "phase": "security",
+       "ref": "x:9fd81887a2"
+      },
+      {
+       "kind": "switch",
+       "phase": "dependency",
+       "ref": "sw:967c49ad34"
+      },
+      {
+       "at": "apps/api/auth/context.py:99",
+       "hit": false,
+       "kind": "gate",
+       "phase": "dependency",
+       "ref": "x:18e726cdeb"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "validation",
+       "ref": "x:1b256011f1",
+       "split": "own-params"
+      },
+      {
+       "at": "apps/api/api/setup.py:191",
+       "call": "get_idempotency_key",
+       "fn": "apps/api/middleware/idempotency.py::get_idempotency_key",
+       "kind": "collapsed",
+       "reason": "one return"
+      },
+      {
+       "at": "apps/api/api/setup.py:193",
+       "hit": false,
+       "kind": "gate",
+       "phase": "handler",
+       "ref": "x:13ce9b79e0"
+      },
+      {
+       "at": "apps/api/api/setup.py:196",
+       "call": "complete_setup",
+       "fn": "apps/api/services/setup.py::complete_setup",
+       "kind": "call"
+      },
+      {
+       "at": "apps/api/services/setup.py:346",
+       "hit": false,
+       "kind": "branch",
+       "ref": "b:777606a0cc"
+      },
+      {
+       "at": "apps/api/services/setup.py:348",
+       "hit": false,
+       "kind": "gate",
+       "phase": "handler",
+       "ref": "x:f2caf456bd"
+      },
+      {
+       "at": "apps/api/services/setup.py:362",
+       "hit": false,
+       "kind": "branch",
+       "ref": "b:ea440a25b4"
+      },
+      {
+       "at": "apps/api/services/setup.py:374",
+       "hit": false,
+       "kind": "gate",
+       "phase": "handler",
+       "ref": "x:a086031223"
+      },
+      {
+       "at": "apps/api/services/setup.py:389",
+       "hit": true,
+       "kind": "branch",
+       "ref": "b:b31ca62e66"
+      },
+      {
+       "kind": "switch",
+       "phase": "handler",
+       "ref": "sw:f52e70d831"
+      },
+      {
+       "at": "apps/api/api/setup.py:204",
+       "call": "_me_response_from_result",
+       "fn": "apps/api/api/setup.py::_me_response_from_result",
+       "kind": "collapsed",
+       "reason": "one return"
+      },
+      {
+       "kind": "exit",
+       "ref": "r:406d313dde"
+      }
+     ],
+     "effects": {
+      "committed": [
+       "st:ba597dd4f4",
+       "st:f0d4172d3b",
+       "st:9b6870a647",
+       "st:7cc3a75a8e",
+       "st:15a3f75493",
+       "st:4d0ee3df2a",
+       "st:a9bf302767",
+       "st:1c0280047e",
+       "st:e5fd2b50ea",
+       "st:43c8056202",
+       "st:d245511503",
+       "st:8c4f90e357",
+       "st:d97a46993d",
+       "st:7297a4e711",
+       "st:fe64b59347",
+       "st:39e2840854",
+       "st:9be8b42058",
+       "st:e623e476f8",
+       "st:f0654d0780",
+       "st:5651165c03",
+       "st:cb7e89cece",
+       "st:3fb9f4edbe",
+       "st:a8b7865a19",
+       "st:57945cb1d8",
+       "st:52bbe4ca63",
+       "st:cdaed79626",
+       "st:3bdeb48734",
+       "st:bc1c15c55e",
+       "st:e202380457",
+       "st:7705d7c36b",
+       "st:d891375de0",
+       "st:a0fb1b8ed5",
+       "st:26f6505da0",
+       "st:c45ea7a722",
+       "st:94314df61f",
+       "st:c74e63b797",
+       "st:381e17c978",
+       "st:129ff47f42",
+       "st:cc87d22194",
+       "st:24395b6742",
+       "st:4c4c61d22b",
+       "st:806f4618fa",
+       "st:07278f8b63",
+       "st:4bc0fc1137",
+       "st:222729711a"
+      ],
+      "dependency": "ran",
+      "maybe_committed": [],
+      "rolled_back": [],
+      "steps": [
+       {
+        "dependency": true,
+        "step": "st:c79e53a27f",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:ba597dd4f4",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:f5b6b3e9b3",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:925411811a",
+        "via": "apps/api/auth/context.py::build_auth_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:fdb7bb7853",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:200eb54837",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:61aa8a44cc",
+        "via": "apps/api/services/ownership.py::get_principal_location"
+       },
+       {
+        "step": "st:c6aff0cdc2",
+        "via": "apps/api/services/idempotency.py::_lookup"
+       },
+       {
+        "step": "st:f0d4172d3b",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:9b6870a647",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:7cc3a75a8e",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:15a3f75493",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:8c8b6c5a08",
+        "via": "apps/api/services/idempotency.py::_outcome_for"
+       },
+       {
+        "step": "st:3bea18b560",
+        "via": "apps/api/services/idempotency.py::claim"
+       },
+       {
+        "step": "st:4d0ee3df2a",
+        "via": "apps/api/services/idempotency.py::claim"
+       },
+       {
+        "step": "st:93d18ca18c",
+        "via": "apps/api/services/idempotency.py::claim"
+       },
+       {
+        "step": "st:63a86044ef",
+        "via": "apps/api/services/idempotency.py::_lookup"
+       },
+       {
+        "step": "st:f0d4172d3b",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:9b6870a647",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:7cc3a75a8e",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:15a3f75493",
+        "via": "apps/api/services/idempotency.py::_reclaim"
+       },
+       {
+        "step": "st:8c8b6c5a08",
+        "via": "apps/api/services/idempotency.py::_outcome_for"
+       },
+       {
+        "step": "st:fdb7bb7853",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "step": "st:200eb54837",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "step": "st:61aa8a44cc",
+        "via": "apps/api/services/ownership.py::get_principal_location"
+       },
+       {
+        "step": "st:66639991ec",
+        "via": "apps/api/services/setup.py::complete_setup"
+       },
+       {
+        "step": "st:bfdef91eea",
+        "via": "apps/api/services/consent.py::latest_consent"
+       },
+       {
+        "step": "st:4588a697e1",
+        "via": "apps/api/services/ownership.py::ensure_principal_household"
+       },
+       {
+        "step": "st:eaa4348ea7",
+        "via": "apps/api/services/ownership.py::ensure_principal_household"
+       },
+       {
+        "step": "st:61aa8a44cc",
+        "via": "apps/api/services/ownership.py::get_principal_location"
+       },
+       {
+        "step": "st:a9bf302767",
+        "via": "apps/api/services/ownership.py::ensure_principal_household"
+       },
+       {
+        "step": "st:be99a781ff",
+        "via": "apps/api/services/ownership.py::ensure_principal_household"
+       },
+       {
+        "step": "st:1c0280047e",
+        "via": "apps/api/services/ownership.py::ensure_principal_household"
+       },
+       {
+        "step": "st:72af76bac9",
+        "via": "apps/api/services/ownership.py::ensure_principal_household"
+       },
+       {
+        "step": "st:e5fd2b50ea",
+        "via": "apps/api/services/ownership.py::ensure_principal_household"
+       },
+       {
+        "step": "st:43c8056202",
+        "via": "apps/api/services/ownership.py::ensure_principal_household"
+       },
+       {
+        "step": "st:863304b9bf",
+        "via": "apps/api/services/ownership.py::ensure_principal_household"
+       },
+       {
+        "step": "st:d245511503",
+        "via": "apps/api/services/setup.py::complete_setup"
+       },
+       {
+        "step": "st:730623ac98",
+        "via": "apps/api/services/setup.py::complete_setup"
+       },
+       {
+        "step": "st:9cec281f5c",
+        "via": "apps/api/services/setup.py::_upsert_format_prefs"
+       },
+       {
+        "step": "st:8c4f90e357",
+        "via": "apps/api/services/setup.py::_upsert_format_prefs"
+       },
+       {
+        "step": "st:d97a46993d",
+        "via": "apps/api/services/setup.py::_upsert_format_prefs"
+       },
+       {
+        "step": "st:7297a4e711",
+        "via": "apps/api/services/setup.py::_upsert_format_prefs"
+       },
+       {
+        "step": "st:fe64b59347",
+        "via": "apps/api/services/setup.py::_upsert_format_prefs"
+       },
+       {
+        "step": "st:39e2840854",
+        "via": "apps/api/services/setup.py::_upsert_format_prefs"
+       },
+       {
+        "step": "st:cdfd674fc9",
+        "via": "apps/api/services/setup.py::_upsert_format_prefs"
+       },
+       {
+        "step": "st:6673e9085f",
+        "via": "apps/api/services/setup.py::_upsert_user_format"
+       },
+       {
+        "step": "st:9be8b42058",
+        "via": "apps/api/services/setup.py::_upsert_user_format"
+       },
+       {
+        "step": "st:e623e476f8",
+        "via": "apps/api/services/setup.py::_upsert_user_format"
+       },
+       {
+        "step": "st:23675ebb9c",
+        "via": "apps/api/services/setup.py::_upsert_user_format"
+       },
+       {
+        "step": "st:50f9b8ad08",
+        "via": "apps/api/services/setup.py::_upsert_dietary"
+       },
+       {
+        "step": "st:f0654d0780",
+        "via": "apps/api/services/setup.py::_upsert_dietary"
+       },
+       {
+        "step": "st:5651165c03",
+        "via": "apps/api/services/setup.py::_upsert_dietary"
+       },
+       {
+        "step": "st:cb7e89cece",
+        "via": "apps/api/services/setup.py::_upsert_dietary"
+       },
+       {
+        "step": "st:25d0b2d2bd",
+        "via": "apps/api/services/setup.py::_upsert_dietary"
+       },
+       {
+        "step": "st:4c2bd05a94",
+        "via": "apps/api/services/exploration.py::upsert_exploration_preferences"
+       },
+       {
+        "step": "st:3fb9f4edbe",
+        "via": "apps/api/services/exploration.py::upsert_exploration_preferences"
+       },
+       {
+        "step": "st:a8b7865a19",
+        "via": "apps/api/services/exploration.py::upsert_exploration_preferences"
+       },
+       {
+        "step": "st:57945cb1d8",
+        "via": "apps/api/services/exploration.py::upsert_exploration_preferences"
+       },
+       {
+        "step": "st:52bbe4ca63",
+        "via": "apps/api/services/exploration.py::upsert_exploration_preferences"
+       },
+       {
+        "step": "st:cdaed79626",
+        "via": "apps/api/services/exploration.py::upsert_exploration_preferences"
+       },
+       {
+        "step": "st:3bdeb48734",
+        "via": "apps/api/services/exploration.py::upsert_exploration_preferences"
+       },
+       {
+        "step": "st:bc1c15c55e",
+        "via": "apps/api/services/exploration.py::upsert_exploration_preferences"
+       },
+       {
+        "step": "st:e202380457",
+        "via": "apps/api/services/exploration.py::upsert_exploration_preferences"
+       },
+       {
+        "step": "st:7705d7c36b",
+        "via": "apps/api/services/exploration.py::upsert_exploration_preferences"
+       },
+       {
+        "step": "st:35976c978a",
+        "via": "apps/api/services/exploration.py::upsert_exploration_preferences"
+       },
+       {
+        "step": "st:410e1b26a2",
+        "via": "apps/api/services/setup.py::_upsert_privacy"
+       },
+       {
+        "step": "st:d891375de0",
+        "via": "apps/api/services/setup.py::_upsert_privacy"
+       },
+       {
+        "step": "st:a0fb1b8ed5",
+        "via": "apps/api/services/setup.py::_upsert_privacy"
+       },
+       {
+        "step": "st:26f6505da0",
+        "via": "apps/api/services/setup.py::_upsert_privacy"
+       },
+       {
+        "step": "st:c45ea7a722",
+        "via": "apps/api/services/setup.py::_upsert_privacy"
+       },
+       {
+        "step": "st:0d18f7c4ad",
+        "via": "apps/api/services/setup.py::_upsert_privacy"
+       },
+       {
+        "step": "st:59e3aa605c",
+        "via": "apps/api/services/setup.py::_upsert_notifications"
+       },
+       {
+        "step": "st:94314df61f",
+        "via": "apps/api/services/setup.py::_upsert_notifications"
+       },
+       {
+        "step": "st:c74e63b797",
+        "via": "apps/api/services/setup.py::_upsert_notifications"
+       },
+       {
+        "step": "st:381e17c978",
+        "via": "apps/api/services/setup.py::_upsert_notifications"
+       },
+       {
+        "step": "st:129ff47f42",
+        "via": "apps/api/services/setup.py::_upsert_notifications"
+       },
+       {
+        "step": "st:e8012a26db",
+        "via": "apps/api/services/setup.py::_upsert_notifications"
+       },
+       {
+        "step": "st:f4a18eb55d",
+        "via": "apps/api/services/setup.py::_upsert_subscription"
+       },
+       {
+        "step": "st:cc87d22194",
+        "via": "apps/api/services/setup.py::_upsert_subscription"
+       },
+       {
+        "step": "st:3e8e1bb77b",
+        "via": "apps/api/services/setup.py::_upsert_subscription"
+       },
+       {
+        "step": "st:f9131e9eae",
+        "via": "apps/api/services/setup.py::_stamp_completion"
+       },
+       {
+        "step": "st:24395b6742",
+        "via": "apps/api/services/setup.py::_stamp_completion"
+       },
+       {
+        "step": "st:4c4c61d22b",
+        "via": "apps/api/services/setup.py::_stamp_completion"
+       },
+       {
+        "step": "st:806f4618fa",
+        "via": "apps/api/services/setup.py::_stamp_completion"
+       },
+       {
+        "step": "st:1bc7fd7d2a",
+        "via": "apps/api/services/setup.py::_stamp_completion"
+       },
+       {
+        "step": "st:07278f8b63",
+        "via": "apps/api/services/idempotency.py::complete"
+       },
+       {
+        "step": "st:4bc0fc1137",
+        "via": "apps/api/services/idempotency.py::complete"
+       },
+       {
+        "step": "st:222729711a",
+        "via": "apps/api/services/idempotency.py::complete"
+       },
+       {
+        "step": "st:840f0b8ac7",
+        "via": "apps/api/services/idempotency.py::complete"
+       },
+       {
+        "step": "st:b87d2e4c3a",
+        "via": "apps/api/services/setup.py::complete_setup"
+       },
+       {
+        "step": "st:c389b6f86f",
+        "via": "apps/api/services/ai_credits.py::credits_used_this_month"
+       }
+      ],
+      "uncommitted": []
+     },
+     "exit": {
+      "id": "r:406d313dde",
+      "kind": "success"
+     },
+     "id": "p:0f099873d5",
+     "names": {
+      "detail": "await _me_response_from_result(ctx, result, session, settings)",
+      "exception": null,
+      "stage": "handler",
+      "token": "fall-through"
+     },
+     "phase": "handler",
+     "state": "defined",
+     "status": 200,
+     "switches": [
+      "sw:12b96f1a5a",
+      "sw:967c49ad34",
+      "sw:f52e70d831"
+     ],
+     "tests": [
+      {
+       "case": "C1049",
+       "conf": "status",
+       "line": 35
+      },
+      {
+       "case": "C1050",
+       "conf": "status",
+       "line": 65
+      },
+      {
+       "case": "C1050",
+       "conf": "status",
+       "line": 66
+      },
+      {
+       "case": "C1056",
+       "conf": "status",
+       "line": 141
+      },
+      {
+       "case": "C1057",
+       "conf": "status",
+       "line": 166
+      },
+      {
+       "case": "C389",
+       "conf": "status",
+       "line": 756
+      },
+      {
+       "case": "C390",
+       "conf": "status",
+       "line": 778
+      },
+      {
+       "case": "C391",
+       "conf": "status",
+       "line": 804
+      },
+      {
+       "case": "C392",
+       "conf": "status",
+       "line": 824
+      },
+      {
+       "case": "C392",
+       "conf": "status",
+       "line": 825
+      }
+     ]
+    },
+    {
+     "anywhere": true,
+     "chain": [
+      {
+       "call": "CORSMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "kind": "switch",
+       "phase": "middleware",
+       "ref": "sw:12b96f1a5a"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:117",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:8437446a6c"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:121",
+       "hit": false,
+       "kind": "gate",
+       "phase": "middleware",
+       "ref": "x:a7992af811"
+      },
+      {
+       "call": "IdempotencyMiddleware",
+       "kind": "step",
+       "phase": "middleware"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:fdb1ae15e9",
+       "split": "body-parse"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "body-parse",
+       "ref": "x:ae1bc4dc59",
+       "split": "body-parse"
+      },
+      {
+       "at": "apps/api/auth/context.py:23",
+       "hit": false,
+       "kind": "gate",
+       "phase": "security",
+       "ref": "x:9fd81887a2"
+      },
+      {
+       "kind": "switch",
+       "phase": "dependency",
+       "ref": "sw:967c49ad34"
+      },
+      {
+       "at": "apps/api/auth/context.py:99",
+       "hit": false,
+       "kind": "gate",
+       "phase": "dependency",
+       "ref": "x:18e726cdeb"
+      },
+      {
+       "hit": false,
+       "kind": "gate",
+       "phase": "validation",
+       "ref": "x:1b256011f1",
+       "split": "own-params"
+      },
+      {
+       "kind": "exit",
+       "ref": "x:17b6cdc4d4"
+      }
+     ],
+     "effects": {
+      "committed": [
+       "st:ba597dd4f4"
+      ],
+      "dependency": "ran",
+      "may_follow_commits": [
+       "st:07fb369254",
+       "st:13847a504a",
+       "st:925411811a",
+       "st:b87d2e4c3a"
+      ],
+      "maybe_committed": [],
+      "rolled_back": [],
+      "steps": [
+       {
+        "dependency": true,
+        "step": "st:c79e53a27f",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:ba597dd4f4",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:f5b6b3e9b3",
+        "via": "apps/api/services/ownership.py::resolve_or_create_user"
+       },
+       {
+        "dependency": true,
+        "step": "st:925411811a",
+        "via": "apps/api/auth/context.py::build_auth_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:fdb7bb7853",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:200eb54837",
+        "via": "apps/api/services/ownership.py::load_household_context"
+       },
+       {
+        "dependency": true,
+        "step": "st:61aa8a44cc",
+        "via": "apps/api/services/ownership.py::get_principal_location"
+       }
+      ],
+      "uncommitted": []
+     },
+     "exit": {
+      "id": "x:17b6cdc4d4",
+      "kind": "uncaught"
+     },
+     "id": "p:3ee19bd271",
+     "names": {
+      "detail": null,
+      "exception": null,
+      "stage": "uncaught",
+      "token": null
+     },
+     "phase": "uncaught",
+     "state": "partial",
+     "status": 500,
+     "switches": [
+      "sw:12b96f1a5a",
+      "sw:967c49ad34"
+     ],
+     "unknown": [
+      "pass-through raise apps/api/services/setup.py:407"
+     ]
+    }
+   ],
    "preconditions": [
     {
      "at": "apps/api/api/setup.py:193",
      "depth": 0,
+     "exit": "x:13ce9b79e0",
+     "id": "g:b50d77feb9",
      "pred": "key is None",
      "status": 400
     },
@@ -64,6 +3428,8 @@ window.LABEP = {
      ],
      "at": "apps/api/services/setup.py:348",
      "depth": 1,
+     "exit": "x:f2caf456bd",
+     "id": "g:5d7ccde2a0",
      "pred": "claimed.outcome is ClaimOutcome.IN_PROGRESS",
      "status": 409,
      "via": "call complete_setup @ apps/api/api/setup.py:196"
@@ -76,6 +3442,8 @@ window.LABEP = {
      ],
      "at": "apps/api/services/setup.py:374",
      "depth": 1,
+     "exit": "x:a086031223",
+     "id": "g:db2bbc8706",
      "pred": "latest is None or latest.policy_version != CONSENT_POLICY_VERSION",
      "status": 409,
      "via": "call complete_setup @ apps/api/api/setup.py:196"
@@ -86,6 +3454,7 @@ window.LABEP = {
      "at": "apps/api/middleware/rate_limit.py:127",
      "detail": "{'detail': 'Rate limit exceeded. Try again shortly.'}",
      "form": "object",
+     "id": "x:8437446a6c",
      "phase": "middleware",
      "pred": "not self._sensitive.allow(key, now)",
      "scope": [
@@ -101,12 +3470,14 @@ window.LABEP = {
      "state": "defined",
      "status": 429,
      "via": "RateLimitMiddleware",
-     "when": "not (not self._enabled or request.url.path in EXEMPT_PATHS)"
+     "when": "not (not self._enabled or request.url.path in EXEMPT_PATHS)",
+     "when_for_path": "settings.rate_limit_enabled or settings.is_production"
     },
     {
      "at": "apps/api/middleware/rate_limit.py:127",
      "detail": "{'detail': 'Rate limit exceeded. Try again shortly.'}",
      "form": "object",
+     "id": "x:a7992af811",
      "phase": "middleware",
      "pred": "not self._global.allow(gkey, now)",
      "scope": "all",
@@ -114,12 +3485,14 @@ window.LABEP = {
      "state": "defined",
      "status": 429,
      "via": "RateLimitMiddleware",
-     "when": "not (not self._enabled or request.url.path in EXEMPT_PATHS)"
+     "when": "not (not self._enabled or request.url.path in EXEMPT_PATHS)",
+     "when_for_path": "settings.rate_limit_enabled or settings.is_production"
     },
     {
      "at": "apps/api/auth/context.py:23",
      "detail": "Not authenticated",
      "form": "default-phrase",
+     "id": "x:9fd81887a2",
      "phase": "security",
      "source": "fastapi/security/http.py:87-92",
      "state": "default",
@@ -132,6 +3505,7 @@ window.LABEP = {
      "depth": 1,
      "detail": "invalid token",
      "form": "text",
+     "id": "x:18e726cdeb",
      "phase": "dependency",
      "source": "unverified",
      "state": "defined",
@@ -139,25 +3513,785 @@ window.LABEP = {
      "via": "except InvalidTokenError"
     },
     {
+     "cases": [
+      {
+       "at": "apps/api/schemas/setup.py:24",
+       "id": "case:schema:SetupCompleteRequest/__model__/extra_forbidden",
+       "loc": "body",
+       "param": "body",
+       "rule": "extra=\"forbid\"",
+       "schema": "schema:SetupCompleteRequest",
+       "type": "extra_forbidden"
+      },
+      {
+       "at": "apps/api/schemas/setup.py:26",
+       "id": "case:schema:SetupCompleteRequest/household_name/missing",
+       "loc": "body.household_name",
+       "param": "body",
+       "schema": "schema:SetupCompleteRequest",
+       "type": "missing"
+      },
+      {
+       "at": "apps/api/schemas/setup.py:26",
+       "id": "case:schema:SetupCompleteRequest/household_name/string_too_short",
+       "loc": "body.household_name",
+       "param": "body",
+       "rule": "min_length=1",
+       "schema": "schema:SetupCompleteRequest",
+       "type": "string_too_short"
+      },
+      {
+       "at": "apps/api/schemas/setup.py:26",
+       "id": "case:schema:SetupCompleteRequest/household_name/string_too_long",
+       "loc": "body.household_name",
+       "param": "body",
+       "rule": "max_length=120",
+       "schema": "schema:SetupCompleteRequest",
+       "type": "string_too_long"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:363",
+       "id": "case:schema:HouseholdFormatInput/household_format.__model__/extra_forbidden",
+       "loc": "body.household_format",
+       "param": "body",
+       "rule": "extra=\"forbid\"",
+       "schema": "schema:HouseholdFormatInput",
+       "type": "extra_forbidden"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:375",
+       "id": "case:schema:HouseholdFormatInput/household_format.country/value_error/_check_country.0",
+       "loc": "body.household_format.country",
+       "msg": "country must be a 2-letter ISO code",
+       "normalises": [
+        "strip",
+        "upper"
+       ],
+       "param": "body",
+       "pred": "len(country) != 2 or not country.isalpha()",
+       "schema": "schema:HouseholdFormatInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::HouseholdFormatInput._check_country"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:383",
+       "id": "case:schema:HouseholdFormatInput/household_format.currency/value_error/_check_currency.0",
+       "loc": "body.household_format.currency",
+       "msg": "currency must be a 3-letter ISO 4217 code",
+       "normalises": [
+        "strip",
+        "upper"
+       ],
+       "param": "body",
+       "pred": "len(currency) != 3 or not currency.isalpha()",
+       "schema": "schema:HouseholdFormatInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::HouseholdFormatInput._check_currency"
+      },
+      {
+       "allowed": {
+        "values": [
+         "metric",
+         "imperial"
+        ]
+       },
+       "at": "apps/api/schemas/preferences.py:391",
+       "id": "case:schema:HouseholdFormatInput/household_format.units/value_error/_check_units.0",
+       "loc": "body.household_format.units",
+       "msg": "units must be one of ['metric', 'imperial']",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "units not in ALLOWED_UNITS",
+       "schema": "schema:HouseholdFormatInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::HouseholdFormatInput._check_units"
+      },
+      {
+       "allowed": {
+        "values": [
+         1,
+         2,
+         3,
+         4,
+         5,
+         8,
+         10,
+         20
+        ]
+       },
+       "at": "apps/api/schemas/preferences.py:398",
+       "id": "case:schema:HouseholdFormatInput/household_format.default_servings/value_error/_check_servings.0",
+       "loc": "body.household_format.default_servings",
+       "msg": "default_servings must be one of [1, 2, 3, 4, 5, 8, 10, 20]",
+       "param": "body",
+       "pred": "value not in ALLOWED_SERVINGS",
+       "schema": "schema:HouseholdFormatInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::HouseholdFormatInput._check_servings"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:405",
+       "id": "case:schema:UserFormatInput/user_format.__model__/extra_forbidden",
+       "loc": "body.user_format",
+       "param": "body",
+       "rule": "extra=\"forbid\"",
+       "schema": "schema:UserFormatInput",
+       "type": "extra_forbidden"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:414",
+       "id": "case:schema:UserFormatInput/user_format.language/value_error/_check_language.0",
+       "loc": "body.user_format.language",
+       "msg": "language must not be empty",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "not language",
+       "schema": "schema:UserFormatInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::UserFormatInput._check_language"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:122",
+       "id": "case:schema:DietaryProfileInput/dietary.__model__/extra_forbidden",
+       "loc": "body.dietary",
+       "param": "body",
+       "rule": "extra=\"forbid\"",
+       "schema": "schema:DietaryProfileInput",
+       "type": "extra_forbidden"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:92",
+       "bound": {
+        "label": "allergens",
+        "max_items": 5
+       },
+       "id": "case:schema:DietaryProfileInput/dietary.allergens/value_error/_check_allergens.0",
+       "loc": "body.dietary.allergens",
+       "msg": "allergens contains an empty tag",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "not tag",
+       "schema": "schema:DietaryProfileInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::DietaryProfileInput._check_allergens",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:131"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:97",
+       "bound": {
+        "label": "allergens",
+        "max_items": 5
+       },
+       "id": "case:schema:DietaryProfileInput/dietary.allergens/value_error/_check_allergens.1",
+       "loc": "body.dietary.allergens",
+       "msg": "allergens allows at most 5 items (got {len(cleaned)})",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "len(cleaned) > max_items",
+       "schema": "schema:DietaryProfileInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::DietaryProfileInput._check_allergens",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:131"
+      },
+      {
+       "allowed": {
+        "reason": "runtime: allergen_codes()",
+        "state": "unknown"
+       },
+       "at": "apps/api/schemas/preferences.py:101",
+       "bound": {
+        "label": "allergens",
+        "max_items": 5
+       },
+       "id": "case:schema:DietaryProfileInput/dietary.allergens/value_error/_check_allergens.2",
+       "loc": "body.dietary.allergens",
+       "msg": "unknown allergens code(s) {unknown}; valid: {sorted(allowed)}",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "allowed is not None and unknown",
+       "schema": "schema:DietaryProfileInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::DietaryProfileInput._check_allergens",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:131"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:92",
+       "bound": {
+        "label": "preferences",
+        "max_items": 20
+       },
+       "id": "case:schema:DietaryProfileInput/dietary.preferences/value_error/_check_preferences.0",
+       "loc": "body.dietary.preferences",
+       "msg": "preferences contains an empty tag",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "not tag",
+       "schema": "schema:DietaryProfileInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::DietaryProfileInput._check_preferences",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:138"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:97",
+       "bound": {
+        "label": "preferences",
+        "max_items": 20
+       },
+       "id": "case:schema:DietaryProfileInput/dietary.preferences/value_error/_check_preferences.1",
+       "loc": "body.dietary.preferences",
+       "msg": "preferences allows at most 20 items (got {len(cleaned)})",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "len(cleaned) > max_items",
+       "schema": "schema:DietaryProfileInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::DietaryProfileInput._check_preferences",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:138"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:182",
+       "id": "case:schema:ExplorationPreferencesInput/exploration.__model__/extra_forbidden",
+       "loc": "body.exploration",
+       "param": "body",
+       "rule": "extra=\"forbid\"",
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "extra_forbidden"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:92",
+       "bound": {
+        "label": "explore_regions",
+        "max_items": 3
+       },
+       "id": "case:schema:ExplorationPreferencesInput/exploration.explore_regions/value_error/_check_explore_regions.0",
+       "loc": "body.exploration.explore_regions",
+       "msg": "explore_regions contains an empty tag",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "not tag",
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::ExplorationPreferencesInput._check_explore_regions",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:197"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:97",
+       "bound": {
+        "label": "explore_regions",
+        "max_items": 3
+       },
+       "id": "case:schema:ExplorationPreferencesInput/exploration.explore_regions/value_error/_check_explore_regions.1",
+       "loc": "body.exploration.explore_regions",
+       "msg": "explore_regions allows at most 3 items (got {len(cleaned)})",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "len(cleaned) > max_items",
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::ExplorationPreferencesInput._check_explore_regions",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:197"
+      },
+      {
+       "allowed": {
+        "reason": "runtime: exploration_region_codes()",
+        "state": "unknown"
+       },
+       "at": "apps/api/schemas/preferences.py:101",
+       "bound": {
+        "label": "explore_regions",
+        "max_items": 3
+       },
+       "id": "case:schema:ExplorationPreferencesInput/exploration.explore_regions/value_error/_check_explore_regions.2",
+       "loc": "body.exploration.explore_regions",
+       "msg": "unknown explore_regions code(s) {unknown}; valid: {sorted(allowed)}",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "allowed is not None and unknown",
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::ExplorationPreferencesInput._check_explore_regions",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:197"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:92",
+       "bound": {
+        "label": "curiosity_techniques",
+        "max_items": 3
+       },
+       "id": "case:schema:ExplorationPreferencesInput/exploration.curiosity_techniques/value_error/_check_curiosity_techniques.0",
+       "loc": "body.exploration.curiosity_techniques",
+       "msg": "curiosity_techniques contains an empty tag",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "not tag",
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::ExplorationPreferencesInput._check_curiosity_techniques",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:207"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:97",
+       "bound": {
+        "label": "curiosity_techniques",
+        "max_items": 3
+       },
+       "id": "case:schema:ExplorationPreferencesInput/exploration.curiosity_techniques/value_error/_check_curiosity_techniques.1",
+       "loc": "body.exploration.curiosity_techniques",
+       "msg": "curiosity_techniques allows at most 3 items (got {len(cleaned)})",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "len(cleaned) > max_items",
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::ExplorationPreferencesInput._check_curiosity_techniques",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:207"
+      },
+      {
+       "allowed": {
+        "reason": "runtime: curiosity_technique_codes()",
+        "state": "unknown"
+       },
+       "at": "apps/api/schemas/preferences.py:101",
+       "bound": {
+        "label": "curiosity_techniques",
+        "max_items": 3
+       },
+       "id": "case:schema:ExplorationPreferencesInput/exploration.curiosity_techniques/value_error/_check_curiosity_techniques.2",
+       "loc": "body.exploration.curiosity_techniques",
+       "msg": "unknown curiosity_techniques code(s) {unknown}; valid: {sorted(allowed)}",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "allowed is not None and unknown",
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::ExplorationPreferencesInput._check_curiosity_techniques",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:207"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:92",
+       "bound": {
+        "label": "comfort_techniques",
+        "max_items": 3
+       },
+       "id": "case:schema:ExplorationPreferencesInput/exploration.comfort_techniques/value_error/_check_comfort_techniques.0",
+       "loc": "body.exploration.comfort_techniques",
+       "msg": "comfort_techniques contains an empty tag",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "not tag",
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::ExplorationPreferencesInput._check_comfort_techniques",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:217"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:97",
+       "bound": {
+        "label": "comfort_techniques",
+        "max_items": 3
+       },
+       "id": "case:schema:ExplorationPreferencesInput/exploration.comfort_techniques/value_error/_check_comfort_techniques.1",
+       "loc": "body.exploration.comfort_techniques",
+       "msg": "comfort_techniques allows at most 3 items (got {len(cleaned)})",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "len(cleaned) > max_items",
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::ExplorationPreferencesInput._check_comfort_techniques",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:217"
+      },
+      {
+       "allowed": {
+        "reason": "runtime: curiosity_technique_codes()",
+        "state": "unknown"
+       },
+       "at": "apps/api/schemas/preferences.py:101",
+       "bound": {
+        "label": "comfort_techniques",
+        "max_items": 3
+       },
+       "id": "case:schema:ExplorationPreferencesInput/exploration.comfort_techniques/value_error/_check_comfort_techniques.2",
+       "loc": "body.exploration.comfort_techniques",
+       "msg": "unknown comfort_techniques code(s) {unknown}; valid: {sorted(allowed)}",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "allowed is not None and unknown",
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::ExplorationPreferencesInput._check_comfort_techniques",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:217"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:92",
+       "bound": {
+        "label": "comfort_time",
+        "max_items": 3
+       },
+       "id": "case:schema:ExplorationPreferencesInput/exploration.comfort_time/value_error/_check_comfort_time.0",
+       "loc": "body.exploration.comfort_time",
+       "msg": "comfort_time contains an empty tag",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "not tag",
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::ExplorationPreferencesInput._check_comfort_time",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:227"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:97",
+       "bound": {
+        "label": "comfort_time",
+        "max_items": 3
+       },
+       "id": "case:schema:ExplorationPreferencesInput/exploration.comfort_time/value_error/_check_comfort_time.1",
+       "loc": "body.exploration.comfort_time",
+       "msg": "comfort_time allows at most 3 items (got {len(cleaned)})",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "len(cleaned) > max_items",
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::ExplorationPreferencesInput._check_comfort_time",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:227"
+      },
+      {
+       "allowed": {
+        "reason": "runtime: comfort_time_codes()",
+        "state": "unknown"
+       },
+       "at": "apps/api/schemas/preferences.py:101",
+       "bound": {
+        "label": "comfort_time",
+        "max_items": 3
+       },
+       "id": "case:schema:ExplorationPreferencesInput/exploration.comfort_time/value_error/_check_comfort_time.2",
+       "loc": "body.exploration.comfort_time",
+       "msg": "unknown comfort_time code(s) {unknown}; valid: {sorted(allowed)}",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "allowed is not None and unknown",
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::ExplorationPreferencesInput._check_comfort_time",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:227"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:53",
+       "band": "accepted",
+       "bound": {},
+       "id": "case:schema:ExplorationPreferencesInput/exploration.skill_complexity_cap/value_error/_check_skill_complexity_cap.0",
+       "loc": "body.exploration.skill_complexity_cap",
+       "msg": "skill_complexity_cap must be null or in 1..5 (got {value})",
+       "param": "body",
+       "pred": "not MIN_SKILL_COMPLEXITY_CAP <= value <= MAX_SKILL_COMPLEXITY_CAP",
+       "range": [
+        1,
+        5
+       ],
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::ExplorationPreferencesInput._check_skill_complexity_cap",
+       "via": "_check_complexity_cap @ apps/api/schemas/preferences.py:237"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:92",
+       "bound": {
+        "label": "preference_tastes",
+        "max_items": 3
+       },
+       "id": "case:schema:ExplorationPreferencesInput/exploration.preference_tastes/value_error/_check_preference_tastes.0",
+       "loc": "body.exploration.preference_tastes",
+       "msg": "preference_tastes contains an empty tag",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "not tag",
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::ExplorationPreferencesInput._check_preference_tastes",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:242"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:97",
+       "bound": {
+        "label": "preference_tastes",
+        "max_items": 3
+       },
+       "id": "case:schema:ExplorationPreferencesInput/exploration.preference_tastes/value_error/_check_preference_tastes.1",
+       "loc": "body.exploration.preference_tastes",
+       "msg": "preference_tastes allows at most 3 items (got {len(cleaned)})",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "len(cleaned) > max_items",
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::ExplorationPreferencesInput._check_preference_tastes",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:242"
+      },
+      {
+       "allowed": {
+        "reason": "runtime: taste_axis_codes()",
+        "state": "unknown"
+       },
+       "at": "apps/api/schemas/preferences.py:101",
+       "bound": {
+        "label": "preference_tastes",
+        "max_items": 3
+       },
+       "id": "case:schema:ExplorationPreferencesInput/exploration.preference_tastes/value_error/_check_preference_tastes.2",
+       "loc": "body.exploration.preference_tastes",
+       "msg": "unknown preference_tastes code(s) {unknown}; valid: {sorted(allowed)}",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "allowed is not None and unknown",
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::ExplorationPreferencesInput._check_preference_tastes",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:242"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:92",
+       "bound": {
+        "label": "preference_textures",
+        "max_items": 3
+       },
+       "id": "case:schema:ExplorationPreferencesInput/exploration.preference_textures/value_error/_check_preference_textures.0",
+       "loc": "body.exploration.preference_textures",
+       "msg": "preference_textures contains an empty tag",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "not tag",
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::ExplorationPreferencesInput._check_preference_textures",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:252"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:97",
+       "bound": {
+        "label": "preference_textures",
+        "max_items": 3
+       },
+       "id": "case:schema:ExplorationPreferencesInput/exploration.preference_textures/value_error/_check_preference_textures.1",
+       "loc": "body.exploration.preference_textures",
+       "msg": "preference_textures allows at most 3 items (got {len(cleaned)})",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "len(cleaned) > max_items",
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::ExplorationPreferencesInput._check_preference_textures",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:252"
+      },
+      {
+       "allowed": {
+        "reason": "runtime: texture_codes()",
+        "state": "unknown"
+       },
+       "at": "apps/api/schemas/preferences.py:101",
+       "bound": {
+        "label": "preference_textures",
+        "max_items": 3
+       },
+       "id": "case:schema:ExplorationPreferencesInput/exploration.preference_textures/value_error/_check_preference_textures.2",
+       "loc": "body.exploration.preference_textures",
+       "msg": "unknown preference_textures code(s) {unknown}; valid: {sorted(allowed)}",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "allowed is not None and unknown",
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::ExplorationPreferencesInput._check_preference_textures",
+       "via": "clean_tags @ apps/api/schemas/preferences.py:252"
+      },
+      {
+       "allowed": {
+        "reason": "runtime: temperature_codes()",
+        "state": "unknown"
+       },
+       "at": "apps/api/schemas/preferences.py:75",
+       "bound": {},
+       "id": "case:schema:ExplorationPreferencesInput/exploration.preference_temperature/value_error/_check_preference_temperature.0",
+       "loc": "body.exploration.preference_temperature",
+       "msg": "unknown preference_temperature code {code}; valid: {sorted(allowed)}",
+       "normalises": [
+        "lower",
+        "strip"
+       ],
+       "param": "body",
+       "pred": "code not in allowed",
+       "schema": "schema:ExplorationPreferencesInput",
+       "type": "value_error",
+       "validator": "apps/api/schemas/preferences.py::ExplorationPreferencesInput._check_preference_temperature",
+       "via": "_check_temperature_pref @ apps/api/schemas/preferences.py:262"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:421",
+       "id": "case:schema:PrivacyPermissionsInput/privacy.__model__/extra_forbidden",
+       "loc": "body.privacy",
+       "param": "body",
+       "rule": "extra=\"forbid\"",
+       "schema": "schema:PrivacyPermissionsInput",
+       "type": "extra_forbidden"
+      },
+      {
+       "at": "apps/api/schemas/preferences.py:431",
+       "id": "case:schema:NotificationPreferencesInput/notifications.__model__/extra_forbidden",
+       "loc": "body.notifications",
+       "param": "body",
+       "rule": "extra=\"forbid\"",
+       "schema": "schema:NotificationPreferencesInput",
+       "type": "extra_forbidden"
+      },
+      {
+       "at": "apps/api/schemas/setup.py:45",
+       "id": "case:schema:SetupCompleteRequest/household_name/value_error/_strip_name.0",
+       "loc": "body.household_name",
+       "msg": "household_name must not be blank",
+       "normalises": [
+        "strip"
+       ],
+       "param": "body",
+       "pred": "not name",
+       "schema": "schema:SetupCompleteRequest",
+       "type": "value_error",
+       "validator": "apps/api/schemas/setup.py::SetupCompleteRequest._strip_name"
+      },
+      {
+       "id": "case:framework:body/missing",
+       "loc": "body",
+       "param": "body",
+       "source": "fastapi/dependencies/utils.py request_body_to_args",
+       "state": "default",
+       "type": "missing"
+      }
+     ],
      "code": "pydantic error type",
      "form": "object",
+     "id": "x:1b256011f1",
      "params": [
       "body"
      ],
      "phase": "validation",
+     "schemas": [
+      "schema:DietaryProfileInput",
+      "schema:ExplorationPreferencesInput",
+      "schema:HouseholdFormatInput",
+      "schema:NotificationPreferencesInput",
+      "schema:PrivacyPermissionsInput",
+      "schema:SetupCompleteRequest",
+      "schema:UserFormatInput"
+     ],
      "source": "fastapi/exception_handlers.py:20-26",
      "state": "default",
-     "status": 422
+     "status": 422,
+     "tests": [
+      {
+       "case": "C1051",
+       "conf": "status",
+       "line": 74
+      },
+      {
+       "case": "C1052",
+       "conf": "status",
+       "line": 83
+      }
+     ],
+     "types": "collapsed"
     },
     {
      "at": "apps/api/api/setup.py:193",
      "depth": 0,
      "detail": "Idempotency-Key required",
      "form": "text",
+     "id": "x:13ce9b79e0",
      "phase": "handler",
      "pred": "key is None",
      "state": "defined",
-     "status": 400
+     "status": 400,
+     "tests": [
+      {
+       "case": "C1048",
+       "conf": "status+detail",
+       "line": 23
+      }
+     ]
     },
     {
      "after": [
@@ -167,11 +4301,24 @@ window.LABEP = {
      "depth": 0,
      "detail": "setup in progress",
      "form": "text",
+     "id": "x:f2caf456bd",
      "phase": "handler",
      "raised_at": "apps/api/services/setup.py:348",
      "source": "verified",
      "state": "defined",
      "status": 409,
+     "tests": [
+      {
+       "case": "C1057",
+       "conf": "ambiguous of 2",
+       "line": 158
+      },
+      {
+       "case": "C1061",
+       "conf": "service raises",
+       "line": 128
+      }
+     ],
      "via": "except SetupInProgressError"
     },
     {
@@ -182,14 +4329,38 @@ window.LABEP = {
      "depth": 0,
      "detail": "consent required",
      "form": "text",
+     "id": "x:a086031223",
      "phase": "handler",
      "raised_at": "apps/api/services/setup.py:374",
      "source": "verified",
      "state": "defined",
      "status": 409,
+     "tests": [
+      {
+       "case": "C1055",
+       "conf": "status+detail",
+       "line": 121
+      },
+      {
+       "case": "C1057",
+       "conf": "ambiguous of 2",
+       "line": 158
+      },
+      {
+       "case": "C1065",
+       "conf": "service raises",
+       "line": 217
+      },
+      {
+       "case": "C1067",
+       "conf": "service raises",
+       "line": 247
+      }
+     ],
      "via": "except ConsentRequiredError"
     },
     {
+     "id": "x:17b6cdc4d4",
      "phase": "uncaught",
      "source": "starlette ServerErrorMiddleware",
      "state": "default",
@@ -197,6 +4368,348 @@ window.LABEP = {
      "unknown_causes": [
       "pass-through raise apps/api/services/setup.py:407"
      ]
+    }
+   ],
+   "rate": {
+    "exempt": [
+     "/healthz"
+    ],
+    "limits": [
+     {
+      "args": [
+       {
+        "at": "apps/api/config.py:139",
+        "env": "GUSTIFY_RATE_LIMIT_SENSITIVE_PER_MINUTE",
+        "expr": "s.rate_limit_sensitive_per_minute",
+        "param": "limit",
+        "setting": "rate_limit_sensitive_per_minute",
+        "state": "default",
+        "value": 20
+       },
+       {
+        "at": "apps/api/config.py:140",
+        "env": "GUSTIFY_RATE_LIMIT_WINDOW_SECONDS",
+        "expr": "s.rate_limit_window_seconds",
+        "param": "window_seconds",
+        "setting": "rate_limit_window_seconds",
+        "state": "default",
+        "value": 60.0
+       }
+      ],
+      "at": "apps/api/middleware/rate_limit.py:117",
+      "class": "SlidingWindowLimiter",
+      "exit": "x:8437446a6c",
+      "init_at": "apps/api/middleware/rate_limit.py:103",
+      "key": "f'{ip}:sensitive'",
+      "limiter": "_sensitive",
+      "state": "default",
+      "via": "RateLimitMiddleware"
+     },
+     {
+      "args": [
+       {
+        "at": "apps/api/config.py:138",
+        "env": "GUSTIFY_RATE_LIMIT_PER_MINUTE",
+        "expr": "s.rate_limit_per_minute",
+        "param": "limit",
+        "setting": "rate_limit_per_minute",
+        "state": "default",
+        "value": 120
+       },
+       {
+        "at": "apps/api/config.py:140",
+        "env": "GUSTIFY_RATE_LIMIT_WINDOW_SECONDS",
+        "expr": "s.rate_limit_window_seconds",
+        "param": "window_seconds",
+        "setting": "rate_limit_window_seconds",
+        "state": "default",
+        "value": 60.0
+       }
+      ],
+      "at": "apps/api/middleware/rate_limit.py:121",
+      "class": "SlidingWindowLimiter",
+      "exit": "x:a7992af811",
+      "init_at": "apps/api/middleware/rate_limit.py:100",
+      "key": "f'{ip}:global'",
+      "limiter": "_global",
+      "state": "default",
+      "via": "RateLimitMiddleware"
+     }
+    ],
+    "state": "defined",
+    "switch": "settings.rate_limit_enabled or settings.is_production"
+   },
+   "repeat": {
+    "claims": [
+     {
+      "arms": [
+       {
+        "at": "apps/api/services/setup.py:345",
+        "exit": "return",
+        "pred": "claimed.outcome is ClaimOutcome.REPLAY"
+       },
+       {
+        "at": "apps/api/services/setup.py:347",
+        "exit": "raise",
+        "pred": "claimed.outcome is ClaimOutcome.IN_PROGRESS"
+       }
+      ],
+      "at": "apps/api/services/idempotency.py:131",
+      "column": "key",
+      "constraint": "uq_idempotency_key_op_owner",
+      "fn": "apps/api/services/idempotency.py::claim",
+      "idioms": [
+       "begin_nested"
+      ],
+      "model": "IdempotencyKey",
+      "race": "handled",
+      "race_at": "apps/api/services/idempotency.py:140",
+      "table": "idempotency_keys",
+      "unique": [
+       "key",
+       "operation",
+       "owner_scope"
+      ]
+     }
+    ],
+    "key": {
+     "carrier": "header",
+     "name": "Idempotency-Key",
+     "read_at": "apps/api/api/setup.py:191",
+     "set_at": "apps/api/middleware/idempotency.py:25",
+     "through": "request.state.idempotency_key"
+    },
+    "required": {
+     "at": "apps/api/api/setup.py:193",
+     "exit": "x:13ce9b79e0",
+     "status": 400
+    },
+    "state": "defined"
+   },
+   "responses": {
+    "r:406d313dde": {
+     "fields": [
+      "setup_required",
+      "user",
+      "household",
+      "membership",
+      "preferences",
+      "subscription"
+     ],
+     "media": "application/json",
+     "model": "MeResponse",
+     "source": "apps/api/schemas/responses.py:157",
+     "status": 200
+    },
+    "x:13ce9b79e0": {
+     "body": {
+      "detail": "…"
+     },
+     "media": "application/json",
+     "source": "fastapi/exception_handlers.py:11-17",
+     "status": 400
+    },
+    "x:17b6cdc4d4": {
+     "body": "Internal Server Error",
+     "media": "text/plain",
+     "source": "starlette ServerErrorMiddleware",
+     "status": 500
+    },
+    "x:18e726cdeb": {
+     "body": {
+      "detail": "…"
+     },
+     "media": "application/json",
+     "source": "fastapi/exception_handlers.py:11-17",
+     "status": 401
+    },
+    "x:1b256011f1": {
+     "body": {
+      "detail": "list"
+     },
+     "media": "application/json",
+     "source": "fastapi/exception_handlers.py:20-26",
+     "status": 422
+    },
+    "x:8437446a6c": {
+     "body": {
+      "detail": "…"
+     },
+     "headers": {
+      "Retry-After": "…"
+     },
+     "media": "application/json",
+     "source": "apps/api/middleware/rate_limit.py:127",
+     "status": 429
+    },
+    "x:9fd81887a2": {
+     "body": {
+      "detail": "…"
+     },
+     "headers": {
+      "WWW-Authenticate": "Bearer"
+     },
+     "media": "application/json",
+     "source": "fastapi/security/http.py:84-92",
+     "status": 401
+    },
+    "x:a086031223": {
+     "body": {
+      "detail": "…"
+     },
+     "media": "application/json",
+     "source": "fastapi/exception_handlers.py:11-17",
+     "status": 409
+    },
+    "x:a7992af811": {
+     "body": {
+      "detail": "…"
+     },
+     "headers": {
+      "Retry-After": "…"
+     },
+     "media": "application/json",
+     "source": "apps/api/middleware/rate_limit.py:127",
+     "status": 429
+    },
+    "x:ae1bc4dc59": {
+     "body": {
+      "detail": "…"
+     },
+     "media": "application/json",
+     "source": "fastapi/routing.py:447",
+     "status": 400
+    },
+    "x:f2caf456bd": {
+     "body": {
+      "detail": "…"
+     },
+     "media": "application/json",
+     "source": "fastapi/exception_handlers.py:11-17",
+     "status": 409
+    },
+    "x:fdb1ae15e9": {
+     "body": {
+      "detail": "list"
+     },
+     "media": "application/json",
+     "source": "fastapi/routing.py:427",
+     "status": 422
+    }
+   },
+   "returns": [
+    {
+     "after": [
+      "not (key is None)"
+     ],
+     "at": "apps/api/api/setup.py:204",
+     "depth": 0,
+     "fn": "apps/api/api/setup.py::setup_complete",
+     "id": "r:406d313dde",
+     "kind": "return",
+     "state": "default",
+     "status": 200,
+     "tests": [
+      {
+       "case": "C1049",
+       "conf": "status",
+       "line": 35
+      },
+      {
+       "case": "C1050",
+       "conf": "status",
+       "line": 65
+      },
+      {
+       "case": "C1050",
+       "conf": "status",
+       "line": 66
+      },
+      {
+       "case": "C1056",
+       "conf": "status",
+       "line": 141
+      },
+      {
+       "case": "C1057",
+       "conf": "status",
+       "line": 166
+      },
+      {
+       "case": "C389",
+       "conf": "status",
+       "line": 756
+      },
+      {
+       "case": "C390",
+       "conf": "status",
+       "line": 778
+      },
+      {
+       "case": "C391",
+       "conf": "status",
+       "line": 804
+      },
+      {
+       "case": "C392",
+       "conf": "status",
+       "line": 824
+      },
+      {
+       "case": "C392",
+       "conf": "status",
+       "line": 825
+      }
+     ],
+     "value": "await _me_response_from_result(ctx, result, session, settings)"
+    },
+    {
+     "at": "apps/api/services/setup.py:346",
+     "branch": "b:777606a0cc",
+     "depth": 1,
+     "fn": "apps/api/services/setup.py::complete_setup",
+     "id": "r:3215864731",
+     "kind": "return",
+     "pred": "claimed.outcome is ClaimOutcome.REPLAY",
+     "site": "apps/api/api/setup.py:196",
+     "state": "n/a",
+     "status": null,
+     "value": "await _load_setup_result(session, user, replayed=True)"
+    },
+    {
+     "after": [
+      "not (claimed.outcome is ClaimOutcome.REPLAY)",
+      "not (claimed.outcome is ClaimOutcome.IN_PROGRESS)"
+     ],
+     "at": "apps/api/services/setup.py:362",
+     "branch": "b:ea440a25b4",
+     "depth": 1,
+     "fn": "apps/api/services/setup.py::complete_setup",
+     "id": "r:14d0c00171",
+     "kind": "return",
+     "pred": "existing is not None and prior is not None and prior.completed",
+     "site": "apps/api/api/setup.py:196",
+     "state": "n/a",
+     "status": null,
+     "value": "result"
+    },
+    {
+     "after": [
+      "not (claimed.outcome is ClaimOutcome.REPLAY)",
+      "not (claimed.outcome is ClaimOutcome.IN_PROGRESS)",
+      "not (existing is not None and prior is not None and prior.completed)",
+      "not (latest is None or latest.policy_version != CONSENT_POLICY_VERSION)"
+     ],
+     "at": "apps/api/services/setup.py:389",
+     "branch": "b:b31ca62e66",
+     "depth": 1,
+     "fn": "apps/api/services/setup.py::complete_setup",
+     "id": "r:53302531e6",
+     "kind": "fall-through",
+     "site": "apps/api/api/setup.py:196",
+     "state": "n/a",
+     "status": null,
+     "value": "SetupResult(household=household, membership=membership, principal=principal, for"
     }
    ],
    "slots": {
@@ -220,10 +4733,10971 @@ window.LABEP = {
      "state": "missing",
      "unknown": 0
     }
+   },
+   "switches": [
+    {
+     "anchor": "apps/api/auth/context.py:97",
+     "branches": [
+      {
+       "binding": "selected",
+       "ends": [
+        "InvalidTokenError → translate apps/api/auth/context.py:98"
+       ],
+       "escapes": [
+        "InvalidTokenError"
+       ],
+       "impl": "FirebaseTokenVerifier",
+       "pred": "settings.auth_provider is ProviderMode.REAL",
+       "t": "apps/api/auth/verifier.py::FirebaseTokenVerifier.verify"
+      },
+      {
+       "binding": "selected",
+       "ends": [
+        "InvalidTokenError → translate apps/api/auth/context.py:98"
+       ],
+       "escapes": [
+        "InvalidTokenError"
+       ],
+       "impl": "MockTokenVerifier",
+       "pred": "not (settings.auth_provider is ProviderMode.REAL)",
+       "t": "apps/api/auth/verifier.py::MockTokenVerifier.verify"
+      }
+     ],
+     "changes_exit": false,
+     "factories": [
+      "apps/api/auth/verifier.py::get_verifier"
+     ],
+     "fn": "apps/api/auth/context.py::build_auth_context",
+     "id": "sw:967c49ad34",
+     "kind": "binding",
+     "port": "TokenVerifier",
+     "proves": [
+      "x:18e726cdeb"
+     ],
+     "scope": "dependency",
+     "site": "apps/api/auth/context.py:77"
+    },
+    {
+     "anchor": "apps/api/api/setup.py:204",
+     "branches": [
+      {
+       "at": "apps/api/services/ai_credits.py:67",
+       "pred": "tier == 'chef'",
+       "setting": "ai_credits_chef",
+       "value": "settings.ai_credits_chef"
+      },
+      {
+       "at": "apps/api/services/ai_credits.py:68",
+       "pred": "not (tier == 'chef')",
+       "setting": "ai_credits_free",
+       "value": "settings.ai_credits_free"
+      }
+     ],
+     "chain": [
+      "apps/api/api/setup.py::setup_complete",
+      "apps/api/api/setup.py::_me_response_from_result",
+      "apps/api/api/setup.py::_subscription_block",
+      "apps/api/services/ai_credits.py::credits_summary",
+      "apps/api/services/ai_credits.py::allowance_for"
+     ],
+     "depth": 4,
+     "fn": "apps/api/services/ai_credits.py::allowance_for",
+     "id": "sw:f52e70d831",
+     "kind": "value",
+     "on": "success",
+     "scope": "call",
+     "settings": {
+      "ai_credits_chef": {
+       "default": "15",
+       "env": "GUSTIFY_AI_CREDITS_CHEF"
+      },
+      "ai_credits_free": {
+       "default": "0",
+       "env": "GUSTIFY_AI_CREDITS_FREE"
+      }
+     },
+     "site": "apps/api/services/ai_credits.py:103"
+    },
+    {
+     "expr": "settings.rate_limit_enabled or settings.is_production",
+     "id": "sw:12b96f1a5a",
+     "kind": "flag",
+     "refs": [
+      "x:8437446a6c",
+      "x:a7992af811"
+     ],
+     "scope": "middleware",
+     "settings": {
+      "environment": {
+       "default": "Environment.LOCAL",
+       "env": "GUSTIFY_ENVIRONMENT"
+      },
+      "rate_limit_enabled": {
+       "default": "False",
+       "env": "GUSTIFY_RATE_LIMIT_ENABLED"
+      }
+     },
+     "settings_class": "apps/api/config.py::Settings",
+     "via": "RateLimitMiddleware",
+     "when": "not (not self._enabled or request.url.path in EXEMPT_PATHS)"
+    }
+   ],
+   "tests": {
+    "act": 15,
+    "arranged_by": [
+     "C1087",
+     "C218",
+     "C250",
+     "C251",
+     "C555",
+     "C556",
+     "C557",
+     "C603",
+     "C605",
+     "C664",
+     "C705",
+     "C785",
+     "C958",
+     "C959"
+    ],
+    "helper_arranged": [
+     "C1028",
+     "C1029",
+     "C1030",
+     "C1031",
+     "C1032",
+     "C1033",
+     "C1034",
+     "C1035",
+     "C1036",
+     "C1037",
+     "C1106",
+     "C1107",
+     "C1108",
+     "C1109",
+     "C1110",
+     "C1111",
+     "C1115",
+     "C1116",
+     "C1117",
+     "C1120",
+     "C1121",
+     "C1122",
+     "C1123",
+     "C2137",
+     "C2138",
+     "C2139",
+     "C260",
+     "C266",
+     "C267",
+     "C373",
+     "C374",
+     "C375",
+     "C376",
+     "C377",
+     "C378",
+     "C379",
+     "C380",
+     "C381",
+     "C382",
+     "C383",
+     "C384",
+     "C385",
+     "C386",
+     "C387",
+     "C388",
+     "C434",
+     "C435",
+     "C436",
+     "C437",
+     "C438",
+     "C439",
+     "C440",
+     "C441",
+     "C442",
+     "C443",
+     "C444",
+     "C445",
+     "C504",
+     "C540",
+     "C541",
+     "C569",
+     "C570",
+     "C571",
+     "C572",
+     "C573",
+     "C574",
+     "C674",
+     "C675",
+     "C677",
+     "C682",
+     "C683",
+     "C684",
+     "C692",
+     "C693",
+     "C694",
+     "C695",
+     "C696",
+     "C697",
+     "C698",
+     "C699",
+     "C700",
+     "C701",
+     "C702",
+     "C703",
+     "C705",
+     "C706",
+     "C707",
+     "C708",
+     "C709",
+     "C710",
+     "C711",
+     "C73",
+     "C74",
+     "C745",
+     "C746",
+     "C75",
+     "C76",
+     "C77",
+     "C78",
+     "C79",
+     "C798",
+     "C799",
+     "C80",
+     "C800",
+     "C801",
+     "C802",
+     "C809",
+     "C81",
+     "C810",
+     "C811",
+     "C8110",
+     "C8111",
+     "C8112",
+     "C812",
+     "C813",
+     "C814",
+     "C815",
+     "C816",
+     "C82",
+     "C823",
+     "C824",
+     "C825",
+     "C83",
+     "C831",
+     "C834",
+     "C839",
+     "C84",
+     "C844",
+     "C85",
+     "C86",
+     "C87",
+     "C88",
+     "C89",
+     "C90",
+     "C91"
+    ],
+    "unjoined": []
    }
   },
   "head": "05007957",
-  "version": 2
+  "version": 2,
+  "source": {
+   "path": "~/.cache/gabe-map-baselines/.check/gustify/forms.json",
+   "arms_on": [
+    "contract",
+    "effects",
+    "frontend",
+    "kinds",
+    "paths",
+    "short",
+    "switches",
+    "tests"
+   ],
+   "note": "an arms-on build of the same twin (scripts/forms-dryrun.sh writes one to ~/.cache/gabe-map-baselines/.check/<target>/forms.json)"
+  },
+  "paths": [
+   {
+    "id": "p:51719726e3",
+    "status": 429,
+    "kind": "refusal",
+    "phase": "middleware",
+    "state": "defined",
+    "names": {
+     "detail": "Rate limit exceeded. Try again shortly.",
+     "exception": null,
+     "stage": "middleware",
+     "token": null,
+     "drawn": "rate limit (sensitive)",
+     "phase_status": "middleware · 429"
+    },
+    "exit": {
+     "id": "x:8437446a6c",
+     "kind": "refusal",
+     "row": "produced",
+     "status": 429,
+     "phase": "middleware",
+     "at": "apps/api/middleware/rate_limit.py:127",
+     "detail": "Rate limit exceeded. Try again shortly.",
+     "code": null,
+     "via": "RateLimitMiddleware",
+     "pred": "not self._sensitive.allow(key, now)",
+     "state": "defined",
+     "form": "object",
+     "split": null,
+     "reason": null,
+     "tests": [],
+     "response": {
+      "body": {
+       "detail": "…"
+      },
+      "headers": {
+       "Retry-After": "…"
+      },
+      "media": "application/json",
+      "source": "apps/api/middleware/rate_limit.py:127",
+      "status": 429
+     }
+    },
+    "chain": [
+     {
+      "i": 0,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "CORSMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 1,
+      "kind": "switch",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": "sw:12b96f1a5a",
+      "label": "flag",
+      "sub": "environment, rate_limit_enabled",
+      "switch_kind": "flag"
+     },
+     {
+      "i": 2,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": true,
+      "at": "apps/api/middleware/rate_limit.py:117",
+      "ref": "x:8437446a6c",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": "settings.rate_limit_enabled or settings.is_production ∧ path starts /api/v1/cooking/sessions or path starts /api/v1/pantry/items/batch or path starts /api/v1/pantry/reset/apply or path starts /api/v1/pantry/resolve-batch or path starts /api/v1/recipe-creation or path starts /api/v1/setup/complete or path starts /api/v1/shopping/items ∧ not self._sensitive.allow(key, now)",
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 3,
+      "kind": "exit",
+      "phase": null,
+      "hit": null,
+      "at": null,
+      "ref": "x:8437446a6c",
+      "label": "429",
+      "sub": "refusal",
+      "status": 429,
+      "exit_kind": "refusal"
+     }
+    ],
+    "effects": {
+     "dependency": "not-run",
+     "steps": [],
+     "may_follow_commits": null,
+     "n": {
+      "committed": 0,
+      "maybe_committed": 0,
+      "rolled_back": 0,
+      "uncommitted": 0
+     },
+     "tables": [],
+     "writes": []
+    },
+    "switches": [
+     {
+      "id": "sw:12b96f1a5a",
+      "kind": "flag",
+      "changes_exit": null,
+      "scope": "middleware",
+      "via": "RateLimitMiddleware",
+      "settings": {
+       "environment": {
+        "default": "Environment.LOCAL",
+        "env": "GUSTIFY_ENVIRONMENT"
+       },
+       "rate_limit_enabled": {
+        "default": "False",
+        "env": "GUSTIFY_RATE_LIMIT_ENABLED"
+       }
+      },
+      "expr": "settings.rate_limit_enabled or settings.is_production",
+      "when": "not (not self._enabled or request.url.path in EXEMPT_PATHS)",
+      "refs": [
+       "x:8437446a6c",
+       "x:a7992af811"
+      ],
+      "settings_class": "apps/api/config.py::Settings"
+     }
+    ],
+    "tests": [],
+    "partial": null,
+    "proven_by": null,
+    "anywhere": null,
+    "n": {
+     "steps": 4,
+     "gates": 1,
+     "catches": 0,
+     "branches": 0,
+     "calls": 0
+    }
+   },
+   {
+    "id": "p:da0a053b53",
+    "status": 429,
+    "kind": "refusal",
+    "phase": "middleware",
+    "state": "defined",
+    "names": {
+     "detail": "Rate limit exceeded. Try again shortly.",
+     "exception": null,
+     "stage": "middleware",
+     "token": null,
+     "drawn": "rate limit (global)",
+     "phase_status": "middleware · 429"
+    },
+    "exit": {
+     "id": "x:a7992af811",
+     "kind": "refusal",
+     "row": "produced",
+     "status": 429,
+     "phase": "middleware",
+     "at": "apps/api/middleware/rate_limit.py:127",
+     "detail": "Rate limit exceeded. Try again shortly.",
+     "code": null,
+     "via": "RateLimitMiddleware",
+     "pred": "not self._global.allow(gkey, now)",
+     "state": "defined",
+     "form": "object",
+     "split": null,
+     "reason": null,
+     "tests": [],
+     "response": {
+      "body": {
+       "detail": "…"
+      },
+      "headers": {
+       "Retry-After": "…"
+      },
+      "media": "application/json",
+      "source": "apps/api/middleware/rate_limit.py:127",
+      "status": 429
+     }
+    },
+    "chain": [
+     {
+      "i": 0,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "CORSMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 1,
+      "kind": "switch",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": "sw:12b96f1a5a",
+      "label": "flag",
+      "sub": "environment, rate_limit_enabled",
+      "switch_kind": "flag"
+     },
+     {
+      "i": 2,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:117",
+      "ref": "x:8437446a6c",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 3,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": true,
+      "at": "apps/api/middleware/rate_limit.py:121",
+      "ref": "x:a7992af811",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": "settings.rate_limit_enabled or settings.is_production ∧ not self._global.allow(gkey, now)",
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 4,
+      "kind": "exit",
+      "phase": null,
+      "hit": null,
+      "at": null,
+      "ref": "x:a7992af811",
+      "label": "429",
+      "sub": "refusal",
+      "status": 429,
+      "exit_kind": "refusal"
+     }
+    ],
+    "effects": {
+     "dependency": "not-run",
+     "steps": [],
+     "may_follow_commits": null,
+     "n": {
+      "committed": 0,
+      "maybe_committed": 0,
+      "rolled_back": 0,
+      "uncommitted": 0
+     },
+     "tables": [],
+     "writes": []
+    },
+    "switches": [
+     {
+      "id": "sw:12b96f1a5a",
+      "kind": "flag",
+      "changes_exit": null,
+      "scope": "middleware",
+      "via": "RateLimitMiddleware",
+      "settings": {
+       "environment": {
+        "default": "Environment.LOCAL",
+        "env": "GUSTIFY_ENVIRONMENT"
+       },
+       "rate_limit_enabled": {
+        "default": "False",
+        "env": "GUSTIFY_RATE_LIMIT_ENABLED"
+       }
+      },
+      "expr": "settings.rate_limit_enabled or settings.is_production",
+      "when": "not (not self._enabled or request.url.path in EXEMPT_PATHS)",
+      "refs": [
+       "x:8437446a6c",
+       "x:a7992af811"
+      ],
+      "settings_class": "apps/api/config.py::Settings"
+     }
+    ],
+    "tests": [],
+    "partial": null,
+    "proven_by": null,
+    "anywhere": null,
+    "n": {
+     "steps": 5,
+     "gates": 2,
+     "catches": 0,
+     "branches": 0,
+     "calls": 0
+    }
+   },
+   {
+    "id": "p:57de16a71b",
+    "status": 422,
+    "kind": "framework",
+    "phase": "body-parse",
+    "state": "defined",
+    "names": {
+     "detail": "JSON decode error",
+     "exception": null,
+     "stage": "body-parse",
+     "token": null,
+     "drawn": "json_invalid (framework)",
+     "phase_status": "body-parse · 422"
+    },
+    "exit": {
+     "id": "x:fdb1ae15e9",
+     "kind": "framework",
+     "row": "framework",
+     "status": 422,
+     "phase": "body-parse",
+     "at": null,
+     "detail": "JSON decode error",
+     "code": "json_invalid",
+     "via": null,
+     "pred": null,
+     "state": "default",
+     "form": "object",
+     "split": null,
+     "reason": null,
+     "tests": [],
+     "response": {
+      "body": {
+       "detail": "list"
+      },
+      "media": "application/json",
+      "source": "fastapi/routing.py:427",
+      "status": 422
+     }
+    },
+    "chain": [
+     {
+      "i": 0,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "CORSMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 1,
+      "kind": "switch",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": "sw:12b96f1a5a",
+      "label": "flag",
+      "sub": "environment, rate_limit_enabled",
+      "switch_kind": "flag"
+     },
+     {
+      "i": 2,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:117",
+      "ref": "x:8437446a6c",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 3,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:121",
+      "ref": "x:a7992af811",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 4,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "IdempotencyMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 5,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": true,
+      "at": null,
+      "ref": "x:fdb1ae15e9",
+      "status": 422,
+      "label": "422 JSON decode error",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 6,
+      "kind": "exit",
+      "phase": null,
+      "hit": null,
+      "at": null,
+      "ref": "x:fdb1ae15e9",
+      "label": "422",
+      "sub": "framework",
+      "status": 422,
+      "exit_kind": "framework"
+     }
+    ],
+    "effects": {
+     "dependency": "not-run",
+     "steps": [],
+     "may_follow_commits": null,
+     "n": {
+      "committed": 0,
+      "maybe_committed": 0,
+      "rolled_back": 0,
+      "uncommitted": 0
+     },
+     "tables": [],
+     "writes": []
+    },
+    "switches": [
+     {
+      "id": "sw:12b96f1a5a",
+      "kind": "flag",
+      "changes_exit": null,
+      "scope": "middleware",
+      "via": "RateLimitMiddleware",
+      "settings": {
+       "environment": {
+        "default": "Environment.LOCAL",
+        "env": "GUSTIFY_ENVIRONMENT"
+       },
+       "rate_limit_enabled": {
+        "default": "False",
+        "env": "GUSTIFY_RATE_LIMIT_ENABLED"
+       }
+      },
+      "expr": "settings.rate_limit_enabled or settings.is_production",
+      "when": "not (not self._enabled or request.url.path in EXEMPT_PATHS)",
+      "refs": [
+       "x:8437446a6c",
+       "x:a7992af811"
+      ],
+      "settings_class": "apps/api/config.py::Settings"
+     }
+    ],
+    "tests": [],
+    "partial": null,
+    "proven_by": null,
+    "anywhere": null,
+    "n": {
+     "steps": 7,
+     "gates": 3,
+     "catches": 0,
+     "branches": 0,
+     "calls": 0
+    }
+   },
+   {
+    "id": "p:201d91702d",
+    "status": 400,
+    "kind": "framework",
+    "phase": "body-parse",
+    "state": "defined",
+    "names": {
+     "detail": "There was an error parsing the body",
+     "exception": null,
+     "stage": "body-parse",
+     "token": null,
+     "drawn": "body (framework)",
+     "phase_status": "body-parse · 400"
+    },
+    "exit": {
+     "id": "x:ae1bc4dc59",
+     "kind": "framework",
+     "row": "framework",
+     "status": 400,
+     "phase": "body-parse",
+     "at": null,
+     "detail": "There was an error parsing the body",
+     "code": null,
+     "via": null,
+     "pred": null,
+     "state": "default",
+     "form": "text",
+     "split": null,
+     "reason": null,
+     "tests": [],
+     "response": {
+      "body": {
+       "detail": "…"
+      },
+      "media": "application/json",
+      "source": "fastapi/routing.py:447",
+      "status": 400
+     }
+    },
+    "chain": [
+     {
+      "i": 0,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "CORSMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 1,
+      "kind": "switch",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": "sw:12b96f1a5a",
+      "label": "flag",
+      "sub": "environment, rate_limit_enabled",
+      "switch_kind": "flag"
+     },
+     {
+      "i": 2,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:117",
+      "ref": "x:8437446a6c",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 3,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:121",
+      "ref": "x:a7992af811",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 4,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "IdempotencyMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 5,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": true,
+      "at": null,
+      "ref": "x:ae1bc4dc59",
+      "status": 400,
+      "label": "400 There was an error parsing the body",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 6,
+      "kind": "exit",
+      "phase": null,
+      "hit": null,
+      "at": null,
+      "ref": "x:ae1bc4dc59",
+      "label": "400",
+      "sub": "framework",
+      "status": 400,
+      "exit_kind": "framework"
+     }
+    ],
+    "effects": {
+     "dependency": "not-run",
+     "steps": [],
+     "may_follow_commits": null,
+     "n": {
+      "committed": 0,
+      "maybe_committed": 0,
+      "rolled_back": 0,
+      "uncommitted": 0
+     },
+     "tables": [],
+     "writes": []
+    },
+    "switches": [
+     {
+      "id": "sw:12b96f1a5a",
+      "kind": "flag",
+      "changes_exit": null,
+      "scope": "middleware",
+      "via": "RateLimitMiddleware",
+      "settings": {
+       "environment": {
+        "default": "Environment.LOCAL",
+        "env": "GUSTIFY_ENVIRONMENT"
+       },
+       "rate_limit_enabled": {
+        "default": "False",
+        "env": "GUSTIFY_RATE_LIMIT_ENABLED"
+       }
+      },
+      "expr": "settings.rate_limit_enabled or settings.is_production",
+      "when": "not (not self._enabled or request.url.path in EXEMPT_PATHS)",
+      "refs": [
+       "x:8437446a6c",
+       "x:a7992af811"
+      ],
+      "settings_class": "apps/api/config.py::Settings"
+     }
+    ],
+    "tests": [],
+    "partial": null,
+    "proven_by": null,
+    "anywhere": null,
+    "n": {
+     "steps": 7,
+     "gates": 3,
+     "catches": 0,
+     "branches": 0,
+     "calls": 0
+    }
+   },
+   {
+    "id": "p:e8c672a046",
+    "status": 401,
+    "kind": "refusal",
+    "phase": "security",
+    "state": "defined",
+    "names": {
+     "detail": "Not authenticated",
+     "exception": null,
+     "stage": "security",
+     "token": null,
+     "drawn": "Not authenticated",
+     "phase_status": "security · 401"
+    },
+    "exit": {
+     "id": "x:9fd81887a2",
+     "kind": "refusal",
+     "row": "produced",
+     "status": 401,
+     "phase": "security",
+     "at": "apps/api/auth/context.py:23",
+     "detail": "Not authenticated",
+     "code": null,
+     "via": "HTTPBearer bearer_scheme",
+     "pred": null,
+     "state": "default",
+     "form": "default-phrase",
+     "split": null,
+     "reason": null,
+     "tests": [],
+     "response": {
+      "body": {
+       "detail": "…"
+      },
+      "headers": {
+       "WWW-Authenticate": "Bearer"
+      },
+      "media": "application/json",
+      "source": "fastapi/security/http.py:84-92",
+      "status": 401
+     }
+    },
+    "chain": [
+     {
+      "i": 0,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "CORSMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 1,
+      "kind": "switch",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": "sw:12b96f1a5a",
+      "label": "flag",
+      "sub": "environment, rate_limit_enabled",
+      "switch_kind": "flag"
+     },
+     {
+      "i": 2,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:117",
+      "ref": "x:8437446a6c",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 3,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:121",
+      "ref": "x:a7992af811",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 4,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "IdempotencyMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 5,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": false,
+      "at": null,
+      "ref": "x:fdb1ae15e9",
+      "status": 422,
+      "label": "422 JSON decode error",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 6,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": false,
+      "at": null,
+      "ref": "x:ae1bc4dc59",
+      "status": 400,
+      "label": "400 There was an error parsing the body",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 7,
+      "kind": "gate",
+      "phase": "security",
+      "hit": true,
+      "at": "apps/api/auth/context.py:23",
+      "ref": "x:9fd81887a2",
+      "status": 401,
+      "label": "401 Not authenticated",
+      "sub": "HTTPBearer bearer_scheme",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 8,
+      "kind": "exit",
+      "phase": null,
+      "hit": null,
+      "at": null,
+      "ref": "x:9fd81887a2",
+      "label": "401",
+      "sub": "refusal",
+      "status": 401,
+      "exit_kind": "refusal"
+     }
+    ],
+    "effects": {
+     "dependency": "not-run",
+     "steps": [],
+     "may_follow_commits": null,
+     "n": {
+      "committed": 0,
+      "maybe_committed": 0,
+      "rolled_back": 0,
+      "uncommitted": 0
+     },
+     "tables": [],
+     "writes": []
+    },
+    "switches": [
+     {
+      "id": "sw:12b96f1a5a",
+      "kind": "flag",
+      "changes_exit": null,
+      "scope": "middleware",
+      "via": "RateLimitMiddleware",
+      "settings": {
+       "environment": {
+        "default": "Environment.LOCAL",
+        "env": "GUSTIFY_ENVIRONMENT"
+       },
+       "rate_limit_enabled": {
+        "default": "False",
+        "env": "GUSTIFY_RATE_LIMIT_ENABLED"
+       }
+      },
+      "expr": "settings.rate_limit_enabled or settings.is_production",
+      "when": "not (not self._enabled or request.url.path in EXEMPT_PATHS)",
+      "refs": [
+       "x:8437446a6c",
+       "x:a7992af811"
+      ],
+      "settings_class": "apps/api/config.py::Settings"
+     }
+    ],
+    "tests": [],
+    "partial": null,
+    "proven_by": null,
+    "anywhere": null,
+    "n": {
+     "steps": 9,
+     "gates": 5,
+     "catches": 0,
+     "branches": 0,
+     "calls": 0
+    }
+   },
+   {
+    "id": "p:ec6c43e906",
+    "status": 401,
+    "kind": "refusal",
+    "phase": "dependency",
+    "state": "defined",
+    "names": {
+     "detail": "invalid token",
+     "exception": "InvalidTokenError",
+     "stage": "dependency",
+     "token": null,
+     "drawn": "invalid token",
+     "phase_status": "dependency · 401"
+    },
+    "exit": {
+     "id": "x:18e726cdeb",
+     "kind": "refusal",
+     "row": "produced",
+     "status": 401,
+     "phase": "dependency",
+     "at": "apps/api/auth/context.py:99",
+     "detail": "invalid token",
+     "code": null,
+     "via": "except InvalidTokenError",
+     "pred": null,
+     "state": "defined",
+     "form": "text",
+     "split": null,
+     "reason": null,
+     "tests": [],
+     "response": {
+      "body": {
+       "detail": "…"
+      },
+      "media": "application/json",
+      "source": "fastapi/exception_handlers.py:11-17",
+      "status": 401
+     }
+    },
+    "chain": [
+     {
+      "i": 0,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "CORSMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 1,
+      "kind": "switch",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": "sw:12b96f1a5a",
+      "label": "flag",
+      "sub": "environment, rate_limit_enabled",
+      "switch_kind": "flag"
+     },
+     {
+      "i": 2,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:117",
+      "ref": "x:8437446a6c",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 3,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:121",
+      "ref": "x:a7992af811",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 4,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "IdempotencyMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 5,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": false,
+      "at": null,
+      "ref": "x:fdb1ae15e9",
+      "status": 422,
+      "label": "422 JSON decode error",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 6,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": false,
+      "at": null,
+      "ref": "x:ae1bc4dc59",
+      "status": 400,
+      "label": "400 There was an error parsing the body",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 7,
+      "kind": "gate",
+      "phase": "security",
+      "hit": false,
+      "at": "apps/api/auth/context.py:23",
+      "ref": "x:9fd81887a2",
+      "status": 401,
+      "label": "401 Not authenticated",
+      "sub": "HTTPBearer bearer_scheme",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 8,
+      "kind": "switch",
+      "phase": "dependency",
+      "hit": null,
+      "at": null,
+      "ref": "sw:967c49ad34",
+      "label": "binding",
+      "sub": "TokenVerifier",
+      "switch_kind": "binding"
+     },
+     {
+      "i": 9,
+      "kind": "gate",
+      "phase": "dependency",
+      "hit": true,
+      "at": "apps/api/auth/context.py:99",
+      "ref": "x:18e726cdeb",
+      "status": 401,
+      "label": "401 invalid token",
+      "sub": "except InvalidTokenError",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 10,
+      "kind": "catch",
+      "phase": null,
+      "hit": null,
+      "at": "apps/api/auth/context.py:98",
+      "ref": "c:10b6b2a3ba",
+      "label": "InvalidTokenError",
+      "sub": "translate",
+      "answers": [
+       401
+      ],
+      "fn": "apps/api/auth/context.py::get_auth_context",
+      "catch_kind": "translate"
+     },
+     {
+      "i": 11,
+      "kind": "exit",
+      "phase": null,
+      "hit": null,
+      "at": null,
+      "ref": "x:18e726cdeb",
+      "label": "401",
+      "sub": "refusal",
+      "status": 401,
+      "exit_kind": "refusal"
+     }
+    ],
+    "effects": {
+     "dependency": "unknown",
+     "steps": [],
+     "may_follow_commits": null,
+     "n": {
+      "committed": 0,
+      "maybe_committed": 0,
+      "rolled_back": 0,
+      "uncommitted": 0
+     },
+     "tables": [],
+     "writes": []
+    },
+    "switches": [
+     {
+      "id": "sw:12b96f1a5a",
+      "kind": "flag",
+      "changes_exit": null,
+      "scope": "middleware",
+      "via": "RateLimitMiddleware",
+      "settings": {
+       "environment": {
+        "default": "Environment.LOCAL",
+        "env": "GUSTIFY_ENVIRONMENT"
+       },
+       "rate_limit_enabled": {
+        "default": "False",
+        "env": "GUSTIFY_RATE_LIMIT_ENABLED"
+       }
+      },
+      "expr": "settings.rate_limit_enabled or settings.is_production",
+      "when": "not (not self._enabled or request.url.path in EXEMPT_PATHS)",
+      "refs": [
+       "x:8437446a6c",
+       "x:a7992af811"
+      ],
+      "settings_class": "apps/api/config.py::Settings"
+     },
+     {
+      "id": "sw:967c49ad34",
+      "kind": "binding",
+      "changes_exit": false,
+      "scope": "dependency",
+      "via": null,
+      "port": "TokenVerifier",
+      "fn": "apps/api/auth/context.py::build_auth_context",
+      "anchor": "apps/api/auth/context.py:97",
+      "branches": [
+       {
+        "impl": "FirebaseTokenVerifier",
+        "pred": "settings.auth_provider is ProviderMode.REAL",
+        "binding": "selected",
+        "ends": [
+         "InvalidTokenError → translate apps/api/auth/context.py:98"
+        ]
+       },
+       {
+        "impl": "MockTokenVerifier",
+        "pred": "not (settings.auth_provider is ProviderMode.REAL)",
+        "binding": "selected",
+        "ends": [
+         "InvalidTokenError → translate apps/api/auth/context.py:98"
+        ]
+       }
+      ],
+      "proves": [
+       "x:18e726cdeb"
+      ]
+     }
+    ],
+    "tests": [],
+    "partial": null,
+    "proven_by": "sw:967c49ad34",
+    "anywhere": null,
+    "n": {
+     "steps": 12,
+     "gates": 6,
+     "catches": 1,
+     "branches": 0,
+     "calls": 0
+    }
+   },
+   {
+    "id": "p:a90ffd3af4",
+    "status": 422,
+    "kind": "validation",
+    "phase": "validation",
+    "state": "defined",
+    "names": {
+     "detail": null,
+     "exception": null,
+     "stage": "validation",
+     "token": null,
+     "drawn": "validation",
+     "phase_status": "validation · 422"
+    },
+    "exit": {
+     "id": "x:1b256011f1",
+     "kind": "validation",
+     "row": "produced",
+     "status": 422,
+     "phase": "validation",
+     "at": null,
+     "detail": null,
+     "code": "pydantic error type",
+     "via": null,
+     "pred": null,
+     "state": "default",
+     "form": "object",
+     "split": null,
+     "reason": null,
+     "tests": [
+      {
+       "case": "C1051",
+       "conf": "status",
+       "line": 74,
+       "name": "test_setup_complete_blank_name_422_C1051",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1052",
+       "conf": "status",
+       "line": 83,
+       "name": "test_setup_complete_too_many_allergens_422_C1052",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      }
+     ],
+     "response": {
+      "body": {
+       "detail": "list"
+      },
+      "media": "application/json",
+      "source": "fastapi/exception_handlers.py:20-26",
+      "status": 422
+     }
+    },
+    "chain": [
+     {
+      "i": 0,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "CORSMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 1,
+      "kind": "switch",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": "sw:12b96f1a5a",
+      "label": "flag",
+      "sub": "environment, rate_limit_enabled",
+      "switch_kind": "flag"
+     },
+     {
+      "i": 2,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:117",
+      "ref": "x:8437446a6c",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 3,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:121",
+      "ref": "x:a7992af811",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 4,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "IdempotencyMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 5,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": false,
+      "at": null,
+      "ref": "x:fdb1ae15e9",
+      "status": 422,
+      "label": "422 JSON decode error",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 6,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": false,
+      "at": null,
+      "ref": "x:ae1bc4dc59",
+      "status": 400,
+      "label": "400 There was an error parsing the body",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 7,
+      "kind": "gate",
+      "phase": "security",
+      "hit": false,
+      "at": "apps/api/auth/context.py:23",
+      "ref": "x:9fd81887a2",
+      "status": 401,
+      "label": "401 Not authenticated",
+      "sub": "HTTPBearer bearer_scheme",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 8,
+      "kind": "switch",
+      "phase": "dependency",
+      "hit": null,
+      "at": null,
+      "ref": "sw:967c49ad34",
+      "label": "binding",
+      "sub": "TokenVerifier",
+      "switch_kind": "binding"
+     },
+     {
+      "i": 9,
+      "kind": "gate",
+      "phase": "dependency",
+      "hit": false,
+      "at": "apps/api/auth/context.py:99",
+      "ref": "x:18e726cdeb",
+      "status": 401,
+      "label": "401 invalid token",
+      "sub": "except InvalidTokenError",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 10,
+      "kind": "gate",
+      "phase": "validation",
+      "hit": true,
+      "at": null,
+      "ref": "x:1b256011f1",
+      "status": 422,
+      "label": "422 pydantic error type",
+      "sub": null,
+      "split": "own-params",
+      "cond": null,
+      "exit_kind": "validation"
+     },
+     {
+      "i": 11,
+      "kind": "exit",
+      "phase": null,
+      "hit": null,
+      "at": null,
+      "ref": "x:1b256011f1",
+      "label": "422",
+      "sub": "validation",
+      "status": 422,
+      "exit_kind": "validation"
+     }
+    ],
+    "effects": {
+     "dependency": "ran",
+     "steps": [
+      {
+       "step": "st:c79e53a27f",
+       "table": "users",
+       "op": "read",
+       "model": "User",
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:34",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": null
+      },
+      {
+       "step": "st:ba597dd4f4",
+       "table": "users",
+       "op": "add",
+       "model": "User",
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:49",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/ownership.py:50",
+        "keys": [
+         [
+          "auth_provider",
+          "auth_provider_id"
+         ]
+        ],
+        "state": "uncaught"
+       },
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:f5b6b3e9b3",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:50",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": null
+      },
+      {
+       "step": "st:925411811a",
+       "table": null,
+       "op": "commit",
+       "model": null,
+       "fn": "apps/api/auth/context.py::build_auth_context",
+       "at": "apps/api/auth/context.py:79",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/auth/context.py::build_auth_context",
+       "bucket": null
+      },
+      {
+       "step": "st:fdb7bb7853",
+       "table": "memberships",
+       "op": "read",
+       "model": "Membership",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:78",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:200eb54837",
+       "table": "households",
+       "op": "read",
+       "model": "Household",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:83",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:61aa8a44cc",
+       "table": "locations",
+       "op": "read",
+       "model": "Location",
+       "fn": "apps/api/services/ownership.py::get_principal_location",
+       "at": "apps/api/services/ownership.py:60",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::get_principal_location",
+       "bucket": null
+      }
+     ],
+     "may_follow_commits": null,
+     "n": {
+      "committed": 1,
+      "maybe_committed": 0,
+      "rolled_back": 0,
+      "uncommitted": 0
+     },
+     "tables": [
+      "households",
+      "locations",
+      "memberships",
+      "users"
+     ],
+     "writes": [
+      "users"
+     ]
+    },
+    "switches": [
+     {
+      "id": "sw:12b96f1a5a",
+      "kind": "flag",
+      "changes_exit": null,
+      "scope": "middleware",
+      "via": "RateLimitMiddleware",
+      "settings": {
+       "environment": {
+        "default": "Environment.LOCAL",
+        "env": "GUSTIFY_ENVIRONMENT"
+       },
+       "rate_limit_enabled": {
+        "default": "False",
+        "env": "GUSTIFY_RATE_LIMIT_ENABLED"
+       }
+      },
+      "expr": "settings.rate_limit_enabled or settings.is_production",
+      "when": "not (not self._enabled or request.url.path in EXEMPT_PATHS)",
+      "refs": [
+       "x:8437446a6c",
+       "x:a7992af811"
+      ],
+      "settings_class": "apps/api/config.py::Settings"
+     },
+     {
+      "id": "sw:967c49ad34",
+      "kind": "binding",
+      "changes_exit": false,
+      "scope": "dependency",
+      "via": null,
+      "port": "TokenVerifier",
+      "fn": "apps/api/auth/context.py::build_auth_context",
+      "anchor": "apps/api/auth/context.py:97",
+      "branches": [
+       {
+        "impl": "FirebaseTokenVerifier",
+        "pred": "settings.auth_provider is ProviderMode.REAL",
+        "binding": "selected",
+        "ends": [
+         "InvalidTokenError → translate apps/api/auth/context.py:98"
+        ]
+       },
+       {
+        "impl": "MockTokenVerifier",
+        "pred": "not (settings.auth_provider is ProviderMode.REAL)",
+        "binding": "selected",
+        "ends": [
+         "InvalidTokenError → translate apps/api/auth/context.py:98"
+        ]
+       }
+      ],
+      "proves": [
+       "x:18e726cdeb"
+      ]
+     }
+    ],
+    "tests": [
+     {
+      "case": "C1051",
+      "conf": "status",
+      "line": 74,
+      "name": "test_setup_complete_blank_name_422_C1051",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1052",
+      "conf": "status",
+      "line": 83,
+      "name": "test_setup_complete_too_many_allergens_422_C1052",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     }
+    ],
+    "partial": null,
+    "proven_by": null,
+    "anywhere": null,
+    "n": {
+     "steps": 12,
+     "gates": 7,
+     "catches": 0,
+     "branches": 0,
+     "calls": 0
+    }
+   },
+   {
+    "id": "p:fd1039c2ca",
+    "status": 400,
+    "kind": "refusal",
+    "phase": "handler",
+    "state": "defined",
+    "names": {
+     "detail": "Idempotency-Key required",
+     "exception": null,
+     "stage": "handler",
+     "token": "key",
+     "drawn": "Idempotency-Key required",
+     "phase_status": "handler · 400"
+    },
+    "exit": {
+     "id": "x:13ce9b79e0",
+     "kind": "refusal",
+     "row": "produced",
+     "status": 400,
+     "phase": "handler",
+     "at": "apps/api/api/setup.py:193",
+     "detail": "Idempotency-Key required",
+     "code": null,
+     "via": null,
+     "pred": "key is None",
+     "state": "defined",
+     "form": "text",
+     "split": null,
+     "reason": null,
+     "tests": [
+      {
+       "case": "C1048",
+       "conf": "status+detail",
+       "line": 23,
+       "name": "test_setup_complete_missing_key_400_C1048",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      }
+     ],
+     "response": {
+      "body": {
+       "detail": "…"
+      },
+      "media": "application/json",
+      "source": "fastapi/exception_handlers.py:11-17",
+      "status": 400
+     }
+    },
+    "chain": [
+     {
+      "i": 0,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "CORSMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 1,
+      "kind": "switch",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": "sw:12b96f1a5a",
+      "label": "flag",
+      "sub": "environment, rate_limit_enabled",
+      "switch_kind": "flag"
+     },
+     {
+      "i": 2,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:117",
+      "ref": "x:8437446a6c",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 3,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:121",
+      "ref": "x:a7992af811",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 4,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "IdempotencyMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 5,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": false,
+      "at": null,
+      "ref": "x:fdb1ae15e9",
+      "status": 422,
+      "label": "422 JSON decode error",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 6,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": false,
+      "at": null,
+      "ref": "x:ae1bc4dc59",
+      "status": 400,
+      "label": "400 There was an error parsing the body",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 7,
+      "kind": "gate",
+      "phase": "security",
+      "hit": false,
+      "at": "apps/api/auth/context.py:23",
+      "ref": "x:9fd81887a2",
+      "status": 401,
+      "label": "401 Not authenticated",
+      "sub": "HTTPBearer bearer_scheme",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 8,
+      "kind": "switch",
+      "phase": "dependency",
+      "hit": null,
+      "at": null,
+      "ref": "sw:967c49ad34",
+      "label": "binding",
+      "sub": "TokenVerifier",
+      "switch_kind": "binding"
+     },
+     {
+      "i": 9,
+      "kind": "gate",
+      "phase": "dependency",
+      "hit": false,
+      "at": "apps/api/auth/context.py:99",
+      "ref": "x:18e726cdeb",
+      "status": 401,
+      "label": "401 invalid token",
+      "sub": "except InvalidTokenError",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 10,
+      "kind": "gate",
+      "phase": "validation",
+      "hit": false,
+      "at": null,
+      "ref": "x:1b256011f1",
+      "status": 422,
+      "label": "422 pydantic error type",
+      "sub": null,
+      "split": "own-params",
+      "cond": null,
+      "exit_kind": "validation"
+     },
+     {
+      "i": 11,
+      "kind": "collapsed",
+      "phase": null,
+      "hit": null,
+      "at": "apps/api/api/setup.py:191",
+      "ref": null,
+      "label": "get_idempotency_key",
+      "fn": "apps/api/middleware/idempotency.py::get_idempotency_key",
+      "reason": "one return",
+      "sub": "apps/api/middleware/idempotency.py"
+     },
+     {
+      "i": 12,
+      "kind": "gate",
+      "phase": "handler",
+      "hit": true,
+      "at": "apps/api/api/setup.py:193",
+      "ref": "x:13ce9b79e0",
+      "status": 400,
+      "label": "400 Idempotency-Key required",
+      "sub": "key is None",
+      "split": null,
+      "cond": "key is None",
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 13,
+      "kind": "exit",
+      "phase": null,
+      "hit": null,
+      "at": null,
+      "ref": "x:13ce9b79e0",
+      "label": "400",
+      "sub": "refusal",
+      "status": 400,
+      "exit_kind": "refusal"
+     }
+    ],
+    "effects": {
+     "dependency": "ran",
+     "steps": [
+      {
+       "step": "st:c79e53a27f",
+       "table": "users",
+       "op": "read",
+       "model": "User",
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:34",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": null
+      },
+      {
+       "step": "st:ba597dd4f4",
+       "table": "users",
+       "op": "add",
+       "model": "User",
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:49",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/ownership.py:50",
+        "keys": [
+         [
+          "auth_provider",
+          "auth_provider_id"
+         ]
+        ],
+        "state": "uncaught"
+       },
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:f5b6b3e9b3",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:50",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": null
+      },
+      {
+       "step": "st:925411811a",
+       "table": null,
+       "op": "commit",
+       "model": null,
+       "fn": "apps/api/auth/context.py::build_auth_context",
+       "at": "apps/api/auth/context.py:79",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/auth/context.py::build_auth_context",
+       "bucket": null
+      },
+      {
+       "step": "st:fdb7bb7853",
+       "table": "memberships",
+       "op": "read",
+       "model": "Membership",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:78",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:200eb54837",
+       "table": "households",
+       "op": "read",
+       "model": "Household",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:83",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:61aa8a44cc",
+       "table": "locations",
+       "op": "read",
+       "model": "Location",
+       "fn": "apps/api/services/ownership.py::get_principal_location",
+       "at": "apps/api/services/ownership.py:60",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::get_principal_location",
+       "bucket": null
+      }
+     ],
+     "may_follow_commits": null,
+     "n": {
+      "committed": 1,
+      "maybe_committed": 0,
+      "rolled_back": 0,
+      "uncommitted": 0
+     },
+     "tables": [
+      "households",
+      "locations",
+      "memberships",
+      "users"
+     ],
+     "writes": [
+      "users"
+     ]
+    },
+    "switches": [
+     {
+      "id": "sw:12b96f1a5a",
+      "kind": "flag",
+      "changes_exit": null,
+      "scope": "middleware",
+      "via": "RateLimitMiddleware",
+      "settings": {
+       "environment": {
+        "default": "Environment.LOCAL",
+        "env": "GUSTIFY_ENVIRONMENT"
+       },
+       "rate_limit_enabled": {
+        "default": "False",
+        "env": "GUSTIFY_RATE_LIMIT_ENABLED"
+       }
+      },
+      "expr": "settings.rate_limit_enabled or settings.is_production",
+      "when": "not (not self._enabled or request.url.path in EXEMPT_PATHS)",
+      "refs": [
+       "x:8437446a6c",
+       "x:a7992af811"
+      ],
+      "settings_class": "apps/api/config.py::Settings"
+     },
+     {
+      "id": "sw:967c49ad34",
+      "kind": "binding",
+      "changes_exit": false,
+      "scope": "dependency",
+      "via": null,
+      "port": "TokenVerifier",
+      "fn": "apps/api/auth/context.py::build_auth_context",
+      "anchor": "apps/api/auth/context.py:97",
+      "branches": [
+       {
+        "impl": "FirebaseTokenVerifier",
+        "pred": "settings.auth_provider is ProviderMode.REAL",
+        "binding": "selected",
+        "ends": [
+         "InvalidTokenError → translate apps/api/auth/context.py:98"
+        ]
+       },
+       {
+        "impl": "MockTokenVerifier",
+        "pred": "not (settings.auth_provider is ProviderMode.REAL)",
+        "binding": "selected",
+        "ends": [
+         "InvalidTokenError → translate apps/api/auth/context.py:98"
+        ]
+       }
+      ],
+      "proves": [
+       "x:18e726cdeb"
+      ]
+     }
+    ],
+    "tests": [
+     {
+      "case": "C1048",
+      "conf": "status+detail",
+      "line": 23,
+      "name": "test_setup_complete_missing_key_400_C1048",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     }
+    ],
+    "partial": null,
+    "proven_by": null,
+    "anywhere": null,
+    "n": {
+     "steps": 14,
+     "gates": 8,
+     "catches": 0,
+     "branches": 0,
+     "calls": 1
+    }
+   },
+   {
+    "id": "p:2adb89467d",
+    "status": 409,
+    "kind": "refusal",
+    "phase": "handler",
+    "state": "defined",
+    "names": {
+     "detail": "setup in progress",
+     "exception": "SetupInProgressError",
+     "stage": "handler",
+     "token": null,
+     "drawn": "setup in progress",
+     "phase_status": "handler · 409"
+    },
+    "exit": {
+     "id": "x:f2caf456bd",
+     "kind": "refusal",
+     "row": "produced",
+     "status": 409,
+     "phase": "handler",
+     "at": "apps/api/api/setup.py:200",
+     "detail": "setup in progress",
+     "code": null,
+     "via": "except SetupInProgressError",
+     "pred": null,
+     "state": "defined",
+     "form": "text",
+     "split": null,
+     "reason": null,
+     "tests": [
+      {
+       "case": "C1057",
+       "conf": "ambiguous of 2",
+       "line": 158,
+       "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1061",
+       "conf": "service raises",
+       "line": 128,
+       "name": "test_complete_setup_in_progress_raises_C1061",
+       "file": "apps/api/tests/test_setup_service.py",
+       "state": "pass",
+       "corpus": "api"
+      }
+     ],
+     "response": {
+      "body": {
+       "detail": "…"
+      },
+      "media": "application/json",
+      "source": "fastapi/exception_handlers.py:11-17",
+      "status": 409
+     }
+    },
+    "chain": [
+     {
+      "i": 0,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "CORSMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 1,
+      "kind": "switch",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": "sw:12b96f1a5a",
+      "label": "flag",
+      "sub": "environment, rate_limit_enabled",
+      "switch_kind": "flag"
+     },
+     {
+      "i": 2,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:117",
+      "ref": "x:8437446a6c",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 3,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:121",
+      "ref": "x:a7992af811",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 4,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "IdempotencyMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 5,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": false,
+      "at": null,
+      "ref": "x:fdb1ae15e9",
+      "status": 422,
+      "label": "422 JSON decode error",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 6,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": false,
+      "at": null,
+      "ref": "x:ae1bc4dc59",
+      "status": 400,
+      "label": "400 There was an error parsing the body",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 7,
+      "kind": "gate",
+      "phase": "security",
+      "hit": false,
+      "at": "apps/api/auth/context.py:23",
+      "ref": "x:9fd81887a2",
+      "status": 401,
+      "label": "401 Not authenticated",
+      "sub": "HTTPBearer bearer_scheme",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 8,
+      "kind": "switch",
+      "phase": "dependency",
+      "hit": null,
+      "at": null,
+      "ref": "sw:967c49ad34",
+      "label": "binding",
+      "sub": "TokenVerifier",
+      "switch_kind": "binding"
+     },
+     {
+      "i": 9,
+      "kind": "gate",
+      "phase": "dependency",
+      "hit": false,
+      "at": "apps/api/auth/context.py:99",
+      "ref": "x:18e726cdeb",
+      "status": 401,
+      "label": "401 invalid token",
+      "sub": "except InvalidTokenError",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 10,
+      "kind": "gate",
+      "phase": "validation",
+      "hit": false,
+      "at": null,
+      "ref": "x:1b256011f1",
+      "status": 422,
+      "label": "422 pydantic error type",
+      "sub": null,
+      "split": "own-params",
+      "cond": null,
+      "exit_kind": "validation"
+     },
+     {
+      "i": 11,
+      "kind": "collapsed",
+      "phase": null,
+      "hit": null,
+      "at": "apps/api/api/setup.py:191",
+      "ref": null,
+      "label": "get_idempotency_key",
+      "fn": "apps/api/middleware/idempotency.py::get_idempotency_key",
+      "reason": "one return",
+      "sub": "apps/api/middleware/idempotency.py"
+     },
+     {
+      "i": 12,
+      "kind": "gate",
+      "phase": "handler",
+      "hit": false,
+      "at": "apps/api/api/setup.py:193",
+      "ref": "x:13ce9b79e0",
+      "status": 400,
+      "label": "400 Idempotency-Key required",
+      "sub": "key is None",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 13,
+      "kind": "call",
+      "phase": null,
+      "hit": null,
+      "at": "apps/api/api/setup.py:196",
+      "ref": null,
+      "label": "complete_setup",
+      "fn": "apps/api/services/setup.py::complete_setup",
+      "reason": null,
+      "sub": "apps/api/services/setup.py"
+     },
+     {
+      "i": 14,
+      "kind": "branch",
+      "phase": null,
+      "hit": false,
+      "at": "apps/api/services/setup.py:346",
+      "ref": "b:777606a0cc",
+      "label": "claimed.outcome is ClaimOutcome.REPLAY",
+      "sub": "branch"
+     },
+     {
+      "i": 15,
+      "kind": "gate",
+      "phase": "handler",
+      "hit": true,
+      "at": "apps/api/services/setup.py:348",
+      "ref": "x:f2caf456bd",
+      "status": 409,
+      "label": "409 setup in progress",
+      "sub": "except SetupInProgressError",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 16,
+      "kind": "catch",
+      "phase": null,
+      "hit": null,
+      "at": "apps/api/api/setup.py:199",
+      "ref": "c:f3f296ea81",
+      "label": "SetupInProgressError",
+      "sub": "translate",
+      "answers": [
+       409
+      ],
+      "fn": "apps/api/api/setup.py::setup_complete",
+      "catch_kind": "translate"
+     },
+     {
+      "i": 17,
+      "kind": "exit",
+      "phase": null,
+      "hit": null,
+      "at": null,
+      "ref": "x:f2caf456bd",
+      "label": "409",
+      "sub": "refusal",
+      "status": 409,
+      "exit_kind": "refusal"
+     }
+    ],
+    "effects": {
+     "dependency": "ran",
+     "steps": [
+      {
+       "step": "st:c79e53a27f",
+       "table": "users",
+       "op": "read",
+       "model": "User",
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:34",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": null
+      },
+      {
+       "step": "st:ba597dd4f4",
+       "table": "users",
+       "op": "add",
+       "model": "User",
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:49",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/ownership.py:50",
+        "keys": [
+         [
+          "auth_provider",
+          "auth_provider_id"
+         ]
+        ],
+        "state": "uncaught"
+       },
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:f5b6b3e9b3",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:50",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": null
+      },
+      {
+       "step": "st:925411811a",
+       "table": null,
+       "op": "commit",
+       "model": null,
+       "fn": "apps/api/auth/context.py::build_auth_context",
+       "at": "apps/api/auth/context.py:79",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/auth/context.py::build_auth_context",
+       "bucket": null
+      },
+      {
+       "step": "st:fdb7bb7853",
+       "table": "memberships",
+       "op": "read",
+       "model": "Membership",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:78",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:200eb54837",
+       "table": "households",
+       "op": "read",
+       "model": "Household",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:83",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:61aa8a44cc",
+       "table": "locations",
+       "op": "read",
+       "model": "Location",
+       "fn": "apps/api/services/ownership.py::get_principal_location",
+       "at": "apps/api/services/ownership.py:60",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::get_principal_location",
+       "bucket": null
+      },
+      {
+       "step": "st:c6aff0cdc2",
+       "table": "idempotency_keys",
+       "op": "read",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_lookup",
+       "at": "apps/api/services/idempotency.py:65",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_lookup",
+       "bucket": null
+      },
+      {
+       "step": "st:f0d4172d3b",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:97",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "uncommitted"
+      },
+      {
+       "step": "st:9b6870a647",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:98",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "uncommitted"
+      },
+      {
+       "step": "st:7cc3a75a8e",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:99",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "uncommitted"
+      },
+      {
+       "step": "st:15a3f75493",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:100",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "uncommitted"
+      },
+      {
+       "step": "st:8c8b6c5a08",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::_outcome_for",
+       "at": "apps/api/services/idempotency.py:109",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_outcome_for",
+       "bucket": null
+      },
+      {
+       "step": "st:3bea18b560",
+       "table": null,
+       "op": "savepoint",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::claim",
+       "at": "apps/api/services/idempotency.py:138",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::claim",
+       "bucket": null
+      },
+      {
+       "step": "st:4d0ee3df2a",
+       "table": "idempotency_keys",
+       "op": "add",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::claim",
+       "at": "apps/api/services/idempotency.py:139",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/idempotency.py:140",
+        "keys": [
+         [
+          "key",
+          "operation",
+          "owner_scope"
+         ]
+        ],
+        "state": "handled"
+       },
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::claim",
+       "bucket": "uncommitted"
+      },
+      {
+       "step": "st:93d18ca18c",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::claim",
+       "at": "apps/api/services/idempotency.py:140",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::claim",
+       "bucket": null
+      },
+      {
+       "step": "st:63a86044ef",
+       "table": "idempotency_keys",
+       "op": "read",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_lookup",
+       "at": "apps/api/services/idempotency.py:65",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_lookup",
+       "bucket": null
+      },
+      {
+       "step": "st:f0d4172d3b",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:97",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "uncommitted"
+      },
+      {
+       "step": "st:9b6870a647",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:98",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "uncommitted"
+      },
+      {
+       "step": "st:7cc3a75a8e",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:99",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "uncommitted"
+      },
+      {
+       "step": "st:15a3f75493",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:100",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "uncommitted"
+      },
+      {
+       "step": "st:8c8b6c5a08",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::_outcome_for",
+       "at": "apps/api/services/idempotency.py:109",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_outcome_for",
+       "bucket": null
+      }
+     ],
+     "may_follow_commits": null,
+     "n": {
+      "committed": 1,
+      "maybe_committed": 0,
+      "rolled_back": 0,
+      "uncommitted": 5
+     },
+     "tables": [
+      "households",
+      "idempotency_keys",
+      "locations",
+      "memberships",
+      "users"
+     ],
+     "writes": [
+      "idempotency_keys",
+      "users"
+     ]
+    },
+    "switches": [
+     {
+      "id": "sw:12b96f1a5a",
+      "kind": "flag",
+      "changes_exit": null,
+      "scope": "middleware",
+      "via": "RateLimitMiddleware",
+      "settings": {
+       "environment": {
+        "default": "Environment.LOCAL",
+        "env": "GUSTIFY_ENVIRONMENT"
+       },
+       "rate_limit_enabled": {
+        "default": "False",
+        "env": "GUSTIFY_RATE_LIMIT_ENABLED"
+       }
+      },
+      "expr": "settings.rate_limit_enabled or settings.is_production",
+      "when": "not (not self._enabled or request.url.path in EXEMPT_PATHS)",
+      "refs": [
+       "x:8437446a6c",
+       "x:a7992af811"
+      ],
+      "settings_class": "apps/api/config.py::Settings"
+     },
+     {
+      "id": "sw:967c49ad34",
+      "kind": "binding",
+      "changes_exit": false,
+      "scope": "dependency",
+      "via": null,
+      "port": "TokenVerifier",
+      "fn": "apps/api/auth/context.py::build_auth_context",
+      "anchor": "apps/api/auth/context.py:97",
+      "branches": [
+       {
+        "impl": "FirebaseTokenVerifier",
+        "pred": "settings.auth_provider is ProviderMode.REAL",
+        "binding": "selected",
+        "ends": [
+         "InvalidTokenError → translate apps/api/auth/context.py:98"
+        ]
+       },
+       {
+        "impl": "MockTokenVerifier",
+        "pred": "not (settings.auth_provider is ProviderMode.REAL)",
+        "binding": "selected",
+        "ends": [
+         "InvalidTokenError → translate apps/api/auth/context.py:98"
+        ]
+       }
+      ],
+      "proves": [
+       "x:18e726cdeb"
+      ]
+     }
+    ],
+    "tests": [
+     {
+      "case": "C1057",
+      "conf": "ambiguous of 2",
+      "line": 158,
+      "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1061",
+      "conf": "service raises",
+      "line": 128,
+      "name": "test_complete_setup_in_progress_raises_C1061",
+      "file": "apps/api/tests/test_setup_service.py",
+      "state": "pass",
+      "corpus": "api"
+     }
+    ],
+    "partial": null,
+    "proven_by": null,
+    "anywhere": null,
+    "n": {
+     "steps": 18,
+     "gates": 9,
+     "catches": 1,
+     "branches": 1,
+     "calls": 2
+    }
+   },
+   {
+    "id": "p:5c8ba607f9",
+    "status": 409,
+    "kind": "refusal",
+    "phase": "handler",
+    "state": "defined",
+    "names": {
+     "detail": "consent required",
+     "exception": "ConsentRequiredError",
+     "stage": "handler",
+     "token": null,
+     "drawn": "consent required",
+     "phase_status": "handler · 409"
+    },
+    "exit": {
+     "id": "x:a086031223",
+     "kind": "refusal",
+     "row": "produced",
+     "status": 409,
+     "phase": "handler",
+     "at": "apps/api/api/setup.py:202",
+     "detail": "consent required",
+     "code": null,
+     "via": "except ConsentRequiredError",
+     "pred": null,
+     "state": "defined",
+     "form": "text",
+     "split": null,
+     "reason": null,
+     "tests": [
+      {
+       "case": "C1055",
+       "conf": "status+detail",
+       "line": 121,
+       "name": "test_setup_complete_without_consent_409_C1055",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1057",
+       "conf": "ambiguous of 2",
+       "line": 158,
+       "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1065",
+       "conf": "service raises",
+       "line": 217,
+       "name": "test_complete_setup_without_consent_raises_C1065",
+       "file": "apps/api/tests/test_setup_service.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1067",
+       "conf": "service raises",
+       "line": 247,
+       "name": "test_complete_setup_stale_consent_version_raises_C1067",
+       "file": "apps/api/tests/test_setup_service.py",
+       "state": "pass",
+       "corpus": "api"
+      }
+     ],
+     "response": {
+      "body": {
+       "detail": "…"
+      },
+      "media": "application/json",
+      "source": "fastapi/exception_handlers.py:11-17",
+      "status": 409
+     }
+    },
+    "chain": [
+     {
+      "i": 0,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "CORSMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 1,
+      "kind": "switch",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": "sw:12b96f1a5a",
+      "label": "flag",
+      "sub": "environment, rate_limit_enabled",
+      "switch_kind": "flag"
+     },
+     {
+      "i": 2,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:117",
+      "ref": "x:8437446a6c",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 3,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:121",
+      "ref": "x:a7992af811",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 4,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "IdempotencyMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 5,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": false,
+      "at": null,
+      "ref": "x:fdb1ae15e9",
+      "status": 422,
+      "label": "422 JSON decode error",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 6,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": false,
+      "at": null,
+      "ref": "x:ae1bc4dc59",
+      "status": 400,
+      "label": "400 There was an error parsing the body",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 7,
+      "kind": "gate",
+      "phase": "security",
+      "hit": false,
+      "at": "apps/api/auth/context.py:23",
+      "ref": "x:9fd81887a2",
+      "status": 401,
+      "label": "401 Not authenticated",
+      "sub": "HTTPBearer bearer_scheme",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 8,
+      "kind": "switch",
+      "phase": "dependency",
+      "hit": null,
+      "at": null,
+      "ref": "sw:967c49ad34",
+      "label": "binding",
+      "sub": "TokenVerifier",
+      "switch_kind": "binding"
+     },
+     {
+      "i": 9,
+      "kind": "gate",
+      "phase": "dependency",
+      "hit": false,
+      "at": "apps/api/auth/context.py:99",
+      "ref": "x:18e726cdeb",
+      "status": 401,
+      "label": "401 invalid token",
+      "sub": "except InvalidTokenError",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 10,
+      "kind": "gate",
+      "phase": "validation",
+      "hit": false,
+      "at": null,
+      "ref": "x:1b256011f1",
+      "status": 422,
+      "label": "422 pydantic error type",
+      "sub": null,
+      "split": "own-params",
+      "cond": null,
+      "exit_kind": "validation"
+     },
+     {
+      "i": 11,
+      "kind": "collapsed",
+      "phase": null,
+      "hit": null,
+      "at": "apps/api/api/setup.py:191",
+      "ref": null,
+      "label": "get_idempotency_key",
+      "fn": "apps/api/middleware/idempotency.py::get_idempotency_key",
+      "reason": "one return",
+      "sub": "apps/api/middleware/idempotency.py"
+     },
+     {
+      "i": 12,
+      "kind": "gate",
+      "phase": "handler",
+      "hit": false,
+      "at": "apps/api/api/setup.py:193",
+      "ref": "x:13ce9b79e0",
+      "status": 400,
+      "label": "400 Idempotency-Key required",
+      "sub": "key is None",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 13,
+      "kind": "call",
+      "phase": null,
+      "hit": null,
+      "at": "apps/api/api/setup.py:196",
+      "ref": null,
+      "label": "complete_setup",
+      "fn": "apps/api/services/setup.py::complete_setup",
+      "reason": null,
+      "sub": "apps/api/services/setup.py"
+     },
+     {
+      "i": 14,
+      "kind": "branch",
+      "phase": null,
+      "hit": false,
+      "at": "apps/api/services/setup.py:346",
+      "ref": "b:777606a0cc",
+      "label": "claimed.outcome is ClaimOutcome.REPLAY",
+      "sub": "branch"
+     },
+     {
+      "i": 15,
+      "kind": "gate",
+      "phase": "handler",
+      "hit": false,
+      "at": "apps/api/services/setup.py:348",
+      "ref": "x:f2caf456bd",
+      "status": 409,
+      "label": "409 setup in progress",
+      "sub": "except SetupInProgressError",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 16,
+      "kind": "branch",
+      "phase": null,
+      "hit": false,
+      "at": "apps/api/services/setup.py:362",
+      "ref": "b:ea440a25b4",
+      "label": "existing is not None and prior is not None and prior.completed",
+      "sub": "branch"
+     },
+     {
+      "i": 17,
+      "kind": "gate",
+      "phase": "handler",
+      "hit": true,
+      "at": "apps/api/services/setup.py:374",
+      "ref": "x:a086031223",
+      "status": 409,
+      "label": "409 consent required",
+      "sub": "except ConsentRequiredError",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 18,
+      "kind": "catch",
+      "phase": null,
+      "hit": null,
+      "at": "apps/api/services/setup.py:403",
+      "ref": "c:64e98bd00d",
+      "label": "Exception",
+      "sub": "pass-through",
+      "answers": [],
+      "fn": "apps/api/services/setup.py::complete_setup",
+      "catch_kind": "pass-through"
+     },
+     {
+      "i": 19,
+      "kind": "catch",
+      "phase": null,
+      "hit": null,
+      "at": "apps/api/api/setup.py:201",
+      "ref": "c:3be4248d42",
+      "label": "ConsentRequiredError",
+      "sub": "translate",
+      "answers": [
+       409
+      ],
+      "fn": "apps/api/api/setup.py::setup_complete",
+      "catch_kind": "translate"
+     },
+     {
+      "i": 20,
+      "kind": "exit",
+      "phase": null,
+      "hit": null,
+      "at": null,
+      "ref": "x:a086031223",
+      "label": "409",
+      "sub": "refusal",
+      "status": 409,
+      "exit_kind": "refusal"
+     }
+    ],
+    "effects": {
+     "dependency": "ran",
+     "steps": [
+      {
+       "step": "st:c79e53a27f",
+       "table": "users",
+       "op": "read",
+       "model": "User",
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:34",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": null
+      },
+      {
+       "step": "st:ba597dd4f4",
+       "table": "users",
+       "op": "add",
+       "model": "User",
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:49",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/ownership.py:50",
+        "keys": [
+         [
+          "auth_provider",
+          "auth_provider_id"
+         ]
+        ],
+        "state": "uncaught"
+       },
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:f5b6b3e9b3",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:50",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": null
+      },
+      {
+       "step": "st:925411811a",
+       "table": null,
+       "op": "commit",
+       "model": null,
+       "fn": "apps/api/auth/context.py::build_auth_context",
+       "at": "apps/api/auth/context.py:79",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/auth/context.py::build_auth_context",
+       "bucket": null
+      },
+      {
+       "step": "st:fdb7bb7853",
+       "table": "memberships",
+       "op": "read",
+       "model": "Membership",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:78",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:200eb54837",
+       "table": "households",
+       "op": "read",
+       "model": "Household",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:83",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:61aa8a44cc",
+       "table": "locations",
+       "op": "read",
+       "model": "Location",
+       "fn": "apps/api/services/ownership.py::get_principal_location",
+       "at": "apps/api/services/ownership.py:60",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::get_principal_location",
+       "bucket": null
+      },
+      {
+       "step": "st:c6aff0cdc2",
+       "table": "idempotency_keys",
+       "op": "read",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_lookup",
+       "at": "apps/api/services/idempotency.py:65",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_lookup",
+       "bucket": null
+      },
+      {
+       "step": "st:f0d4172d3b",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:97",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "rolled_back"
+      },
+      {
+       "step": "st:9b6870a647",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:98",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "rolled_back"
+      },
+      {
+       "step": "st:7cc3a75a8e",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:99",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "rolled_back"
+      },
+      {
+       "step": "st:15a3f75493",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:100",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "rolled_back"
+      },
+      {
+       "step": "st:8c8b6c5a08",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::_outcome_for",
+       "at": "apps/api/services/idempotency.py:109",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_outcome_for",
+       "bucket": null
+      },
+      {
+       "step": "st:3bea18b560",
+       "table": null,
+       "op": "savepoint",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::claim",
+       "at": "apps/api/services/idempotency.py:138",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::claim",
+       "bucket": null
+      },
+      {
+       "step": "st:4d0ee3df2a",
+       "table": "idempotency_keys",
+       "op": "add",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::claim",
+       "at": "apps/api/services/idempotency.py:139",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/idempotency.py:140",
+        "keys": [
+         [
+          "key",
+          "operation",
+          "owner_scope"
+         ]
+        ],
+        "state": "handled"
+       },
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::claim",
+       "bucket": "rolled_back"
+      },
+      {
+       "step": "st:93d18ca18c",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::claim",
+       "at": "apps/api/services/idempotency.py:140",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::claim",
+       "bucket": null
+      },
+      {
+       "step": "st:63a86044ef",
+       "table": "idempotency_keys",
+       "op": "read",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_lookup",
+       "at": "apps/api/services/idempotency.py:65",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_lookup",
+       "bucket": null
+      },
+      {
+       "step": "st:f0d4172d3b",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:97",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "rolled_back"
+      },
+      {
+       "step": "st:9b6870a647",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:98",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "rolled_back"
+      },
+      {
+       "step": "st:7cc3a75a8e",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:99",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "rolled_back"
+      },
+      {
+       "step": "st:15a3f75493",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:100",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "rolled_back"
+      },
+      {
+       "step": "st:8c8b6c5a08",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::_outcome_for",
+       "at": "apps/api/services/idempotency.py:109",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_outcome_for",
+       "bucket": null
+      },
+      {
+       "step": "st:fdb7bb7853",
+       "table": "memberships",
+       "op": "read",
+       "model": "Membership",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:78",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:200eb54837",
+       "table": "households",
+       "op": "read",
+       "model": "Household",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:83",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:61aa8a44cc",
+       "table": "locations",
+       "op": "read",
+       "model": "Location",
+       "fn": "apps/api/services/ownership.py::get_principal_location",
+       "at": "apps/api/services/ownership.py:60",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::get_principal_location",
+       "bucket": null
+      },
+      {
+       "step": "st:66639991ec",
+       "table": "setup_completion_state",
+       "op": "read",
+       "model": "SetupCompletionState",
+       "fn": "apps/api/services/setup.py::complete_setup",
+       "at": "apps/api/services/setup.py:354",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::complete_setup",
+       "bucket": null
+      },
+      {
+       "step": "st:bfdef91eea",
+       "table": "consent_records",
+       "op": "read",
+       "model": "ConsentRecord",
+       "fn": "apps/api/services/consent.py::latest_consent",
+       "at": "apps/api/services/consent.py:22",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/consent.py::latest_consent",
+       "bucket": null
+      },
+      {
+       "step": "st:e2a6433d13",
+       "table": null,
+       "op": "rollback",
+       "model": null,
+       "fn": "apps/api/services/setup.py::complete_setup",
+       "at": "apps/api/services/setup.py:404",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::complete_setup",
+       "bucket": null
+      },
+      {
+       "step": "st:5d68c1638a",
+       "table": "idempotency_keys",
+       "op": "read",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/setup.py::_discard_claim",
+       "at": "apps/api/services/setup.py:325",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_discard_claim",
+       "bucket": null
+      },
+      {
+       "step": "st:5768e71cd4",
+       "table": "idempotency_keys",
+       "op": "delete",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/setup.py::_discard_claim",
+       "at": "apps/api/services/setup.py:333",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_discard_claim",
+       "bucket": "maybe_committed"
+      },
+      {
+       "step": "st:13847a504a",
+       "table": null,
+       "op": "commit",
+       "model": null,
+       "fn": "apps/api/services/setup.py::_discard_claim",
+       "at": "apps/api/services/setup.py:334",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_discard_claim",
+       "bucket": null
+      }
+     ],
+     "may_follow_commits": null,
+     "n": {
+      "committed": 1,
+      "maybe_committed": 1,
+      "rolled_back": 5,
+      "uncommitted": 0
+     },
+     "tables": [
+      "consent_records",
+      "households",
+      "idempotency_keys",
+      "locations",
+      "memberships",
+      "setup_completion_state",
+      "users"
+     ],
+     "writes": [
+      "idempotency_keys",
+      "users"
+     ]
+    },
+    "switches": [
+     {
+      "id": "sw:12b96f1a5a",
+      "kind": "flag",
+      "changes_exit": null,
+      "scope": "middleware",
+      "via": "RateLimitMiddleware",
+      "settings": {
+       "environment": {
+        "default": "Environment.LOCAL",
+        "env": "GUSTIFY_ENVIRONMENT"
+       },
+       "rate_limit_enabled": {
+        "default": "False",
+        "env": "GUSTIFY_RATE_LIMIT_ENABLED"
+       }
+      },
+      "expr": "settings.rate_limit_enabled or settings.is_production",
+      "when": "not (not self._enabled or request.url.path in EXEMPT_PATHS)",
+      "refs": [
+       "x:8437446a6c",
+       "x:a7992af811"
+      ],
+      "settings_class": "apps/api/config.py::Settings"
+     },
+     {
+      "id": "sw:967c49ad34",
+      "kind": "binding",
+      "changes_exit": false,
+      "scope": "dependency",
+      "via": null,
+      "port": "TokenVerifier",
+      "fn": "apps/api/auth/context.py::build_auth_context",
+      "anchor": "apps/api/auth/context.py:97",
+      "branches": [
+       {
+        "impl": "FirebaseTokenVerifier",
+        "pred": "settings.auth_provider is ProviderMode.REAL",
+        "binding": "selected",
+        "ends": [
+         "InvalidTokenError → translate apps/api/auth/context.py:98"
+        ]
+       },
+       {
+        "impl": "MockTokenVerifier",
+        "pred": "not (settings.auth_provider is ProviderMode.REAL)",
+        "binding": "selected",
+        "ends": [
+         "InvalidTokenError → translate apps/api/auth/context.py:98"
+        ]
+       }
+      ],
+      "proves": [
+       "x:18e726cdeb"
+      ]
+     }
+    ],
+    "tests": [
+     {
+      "case": "C1055",
+      "conf": "status+detail",
+      "line": 121,
+      "name": "test_setup_complete_without_consent_409_C1055",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1057",
+      "conf": "ambiguous of 2",
+      "line": 158,
+      "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1065",
+      "conf": "service raises",
+      "line": 217,
+      "name": "test_complete_setup_without_consent_raises_C1065",
+      "file": "apps/api/tests/test_setup_service.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1067",
+      "conf": "service raises",
+      "line": 247,
+      "name": "test_complete_setup_stale_consent_version_raises_C1067",
+      "file": "apps/api/tests/test_setup_service.py",
+      "state": "pass",
+      "corpus": "api"
+     }
+    ],
+    "partial": null,
+    "proven_by": null,
+    "anywhere": null,
+    "n": {
+     "steps": 21,
+     "gates": 10,
+     "catches": 2,
+     "branches": 2,
+     "calls": 2
+    }
+   },
+   {
+    "id": "p:bba821f362",
+    "status": 200,
+    "kind": "success",
+    "phase": "handler",
+    "state": "defined",
+    "names": {
+     "detail": "await _me_response_from_result(ctx, result, session, settings)",
+     "exception": null,
+     "stage": "handler",
+     "token": "REPLAY",
+     "drawn": "replay",
+     "phase_status": "handler · 200"
+    },
+    "exit": {
+     "id": "r:406d313dde",
+     "kind": "success",
+     "row": "return",
+     "status": 200,
+     "phase": "handler",
+     "at": "apps/api/api/setup.py:204",
+     "detail": null,
+     "code": null,
+     "via": null,
+     "pred": null,
+     "state": "default",
+     "form": null,
+     "split": null,
+     "reason": null,
+     "tests": [
+      {
+       "case": "C1049",
+       "conf": "status",
+       "line": 35,
+       "name": "test_setup_complete_success_then_me_reads_back_C1049",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1050",
+       "conf": "status",
+       "line": 65,
+       "name": "test_setup_complete_replay_identical_count_one_C1050",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1050",
+       "conf": "status",
+       "line": 66,
+       "name": "test_setup_complete_replay_identical_count_one_C1050",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1056",
+       "conf": "status",
+       "line": 141,
+       "name": "test_setup_complete_with_consent_200_C1056",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1057",
+       "conf": "status",
+       "line": 166,
+       "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C389",
+       "conf": "status",
+       "line": 756,
+       "name": "test_setup_complete_with_exploration_creates_row_C389",
+       "file": "apps/api/tests/test_exploration_preferences.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C390",
+       "conf": "status",
+       "line": 778,
+       "name": "test_setup_complete_folds_in_path_a_plus_C390",
+       "file": "apps/api/tests/test_exploration_preferences.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C391",
+       "conf": "status",
+       "line": 804,
+       "name": "test_setup_complete_without_exploration_creates_empty_row_C391",
+       "file": "apps/api/tests/test_exploration_preferences.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C392",
+       "conf": "status",
+       "line": 824,
+       "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
+       "file": "apps/api/tests/test_exploration_preferences.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C392",
+       "conf": "status",
+       "line": 825,
+       "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
+       "file": "apps/api/tests/test_exploration_preferences.py",
+       "state": "pass",
+       "corpus": "api"
+      }
+     ],
+     "response": {
+      "fields": [
+       "setup_required",
+       "user",
+       "household",
+       "membership",
+       "preferences",
+       "subscription"
+      ],
+      "media": "application/json",
+      "model": "MeResponse",
+      "source": "apps/api/schemas/responses.py:157",
+      "status": 200
+     }
+    },
+    "chain": [
+     {
+      "i": 0,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "CORSMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 1,
+      "kind": "switch",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": "sw:12b96f1a5a",
+      "label": "flag",
+      "sub": "environment, rate_limit_enabled",
+      "switch_kind": "flag"
+     },
+     {
+      "i": 2,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:117",
+      "ref": "x:8437446a6c",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 3,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:121",
+      "ref": "x:a7992af811",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 4,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "IdempotencyMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 5,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": false,
+      "at": null,
+      "ref": "x:fdb1ae15e9",
+      "status": 422,
+      "label": "422 JSON decode error",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 6,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": false,
+      "at": null,
+      "ref": "x:ae1bc4dc59",
+      "status": 400,
+      "label": "400 There was an error parsing the body",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 7,
+      "kind": "gate",
+      "phase": "security",
+      "hit": false,
+      "at": "apps/api/auth/context.py:23",
+      "ref": "x:9fd81887a2",
+      "status": 401,
+      "label": "401 Not authenticated",
+      "sub": "HTTPBearer bearer_scheme",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 8,
+      "kind": "switch",
+      "phase": "dependency",
+      "hit": null,
+      "at": null,
+      "ref": "sw:967c49ad34",
+      "label": "binding",
+      "sub": "TokenVerifier",
+      "switch_kind": "binding"
+     },
+     {
+      "i": 9,
+      "kind": "gate",
+      "phase": "dependency",
+      "hit": false,
+      "at": "apps/api/auth/context.py:99",
+      "ref": "x:18e726cdeb",
+      "status": 401,
+      "label": "401 invalid token",
+      "sub": "except InvalidTokenError",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 10,
+      "kind": "gate",
+      "phase": "validation",
+      "hit": false,
+      "at": null,
+      "ref": "x:1b256011f1",
+      "status": 422,
+      "label": "422 pydantic error type",
+      "sub": null,
+      "split": "own-params",
+      "cond": null,
+      "exit_kind": "validation"
+     },
+     {
+      "i": 11,
+      "kind": "collapsed",
+      "phase": null,
+      "hit": null,
+      "at": "apps/api/api/setup.py:191",
+      "ref": null,
+      "label": "get_idempotency_key",
+      "fn": "apps/api/middleware/idempotency.py::get_idempotency_key",
+      "reason": "one return",
+      "sub": "apps/api/middleware/idempotency.py"
+     },
+     {
+      "i": 12,
+      "kind": "gate",
+      "phase": "handler",
+      "hit": false,
+      "at": "apps/api/api/setup.py:193",
+      "ref": "x:13ce9b79e0",
+      "status": 400,
+      "label": "400 Idempotency-Key required",
+      "sub": "key is None",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 13,
+      "kind": "call",
+      "phase": null,
+      "hit": null,
+      "at": "apps/api/api/setup.py:196",
+      "ref": null,
+      "label": "complete_setup",
+      "fn": "apps/api/services/setup.py::complete_setup",
+      "reason": null,
+      "sub": "apps/api/services/setup.py"
+     },
+     {
+      "i": 14,
+      "kind": "branch",
+      "phase": null,
+      "hit": true,
+      "at": "apps/api/services/setup.py:346",
+      "ref": "b:777606a0cc",
+      "label": "claimed.outcome is ClaimOutcome.REPLAY",
+      "sub": "branch"
+     },
+     {
+      "i": 15,
+      "kind": "switch",
+      "phase": "handler",
+      "hit": null,
+      "at": null,
+      "ref": "sw:f52e70d831",
+      "label": "value",
+      "sub": "ai_credits_chef, ai_credits_free",
+      "switch_kind": "value"
+     },
+     {
+      "i": 16,
+      "kind": "collapsed",
+      "phase": null,
+      "hit": null,
+      "at": "apps/api/api/setup.py:204",
+      "ref": null,
+      "label": "_me_response_from_result",
+      "fn": "apps/api/api/setup.py::_me_response_from_result",
+      "reason": "one return",
+      "sub": "apps/api/api/setup.py"
+     },
+     {
+      "i": 17,
+      "kind": "exit",
+      "phase": null,
+      "hit": null,
+      "at": null,
+      "ref": "r:406d313dde",
+      "label": "200",
+      "sub": "success",
+      "status": 200,
+      "exit_kind": "success"
+     }
+    ],
+    "effects": {
+     "dependency": "ran",
+     "steps": [
+      {
+       "step": "st:c79e53a27f",
+       "table": "users",
+       "op": "read",
+       "model": "User",
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:34",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": null
+      },
+      {
+       "step": "st:ba597dd4f4",
+       "table": "users",
+       "op": "add",
+       "model": "User",
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:49",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/ownership.py:50",
+        "keys": [
+         [
+          "auth_provider",
+          "auth_provider_id"
+         ]
+        ],
+        "state": "uncaught"
+       },
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:f5b6b3e9b3",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:50",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": null
+      },
+      {
+       "step": "st:925411811a",
+       "table": null,
+       "op": "commit",
+       "model": null,
+       "fn": "apps/api/auth/context.py::build_auth_context",
+       "at": "apps/api/auth/context.py:79",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/auth/context.py::build_auth_context",
+       "bucket": null
+      },
+      {
+       "step": "st:fdb7bb7853",
+       "table": "memberships",
+       "op": "read",
+       "model": "Membership",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:78",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:200eb54837",
+       "table": "households",
+       "op": "read",
+       "model": "Household",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:83",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:61aa8a44cc",
+       "table": "locations",
+       "op": "read",
+       "model": "Location",
+       "fn": "apps/api/services/ownership.py::get_principal_location",
+       "at": "apps/api/services/ownership.py:60",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::get_principal_location",
+       "bucket": null
+      },
+      {
+       "step": "st:c6aff0cdc2",
+       "table": "idempotency_keys",
+       "op": "read",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_lookup",
+       "at": "apps/api/services/idempotency.py:65",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_lookup",
+       "bucket": null
+      },
+      {
+       "step": "st:f0d4172d3b",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:97",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "uncommitted"
+      },
+      {
+       "step": "st:9b6870a647",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:98",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "uncommitted"
+      },
+      {
+       "step": "st:7cc3a75a8e",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:99",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "uncommitted"
+      },
+      {
+       "step": "st:15a3f75493",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:100",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "uncommitted"
+      },
+      {
+       "step": "st:8c8b6c5a08",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::_outcome_for",
+       "at": "apps/api/services/idempotency.py:109",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_outcome_for",
+       "bucket": null
+      },
+      {
+       "step": "st:3bea18b560",
+       "table": null,
+       "op": "savepoint",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::claim",
+       "at": "apps/api/services/idempotency.py:138",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::claim",
+       "bucket": null
+      },
+      {
+       "step": "st:4d0ee3df2a",
+       "table": "idempotency_keys",
+       "op": "add",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::claim",
+       "at": "apps/api/services/idempotency.py:139",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/idempotency.py:140",
+        "keys": [
+         [
+          "key",
+          "operation",
+          "owner_scope"
+         ]
+        ],
+        "state": "handled"
+       },
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::claim",
+       "bucket": "uncommitted"
+      },
+      {
+       "step": "st:93d18ca18c",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::claim",
+       "at": "apps/api/services/idempotency.py:140",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::claim",
+       "bucket": null
+      },
+      {
+       "step": "st:63a86044ef",
+       "table": "idempotency_keys",
+       "op": "read",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_lookup",
+       "at": "apps/api/services/idempotency.py:65",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_lookup",
+       "bucket": null
+      },
+      {
+       "step": "st:f0d4172d3b",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:97",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "uncommitted"
+      },
+      {
+       "step": "st:9b6870a647",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:98",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "uncommitted"
+      },
+      {
+       "step": "st:7cc3a75a8e",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:99",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "uncommitted"
+      },
+      {
+       "step": "st:15a3f75493",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:100",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "uncommitted"
+      },
+      {
+       "step": "st:8c8b6c5a08",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::_outcome_for",
+       "at": "apps/api/services/idempotency.py:109",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_outcome_for",
+       "bucket": null
+      },
+      {
+       "step": "st:fdb7bb7853",
+       "table": "memberships",
+       "op": "read",
+       "model": "Membership",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:78",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:200eb54837",
+       "table": "households",
+       "op": "read",
+       "model": "Household",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:83",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:61aa8a44cc",
+       "table": "locations",
+       "op": "read",
+       "model": "Location",
+       "fn": "apps/api/services/ownership.py::get_principal_location",
+       "at": "apps/api/services/ownership.py:60",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::get_principal_location",
+       "bucket": null
+      },
+      {
+       "step": "st:3d8941af09",
+       "table": "household_format_preferences",
+       "op": "read",
+       "model": "HouseholdFormatPreferences",
+       "fn": "apps/api/services/setup.py::_load_setup_result",
+       "at": "apps/api/services/setup.py:247",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_load_setup_result",
+       "bucket": null
+      },
+      {
+       "step": "st:1a572ca3fa",
+       "table": "user_format_preferences",
+       "op": "read",
+       "model": "UserFormatPreferences",
+       "fn": "apps/api/services/setup.py::_load_setup_result",
+       "at": "apps/api/services/setup.py:254",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_load_setup_result",
+       "bucket": null
+      },
+      {
+       "step": "st:3e4e2e6f76",
+       "table": "user_dietary_profile",
+       "op": "read",
+       "model": "UserDietaryProfile",
+       "fn": "apps/api/services/setup.py::_load_setup_result",
+       "at": "apps/api/services/setup.py:259",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_load_setup_result",
+       "bucket": null
+      },
+      {
+       "step": "st:f418771e9b",
+       "table": "user_exploration_preferences",
+       "op": "read",
+       "model": "UserExplorationPreferences",
+       "fn": "apps/api/services/setup.py::_load_setup_result",
+       "at": "apps/api/services/setup.py:267",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_load_setup_result",
+       "bucket": null
+      },
+      {
+       "step": "st:0435d252bf",
+       "table": "user_privacy_permissions",
+       "op": "read",
+       "model": "UserPrivacyPermissions",
+       "fn": "apps/api/services/setup.py::_load_setup_result",
+       "at": "apps/api/services/setup.py:276",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_load_setup_result",
+       "bucket": null
+      },
+      {
+       "step": "st:43c78fa3a7",
+       "table": "user_notification_preferences",
+       "op": "read",
+       "model": "UserNotificationPreferences",
+       "fn": "apps/api/services/setup.py::_load_setup_result",
+       "at": "apps/api/services/setup.py:281",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_load_setup_result",
+       "bucket": null
+      },
+      {
+       "step": "st:4224af6803",
+       "table": "subscription_entitlement",
+       "op": "read",
+       "model": "SubscriptionEntitlement",
+       "fn": "apps/api/services/setup.py::_load_setup_result",
+       "at": "apps/api/services/setup.py:288",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_load_setup_result",
+       "bucket": null
+      },
+      {
+       "step": "st:a757b623da",
+       "table": "setup_completion_state",
+       "op": "read",
+       "model": "SetupCompletionState",
+       "fn": "apps/api/services/setup.py::_load_setup_result",
+       "at": "apps/api/services/setup.py:293",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_load_setup_result",
+       "bucket": null
+      },
+      {
+       "step": "st:c389b6f86f",
+       "table": "ai_spend_log",
+       "op": "read",
+       "model": "AiSpendLog",
+       "fn": "apps/api/services/ai_credits.py::credits_used_this_month",
+       "at": "apps/api/services/ai_credits.py:83",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ai_credits.py::credits_used_this_month",
+       "bucket": null
+      }
+     ],
+     "may_follow_commits": null,
+     "n": {
+      "committed": 1,
+      "maybe_committed": 0,
+      "rolled_back": 0,
+      "uncommitted": 5
+     },
+     "tables": [
+      "ai_spend_log",
+      "household_format_preferences",
+      "households",
+      "idempotency_keys",
+      "locations",
+      "memberships",
+      "setup_completion_state",
+      "subscription_entitlement",
+      "user_dietary_profile",
+      "user_exploration_preferences",
+      "user_format_preferences",
+      "user_notification_preferences",
+      "user_privacy_permissions",
+      "users"
+     ],
+     "writes": [
+      "idempotency_keys",
+      "users"
+     ]
+    },
+    "switches": [
+     {
+      "id": "sw:12b96f1a5a",
+      "kind": "flag",
+      "changes_exit": null,
+      "scope": "middleware",
+      "via": "RateLimitMiddleware",
+      "settings": {
+       "environment": {
+        "default": "Environment.LOCAL",
+        "env": "GUSTIFY_ENVIRONMENT"
+       },
+       "rate_limit_enabled": {
+        "default": "False",
+        "env": "GUSTIFY_RATE_LIMIT_ENABLED"
+       }
+      },
+      "expr": "settings.rate_limit_enabled or settings.is_production",
+      "when": "not (not self._enabled or request.url.path in EXEMPT_PATHS)",
+      "refs": [
+       "x:8437446a6c",
+       "x:a7992af811"
+      ],
+      "settings_class": "apps/api/config.py::Settings"
+     },
+     {
+      "id": "sw:967c49ad34",
+      "kind": "binding",
+      "changes_exit": false,
+      "scope": "dependency",
+      "via": null,
+      "port": "TokenVerifier",
+      "fn": "apps/api/auth/context.py::build_auth_context",
+      "anchor": "apps/api/auth/context.py:97",
+      "branches": [
+       {
+        "impl": "FirebaseTokenVerifier",
+        "pred": "settings.auth_provider is ProviderMode.REAL",
+        "binding": "selected",
+        "ends": [
+         "InvalidTokenError → translate apps/api/auth/context.py:98"
+        ]
+       },
+       {
+        "impl": "MockTokenVerifier",
+        "pred": "not (settings.auth_provider is ProviderMode.REAL)",
+        "binding": "selected",
+        "ends": [
+         "InvalidTokenError → translate apps/api/auth/context.py:98"
+        ]
+       }
+      ],
+      "proves": [
+       "x:18e726cdeb"
+      ]
+     },
+     {
+      "id": "sw:f52e70d831",
+      "kind": "value",
+      "changes_exit": null,
+      "scope": "call",
+      "via": null,
+      "anchor": "apps/api/api/setup.py:204",
+      "chain": [
+       "apps/api/api/setup.py::setup_complete",
+       "apps/api/api/setup.py::_me_response_from_result",
+       "apps/api/api/setup.py::_subscription_block",
+       "apps/api/services/ai_credits.py::credits_summary",
+       "apps/api/services/ai_credits.py::allowance_for"
+      ],
+      "branches": [
+       {
+        "at": "apps/api/services/ai_credits.py:67",
+        "pred": "tier == 'chef'",
+        "setting": "ai_credits_chef",
+        "value": "settings.ai_credits_chef"
+       },
+       {
+        "at": "apps/api/services/ai_credits.py:68",
+        "pred": "not (tier == 'chef')",
+        "setting": "ai_credits_free",
+        "value": "settings.ai_credits_free"
+       }
+      ],
+      "depth": 4,
+      "settings": [
+       "ai_credits_chef",
+       "ai_credits_free"
+      ]
+     }
+    ],
+    "tests": [
+     {
+      "case": "C1049",
+      "conf": "status",
+      "line": 35,
+      "name": "test_setup_complete_success_then_me_reads_back_C1049",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1050",
+      "conf": "status",
+      "line": 65,
+      "name": "test_setup_complete_replay_identical_count_one_C1050",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1050",
+      "conf": "status",
+      "line": 66,
+      "name": "test_setup_complete_replay_identical_count_one_C1050",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1056",
+      "conf": "status",
+      "line": 141,
+      "name": "test_setup_complete_with_consent_200_C1056",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1057",
+      "conf": "status",
+      "line": 166,
+      "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C389",
+      "conf": "status",
+      "line": 756,
+      "name": "test_setup_complete_with_exploration_creates_row_C389",
+      "file": "apps/api/tests/test_exploration_preferences.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C390",
+      "conf": "status",
+      "line": 778,
+      "name": "test_setup_complete_folds_in_path_a_plus_C390",
+      "file": "apps/api/tests/test_exploration_preferences.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C391",
+      "conf": "status",
+      "line": 804,
+      "name": "test_setup_complete_without_exploration_creates_empty_row_C391",
+      "file": "apps/api/tests/test_exploration_preferences.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C392",
+      "conf": "status",
+      "line": 824,
+      "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
+      "file": "apps/api/tests/test_exploration_preferences.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C392",
+      "conf": "status",
+      "line": 825,
+      "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
+      "file": "apps/api/tests/test_exploration_preferences.py",
+      "state": "pass",
+      "corpus": "api"
+     }
+    ],
+    "partial": null,
+    "proven_by": null,
+    "anywhere": null,
+    "n": {
+     "steps": 18,
+     "gates": 8,
+     "catches": 0,
+     "branches": 1,
+     "calls": 3
+    }
+   },
+   {
+    "id": "p:1ac75d260a",
+    "status": 200,
+    "kind": "success",
+    "phase": "handler",
+    "state": "defined",
+    "names": {
+     "detail": "await _me_response_from_result(ctx, result, session, settings)",
+     "exception": null,
+     "stage": "handler",
+     "token": "completed",
+     "drawn": "already done",
+     "phase_status": "handler · 200"
+    },
+    "exit": {
+     "id": "r:406d313dde",
+     "kind": "success",
+     "row": "return",
+     "status": 200,
+     "phase": "handler",
+     "at": "apps/api/api/setup.py:204",
+     "detail": null,
+     "code": null,
+     "via": null,
+     "pred": null,
+     "state": "default",
+     "form": null,
+     "split": null,
+     "reason": null,
+     "tests": [
+      {
+       "case": "C1049",
+       "conf": "status",
+       "line": 35,
+       "name": "test_setup_complete_success_then_me_reads_back_C1049",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1050",
+       "conf": "status",
+       "line": 65,
+       "name": "test_setup_complete_replay_identical_count_one_C1050",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1050",
+       "conf": "status",
+       "line": 66,
+       "name": "test_setup_complete_replay_identical_count_one_C1050",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1056",
+       "conf": "status",
+       "line": 141,
+       "name": "test_setup_complete_with_consent_200_C1056",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1057",
+       "conf": "status",
+       "line": 166,
+       "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C389",
+       "conf": "status",
+       "line": 756,
+       "name": "test_setup_complete_with_exploration_creates_row_C389",
+       "file": "apps/api/tests/test_exploration_preferences.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C390",
+       "conf": "status",
+       "line": 778,
+       "name": "test_setup_complete_folds_in_path_a_plus_C390",
+       "file": "apps/api/tests/test_exploration_preferences.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C391",
+       "conf": "status",
+       "line": 804,
+       "name": "test_setup_complete_without_exploration_creates_empty_row_C391",
+       "file": "apps/api/tests/test_exploration_preferences.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C392",
+       "conf": "status",
+       "line": 824,
+       "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
+       "file": "apps/api/tests/test_exploration_preferences.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C392",
+       "conf": "status",
+       "line": 825,
+       "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
+       "file": "apps/api/tests/test_exploration_preferences.py",
+       "state": "pass",
+       "corpus": "api"
+      }
+     ],
+     "response": {
+      "fields": [
+       "setup_required",
+       "user",
+       "household",
+       "membership",
+       "preferences",
+       "subscription"
+      ],
+      "media": "application/json",
+      "model": "MeResponse",
+      "source": "apps/api/schemas/responses.py:157",
+      "status": 200
+     }
+    },
+    "chain": [
+     {
+      "i": 0,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "CORSMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 1,
+      "kind": "switch",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": "sw:12b96f1a5a",
+      "label": "flag",
+      "sub": "environment, rate_limit_enabled",
+      "switch_kind": "flag"
+     },
+     {
+      "i": 2,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:117",
+      "ref": "x:8437446a6c",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 3,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:121",
+      "ref": "x:a7992af811",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 4,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "IdempotencyMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 5,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": false,
+      "at": null,
+      "ref": "x:fdb1ae15e9",
+      "status": 422,
+      "label": "422 JSON decode error",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 6,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": false,
+      "at": null,
+      "ref": "x:ae1bc4dc59",
+      "status": 400,
+      "label": "400 There was an error parsing the body",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 7,
+      "kind": "gate",
+      "phase": "security",
+      "hit": false,
+      "at": "apps/api/auth/context.py:23",
+      "ref": "x:9fd81887a2",
+      "status": 401,
+      "label": "401 Not authenticated",
+      "sub": "HTTPBearer bearer_scheme",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 8,
+      "kind": "switch",
+      "phase": "dependency",
+      "hit": null,
+      "at": null,
+      "ref": "sw:967c49ad34",
+      "label": "binding",
+      "sub": "TokenVerifier",
+      "switch_kind": "binding"
+     },
+     {
+      "i": 9,
+      "kind": "gate",
+      "phase": "dependency",
+      "hit": false,
+      "at": "apps/api/auth/context.py:99",
+      "ref": "x:18e726cdeb",
+      "status": 401,
+      "label": "401 invalid token",
+      "sub": "except InvalidTokenError",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 10,
+      "kind": "gate",
+      "phase": "validation",
+      "hit": false,
+      "at": null,
+      "ref": "x:1b256011f1",
+      "status": 422,
+      "label": "422 pydantic error type",
+      "sub": null,
+      "split": "own-params",
+      "cond": null,
+      "exit_kind": "validation"
+     },
+     {
+      "i": 11,
+      "kind": "collapsed",
+      "phase": null,
+      "hit": null,
+      "at": "apps/api/api/setup.py:191",
+      "ref": null,
+      "label": "get_idempotency_key",
+      "fn": "apps/api/middleware/idempotency.py::get_idempotency_key",
+      "reason": "one return",
+      "sub": "apps/api/middleware/idempotency.py"
+     },
+     {
+      "i": 12,
+      "kind": "gate",
+      "phase": "handler",
+      "hit": false,
+      "at": "apps/api/api/setup.py:193",
+      "ref": "x:13ce9b79e0",
+      "status": 400,
+      "label": "400 Idempotency-Key required",
+      "sub": "key is None",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 13,
+      "kind": "call",
+      "phase": null,
+      "hit": null,
+      "at": "apps/api/api/setup.py:196",
+      "ref": null,
+      "label": "complete_setup",
+      "fn": "apps/api/services/setup.py::complete_setup",
+      "reason": null,
+      "sub": "apps/api/services/setup.py"
+     },
+     {
+      "i": 14,
+      "kind": "branch",
+      "phase": null,
+      "hit": false,
+      "at": "apps/api/services/setup.py:346",
+      "ref": "b:777606a0cc",
+      "label": "claimed.outcome is ClaimOutcome.REPLAY",
+      "sub": "branch"
+     },
+     {
+      "i": 15,
+      "kind": "gate",
+      "phase": "handler",
+      "hit": false,
+      "at": "apps/api/services/setup.py:348",
+      "ref": "x:f2caf456bd",
+      "status": 409,
+      "label": "409 setup in progress",
+      "sub": "except SetupInProgressError",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 16,
+      "kind": "branch",
+      "phase": null,
+      "hit": true,
+      "at": "apps/api/services/setup.py:362",
+      "ref": "b:ea440a25b4",
+      "label": "existing is not None and prior is not None and prior.completed",
+      "sub": "branch"
+     },
+     {
+      "i": 17,
+      "kind": "switch",
+      "phase": "handler",
+      "hit": null,
+      "at": null,
+      "ref": "sw:f52e70d831",
+      "label": "value",
+      "sub": "ai_credits_chef, ai_credits_free",
+      "switch_kind": "value"
+     },
+     {
+      "i": 18,
+      "kind": "collapsed",
+      "phase": null,
+      "hit": null,
+      "at": "apps/api/api/setup.py:204",
+      "ref": null,
+      "label": "_me_response_from_result",
+      "fn": "apps/api/api/setup.py::_me_response_from_result",
+      "reason": "one return",
+      "sub": "apps/api/api/setup.py"
+     },
+     {
+      "i": 19,
+      "kind": "exit",
+      "phase": null,
+      "hit": null,
+      "at": null,
+      "ref": "r:406d313dde",
+      "label": "200",
+      "sub": "success",
+      "status": 200,
+      "exit_kind": "success"
+     }
+    ],
+    "effects": {
+     "dependency": "ran",
+     "steps": [
+      {
+       "step": "st:c79e53a27f",
+       "table": "users",
+       "op": "read",
+       "model": "User",
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:34",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": null
+      },
+      {
+       "step": "st:ba597dd4f4",
+       "table": "users",
+       "op": "add",
+       "model": "User",
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:49",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/ownership.py:50",
+        "keys": [
+         [
+          "auth_provider",
+          "auth_provider_id"
+         ]
+        ],
+        "state": "uncaught"
+       },
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:f5b6b3e9b3",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:50",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": null
+      },
+      {
+       "step": "st:925411811a",
+       "table": null,
+       "op": "commit",
+       "model": null,
+       "fn": "apps/api/auth/context.py::build_auth_context",
+       "at": "apps/api/auth/context.py:79",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/auth/context.py::build_auth_context",
+       "bucket": null
+      },
+      {
+       "step": "st:fdb7bb7853",
+       "table": "memberships",
+       "op": "read",
+       "model": "Membership",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:78",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:200eb54837",
+       "table": "households",
+       "op": "read",
+       "model": "Household",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:83",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:61aa8a44cc",
+       "table": "locations",
+       "op": "read",
+       "model": "Location",
+       "fn": "apps/api/services/ownership.py::get_principal_location",
+       "at": "apps/api/services/ownership.py:60",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::get_principal_location",
+       "bucket": null
+      },
+      {
+       "step": "st:c6aff0cdc2",
+       "table": "idempotency_keys",
+       "op": "read",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_lookup",
+       "at": "apps/api/services/idempotency.py:65",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_lookup",
+       "bucket": null
+      },
+      {
+       "step": "st:f0d4172d3b",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:97",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:9b6870a647",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:98",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:7cc3a75a8e",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:99",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:15a3f75493",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:100",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:8c8b6c5a08",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::_outcome_for",
+       "at": "apps/api/services/idempotency.py:109",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_outcome_for",
+       "bucket": null
+      },
+      {
+       "step": "st:3bea18b560",
+       "table": null,
+       "op": "savepoint",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::claim",
+       "at": "apps/api/services/idempotency.py:138",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::claim",
+       "bucket": null
+      },
+      {
+       "step": "st:4d0ee3df2a",
+       "table": "idempotency_keys",
+       "op": "add",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::claim",
+       "at": "apps/api/services/idempotency.py:139",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/idempotency.py:140",
+        "keys": [
+         [
+          "key",
+          "operation",
+          "owner_scope"
+         ]
+        ],
+        "state": "handled"
+       },
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::claim",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:93d18ca18c",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::claim",
+       "at": "apps/api/services/idempotency.py:140",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::claim",
+       "bucket": null
+      },
+      {
+       "step": "st:63a86044ef",
+       "table": "idempotency_keys",
+       "op": "read",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_lookup",
+       "at": "apps/api/services/idempotency.py:65",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_lookup",
+       "bucket": null
+      },
+      {
+       "step": "st:f0d4172d3b",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:97",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:9b6870a647",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:98",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:7cc3a75a8e",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:99",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:15a3f75493",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:100",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:8c8b6c5a08",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::_outcome_for",
+       "at": "apps/api/services/idempotency.py:109",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_outcome_for",
+       "bucket": null
+      },
+      {
+       "step": "st:fdb7bb7853",
+       "table": "memberships",
+       "op": "read",
+       "model": "Membership",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:78",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:200eb54837",
+       "table": "households",
+       "op": "read",
+       "model": "Household",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:83",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:61aa8a44cc",
+       "table": "locations",
+       "op": "read",
+       "model": "Location",
+       "fn": "apps/api/services/ownership.py::get_principal_location",
+       "at": "apps/api/services/ownership.py:60",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::get_principal_location",
+       "bucket": null
+      },
+      {
+       "step": "st:66639991ec",
+       "table": "setup_completion_state",
+       "op": "read",
+       "model": "SetupCompletionState",
+       "fn": "apps/api/services/setup.py::complete_setup",
+       "at": "apps/api/services/setup.py:354",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::complete_setup",
+       "bucket": null
+      },
+      {
+       "step": "st:fdb7bb7853",
+       "table": "memberships",
+       "op": "read",
+       "model": "Membership",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:78",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:200eb54837",
+       "table": "households",
+       "op": "read",
+       "model": "Household",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:83",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:61aa8a44cc",
+       "table": "locations",
+       "op": "read",
+       "model": "Location",
+       "fn": "apps/api/services/ownership.py::get_principal_location",
+       "at": "apps/api/services/ownership.py:60",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::get_principal_location",
+       "bucket": null
+      },
+      {
+       "step": "st:3d8941af09",
+       "table": "household_format_preferences",
+       "op": "read",
+       "model": "HouseholdFormatPreferences",
+       "fn": "apps/api/services/setup.py::_load_setup_result",
+       "at": "apps/api/services/setup.py:247",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_load_setup_result",
+       "bucket": null
+      },
+      {
+       "step": "st:1a572ca3fa",
+       "table": "user_format_preferences",
+       "op": "read",
+       "model": "UserFormatPreferences",
+       "fn": "apps/api/services/setup.py::_load_setup_result",
+       "at": "apps/api/services/setup.py:254",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_load_setup_result",
+       "bucket": null
+      },
+      {
+       "step": "st:3e4e2e6f76",
+       "table": "user_dietary_profile",
+       "op": "read",
+       "model": "UserDietaryProfile",
+       "fn": "apps/api/services/setup.py::_load_setup_result",
+       "at": "apps/api/services/setup.py:259",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_load_setup_result",
+       "bucket": null
+      },
+      {
+       "step": "st:f418771e9b",
+       "table": "user_exploration_preferences",
+       "op": "read",
+       "model": "UserExplorationPreferences",
+       "fn": "apps/api/services/setup.py::_load_setup_result",
+       "at": "apps/api/services/setup.py:267",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_load_setup_result",
+       "bucket": null
+      },
+      {
+       "step": "st:0435d252bf",
+       "table": "user_privacy_permissions",
+       "op": "read",
+       "model": "UserPrivacyPermissions",
+       "fn": "apps/api/services/setup.py::_load_setup_result",
+       "at": "apps/api/services/setup.py:276",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_load_setup_result",
+       "bucket": null
+      },
+      {
+       "step": "st:43c78fa3a7",
+       "table": "user_notification_preferences",
+       "op": "read",
+       "model": "UserNotificationPreferences",
+       "fn": "apps/api/services/setup.py::_load_setup_result",
+       "at": "apps/api/services/setup.py:281",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_load_setup_result",
+       "bucket": null
+      },
+      {
+       "step": "st:4224af6803",
+       "table": "subscription_entitlement",
+       "op": "read",
+       "model": "SubscriptionEntitlement",
+       "fn": "apps/api/services/setup.py::_load_setup_result",
+       "at": "apps/api/services/setup.py:288",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_load_setup_result",
+       "bucket": null
+      },
+      {
+       "step": "st:a757b623da",
+       "table": "setup_completion_state",
+       "op": "read",
+       "model": "SetupCompletionState",
+       "fn": "apps/api/services/setup.py::_load_setup_result",
+       "at": "apps/api/services/setup.py:293",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_load_setup_result",
+       "bucket": null
+      },
+      {
+       "step": "st:07278f8b63",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::complete",
+       "at": "apps/api/services/idempotency.py:153",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::complete",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:4bc0fc1137",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::complete",
+       "at": "apps/api/services/idempotency.py:154",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::complete",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:222729711a",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::complete",
+       "at": "apps/api/services/idempotency.py:155",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::complete",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:840f0b8ac7",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::complete",
+       "at": "apps/api/services/idempotency.py:156",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::complete",
+       "bucket": null
+      },
+      {
+       "step": "st:07fb369254",
+       "table": null,
+       "op": "commit",
+       "model": null,
+       "fn": "apps/api/services/setup.py::complete_setup",
+       "at": "apps/api/services/setup.py:361",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::complete_setup",
+       "bucket": null
+      },
+      {
+       "step": "st:c389b6f86f",
+       "table": "ai_spend_log",
+       "op": "read",
+       "model": "AiSpendLog",
+       "fn": "apps/api/services/ai_credits.py::credits_used_this_month",
+       "at": "apps/api/services/ai_credits.py:83",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ai_credits.py::credits_used_this_month",
+       "bucket": null
+      }
+     ],
+     "may_follow_commits": null,
+     "n": {
+      "committed": 9,
+      "maybe_committed": 0,
+      "rolled_back": 0,
+      "uncommitted": 0
+     },
+     "tables": [
+      "ai_spend_log",
+      "household_format_preferences",
+      "households",
+      "idempotency_keys",
+      "locations",
+      "memberships",
+      "setup_completion_state",
+      "subscription_entitlement",
+      "user_dietary_profile",
+      "user_exploration_preferences",
+      "user_format_preferences",
+      "user_notification_preferences",
+      "user_privacy_permissions",
+      "users"
+     ],
+     "writes": [
+      "idempotency_keys",
+      "users"
+     ]
+    },
+    "switches": [
+     {
+      "id": "sw:12b96f1a5a",
+      "kind": "flag",
+      "changes_exit": null,
+      "scope": "middleware",
+      "via": "RateLimitMiddleware",
+      "settings": {
+       "environment": {
+        "default": "Environment.LOCAL",
+        "env": "GUSTIFY_ENVIRONMENT"
+       },
+       "rate_limit_enabled": {
+        "default": "False",
+        "env": "GUSTIFY_RATE_LIMIT_ENABLED"
+       }
+      },
+      "expr": "settings.rate_limit_enabled or settings.is_production",
+      "when": "not (not self._enabled or request.url.path in EXEMPT_PATHS)",
+      "refs": [
+       "x:8437446a6c",
+       "x:a7992af811"
+      ],
+      "settings_class": "apps/api/config.py::Settings"
+     },
+     {
+      "id": "sw:967c49ad34",
+      "kind": "binding",
+      "changes_exit": false,
+      "scope": "dependency",
+      "via": null,
+      "port": "TokenVerifier",
+      "fn": "apps/api/auth/context.py::build_auth_context",
+      "anchor": "apps/api/auth/context.py:97",
+      "branches": [
+       {
+        "impl": "FirebaseTokenVerifier",
+        "pred": "settings.auth_provider is ProviderMode.REAL",
+        "binding": "selected",
+        "ends": [
+         "InvalidTokenError → translate apps/api/auth/context.py:98"
+        ]
+       },
+       {
+        "impl": "MockTokenVerifier",
+        "pred": "not (settings.auth_provider is ProviderMode.REAL)",
+        "binding": "selected",
+        "ends": [
+         "InvalidTokenError → translate apps/api/auth/context.py:98"
+        ]
+       }
+      ],
+      "proves": [
+       "x:18e726cdeb"
+      ]
+     },
+     {
+      "id": "sw:f52e70d831",
+      "kind": "value",
+      "changes_exit": null,
+      "scope": "call",
+      "via": null,
+      "anchor": "apps/api/api/setup.py:204",
+      "chain": [
+       "apps/api/api/setup.py::setup_complete",
+       "apps/api/api/setup.py::_me_response_from_result",
+       "apps/api/api/setup.py::_subscription_block",
+       "apps/api/services/ai_credits.py::credits_summary",
+       "apps/api/services/ai_credits.py::allowance_for"
+      ],
+      "branches": [
+       {
+        "at": "apps/api/services/ai_credits.py:67",
+        "pred": "tier == 'chef'",
+        "setting": "ai_credits_chef",
+        "value": "settings.ai_credits_chef"
+       },
+       {
+        "at": "apps/api/services/ai_credits.py:68",
+        "pred": "not (tier == 'chef')",
+        "setting": "ai_credits_free",
+        "value": "settings.ai_credits_free"
+       }
+      ],
+      "depth": 4,
+      "settings": [
+       "ai_credits_chef",
+       "ai_credits_free"
+      ]
+     }
+    ],
+    "tests": [
+     {
+      "case": "C1049",
+      "conf": "status",
+      "line": 35,
+      "name": "test_setup_complete_success_then_me_reads_back_C1049",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1050",
+      "conf": "status",
+      "line": 65,
+      "name": "test_setup_complete_replay_identical_count_one_C1050",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1050",
+      "conf": "status",
+      "line": 66,
+      "name": "test_setup_complete_replay_identical_count_one_C1050",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1056",
+      "conf": "status",
+      "line": 141,
+      "name": "test_setup_complete_with_consent_200_C1056",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1057",
+      "conf": "status",
+      "line": 166,
+      "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C389",
+      "conf": "status",
+      "line": 756,
+      "name": "test_setup_complete_with_exploration_creates_row_C389",
+      "file": "apps/api/tests/test_exploration_preferences.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C390",
+      "conf": "status",
+      "line": 778,
+      "name": "test_setup_complete_folds_in_path_a_plus_C390",
+      "file": "apps/api/tests/test_exploration_preferences.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C391",
+      "conf": "status",
+      "line": 804,
+      "name": "test_setup_complete_without_exploration_creates_empty_row_C391",
+      "file": "apps/api/tests/test_exploration_preferences.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C392",
+      "conf": "status",
+      "line": 824,
+      "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
+      "file": "apps/api/tests/test_exploration_preferences.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C392",
+      "conf": "status",
+      "line": 825,
+      "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
+      "file": "apps/api/tests/test_exploration_preferences.py",
+      "state": "pass",
+      "corpus": "api"
+     }
+    ],
+    "partial": null,
+    "proven_by": null,
+    "anywhere": null,
+    "n": {
+     "steps": 20,
+     "gates": 9,
+     "catches": 0,
+     "branches": 2,
+     "calls": 3
+    }
+   },
+   {
+    "id": "p:0f099873d5",
+    "status": 200,
+    "kind": "success",
+    "phase": "handler",
+    "state": "defined",
+    "names": {
+     "detail": "await _me_response_from_result(ctx, result, session, settings)",
+     "exception": null,
+     "stage": "handler",
+     "token": "fall-through",
+     "drawn": "first run",
+     "phase_status": "handler · 200"
+    },
+    "exit": {
+     "id": "r:406d313dde",
+     "kind": "success",
+     "row": "return",
+     "status": 200,
+     "phase": "handler",
+     "at": "apps/api/api/setup.py:204",
+     "detail": null,
+     "code": null,
+     "via": null,
+     "pred": null,
+     "state": "default",
+     "form": null,
+     "split": null,
+     "reason": null,
+     "tests": [
+      {
+       "case": "C1049",
+       "conf": "status",
+       "line": 35,
+       "name": "test_setup_complete_success_then_me_reads_back_C1049",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1050",
+       "conf": "status",
+       "line": 65,
+       "name": "test_setup_complete_replay_identical_count_one_C1050",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1050",
+       "conf": "status",
+       "line": 66,
+       "name": "test_setup_complete_replay_identical_count_one_C1050",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1056",
+       "conf": "status",
+       "line": 141,
+       "name": "test_setup_complete_with_consent_200_C1056",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1057",
+       "conf": "status",
+       "line": 166,
+       "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C389",
+       "conf": "status",
+       "line": 756,
+       "name": "test_setup_complete_with_exploration_creates_row_C389",
+       "file": "apps/api/tests/test_exploration_preferences.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C390",
+       "conf": "status",
+       "line": 778,
+       "name": "test_setup_complete_folds_in_path_a_plus_C390",
+       "file": "apps/api/tests/test_exploration_preferences.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C391",
+       "conf": "status",
+       "line": 804,
+       "name": "test_setup_complete_without_exploration_creates_empty_row_C391",
+       "file": "apps/api/tests/test_exploration_preferences.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C392",
+       "conf": "status",
+       "line": 824,
+       "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
+       "file": "apps/api/tests/test_exploration_preferences.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C392",
+       "conf": "status",
+       "line": 825,
+       "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
+       "file": "apps/api/tests/test_exploration_preferences.py",
+       "state": "pass",
+       "corpus": "api"
+      }
+     ],
+     "response": {
+      "fields": [
+       "setup_required",
+       "user",
+       "household",
+       "membership",
+       "preferences",
+       "subscription"
+      ],
+      "media": "application/json",
+      "model": "MeResponse",
+      "source": "apps/api/schemas/responses.py:157",
+      "status": 200
+     }
+    },
+    "chain": [
+     {
+      "i": 0,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "CORSMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 1,
+      "kind": "switch",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": "sw:12b96f1a5a",
+      "label": "flag",
+      "sub": "environment, rate_limit_enabled",
+      "switch_kind": "flag"
+     },
+     {
+      "i": 2,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:117",
+      "ref": "x:8437446a6c",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 3,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:121",
+      "ref": "x:a7992af811",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 4,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "IdempotencyMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 5,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": false,
+      "at": null,
+      "ref": "x:fdb1ae15e9",
+      "status": 422,
+      "label": "422 JSON decode error",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 6,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": false,
+      "at": null,
+      "ref": "x:ae1bc4dc59",
+      "status": 400,
+      "label": "400 There was an error parsing the body",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 7,
+      "kind": "gate",
+      "phase": "security",
+      "hit": false,
+      "at": "apps/api/auth/context.py:23",
+      "ref": "x:9fd81887a2",
+      "status": 401,
+      "label": "401 Not authenticated",
+      "sub": "HTTPBearer bearer_scheme",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 8,
+      "kind": "switch",
+      "phase": "dependency",
+      "hit": null,
+      "at": null,
+      "ref": "sw:967c49ad34",
+      "label": "binding",
+      "sub": "TokenVerifier",
+      "switch_kind": "binding"
+     },
+     {
+      "i": 9,
+      "kind": "gate",
+      "phase": "dependency",
+      "hit": false,
+      "at": "apps/api/auth/context.py:99",
+      "ref": "x:18e726cdeb",
+      "status": 401,
+      "label": "401 invalid token",
+      "sub": "except InvalidTokenError",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 10,
+      "kind": "gate",
+      "phase": "validation",
+      "hit": false,
+      "at": null,
+      "ref": "x:1b256011f1",
+      "status": 422,
+      "label": "422 pydantic error type",
+      "sub": null,
+      "split": "own-params",
+      "cond": null,
+      "exit_kind": "validation"
+     },
+     {
+      "i": 11,
+      "kind": "collapsed",
+      "phase": null,
+      "hit": null,
+      "at": "apps/api/api/setup.py:191",
+      "ref": null,
+      "label": "get_idempotency_key",
+      "fn": "apps/api/middleware/idempotency.py::get_idempotency_key",
+      "reason": "one return",
+      "sub": "apps/api/middleware/idempotency.py"
+     },
+     {
+      "i": 12,
+      "kind": "gate",
+      "phase": "handler",
+      "hit": false,
+      "at": "apps/api/api/setup.py:193",
+      "ref": "x:13ce9b79e0",
+      "status": 400,
+      "label": "400 Idempotency-Key required",
+      "sub": "key is None",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 13,
+      "kind": "call",
+      "phase": null,
+      "hit": null,
+      "at": "apps/api/api/setup.py:196",
+      "ref": null,
+      "label": "complete_setup",
+      "fn": "apps/api/services/setup.py::complete_setup",
+      "reason": null,
+      "sub": "apps/api/services/setup.py"
+     },
+     {
+      "i": 14,
+      "kind": "branch",
+      "phase": null,
+      "hit": false,
+      "at": "apps/api/services/setup.py:346",
+      "ref": "b:777606a0cc",
+      "label": "claimed.outcome is ClaimOutcome.REPLAY",
+      "sub": "branch"
+     },
+     {
+      "i": 15,
+      "kind": "gate",
+      "phase": "handler",
+      "hit": false,
+      "at": "apps/api/services/setup.py:348",
+      "ref": "x:f2caf456bd",
+      "status": 409,
+      "label": "409 setup in progress",
+      "sub": "except SetupInProgressError",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 16,
+      "kind": "branch",
+      "phase": null,
+      "hit": false,
+      "at": "apps/api/services/setup.py:362",
+      "ref": "b:ea440a25b4",
+      "label": "existing is not None and prior is not None and prior.completed",
+      "sub": "branch"
+     },
+     {
+      "i": 17,
+      "kind": "gate",
+      "phase": "handler",
+      "hit": false,
+      "at": "apps/api/services/setup.py:374",
+      "ref": "x:a086031223",
+      "status": 409,
+      "label": "409 consent required",
+      "sub": "except ConsentRequiredError",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 18,
+      "kind": "branch",
+      "phase": null,
+      "hit": true,
+      "at": "apps/api/services/setup.py:389",
+      "ref": "b:b31ca62e66",
+      "label": "fall-through",
+      "sub": "branch"
+     },
+     {
+      "i": 19,
+      "kind": "switch",
+      "phase": "handler",
+      "hit": null,
+      "at": null,
+      "ref": "sw:f52e70d831",
+      "label": "value",
+      "sub": "ai_credits_chef, ai_credits_free",
+      "switch_kind": "value"
+     },
+     {
+      "i": 20,
+      "kind": "collapsed",
+      "phase": null,
+      "hit": null,
+      "at": "apps/api/api/setup.py:204",
+      "ref": null,
+      "label": "_me_response_from_result",
+      "fn": "apps/api/api/setup.py::_me_response_from_result",
+      "reason": "one return",
+      "sub": "apps/api/api/setup.py"
+     },
+     {
+      "i": 21,
+      "kind": "exit",
+      "phase": null,
+      "hit": null,
+      "at": null,
+      "ref": "r:406d313dde",
+      "label": "200",
+      "sub": "success",
+      "status": 200,
+      "exit_kind": "success"
+     }
+    ],
+    "effects": {
+     "dependency": "ran",
+     "steps": [
+      {
+       "step": "st:c79e53a27f",
+       "table": "users",
+       "op": "read",
+       "model": "User",
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:34",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": null
+      },
+      {
+       "step": "st:ba597dd4f4",
+       "table": "users",
+       "op": "add",
+       "model": "User",
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:49",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/ownership.py:50",
+        "keys": [
+         [
+          "auth_provider",
+          "auth_provider_id"
+         ]
+        ],
+        "state": "uncaught"
+       },
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:f5b6b3e9b3",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:50",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": null
+      },
+      {
+       "step": "st:925411811a",
+       "table": null,
+       "op": "commit",
+       "model": null,
+       "fn": "apps/api/auth/context.py::build_auth_context",
+       "at": "apps/api/auth/context.py:79",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/auth/context.py::build_auth_context",
+       "bucket": null
+      },
+      {
+       "step": "st:fdb7bb7853",
+       "table": "memberships",
+       "op": "read",
+       "model": "Membership",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:78",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:200eb54837",
+       "table": "households",
+       "op": "read",
+       "model": "Household",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:83",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:61aa8a44cc",
+       "table": "locations",
+       "op": "read",
+       "model": "Location",
+       "fn": "apps/api/services/ownership.py::get_principal_location",
+       "at": "apps/api/services/ownership.py:60",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::get_principal_location",
+       "bucket": null
+      },
+      {
+       "step": "st:c6aff0cdc2",
+       "table": "idempotency_keys",
+       "op": "read",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_lookup",
+       "at": "apps/api/services/idempotency.py:65",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_lookup",
+       "bucket": null
+      },
+      {
+       "step": "st:f0d4172d3b",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:97",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:9b6870a647",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:98",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:7cc3a75a8e",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:99",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:15a3f75493",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:100",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:8c8b6c5a08",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::_outcome_for",
+       "at": "apps/api/services/idempotency.py:109",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_outcome_for",
+       "bucket": null
+      },
+      {
+       "step": "st:3bea18b560",
+       "table": null,
+       "op": "savepoint",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::claim",
+       "at": "apps/api/services/idempotency.py:138",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::claim",
+       "bucket": null
+      },
+      {
+       "step": "st:4d0ee3df2a",
+       "table": "idempotency_keys",
+       "op": "add",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::claim",
+       "at": "apps/api/services/idempotency.py:139",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/idempotency.py:140",
+        "keys": [
+         [
+          "key",
+          "operation",
+          "owner_scope"
+         ]
+        ],
+        "state": "handled"
+       },
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::claim",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:93d18ca18c",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::claim",
+       "at": "apps/api/services/idempotency.py:140",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::claim",
+       "bucket": null
+      },
+      {
+       "step": "st:63a86044ef",
+       "table": "idempotency_keys",
+       "op": "read",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_lookup",
+       "at": "apps/api/services/idempotency.py:65",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_lookup",
+       "bucket": null
+      },
+      {
+       "step": "st:f0d4172d3b",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:97",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:9b6870a647",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:98",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:7cc3a75a8e",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:99",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:15a3f75493",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::_reclaim",
+       "at": "apps/api/services/idempotency.py:100",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_reclaim",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:8c8b6c5a08",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::_outcome_for",
+       "at": "apps/api/services/idempotency.py:109",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::_outcome_for",
+       "bucket": null
+      },
+      {
+       "step": "st:fdb7bb7853",
+       "table": "memberships",
+       "op": "read",
+       "model": "Membership",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:78",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:200eb54837",
+       "table": "households",
+       "op": "read",
+       "model": "Household",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:83",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:61aa8a44cc",
+       "table": "locations",
+       "op": "read",
+       "model": "Location",
+       "fn": "apps/api/services/ownership.py::get_principal_location",
+       "at": "apps/api/services/ownership.py:60",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::get_principal_location",
+       "bucket": null
+      },
+      {
+       "step": "st:66639991ec",
+       "table": "setup_completion_state",
+       "op": "read",
+       "model": "SetupCompletionState",
+       "fn": "apps/api/services/setup.py::complete_setup",
+       "at": "apps/api/services/setup.py:354",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::complete_setup",
+       "bucket": null
+      },
+      {
+       "step": "st:bfdef91eea",
+       "table": "consent_records",
+       "op": "read",
+       "model": "ConsentRecord",
+       "fn": "apps/api/services/consent.py::latest_consent",
+       "at": "apps/api/services/consent.py:22",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/consent.py::latest_consent",
+       "bucket": null
+      },
+      {
+       "step": "st:4588a697e1",
+       "table": "memberships",
+       "op": "read",
+       "model": "Membership",
+       "fn": "apps/api/services/ownership.py::ensure_principal_household",
+       "at": "apps/api/services/ownership.py:98",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::ensure_principal_household",
+       "bucket": null
+      },
+      {
+       "step": "st:eaa4348ea7",
+       "table": "households",
+       "op": "read",
+       "model": "Household",
+       "fn": "apps/api/services/ownership.py::ensure_principal_household",
+       "at": "apps/api/services/ownership.py:104",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::ensure_principal_household",
+       "bucket": null
+      },
+      {
+       "step": "st:61aa8a44cc",
+       "table": "locations",
+       "op": "read",
+       "model": "Location",
+       "fn": "apps/api/services/ownership.py::get_principal_location",
+       "at": "apps/api/services/ownership.py:60",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::get_principal_location",
+       "bucket": null
+      },
+      {
+       "step": "st:a9bf302767",
+       "table": "locations",
+       "op": "add",
+       "model": "Location",
+       "fn": "apps/api/services/ownership.py::ensure_principal_household",
+       "at": "apps/api/services/ownership.py:116",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/ownership.py:117",
+        "keys": [
+         [
+          "household_id"
+         ]
+        ],
+        "state": "uncaught"
+       },
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::ensure_principal_household",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:be99a781ff",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/ownership.py::ensure_principal_household",
+       "at": "apps/api/services/ownership.py:117",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::ensure_principal_household",
+       "bucket": null
+      },
+      {
+       "step": "st:1c0280047e",
+       "table": "households",
+       "op": "add",
+       "model": "Household",
+       "fn": "apps/api/services/ownership.py::ensure_principal_household",
+       "at": "apps/api/services/ownership.py:121",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::ensure_principal_household",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:72af76bac9",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/ownership.py::ensure_principal_household",
+       "at": "apps/api/services/ownership.py:122",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::ensure_principal_household",
+       "bucket": null
+      },
+      {
+       "step": "st:e5fd2b50ea",
+       "table": "memberships",
+       "op": "add",
+       "model": "Membership",
+       "fn": "apps/api/services/ownership.py::ensure_principal_household",
+       "at": "apps/api/services/ownership.py:131",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/ownership.py:132",
+        "keys": [
+         [
+          "household_id",
+          "user_id"
+         ]
+        ],
+        "state": "uncaught"
+       },
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::ensure_principal_household",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:43c8056202",
+       "table": "locations",
+       "op": "add",
+       "model": "Location",
+       "fn": "apps/api/services/ownership.py::ensure_principal_household",
+       "at": "apps/api/services/ownership.py:131",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/ownership.py:132",
+        "keys": [
+         [
+          "household_id"
+         ]
+        ],
+        "state": "uncaught"
+       },
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::ensure_principal_household",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:863304b9bf",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/ownership.py::ensure_principal_household",
+       "at": "apps/api/services/ownership.py:132",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ownership.py::ensure_principal_household",
+       "bucket": null
+      },
+      {
+       "step": "st:d245511503",
+       "table": "households",
+       "op": "update",
+       "model": "Household",
+       "fn": "apps/api/services/setup.py::complete_setup",
+       "at": "apps/api/services/setup.py:377",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::complete_setup",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:730623ac98",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/setup.py::complete_setup",
+       "at": "apps/api/services/setup.py:378",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::complete_setup",
+       "bucket": null
+      },
+      {
+       "step": "st:9cec281f5c",
+       "table": "household_format_preferences",
+       "op": "read",
+       "model": "HouseholdFormatPreferences",
+       "fn": "apps/api/services/setup.py::_upsert_format_prefs",
+       "at": "apps/api/services/setup.py:96",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_format_prefs",
+       "bucket": null
+      },
+      {
+       "step": "st:8c4f90e357",
+       "table": "household_format_preferences",
+       "op": "add",
+       "model": "HouseholdFormatPreferences",
+       "fn": "apps/api/services/setup.py::_upsert_format_prefs",
+       "at": "apps/api/services/setup.py:103",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/setup.py:108",
+        "keys": [
+         [
+          "household_id"
+         ]
+        ],
+        "state": "uncaught"
+       },
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_format_prefs",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:d97a46993d",
+       "table": "household_format_preferences",
+       "op": "update",
+       "model": "HouseholdFormatPreferences",
+       "fn": "apps/api/services/setup.py::_upsert_format_prefs",
+       "at": "apps/api/services/setup.py:104",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_format_prefs",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:7297a4e711",
+       "table": "household_format_preferences",
+       "op": "update",
+       "model": "HouseholdFormatPreferences",
+       "fn": "apps/api/services/setup.py::_upsert_format_prefs",
+       "at": "apps/api/services/setup.py:105",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_format_prefs",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:fe64b59347",
+       "table": "household_format_preferences",
+       "op": "update",
+       "model": "HouseholdFormatPreferences",
+       "fn": "apps/api/services/setup.py::_upsert_format_prefs",
+       "at": "apps/api/services/setup.py:106",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_format_prefs",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:39e2840854",
+       "table": "household_format_preferences",
+       "op": "update",
+       "model": "HouseholdFormatPreferences",
+       "fn": "apps/api/services/setup.py::_upsert_format_prefs",
+       "at": "apps/api/services/setup.py:107",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_format_prefs",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:cdfd674fc9",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/setup.py::_upsert_format_prefs",
+       "at": "apps/api/services/setup.py:108",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_format_prefs",
+       "bucket": null
+      },
+      {
+       "step": "st:6673e9085f",
+       "table": "user_format_preferences",
+       "op": "read",
+       "model": "UserFormatPreferences",
+       "fn": "apps/api/services/setup.py::_upsert_user_format",
+       "at": "apps/api/services/setup.py:117",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_user_format",
+       "bucket": null
+      },
+      {
+       "step": "st:9be8b42058",
+       "table": "user_format_preferences",
+       "op": "add",
+       "model": "UserFormatPreferences",
+       "fn": "apps/api/services/setup.py::_upsert_user_format",
+       "at": "apps/api/services/setup.py:122",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/setup.py:124",
+        "keys": [
+         [
+          "user_id"
+         ]
+        ],
+        "state": "uncaught"
+       },
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_user_format",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:e623e476f8",
+       "table": "user_format_preferences",
+       "op": "update",
+       "model": "UserFormatPreferences",
+       "fn": "apps/api/services/setup.py::_upsert_user_format",
+       "at": "apps/api/services/setup.py:123",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_user_format",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:23675ebb9c",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/setup.py::_upsert_user_format",
+       "at": "apps/api/services/setup.py:124",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_user_format",
+       "bucket": null
+      },
+      {
+       "step": "st:50f9b8ad08",
+       "table": "user_dietary_profile",
+       "op": "read",
+       "model": "UserDietaryProfile",
+       "fn": "apps/api/services/setup.py::_upsert_dietary",
+       "at": "apps/api/services/setup.py:133",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_dietary",
+       "bucket": null
+      },
+      {
+       "step": "st:f0654d0780",
+       "table": "user_dietary_profile",
+       "op": "add",
+       "model": "UserDietaryProfile",
+       "fn": "apps/api/services/setup.py::_upsert_dietary",
+       "at": "apps/api/services/setup.py:138",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/setup.py:144",
+        "keys": [
+         [
+          "user_id"
+         ]
+        ],
+        "state": "uncaught"
+       },
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_dietary",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:5651165c03",
+       "table": "user_dietary_profile",
+       "op": "update",
+       "model": "UserDietaryProfile",
+       "fn": "apps/api/services/setup.py::_upsert_dietary",
+       "at": "apps/api/services/setup.py:139",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_dietary",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:cb7e89cece",
+       "table": "user_dietary_profile",
+       "op": "update",
+       "model": "UserDietaryProfile",
+       "fn": "apps/api/services/setup.py::_upsert_dietary",
+       "at": "apps/api/services/setup.py:143",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_dietary",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:25d0b2d2bd",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/setup.py::_upsert_dietary",
+       "at": "apps/api/services/setup.py:144",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_dietary",
+       "bucket": null
+      },
+      {
+       "step": "st:4c2bd05a94",
+       "table": "user_exploration_preferences",
+       "op": "read",
+       "model": "UserExplorationPreferences",
+       "fn": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "at": "apps/api/services/exploration.py:40",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "bucket": null
+      },
+      {
+       "step": "st:3fb9f4edbe",
+       "table": "user_exploration_preferences",
+       "op": "add",
+       "model": "UserExplorationPreferences",
+       "fn": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "at": "apps/api/services/exploration.py:47",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/exploration.py:57",
+        "keys": [
+         [
+          "user_id"
+         ]
+        ],
+        "state": "uncaught"
+       },
+       "dependency": false,
+       "via": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:a8b7865a19",
+       "table": "user_exploration_preferences",
+       "op": "update",
+       "model": "UserExplorationPreferences",
+       "fn": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "at": "apps/api/services/exploration.py:48",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:57945cb1d8",
+       "table": "user_exploration_preferences",
+       "op": "update",
+       "model": "UserExplorationPreferences",
+       "fn": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "at": "apps/api/services/exploration.py:49",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:52bbe4ca63",
+       "table": "user_exploration_preferences",
+       "op": "update",
+       "model": "UserExplorationPreferences",
+       "fn": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "at": "apps/api/services/exploration.py:50",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:cdaed79626",
+       "table": "user_exploration_preferences",
+       "op": "update",
+       "model": "UserExplorationPreferences",
+       "fn": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "at": "apps/api/services/exploration.py:51",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:3bdeb48734",
+       "table": "user_exploration_preferences",
+       "op": "update",
+       "model": "UserExplorationPreferences",
+       "fn": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "at": "apps/api/services/exploration.py:52",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:bc1c15c55e",
+       "table": "user_exploration_preferences",
+       "op": "update",
+       "model": "UserExplorationPreferences",
+       "fn": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "at": "apps/api/services/exploration.py:54",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:e202380457",
+       "table": "user_exploration_preferences",
+       "op": "update",
+       "model": "UserExplorationPreferences",
+       "fn": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "at": "apps/api/services/exploration.py:55",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:7705d7c36b",
+       "table": "user_exploration_preferences",
+       "op": "update",
+       "model": "UserExplorationPreferences",
+       "fn": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "at": "apps/api/services/exploration.py:56",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:35976c978a",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "at": "apps/api/services/exploration.py:57",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/exploration.py::upsert_exploration_preferences",
+       "bucket": null
+      },
+      {
+       "step": "st:410e1b26a2",
+       "table": "user_privacy_permissions",
+       "op": "read",
+       "model": "UserPrivacyPermissions",
+       "fn": "apps/api/services/setup.py::_upsert_privacy",
+       "at": "apps/api/services/setup.py:165",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_privacy",
+       "bucket": null
+      },
+      {
+       "step": "st:d891375de0",
+       "table": "user_privacy_permissions",
+       "op": "add",
+       "model": "UserPrivacyPermissions",
+       "fn": "apps/api/services/setup.py::_upsert_privacy",
+       "at": "apps/api/services/setup.py:170",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/setup.py:174",
+        "keys": [
+         [
+          "user_id"
+         ]
+        ],
+        "state": "uncaught"
+       },
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_privacy",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:a0fb1b8ed5",
+       "table": "user_privacy_permissions",
+       "op": "update",
+       "model": "UserPrivacyPermissions",
+       "fn": "apps/api/services/setup.py::_upsert_privacy",
+       "at": "apps/api/services/setup.py:171",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_privacy",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:26f6505da0",
+       "table": "user_privacy_permissions",
+       "op": "update",
+       "model": "UserPrivacyPermissions",
+       "fn": "apps/api/services/setup.py::_upsert_privacy",
+       "at": "apps/api/services/setup.py:172",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_privacy",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:c45ea7a722",
+       "table": "user_privacy_permissions",
+       "op": "update",
+       "model": "UserPrivacyPermissions",
+       "fn": "apps/api/services/setup.py::_upsert_privacy",
+       "at": "apps/api/services/setup.py:173",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_privacy",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:0d18f7c4ad",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/setup.py::_upsert_privacy",
+       "at": "apps/api/services/setup.py:174",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_privacy",
+       "bucket": null
+      },
+      {
+       "step": "st:59e3aa605c",
+       "table": "user_notification_preferences",
+       "op": "read",
+       "model": "UserNotificationPreferences",
+       "fn": "apps/api/services/setup.py::_upsert_notifications",
+       "at": "apps/api/services/setup.py:183",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_notifications",
+       "bucket": null
+      },
+      {
+       "step": "st:94314df61f",
+       "table": "user_notification_preferences",
+       "op": "add",
+       "model": "UserNotificationPreferences",
+       "fn": "apps/api/services/setup.py::_upsert_notifications",
+       "at": "apps/api/services/setup.py:190",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/setup.py:194",
+        "keys": [
+         [
+          "user_id"
+         ]
+        ],
+        "state": "uncaught"
+       },
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_notifications",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:c74e63b797",
+       "table": "user_notification_preferences",
+       "op": "update",
+       "model": "UserNotificationPreferences",
+       "fn": "apps/api/services/setup.py::_upsert_notifications",
+       "at": "apps/api/services/setup.py:191",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_notifications",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:381e17c978",
+       "table": "user_notification_preferences",
+       "op": "update",
+       "model": "UserNotificationPreferences",
+       "fn": "apps/api/services/setup.py::_upsert_notifications",
+       "at": "apps/api/services/setup.py:192",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_notifications",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:129ff47f42",
+       "table": "user_notification_preferences",
+       "op": "update",
+       "model": "UserNotificationPreferences",
+       "fn": "apps/api/services/setup.py::_upsert_notifications",
+       "at": "apps/api/services/setup.py:193",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_notifications",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:e8012a26db",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/setup.py::_upsert_notifications",
+       "at": "apps/api/services/setup.py:194",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_notifications",
+       "bucket": null
+      },
+      {
+       "step": "st:f4a18eb55d",
+       "table": "subscription_entitlement",
+       "op": "read",
+       "model": "SubscriptionEntitlement",
+       "fn": "apps/api/services/setup.py::_upsert_subscription",
+       "at": "apps/api/services/setup.py:203",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_subscription",
+       "bucket": null
+      },
+      {
+       "step": "st:cc87d22194",
+       "table": "subscription_entitlement",
+       "op": "add",
+       "model": "SubscriptionEntitlement",
+       "fn": "apps/api/services/setup.py::_upsert_subscription",
+       "at": "apps/api/services/setup.py:208",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/setup.py:209",
+        "keys": [
+         [
+          "user_id"
+         ]
+        ],
+        "state": "uncaught"
+       },
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_subscription",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:3e8e1bb77b",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/setup.py::_upsert_subscription",
+       "at": "apps/api/services/setup.py:209",
+       "cond": true,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_upsert_subscription",
+       "bucket": null
+      },
+      {
+       "step": "st:f9131e9eae",
+       "table": "setup_completion_state",
+       "op": "read",
+       "model": "SetupCompletionState",
+       "fn": "apps/api/services/setup.py::_stamp_completion",
+       "at": "apps/api/services/setup.py:218",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_stamp_completion",
+       "bucket": null
+      },
+      {
+       "step": "st:24395b6742",
+       "table": "setup_completion_state",
+       "op": "add",
+       "model": "SetupCompletionState",
+       "fn": "apps/api/services/setup.py::_stamp_completion",
+       "at": "apps/api/services/setup.py:223",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/setup.py:226",
+        "keys": [
+         [
+          "user_id"
+         ]
+        ],
+        "state": "uncaught"
+       },
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_stamp_completion",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:4c4c61d22b",
+       "table": "setup_completion_state",
+       "op": "update",
+       "model": "SetupCompletionState",
+       "fn": "apps/api/services/setup.py::_stamp_completion",
+       "at": "apps/api/services/setup.py:224",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_stamp_completion",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:806f4618fa",
+       "table": "setup_completion_state",
+       "op": "update",
+       "model": "SetupCompletionState",
+       "fn": "apps/api/services/setup.py::_stamp_completion",
+       "at": "apps/api/services/setup.py:225",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_stamp_completion",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:1bc7fd7d2a",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/setup.py::_stamp_completion",
+       "at": "apps/api/services/setup.py:226",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::_stamp_completion",
+       "bucket": null
+      },
+      {
+       "step": "st:07278f8b63",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::complete",
+       "at": "apps/api/services/idempotency.py:153",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::complete",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:4bc0fc1137",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::complete",
+       "at": "apps/api/services/idempotency.py:154",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::complete",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:222729711a",
+       "table": "idempotency_keys",
+       "op": "update",
+       "model": "IdempotencyKey",
+       "fn": "apps/api/services/idempotency.py::complete",
+       "at": "apps/api/services/idempotency.py:155",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::complete",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:840f0b8ac7",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/idempotency.py::complete",
+       "at": "apps/api/services/idempotency.py:156",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/idempotency.py::complete",
+       "bucket": null
+      },
+      {
+       "step": "st:b87d2e4c3a",
+       "table": null,
+       "op": "commit",
+       "model": null,
+       "fn": "apps/api/services/setup.py::complete_setup",
+       "at": "apps/api/services/setup.py:388",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/setup.py::complete_setup",
+       "bucket": null
+      },
+      {
+       "step": "st:c389b6f86f",
+       "table": "ai_spend_log",
+       "op": "read",
+       "model": "AiSpendLog",
+       "fn": "apps/api/services/ai_credits.py::credits_used_this_month",
+       "at": "apps/api/services/ai_credits.py:83",
+       "cond": false,
+       "race": null,
+       "dependency": false,
+       "via": "apps/api/services/ai_credits.py::credits_used_this_month",
+       "bucket": null
+      }
+     ],
+     "may_follow_commits": null,
+     "n": {
+      "committed": 45,
+      "maybe_committed": 0,
+      "rolled_back": 0,
+      "uncommitted": 0
+     },
+     "tables": [
+      "ai_spend_log",
+      "consent_records",
+      "household_format_preferences",
+      "households",
+      "idempotency_keys",
+      "locations",
+      "memberships",
+      "setup_completion_state",
+      "subscription_entitlement",
+      "user_dietary_profile",
+      "user_exploration_preferences",
+      "user_format_preferences",
+      "user_notification_preferences",
+      "user_privacy_permissions",
+      "users"
+     ],
+     "writes": [
+      "household_format_preferences",
+      "households",
+      "idempotency_keys",
+      "locations",
+      "memberships",
+      "setup_completion_state",
+      "subscription_entitlement",
+      "user_dietary_profile",
+      "user_exploration_preferences",
+      "user_format_preferences",
+      "user_notification_preferences",
+      "user_privacy_permissions",
+      "users"
+     ]
+    },
+    "switches": [
+     {
+      "id": "sw:12b96f1a5a",
+      "kind": "flag",
+      "changes_exit": null,
+      "scope": "middleware",
+      "via": "RateLimitMiddleware",
+      "settings": {
+       "environment": {
+        "default": "Environment.LOCAL",
+        "env": "GUSTIFY_ENVIRONMENT"
+       },
+       "rate_limit_enabled": {
+        "default": "False",
+        "env": "GUSTIFY_RATE_LIMIT_ENABLED"
+       }
+      },
+      "expr": "settings.rate_limit_enabled or settings.is_production",
+      "when": "not (not self._enabled or request.url.path in EXEMPT_PATHS)",
+      "refs": [
+       "x:8437446a6c",
+       "x:a7992af811"
+      ],
+      "settings_class": "apps/api/config.py::Settings"
+     },
+     {
+      "id": "sw:967c49ad34",
+      "kind": "binding",
+      "changes_exit": false,
+      "scope": "dependency",
+      "via": null,
+      "port": "TokenVerifier",
+      "fn": "apps/api/auth/context.py::build_auth_context",
+      "anchor": "apps/api/auth/context.py:97",
+      "branches": [
+       {
+        "impl": "FirebaseTokenVerifier",
+        "pred": "settings.auth_provider is ProviderMode.REAL",
+        "binding": "selected",
+        "ends": [
+         "InvalidTokenError → translate apps/api/auth/context.py:98"
+        ]
+       },
+       {
+        "impl": "MockTokenVerifier",
+        "pred": "not (settings.auth_provider is ProviderMode.REAL)",
+        "binding": "selected",
+        "ends": [
+         "InvalidTokenError → translate apps/api/auth/context.py:98"
+        ]
+       }
+      ],
+      "proves": [
+       "x:18e726cdeb"
+      ]
+     },
+     {
+      "id": "sw:f52e70d831",
+      "kind": "value",
+      "changes_exit": null,
+      "scope": "call",
+      "via": null,
+      "anchor": "apps/api/api/setup.py:204",
+      "chain": [
+       "apps/api/api/setup.py::setup_complete",
+       "apps/api/api/setup.py::_me_response_from_result",
+       "apps/api/api/setup.py::_subscription_block",
+       "apps/api/services/ai_credits.py::credits_summary",
+       "apps/api/services/ai_credits.py::allowance_for"
+      ],
+      "branches": [
+       {
+        "at": "apps/api/services/ai_credits.py:67",
+        "pred": "tier == 'chef'",
+        "setting": "ai_credits_chef",
+        "value": "settings.ai_credits_chef"
+       },
+       {
+        "at": "apps/api/services/ai_credits.py:68",
+        "pred": "not (tier == 'chef')",
+        "setting": "ai_credits_free",
+        "value": "settings.ai_credits_free"
+       }
+      ],
+      "depth": 4,
+      "settings": [
+       "ai_credits_chef",
+       "ai_credits_free"
+      ]
+     }
+    ],
+    "tests": [
+     {
+      "case": "C1049",
+      "conf": "status",
+      "line": 35,
+      "name": "test_setup_complete_success_then_me_reads_back_C1049",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1050",
+      "conf": "status",
+      "line": 65,
+      "name": "test_setup_complete_replay_identical_count_one_C1050",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1050",
+      "conf": "status",
+      "line": 66,
+      "name": "test_setup_complete_replay_identical_count_one_C1050",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1056",
+      "conf": "status",
+      "line": 141,
+      "name": "test_setup_complete_with_consent_200_C1056",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1057",
+      "conf": "status",
+      "line": 166,
+      "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C389",
+      "conf": "status",
+      "line": 756,
+      "name": "test_setup_complete_with_exploration_creates_row_C389",
+      "file": "apps/api/tests/test_exploration_preferences.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C390",
+      "conf": "status",
+      "line": 778,
+      "name": "test_setup_complete_folds_in_path_a_plus_C390",
+      "file": "apps/api/tests/test_exploration_preferences.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C391",
+      "conf": "status",
+      "line": 804,
+      "name": "test_setup_complete_without_exploration_creates_empty_row_C391",
+      "file": "apps/api/tests/test_exploration_preferences.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C392",
+      "conf": "status",
+      "line": 824,
+      "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
+      "file": "apps/api/tests/test_exploration_preferences.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C392",
+      "conf": "status",
+      "line": 825,
+      "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
+      "file": "apps/api/tests/test_exploration_preferences.py",
+      "state": "pass",
+      "corpus": "api"
+     }
+    ],
+    "partial": null,
+    "proven_by": null,
+    "anywhere": null,
+    "n": {
+     "steps": 22,
+     "gates": 10,
+     "catches": 0,
+     "branches": 3,
+     "calls": 3
+    }
+   },
+   {
+    "id": "p:3ee19bd271",
+    "status": 500,
+    "kind": "uncaught",
+    "phase": "uncaught",
+    "state": "partial",
+    "names": {
+     "detail": null,
+     "exception": null,
+     "stage": "uncaught",
+     "token": null,
+     "drawn": "uncaught",
+     "phase_status": "uncaught · 500"
+    },
+    "exit": {
+     "id": "x:17b6cdc4d4",
+     "kind": "uncaught",
+     "row": "produced",
+     "status": 500,
+     "phase": "uncaught",
+     "at": null,
+     "detail": null,
+     "code": null,
+     "via": null,
+     "pred": null,
+     "state": "default",
+     "form": null,
+     "split": null,
+     "reason": null,
+     "tests": [],
+     "response": {
+      "body": "Internal Server Error",
+      "media": "text/plain",
+      "source": "starlette ServerErrorMiddleware",
+      "status": 500
+     }
+    },
+    "chain": [
+     {
+      "i": 0,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "CORSMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 1,
+      "kind": "switch",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": "sw:12b96f1a5a",
+      "label": "flag",
+      "sub": "environment, rate_limit_enabled",
+      "switch_kind": "flag"
+     },
+     {
+      "i": 2,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:117",
+      "ref": "x:8437446a6c",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 3,
+      "kind": "gate",
+      "phase": "middleware",
+      "hit": false,
+      "at": "apps/api/middleware/rate_limit.py:121",
+      "ref": "x:a7992af811",
+      "status": 429,
+      "label": "429 Rate limit exceeded. Try again shortly.",
+      "sub": "RateLimitMiddleware",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 4,
+      "kind": "step",
+      "phase": "middleware",
+      "hit": null,
+      "at": null,
+      "ref": null,
+      "label": "IdempotencyMiddleware",
+      "sub": "middleware"
+     },
+     {
+      "i": 5,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": false,
+      "at": null,
+      "ref": "x:fdb1ae15e9",
+      "status": 422,
+      "label": "422 JSON decode error",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 6,
+      "kind": "gate",
+      "phase": "body-parse",
+      "hit": false,
+      "at": null,
+      "ref": "x:ae1bc4dc59",
+      "status": 400,
+      "label": "400 There was an error parsing the body",
+      "sub": null,
+      "split": "body-parse",
+      "cond": null,
+      "exit_kind": "framework"
+     },
+     {
+      "i": 7,
+      "kind": "gate",
+      "phase": "security",
+      "hit": false,
+      "at": "apps/api/auth/context.py:23",
+      "ref": "x:9fd81887a2",
+      "status": 401,
+      "label": "401 Not authenticated",
+      "sub": "HTTPBearer bearer_scheme",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 8,
+      "kind": "switch",
+      "phase": "dependency",
+      "hit": null,
+      "at": null,
+      "ref": "sw:967c49ad34",
+      "label": "binding",
+      "sub": "TokenVerifier",
+      "switch_kind": "binding"
+     },
+     {
+      "i": 9,
+      "kind": "gate",
+      "phase": "dependency",
+      "hit": false,
+      "at": "apps/api/auth/context.py:99",
+      "ref": "x:18e726cdeb",
+      "status": 401,
+      "label": "401 invalid token",
+      "sub": "except InvalidTokenError",
+      "split": null,
+      "cond": null,
+      "exit_kind": "refusal"
+     },
+     {
+      "i": 10,
+      "kind": "gate",
+      "phase": "validation",
+      "hit": false,
+      "at": null,
+      "ref": "x:1b256011f1",
+      "status": 422,
+      "label": "422 pydantic error type",
+      "sub": null,
+      "split": "own-params",
+      "cond": null,
+      "exit_kind": "validation"
+     },
+     {
+      "i": 11,
+      "kind": "exit",
+      "phase": null,
+      "hit": null,
+      "at": null,
+      "ref": "x:17b6cdc4d4",
+      "label": "500",
+      "sub": "uncaught",
+      "status": 500,
+      "exit_kind": "uncaught"
+     }
+    ],
+    "effects": {
+     "dependency": "ran",
+     "steps": [
+      {
+       "step": "st:c79e53a27f",
+       "table": "users",
+       "op": "read",
+       "model": "User",
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:34",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": null
+      },
+      {
+       "step": "st:ba597dd4f4",
+       "table": "users",
+       "op": "add",
+       "model": "User",
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:49",
+       "cond": true,
+       "race": {
+        "at": "apps/api/services/ownership.py:50",
+        "keys": [
+         [
+          "auth_provider",
+          "auth_provider_id"
+         ]
+        ],
+        "state": "uncaught"
+       },
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": "committed"
+      },
+      {
+       "step": "st:f5b6b3e9b3",
+       "table": null,
+       "op": "flush",
+       "model": null,
+       "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+       "at": "apps/api/services/ownership.py:50",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::resolve_or_create_user",
+       "bucket": null
+      },
+      {
+       "step": "st:925411811a",
+       "table": null,
+       "op": "commit",
+       "model": null,
+       "fn": "apps/api/auth/context.py::build_auth_context",
+       "at": "apps/api/auth/context.py:79",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/auth/context.py::build_auth_context",
+       "bucket": null
+      },
+      {
+       "step": "st:fdb7bb7853",
+       "table": "memberships",
+       "op": "read",
+       "model": "Membership",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:78",
+       "cond": false,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:200eb54837",
+       "table": "households",
+       "op": "read",
+       "model": "Household",
+       "fn": "apps/api/services/ownership.py::load_household_context",
+       "at": "apps/api/services/ownership.py:83",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::load_household_context",
+       "bucket": null
+      },
+      {
+       "step": "st:61aa8a44cc",
+       "table": "locations",
+       "op": "read",
+       "model": "Location",
+       "fn": "apps/api/services/ownership.py::get_principal_location",
+       "at": "apps/api/services/ownership.py:60",
+       "cond": true,
+       "race": null,
+       "dependency": true,
+       "via": "apps/api/services/ownership.py::get_principal_location",
+       "bucket": null
+      }
+     ],
+     "may_follow_commits": [
+      "st:07fb369254",
+      "st:13847a504a",
+      "st:925411811a",
+      "st:b87d2e4c3a"
+     ],
+     "n": {
+      "committed": 1,
+      "maybe_committed": 0,
+      "rolled_back": 0,
+      "uncommitted": 0
+     },
+     "tables": [
+      "households",
+      "locations",
+      "memberships",
+      "users"
+     ],
+     "writes": [
+      "users"
+     ]
+    },
+    "switches": [
+     {
+      "id": "sw:12b96f1a5a",
+      "kind": "flag",
+      "changes_exit": null,
+      "scope": "middleware",
+      "via": "RateLimitMiddleware",
+      "settings": {
+       "environment": {
+        "default": "Environment.LOCAL",
+        "env": "GUSTIFY_ENVIRONMENT"
+       },
+       "rate_limit_enabled": {
+        "default": "False",
+        "env": "GUSTIFY_RATE_LIMIT_ENABLED"
+       }
+      },
+      "expr": "settings.rate_limit_enabled or settings.is_production",
+      "when": "not (not self._enabled or request.url.path in EXEMPT_PATHS)",
+      "refs": [
+       "x:8437446a6c",
+       "x:a7992af811"
+      ],
+      "settings_class": "apps/api/config.py::Settings"
+     },
+     {
+      "id": "sw:967c49ad34",
+      "kind": "binding",
+      "changes_exit": false,
+      "scope": "dependency",
+      "via": null,
+      "port": "TokenVerifier",
+      "fn": "apps/api/auth/context.py::build_auth_context",
+      "anchor": "apps/api/auth/context.py:97",
+      "branches": [
+       {
+        "impl": "FirebaseTokenVerifier",
+        "pred": "settings.auth_provider is ProviderMode.REAL",
+        "binding": "selected",
+        "ends": [
+         "InvalidTokenError → translate apps/api/auth/context.py:98"
+        ]
+       },
+       {
+        "impl": "MockTokenVerifier",
+        "pred": "not (settings.auth_provider is ProviderMode.REAL)",
+        "binding": "selected",
+        "ends": [
+         "InvalidTokenError → translate apps/api/auth/context.py:98"
+        ]
+       }
+      ],
+      "proves": [
+       "x:18e726cdeb"
+      ]
+     }
+    ],
+    "tests": [],
+    "partial": null,
+    "proven_by": null,
+    "anywhere": true,
+    "n": {
+     "steps": 12,
+     "gates": 7,
+     "catches": 0,
+     "branches": 0,
+     "calls": 0
+    }
+   }
+  ],
+  "exits": [
+   {
+    "id": "x:8437446a6c",
+    "kind": "refusal",
+    "row": "produced",
+    "status": 429,
+    "phase": "middleware",
+    "at": "apps/api/middleware/rate_limit.py:127",
+    "detail": "Rate limit exceeded. Try again shortly.",
+    "code": null,
+    "via": "RateLimitMiddleware",
+    "pred": "not self._sensitive.allow(key, now)",
+    "state": "defined",
+    "form": "object",
+    "split": null,
+    "reason": null,
+    "tests": [],
+    "response": {
+     "body": {
+      "detail": "…"
+     },
+     "headers": {
+      "Retry-After": "…"
+     },
+     "media": "application/json",
+     "source": "apps/api/middleware/rate_limit.py:127",
+     "status": 429
+    },
+    "paths": [
+     "p:51719726e3"
+    ]
+   },
+   {
+    "id": "x:a7992af811",
+    "kind": "refusal",
+    "row": "produced",
+    "status": 429,
+    "phase": "middleware",
+    "at": "apps/api/middleware/rate_limit.py:127",
+    "detail": "Rate limit exceeded. Try again shortly.",
+    "code": null,
+    "via": "RateLimitMiddleware",
+    "pred": "not self._global.allow(gkey, now)",
+    "state": "defined",
+    "form": "object",
+    "split": null,
+    "reason": null,
+    "tests": [],
+    "response": {
+     "body": {
+      "detail": "…"
+     },
+     "headers": {
+      "Retry-After": "…"
+     },
+     "media": "application/json",
+     "source": "apps/api/middleware/rate_limit.py:127",
+     "status": 429
+    },
+    "paths": [
+     "p:da0a053b53"
+    ]
+   },
+   {
+    "id": "x:9fd81887a2",
+    "kind": "refusal",
+    "row": "produced",
+    "status": 401,
+    "phase": "security",
+    "at": "apps/api/auth/context.py:23",
+    "detail": "Not authenticated",
+    "code": null,
+    "via": "HTTPBearer bearer_scheme",
+    "pred": null,
+    "state": "default",
+    "form": "default-phrase",
+    "split": null,
+    "reason": null,
+    "tests": [],
+    "response": {
+     "body": {
+      "detail": "…"
+     },
+     "headers": {
+      "WWW-Authenticate": "Bearer"
+     },
+     "media": "application/json",
+     "source": "fastapi/security/http.py:84-92",
+     "status": 401
+    },
+    "paths": [
+     "p:e8c672a046"
+    ]
+   },
+   {
+    "id": "x:18e726cdeb",
+    "kind": "refusal",
+    "row": "produced",
+    "status": 401,
+    "phase": "dependency",
+    "at": "apps/api/auth/context.py:99",
+    "detail": "invalid token",
+    "code": null,
+    "via": "except InvalidTokenError",
+    "pred": null,
+    "state": "defined",
+    "form": "text",
+    "split": null,
+    "reason": null,
+    "tests": [],
+    "response": {
+     "body": {
+      "detail": "…"
+     },
+     "media": "application/json",
+     "source": "fastapi/exception_handlers.py:11-17",
+     "status": 401
+    },
+    "paths": [
+     "p:ec6c43e906"
+    ]
+   },
+   {
+    "id": "x:ae1bc4dc59",
+    "kind": "framework",
+    "row": "framework",
+    "status": 400,
+    "phase": "body-parse",
+    "at": null,
+    "detail": "There was an error parsing the body",
+    "code": null,
+    "via": null,
+    "pred": null,
+    "state": "default",
+    "form": "text",
+    "split": null,
+    "reason": null,
+    "tests": [],
+    "response": {
+     "body": {
+      "detail": "…"
+     },
+     "media": "application/json",
+     "source": "fastapi/routing.py:447",
+     "status": 400
+    },
+    "paths": [
+     "p:201d91702d"
+    ]
+   },
+   {
+    "id": "x:fdb1ae15e9",
+    "kind": "framework",
+    "row": "framework",
+    "status": 422,
+    "phase": "body-parse",
+    "at": null,
+    "detail": "JSON decode error",
+    "code": "json_invalid",
+    "via": null,
+    "pred": null,
+    "state": "default",
+    "form": "object",
+    "split": null,
+    "reason": null,
+    "tests": [],
+    "response": {
+     "body": {
+      "detail": "list"
+     },
+     "media": "application/json",
+     "source": "fastapi/routing.py:427",
+     "status": 422
+    },
+    "paths": [
+     "p:57de16a71b"
+    ]
+   },
+   {
+    "id": "x:1b256011f1",
+    "kind": "validation",
+    "row": "produced",
+    "status": 422,
+    "phase": "validation",
+    "at": null,
+    "detail": null,
+    "code": "pydantic error type",
+    "via": null,
+    "pred": null,
+    "state": "default",
+    "form": "object",
+    "split": null,
+    "reason": null,
+    "tests": [
+     {
+      "case": "C1051",
+      "conf": "status",
+      "line": 74,
+      "name": "test_setup_complete_blank_name_422_C1051",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1052",
+      "conf": "status",
+      "line": 83,
+      "name": "test_setup_complete_too_many_allergens_422_C1052",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     }
+    ],
+    "response": {
+     "body": {
+      "detail": "list"
+     },
+     "media": "application/json",
+     "source": "fastapi/exception_handlers.py:20-26",
+     "status": 422
+    },
+    "paths": [
+     "p:a90ffd3af4"
+    ]
+   },
+   {
+    "id": "r:406d313dde",
+    "kind": "success",
+    "row": "return",
+    "status": 200,
+    "phase": "handler",
+    "at": "apps/api/api/setup.py:204",
+    "detail": null,
+    "code": null,
+    "via": null,
+    "pred": null,
+    "state": "default",
+    "form": null,
+    "split": null,
+    "reason": null,
+    "tests": [
+     {
+      "case": "C1049",
+      "conf": "status",
+      "line": 35,
+      "name": "test_setup_complete_success_then_me_reads_back_C1049",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1050",
+      "conf": "status",
+      "line": 65,
+      "name": "test_setup_complete_replay_identical_count_one_C1050",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1050",
+      "conf": "status",
+      "line": 66,
+      "name": "test_setup_complete_replay_identical_count_one_C1050",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1056",
+      "conf": "status",
+      "line": 141,
+      "name": "test_setup_complete_with_consent_200_C1056",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1057",
+      "conf": "status",
+      "line": 166,
+      "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C389",
+      "conf": "status",
+      "line": 756,
+      "name": "test_setup_complete_with_exploration_creates_row_C389",
+      "file": "apps/api/tests/test_exploration_preferences.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C390",
+      "conf": "status",
+      "line": 778,
+      "name": "test_setup_complete_folds_in_path_a_plus_C390",
+      "file": "apps/api/tests/test_exploration_preferences.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C391",
+      "conf": "status",
+      "line": 804,
+      "name": "test_setup_complete_without_exploration_creates_empty_row_C391",
+      "file": "apps/api/tests/test_exploration_preferences.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C392",
+      "conf": "status",
+      "line": 824,
+      "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
+      "file": "apps/api/tests/test_exploration_preferences.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C392",
+      "conf": "status",
+      "line": 825,
+      "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
+      "file": "apps/api/tests/test_exploration_preferences.py",
+      "state": "pass",
+      "corpus": "api"
+     }
+    ],
+    "response": {
+     "fields": [
+      "setup_required",
+      "user",
+      "household",
+      "membership",
+      "preferences",
+      "subscription"
+     ],
+     "media": "application/json",
+     "model": "MeResponse",
+     "source": "apps/api/schemas/responses.py:157",
+     "status": 200
+    },
+    "paths": [
+     "p:bba821f362",
+     "p:1ac75d260a",
+     "p:0f099873d5"
+    ]
+   },
+   {
+    "id": "x:13ce9b79e0",
+    "kind": "refusal",
+    "row": "produced",
+    "status": 400,
+    "phase": "handler",
+    "at": "apps/api/api/setup.py:193",
+    "detail": "Idempotency-Key required",
+    "code": null,
+    "via": null,
+    "pred": "key is None",
+    "state": "defined",
+    "form": "text",
+    "split": null,
+    "reason": null,
+    "tests": [
+     {
+      "case": "C1048",
+      "conf": "status+detail",
+      "line": 23,
+      "name": "test_setup_complete_missing_key_400_C1048",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     }
+    ],
+    "response": {
+     "body": {
+      "detail": "…"
+     },
+     "media": "application/json",
+     "source": "fastapi/exception_handlers.py:11-17",
+     "status": 400
+    },
+    "paths": [
+     "p:fd1039c2ca"
+    ]
+   },
+   {
+    "id": "x:f2caf456bd",
+    "kind": "refusal",
+    "row": "produced",
+    "status": 409,
+    "phase": "handler",
+    "at": "apps/api/api/setup.py:200",
+    "detail": "setup in progress",
+    "code": null,
+    "via": "except SetupInProgressError",
+    "pred": null,
+    "state": "defined",
+    "form": "text",
+    "split": null,
+    "reason": null,
+    "tests": [
+     {
+      "case": "C1057",
+      "conf": "ambiguous of 2",
+      "line": 158,
+      "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1061",
+      "conf": "service raises",
+      "line": 128,
+      "name": "test_complete_setup_in_progress_raises_C1061",
+      "file": "apps/api/tests/test_setup_service.py",
+      "state": "pass",
+      "corpus": "api"
+     }
+    ],
+    "response": {
+     "body": {
+      "detail": "…"
+     },
+     "media": "application/json",
+     "source": "fastapi/exception_handlers.py:11-17",
+     "status": 409
+    },
+    "paths": [
+     "p:2adb89467d"
+    ]
+   },
+   {
+    "id": "x:a086031223",
+    "kind": "refusal",
+    "row": "produced",
+    "status": 409,
+    "phase": "handler",
+    "at": "apps/api/api/setup.py:202",
+    "detail": "consent required",
+    "code": null,
+    "via": "except ConsentRequiredError",
+    "pred": null,
+    "state": "defined",
+    "form": "text",
+    "split": null,
+    "reason": null,
+    "tests": [
+     {
+      "case": "C1055",
+      "conf": "status+detail",
+      "line": 121,
+      "name": "test_setup_complete_without_consent_409_C1055",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1057",
+      "conf": "ambiguous of 2",
+      "line": 158,
+      "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
+      "file": "apps/api/tests/test_setup_routes.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1065",
+      "conf": "service raises",
+      "line": 217,
+      "name": "test_complete_setup_without_consent_raises_C1065",
+      "file": "apps/api/tests/test_setup_service.py",
+      "state": "pass",
+      "corpus": "api"
+     },
+     {
+      "case": "C1067",
+      "conf": "service raises",
+      "line": 247,
+      "name": "test_complete_setup_stale_consent_version_raises_C1067",
+      "file": "apps/api/tests/test_setup_service.py",
+      "state": "pass",
+      "corpus": "api"
+     }
+    ],
+    "response": {
+     "body": {
+      "detail": "…"
+     },
+     "media": "application/json",
+     "source": "fastapi/exception_handlers.py:11-17",
+     "status": 409
+    },
+    "paths": [
+     "p:5c8ba607f9"
+    ]
+   },
+   {
+    "id": "x:17b6cdc4d4",
+    "kind": "uncaught",
+    "row": "produced",
+    "status": 500,
+    "phase": "uncaught",
+    "at": null,
+    "detail": null,
+    "code": null,
+    "via": null,
+    "pred": null,
+    "state": "default",
+    "form": null,
+    "split": null,
+    "reason": null,
+    "tests": [],
+    "response": {
+     "body": "Internal Server Error",
+     "media": "text/plain",
+     "source": "starlette ServerErrorMiddleware",
+     "status": 500
+    },
+    "paths": [
+     "p:3ee19bd271"
+    ]
+   }
+  ],
+  "stages": [
+   {
+    "phase": "middleware",
+    "exits": [
+     "x:8437446a6c",
+     "x:a7992af811"
+    ]
+   },
+   {
+    "phase": "security",
+    "exits": [
+     "x:9fd81887a2"
+    ]
+   },
+   {
+    "phase": "dependency",
+    "exits": [
+     "x:18e726cdeb"
+    ]
+   },
+   {
+    "phase": "body-parse",
+    "exits": [
+     "x:ae1bc4dc59",
+     "x:fdb1ae15e9"
+    ]
+   },
+   {
+    "phase": "validation",
+    "exits": [
+     "x:1b256011f1"
+    ]
+   },
+   {
+    "phase": "handler",
+    "exits": [
+     "r:406d313dde",
+     "x:13ce9b79e0",
+     "x:f2caf456bd",
+     "x:a086031223"
+    ]
+   },
+   {
+    "phase": "uncaught",
+    "exits": [
+     "x:17b6cdc4d4"
+    ]
+   }
+  ],
+  "preconditions": [
+   {
+    "at": "apps/api/api/setup.py:193",
+    "depth": 0,
+    "exit": "x:13ce9b79e0",
+    "id": "g:b50d77feb9",
+    "pred": "key is None",
+    "status": 400,
+    "exit_rec": {
+     "id": "x:13ce9b79e0",
+     "kind": "refusal",
+     "row": "produced",
+     "status": 400,
+     "phase": "handler",
+     "at": "apps/api/api/setup.py:193",
+     "detail": "Idempotency-Key required",
+     "code": null,
+     "via": null,
+     "pred": "key is None",
+     "state": "defined",
+     "form": "text",
+     "split": null,
+     "reason": null,
+     "tests": [
+      {
+       "case": "C1048",
+       "conf": "status+detail",
+       "line": 23,
+       "name": "test_setup_complete_missing_key_400_C1048",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      }
+     ],
+     "response": {
+      "body": {
+       "detail": "…"
+      },
+      "media": "application/json",
+      "source": "fastapi/exception_handlers.py:11-17",
+      "status": 400
+     }
+    }
+   },
+   {
+    "after": [
+     "not (claimed.outcome is ClaimOutcome.REPLAY)"
+    ],
+    "at": "apps/api/services/setup.py:348",
+    "depth": 1,
+    "exit": "x:f2caf456bd",
+    "id": "g:5d7ccde2a0",
+    "pred": "claimed.outcome is ClaimOutcome.IN_PROGRESS",
+    "status": 409,
+    "via": "call complete_setup @ apps/api/api/setup.py:196",
+    "exit_rec": {
+     "id": "x:f2caf456bd",
+     "kind": "refusal",
+     "row": "produced",
+     "status": 409,
+     "phase": "handler",
+     "at": "apps/api/api/setup.py:200",
+     "detail": "setup in progress",
+     "code": null,
+     "via": "except SetupInProgressError",
+     "pred": null,
+     "state": "defined",
+     "form": "text",
+     "split": null,
+     "reason": null,
+     "tests": [
+      {
+       "case": "C1057",
+       "conf": "ambiguous of 2",
+       "line": 158,
+       "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1061",
+       "conf": "service raises",
+       "line": 128,
+       "name": "test_complete_setup_in_progress_raises_C1061",
+       "file": "apps/api/tests/test_setup_service.py",
+       "state": "pass",
+       "corpus": "api"
+      }
+     ],
+     "response": {
+      "body": {
+       "detail": "…"
+      },
+      "media": "application/json",
+      "source": "fastapi/exception_handlers.py:11-17",
+      "status": 409
+     }
+    }
+   },
+   {
+    "after": [
+     "not (claimed.outcome is ClaimOutcome.REPLAY)",
+     "not (claimed.outcome is ClaimOutcome.IN_PROGRESS)",
+     "not (existing is not None and prior is not None and prior.completed)"
+    ],
+    "at": "apps/api/services/setup.py:374",
+    "depth": 1,
+    "exit": "x:a086031223",
+    "id": "g:db2bbc8706",
+    "pred": "latest is None or latest.policy_version != CONSENT_POLICY_VERSION",
+    "status": 409,
+    "via": "call complete_setup @ apps/api/api/setup.py:196",
+    "exit_rec": {
+     "id": "x:a086031223",
+     "kind": "refusal",
+     "row": "produced",
+     "status": 409,
+     "phase": "handler",
+     "at": "apps/api/api/setup.py:202",
+     "detail": "consent required",
+     "code": null,
+     "via": "except ConsentRequiredError",
+     "pred": null,
+     "state": "defined",
+     "form": "text",
+     "split": null,
+     "reason": null,
+     "tests": [
+      {
+       "case": "C1055",
+       "conf": "status+detail",
+       "line": 121,
+       "name": "test_setup_complete_without_consent_409_C1055",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1057",
+       "conf": "ambiguous of 2",
+       "line": 158,
+       "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
+       "file": "apps/api/tests/test_setup_routes.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1065",
+       "conf": "service raises",
+       "line": 217,
+       "name": "test_complete_setup_without_consent_raises_C1065",
+       "file": "apps/api/tests/test_setup_service.py",
+       "state": "pass",
+       "corpus": "api"
+      },
+      {
+       "case": "C1067",
+       "conf": "service raises",
+       "line": 247,
+       "name": "test_complete_setup_stale_consent_version_raises_C1067",
+       "file": "apps/api/tests/test_setup_service.py",
+       "state": "pass",
+       "corpus": "api"
+      }
+     ],
+     "response": {
+      "body": {
+       "detail": "…"
+      },
+      "media": "application/json",
+      "source": "fastapi/exception_handlers.py:11-17",
+      "status": 409
+     }
+    }
+   }
+  ],
+  "branches": [
+   {
+    "after": [],
+    "call": "complete_setup",
+    "fn": "apps/api/services/setup.py::complete_setup",
+    "id": "b:777606a0cc",
+    "pred": "claimed.outcome is ClaimOutcome.REPLAY",
+    "return": "r:3215864731",
+    "site": "apps/api/api/setup.py:196",
+    "token": "REPLAY",
+    "why": [
+     "contributes-rows",
+     "commit-differs"
+    ]
+   },
+   {
+    "after": [
+     "not (claimed.outcome is ClaimOutcome.REPLAY)",
+     "not (claimed.outcome is ClaimOutcome.IN_PROGRESS)"
+    ],
+    "call": "complete_setup",
+    "fn": "apps/api/services/setup.py::complete_setup",
+    "id": "b:ea440a25b4",
+    "pred": "existing is not None and prior is not None and prior.completed",
+    "return": "r:14d0c00171",
+    "site": "apps/api/api/setup.py:196",
+    "token": "completed",
+    "why": [
+     "contributes-rows",
+     "commit-differs"
+    ]
+   },
+   {
+    "after": [
+     "not (claimed.outcome is ClaimOutcome.REPLAY)",
+     "not (claimed.outcome is ClaimOutcome.IN_PROGRESS)",
+     "not (existing is not None and prior is not None and prior.completed)",
+     "not (latest is None or latest.policy_version != CONSENT_POLICY_VERSION)"
+    ],
+    "call": "complete_setup",
+    "fn": "apps/api/services/setup.py::complete_setup",
+    "id": "b:b31ca62e66",
+    "pred": null,
+    "return": "r:53302531e6",
+    "site": "apps/api/api/setup.py:196",
+    "token": "fall-through",
+    "why": [
+     "contributes-rows",
+     "commit-differs"
+    ]
+   }
+  ],
+  "switches": [
+   {
+    "id": "sw:967c49ad34",
+    "kind": "binding",
+    "changes_exit": false,
+    "scope": "dependency",
+    "via": null,
+    "port": "TokenVerifier",
+    "fn": "apps/api/auth/context.py::build_auth_context",
+    "anchor": "apps/api/auth/context.py:97",
+    "branches": [
+     {
+      "impl": "FirebaseTokenVerifier",
+      "pred": "settings.auth_provider is ProviderMode.REAL",
+      "binding": "selected",
+      "ends": [
+       "InvalidTokenError → translate apps/api/auth/context.py:98"
+      ]
+     },
+     {
+      "impl": "MockTokenVerifier",
+      "pred": "not (settings.auth_provider is ProviderMode.REAL)",
+      "binding": "selected",
+      "ends": [
+       "InvalidTokenError → translate apps/api/auth/context.py:98"
+      ]
+     }
+    ],
+    "proves": [
+     "x:18e726cdeb"
+    ]
+   },
+   {
+    "id": "sw:f52e70d831",
+    "kind": "value",
+    "changes_exit": null,
+    "scope": "call",
+    "via": null,
+    "anchor": "apps/api/api/setup.py:204",
+    "chain": [
+     "apps/api/api/setup.py::setup_complete",
+     "apps/api/api/setup.py::_me_response_from_result",
+     "apps/api/api/setup.py::_subscription_block",
+     "apps/api/services/ai_credits.py::credits_summary",
+     "apps/api/services/ai_credits.py::allowance_for"
+    ],
+    "branches": [
+     {
+      "at": "apps/api/services/ai_credits.py:67",
+      "pred": "tier == 'chef'",
+      "setting": "ai_credits_chef",
+      "value": "settings.ai_credits_chef"
+     },
+     {
+      "at": "apps/api/services/ai_credits.py:68",
+      "pred": "not (tier == 'chef')",
+      "setting": "ai_credits_free",
+      "value": "settings.ai_credits_free"
+     }
+    ],
+    "depth": 4,
+    "settings": [
+     "ai_credits_chef",
+     "ai_credits_free"
+    ]
+   },
+   {
+    "id": "sw:12b96f1a5a",
+    "kind": "flag",
+    "changes_exit": null,
+    "scope": "middleware",
+    "via": "RateLimitMiddleware",
+    "settings": {
+     "environment": {
+      "default": "Environment.LOCAL",
+      "env": "GUSTIFY_ENVIRONMENT"
+     },
+     "rate_limit_enabled": {
+      "default": "False",
+      "env": "GUSTIFY_RATE_LIMIT_ENABLED"
+     }
+    },
+    "expr": "settings.rate_limit_enabled or settings.is_production",
+    "when": "not (not self._enabled or request.url.path in EXEMPT_PATHS)",
+    "refs": [
+     "x:8437446a6c",
+     "x:a7992af811"
+    ],
+    "settings_class": "apps/api/config.py::Settings"
+   }
+  ],
+  "collapsed": [
+   {
+    "call": "get_idempotency_key",
+    "fn": "apps/api/middleware/idempotency.py::get_idempotency_key",
+    "reason": "one return",
+    "site": "apps/api/api/setup.py:191"
+   },
+   {
+    "call": "_me_response_from_result",
+    "fn": "apps/api/api/setup.py::_me_response_from_result",
+    "reason": "one return",
+    "site": "apps/api/api/setup.py:204"
+   }
+  ],
+  "returns": [
+   {
+    "after": [
+     "not (key is None)"
+    ],
+    "at": "apps/api/api/setup.py:204",
+    "depth": 0,
+    "fn": "apps/api/api/setup.py::setup_complete",
+    "id": "r:406d313dde",
+    "kind": "return",
+    "state": "default",
+    "status": 200,
+    "tests": [
+     {
+      "case": "C1049",
+      "conf": "status",
+      "line": 35
+     },
+     {
+      "case": "C1050",
+      "conf": "status",
+      "line": 65
+     },
+     {
+      "case": "C1050",
+      "conf": "status",
+      "line": 66
+     },
+     {
+      "case": "C1056",
+      "conf": "status",
+      "line": 141
+     },
+     {
+      "case": "C1057",
+      "conf": "status",
+      "line": 166
+     },
+     {
+      "case": "C389",
+      "conf": "status",
+      "line": 756
+     },
+     {
+      "case": "C390",
+      "conf": "status",
+      "line": 778
+     },
+     {
+      "case": "C391",
+      "conf": "status",
+      "line": 804
+     },
+     {
+      "case": "C392",
+      "conf": "status",
+      "line": 824
+     },
+     {
+      "case": "C392",
+      "conf": "status",
+      "line": 825
+     }
+    ],
+    "value": "await _me_response_from_result(ctx, result, session, settings)"
+   },
+   {
+    "at": "apps/api/services/setup.py:346",
+    "branch": "b:777606a0cc",
+    "depth": 1,
+    "fn": "apps/api/services/setup.py::complete_setup",
+    "id": "r:3215864731",
+    "kind": "return",
+    "pred": "claimed.outcome is ClaimOutcome.REPLAY",
+    "site": "apps/api/api/setup.py:196",
+    "state": "n/a",
+    "status": null,
+    "value": "await _load_setup_result(session, user, replayed=True)"
+   },
+   {
+    "after": [
+     "not (claimed.outcome is ClaimOutcome.REPLAY)",
+     "not (claimed.outcome is ClaimOutcome.IN_PROGRESS)"
+    ],
+    "at": "apps/api/services/setup.py:362",
+    "branch": "b:ea440a25b4",
+    "depth": 1,
+    "fn": "apps/api/services/setup.py::complete_setup",
+    "id": "r:14d0c00171",
+    "kind": "return",
+    "pred": "existing is not None and prior is not None and prior.completed",
+    "site": "apps/api/api/setup.py:196",
+    "state": "n/a",
+    "status": null,
+    "value": "result"
+   },
+   {
+    "after": [
+     "not (claimed.outcome is ClaimOutcome.REPLAY)",
+     "not (claimed.outcome is ClaimOutcome.IN_PROGRESS)",
+     "not (existing is not None and prior is not None and prior.completed)",
+     "not (latest is None or latest.policy_version != CONSENT_POLICY_VERSION)"
+    ],
+    "at": "apps/api/services/setup.py:389",
+    "branch": "b:b31ca62e66",
+    "depth": 1,
+    "fn": "apps/api/services/setup.py::complete_setup",
+    "id": "r:53302531e6",
+    "kind": "fall-through",
+    "site": "apps/api/api/setup.py:196",
+    "state": "n/a",
+    "status": null,
+    "value": "SetupResult(household=household, membership=membership, principal=principal, for"
+   }
+  ],
+  "repeat": {
+   "claims": [
+    {
+     "arms": [
+      {
+       "at": "apps/api/services/setup.py:345",
+       "exit": "return",
+       "pred": "claimed.outcome is ClaimOutcome.REPLAY"
+      },
+      {
+       "at": "apps/api/services/setup.py:347",
+       "exit": "raise",
+       "pred": "claimed.outcome is ClaimOutcome.IN_PROGRESS"
+      }
+     ],
+     "at": "apps/api/services/idempotency.py:131",
+     "column": "key",
+     "constraint": "uq_idempotency_key_op_owner",
+     "fn": "apps/api/services/idempotency.py::claim",
+     "idioms": [
+      "begin_nested"
+     ],
+     "model": "IdempotencyKey",
+     "race": "handled",
+     "race_at": "apps/api/services/idempotency.py:140",
+     "table": "idempotency_keys",
+     "unique": [
+      "key",
+      "operation",
+      "owner_scope"
+     ]
+    }
+   ],
+   "key": {
+    "carrier": "header",
+    "name": "Idempotency-Key",
+    "read_at": "apps/api/api/setup.py:191",
+    "set_at": "apps/api/middleware/idempotency.py:25",
+    "through": "request.state.idempotency_key"
+   },
+   "required": {
+    "at": "apps/api/api/setup.py:193",
+    "exit": "x:13ce9b79e0",
+    "status": 400
+   },
+   "state": "defined"
+  },
+  "auth": {
+   "gates": [
+    {
+     "fn": "apps/api/auth/context.py::get_auth_context",
+     "name": "get_auth_context"
+    }
+   ],
+   "provisions": [
+    {
+     "at": "apps/api/services/ownership.py:49",
+     "committed_at": "apps/api/auth/context.py:79",
+     "cond": true,
+     "op": "add",
+     "state": "committed",
+     "step": "st:ba597dd4f4",
+     "table": "users"
+    }
+   ],
+   "requires": [],
+   "schemes": [
+    {
+     "at": "apps/api/auth/context.py:23",
+     "carrier": "header",
+     "exit": "x:9fd81887a2",
+     "header": "Authorization",
+     "name": "bearer_scheme",
+     "scheme": "HTTPBearer",
+     "state": "default",
+     "status": 401
+    }
+   ],
+   "state": "defined"
+  },
+  "rate": {
+   "exempt": [
+    "/healthz"
+   ],
+   "limits": [
+    {
+     "args": [
+      {
+       "at": "apps/api/config.py:139",
+       "env": "GUSTIFY_RATE_LIMIT_SENSITIVE_PER_MINUTE",
+       "expr": "s.rate_limit_sensitive_per_minute",
+       "param": "limit",
+       "setting": "rate_limit_sensitive_per_minute",
+       "state": "default",
+       "value": 20
+      },
+      {
+       "at": "apps/api/config.py:140",
+       "env": "GUSTIFY_RATE_LIMIT_WINDOW_SECONDS",
+       "expr": "s.rate_limit_window_seconds",
+       "param": "window_seconds",
+       "setting": "rate_limit_window_seconds",
+       "state": "default",
+       "value": 60.0
+      }
+     ],
+     "at": "apps/api/middleware/rate_limit.py:117",
+     "class": "SlidingWindowLimiter",
+     "exit": "x:8437446a6c",
+     "init_at": "apps/api/middleware/rate_limit.py:103",
+     "key": "f'{ip}:sensitive'",
+     "limiter": "_sensitive",
+     "state": "default",
+     "via": "RateLimitMiddleware"
+    },
+    {
+     "args": [
+      {
+       "at": "apps/api/config.py:138",
+       "env": "GUSTIFY_RATE_LIMIT_PER_MINUTE",
+       "expr": "s.rate_limit_per_minute",
+       "param": "limit",
+       "setting": "rate_limit_per_minute",
+       "state": "default",
+       "value": 120
+      },
+      {
+       "at": "apps/api/config.py:140",
+       "env": "GUSTIFY_RATE_LIMIT_WINDOW_SECONDS",
+       "expr": "s.rate_limit_window_seconds",
+       "param": "window_seconds",
+       "setting": "rate_limit_window_seconds",
+       "state": "default",
+       "value": 60.0
+      }
+     ],
+     "at": "apps/api/middleware/rate_limit.py:121",
+     "class": "SlidingWindowLimiter",
+     "exit": "x:a7992af811",
+     "init_at": "apps/api/middleware/rate_limit.py:100",
+     "key": "f'{ip}:global'",
+     "limiter": "_global",
+     "state": "default",
+     "via": "RateLimitMiddleware"
+    }
+   ],
+   "state": "defined",
+   "switch": "settings.rate_limit_enabled or settings.is_production"
+  },
+  "responses": {
+   "r:406d313dde": {
+    "fields": [
+     "setup_required",
+     "user",
+     "household",
+     "membership",
+     "preferences",
+     "subscription"
+    ],
+    "media": "application/json",
+    "model": "MeResponse",
+    "source": "apps/api/schemas/responses.py:157",
+    "status": 200
+   },
+   "x:13ce9b79e0": {
+    "body": {
+     "detail": "…"
+    },
+    "media": "application/json",
+    "source": "fastapi/exception_handlers.py:11-17",
+    "status": 400
+   },
+   "x:17b6cdc4d4": {
+    "body": "Internal Server Error",
+    "media": "text/plain",
+    "source": "starlette ServerErrorMiddleware",
+    "status": 500
+   },
+   "x:18e726cdeb": {
+    "body": {
+     "detail": "…"
+    },
+    "media": "application/json",
+    "source": "fastapi/exception_handlers.py:11-17",
+    "status": 401
+   },
+   "x:1b256011f1": {
+    "body": {
+     "detail": "list"
+    },
+    "media": "application/json",
+    "source": "fastapi/exception_handlers.py:20-26",
+    "status": 422
+   },
+   "x:8437446a6c": {
+    "body": {
+     "detail": "…"
+    },
+    "headers": {
+     "Retry-After": "…"
+    },
+    "media": "application/json",
+    "source": "apps/api/middleware/rate_limit.py:127",
+    "status": 429
+   },
+   "x:9fd81887a2": {
+    "body": {
+     "detail": "…"
+    },
+    "headers": {
+     "WWW-Authenticate": "Bearer"
+    },
+    "media": "application/json",
+    "source": "fastapi/security/http.py:84-92",
+    "status": 401
+   },
+   "x:a086031223": {
+    "body": {
+     "detail": "…"
+    },
+    "media": "application/json",
+    "source": "fastapi/exception_handlers.py:11-17",
+    "status": 409
+   },
+   "x:a7992af811": {
+    "body": {
+     "detail": "…"
+    },
+    "headers": {
+     "Retry-After": "…"
+    },
+    "media": "application/json",
+    "source": "apps/api/middleware/rate_limit.py:127",
+    "status": 429
+   },
+   "x:ae1bc4dc59": {
+    "body": {
+     "detail": "…"
+    },
+    "media": "application/json",
+    "source": "fastapi/routing.py:447",
+    "status": 400
+   },
+   "x:f2caf456bd": {
+    "body": {
+     "detail": "…"
+    },
+    "media": "application/json",
+    "source": "fastapi/exception_handlers.py:11-17",
+    "status": 409
+   },
+   "x:fdb1ae15e9": {
+    "body": {
+     "detail": "list"
+    },
+    "media": "application/json",
+    "source": "fastapi/routing.py:427",
+    "status": 422
+   }
+  },
+  "failure": {
+   "catches": [
+    {
+     "actions": [
+      {
+       "at": 200,
+       "call": "HTTPException(status.HTTP_409_CONFLICT, 'setup in progress')",
+       "op": "raise"
+      }
+     ],
+     "answers": [
+      409
+     ],
+     "at": "apps/api/api/setup.py:199",
+     "commits": [
+      "st:07fb369254",
+      "st:b87d2e4c3a"
+     ],
+     "fn": "apps/api/api/setup.py::setup_complete",
+     "id": "c:f3f296ea81",
+     "outcome": "translate",
+     "paths": [
+      "p:0f099873d5",
+      "p:1ac75d260a",
+      "p:2adb89467d",
+      "p:5c8ba607f9",
+      "p:bba821f362"
+     ],
+     "types": [
+      "SetupInProgressError"
+     ],
+     "writes": [
+      "st:f0d4172d3b",
+      "st:9b6870a647",
+      "st:7cc3a75a8e",
+      "st:15a3f75493",
+      "st:4d0ee3df2a",
+      "st:07278f8b63",
+      "st:4bc0fc1137",
+      "st:222729711a",
+      "st:a9bf302767",
+      "st:1c0280047e",
+      "st:e5fd2b50ea",
+      "st:43c8056202",
+      "st:d245511503",
+      "st:8c4f90e357",
+      "st:d97a46993d",
+      "st:7297a4e711",
+      "st:fe64b59347",
+      "st:39e2840854",
+      "st:9be8b42058",
+      "st:e623e476f8",
+      "st:f0654d0780",
+      "st:5651165c03",
+      "st:cb7e89cece",
+      "st:3fb9f4edbe",
+      "st:a8b7865a19",
+      "st:57945cb1d8",
+      "st:52bbe4ca63",
+      "st:cdaed79626",
+      "st:3bdeb48734",
+      "st:bc1c15c55e",
+      "st:e202380457",
+      "st:7705d7c36b",
+      "st:d891375de0",
+      "st:a0fb1b8ed5",
+      "st:26f6505da0",
+      "st:c45ea7a722",
+      "st:94314df61f",
+      "st:c74e63b797",
+      "st:381e17c978",
+      "st:129ff47f42",
+      "st:cc87d22194",
+      "st:24395b6742",
+      "st:4c4c61d22b",
+      "st:806f4618fa"
+     ]
+    },
+    {
+     "actions": [
+      {
+       "at": 202,
+       "call": "HTTPException(status.HTTP_409_CONFLICT, 'consent required')",
+       "op": "raise"
+      }
+     ],
+     "answers": [
+      409
+     ],
+     "at": "apps/api/api/setup.py:201",
+     "commits": [
+      "st:07fb369254",
+      "st:b87d2e4c3a"
+     ],
+     "fn": "apps/api/api/setup.py::setup_complete",
+     "id": "c:3be4248d42",
+     "outcome": "translate",
+     "paths": [
+      "p:0f099873d5",
+      "p:1ac75d260a",
+      "p:2adb89467d",
+      "p:5c8ba607f9",
+      "p:bba821f362"
+     ],
+     "types": [
+      "ConsentRequiredError"
+     ],
+     "writes": [
+      "st:f0d4172d3b",
+      "st:9b6870a647",
+      "st:7cc3a75a8e",
+      "st:15a3f75493",
+      "st:4d0ee3df2a",
+      "st:07278f8b63",
+      "st:4bc0fc1137",
+      "st:222729711a",
+      "st:a9bf302767",
+      "st:1c0280047e",
+      "st:e5fd2b50ea",
+      "st:43c8056202",
+      "st:d245511503",
+      "st:8c4f90e357",
+      "st:d97a46993d",
+      "st:7297a4e711",
+      "st:fe64b59347",
+      "st:39e2840854",
+      "st:9be8b42058",
+      "st:e623e476f8",
+      "st:f0654d0780",
+      "st:5651165c03",
+      "st:cb7e89cece",
+      "st:3fb9f4edbe",
+      "st:a8b7865a19",
+      "st:57945cb1d8",
+      "st:52bbe4ca63",
+      "st:cdaed79626",
+      "st:3bdeb48734",
+      "st:bc1c15c55e",
+      "st:e202380457",
+      "st:7705d7c36b",
+      "st:d891375de0",
+      "st:a0fb1b8ed5",
+      "st:26f6505da0",
+      "st:c45ea7a722",
+      "st:94314df61f",
+      "st:c74e63b797",
+      "st:381e17c978",
+      "st:129ff47f42",
+      "st:cc87d22194",
+      "st:24395b6742",
+      "st:4c4c61d22b",
+      "st:806f4618fa"
+     ]
+    },
+    {
+     "actions": [
+      {
+       "at": 99,
+       "call": "HTTPException(status.HTTP_401_UNAUTHORIZED, 'invalid token')",
+       "op": "raise"
+      }
+     ],
+     "answers": [
+      401
+     ],
+     "at": "apps/api/auth/context.py:98",
+     "commits": [
+      "st:925411811a"
+     ],
+     "fn": "apps/api/auth/context.py::get_auth_context",
+     "id": "c:10b6b2a3ba",
+     "outcome": "translate",
+     "paths": [
+      "p:0f099873d5",
+      "p:1ac75d260a",
+      "p:2adb89467d",
+      "p:3ee19bd271",
+      "p:5c8ba607f9",
+      "p:a90ffd3af4",
+      "p:bba821f362",
+      "p:ec6c43e906",
+      "p:fd1039c2ca"
+     ],
+     "types": [
+      "InvalidTokenError"
+     ],
+     "writes": [
+      "st:ba597dd4f4"
+     ]
+    },
+    {
+     "actions": [
+      {
+       "at": 142,
+       "call": "_lookup",
+       "op": "call"
+      },
+      {
+       "at": 144,
+       "op": "pass-through"
+      },
+      {
+       "at": 145,
+       "op": "return"
+      },
+      {
+       "at": 145,
+       "call": "_outcome_for",
+       "op": "call"
+      }
+     ],
+     "answers": [],
+     "at": "apps/api/services/idempotency.py:141",
+     "commits": [],
+     "fn": "apps/api/services/idempotency.py::claim",
+     "id": "c:0dec997c32",
+     "outcome": "pass-through",
+     "paths": [
+      "p:0f099873d5",
+      "p:1ac75d260a",
+      "p:2adb89467d",
+      "p:5c8ba607f9",
+      "p:bba821f362"
+     ],
+     "types": [
+      "IntegrityError"
+     ],
+     "writes": [
+      "st:4d0ee3df2a"
+     ]
+    },
+    {
+     "actions": [
+      {
+       "at": 404,
+       "call": "session.rollback",
+       "op": "rollback"
+      },
+      {
+       "at": 406,
+       "call": "_discard_claim",
+       "op": "call",
+       "suppressed": true
+      },
+      {
+       "at": 407,
+       "op": "pass-through"
+      }
+     ],
+     "answers": [],
+     "at": "apps/api/services/setup.py:403",
+     "commits": [
+      "st:07fb369254",
+      "st:b87d2e4c3a"
+     ],
+     "fn": "apps/api/services/setup.py::complete_setup",
+     "id": "c:64e98bd00d",
+     "outcome": "pass-through",
+     "paths": [
+      "p:0f099873d5",
+      "p:1ac75d260a",
+      "p:5c8ba607f9"
+     ],
+     "types": [
+      "Exception"
+     ],
+     "writes": [
+      "st:07278f8b63",
+      "st:4bc0fc1137",
+      "st:222729711a",
+      "st:a9bf302767",
+      "st:1c0280047e",
+      "st:e5fd2b50ea",
+      "st:43c8056202",
+      "st:d245511503",
+      "st:8c4f90e357",
+      "st:d97a46993d",
+      "st:7297a4e711",
+      "st:fe64b59347",
+      "st:39e2840854",
+      "st:9be8b42058",
+      "st:e623e476f8",
+      "st:f0654d0780",
+      "st:5651165c03",
+      "st:cb7e89cece",
+      "st:3fb9f4edbe",
+      "st:a8b7865a19",
+      "st:57945cb1d8",
+      "st:52bbe4ca63",
+      "st:cdaed79626",
+      "st:3bdeb48734",
+      "st:bc1c15c55e",
+      "st:e202380457",
+      "st:7705d7c36b",
+      "st:d891375de0",
+      "st:a0fb1b8ed5",
+      "st:26f6505da0",
+      "st:c45ea7a722",
+      "st:94314df61f",
+      "st:c74e63b797",
+      "st:381e17c978",
+      "st:129ff47f42",
+      "st:cc87d22194",
+      "st:24395b6742",
+      "st:4c4c61d22b",
+      "st:806f4618fa"
+     ]
+    }
+   ],
+   "state": "defined"
+  },
+  "findings": [
+   {
+    "id": "text-only",
+    "n": 5,
+    "slot": "U7"
+   },
+   {
+    "details": [
+     "consent required",
+     "setup in progress"
+    ],
+    "id": "shared-status",
+    "slot": "U7",
+    "status": 409
+   },
+   {
+    "id": "undeclared",
+    "slot": "K1",
+    "statuses": [
+     400,
+     401,
+     409,
+     429
+    ]
+   }
+  ],
+  "arm_findings": {
+   "effects": [
+    {
+     "endpoint": "endpoint:POST /setup/complete",
+     "id": "refusal-writes",
+     "paths": [
+      "p:5c8ba607f9"
+     ],
+     "slot": "U9"
+    }
+   ]
+  },
+  "declared": {
+   "refusals": [],
+   "response_model": {
+    "name": "MeResponse",
+    "state": "defined"
+   },
+   "success": {
+    "state": "default",
+    "status": 200
+   }
+  },
+  "framework_exits": [
+   {
+    "body": "json",
+    "code": "json_invalid",
+    "detail": "JSON decode error",
+    "form": "object",
+    "id": "x:fdb1ae15e9",
+    "phase": "body-parse",
+    "source": "fastapi/routing.py:427",
+    "state": "default",
+    "status": 422
+   },
+   {
+    "body": "json",
+    "detail": "There was an error parsing the body",
+    "form": "text",
+    "id": "x:ae1bc4dc59",
+    "phase": "body-parse",
+    "source": "fastapi/routing.py:447",
+    "state": "default",
+    "status": 400
+   }
+  ],
+  "tests": {
+   "act": 15,
+   "arranged_by": [
+    "C1087",
+    "C218",
+    "C250",
+    "C251",
+    "C555",
+    "C556",
+    "C557",
+    "C603",
+    "C605",
+    "C664",
+    "C705",
+    "C785",
+    "C958",
+    "C959"
+   ],
+   "helper_arranged": [
+    "C1028",
+    "C1029",
+    "C1030",
+    "C1031",
+    "C1032",
+    "C1033",
+    "C1034",
+    "C1035",
+    "C1036",
+    "C1037",
+    "C1106",
+    "C1107",
+    "C1108",
+    "C1109",
+    "C1110",
+    "C1111",
+    "C1115",
+    "C1116",
+    "C1117",
+    "C1120",
+    "C1121",
+    "C1122",
+    "C1123",
+    "C2137",
+    "C2138",
+    "C2139",
+    "C260",
+    "C266",
+    "C267",
+    "C373",
+    "C374",
+    "C375",
+    "C376",
+    "C377",
+    "C378",
+    "C379",
+    "C380",
+    "C381",
+    "C382",
+    "C383",
+    "C384",
+    "C385",
+    "C386",
+    "C387",
+    "C388",
+    "C434",
+    "C435",
+    "C436",
+    "C437",
+    "C438",
+    "C439",
+    "C440",
+    "C441",
+    "C442",
+    "C443",
+    "C444",
+    "C445",
+    "C504",
+    "C540",
+    "C541",
+    "C569",
+    "C570",
+    "C571",
+    "C572",
+    "C573",
+    "C574",
+    "C674",
+    "C675",
+    "C677",
+    "C682",
+    "C683",
+    "C684",
+    "C692",
+    "C693",
+    "C694",
+    "C695",
+    "C696",
+    "C697",
+    "C698",
+    "C699",
+    "C700",
+    "C701",
+    "C702",
+    "C703",
+    "C705",
+    "C706",
+    "C707",
+    "C708",
+    "C709",
+    "C710",
+    "C711",
+    "C73",
+    "C74",
+    "C745",
+    "C746",
+    "C75",
+    "C76",
+    "C77",
+    "C78",
+    "C79",
+    "C798",
+    "C799",
+    "C80",
+    "C800",
+    "C801",
+    "C802",
+    "C809",
+    "C81",
+    "C810",
+    "C811",
+    "C8110",
+    "C8111",
+    "C8112",
+    "C812",
+    "C813",
+    "C814",
+    "C815",
+    "C816",
+    "C82",
+    "C823",
+    "C824",
+    "C825",
+    "C83",
+    "C831",
+    "C834",
+    "C839",
+    "C84",
+    "C844",
+    "C85",
+    "C86",
+    "C87",
+    "C88",
+    "C89",
+    "C90",
+    "C91"
+   ],
+   "unjoined": []
+  },
+  "slots": {
+   "K1": {
+    "declared": [],
+    "produced": [
+     400,
+     401,
+     409,
+     422,
+     429
+    ],
+    "state": "missing"
+   },
+   "U3": {
+    "rows": 3,
+    "state": "defined"
+   },
+   "U7": {
+    "rows": 8,
+    "state": "missing",
+    "unknown": 0
+   }
+  },
+  "frontend": {
+   "hook": {
+    "at": "apps/web/src/features/auth/useCompleteSetup.ts:31",
+    "calls": [
+     {
+      "at": "apps/web/src/features/auth/useCompleteSetup.ts:34",
+      "callee": "useMutation",
+      "endpoint": "endpoint:POST /setup/complete",
+      "fetch": [
+       {
+        "at": "apps/web/src/features/auth/useCompleteSetup.ts:36",
+        "callee": "apiFetch",
+        "method": "POST",
+        "path": "/api/v1/setup/complete",
+        "wrapper": "fe:apps/web/src/lib/api/client.ts#apiFetch"
+       }
+      ],
+      "invalidates": [
+       {
+        "at": "apps/web/src/features/auth/useCompleteSetup.ts:45",
+        "call": "invalidateQueries",
+        "key": [
+         "me"
+        ],
+        "when": "onSuccess"
+       },
+       {
+        "at": "apps/web/src/features/auth/useCompleteSetup.ts:45",
+        "call": "invalidateQueries",
+        "key": [
+         "settings"
+        ],
+        "when": "onSuccess"
+       }
+      ],
+      "kind": "mutation",
+      "options": {},
+      "seeds": [
+       {
+        "at": "apps/web/src/features/auth/useCompleteSetup.ts:43",
+        "key": [
+         "me"
+        ],
+        "when": "onSuccess"
+       }
+      ]
+     }
+    ],
+    "form": "hook",
+    "piece": "fe:apps/web/src/features/auth/useCompleteSetup.ts#useCompleteSetup"
+   },
+   "reason_sites": [
+    {
+     "at": "apps/web/src/features/auth/SetupScreen.tsx:43",
+     "branch": "none",
+     "classified": false,
+     "endpoints": [
+      "endpoint:PATCH /settings/household",
+      "endpoint:PATCH /settings/preferences",
+      "endpoint:POST /setup/complete"
+     ],
+     "id": "r-56477c4fb6",
+     "op": "===",
+     "origins": [
+      {
+       "endpoints": [
+        "endpoint:PATCH /settings/household",
+        "endpoint:PATCH /settings/preferences"
+       ],
+       "kind": "hook",
+       "via": [
+        "apps/web/src/features/auth/SetupScreen.tsx:43",
+        "apps/web/src/features/auth/SetupScreen.tsx:98",
+        "apps/web/src/features/auth/SetupScreen.tsx:97"
+       ]
+      },
+      {
+       "endpoints": [
+        "endpoint:POST /setup/complete"
+       ],
+       "kind": "hook",
+       "via": [
+        "apps/web/src/features/auth/SetupScreen.tsx:43",
+        "apps/web/src/features/auth/SetupScreen.tsx:98",
+        "apps/web/src/features/auth/SetupScreen.tsx:97"
+       ]
+      },
+      {
+       "endpoints": [],
+       "kind": "catch",
+       "reason": "the try block fetches nothing the forms hold",
+       "via": [
+        "apps/web/src/features/auth/SetupScreen.tsx:43",
+        "apps/web/src/features/auth/SetupScreen.tsx:83"
+       ]
+      }
+     ],
+     "piece": "fe:apps/web/src/features/auth/SetupScreen.tsx#setupErrorMessage",
+     "reads": "status",
+     "receiver": "error",
+     "value": 409
+    }
+   ],
+   "findings": [
+    {
+     "at": "apps/web/src/features/auth/SetupScreen.tsx:43",
+     "details": [
+      "consent required",
+      "setup in progress"
+     ],
+     "endpoint": "endpoint:POST /setup/complete",
+     "id": "reason-collapsed",
+     "piece": "fe:apps/web/src/features/auth/SetupScreen.tsx#setupErrorMessage",
+     "site": "r-56477c4fb6",
+     "slot": "U7",
+     "status": 409
+    }
+   ],
+   "guard": {
+    "at": "apps/web/src/routes/RequireSetup.tsx:29",
+    "chain": [
+     {
+      "exit": "x-9b271e1ae1",
+      "guard": "fe:apps/web/src/routes/RequireAuth.tsx#RequireAuth",
+      "id": "p-1af79d57a6",
+      "through": []
+     },
+     {
+      "exit": "x-1a327a5054",
+      "guard": "fe:apps/web/src/routes/RequireAuth.tsx#RequireAuth",
+      "id": "p-77a7caa171",
+      "through": []
+     },
+     {
+      "exit": "x-9aa64e71f6",
+      "guard": "fe:apps/web/src/routes/RequireSetup.tsx#RequireSetup",
+      "id": "p-c59ee662c9",
+      "through": [
+       "x-cf0f658e15"
+      ]
+     },
+     {
+      "effect": "e-e3b90cd8c0",
+      "exit": "x-e627d1f159",
+      "guard": "fe:apps/web/src/routes/RequireSetup.tsx#RequireSetup",
+      "id": "p-70222df8bf",
+      "through": [
+       "x-cf0f658e15"
+      ]
+     },
+     {
+      "effect": "e-e1474802ba",
+      "exit": "x-e627d1f159",
+      "guard": "fe:apps/web/src/routes/RequireSetup.tsx#RequireSetup",
+      "id": "p-aa8077e62c",
+      "through": [
+       "x-cf0f658e15"
+      ]
+     },
+     {
+      "exit": "x-4af500576c",
+      "guard": "fe:apps/web/src/routes/RequireSetup.tsx#RequireSetup",
+      "id": "p-58cadcb596",
+      "through": [
+       "x-cf0f658e15"
+      ]
+     },
+     {
+      "exit": "x-249eb1b535",
+      "guard": "fe:apps/web/src/routes/RequireSetup.tsx#RequireSetup",
+      "id": "p-664b293338",
+      "ready": true,
+      "through": [
+       "x-cf0f658e15"
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "at": "apps/web/src/routes/RequireSetup.tsx:39",
+      "call": "signOut",
+      "hook": "fe:apps/web/src/auth/useAuth.ts#useAuth",
+      "id": "e-e3b90cd8c0",
+      "lands": "unknown",
+      "member": "signOut",
+      "when": [
+       {
+        "class": "error",
+        "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+        "member": "isError",
+        "name": "isError",
+        "neg": false
+       },
+       {
+        "neg": false,
+        "opaque": "isApiError(error)"
+       },
+       {
+        "class": "error",
+        "field": "status",
+        "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+        "member": "error",
+        "name": "error.status",
+        "neg": false,
+        "value": "401"
+       }
+      ]
+     },
+     {
+      "at": "apps/web/src/routes/RequireSetup.tsx:41",
+      "call": "pushToast",
+      "hook": "fe:apps/web/src/store/ui.ts#useUiStore",
+      "id": "e-e1474802ba",
+      "lands": "unknown",
+      "member": "pushToast",
+      "when": [
+       {
+        "neg": true,
+        "opaque": "isError && isApiError(error) && error.status === 401"
+       },
+       {
+        "class": "error",
+        "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+        "member": "isError",
+        "name": "isError",
+        "neg": false
+       }
+      ]
+     }
+    ],
+    "exits": [
+     {
+      "at": "apps/web/src/routes/RequireSetup.tsx:46",
+      "id": "x-9aa64e71f6",
+      "kind": "render",
+      "passed": [],
+      "tag": "AuthSplash",
+      "when": [
+       {
+        "class": "pending",
+        "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+        "member": "isPending",
+        "name": "isPending",
+        "neg": false
+       }
+      ]
+     },
+     {
+      "at": "apps/web/src/routes/RequireSetup.tsx:52",
+      "effects": [
+       "e-e3b90cd8c0",
+       "e-e1474802ba"
+      ],
+      "id": "x-e627d1f159",
+      "kind": "render",
+      "passed": [
+       {
+        "class": "pending",
+        "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+        "member": "isPending",
+        "name": "isPending",
+        "neg": true
+       }
+      ],
+      "tag": "AuthSplash",
+      "when": [
+       {
+        "class": "error",
+        "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+        "member": "isError",
+        "name": "isError",
+        "neg": false
+       }
+      ]
+     },
+     {
+      "at": "apps/web/src/routes/RequireSetup.tsx:60",
+      "decided_by": {
+       "endpoint": "endpoint:GET /me",
+       "field": "setup_required",
+       "response_model": "MeResponse",
+       "state": "defined"
+      },
+      "id": "x-4af500576c",
+      "kind": "nav",
+      "passed": [
+       {
+        "class": "pending",
+        "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+        "member": "isPending",
+        "name": "isPending",
+        "neg": true
+       },
+       {
+        "class": "error",
+        "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+        "member": "isError",
+        "name": "isError",
+        "neg": true
+       }
+      ],
+      "to": "/setup",
+      "when": [
+       {
+        "class": "data",
+        "field": "setup_required",
+        "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+        "member": "data",
+        "name": "data.setup_required",
+        "neg": false
+       }
+      ]
+     },
+     {
+      "at": "apps/web/src/routes/RequireSetup.tsx:63",
+      "id": "x-249eb1b535",
+      "kind": "outlet",
+      "passed": [
+       {
+        "class": "pending",
+        "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+        "member": "isPending",
+        "name": "isPending",
+        "neg": true
+       },
+       {
+        "class": "error",
+        "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+        "member": "isError",
+        "name": "isError",
+        "neg": true
+       },
+       {
+        "class": "data",
+        "field": "setup_required",
+        "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+        "member": "data",
+        "name": "data.setup_required",
+        "neg": true
+       }
+      ],
+      "tag": "Outlet",
+      "when": []
+     }
+    ],
+    "form": "guard",
+    "hooks": {
+     "data": "fe:apps/web/src/features/me/useMe.ts#useMe",
+     "error": "fe:apps/web/src/features/me/useMe.ts#useMe",
+     "isError": "fe:apps/web/src/features/me/useMe.ts#useMe",
+     "isPending": "fe:apps/web/src/features/me/useMe.ts#useMe",
+     "pushToast": "fe:apps/web/src/store/ui.ts#useUiStore",
+     "signOut": "fe:apps/web/src/auth/useAuth.ts#useAuth",
+     "t": "fe:apps/web/src/i18n/useT.ts#useT"
+    },
+    "k3": {
+     "pairs": [
+      {
+       "exit": "x-034ee6d39a",
+       "on": "data.setup_required",
+       "state": "exclusive",
+       "with": "fe:apps/web/src/routes/RedirectIfSetupComplete.tsx#RedirectIfSetupComplete"
+      }
+     ],
+     "state": "safe",
+     "targets": [
+      {
+       "exit": "x-4af500576c",
+       "state": "safe",
+       "to": "/setup"
+      }
+     ]
+    },
+    "mounts": 1,
+    "piece": "fe:apps/web/src/routes/RequireSetup.tsx#RequireSetup"
+   },
+   "screens": {
+    "fe:apps/web/src/features/auth/screens/InitialSetupScreen.tsx#HouseholdStep": {
+     "at": "apps/web/src/features/auth/screens/InitialSetupScreen.tsx:593",
+     "controls": [
+      {
+       "at": "apps/web/src/features/auth/screens/InitialSetupScreen.tsx:619",
+       "handler": {
+        "onClick": "() => onSelectHouseholdMode(mode)"
+       },
+       "id": "c-c3228daf2a",
+       "state": "live",
+       "tag": "HouseholdModeButton"
+      }
+     ],
+     "form": "component"
+    },
+    "fe:apps/web/src/features/auth/screens/InitialSetupScreen.tsx#SetupContent": {
+     "at": "apps/web/src/features/auth/screens/InitialSetupScreen.tsx:385",
+     "controls": [
+      {
+       "at": "apps/web/src/features/auth/screens/InitialSetupScreen.tsx:486",
+       "handler": {
+        "onClick": "onNext"
+       },
+       "id": "c-60deb6d99a",
+       "state": "live",
+       "tag": "Button",
+       "when": [
+        "selectedStepIndex === 0"
+       ]
+      },
+      {
+       "at": "apps/web/src/features/auth/screens/InitialSetupScreen.tsx:490",
+       "handler": {
+        "onClick": "onBack"
+       },
+       "id": "c-3b5952e3c0",
+       "state": "live",
+       "tag": "Button",
+       "when": [
+        "!selectedStepIndex === 0",
+        "!selectedStep === \"complete\""
+       ]
+      },
+      {
+       "at": "apps/web/src/features/auth/screens/InitialSetupScreen.tsx:492",
+       "handler": {
+        "onClick": "onNext"
+       },
+       "id": "c-4e5f4884b0",
+       "state": "live",
+       "tag": "Button",
+       "when": [
+        "!selectedStepIndex === 0"
+       ]
+      }
+     ],
+     "form": "component"
+    },
+    "fe:apps/web/src/features/auth/screens/InitialSetupScreen.tsx#SetupStateTabs": {
+     "at": "apps/web/src/features/auth/screens/InitialSetupScreen.tsx:336",
+     "controls": [
+      {
+       "at": "apps/web/src/features/auth/screens/InitialSetupScreen.tsx:341",
+       "handler": {
+        "onClick": "() => onSelect(item.id)"
+       },
+       "id": "c-ca7c71300c",
+       "state": "live",
+       "tag": "button"
+      }
+     ],
+     "form": "component"
+    }
+   },
+   "client": {
+    "clients": [
+     {
+      "at": "apps/web/src/lib/query/client.ts:23",
+      "fn": "apps/web/src/lib/query/client.ts::createQueryClient",
+      "hook_overrides": [
+       {
+        "hook": "fe:apps/web/src/features/cooking/useCookingSessions.ts#useRemindersDue",
+        "option": "staleTime"
+       },
+       {
+        "hook": "fe:apps/web/src/features/profile/useProfileSummary.ts#useProfileSummary",
+        "option": "staleTime"
+       },
+       {
+        "hook": "fe:apps/web/src/features/settings/useSettings.ts#useSettings",
+        "option": "staleTime"
+       }
+      ],
+      "library": {
+       "lock": "apps/web/package-lock.json",
+       "package": "@tanstack/query-core",
+       "version": "5.100.6"
+      },
+      "policy": {
+       "mutations": {
+        "retry": {
+         "state": "defined",
+         "value": false
+        }
+       },
+       "queries": {
+        "gcTime": {
+         "note": "Infinity on the server",
+         "source": "@tanstack/query-core/src/removable.ts:28",
+         "state": "default",
+         "value": 300000
+        },
+        "refetchOnReconnect": {
+         "state": "defined",
+         "value": true
+        },
+        "refetchOnWindowFocus": {
+         "state": "defined",
+         "value": false
+        },
+        "retry": {
+         "state": "defined",
+         "summary": {
+          "at": "apps/web/src/lib/query/client.ts:17",
+          "branches": [
+           {
+            "means": [
+             "value.status >= 400",
+             "value.status < 500"
+            ],
+            "returns": false,
+            "when": [
+             "isClientError(error)"
+            ]
+           },
+           {
+            "compares": [
+             "failureCount < 1"
+            ],
+            "returns": "failureCount < MAX_RETRIES"
+           }
+          ],
+          "fn": "shouldRetry"
+         },
+         "value": {
+          "ref": "shouldRetry"
+         }
+        },
+        "staleTime": {
+         "state": "defined",
+         "value": 30000
+        }
+       }
+      }
+     }
+    ],
+    "transport": {
+     "apps/web/src/lib/api/client.ts": {
+      "branches": [
+       {
+        "at": "apps/web/src/lib/api/client.ts:100",
+        "fn": "apiFetch",
+        "op": "===",
+        "status": 401,
+        "when": []
+       },
+       {
+        "at": "apps/web/src/lib/api/client.ts:108",
+        "fn": "apiFetch",
+        "op": "===",
+        "status": 401,
+        "when": [
+         "response.status === 401 && !anonymous && tokenGetter !== null"
+        ]
+       },
+       {
+        "at": "apps/web/src/lib/api/client.ts:114",
+        "fn": "apiFetch",
+        "throws": "await parseError(response)",
+        "when": [
+         "!response.ok"
+        ]
+       },
+       {
+        "at": "apps/web/src/lib/api/client.ts:234",
+        "fn": "apiFetchBlob",
+        "op": "===",
+        "status": 401,
+        "when": []
+       },
+       {
+        "at": "apps/web/src/lib/api/client.ts:236",
+        "fn": "apiFetchBlob",
+        "op": "===",
+        "status": 401,
+        "when": [
+         "response.status === 401 && tokenGetter !== null"
+        ]
+       },
+       {
+        "at": "apps/web/src/lib/api/client.ts:242",
+        "fn": "apiFetchBlob",
+        "throws": "await parseError(response)",
+        "when": [
+         "!response.ok"
+        ]
+       },
+       {
+        "at": "apps/web/src/lib/api/client.ts:196",
+        "fn": "apiUpload",
+        "op": "===",
+        "status": 401,
+        "when": []
+       },
+       {
+        "at": "apps/web/src/lib/api/client.ts:198",
+        "fn": "apiUpload",
+        "op": "===",
+        "status": 401,
+        "when": [
+         "response.status === 401 && tokenGetter !== null"
+        ]
+       },
+       {
+        "at": "apps/web/src/lib/api/client.ts:204",
+        "fn": "apiUpload",
+        "throws": "await parseError(response)",
+        "when": [
+         "!response.ok"
+        ]
+       },
+       {
+        "at": "apps/web/src/lib/api/client.ts:155",
+        "fn": "parseSuccess",
+        "op": "===",
+        "status": 204,
+        "when": []
+       },
+       {
+        "at": "apps/web/src/lib/api/client.ts:161",
+        "ctx": "catch:",
+        "fn": "parseSuccess",
+        "throws": "new ApiError({ status: response.status, detail: \"Malformed JSON in a successful ",
+        "when": []
+       }
+      ],
+      "wrappers": [
+       "fe:apps/web/src/lib/api/client.ts#apiFetch",
+       "fe:apps/web/src/lib/api/client.ts#apiUpload"
+      ]
+     }
+    }
+   },
+   "present": true
+  },
+  "phases": [
+   "middleware",
+   "security",
+   "dependency",
+   "body-parse",
+   "validation",
+   "handler",
+   "uncaught"
+  ],
+  "counts": {
+   "paths": 14,
+   "exits": 12,
+   "produced": 9,
+   "returns": 4,
+   "framework": 2,
+   "switches": 3,
+   "preconditions": 3,
+   "catches": 5,
+   "branches": 3,
+   "by_kind": {
+    "refusal": 7,
+    "framework": 2,
+    "validation": 1,
+    "success": 3,
+    "uncaught": 1
+   },
+   "by_status": {
+    "200": 3,
+    "400": 2,
+    "401": 2,
+    "409": 2,
+    "422": 2,
+    "429": 2,
+    "500": 1
+   },
+   "steps_max": 22
+  }
  },
  "identity": {
   "id": "endpoint:POST /setup/complete",
