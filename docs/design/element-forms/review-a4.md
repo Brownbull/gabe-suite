@@ -200,7 +200,7 @@ DECISION (V40a): the nav-hook guard is NOT BUILT. Slice 11a's guard kinds read t
 (gastify's `ProtectedRoute`, `__root.tsx:19-25`) gets no guard row, though the c4-graph knows the piece. CHOSE strike
 + list over build: the build needs a third extractor rule (an effect's call sites walked for the router's navigate)
 and a fourth guard kind, and gastify is the only target that would draw it today. Listed under Slice 11a as Not built
-with the trigger: build when a target's auth guard is such a hook and the operator wants it drawn.
+with the trigger: build when a target's auth guard is such a hook and the operator wants it drawn. **Operator ruled B on 2026-09-16.**
 
 ⚠ CORRECTION to fix 3 (`16ba773`): its `is None` fold read any bound non-constant expression as proof of "not None",
 so `need_owner(session)` with a `session` parameter had its 409 proven dead — in the default feed. Fixed in fix 4 (the
