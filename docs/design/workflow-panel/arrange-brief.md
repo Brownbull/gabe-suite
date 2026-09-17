@@ -103,3 +103,22 @@ which keys, the first-cut copy line verbatim, anything hatched and why, line cou
 - **Probe.** One node per tile; SETS = controls + the timeline, READS = standpoints + records, measured on the drawn map;
   hovering `security` shows the four titles and a number equal to one computed in the page; `ARR.place` dims the node
   and tags it; the 12px floor on node labels; shots of the empty map and of the first cut placed.
+
+## Addition 2 (operator, 2026-09-17): the console model — WHAT × PATH × TIME, and three starting layouts
+
+The operator's model: WHAT (tables · schemas · functions · tests · security · widening — the rich content) × PATH (the
+use case, the ending in force) × TIME (the chain order inside a path). The COMMAND panel navigates WHAT and PATH as a
+drill-down; the MIDDLE shows the result in the chosen dimension; the PORTRAIT magnifies what is clicked in the middle.
+
+- **Views on every standpoint tile:** `all` (the door's whole set — today's part panel) · `path` (filtered by the path in
+  force) · `time` (ordered by the chain, top to bottom in request order: data = effects.steps in order · functions = the
+  chain's calls · security = gates and switches with hit · schemas = the body read → the response · widening = the
+  frontend after the exit; tests HATCHED — a case proves an ending, it has no time inside). The view rides the copy line
+  as `tile:view`.
+- **The command tile's `menu` view:** level 1 = PATHS ▸ + the six WHAT groups (+ the corner); level 2 = a WHAT's views
+  ALL · ON THIS PATH · ALONG TIME + its verbs + Back, or the path cells + Back. Never deeper than 3. The `verbs` view
+  keeps the 15-verb card.
+- **Presets** (starting points, never rulings): `blank` · `today` (the endpoint lab as built: middle ← `part-buttons`,
+  portrait ← `thing-record`, command ← `command-card:verbs`) · `proposed` (middle ← `paths-timeline` M then `data:path` ·
+  `functions:path` · `security:path` S; portrait ← `thing-record` L; command ← `command-card:menu` L; dial fit). The
+  operator's own line, pasted back, is the ruling.
