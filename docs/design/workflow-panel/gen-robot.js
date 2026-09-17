@@ -11,10 +11,10 @@ const exits=fm.exits, byId=Object.fromEntries(exits.map(e=>[e.id,e]));
 const cond=(id,label,sub,c,slot,extra)=>Object.assign({id,label,sub,slot,cov:c},extra||{});
 const NM={state:"unmeasured",cases:[]};
 const L=[];
-L.push({ key:"edge", slot:["K3 rate","U3 guards"], name:"EDGE", plain:"the checks every request meets before the door — the app band", stage:"middleware",
+L.push({ key:"edge", slot:["K3 rate","U3 guards"], name:"EDGE", plain:"the checks every request meets before it reaches this door — the same ones guard every door in the app", stage:"middleware",
   conds: exits.filter(e=>e.phase==="middleware").map(e=>cond(e.id, e.status+" "+(e.detail||""), e.via||e.pred||"", cov(e.tests), "K3", {kind:"exit"}))
     .concat((fm.switches||[]).filter(w=>w.kind==="flag").map(w=>cond(w.id,"flag "+Object.keys(w.settings||{}).join(" · "),"decides whether the limiter runs at all", NM, "U8", {kind:"switch"}))) });
-L.push({ key:"gate", slot:["K2 auth","U3 guards","U8 switches"], name:"GATE", plain:"who may knock — the scheme, the verifier and what the dependency provisions", stage:"security · dependency",
+L.push({ key:"gate", slot:["K2 auth","U3 guards","U8 switches"], name:"GATE", plain:"the lock on the door — it decides who may knock, and it writes a row when it lets someone in", stage:"security · dependency",
   conds: exits.filter(e=>e.phase==="security"||e.phase==="dependency").map(e=>cond(e.id, e.status+" "+(e.detail||""), e.via||"", cov(e.tests), "K2", {kind:"exit"}))
     .concat((fm.switches||[]).filter(w=>w.kind==="binding").flatMap(w=>(w.branches||[]).map((b,i)=>cond(w.id+":"+i,"verifier "+b.impl,b.pred||"", NM, "U8", {kind:"switch-arm"}))))
     .concat((fm.auth.provisions||[]).map((p,i)=>cond("prov:"+i,"provision "+p.op+" "+p.table, p.state+" at "+p.committed_at, NM, "K2", {kind:"effect"}))) });
@@ -26,12 +26,12 @@ L.push({ key:"handler", slot:["U3 guards","U7 refusals","U6 paths","U11 failure"
     .concat((fm.branches||[]).map(b=>{ const p=(fm.paths||[]).find(p=>p.kind==="success"&&((b.token&&p.names.token===b.token)||(!b.token&&p.names.token==="fall-through"))); return cond(b.id,"arm "+(p?p.names.drawn:(b.token||"fall-through")), b.pred||"the fall-through", p?cov(p.tests):{state:"untested",cases:[]}, "U6", {kind:"branch"}); }))
     .concat((fm.failure.catches||[]).map(c=>{ const ans=c.answers||[]; const e=exits.find(x=>ans.includes(x.status)&&x.phase==="handler"); return cond(c.id,"catch "+(c.types||[]).join(", "), c.outcome+(ans.length?" → "+ans.join(", "):""), e?cov(e.tests):NM, "U11", {kind:"catch"}); })) });
 const refusalWrites=(fm.arm_findings.effects||[]).filter(f=>f.id==="refusal-writes");
-L.push({ key:"effects", slot:["U9 effects","U12 repeat"], name:"EFFECTS", plain:"what the door writes, and what happens to the writes on each ending", stage:"handler → exit",
+L.push({ key:"effects", slot:["U9 effects","U12 repeat"], name:"EFFECTS", plain:"the writes the door leaves behind — which survive each ending and which are rolled back", stage:"handler → exit",
   conds: [cond("eff:commit","commit on success", fm.paths.filter(p=>p.kind==="success").map(p=>p.names.drawn+" "+p.effects.n.committed).join(" · "), NM, "U9", {kind:"effect"}),
           cond("eff:rollback","rollback on refusal", fm.paths.filter(p=>p.effects.n.rolled_back).map(p=>p.names.drawn+" "+p.effects.n.rolled_back).join(" · ")||"none", NM, "U9", {kind:"effect"}),
           cond("eff:refusal-writes","a refusal that still writes", refusalWrites.map(f=>f.paths.join(", ")).join(" · ")||"none", refusalWrites.length?{state:"gap",cases:[]}:NM, "U9", {kind:"finding"})]
     .concat((fm.repeat.claims||[]).map((c,i)=>cond("claim:"+i,"claim "+c.table+" ("+c.race+")", (c.idioms||[]).join(", ")+" · "+c.constraint, NM, "U12", {kind:"race"}))) });
-L.push({ key:"answer", slot:["K4 responses","K1 declared"], name:"ANSWER", plain:"what the caller gets — the body per ending, and what the door promised", stage:"exit",
+L.push({ key:"answer", slot:["K4 responses","K1 declared"], name:"ANSWER", plain:"the reply the caller gets — one body per ending, beside what the door promised to return", stage:"exit",
   conds: succ.map(e=>cond(e.id, e.status+" "+((e.response||{}).model||"success"), ((e.response||{}).fields||[]).length+" fields", cov(e.tests), "K4", {kind:"exit"}))
     .concat([cond("k1","declared vs produced", "declares "+(fm.declared.success||{}).status+" · produces "+[...new Set(exits.filter(e=>e.status).map(e=>e.status))].sort().join(" "), {state:(ep.findings||[]).some(f=>f.id==="undeclared")?"gap":"covered", cases:[]}, "K1", {kind:"contract"})]) });
 L.push({ key:"uncaught", slot:["U11 failure"], name:"UNCAUGHT", plain:"the 500 — anything nobody caught, possible at any step", stage:"anywhere",
@@ -42,5 +42,5 @@ L.push({ key:"client", slot:["frontend reason"], name:"CLIENT", plain:"the scree
     .concat(rf.map(f=>cond("rf:"+f.site, f.id+" "+f.status, (f.details||[]).join(" vs "), {state:"gap",cases:[]}, "reason", {kind:"finding"}))) });
 const tally=lv=>lv.conds.reduce((a,c)=>{a[c.cov.state]=(a[c.cov.state]||0)+1;return a;},{});
 L.forEach(l=>l.tally=tally(l));
-const out={ door:F.identity.label, head:F.head, levels:L, states:{covered:"a case proves it — the status and the detail, or the service raise", partial:"a case reaches the status only, or the join is ambiguous", untested:"no case reaches it", unmeasured:"no test can assert it today — effects, switch arms, provisions, races", gap:"a contract or client gap the forms found"}, cases:Object.fromEntries((fm.paths||[]).flatMap(p=>p.tests||[]).map(t=>[t.case,{name:t.name,file:t.file,state:t.state}])) };
+const out={ door:F.identity.label, head:F.head, levels:L, states:{covered:"a case proves it — the status and the detail, or the service raise", partial:"a case reaches the status only — or it could be proving a different ending with the same status", untested:"no case reaches it", unmeasured:"no test can assert it today — effects, switch arms, provisions, races", gap:"a hole the forms found in the contract or the screen — the fix is code, not another test"}, cases:Object.fromEntries((fm.paths||[]).flatMap(p=>p.tests||[]).map(t=>[t.case,{name:t.name,file:t.file,state:t.state}])) };
 fs.writeFileSync(process.argv[2], JSON.stringify(out)); L.forEach(l=>console.log(l.name.padEnd(9), JSON.stringify(l.tally), "|", l.conds.map(c=>c.label).join(" · ").slice(0,140)));
