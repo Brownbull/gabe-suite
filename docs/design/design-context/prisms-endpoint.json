@@ -1,0 +1,190 @@
+{
+  "_about": "Authored words for the matrices page of the endpoint card. A block is keyed by the questions it holds (the clustering decides those, m1-cluster.js); if the blocks change, gen-matrices.js stops and asks for names. Plain lines follow gabe-lens plain mode and are checked by ../workflow-panel/plain-audit.py. Numbers are never typed here: {tokens} are filled by the generator.",
+  "clusterOpts": {
+    "minClusters": 3,
+    "maxClusters": 14,
+    "spineClusters": 3
+  },
+  "faceBudget": 5,
+  "faceFixed": [
+    "method-path"
+  ],
+  "faceFamilies": [
+    [
+      "the-endings",
+      "kinds-of-ending"
+    ]
+  ],
+  "farForm": {
+    "the-endings": "chips",
+    "kinds-of-ending": "chips",
+    "method-path": "mark"
+  },
+  "barFloor": 3,
+  "blocks": {
+    "Q1+Q2+Q9": {
+      "name": "Data effects",
+      "plain": "The rows the endpoint touches, the moment it touches them, and the fate of each change.",
+      "standpoint": "Your first standpoint: what we read, write, modify, create and delete."
+    },
+    "Q3+Q11": {
+      "name": "Endings",
+      "plain": "The ways a request can end, and the expected one among them.",
+      "standpoint": "The destinations in your standpoint on what determines the path. The forks that lead to them sit in Gates and decisions."
+    },
+    "Q4": {
+      "name": "Proof",
+      "plain": "The conditions a test proves, and the ones nothing reaches.",
+      "standpoint": "Your coverage standpoint, the part the lab calls Tests."
+    },
+    "Q5+Q7": {
+      "name": "Stages and order",
+      "plain": "The stations a request passes, and the order in which things run.",
+      "standpoint": "Your stage spine, read as a sequence. It is the time axis of the console."
+    },
+    "Q6+Q17": {
+      "name": "Gates and decisions",
+      "plain": "The checks that stop a request and the forks that decide its ending.",
+      "standpoint": "Your standpoint on what determines the path. The part the lab calls Security lands here, because a gate is one kind of fork."
+    },
+    "Q10+Q13": {
+      "name": "Structures",
+      "plain": "The shapes of the body that comes in and the body that goes out.",
+      "standpoint": "Your structures standpoint, the schemas."
+    },
+    "Q15+Q18+Q19": {
+      "name": "Functions",
+      "plain": "The code that runs, sorted by how much it decides.",
+      "standpoint": "Your functions standpoint, from the one facing the API down to the little helpers."
+    },
+    "Q16": {
+      "name": "In-flight state",
+      "plain": "The values that stay alive only while the request runs.",
+      "standpoint": "Your standpoint on what is saved temporarily and alive during the process. The map cannot read most of it yet."
+    },
+    "Q14+Q20": {
+      "name": "Overview and risk",
+      "plain": "The whole endpoint at a glance, and the things about it that look wrong.",
+      "standpoint": "None of your standpoints names it. It is what the face and the command panel answer before any view is chosen."
+    },
+    "Q12": {
+      "name": "Standard or specialist",
+      "plain": "The pieces this endpoint is built from, set against the pieces most endpoints share.",
+      "standpoint": "None of your standpoints names it. It is the common versus specialist lens from your forward ideas, and it compares endpoints instead of reading one."
+    },
+    "Q8": {
+      "name": "Client",
+      "plain": "The screen's side of each ending.",
+      "standpoint": "Your reach outward standpoint, the one the lab calls widening."
+    }
+  },
+  "levels": [
+    {
+      "key": "far",
+      "name": "far",
+      "plain": "The face of the card, as it sits on the graph or in a list."
+    },
+    {
+      "key": "mid",
+      "name": "mid",
+      "plain": "The open card in the middle panel, under one point of view."
+    },
+    {
+      "key": "near",
+      "name": "near",
+      "plain": "One part of the open card, drilled into."
+    },
+    {
+      "key": "tooltip",
+      "name": "hover",
+      "plain": "The hover over one thing."
+    },
+    {
+      "key": "portrait",
+      "name": "portrait",
+      "plain": "The full record of the one thing you clicked."
+    }
+  ],
+  "forms": {
+    "mark": "A single mark or label — present or absent, one value.",
+    "count": "A number, with no names yet.",
+    "chips": "A short row of named pieces.",
+    "list": "The full list, with the specifics of each item.",
+    "full": "The complete record, nothing held back.",
+    "alert": "An alert — invisible at rest, drawn on the face only when the value is abnormal."
+  },
+  "formWord": {
+    "mark": "a mark",
+    "count": "a count",
+    "chips": "named pieces",
+    "list": "the list",
+    "full": "the full record",
+    "alert": "an alert, only when abnormal"
+  },
+  "takes": {
+    "m1": [
+      "A filled block means its questions lean on the same attributes, so one point of view can answer them together.",
+      "A square outside every block is an attribute one view borrows from another.",
+      "The raters are three agents, not people. Each judged from a different seat: the operator at the console, the data engineer, and the minimalist.",
+      "The three marked {cells} cells between them, and {filled} stay filled after the merge. All three agreed on {unanimous}, and were one step apart on {adjacent}. On {split} one said needed and another said not needed, and a fourth agent ruled as judge."
+    ],
+    "prisms": [
+      "All six parts of the lab come back as blocks: data, schemas as structures, functions, tests as proof, security as gates and decisions, and widening as the client.",
+      "Five more blocks stand beside them: the endings, the stages and their order, in-flight state, the overview, and the comparison of one endpoint against the rest.",
+      "{nSingle} blocks hold a single question. Nothing joined them, which is weak evidence for a view of their own.",
+      "The cut falls at the widest gap in the joins, between {simAbove} and {simBelow}. The joins just past it are your merge candidates. {weak}."
+    ],
+    "spine": [
+      "“{top}” is needed most. {topNeed} of {nq} questions cannot be answered without it.",
+      "The top of this list is the face of the card. Everything lower appears only inside its own view.",
+      "A rating of 3 does not earn the face by itself. {n3} attributes are rated 3, and the face holds about {budget}.",
+      "{outranked}"
+    ],
+    "m2": [
+      "Read a row left to right. The first mark is where the attribute first shows.",
+      "The words earlier and later mark where the questions moved an attribute away from my first guess in the inventory.",
+      "A bell at the far view is an alert. It stays invisible until the value is abnormal."
+    ],
+    "left": [
+      "A question listed here needs an attribute the inventory lacks, or one the map cannot produce yet.",
+      "An attribute no question needs is a candidate to cut, or a sign that one of your questions is still missing."
+    ]
+  },
+  "leftovers": {
+    "unanswered": {
+      "title": "Gaps the raters named",
+      "plain": "A question where two or more raters said the inventory lacks something.",
+      "none": "No rater named anything missing."
+    },
+    "unneeded": {
+      "title": "Attributes no question needs",
+      "plain": "An attribute that only ever helps, and never decides an answer.",
+      "none": "Every attribute is needed by at least one question."
+    },
+    "blocked": {
+      "title": "Needed, but the map cannot produce it yet",
+      "plain": "An attribute a question needs that waits on new generation work.",
+      "none": "Nothing that is needed waits on the map."
+    }
+  },
+  "verdictWord": {
+    "keep": {
+      "plain": "A point of view worth its own entry in the command panel."
+    },
+    "merge": {
+      "plain": "A block that belongs inside another point of view — name that view in the note."
+    },
+    "drop": {
+      "plain": "A block that is no point of view at all."
+    }
+  },
+  "ownWord": {
+    "plain": "The share of these attributes' use that falls inside this view — a short bar means the view mostly borrows."
+  },
+  "ladderWord": {
+    "plain": "The similarity at which two groups of questions would join — a long bar means they lean on the same attributes."
+  },
+  "cutWord": {
+    "plain": "The cut — the widest drop between two joins in a row, so everything above it joined and nothing below it did."
+  }
+}

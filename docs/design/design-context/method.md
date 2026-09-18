@@ -68,5 +68,9 @@ the three depths of a hover (D-009), and where the animation and centring rules 
 5. The probe measures squint, grayscale and worst-case; Gabe runs the 5-second and timed questions on a harness.
 6. The result goes to `decisions.md`; the winner is promoted to the slot map and the tokens.
 
+**Status 2026-09-18, evening:** step 1 is done (ratings ruled, D-013; four proposed rows still wait for a rating on `rate-endpoint.html`). Step 2 is built
+and waits on Gabe: `matrices-endpoint.html` shows M1 reordered into eleven blocks, the ladder of joins with the cut, the shared band, the face the
+questions earn, and M2 by rule (D-014). His ruling on the blocks (Keep · Merge · Drop + a name) is what step 3 starts from.
+
 Two known conflicts with the rules are queued for the loop, not patched ahead of it: PATHS ▸ listing codes in the command
 panel (D-008) and the long hovers on headers, command cells and rail controls (D-009).

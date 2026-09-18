@@ -1,0 +1,3580 @@
+{
+ "_about": "M1 for the endpoint card: written by m1-merge.js from m1-endpoint.raw.json. Do not edit.",
+ "input_sha1": "d5e186f8",
+ "raters": [
+  "operator",
+  "engineer",
+  "minimalist"
+ ],
+ "cells": [
+  {
+   "q": "Q1",
+   "a": "the-endings",
+   "vals": [
+    1,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q1",
+   "a": "the-stage-an-ending-leaves-from",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q1",
+   "a": "own-guards",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q1",
+   "a": "deciding-branches",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q1",
+   "a": "catches",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q1",
+   "a": "switches",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q1",
+   "a": "steps-in-the-longest-chain",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q1",
+   "a": "tables-touched",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q1",
+   "a": "operation-per-table",
+   "vals": [
+    2,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q1",
+   "a": "fate-of-the-writes-per-ending",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q1",
+   "a": "the-moment-a-table-is-touched",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q1",
+   "a": "provisions",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q1",
+   "a": "data-touching-functions",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q2",
+   "a": "the-endings",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q2",
+   "a": "the-stage-an-ending-leaves-from",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q2",
+   "a": "status-code-per-ending",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q2",
+   "a": "catches",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q2",
+   "a": "tables-touched",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q2",
+   "a": "operation-per-table",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q2",
+   "a": "fate-of-the-writes-per-ending",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q2",
+   "a": "the-moment-a-table-is-touched",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q2",
+   "a": "provisions",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q2",
+   "a": "race-on-a-unique-key",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q2",
+   "a": "idempotency-claim",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q2",
+   "a": "data-touching-functions",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q3",
+   "a": "declared-status",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q3",
+   "a": "kinds-of-ending",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q3",
+   "a": "the-endings",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q3",
+   "a": "the-stage-an-ending-leaves-from",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q3",
+   "a": "status-code-per-ending",
+   "vals": [
+    2,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q3",
+   "a": "own-guards",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q3",
+   "a": "deciding-branches",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q3",
+   "a": "catches",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q3",
+   "a": "response-shape-per-ending",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q3",
+   "a": "findings",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q4",
+   "a": "kinds-of-ending",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q4",
+   "a": "the-endings",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q4",
+   "a": "the-stage-an-ending-leaves-from",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q4",
+   "a": "status-code-per-ending",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q4",
+   "a": "own-guards",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q4",
+   "a": "deciding-branches",
+   "vals": [
+    1,
+    2,
+    0
+   ],
+   "value": 1,
+   "split": true,
+   "reason": "Each arm is already its own ending on the list (replay · already done · first run), so the proof mark sits on the ending; the branch only explains why all three read 'partial' — a test that asserts 200 cannot say which arm it took.",
+   "judged": true
+  },
+  {
+   "q": "Q4",
+   "a": "catches",
+   "vals": [
+    1,
+    2,
+    0
+   ],
+   "value": 1,
+   "split": true,
+   "reason": "A catch's proof is the proof of the ending it feeds (the two 409s, the 401, the 500), so the mark is already on the ending; the catch adds which failure feeds it and that the 409s are proven by a service raise.",
+   "judged": true
+  },
+  {
+   "q": "Q4",
+   "a": "switches",
+   "vals": [
+    1,
+    2,
+    0
+   ],
+   "value": 1,
+   "split": true,
+   "reason": "No test can be pinned to a switch arm today, so every switch reads 'unmeasured' on every door — it names a known blind spot and points at the flag that gates the untested 429s, but it carries no verdict of its own.",
+   "judged": true
+  },
+  {
+   "q": "Q4",
+   "a": "fate-of-the-writes-per-ending",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q4",
+   "a": "provisions",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q4",
+   "a": "race-on-a-unique-key",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q4",
+   "a": "validation-cases",
+   "vals": [
+    1,
+    2,
+    0
+   ],
+   "value": 1,
+   "split": true,
+   "reason": "A test's 422 proves that some rule refused, never which one, so the mark lives on the single validation ending; the rules only show how much hides behind that 'partial'.",
+   "judged": true
+  },
+  {
+   "q": "Q4",
+   "a": "coverage-per-condition",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q4",
+   "a": "cases",
+   "vals": [
+    2,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q4",
+   "a": "findings",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q5",
+   "a": "kinds-of-ending",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q5",
+   "a": "the-endings",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q5",
+   "a": "the-stage-an-ending-leaves-from",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q5",
+   "a": "own-guards",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q5",
+   "a": "catches",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q5",
+   "a": "tables-touched",
+   "vals": [
+    1,
+    2,
+    0
+   ],
+   "value": 1,
+   "split": true,
+   "reason": "What SHOULD be at a stage is a standard line, the same on every door, so it is answered with no table on screen; the tables only feed the one 'on this door: n' fact beside it, and only under the Data topic.",
+   "judged": true
+  },
+  {
+   "q": "Q5",
+   "a": "operation-per-table",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q5",
+   "a": "the-moment-a-table-is-touched",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q5",
+   "a": "provisions",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q5",
+   "a": "idempotency-claim",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q5",
+   "a": "request-scoped-state",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q5",
+   "a": "client-cache-effects",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q5",
+   "a": "request-shape",
+   "vals": [
+    2,
+    2,
+    0
+   ],
+   "value": 2,
+   "split": true,
+   "reason": "It is the only row that says what belongs at INPUT for structures; no other row lets him infer it.",
+   "judged": true
+  },
+  {
+   "q": "Q5",
+   "a": "response-shape-per-ending",
+   "vals": [
+    2,
+    2,
+    0
+   ],
+   "value": 2,
+   "split": true,
+   "reason": "It is the only row that says what belongs at ANSWER for structures.",
+   "judged": true
+  },
+  {
+   "q": "Q5",
+   "a": "delivery",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q5",
+   "a": "validation-cases",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q5",
+   "a": "the-handler",
+   "vals": [
+    2,
+    2,
+    0
+   ],
+   "value": 2,
+   "split": true,
+   "reason": "It is what the HANDLER stage holds for the functions topic, and nothing else in the list says so.",
+   "judged": true
+  },
+  {
+   "q": "Q5",
+   "a": "data-touching-functions",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q5",
+   "a": "context-giving-functions",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q5",
+   "a": "auth-scheme-gate",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q5",
+   "a": "rate-limit",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q5",
+   "a": "app-band",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q6",
+   "a": "kinds-of-ending",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q6",
+   "a": "the-endings",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q6",
+   "a": "the-stage-an-ending-leaves-from",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q6",
+   "a": "status-code-per-ending",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q6",
+   "a": "own-guards",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q6",
+   "a": "deciding-branches",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q6",
+   "a": "catches",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q6",
+   "a": "switches",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q6",
+   "a": "provisions",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q6",
+   "a": "idempotency-claim",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q6",
+   "a": "request-scoped-state",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q6",
+   "a": "validation-cases",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q6",
+   "a": "context-giving-functions",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q6",
+   "a": "auth-scheme-gate",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q6",
+   "a": "rate-limit",
+   "vals": [
+    2,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q6",
+   "a": "app-band",
+   "vals": [
+    1,
+    2,
+    0
+   ],
+   "value": 2,
+   "split": true,
+   "reason": "It separates no door from another, but this question traces ONE request: the band is the first thing every route passes and the place both 429s fire, so the passed-then-stopped chain has no first link without it.",
+   "judged": true
+  },
+  {
+   "q": "Q7",
+   "a": "the-endings",
+   "vals": [
+    2,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": true,
+   "reason": "An ending picks one run and makes the sequence concrete, but the order of the steps holds for the door as a whole.",
+   "judged": true
+  },
+  {
+   "q": "Q7",
+   "a": "the-stage-an-ending-leaves-from",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q7",
+   "a": "own-guards",
+   "vals": [
+    1,
+    2,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q7",
+   "a": "deciding-branches",
+   "vals": [
+    1,
+    2,
+    0
+   ],
+   "value": 1,
+   "split": true,
+   "reason": "The order itself comes from the stages, the functions and the table touches; the branch marks the one spot where two of the three arms skip the long tail — a fork on the order, not the order.",
+   "judged": true
+  },
+  {
+   "q": "Q7",
+   "a": "catches",
+   "vals": [
+    1,
+    2,
+    0
+   ],
+   "value": 1,
+   "split": true,
+   "reason": "On a failure route the catch is the step that runs next and cuts the rest short, so it completes the failure routes; the normal order is read without it.",
+   "judged": true
+  },
+  {
+   "q": "Q7",
+   "a": "steps-in-the-longest-chain",
+   "vals": [
+    1,
+    2,
+    0
+   ],
+   "value": 0,
+   "split": true,
+   "reason": "It is a count — 22 — and a count cannot say what runs after what; once the chain is on screen its length is already visible.",
+   "judged": true
+  },
+  {
+   "q": "Q7",
+   "a": "the-moment-a-table-is-touched",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q7",
+   "a": "provisions",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q7",
+   "a": "events-published",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q7",
+   "a": "tasks-dispatched",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q7",
+   "a": "outside-services-called",
+   "vals": [
+    1,
+    0,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q7",
+   "a": "validation-cases",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q7",
+   "a": "the-handler",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q7",
+   "a": "decision-point-functions",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q7",
+   "a": "data-touching-functions",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q7",
+   "a": "context-giving-functions",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q7",
+   "a": "little-helpers-with-a-type",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q7",
+   "a": "functions-behind-walk-levels",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q7",
+   "a": "auth-scheme-gate",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q7",
+   "a": "app-band",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q8",
+   "a": "declared-status",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q8",
+   "a": "kinds-of-ending",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q8",
+   "a": "the-endings",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q8",
+   "a": "status-code-per-ending",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q8",
+   "a": "client-cache-effects",
+   "vals": [
+    1,
+    2,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q8",
+   "a": "response-shape-per-ending",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q8",
+   "a": "delivery",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q8",
+   "a": "cases",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q8",
+   "a": "journeys-workflow-step",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q8",
+   "a": "auth-scheme-gate",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q8",
+   "a": "who-fetches-it",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q8",
+   "a": "can-the-client-tell-the-endings-apart",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q8",
+   "a": "findings",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q9",
+   "a": "entity-cluster",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q9",
+   "a": "the-endings",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q9",
+   "a": "tables-touched",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q9",
+   "a": "operation-per-table",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q9",
+   "a": "fate-of-the-writes-per-ending",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q9",
+   "a": "the-moment-a-table-is-touched",
+   "vals": [
+    1,
+    2,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q9",
+   "a": "provisions",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q9",
+   "a": "data-touching-functions",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q10",
+   "a": "entity-cluster",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q10",
+   "a": "the-endings",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q10",
+   "a": "tables-touched",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q10",
+   "a": "operation-per-table",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q10",
+   "a": "the-moment-a-table-is-touched",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q10",
+   "a": "request-shape",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q10",
+   "a": "response-shape-per-ending",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q10",
+   "a": "validation-cases",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q10",
+   "a": "data-touching-functions",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q11",
+   "a": "declared-status",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q11",
+   "a": "kinds-of-ending",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q11",
+   "a": "the-endings",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q11",
+   "a": "the-stage-an-ending-leaves-from",
+   "vals": [
+    2,
+    2,
+    0
+   ],
+   "value": 1,
+   "split": true,
+   "reason": "It shows where each exception peels off the expected route, but the kind already says which is which.",
+   "judged": true
+  },
+  {
+   "q": "Q11",
+   "a": "status-code-per-ending",
+   "vals": [
+    2,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q11",
+   "a": "own-guards",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q11",
+   "a": "deciding-branches",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q11",
+   "a": "catches",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q11",
+   "a": "steps-in-the-longest-chain",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q11",
+   "a": "fate-of-the-writes-per-ending",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q11",
+   "a": "response-shape-per-ending",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q11",
+   "a": "coverage-per-condition",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q11",
+   "a": "cases",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q11",
+   "a": "journeys-workflow-step",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q11",
+   "a": "findings",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q12",
+   "a": "method-path",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q12",
+   "a": "entity-cluster",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q12",
+   "a": "declared-status",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q12",
+   "a": "risk-flag",
+   "vals": [
+    2,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": true,
+   "reason": "Size and heavy use say nothing about whether the pieces are shared or rare; a large door can be built entirely from standard pieces.",
+   "judged": true
+  },
+  {
+   "q": "Q12",
+   "a": "signature",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q12",
+   "a": "kinds-of-ending",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q12",
+   "a": "the-stage-an-ending-leaves-from",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q12",
+   "a": "own-guards",
+   "vals": [
+    2,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": true,
+   "reason": "Checks written in the handler's own code are the opposite of shared pieces, so their number is one sign of a specialist door, but only one among several.",
+   "judged": true
+  },
+  {
+   "q": "Q12",
+   "a": "catches",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q12",
+   "a": "switches",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q12",
+   "a": "steps-in-the-longest-chain",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q12",
+   "a": "tables-touched",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q12",
+   "a": "race-on-a-unique-key",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q12",
+   "a": "idempotency-claim",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q12",
+   "a": "events-published",
+   "vals": [
+    1,
+    2,
+    0
+   ],
+   "value": 2,
+   "split": true,
+   "reason": "'Specialist' shows in the stations most doors leave empty — 1 door in 80 publishes an event — so whether this slot is filled or hollow is itself part of the answer, and a publishing door would be called standard without it.",
+   "judged": true
+  },
+  {
+   "q": "Q12",
+   "a": "tasks-dispatched",
+   "vals": [
+    1,
+    2,
+    0
+   ],
+   "value": 2,
+   "split": true,
+   "reason": "Same station logic: work that outlives the answer is a piece a plain door does not have and no other attribute would show it, so the slot must be on screen, filled or hollow.",
+   "judged": true
+  },
+  {
+   "q": "Q12",
+   "a": "outside-services-called",
+   "vals": [
+    2,
+    2,
+    0
+   ],
+   "value": 1,
+   "split": true,
+   "reason": "Calling an LLM or a payment API is a sign of a specialist door, again one of several interchangeable signs.",
+   "judged": true
+  },
+  {
+   "q": "Q12",
+   "a": "request-shape",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q12",
+   "a": "delivery",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q12",
+   "a": "context-giving-functions",
+   "vals": [
+    2,
+    0,
+    2
+   ],
+   "value": 2,
+   "split": true,
+   "reason": "The shared dependencies are part of the standard band a door is judged against.",
+   "judged": true
+  },
+  {
+   "q": "Q12",
+   "a": "little-helpers-with-a-type",
+   "vals": [
+    0,
+    0,
+    1
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q12",
+   "a": "functions-behind-walk-levels",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q12",
+   "a": "auth-scheme-gate",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q12",
+   "a": "rate-limit",
+   "vals": [
+    1,
+    2,
+    0
+   ],
+   "value": 1,
+   "split": true,
+   "reason": "Nearly every door wears the app's limiter, so it cannot tell a standard door from a specialist one; it only confirms one more standard piece (here with a second, 'sensitive' tier), and the cap's numbers say nothing either way.",
+   "judged": true
+  },
+  {
+   "q": "Q12",
+   "a": "app-band",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q13",
+   "a": "declared-status",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q13",
+   "a": "kinds-of-ending",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q13",
+   "a": "the-endings",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q13",
+   "a": "the-stage-an-ending-leaves-from",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q13",
+   "a": "status-code-per-ending",
+   "vals": [
+    2,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q13",
+   "a": "request-shape",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q13",
+   "a": "response-shape-per-ending",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q13",
+   "a": "delivery",
+   "vals": [
+    1,
+    2,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q13",
+   "a": "validation-cases",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q13",
+   "a": "cases",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q14",
+   "a": "method-path",
+   "vals": [
+    2,
+    1,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q14",
+   "a": "entity-cluster",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q14",
+   "a": "risk-flag",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q14",
+   "a": "signature",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q14",
+   "a": "usage-fan-in",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q14",
+   "a": "kinds-of-ending",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q14",
+   "a": "the-endings",
+   "vals": [
+    2,
+    2,
+    0
+   ],
+   "value": 1,
+   "split": true,
+   "reason": "Their count is one measure of density, but a by-product of the list and not the measure the flag is cut from.",
+   "judged": true
+  },
+  {
+   "q": "Q14",
+   "a": "own-guards",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q14",
+   "a": "catches",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q14",
+   "a": "steps-in-the-longest-chain",
+   "vals": [
+    1,
+    2,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q14",
+   "a": "tables-touched",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q14",
+   "a": "operation-per-table",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q14",
+   "a": "fate-of-the-writes-per-ending",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q14",
+   "a": "race-on-a-unique-key",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q14",
+   "a": "functions-behind-walk-levels",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q14",
+   "a": "coverage-per-condition",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q14",
+   "a": "cases",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q14",
+   "a": "auth-scheme-gate",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q14",
+   "a": "can-the-client-tell-the-endings-apart",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q14",
+   "a": "findings",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q15",
+   "a": "method-path",
+   "vals": [
+    2,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q15",
+   "a": "entity-cluster",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q15",
+   "a": "file-line",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q15",
+   "a": "signature",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q15",
+   "a": "the-handler",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q15",
+   "a": "decision-point-functions",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q15",
+   "a": "data-touching-functions",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q15",
+   "a": "context-giving-functions",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q15",
+   "a": "little-helpers-with-a-type",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q16",
+   "a": "fate-of-the-writes-per-ending",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q16",
+   "a": "the-moment-a-table-is-touched",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q16",
+   "a": "provisions",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q16",
+   "a": "idempotency-claim",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q16",
+   "a": "request-scoped-state",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q16",
+   "a": "client-cache-effects",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q16",
+   "a": "data-touching-functions",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q16",
+   "a": "context-giving-functions",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q16",
+   "a": "auth-scheme-gate",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q16",
+   "a": "app-band",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q16",
+   "a": "who-fetches-it",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q17",
+   "a": "declared-status",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q17",
+   "a": "kinds-of-ending",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q17",
+   "a": "the-endings",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q17",
+   "a": "the-stage-an-ending-leaves-from",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q17",
+   "a": "status-code-per-ending",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q17",
+   "a": "own-guards",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q17",
+   "a": "deciding-branches",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q17",
+   "a": "catches",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q17",
+   "a": "switches",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q17",
+   "a": "race-on-a-unique-key",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q17",
+   "a": "idempotency-claim",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q17",
+   "a": "outside-services-called",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q17",
+   "a": "request-scoped-state",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q17",
+   "a": "request-shape",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q17",
+   "a": "validation-cases",
+   "vals": [
+    1,
+    2,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q17",
+   "a": "decision-point-functions",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q17",
+   "a": "context-giving-functions",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q17",
+   "a": "auth-scheme-gate",
+   "vals": [
+    1,
+    2,
+    0
+   ],
+   "value": 2,
+   "split": true,
+   "reason": "The question's own first example is the 401, and '401 Not authenticated' is decided by the scheme itself (no bearer token on the Authorization header) — no guard, branch, catch or switch carries it, so without this row that ending has no cause on screen.",
+   "judged": true
+  },
+  {
+   "q": "Q17",
+   "a": "rate-limit",
+   "vals": [
+    1,
+    2,
+    0
+   ],
+   "value": 1,
+   "split": true,
+   "reason": "What makes a 429 is already said by the ending's name, the limiter in the app band and the flag that switches it on; the cap only adds the number (more than 20 in 60 s).",
+   "judged": true
+  },
+  {
+   "q": "Q17",
+   "a": "app-band",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q17",
+   "a": "findings",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q18",
+   "a": "file-line",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q18",
+   "a": "signature",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q18",
+   "a": "the-endings",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q18",
+   "a": "own-guards",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q18",
+   "a": "deciding-branches",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q18",
+   "a": "catches",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q18",
+   "a": "tables-touched",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q18",
+   "a": "operation-per-table",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q18",
+   "a": "the-handler",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q18",
+   "a": "decision-point-functions",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q18",
+   "a": "data-touching-functions",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q18",
+   "a": "context-giving-functions",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q18",
+   "a": "little-helpers-with-a-type",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q18",
+   "a": "functions-behind-walk-levels",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q18",
+   "a": "auth-scheme-gate",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q19",
+   "a": "file-line",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q19",
+   "a": "steps-in-the-longest-chain",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q19",
+   "a": "validation-cases",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q19",
+   "a": "the-handler",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q19",
+   "a": "decision-point-functions",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q19",
+   "a": "data-touching-functions",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q19",
+   "a": "little-helpers-with-a-type",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q19",
+   "a": "functions-behind-walk-levels",
+   "vals": [
+    1,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "method-path",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "entity-cluster",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "declared-status",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "risk-flag",
+   "vals": [
+    2,
+    1,
+    1
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "usage-fan-in",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "kinds-of-ending",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "the-endings",
+   "vals": [
+    2,
+    2,
+    0
+   ],
+   "value": 1,
+   "split": true,
+   "reason": "The list is the detail under the kinds; the kinds already head the chapter, and the count of endings only says how much is under it.",
+   "judged": true
+  },
+  {
+   "q": "Q20",
+   "a": "the-stage-an-ending-leaves-from",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "switches",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "steps-in-the-longest-chain",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "tables-touched",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "operation-per-table",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "fate-of-the-writes-per-ending",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "events-published",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "tasks-dispatched",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "outside-services-called",
+   "vals": [
+    2,
+    2,
+    0
+   ],
+   "value": 2,
+   "split": true,
+   "reason": "A call that charges a card or spends on an LLM is an effect the tables row never shows; the three 'sets in motion' rows have no common head, so each is its own chapter.",
+   "judged": true
+  },
+  {
+   "q": "Q20",
+   "a": "client-cache-effects",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "request-shape",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "response-shape-per-ending",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "delivery",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "the-handler",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "data-touching-functions",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "functions-behind-walk-levels",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "coverage-per-condition",
+   "vals": [
+    2,
+    2,
+    2
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "cases",
+   "vals": [
+    0,
+    1,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "journeys-workflow-step",
+   "vals": [
+    1,
+    1,
+    0
+   ],
+   "value": 1,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "auth-scheme-gate",
+   "vals": [
+    1,
+    0,
+    0
+   ],
+   "value": 0,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "who-fetches-it",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  },
+  {
+   "q": "Q20",
+   "a": "findings",
+   "vals": [
+    2,
+    2,
+    1
+   ],
+   "value": 2,
+   "split": false
+  }
+ ],
+ "notes": {
+  "Q1": {
+   "operator": "The question has two halves — the table and its moment give the WHEN (a touch with no read/write kind is half a fact), and the forks that gate that step, the handler's own guards and the branch one call down, are the \"depends on\".",
+   "engineer": "The answer is one join — the table set keyed to its stage-and-step stamp — and the second half (\"on what does that depend\") is computed from the forks that stand above that step on the route, so the ending list plus the guards and callee arms that select it are the WHERE clause; operation, switches and catches only label or qualify the touch.",
+   "minimalist": "The question is two-part — WHICH table and WHEN comes from the touch roster plus the stage/step on each touch, and the \"depends on\" half is only answerable against the routes a touch belongs to, so the endings roster is the third irreducible row."
+  },
+  "Q2": {
+   "operator": "He must first pick THIS ending from the list, then read which tables that route wrote and the committed / rolled-back / uncommitted label on each — the fate row is the whole second half of the question.",
+   "engineer": "One ending is the row selector, operation filters the touches down to writes, and fate is the answer column itself — the other three of the four cannot be dropped because \"which tables were written\" is a filter over the touch set, not a fact stored anywhere else.",
+   "minimalist": "\"Which tables\" needs the roster, \"written\" needs the operation that separates a read from a write, and \"did it survive\" needs the per-ending fate — the ending itself is the selection the card is already scoped to, so it only helps."
+  },
+  "Q3": {
+   "operator": "The endings are the answer's body, the kinds are its vocabulary, the stage is the \"where does each leave\" half, and the status is how he names one out loud.",
+   "engineer": "The result set is the ending list crossed with its stage stamp, and because the task is summarize the answer is grouped by family — kinds is the GROUP BY, while the status code is the per-row label the console rules push to the middle as a filter.",
+   "minimalist": "The two halves of the question are exactly two rows — the list of endings and the stage each one leaves from; the kinds and the codes label that list without adding a member to it."
+  },
+  "Q4": {
+   "operator": "\"Conditions\" here are the endings and the guards, so he needs both lists plus the covered / partial / untested mark on each and the C-ids that are the proof.",
+   "engineer": "Coverage is the verdict column but it is meaningless without the denominator, and the denominator is the full condition estate — every ending plus every fork (guard, callee arm, catch, switch arm, 422 rule) — so each of those lists is an input to the count, not a decoration on it.",
+   "minimalist": "Coverage is the verdict and the endings are the roster it is a verdict over — without the roster the untested side of the answer has no names, and the C-ids only sharpen the proved side."
+  },
+  "Q5": {
+   "operator": "This is the frame question, not a content one: the stage spine plus the one attribute that occupies each stage per topic — EDGE the middleware band, GATE the scheme and the context-giving functions, INPUT the request shape and its 422 rules, HANDLER the handler and its guards, EFFECTS the moment of each touch, ANSWER the response shape.",
+   "engineer": "This is the spine query — stage is the partition key, so every column that carries a stage stamp or belongs to exactly one station (EDGE band, GATE scheme and dependencies, INPUT shape and rules, HANDLER, EFFECTS touches, ANSWER shape) is an input, and each stage would come out empty without its own.",
+   "minimalist": "Only three rows carry a stage position for their topic — endings leave from a stage, a table is touched at a stage, and the context functions run at the GATE — so the stage axis of every other topic is inherited from these."
+  },
+  "Q6": {
+   "operator": "A gate is either the auth check, a limiter or a handler precondition, so all three must be on screen beside the ending that fired and the stage it left from, which is what orders \"passed first\" against \"stopped here\".",
+   "engineer": "The stop is computed from the ending joined to the fork that produced it, and the passed-first half is computed from the ordered roster of checks ahead of that fork — the middleware band, the auth scheme and its checking function, then the handler's own guards.",
+   "minimalist": "A gate that stops a request is either the auth gate or a precondition in the handler's own code, and \"stopped\" is only meaningful against the ending it produced — the rest of the band tells you what was passed, not what fired."
+  },
+  "Q7": {
+   "operator": "Sequence is read off one route: the ending picks the route, the stage order carries the coarse \"after what\", and the named functions plus the stage·step of each table touch are the only things that place a step inside a stage.",
+   "engineer": "Sequence is the whole answer, and the only order-bearing columns are the stage stamps, the step stamp on a data touch and the chain length — so the ordering has to be reconstructed by joining those stamps to the functions and forks that sit at each station.",
+   "minimalist": "Execution order has to be reassembled: the handler is the entry, the context functions are what provably runs before it, and the step ordinal on a table touch is the only row that carries a position INSIDE the run."
+  },
+  "Q8": {
+   "operator": "Two 409s are told apart only by what differs in the answer and by what the screen reads, so he needs the endings with their codes, the body each one sends, the hook and screen that receive it, and the verdict row that says whether they land on one branch.",
+   "engineer": "The collision is computed by grouping endings on their status and asking whether the body carries anything that separates them, then joined across the bridge to the hook and screen that receives it — the verdict column plus the cache effects is what the client actually DOES with each.",
+   "minimalist": "The tell-apart verdict already prices the collapsed 409s, but it is a verdict about a set and a screen — the endings give the set and the hook-to-screen row gives the client doing the telling."
+  },
+  "Q9": {
+   "operator": "Only the endpoint's own touched set and the kind of each touch are on the card; the whole question is that set minus the panel's, and the read-only touches are the ones that go missing.",
+   "engineer": "This is a set difference and only the minuend is a column here — the touched set plus the kind and the station of each touch, which is what explains the undrawn ones (a read-only table, or a row provisioned at the gate before the handler).",
+   "minimalist": "One row answers it: the full touch roster is the only thing that can exceed what a panel drew, and the rest merely explains why the extra tables are invisible (touched at the gate, touched by a provision)."
+  },
+  "Q10": {
+   "operator": "From an endpoint card the only carriers of an entity's fields are the request shape, the per-ending response shape and the tables the door touches — everything else is about behaviour, not structure.",
+   "engineer": "From an endpoint card the only field-bearing columns are the two schemas, and the table list is the only thing that names the entity's storage — everything else here counts fields rather than listing them.",
+   "minimalist": "On an endpoint card the only rows that carry FIELDS are the two schemas, so they are the whole of the answerable part; the tables and the entity name only say which entity is being asked about."
+  },
+  "Q11": {
+   "operator": "Expected versus exception is read as success-kind against refusal-kind: the ending list split by kind, each one's code against the declared promise, and how early it leaves — an ending that leaves at EDGE is never the golden route.",
+   "engineer": "The split is computed by partitioning the endings on their family and testing each against the declared promise — the success that matches the decorator and runs to the ANSWER stage is the expected route, everything that leaves earlier is an exception.",
+   "minimalist": "Expected-versus-exception is read as success-versus-refusal over the ending list, so the kinds give the split and the endings give the members; everything else is corroboration (the declared promise, the tested route, the long chain)."
+  },
+  "Q12": {
+   "operator": "He judges standard-versus-specialist by the pieces the door is assembled from — the middleware band, the scheme, the context functions every door has — against the rare marks that only a few carry: an idempotency key, a stream, an outside service, extra switches or guards, and the size alert.",
+   "engineer": "The verdict is computed from a wiring fingerprint: the saturated columns say what every door has (band, scheme, limiter) and the rare-when-present columns say where this one departs (an idempotency key on 6 of 80, a stream on 1, an event, a task, an outside call) — those are the columns the comparison is actually made of.",
+   "minimalist": "\"Standard pieces\" means the shared band a door is assembled from — the middleware every door passes, the shared auth gate, the shared context dependencies — and a door that skips them or carries the rare rows instead is the specialist one."
+  },
+  "Q13": {
+   "operator": "In and out is one pair per ending, so the ending and its code are needed just to select the right response shape beside the single request shape.",
+   "engineer": "One ending selects the row, the two schema columns are the answer, and delivery belongs with them because on a streaming ending the shape that comes back is a sequence and the response shape alone would say it wrong.",
+   "minimalist": "In and out are literally the two schema rows, and the response row is already keyed per ending, so the ending is the selection rather than a second thing to show."
+  },
+  "Q14": {
+   "operator": "Three superlatives, three readings: density is the ending count, the tables and the functions behind; risk is the alert flag and the findings; least tested is the coverage fraction — and the door's name is what he says back.",
+   "engineer": "Three rankings over one table: density is computed from the size columns (chain length, functions behind, endings, tables), riskiest from the risk verdict and the findings, least tested from the coverage fraction — method and entity only label and group the ordering.",
+   "minimalist": "The answer is a door's NAME three times over, so identity is needed beside the three verdicts that already compress density (the risk flag), testedness (the coverage fraction) and risk (the findings) — the size counts only break ties."
+  },
+  "Q15": {
+   "operator": "Opening it takes exactly the anchor and the function it anchors, with the door's name as confirmation that it is the right one.",
+   "engineer": "An openable location is computed from exactly one column, the file and line, and the handler name is what turns that anchor into a thing the operator recognises when it opens.",
+   "minimalist": "Only one attribute can be opened in an editor — the file and line — while the handler name and the path merely say what will be found there."
+  },
+  "Q16": {
+   "operator": "Two attributes are the question by definition — what lived on the request and what the screen's cache kept or dropped — and everything else is one of the three known instances of that state riding on another row.",
+   "engineer": "Only two columns hold anything ephemeral — the values set early and read later in the request, and the client-side cache keys the answer seeds or drops — and every other column here is durable state by definition.",
+   "minimalist": "The question names the two ephemera exactly — what lived on the request while it ran, and what the client's cache did afterwards — and every other row is a permanent effect wearing a temporary face."
+  },
+  "Q17": {
+   "operator": "The four decision-point kinds are the four places a fork can sit — own code, one call down, a failure only, configuration — and they are only an answer when read against the ending and status they produce.",
+   "engineer": "Each status has to be traced to the fork that produced it, and the forks live in different columns by where they sit — the handler's own guards, an arm one call down, a catch on failure, a switch set before the request, plus the gate that makes the 401, the limiter that makes the 429 and the validation rules that make the 422.",
+   "minimalist": "Per the operator's own ruling the forks differ only by WHERE they sit — the handler's code, one call down, a failure path — so dropping any of the three loses a whole class of determinant, and the endings are what the forks choose between."
+  },
+  "Q18": {
+   "operator": "His four roles map one-to-one onto four attributes, so the needed set is simply those four — the rest is the fifth, uncrucial tier and the anchors for opening them.",
+   "engineer": "The question names its own four buckets and each is one column — the answer is the union of those four rosters, with everything else serving as the evidence that put a function in its bucket.",
+   "minimalist": "The question enumerates four classes and each is a separate row with no overlap — the API-facing one, the ones whose raise becomes an ending, the ones that touch data, the ones that build context — so four is already the minimum."
+  },
+  "Q19": {
+   "operator": "One attribute is the question verbatim — the small functions with their format / cap / validate type — and the rest only bounds where they sit in the walk.",
+   "engineer": "One column is the whole query — the helper roster with its type — and every other column can only bound the population the helpers are drawn from.",
+   "minimalist": "One row is the whole question — the small helpers carried with their type — and the walk counts only say how many of them there could be."
+  },
+  "Q20": {
+   "operator": "This is the table of contents, so the needed set is one head per topic and nothing below it: behaviour (the kinds and the endings), effects (the tables), impact beyond the request (events, tasks, outside services), reach (who fetches it), coverage, and the two alarms.",
+   "engineer": "This is the index query: one count per topic, so the needed set is the presence column of each topic the console offers — the endings and their families, the effects on the database, the impact that leaves the request (events, tasks, outside calls, the screens that fetch it), the coverage fraction and the anomalies.",
+   "minimalist": "This is the face itself: a name, the behaviour as concepts, the effects, and one coverage fraction is the smallest set that says what there is to explore without naming a single code."
+  }
+ },
+ "missing": {
+  "Q1": {
+   "operator": "Nothing attaches a condition to one individual table touch — the decision points are listed per ending and the touches per stage, so the operator joins the two himself.",
+   "engineer": "No column carries the ordered step chain per ending — the-moment gives a stage and a step stamp, never the sequence between two touches — and a touch inside a loop has no iteration or cardinality column.",
+   "minimalist": "Nothing states the condition ON a touch directly: the dependency has to be read backwards from which endings' routes contain it, and a touch inside a loop or a branch that may not run is not told apart from one that always runs."
+  },
+  "Q4": {
+   "operator": "Nothing says WHY an untested condition is untestable — an effect, a switch arm, a provision or a race that no test can assert reads the same as one nobody wrote a test for, beyond the single word \"unmeasured\".",
+   "engineer": "No column distinguishes \"a test could assert this and none does\" from \"no test could ever assert this\" per condition (effects, switch arms, provisions and races are unmeasurable by construction), and no column names WHICH assertion inside a case proves the condition."
+  },
+  "Q5": {
+   "operator": "Nothing states what SHOULD be at a stage — the expected slot per stage per topic is a norm no attribute carries, so today the answer can only be what IS there, which is exactly the diagnosis he ruled out.",
+   "engineer": "The expected-slot roster: no column says what a stage MUST hold, only what it does hold, so \"should\" is inferred by the reader — an expected-vs-present column per stage and topic is the one thing the card cannot compute.",
+   "minimalist": "No attribute says what SHOULD be at a stage: every row reports what IS there, so the expected slots per stage-and-topic are a template the inventory does not carry, and an empty stage cannot be told from a stage nothing measured."
+  },
+  "Q6": {
+   "operator": "Nothing records the order of the gates among themselves — which dependency resolves before which — so \"which ones did it pass first\" is answerable only at stage granularity.",
+   "engineer": "Order INSIDE a stage: the columns rank checks only by station, so two dependencies at the GATE cannot be told apart by which ran first — the per-ending ordered chain the prisms doc claims the feed carries has no column here.",
+   "minimalist": "The ORDER of the gates is not carried — which ran before which has to be inferred from the stage — and a gate that PASSED leaves no row of its own, so \"which ones did it pass first\" is answered only by elimination."
+  },
+  "Q7": {
+   "operator": "There is no ordered step list as an attribute — only counts (steps in the longest chain, walk levels) and stage positions — so \"what executes after what\" inside a single stage cannot be read off the card.",
+   "engineer": "The chain itself: there is a COUNT of steps on the longest route but no ordered step list per route, no call-site order between two functions at the same stage, and calls deeper than one level are collapsed with a reason rather than sequenced.",
+   "minimalist": "No attribute is the ordered chain itself — the call order between two functions that touch no table and raise nothing is not carried, so stretches of the run have no sequence at all."
+  },
+  "Q8": {
+   "operator": "Nothing shows what the screen DOES on each branch — the message, the retry, the redirect — only whether it can distinguish the endings at all.",
+   "engineer": "What the screen shows the user per ending, and whether it retries: the columns reach the branch and the cache keys, never the rendered message, the toast or the retry policy behind the branch.",
+   "minimalist": "What the screen DOES on an ending beyond distinguishing it — the message it shows, the redirect or retry it takes — is not carried by any row; only the cache effects of the success path are."
+  },
+  "Q9": {
+   "operator": "Nothing names the DRAWN set — which tables the Data panel actually renders — so the difference can be counted (15 touched, 13 drawn) but the two missing tables cannot be listed from the card.",
+   "engineer": "The subtrahend: the set of tables the Data panel draws (the entity's declared or mapped model roster) is not an attribute of the endpoint, so the difference cannot be computed from this list alone.",
+   "minimalist": "Which tables the Data panel actually draws is a property of the panel, not of the endpoint — no attribute records the drawn set, so the comparison needs the panel's own roster beside this one."
+  },
+  "Q10": {
+   "operator": "The fields themselves — a table's columns with type, nullability and the joins between them, and the hierarchy the question asks for — are not endpoint attributes; this question belongs to the model or schema card and only the shapes' names reach here.",
+   "engineer": "The model's own columns with their types, nullability and defaults, and the foreign keys between tables — the \"how they hang together\" half has no column at all; the endpoint card carries schema field COUNTS, not a field tree or a join key.",
+   "minimalist": "The entity's own field tree is absent from this list — a model's columns, their types, nullability and the foreign keys that make them hang together are not endpoint-card attributes, so \"how they hang together\" cannot be answered here at all."
+  },
+  "Q11": {
+   "operator": "Nothing marks a route as the EXPECTED one — there is no frequency, traffic or declared happy-path attribute — so \"expected\" is inferred from the success kind and the longest chain rather than read.",
+   "engineer": "Frequency: nothing observes how often each ending actually happens, so \"expected\" is a structural claim (the declared success, the longest chain) and not a measured one — a route that is nominally golden but fires once a month reads identically.",
+   "minimalist": "Nothing records which route is actually TAKEN most often — there is no frequency or observed-run attribute — so \"expected\" is inferred from the kind and the declared status, never from traffic."
+  },
+  "Q12": {
+   "operator": "The comparison base is absent: nothing on the card says how many of the estate's doors carry each piece (the common-vs-rare census, backlog B14), so \"standard\" stays a judgement rather than a reading.",
+   "engineer": "The population baseline: \"standard\" needs the distribution of each value across the other doors and across the other apps, and that census is not a column on the card — one row cannot tell common from rare.",
+   "minimalist": "The norm itself is outside the card: no attribute says how many other doors carry a row or reuse a named function, so common-versus-rare has to be brought in from a corpus census rather than read off the door."
+  },
+  "Q13": {
+   "operator": "The shapes are named and counted, not shown field by field — the same field-level gap as Q10, so \"what shape\" is answered by a name plus a count.",
+   "engineer": "The fields themselves: the schema columns carry counts and a type name, not the field list with types and rules, and no column carries the response HEADERS an ending sets.",
+   "minimalist": "The request shape is one schema for the whole door — no row says which of its fields a PARTICULAR ending actually read, so only the outbound half is truly per-ending."
+  },
+  "Q14": {
+   "operator": "The other doors — this is the only question that cannot be answered from one card; it needs the same attributes ranked across the estate (the far view), and no attribute carries a door's rank or the estate's distribution.",
+   "engineer": "The other rows: this is the only cross-door question and a card holds one door, so it needs the same columns for all 80 at once; and \"riskiest\" has no agreed formula — the risk flag is derived from size alone, with no traffic, no blast radius and no failure history feeding it.",
+   "minimalist": "Every row here is one door's value; nothing carries the app-wide distribution, so a superlative requires the same rows read across all 80 doors and ranked outside the card."
+  },
+  "Q15": {
+   "operator": "file:line exists for the handler only — the guards, branches, catches, tables and screens listed elsewhere on the card carry no anchor of their own, so \"open it\" works for one thing and stops there.",
+   "engineer": "Anchors for everything else: file:line exists once, for the handler, so a guard, a catch, a branch, a helper, a table's model class or a frontend hook has no location column — \"can I open it\" is answerable only for the door itself.",
+   "minimalist": "file:line is carried for the handler alone: no location exists for a guard, a catch, a called function, a schema or the screen, so \"open THIS one\" works for the door and for nothing inside it."
+  },
+  "Q16": {
+   "operator": "In-process ephemera has no attribute at all — a lock, an in-memory cache, the life of the database session — and request-scoped state itself is read by no general arm, so the answer is assembled from the auth context, the idempotency key and the session instead of listed.",
+   "engineer": "Most of the answer: no column reads server-side cache or locks, session objects, in-memory values, temporary files, or anything held across the request that is not a database row — and the one column that exists is partial in the feed, so the ephemera the operator means are largely invisible.",
+   "minimalist": "There is no general in-flight row (D-013): locks, in-process caches, a session's scratch values and anything else alive only during the request are not carried, so the answer is limited to the three instances that ride other attributes."
+  },
+  "Q17": {
+   "operator": "The predicate is carried for own guards but not for the other three kinds — a deciding branch or a catch names its exit, not the condition in the caller's words — and calls past one level are collapsed with a reason.",
+   "engineer": "The predicate's inputs: a guard's condition is named but not what a request must carry to falsify it, and forks more than one call deep are collapsed with a reason — so a status decided three levels down is attributed to the collapsed call, not to the condition."
+  },
+  "Q18": {
+   "operator": "Nothing says a function holds two roles at once — a function that both decides an ending and commits appears on two lists with no mark that it is the same one.",
+   "engineer": "A rule for overlap: a function that both decides an ending and commits sits in two buckets, and no column ranks which role is its principal one — nor is there a count of how many functions fall in none of the four."
+  },
+  "Q19": {
+   "operator": "Nothing marks which helpers sit inside a loop or how often they run — the walk gives depth, not repetition — and the TYPE the question asks for is a classification no arm produces today.",
+   "engineer": "Both halves in practice: the TYPE is not classified anywhere, and \"inside the loop\" is a containment relation (which function calls the helper, at which step) that no column carries — so the helpers cannot even be located relative to the chain, let alone typed.",
+   "minimalist": "\"Inside the loop\" has no attribute: no row says which helpers sit on a repeated or hot path, so the helper list cannot be narrowed to the loop even once the type is classified."
+  },
+  "Q20": {
+   "operator": "Nothing distinguishes a topic that is empty because the app has none from one that is empty because no arm reads it, so \"what is there to explore\" cannot say where this card is blind — the distinction D-012 asks for on the empty kinds.",
+   "engineer": "An empty-versus-unknown state per topic: D-012 gives it to the kinds of ending only, so for every other section a zero cannot be told from a generation gap, and nothing ranks which topic is worth opening first on this particular door.",
+   "minimalist": "Nothing marks what is EMPTY — an absent stream, event or task is carried as absence rather than as a hollow slot — so the operator cannot see the dimensions this door has nothing in, which is precisely what D-012 asks for."
+  },
+  "Q2": {
+   "engineer": "Nothing for the verdict; what is absent is the reason a given write ended in its bucket (which commit or rollback statement decided it) — catches names the failure translation but not the commit boundary that owned the write."
+  },
+  "Q3": {
+   "engineer": "Nothing — this is the one question the inventory answers completely; the only softness is that an ending's identity (a status plus a reason) is split across two columns rather than keyed as one."
+  }
+ },
+ "dropped": [],
+ "unjudged": [],
+ "counts": {
+  "cells": 301,
+  "unanimous": 73,
+  "adjacent": 202,
+  "split": 26,
+  "judged": 26
+ }
+}

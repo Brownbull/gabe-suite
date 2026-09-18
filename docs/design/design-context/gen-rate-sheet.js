@@ -5,6 +5,7 @@
      node docs/design/design-context/gen-rate-sheet.js --check    # exit 1 when the committed page is stale
 
    READS   inventory-endpoint.md      the record: sections, attributes, my proposed rating + why (never edited here)
+           inventory-parse.js         the one reader of the inventory file (shared with gen-matrices.js)
            rate-sheet.words.json      authored plain lines, keyed by row slug (checked by ../workflow-panel/plain-audit.py)
            ../workflow-panel/_lab-ep.js   the lab's GENERATED facts — every example under a row is computed from it, never typed
            skills/gabe-artifact/assets/artifact-chrome.html   the kit: its three blocks are pasted verbatim
@@ -19,42 +20,10 @@ const KIND = "endpoint-card";
 const die = (m) => { console.error("gen-rate-sheet: " + m); process.exit(2); };
 
 /* ── 1 · the inventory ─────────────────────────────────────────────────── */
-const md = fs.readFileSync(INV, "utf8");
-const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-const unbold = (s) => s.replace(/\*\*/g, "").trim();
-const sections = [];
-let cur = null;
-for (const line of md.split("\n")) {
-  const h = line.match(/^## (.+)$/);
-  if (h && /^The face/.test(h[1])) break;                /* the inventory ends here; the face proposal and the notes are prose */
-  if (h) { cur = { title: h[1].trim(), rows: [] }; sections.push(cur); continue; }
-  if (!cur || !line.startsWith("|") || /^\|\s*-{3}/.test(line) || /^\|\s*attribute\s*\|/.test(line)) continue;
-  const cells = line.split("|").slice(1).map((c) => c.trim());
-  while (cells.length && cells[cells.length - 1] === "") cells.pop();
-  if (cells.length !== 8) die(`row with ${cells.length} cells, expected 8: ${line.slice(0, 80)}`);
-  const [name, type, card, imp, why, vol, rel, first] = cells;
-  const label0 = name.split(" (")[0].trim(), sub = (name.match(/\((.+)\)\s*$/) || [])[1] || null;
-  const gapM = first.match(/\*\*(.+?)\*\*/) || type.match(/\*\*(.+?)\*\*/);
-  cur.rows.push({
-    id: slug(label0), label: label0.charAt(0).toUpperCase() + label0.slice(1), sub,
-    type: unbold(type), cardFull: unbold(card), why: unbold(why), volatile: unbold(vol), rel: unbold(rel),
-    first: unbold(first.replace(/\s*[—,]\s*\*\*.+?\*\*\s*$/, "")).replace(/\bfar\b/, "far (the face)"), gap: gapM ? unbold(gapM[1]).replace(/^feed gap:\s*/, "") : null,
-    mine: proposal(imp.replace(/\s*\(proposed\)/, "")), fresh: /\(proposed\)/.test(imp),
-  });
-}
-function proposal(cell) {                       /* "**3** if uncaught, else 1" → base 1 + alert · "alarm channel only" → base 1 + alert */
-  const raw = unbold(cell).replace(/\s+/g, " "), nums = (raw.match(/[123]/g) || []).map(Number), els = raw.match(/else ([123])/);
-  let base, alarm;
-  if (els) { base = Number(els[1]); alarm = true; }
-  else if (nums.length >= 2) { base = nums[0]; alarm = true; }
-  else if (nums.length === 1) { base = nums[0]; alarm = /alarm|alert/i.test(raw); }
-  else { base = 1; alarm = true; }
-  return { base, alarm, raw };
-}
+let INVP; try { INVP = require("./inventory-parse.js").parseInventory(INV); } catch (e) { die(e.message); }
+const { md, sections } = INVP, slug = require("./inventory-parse.js").slug;
 const rows = sections.flatMap((s) => s.rows);
 if (rows.length < 10) die("the inventory parsed to " + rows.length + " rows");
-const dup = rows.map((r) => r.id).filter((id, i, a) => a.indexOf(id) !== i);
-if (dup.length) die("duplicate slugs: " + dup.join(", "));
 
 /* ── 2 · the words ─────────────────────────────────────────────────────── */
 const W = JSON.parse(fs.readFileSync(path.join(HERE, "rate-sheet.words.json"), "utf8"));
@@ -152,13 +121,8 @@ for (const r of rows) {
 }
 
 /* ── 4 · the kit, verbatim ─────────────────────────────────────────────── */
-const kit = fs.readFileSync(path.join(ROOT, "skills/gabe-artifact/assets/artifact-chrome.html"), "utf8");
-const cut = (block, from, to) => {                      /* a block starts at its `<!-- ══ BLOCK n` marker, never at a mention in the header comment */
-  const m = kit.indexOf("<!-- ══ BLOCK " + block), a = kit.indexOf(from, m), b = kit.indexOf(to, a);
-  if (m < 0 || a < 0 || b < 0) die("kit block " + block + " not found"); return kit.slice(a, b + to.length); };
-const k1 = cut(1, "<style>", "</style>");
-let k2 = cut(2, "<div class=\"af-chrome\">", "</div>\n</div>");
-let k3 = cut(3, "<script>", "</script>");
+let KIT; try { KIT = require("./kit-blocks.js").kitBlocks(ROOT); } catch (e) { die(e.message); }
+const k1 = KIT.k1; let k2 = KIT.k2, k3 = KIT.k3;
 const swap = (s, a, b) => { if (!s.includes(a)) die("kit text to adapt not found: " + a.slice(0, 50)); return s.replace(a, b); };
 /* a page with no animation drops the Motion group (the kit says so); its place takes the page's own Detail group */
 k2 = k2.replace(/\s*<!-- Drop this Motion group[^>]*-->/, "");
@@ -168,7 +132,7 @@ k3 = swap(k3, 'mark(mhost, on ? "on" : "off");', 'if (mhost) mark(mhost, on ? "o
 
 /* ── 5 · the page ──────────────────────────────────────────────────────── */
 const data = {
-  kind: KIND, endpoint: `${I.method} ${I.path}`, head: f.head, ruled: (md.match(/^Ruled:\s*(\d{4}-\d{2}-\d{2})\s*$/m) || [])[1] || null,
+  kind: KIND, endpoint: `${I.method} ${I.path}`, head: f.head, ruled: INVP.ruled,
   inv: { file: "inventory-endpoint.md", hash: crypto.createHash("sha1").update(md).digest("hex").slice(0, 8) },
   ui: Object.fromEntries(Object.entries(W.ui).map(([k, v]) => [k, v.plain])),
   sections: sections.map((s) => ({ title: s.title, short: s.short, slug: s.slug, icon: s.icon, plain: s.plain, rows: s.rows })),
