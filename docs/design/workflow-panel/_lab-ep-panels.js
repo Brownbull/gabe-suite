@@ -881,6 +881,44 @@
   window.KINDICON = function(key, z){ var x = TYPEC.filter(function(t){ return t.key === key; })[0]; return x ? ico(x.sym, z || 14, x.col(S)) : ""; };
   window.FOOTDEF = FOOTDEF;
 
+  /* ══ THE BLOCK (operator 2026-09-17: "for data we worked super hard on the BLOCKS layout — the blocks
+     are the perfect representation of each table; we keep that"). ONE builder, so any distribution that
+     wants blocks draws the SAME thing: the title lines the rail arranged, the field marks at their set
+     size and opacity, the entity edge, one hover card and one click into the portrait. `extra` rides the
+     first title line's right column — a count, a fate chip — and is the only thing a caller may add. ══ */
+  function dataBlockNode(t, F, S, extra){
+    var sel = (window.SEL || {}).data, portOn = (window.FRAME || {}).portW > 0;
+    var fkSet = {}; (t.fks || []).forEach(function(f){ fkSet[Array.isArray(f) ? f[0] : f] = (Array.isArray(f) && f[1]) ? f[1] : true; });
+    var uqSet = {}; (t.uqs || []).forEach(function(u){ (Array.isArray(u) ? u : [u]).forEach(function(c){ uqSet[c] = 1; }); });
+    var blk = E("div", { class: "blk rw-" + t.rw + (sel === t.table ? " sel" : ""), style: "--ec:" + (t.entity_color || "#888") });
+    blk.dataset.table = t.table;
+    var hd = E("div", { class: "bkhd" }), ti = E("div", { class: "bkti" });
+    bkLines(t, S).forEach(function(line){ var ln = E("div", { class: "bkln" });
+      function put(into, ns){ ns.forEach(function(n){ if (typeof n === "string") into.insertAdjacentHTML("beforeend", n); else into.append(n); }); }
+      var L = E("div", { class: "bkcol l" }), R = E("div", { class: "bkcol r" });
+      put(L, line.l); put(R, line.r); ln.append(L, R); ti.append(ln); });
+    if (extra && extra.length) { var host = ti.querySelector(".bkln .bkcol.r") || ti;
+      extra.forEach(function(n){ if (n) host.append(n); }); }
+    hd.append(ti);
+    var sqs = E("div", { class: "sqs" });
+    t.cols.forEach(function(c){ var isFk = fkSet[c[0]], isUq = uqSet[c[0]];
+      /* no card of its own — the whole block carries ONE card (operator 2026-09-13) */
+      sqs.append(sqNode(c, t, S, (isFk ? "fk" : "") + (isUq ? " uq" : ""))); });
+    hd.append(sqs);
+    blk.append(hd);
+    var list = E("div", { class: "flds bkfl" });
+    t.cols.forEach(function(c){ var isFk = fkSet[c[0]], isUq = uqSet[c[0]];
+      list.append(E("div", { class: "fld" + (isFk ? " fk" : "") + (isUq ? " uq" : "") },
+        sqNode(c, t, S), E("span", { class: "fn" }, esc(c[0])), fkMarks(t, c[0]), E("span", { class: "ft" }, esc(c[1] || "—")))); });
+    blk.append(list);
+    /* ONE hover and ONE click for the WHOLE block (operator 2026-09-13): no dead corners, and no field
+       mark with a card of its own competing with the table's */
+    bind(blk, function(){ return blockCard(t, S); });
+    blk.addEventListener("click", function(){
+      if (portOn) { window.selectIn("data", t.table); }
+      else blk.classList.toggle("open"); });
+    return blk; }
+
   function renderDataBlocks(box, F, S){
     var D = F.data, TS = dtables(D), DC = window.DATACFG || {}, B = bkcfg();
     var sel = (window.SEL || {}).data, portOn = (window.FRAME || {}).portW > 0;
@@ -889,38 +927,7 @@
       + (portOn ? "a table and its whole record opens in the portrait beside this panel." : "a table to name every field at once (the portrait is off, so it opens in place)."));
     if (!TS.length) { chanEmpty(box, D, S); COV.mark("ACCESSES", "data"); return; }
     var body = E("div", { class: "bkbody form-" + B.form });
-    sortTables(TS).forEach(function(t){
-      var fkSet = {}; (t.fks || []).forEach(function(f){ fkSet[Array.isArray(f) ? f[0] : f] = (Array.isArray(f) && f[1]) ? f[1] : true; });
-      var uqSet = {}; (t.uqs || []).forEach(function(u){ (Array.isArray(u) ? u : [u]).forEach(function(c){ uqSet[c] = 1; }); });
-      var mix = {}; t.cols.forEach(function(c){ var k = typeOf(c[1]).key; mix[k] = (mix[k] || 0) + 1; });
-      var blk = E("div", { class: "blk rw-" + t.rw + (sel === t.table ? " sel" : ""), style: "--ec:" + (t.entity_color || "#888") });
-      blk.dataset.table = t.table;
-      var hd = E("div", { class: "bkhd" }), ti = E("div", { class: "bkti" });
-      bkLines(t, S).forEach(function(line){ var ln = E("div", { class: "bkln" });
-        function put(into, ns){ ns.forEach(function(n){ if (typeof n === "string") into.insertAdjacentHTML("beforeend", n); else into.append(n); }); }
-        var L = E("div", { class: "bkcol l" }), R = E("div", { class: "bkcol r" });
-        put(L, line.l); put(R, line.r); ln.append(L, R); ti.append(ln); });
-      hd.append(ti);
-      var sqs = E("div", { class: "sqs" });
-      t.cols.forEach(function(c){ var tc = typeOf(c[1]), opt = isOpt(c[1]), isFk = fkSet[c[0]], isUq = uqSet[c[0]];
-        var q = sqNode(c, t, S, (isFk ? "fk" : "") + (isUq ? " uq" : ""));
-        /* no card of its own — the whole block carries ONE card (operator 2026-09-13) */
-        sqs.append(q); });
-      hd.append(sqs);
-
-      blk.append(hd);
-      var list = E("div", { class: "flds bkfl" });
-      t.cols.forEach(function(c){ var tc = typeOf(c[1]), isFk = fkSet[c[0]], isUq = uqSet[c[0]];
-        list.append(E("div", { class: "fld" + (isFk ? " fk" : "") + (isUq ? " uq" : "") },
-          sqNode(c, t, S), E("span", { class: "fn" }, esc(c[0])), fkMarks(t, c[0]), E("span", { class: "ft" }, esc(c[1] || "—")))); });
-      blk.append(list);
-      /* ONE hover and ONE click for the WHOLE block (operator 2026-09-13): no dead corners, and no field mark with a
-         card of its own competing with the table's */
-      bind(blk, function(){ return blockCard(t, S); });
-      blk.addEventListener("click", function(){
-        if (portOn) { window.selectIn("data", t.table); }
-        else blk.classList.toggle("open"); });
-      body.append(blk); });
+    sortTables(TS).forEach(function(t){ body.append(dataBlockNode(t, F, S)); });
     box.append(body);
     var mixAll = {}; TS.forEach(function(t){ t.cols.forEach(function(c){ var k = typeOf(c[1]).key; mixAll[k] = (mixAll[k] || 0) + 1; }); });
     /* THE FOOTER ROW (operator 2026-09-13) — one row of parts with a LEFT and a RIGHT column, ordered by drag like the
@@ -976,7 +983,8 @@
     { key: "ANSWER", holds: "the status this ending answers with",
       plain: "the reply the caller gets" } ];
   var DSTGBUCK = ["committed", "maybe_committed", "rolled_back", "uncommitted"];
-  function stgCfg(){ var C = window.DATACFG || {}; return C.stages || { axis: "cols", union: "counts", fate: "station", rail: "shown" }; }
+  function stgCfg(){ var C = window.DATACFG || {};
+    return C.stages || { axis: "rows", union: "counts", fate: "station", rail: "shown", placement: "every", empty: "shown" }; }
   /* the stage a step happened at — the effects arm's own `dependency` flag, nothing guessed */
   function stgOf(st){ return st.dependency ? "GATE" : "HANDLER"; }
   function stgPaths(F){ var fm = FRM(F); return fm ? (fm.paths || []) : []; }
@@ -1191,6 +1199,123 @@
       .concat([{ t: "read", swatch: "background:var(--muted)" }, { t: "not in the Data panel", swatch: "background:transparent;border:1px dashed var(--muted)" }])));
     box.append(foot);
     COV.mark("ACCESSES", "data"); COV.mark("CONNECTIONS", "data");
+  }
+
+  /* ══ DATA · G "stage blocks" — the BLOCKS, grouped under the stage that touches them ══════════════
+     operator 2026-09-17: "for data we worked super hard on the BLOCKS layout — the blocks are the perfect
+     representation of each table; we keep that. The endpoint has stages: show the tables throughout those
+     stages, and when I hover a stage the information is NOT diagnostic — only what should be there in that
+     stage for this topic."
+     So: the same block, the same card, the same marks — `dataBlockNode` builds every one of them — laid in
+     bands (or columns) on the standard spine. The bucketing is the `stages` grid's own (`stgIndex`), so the
+     two distributions can never disagree about where a table is touched. A stage's header card states the
+     EXPECTATION for this topic, and one measured row beside it; it never grades what it found.        ══ */
+  var STAGE_EXPECT = window.STAGE_EXPECT = { data: {
+    EDGE:    "no table — the app band checks the request before any data is touched",
+    GATE:    "the rows the lock reads or creates to know who is knocking — here the user row, provisioned before the body is read",
+    INPUT:   "no table — the body is read and checked against its shape, not against the database",
+    HANDLER: "the reads and writes the door's own code makes — every table it touches, in the order it touches them",
+    EFFECTS: "the fate of each write — committed, still open, or rolled back — decided by the ending",
+    ANSWER:  "no table — the reply is built from what was already read; nothing is touched here" } };
+  /* which tables belong under which stage — the ONE rule, read by both stage distributions */
+  function stgPlacement(F){ var C = stgCfg(), idx = stgIndex(F), p = pathById(F, (window.SEL || {}).path);
+    var per = p ? idx.per[p.id] : null, out = {}, first = {};
+    DSTG.forEach(function(s){ out[s.key] = []; });
+    var known = {}; dtables(F.data).forEach(function(t){ known[t.table] = t; });
+    function add(stage, table, n){ out[stage].push({ table: table, t: known[table] || null, n: n }); }
+    /* GATE and HANDLER: the touches themselves */
+    ["GATE", "HANDLER"].forEach(function(g){
+      stgRows(F).forEach(function(r){
+        if (per) { var list = (per.t[r.table] || {})[g] || []; if (list.length) add(g, r.table, list.length); }
+        else { var ps = (idx.union[r.table] || {})[g] || []; if (ps.length) add(g, r.table, ps.length); } }); });
+    /* EFFECTS: the tables whose writes have a FATE — the ending decides it */
+    stgRows(F).forEach(function(r){
+      var b = per ? (per.bucket[r.table] || null) : (idx.uBucket[r.table] || null);
+      if (b && Object.keys(b).length) add("EFFECTS", r.table, b); });
+    /* `first touch`: one block per table, under the earliest stage it appears at, with ticks for the rest */
+    if (C.placement === "first") { var seen = {};
+      DSTG.forEach(function(s){ out[s.key] = out[s.key].filter(function(c){
+        if (seen[c.table]) { first[c.table].push(s.key); return false; }
+        seen[c.table] = s.key; first[c.table] = []; return true; }); }); }
+    return { at: out, ticks: first, per: per, idx: idx, path: p }; }
+  function stgHeadNode(s, n, F, S, place){
+    var h = E("div", { class: "sbhd" }); h.dataset.stage = s.key;
+    h.append(E("i", { class: "sbord" }, esc(String(DSTG.indexOf(s) + 1))),
+             E("b", null, esc(s.key)),
+             E("span", { class: "sbn" }, esc(n ? String(n) : "—")));
+    var nT = 0, nP = 0;
+    (place.at[s.key] || []).forEach(function(c){ nT++; nP += typeof c.n === "number" ? c.n : 0; });
+    var fact = !nT ? "none — and none is expected"
+      : (place.path ? nT + " table(s) on " + pathWord(place.path) : nT + " table(s), " + nP + " touch(es) across every ending");
+    tipBind(h, function(){ return cmdc({ title: s.key, value: "data", icon: "journey", color: S.KINDCOL.model,
+      rows: [["on this door", fact]],
+      plain: (STAGE_EXPECT.data || {})[s.key] }); }, function(){ return esc(s.key + " · " + fact); });
+    return h; }
+  function stgTickNode(keys, S){ var t = E("span", { class: "sbtick" });
+    keys.forEach(function(k){ t.append(E("i", null, esc(k.charAt(0)))); });
+    bind(t, function(){ return cmdc({ title: "also at", value: keys.join(" · "), icon: "journey", color: "var(--muted)",
+      rows: keys.map(function(k){ return [k, (STAGE_EXPECT.data || {})[k]]; }),
+      plain: "the other stages that touch this table — the block is drawn once, under the first of them" }); });
+    return t; }
+  function renderDataStageBlocks(box, F, S){
+    var D = F.data, C = stgCfg(), fm = FRM(F), TS = dtables(D), FA = stgFates(S);
+    var p = pathById(F, (window.SEL || {}).path);
+    dhead(box, F, D, TS, "layers",
+      "the same block per table, grouped under the stage that touches it. "
+      + (p ? "Reading the " + pathWord(p) + " ending: only what that path did."
+           : "No ending is chosen, so a block sits under every stage any ending touches it at — the number on its title line counts them."));
+    if (!TS.length) { chanEmpty(box, D, S); COV.mark("ACCESSES", "data"); return; }
+    if (!fm) { box.append(E("div", { class: "pempty" }, ico("journey", 15, "var(--muted)"),
+      E("b", null, "the forms feed is " + ((F.forms || {}).state || "absent")),
+      E("span", null, "the stages are read from the element forms; without that feed there is nothing to group the blocks under."))); COV.mark("ACCESSES", "data"); return; }
+    var place = stgPlacement(F);
+    var wrap = E("div", { class: "sbwrap" });
+    wrap.dataset.axis = C.axis === "cols" ? "cols" : "rows";
+    DSTG.forEach(function(s){
+      var cells = place.at[s.key] || [];
+      if (!cells.length && C.empty === "hidden") return;
+      var g = E("div", { class: "sbgrp" + (cells.length ? "" : " open") }); g.dataset.stage = s.key;
+      g.append(stgHeadNode(s, cells.length, F, S, place));
+      var body = E("div", { class: "sbbody bkbody form-" + bkcfg().form });
+      cells.forEach(function(c){
+        if (!c.t) { /* a table the effects arm touches that the panel's own list does not carry */
+          var ho = E("div", { class: "blk hollow" }); ho.dataset.table = c.table;
+          ho.append(E("div", { class: "bkhd" }, E("div", { class: "bkti" }, E("div", { class: "bkln" },
+            E("div", { class: "bkcol l" }, E("b", null, esc(c.table))), E("div", { class: "bkcol r" })))));
+          bind(ho, function(){ return cmdc({ title: c.table, value: "not in the Data panel", icon: "table", color: "var(--muted)",
+            rows: [["stage", s.key], ["hollow", "the effects arm touches it, the panel's own table list does not carry it — drawn anyway so the gap is visible"]],
+            plain: "a table this door touches that the Data panel never draws" }); });
+          body.append(ho); return; }
+        var extra = [];
+        if (s.key === "EFFECTS") { var b = c.n;
+          DSTGBUCK.forEach(function(k){ var nb = b[k]; if (!nb) return; var fa = FA[k];
+            /* `fchip`, not `bchip`: the projection sweeps every .bchip off the panel before it marks it,
+               and this chip is the PICTURE's own, drawn at EFFECTS where the fate belongs */
+            var chip = E("i", { class: "fchip bk-" + k }, esc(fa.word + " ×" + nb));
+            chip.style.setProperty("--bc", fa.col);
+            bind(chip, function(){ return cmdc({ title: c.table, value: fa.word + " ×" + nb, icon: "table", color: fa.col,
+              rows: [["on", place.path ? pathWord(place.path) : "every ending that writes it"],
+                     ["stage", "EFFECTS — the ending decides the fate"]],
+              plain: fa.plain }); });
+            extra.push(chip); }); }
+        else if (!place.path && typeof c.n === "number") { var pill = E("i", { class: "bkxp", style: pillLook("num", S) }, esc(String(c.n)));
+          bind(pill, function(){ return cmdc({ title: c.table, value: c.n + " of " + (fm.paths || []).length + " endings", icon: "journey", color: S.KINDCOL.model,
+            rows: [["stage", s.key], ["counts", "the endings that touch this table here"]],
+            plain: "how many of this door's endings meet this table at this stage" }); });
+          extra.push(pill); }
+        var node = dataBlockNode(c.t, F, S, extra);
+        node.dataset.stage = s.key;
+        if (C.placement === "first" && (place.ticks[c.table] || []).length)
+          node.querySelector(".bkhd").append(stgTickNode(place.ticks[c.table], S));
+        body.append(node); });
+      if (!cells.length) body.append(E("div", { class: "sbnone" }, esc((STAGE_EXPECT.data || {})[s.key])));
+      g.append(body); wrap.append(g); });
+    box.append(wrap);
+    var foot = E("div", { class: "pfoot" });
+    foot.append(legend(DSTG.map(function(s){ return { t: s.key.toLowerCase(), swatch: (place.at[s.key] || []).length
+      ? "background:color-mix(in srgb, " + S.KINDCOL.model + " 45%, transparent)" : "background:transparent;border:1px dashed var(--muted)" }; })));
+    box.append(foot);
+    COV.mark("ACCESSES", "data"); COV.mark("PAYLOAD", "data"); COV.mark("CONNECTIONS", "data");
   }
 
   /* ── THE DATA PORTRAIT — whatever table you clicked, at full detail, beside the picture ── */
@@ -3010,7 +3135,7 @@
     /* DATA — a written table wears its BUCKET chip. The Stages distribution draws the fate at its own
        EFFECTS column, so the chip would say the same thing twice: a card mirrors its thing and never
        repeats a fact another line carries (the pattern book). The dimming above still applies. */
-    if (part === "data" && (window.PANELVAR ? window.PANELVAR("data") : null) === "stages") { /* the picture already says it */ }
+    if (part === "data" && ["stages", "stageblocks"].indexOf(window.PANELVAR ? window.PANELVAR("data") : null) >= 0) { /* the picture already says it */ }
     else if (part === "data") { var BK = { committed: S.OPC.read, maybe_committed: S.OPC.gate, rolled_back: (S.BADGE_COL.role || {}).accessor, uncommitted: "transparent" };
       var BW = { committed: "committed", maybe_committed: "maybe", rolled_back: "rolled back", uncommitted: "uncommitted" };
       var ORD = ["committed", "maybe_committed", "rolled_back", "uncommitted"];
@@ -3176,7 +3301,7 @@
   /* ── the registry — icons are STATION icons (words on hover), counts answer A ─────────── */
   window.PANELS = {
     data: { icon: "table", word: "Data", col: S.KINDCOL.model,
-      defaultVariant: "stages",      /* the operator's model, 2026-09-17: the topic across the door's standard stages */
+      defaultVariant: "stageblocks", /* the operator's model, 2026-09-17: the BLOCKS, grouped by stage */
       portraitSubject: function(F){ var t = selTable(F); return t ? t.table : null; },
       portraits: [ { key: "record", label: "Record", icon: "doc", hint: "everything the feed knows about the table, in rows — the densest honest reading", render: dataPortrait },
                    { key: "shape", label: "Shape", icon: "model", hint: "the drum as the graph draws it, with every field a cell beneath it", render: dataShape },
@@ -3188,7 +3313,8 @@
                   { key: "ledger", label: "Ledger", hint: "one row per table with every column the feed knows (entity · rw · shape · cols · fk · uq · model). The densest honest form.", render: renderDataLedger },
                   { key: "fields", label: "Fields", hint: "the columns THEMSELVES, named and typed, filtered by channel — written, read, or both. The one distribution where the fields ARE the picture instead of a stack of lines.", render: renderDataFields },
                   { key: "blocks", label: "Blocks", hint: "one ROW per table — whose entity, how many fields, what kinds — and each field a little coloured square. Click a row to name every field at once.", render: renderDataBlocks },
-                  { key: "stages", label: "Stages", pathAware: true, hint: "the tables laid across the door's stages — where each is touched, and the fate of the write at the end", render: renderDataStages } ] },
+                  { key: "stages", label: "Stages", pathAware: true, hint: "the tables laid across the door's stages — where each is touched, and the fate of the write at the end", render: renderDataStages },
+                  { key: "stageblocks", label: "Stage blocks", pathAware: true, hint: "the same block per table, grouped under the stage that touches it — rows or columns of stages", render: renderDataStageBlocks } ] },
     schemas: { icon: "schema", word: "Schemas", col: S.KINDCOL.schema, hint: "the shapes that cross the door — the request's 7 fields with 6 nested shapes in, the response's 6 with 5 nested out; drawn as lines, the exact fields on hover",
       count: function(F){ return (F.data.schemas.request.cols || []).length + (F.data.schemas.response.cols || []).length; },
       defaultVariant: "blocks",      /* the pattern book's first carry-over, 2026-09-13 */

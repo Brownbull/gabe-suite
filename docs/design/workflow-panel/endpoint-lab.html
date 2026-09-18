@@ -757,10 +757,13 @@
     footShow: ["icon", "count"],   /* each part's pieces — icon · text · count, any combination, never none */
     /* THE STAGES distribution (operator 2026-09-17, endpoint-stages.md): the tables across the door's
        standard dimension. Its own four dials, the way every other distribution has its own. */
-    stages: { axis: "cols",      /* the stages as COLUMNS, the tables as rows — or transposed */
-              union: "counts",   /* with no ending chosen: a count per cell, or one dot per ending */
+    stages: { axis: "rows",      /* STAGE BLOCKS: a band per stage · six columns. The grid reads the same key
+                                     the other way round — stages as rows (`rows`) or as columns (`cols`). */
+              union: "counts",   /* the GRID, with no ending chosen: a count per cell, or one dot per ending */
               fate: "station",   /* the four fates in the station's own colours, or mono (the form still parts them) */
-              rail: "shown" } }; /* the transaction rail — commit · flush · savepoint · rollback */
+              rail: "shown",     /* the GRID's transaction rail — commit · flush · savepoint · rollback */
+              placement: "every",/* STAGE BLOCKS: a block under every stage that touches it, or once under the first */
+              empty: "shown" } };/* STAGE BLOCKS: a stage with no table is an open band, or it goes */
   /* SCHEMAS' OWN SETTINGS (operator 2026-09-13: "redo the schemas section" with the pattern book). The looks it shares
      with Data — pill colour, chip box/fill/size, field marks, block edge — are read from DATACFG, not copied. */
   var SCHCFG = window.SCHCFG = { dir: { in: 1, out: 1 }, sort: "tree", sortRev: 0,
@@ -786,11 +789,11 @@
     footShow: ["icon", "count"] };
   var FFOLDS = window.FFOLDS = { layout: 0, map: 1, sections: 0, roles: 0, sort: 0, counts: 0, title: 0, lines: 0, foot: 0 };
   var DSEC = [
-    { key: "title",  word: "the title",   icon: "layers", on: ["grounds", "flow", "ledger", "fields", "blocks", "stages"],
+    { key: "title",  word: "the title",   icon: "layers", on: ["grounds", "flow", "ledger", "fields", "blocks", "stages", "stageblocks"],
       what: "the part's own name and glyph, left of the counts", lost: "which part you are looking at; the counts and the switches stay" },
-    { key: "note",   word: "the note",    icon: "doc",    on: ["grounds", "flow", "ledger", "fields", "blocks", "stages"],
+    { key: "note",   word: "the note",    icon: "doc",    on: ["grounds", "flow", "ledger", "fields", "blocks", "stages", "stageblocks"],
       what: "the sentence under the title", lost: "how to read the picture, said once in words" },
-    { key: "counts", word: "counts",      icon: "info",   on: ["grounds", "flow", "ledger", "fields", "blocks", "stages"],
+    { key: "counts", word: "counts",      icon: "info",   on: ["grounds", "flow", "ledger", "fields", "blocks", "stages", "stageblocks"],
       what: "the number beside every name", lost: "how many — the first question the card answers" },
     { key: "shapes", word: "the shapes",  icon: "table",  on: ["grounds", "flow", "ledger"],
       what: "the line stack inside each table — one line per column", lost: "how deep each table is; the names stay",
@@ -805,7 +808,7 @@
       what: "the entity-model row — claim · seeded · derived · proposed", lost: "which model would re-home this door" },
     { key: "ents",   word: "entities",    icon: "entity", on: ["flow"],
       what: "the entities line under the field", lost: "the roster of grounds the dots stand for" },
-    { key: "legend", word: "the legend",  icon: "layers", on: ["grounds", "flow", "ledger", "fields", "blocks", "stages"],
+    { key: "legend", word: "the legend",  icon: "layers", on: ["grounds", "flow", "ledger", "fields", "blocks", "stages", "stageblocks"],
       what: "the strip of swatches at the foot", lost: "what a colour and a line mean, drawn as they are drawn" } ];
   /* THE LOOK applyData paints (operator 2026-09-13): Data's, unless Schemas is open and keeps its own copy */
   function lookOf(){ var pn = document.getElementById("panel"), tab = pn && pn.dataset.tab;
@@ -977,26 +980,34 @@
     });
     /* THE STAGES dials (operator 2026-09-17) — the door's standard dimension is the picture; these
        four say how it is read. They do nothing outside the Stages distribution, and say so. */
-    { var SG = DATACFG.stages;
-      function spick(label, ds, key, opts, iconFor){
-        var na = live !== "stages", w = el("div", { class: "ibwrap" });
+    { var SG = DATACFG.stages, STGVARS = ["stages", "stageblocks"];
+      function spick(label, ds, key, opts, iconFor, only){
+        var na = (only || STGVARS).indexOf(live) < 0, w = el("div", { class: "ibwrap" });
         opts.forEach(function(o){ var b2 = el("button", { class: "ib" + (SG[key] === o[0] ? " on" : "") + (na ? " na" : "") });
           b2.dataset[ds] = o[0]; b2.innerHTML = iconFor(o);
           hoverBind(b2, hcard({ title: o[2] || o[0], value: label, icon: "shape",
-            rows: na ? [["drawn in", "stages — not in " + live + ", so this does nothing right now"]] : null, plain: o[1] }));
+            rows: na ? [["drawn in", (only || STGVARS).join(" · ") + " — not in " + live + ", so this does nothing right now"]] : null, plain: o[1] }));
           b2.onclick = function(ev){ ev.stopPropagation(); SG[key] = o[0];
             applyData(); window.showTab("data"); drawDataCfg(); }; w.append(b2); });
         box.append(el("div", { class: "cfl" }, label), w); }
-      group("stages", "stages", SG.axis + " · " + SG.union + " · " + SG.fate + " · rail " + SG.rail,
+      group("stages", "stages", SG.axis + " · " + SG.placement + " · empty " + SG.empty + " · " + SG.fate,
         "the six stages every API door has — EDGE · GATE · INPUT · HANDLER · EFFECTS · ANSWER — with this door's tables laid across them", function(){
         spick("axis", "dstgaxis", "axis",
-          [["cols", "the stages run across the top, one row per table — the way a request is read, left to right", "stages as columns"],
-           ["rows", "turned around: one row per stage, one column per table, the names rotated", "stages as rows"]],
-          function(o){ return labIco(o[0] === "cols" ? "bars" : "laycfill", 15); });
+          [["rows", "STAGE BLOCKS: one band per stage, top to bottom, the blocks wrapping inside it. The GRID reads it as one row per stage, the table names rotated", "stages as rows"],
+           ["cols", "STAGE BLOCKS: six columns left to right, the blocks stacked in each. The GRID reads it as the stages across the top, one row per table", "stages as columns"]],
+          function(o){ return labIco(o[0] === "rows" ? "bars" : "laycfill", 15); });
+        spick("placement", "dstgplace", "placement",
+          [["every", "a block appears under EVERY stage that touches its table — the same table can stand twice", "every touch"],
+           ["first", "one block per table, under the earliest stage it is touched at, with a tick for the others", "first touch"]],
+          function(o){ return labIco(o[0] === "every" ? "laycfill" : "layleft", 15); }, ["stageblocks"]);
+        spick("empty stages", "dstgempty", "empty",
+          [["shown", "a stage with no table is still drawn — an open band with its header and what belongs there", "shown"],
+           ["hidden", "only the stages that hold something", "hidden"]],
+          function(o){ return labIco(o[0] === "shown" ? "eye" : "eyeoff", 15); }, ["stageblocks"]);
         spick("union", "dstgunion", "union",
           [["counts", "with no ending chosen, each cell counts the endings that touch that table there", "counts"],
            ["dots", "one dot per ending instead, each in its own kind colour", "dots"]],
-          function(o){ return labIco(o[0] === "counts" ? "ton" : "sh-circle", 15); });
+          function(o){ return labIco(o[0] === "counts" ? "ton" : "sh-circle", 15); }, ["stages"]);
         spick("fate colours", "dstgfate", "fate",
           [["station", "the four fates in the station's own colours — committed, maybe, rolled back, uncommitted", "station colours"],
            ["mono", "no colour; the marker's FORM still parts the four — filled, dashed, slashed, outline", "mono"]],
@@ -1004,7 +1015,7 @@
         spick("rail", "dstgrail", "rail",
           [["shown", "the transaction lane above the tables — commit, flush, savepoint, rollback", "shown"],
            ["hidden", "the tables alone", "hidden"]],
-          function(o){ return labIco(o[0] === "shown" ? "eye" : "eyeoff", 15); });
+          function(o){ return labIco(o[0] === "shown" ? "eye" : "eyeoff", 15); }, ["stages"]);
         box.append(el("div", { class: "cfread" }, "the bay (a 500) and the client screen are the other two stages; neither touches a table, so neither is drawn here — the axis card says so.")); }); }
 
     group("sections", "sections", (DSEC.length - HID.length) + " drawn" + (HID.length ? " · hidden " + HID.join(" ") : ""),
@@ -2124,7 +2135,8 @@
           + ", standard " + DATACFG.sqBase + "% optional " + DATACFG.sqOptA + "%"
         + " · footer " + (DATACFG.foot.l.join(" ") || "—") + " | " + (DATACFG.foot.r.join(" ") || "—") + ", " + DATACFG.footShow.join(" ")
         + " · grounds by " + DATACFG.order + ", width " + DATACFG.width + ", tiles " + DATACFG.tiles
-        + " · stages axis " + DATACFG.stages.axis + ", union " + DATACFG.stages.union + ", fate " + DATACFG.stages.fate + ", rail " + DATACFG.stages.rail
+        + " · stages axis " + DATACFG.stages.axis + ", placement " + DATACFG.stages.placement + ", empty " + DATACFG.stages.empty
+        + ", union " + DATACFG.stages.union + ", fate " + DATACFG.stages.fate + ", rail " + DATACFG.stages.rail
         + " · drawn " + shown.join(" ") + (hidden.length ? " · hidden " + hidden.join(" ") : " · nothing hidden"); },
     schemas: function(){ var C = SCHCFG, B = C.bk, SEC = ["title", "note", "legend"];
       var drawn = SEC.filter(function(k){ return C.show[k]; }), hidden = SEC.filter(function(k){ return !C.show[k]; });
@@ -2256,7 +2268,7 @@
   RAILBLK.forEach(function(r){ foldable(r[0]); if (r[0] !== OPENBLK) document.getElementById(r[0]).classList.add("min"); });
 
   /* ── the variant bar: one panel, several DISTRIBUTIONS — proposals to compare, not settings ── */
-  var VARICO = window.VARICO = { shapes: "drill", grounds: "entity", flow: "drill", ledger: "table", fields: "schema", blocks: "layers", stages: "journey", levels: "layers", chain: "merge", status: "info", ladder: "up", band: "shield", gauntlet: "drill" };
+  var VARICO = window.VARICO = { stageblocks: "layers", shapes: "drill", grounds: "entity", flow: "drill", ledger: "table", fields: "schema", blocks: "layers", stages: "journey", levels: "layers", chain: "merge", status: "info", ladder: "up", band: "shield", gauntlet: "drill" };
   function drawVars(){ var PC = document.getElementById("partcfg"); if (!PC) return; PC.innerHTML = "";
     order.forEach(function(k){ var P = window.PANELS[k];
       var row = E("div", { class: "prow" + (cur === k ? " on" : "") });

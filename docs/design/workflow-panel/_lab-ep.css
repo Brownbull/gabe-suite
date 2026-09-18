@@ -1251,6 +1251,39 @@ html, body{ height:100%; }
   box-shadow:none !important; border-style:dotted; }
 .cmdcell.st-blank{ background:none !important; box-shadow:none !important; cursor:default;
   border-color:color-mix(in srgb, var(--line) 60%, transparent); border-style:solid; }
+/* ══ DATA · "stage blocks" — the SAME blocks, grouped under the stage that touches them (2026-09-17) ══
+   Nothing here styles a block: `.blk` and everything inside it is the Blocks distribution's own, built by
+   one shared builder. This is the band (or the column) a group of them sits in, and its header. */
+.sbwrap{ flex:1 1 auto; min-height:0; display:flex; gap:8px; padding:6px 12px 4px; }
+.sbwrap[data-axis="rows"]{ flex-direction:column; overflow-y:auto; overflow-x:hidden; }
+.sbwrap[data-axis="cols"]{ flex-direction:row; align-items:stretch; overflow-x:auto; overflow-y:hidden; }
+.sbgrp{ display:flex; flex-direction:column; min-width:0; border-radius:9px;
+  border:1px solid color-mix(in srgb, var(--line) 85%, transparent); background:color-mix(in srgb, var(--line) 12%, transparent); }
+/* a band is as tall as the blocks it holds — the WRAP scrolls, never the band (2026-09-17) */
+.sbwrap[data-axis="rows"] .sbgrp{ flex:none; }
+.sbwrap[data-axis="cols"] .sbgrp{ flex:1 0 246px; overflow-y:auto; }
+/* an EMPTY stage is an OPEN band — it still HAS the stage, and the break in the silhouette is the finding */
+.sbgrp.open{ background:none; border-style:dashed; }
+.sbhd{ flex:none; display:flex; align-items:center; gap:7px; padding:5px 9px; cursor:help;
+  border-bottom:1px solid color-mix(in srgb, var(--line) 70%, transparent); }
+.sbgrp.open .sbhd{ border-bottom-style:dashed; }
+.sbhd .sbord{ font:800 12px/1 var(--font-mono); color:var(--muted); font-style:normal; opacity:.6; }
+.sbhd b{ font:800 12px/1 var(--font-mono); letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+.sbhd:hover b{ color:var(--ink); }
+.sbhd .sbn{ margin-left:auto; font:700 12px/1 var(--font-mono); color:var(--muted); }
+.sbbody{ padding:7px 8px 8px; min-height:0; }
+.sbnone{ padding:3px 9px 9px; font:600 12px/1.45 var(--font-ui); color:var(--muted); max-width:72ch; }
+/* the extra a stage block may carry on its title line: the ending count, or a fate chip */
+.blk .bkxp{ font:700 12px/1.3 var(--font-mono); font-style:normal; padding:1px 6px; }
+.blk .bkhd .bchip, .blk .bkhd .fchip{ margin-left:4px; }
+/* a table the effects arm touches that the panel's own list does not carry */
+.blk.hollow{ border:1px dashed var(--line); background:none; box-shadow:none; opacity:.8; }
+.blk.hollow .bkcol.l b{ font:600 12px/1.3 var(--font-ui); color:var(--muted); }
+/* `first touch`: the stages this block is ALSO touched at, as initials */
+.sbtick{ display:inline-flex; align-items:center; gap:2px; margin-left:6px; cursor:help; }
+.sbtick i{ font:800 12px/1 var(--font-mono); font-style:normal; color:var(--muted); opacity:.55;
+  border:1px solid color-mix(in srgb, var(--line) 80%, transparent); border-radius:3px; padding:1px 3px; }
+
 /* ══ DATA · "stages" — the tables across the door's STANDARD dimension (2026-09-17) ═══════════════
    EDGE · GATE · INPUT · HANDLER · EFFECTS · ANSWER as one grid. The `axis` pick transposes it by
    swapping the template and the emit order — the cells themselves are the same nodes either way, so
@@ -1419,12 +1452,12 @@ html, body{ height:100%; }
 #panel.proj-outline .onpath{ outline:1px solid var(--accent); outline-offset:1px; border-radius:4px; }
 #panel.proj-dim .onpath, #panel.proj-filter .onpath{ outline:1px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset:1px; border-radius:4px; }
 /* the BUCKET chip on a written table — committed · maybe · rolled back · uncommitted */
-.bchip{ display:inline-flex; align-items:center; margin-left:5px; padding:0 6px; border-radius:999px;
+.bchip, .fchip{ display:inline-flex; align-items:center; margin-left:5px; padding:0 6px; border-radius:999px;
   font:700 12px/1.5 var(--font-mono); font-style:normal; color:var(--bc);
   border:1px solid color-mix(in srgb, var(--bc) 55%, var(--line));
   background:color-mix(in srgb, var(--bc) 14%, transparent); }
-.bchip.bk-uncommitted{ background:none; border-style:solid; color:var(--muted); }
-.bchip.bk-maybe_committed{ border-style:dashed; }
+.bchip.bk-uncommitted, .fchip.bk-uncommitted{ background:none; border-style:solid; color:var(--muted); }
+.bchip.bk-maybe_committed, .fchip.bk-maybe_committed{ border-style:dashed; }
 /* a gate the path crossed says whether it FIRED */
 .gatemark{ display:inline-flex; align-items:center; margin-left:5px; padding:0 5px; border-radius:4px;
   font:700 12px/1.5 var(--font-mono); font-style:normal; color:var(--bc);

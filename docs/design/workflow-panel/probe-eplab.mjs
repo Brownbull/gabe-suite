@@ -65,11 +65,11 @@ ok(tabs.join(',') === 'data,schemas,functions,tests,widening,security', 'SIX tab
 
 // the DATA panel boots on the operator's own default line (2026-09-12)
 ok(await p.evaluate(() => window.COPYTXT.data()) ===
-   'data · shown as stages · tables all · title counts tables icon, fields icon, ops icon · sort channel, icon, accent on panel 45% · pills each, shape pill, text ink, ground kind 15%'
+   'data · shown as stageblocks · tables all · title counts tables icon, fields icon, ops icon · sort channel, icon, accent on panel 45% · pills each, shape pill, text ink, ground kind 15%'
    + ' · block block (icon on model, chip on, name on, entity both, count badge, model both) · edge left solid 2px · chips count pill 100%, channel pill 90%'
    + ' · lines icon name | — / ent | count rw / model | — · sizes icon 13 rw 11 name 13 ent 12 count 11 model 12'
    + ' · squares 14px gap 4 round as symbol by type, optional marked, unique corners both, arms 40% 1.5px tip 10%, standard 100% optional 50% · footer hint | id text num flag time list other opt, icon count · grounds by size, width flex, tiles stack'
-   + ' · stages axis cols, union counts, fate station, rail shown'
+   + ' · stages axis rows, placement every, empty shown, union counts, fate station, rail shown'
    + ' · drawn counts shapes rw commit ev mdl ents legend · hidden title note',
    'the data panel boots on the operator\'s default line', await p.evaluate(() => window.COPYTXT.data()));
 
@@ -84,7 +84,7 @@ const CMDBOOT = 'command · layout card · verbs g2 · grouping request · names
 ok(await p.evaluate(() => window.COPYTXT.command()) === CMDBOOT,
    'the command panel boots on its default line, word for word — only what reaches the command region',
    await p.evaluate(() => window.COPYTXT.command()));
-const MIDBOOT = 'middle · part bars data=stages · schemas=shapes · functions=levels · tests=status · widening=ladder · security=band'
+const MIDBOOT = 'middle · part bars data=stageblocks · schemas=shapes · functions=levels · tests=status · widening=ladder · security=band'
   + ' · label dim .28 · rows command · on part switch kept · test join exact';
 ok(await p.evaluate(() => window.COPYTXT.middle()) === MIDBOOT,
    'the middle boots on its own line — the part bars and the four dials a chosen ending drives',
@@ -1283,7 +1283,7 @@ await p.waitForTimeout(320);
 { await p.click('#railtabs .rtb[data-rt="controls"]'); await p.waitForTimeout(80);
   await p.evaluate(() => window.showVariant('data', 'grounds')); await p.waitForTimeout(200);
   const lay = await p.$$eval('#datacfg .ib[data-dlayout]', els => els.map(e => e.dataset.dlayout));
-  ok(lay.join(',') === 'grounds,flow,ledger,fields,blocks,stages', 'the data block carries all six distributions', lay.join(','));
+  ok(lay.join(',') === 'grounds,flow,ledger,fields,blocks,stages,stageblocks', 'the data block carries all seven distributions', lay.join(','));
   const secs = await p.$$eval('#datacfg .ib[data-sec]', els => els.map(e => e.dataset.sec));
   ok(secs.join(',') === 'title,note,counts,shapes,rw,commit,ev,mdl,ents,legend', 'ten sections, each its own toggle', secs.join(','));
   ok(await p.$$eval('#datacfg .ib', els => els.every(e => !e.innerText.trim() && (!!e.querySelector('svg') || !!e.querySelector('.chsw')))),
@@ -1755,7 +1755,7 @@ ok(blocks.join(',') === 'bench,head bar,part buttons,middle,data panel,schemas p
 const prows = await p.$$eval('#partcfg .prow', els => els.length);
 ok(prows === 6, 'the BARS tab separates the controls per part — one row each', String(prows));
 const varBtns = await p.$$eval('#partcfg .ib', els => els.length);
-ok(varBtns === 19, 'every distribution is an icon button in its part row', String(varBtns));
+ok(varBtns === 20, 'every distribution is an icon button in its part row', String(varBtns));
 const iconOnlyCtl = await p.$$eval('#partcfg .ib, #barcfg .ib, #boxes .ib, #dens .ib, #motionwrap .ib', els => els.every(e => !e.innerText.trim() && !!e.querySelector('svg')));
 ok(iconOnlyCtl, 'every control in the rail is an ICON — its word lives on the hover card');
 const ctl = (await p.$$('#partcfg .ib'))[0]; await ctl.hover(); await p.waitForTimeout(120);
@@ -2334,15 +2334,18 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
   await p.click('#cmd .cmdcell[data-cmd="grp-data"]'); await p.waitForTimeout(360);
   { ok(await p.$eval('#panel', e => e.dataset.tab) === 'data', 'DATA ▸ opens the Data topic in the middle panel');
     const live = await p.evaluate(() => window.PANELVAR('data'));
-    ok(live === 'stages', 'reading the Data topic on the distribution it defaults to — the stages', live);
+    ok(live === await p.evaluate(() => window.PANELS.data.defaultVariant),
+      'reading the Data topic on the distribution it defaults to', live);
     const g = await p.$$eval('#cmd .cmdgrid .cmdcell', els => els.filter(e => e.dataset.cmd)
       .map(e => e.dataset.cmd + '/' + ((e.querySelector('.chot') || {}).textContent || '') + (e.classList.contains('on') ? '*' : '')));
     const want = TOP.dists.data.map((k, i) => 'var-data-' + k + '/' + 'QWERTASDFGZXCVB'[i] + (k === live ? '*' : ''))
       .concat(['writes/' + 'QWERTASDFGZXCVB'[TOP.dists.data.length], 'back/B']);
     ok(g.join(' ') === want.join(' '),
       `and the card draws its ${TOP.dists.data.length} distributions, then its one verb, then Back — the live one lit`, g.join(' '));
-    ok(await p.$eval('#cmd .cmdhd .sechd .cnt', e => e.textContent) === 'DATA · 6 DISTRIBUTIONS · 1 VERB',
+    ok(await p.$eval('#cmd .cmdhd .sechd .cnt', e => e.textContent) === 'DATA · ' + TOP.dists.data.length + ' DISTRIBUTIONS · 1 VERB',
       'the head pill counts both, computed', await p.$eval('#cmd .cmdhd .sechd .cnt', e => e.textContent));
+    ok(TOP.dists.data.indexOf('stageblocks') >= 0 && g.some(x => /^var-data-stageblocks\//.test(x)),
+      'a distribution added to the registry appears on the card by itself — the card reads PANELS.data.variants', g.join(' '));
     const fl = await cmdFloorAt(); ok(fl.under === 0, 'level 2 holds the 12px floor', JSON.stringify(fl)); }
   // a distribution cell re-renders the MIDDLE and leaves the card where it is
   await p.click('#cmd .cmdcell[data-cmd="var-data-blocks"]'); await p.waitForTimeout(360);
@@ -2491,8 +2494,9 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
       firstRun: fr.id, frStatus: String(fr.status), frTables: Object.keys(per(fr)) }; });
 
   ok(await p.evaluate(() => document.getElementById('panel').dataset.variant) === 'stages',
-    'Data opens on the Stages distribution — the operator\'s model, the topic across the door\'s own spine');
-  ok(await p.evaluate(() => window.PANELS.data.defaultVariant) === 'stages', 'and it is the registry DEFAULT, not a click');
+    'the Stages grid draws the topic across the door\'s own spine');
+  ok(await p.evaluate(() => window.PANELS.data.defaultVariant) === 'stageblocks',
+    'the registry DEFAULT is the STAGE BLOCKS — the grid is read here by a click');
   { const heads = await p.$$eval('#panel .dsh.dsst', els => els.map(e => e.dataset.stage));
     ok(heads.join(' → ') === 'EDGE → GATE → INPUT → HANDLER → EFFECTS → ANSWER',
       'the six drawn stages are the standard spine, in request order', heads.join(' → ')); }
@@ -2696,8 +2700,11 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
     const added = live.filter(a => RAILCTL_9b163fc.indexOf(a) < 0);
     ok(lost.join(',') === RAILCTL_REMOVED.join(','),
       `of the ${RAILCTL_9b163fc.length} controls the rail carried before the regroup, the only one gone is the entity card's scope pick — deleted by ruling, not mislaid`, lost.join(','));
-    ok(added.join(',') === 'data-frame,data-region,data-rg',
-      'and the only things added are structure tags, not controls — the block\'s region, the frame-dial wrapper and each label\'s region tag', added.join(',')); }
+    // and the controls ADDED on purpose since that recording, each named with what it belongs to
+    const RAILCTL_ADDED = ['data-dstgempty', 'data-dstgplace'];   /* the stage blocks' placement and empty-stage dials (2026-09-17) */
+    const STRUCTURE = ['data-frame', 'data-region', 'data-rg'];   /* not controls: the block's region, the frame-dial wrapper, each label's region tag */
+    ok(added.join(',') === RAILCTL_ADDED.concat(STRUCTURE).sort().join(','),
+      'and everything added is either a named new control or a structure tag — nothing arrived unaccounted for', added.join(',')); }
 
   // every block says which region it reaches, in a glyph and in words
   { const hd = await p.$$eval('#rt-controls .barblk', els => els.map(e => ({ id: e.id, region: e.dataset.region,
@@ -2867,6 +2874,162 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
   await p.waitForTimeout(140);
   await p.evaluate(() => document.querySelectorAll('.barblk.min').forEach(x => x.classList.remove('min')));
   await p.waitForTimeout(140);
+}
+
+// ── DATA · STAGE BLOCKS (operator 2026-09-17: "the blocks are the perfect representation of each table;
+//    we keep that. The endpoint has stages: show the tables throughout those stages"). The SAME block, in
+//    bands on the standard spine; a stage's card states what BELONGS there, never what it found. ──
+{
+  const errsBefore = errs.length;
+  await p.evaluate(() => { window.railTab('controls'); });
+  await p.click('#boxes .ib[data-box="work"]');
+  await p.evaluate(() => { window.clearPath(); Object.assign(window.DATACFG.stages, { axis: 'rows', placement: 'every', empty: 'shown' });
+    window.showVariant('data', 'stageblocks'); window.showTab('data'); window.drawDataCfg(); });
+  await p.waitForTimeout(380);
+
+  ok(await p.evaluate(() => window.PANELS.data.defaultVariant) === 'stageblocks',
+    'the STAGE BLOCKS are the Data default — the blocks, by stage');
+  { const g = await p.$$eval('#panel .sbgrp', els => els.map(e => e.dataset.stage));
+    ok(g.join(' → ') === 'EDGE → GATE → INPUT → HANDLER → EFFECTS → ANSWER',
+      'six stage groups, the standard spine in request order', g.join(' → '));
+    const open = await p.$$eval('#panel .sbgrp.open', els => els.map(e => e.dataset.stage).sort());
+    ok(open.join(',') === 'ANSWER,EDGE,INPUT', 'EDGE, INPUT and ANSWER are OPEN bands — no table belongs there',
+      open.join(','));
+    const held = await p.$$eval('#panel .sbgrp:not(.open)', els => els.map(e => e.dataset.stage + ':' + e.querySelectorAll('.blk').length));
+    ok(/^GATE:\d+,HANDLER:\d+,EFFECTS:\d+$/.test(held.join(',')) && held.every(x => +x.split(':')[1] > 0),
+      'and GATE, HANDLER and EFFECTS hold the blocks', held.join(',')); }
+
+  // ── THE BLOCK IS THE BLOCKS DISTRIBUTION'S OWN — built by one builder, so it cannot drift ──
+  { const mine = await p.$$eval('#panel .sbgrp .blk:not(.hollow)', els => { const o = {};
+      els.forEach(e => { if (!o[e.dataset.table]) o[e.dataset.table] = { cls: e.className.replace(/ ?sel/, ''),
+        lines: [...e.querySelectorAll('.bkti .bkln')].map(l => [...l.querySelectorAll('.bkcol')].map(c =>
+          [...c.childNodes].filter(n => !(n.classList && (n.classList.contains('bkxp') || n.classList.contains('bchip') || n.classList.contains('fchip') || n.classList.contains('sbtick'))))
+            .map(n => (n.textContent || '').replace(/\s+/g, ' ').trim()).join(' ')).join(' ~ ')).join(' | '),
+        sqs: e.querySelectorAll('.sqs .sq').length, flds: e.querySelectorAll('.bkfl .fld').length }; }); return o; });
+    await p.evaluate(() => { window.showVariant('data', 'blocks'); }); await p.waitForTimeout(320);
+    const theirs = await p.$$eval('#panel .bkbody .blk', els => { const o = {};
+      els.forEach(e => { o[e.dataset.table] = { cls: e.className.replace(/ ?sel/, ''),
+        lines: [...e.querySelectorAll('.bkti .bkln')].map(l => [...l.querySelectorAll('.bkcol')].map(c =>
+          [...c.childNodes].filter(n => !(n.classList && (n.classList.contains('bkxp') || n.classList.contains('bchip') || n.classList.contains('fchip') || n.classList.contains('sbtick'))))
+            .map(n => (n.textContent || '').replace(/\s+/g, ' ').trim()).join(' ')).join(' ~ ')).join(' | '),
+        sqs: e.querySelectorAll('.sqs .sq').length, flds: e.querySelectorAll('.bkfl .fld').length }; }); return o; });
+    const names = Object.keys(mine);
+    ok(names.length > 5 && names.every(t => theirs[t] && theirs[t].cls === mine[t].cls),
+      `all ${names.length} stage blocks carry the Blocks distribution's own class list, table for table`,
+      names.filter(t => !theirs[t] || theirs[t].cls !== mine[t].cls).join(','));
+    ok(names.every(t => theirs[t].lines === mine[t].lines),
+      'and its title lines, word for word, once the stage extra is set aside — the rail arranged them once',
+      names.filter(t => theirs[t].lines !== mine[t].lines).slice(0, 2).map(t => mine[t].lines + ' VS ' + theirs[t].lines).join(' / '));
+    ok(names.every(t => theirs[t].sqs === mine[t].sqs && theirs[t].flds === mine[t].flds),
+      'and the same field marks and the same field list', JSON.stringify(names.filter(t => theirs[t].sqs !== mine[t].sqs)));
+    await p.evaluate(() => { window.showVariant('data', 'stageblocks'); }); await p.waitForTimeout(320); }
+
+  // ── THE STAGE HEADER states the EXPECTATION, and one measured row beside it ──
+  const EXPECT = await p.evaluate(() => window.STAGE_EXPECT.data);
+  for (const st of ['EDGE', 'GATE', 'HANDLER', 'EFFECTS']) {
+    await p.hover(`#panel .sbgrp[data-stage="${st}"] .sbhd`); await p.waitForTimeout(170);
+    const h = (await p.$eval('#hover', e => e.innerText)).replace(/\s+/g, ' ');
+    ok(h.indexOf(EXPECT[st]) >= 0, `the ${st} card carries its expectation line, verbatim`, h.slice(0, 110));
+    ok(/ON THIS DOOR/i.test(h), 'and ONE measured row beside it — what is here, never a grade', h.slice(0, 90));
+    await p.mouse.move(5, 1030); }
+  { const words = await p.evaluate(() => Object.keys(window.STAGE_EXPECT.data).join(','));
+    ok(words === 'EDGE,GATE,INPUT,HANDLER,EFFECTS,ANSWER', 'the six lines live in one registry the next topics add beside', words); }
+
+  // ── THE PICKS ──
+  // measured INSIDE the wrap, with its scroll parked, so a remembered scroll position can never read as
+  // a different picture
+  const sbFp = () => p.evaluate(() => { const w = document.querySelector('#panel .sbwrap');
+    w.scrollTop = 0; w.scrollLeft = 0; const o = w.getBoundingClientRect();
+    return [...document.querySelectorAll('#panel .sbgrp')].map(e => { const r = e.getBoundingClientRect();
+      return e.dataset.stage + '@' + Math.round(r.left - o.left) + ',' + Math.round(r.top - o.top)
+        + ':' + Math.round(r.width) + 'x' + Math.round(r.height)
+        + ':' + [...e.querySelectorAll('.blk')].map(b2 => b2.dataset.table).join('+'); }).join('§'); });
+  const nBlocks = () => p.$$eval('#panel .sbgrp .blk', els => els.length);
+  { const before = await sbFp(), n = await nBlocks();
+    await p.click('#datacfg [data-dstgaxis="cols"]'); await p.waitForTimeout(380);
+    ok(await p.evaluate(() => document.querySelector('#panel .sbwrap').dataset.axis) === 'cols', 'axis columns turns the bands into six columns');
+    const cols = await p.evaluate(() => { const g = [...document.querySelectorAll('#panel .sbgrp')];
+      return { n: g.length, tops: new Set(g.map(e => Math.round(e.getBoundingClientRect().top))).size }; });
+    ok(cols.n === 6 && cols.tops === 1, 'six of them, side by side on one line', JSON.stringify(cols));
+    ok(await sbFp() !== before, 'it is a different picture');
+    ok(await nBlocks() === n, 'with exactly the same blocks in it', (await nBlocks()) + ' vs ' + n);
+    ok(await p.$eval('#panel', e => e.scrollWidth <= e.clientWidth + 1), 'and the PANEL never scrolls sideways — the columns do, inside themselves');
+    await p.click('#datacfg [data-dstgaxis="rows"]'); await p.waitForTimeout(380);
+    { const now = await sbFp();
+      ok(now === before, 'and the bands come back exactly',
+        now.split('§').filter((x, i) => x !== before.split('§')[i]).join(' | ').slice(0, 160)); } }
+  { const n = await nBlocks();
+    const tables = await p.evaluate(() => new Set([...document.querySelectorAll('#panel .sbgrp .blk')].map(e => e.dataset.table)).size);
+    await p.click('#datacfg [data-dstgplace="first"]'); await p.waitForTimeout(380);
+    ok(await nBlocks() === tables, `first touch draws one block per table — ${tables}, not ${n}`, String(await nBlocks()));
+    ok((await p.$$('#panel .sbtick')).length > 0, 'and ticks the stages it is ALSO touched at');
+    await p.hover('#panel .sbtick'); await p.waitForTimeout(170);
+    ok(/also at/i.test(await p.$eval('#hover', e => e.innerText)), 'whose card names them');
+    await p.mouse.move(5, 1030);
+    await p.click('#datacfg [data-dstgplace="every"]'); await p.waitForTimeout(380);
+    ok(await nBlocks() === n, 'every touch puts them back', String(await nBlocks())); }
+  { await p.click('#datacfg [data-dstgempty="hidden"]'); await p.waitForTimeout(340);
+    const g = await p.$$eval('#panel .sbgrp', els => els.map(e => e.dataset.stage));
+    ok(g.join(',') === 'GATE,HANDLER,EFFECTS', 'empty hidden drops the three stages no table belongs to', g.join(','));
+    await p.click('#datacfg [data-dstgempty="shown"]'); await p.waitForTimeout(340);
+    ok((await p.$$('#panel .sbgrp')).length === 6, 'and shown brings them back as open bands'); }
+
+  // ── A LABEL: the consent 409 ──
+  { const cons = await p.evaluate(() => window.LABEP.forms.paths.find(x => x.names.drawn === 'consent required').id);
+    await p.evaluate(id => window.selectPath(id), cons); await p.waitForTimeout(420);
+    const gate = await p.$$eval('#panel .sbgrp[data-stage="GATE"] .blk', els => els.map(e => e.dataset.table));
+    ok(gate.indexOf('users') >= 0, 'the consent 409 holds users at the GATE — provisioned before the body was read', gate.join(','));
+    const hand = await p.$$eval('#panel .sbgrp[data-stage="HANDLER"] .blk', els => els.map(e => e.dataset.table));
+    const want = await p.evaluate(id => { const p2 = window.LABEP.forms.paths.find(x => x.id === id), o = new Set();
+      (p2.effects.steps || []).forEach(s => { if (s.table && !s.dependency) o.add(s.table); }); return [...o]; }, cons);
+    ok(hand.slice().sort().join(',') === want.slice().sort().join(','),
+      'and the HANDLER holds exactly the tables its own code touched', hand.join(',') + ' vs ' + want.join(','));
+    const eff = await p.$$eval('#panel .sbgrp[data-stage="EFFECTS"] .blk', els => els.map(e => e.dataset.table + '[' +
+      [...e.querySelectorAll('.fchip')].map(c => c.textContent).join(';') + ']'));
+    ok(eff.some(x => /^idempotency_keys\[/.test(x) && /rolled back ×/.test(x)),
+      'EFFECTS holds idempotency_keys wearing its rolled-back chip — the same chip the Blocks projection draws', eff.join(' '));
+    ok((await p.$$('#panel .blk .bkxp')).length === 0, 'and with a label in force the union counts are gone — one ending, not a tally');
+    await p.evaluate(() => document.body.focus()); await p.keyboard.press('Escape'); await p.waitForTimeout(400);
+    ok((await p.$$('#panel .blk .bkxp')).length > 0, 'Esc gives the union back, counts and all'); }
+
+  // ── the floor and the fit, both axes, at the dock box ──
+  await p.evaluate(() => window.railTab('controls')); await p.click('#boxes .ib[data-box="dock"]'); await p.waitForTimeout(340);
+  for (const ax of ['rows', 'cols']) {
+    await p.evaluate(a => { window.DATACFG.stages.axis = a; window.applyData(); window.showTab('data'); }, ax);
+    await p.mouse.move(5, 1030); await p.waitForTimeout(320);
+    // the two title chips the operator sized under the floor ON PURPOSE are counted apart, exactly as the
+    // page-wide floor check counts them — a block is a block, wherever it is drawn
+    const fl = await p.evaluate(() => { let n = 0, worst = 99, chosen = 0; const B = window.DATACFG.bk;
+      document.querySelectorAll('#panel *').forEach(el => { if (!el.offsetParent) return;
+        const t = el.childNodes && [...el.childNodes].some(c => c.nodeType === 3 && c.textContent.trim()); if (!t) return;
+        const fs2 = parseFloat(getComputedStyle(el).fontSize); if (fs2 >= 12) return;
+        const part = el.closest('.bkhd .bkrw') ? 'rw' : el.closest('.bkhd .bkn') ? 'count' : null;
+        if (part && (B.size[part] || 12) < 12 && Math.round(fs2) === B.size[part]) { chosen++; return; }
+        n++; worst = Math.min(worst, fs2); });
+      return { under: n, worst, chosen }; });
+    ok(fl.under === 0, `nothing in the stage blocks goes under 12px at the dock box, bar the two chips the operator sized there — axis ${ax}`, JSON.stringify(fl));
+    const d = await p.$eval('#panel', e => ({ w: e.clientWidth, sw: e.scrollWidth, h: e.clientHeight, sh: e.scrollHeight }));
+    ok(d.sw <= d.w + 1 && d.sh <= d.h + 1, `and it fits the dock box — axis ${ax}`, JSON.stringify(d)); }
+  await p.click('#boxes .ib[data-box="work"]'); await p.evaluate(() => { window.DATACFG.stages.axis = 'rows'; window.applyData(); window.showTab('data'); });
+  await p.waitForTimeout(320);
+
+  if (shotsAt) { fs.mkdirSync(shotsAt, { recursive: true });
+    const shot = async (n2) => { await p.mouse.move(5, 1030); await p.evaluate(() => window.hoverHide()); await p.waitForTimeout(240);
+      await (await p.$('#bench')).screenshot({ path: path.join(shotsAt, n2) }); };
+    await shot('eplab-stageblocks-rows.png');
+    await p.evaluate(() => { window.DATACFG.stages.axis = 'cols'; window.applyData(); window.showTab('data'); }); await p.waitForTimeout(340);
+    await shot('eplab-stageblocks-cols.png');
+    await p.evaluate(() => { window.DATACFG.stages.axis = 'rows'; const f = window.LABEP.forms;
+      window.selectPath(f.paths.find(x => x.names.drawn === 'consent required').id); }); await p.waitForTimeout(420);
+    await shot('eplab-stageblocks-consent409.png');
+    await p.evaluate(() => window.clearPath()); await p.waitForTimeout(340);
+    await p.hover('#panel .sbgrp[data-stage="GATE"] .sbhd'); await p.waitForTimeout(260);
+    await (await p.$('#bench')).screenshot({ path: path.join(shotsAt, 'eplab-stageblocks-stagecard.png') });
+    await p.mouse.move(5, 1030); }
+  await p.evaluate(() => { window.clearPath(); Object.assign(window.DATACFG.stages, { axis: 'rows', placement: 'every', empty: 'shown' });
+    window.showVariant('data', 'blocks'); window.showTab('data'); window.drawDataCfg(); });
+  await p.waitForTimeout(280);
+  ok(errs.length === errsBefore, 'the stage blocks raise no page error anywhere in this section', errs.slice(errsBefore, errsBefore + 3).join(' | '));
 }
 
 // the checks file
