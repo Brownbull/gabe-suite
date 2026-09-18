@@ -46,12 +46,27 @@ once; this is the structure that stops that.
 By the guide's own §7 table, icons that summarise the whole table make the footer strip "fine"; the left rail wins only if
 the self-test says so. That test is not run yet.
 
-## Still Gabe's to answer
+## Answered by Gabe on 2026-09-18
 
-1. **"Prism" — the word collides.** In this suite a prism is already a thing: an authored instrument page (`docs/prisms/`,
-   the gabe-imagine skill). The guide's prism is a saved fader preset that recolours the view. Same word for both, or a new
-   word for the guide's (lens · preset · view)?
-2. **The question list** — the draft in `questions.md` is mine, from what you asked this week; the real list is yours.
-3. **Importance 1–3 per attribute** — only you can rate it; the inventory ships with the column empty.
-4. **Where the loop runs first** — the table block inside the endpoint's Data topic (the guide's open question §7), or the
-   endpoint card as a whole.
+1. **Prism = a point of view** — his definition, the standpoints he named for an endpoint, and the depth rule are in `prisms.md` (D-011).
+2. **The question list** — not struck; five questions added from his own words (Q16–Q20 in `questions.md`). Still a draft.
+3. **Importance** — proposed by the agent with a reason per attribute in `inventory-endpoint.md`; he corrects it (D-010).
+4. **Loop 1** — the endpoint card as a whole (D-010).
+
+He also corrected D-001…D-007 and stated three rules that now bind every panel: what each console region may hold (D-008),
+the three depths of a hover (D-009), and where the animation and centring rules apply (artifacts only). All of it is in
+`console-rules.md` and at the foot of `decisions.md`.
+
+## Loop 1 — the endpoint card as a whole (the order of work)
+
+1. Gabe corrects the ratings in `inventory-endpoint.md`.
+2. The agent builds M1 (attribute × question) and M2 (attribute × zoom level) from the corrected inventory and `questions.md`,
+   reorders M1 until clusters appear, and names the candidate prisms the clusters suggest.
+3. M3 for the first prism: the channel budget — which channel carries which attribute, where two attributes collide.
+4. A gallery page in the endpoint lab's layout: 3–5 variants of the endpoint card at true size, ONE fader moved each, on
+   POST /setup/complete AND GET /recipes (22 paths, the worst case), with the squint · grayscale dev toggles.
+5. The probe measures squint, grayscale and worst-case; Gabe runs the 5-second and timed questions on a harness.
+6. The result goes to `decisions.md`; the winner is promoted to the slot map and the tokens.
+
+Two known conflicts with the rules are queued for the loop, not patched ahead of it: PATHS ▸ listing codes in the command
+panel (D-008) and the long hovers on headers, command cells and rail controls (D-009).

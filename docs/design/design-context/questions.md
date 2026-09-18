@@ -23,5 +23,12 @@ Task types: **locate** · **trace** · **compare** · **audit** · **summarize**
 | Q13 | What shape goes in and what shape comes back on this ending? | locate | Schemas across the stages |
 | Q14 | Which door is the densest, the riskiest, the least tested? | compare · summarize | the risk flag; the worst-case rule |
 | Q15 | Where in the code is this — can I open it? | locate | every `at` anchor; "Open the handler" |
+| Q16 | What did the door save temporarily — cache, or something ephemeral that was alive and important during the process? | trace | 09-18, Gabe's prism definition |
+| Q17 | What determines the path — what makes this a 401, a 402 or a 200? | trace · audit | 09-18, Gabe's prism definition |
+| Q18 | Which functions are the crucial ones: facing the API, deciding the ending, touching the database, giving context? | locate · summarize | 09-18, Gabe's prism definition |
+| Q19 | Which little functions sit inside the loop, and of what type (formatting · capping · validation…)? | summarize | 09-18, Gabe's prism definition |
+| Q20 | What is inside this element, and what is there to explore — implications, effects, impact, coverage? | summarize | 09-18: what the command panel is for |
+
+Status 2026-09-18: Q1–Q15 were not struck or reworded by Gabe; Q16–Q20 come from his own words that day. Still a draft until he says otherwise.
 
 Not questions about the graph (kept out on purpose): "which control changes which panel" — that is about the lab's own rail.
