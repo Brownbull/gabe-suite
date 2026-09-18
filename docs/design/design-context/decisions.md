@@ -31,3 +31,11 @@ Revisit if: the kit flip is landed.
 Date: 2026-09-17 · Fader moved: several at once (grouping · depth · what a cell opens) — the pattern this log exists to stop
 Tests run: probe only · Result: adopted as the default, not tested against the part buttons for speed
 Revisit if: timed questions show the part buttons are faster for "open topic X".
+
+## D-007 — Data's default is the Blocks card grouped by stage (rows), with columns as the compared option
+Date: 2026-09-17, committed 2026-09-18 · Fader moved: space (grouping by stage) — plus two more in the same build (placement · empty stages), which the method now forbids in one variant
+Variants compared: stage grid (WHEN) · stage blocks in rows · stage blocks in columns — seen one at a time in the lab, not side by side
+Tests run: probe only (1,013 structure asserts: the block is proven identical to the Blocks block table for table); none of the five design tests
+Result: adopted as the Data default by the operator's words ("we keep the blocks … group them in rows or in columns")
+Decision + reason: positional constancy (P6) — the table's face never changes; the stage is only a group. The stage header states the expectation (P12: one tooltip per concept), not a diagnosis.
+Revisit if: GET /recipes (22 paths) does not fit the bands; the squint test cannot tell the six bands apart; rows vs columns has never been timed on Q1/Q2 — run that before calling either the winner.
