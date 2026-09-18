@@ -59,6 +59,7 @@
   .nm { font: inherit; letter-spacing: inherit; font-weight: 650; color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; text-align: left; border-bottom: 1px dotted var(--muted); }
   .nm:hover, .nm[aria-expanded="true"] { color: var(--accent); border-bottom-color: var(--accent); }
   .chip { font-size: var(--fs-min); color: var(--muted); border: 1px solid var(--rule); border-radius: 999px; padding: 0 8px; line-height: 1.5; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .chip.fresh { border-color: var(--accent); color: var(--accent); }
   .chip.gap { border-style: dashed; color: var(--ink-soft);
     background: repeating-linear-gradient(135deg, transparent 0 5px, var(--rule-soft) 5px 8px); }    /* hatched = unmeasured */
   .pl { font-size: var(--fs-sm); color: var(--ink-soft); }
@@ -123,7 +124,7 @@
   <header>
     <p class="eyebrow">design context · loop 1 · step 1 of 6</p>
     <h1>Rate what an endpoint card could show</h1>
-    <p class="lede"><span id="n-all">—</span> attributes, in <span id="n-secs">—</span> groups. My rating sits dashed on every row. Press 1, 2 or 3 to make it yours, then copy the text at the bottom and paste it to me.</p>
+    <p class="lede"><span id="n-all">—</span> attributes, in <span id="n-secs">—</span> groups. <span id="lede-say">My rating sits dashed on every row. Press 1, 2 or 3 to make it yours, then copy the text at the bottom and paste it to me.</span></p>
     <p class="keys">On a focused row: <kbd>↑</kbd> <kbd>↓</kbd> move · <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> rate · <kbd>Enter</kbd> accepts mine · <kbd>A</kbd> alert · <kbd>N</kbd> note. Every example comes from <span id="ep-name">—</span>, read from the map's facts.</p>
   </header>
 
@@ -266,6 +267,7 @@
     var nm = el("button", "nm", row.label); nm.type = "button"; nm.setAttribute("aria-expanded", "false");
     top.appendChild(nm);
     if (row.card) { var cd = el("span", "chip", row.card); top.appendChild(cd); if (row.card3) { cd.tabIndex = -1; wire(cd, tip, stage, plain("card")); } }
+    if (row.fresh) { var fr = el("span", "chip fresh", "new"); top.appendChild(fr); wire(fr, tip, stage, plain("fresh")); }
     if (row.gap) { var gp = el("span", "chip gap", "not in the feed yet"); top.appendChild(gp); wire(gp, tip, stage, plain("gap")); }
     what.appendChild(top);
     what.appendChild(el("p", "pl", row.plain));
@@ -320,7 +322,9 @@
       if (stt === "confirmed") bits.push("same as mine");
       if (e.r !== row.mine.base) bits.push("was " + row.mine.base);
       if (e.a !== row.mine.alarm) bits.push(e.a ? "alert added" : "alert removed");
-      st.textContent = stt === "untouched" ? "still mine" : bits.join(" · ");
+      var rec = D.ruled && !row.fresh;                     /* once ruled, the dashed number is the record, except on rows added since */
+      if (rec && stt === "confirmed") bits[1] = "same as the record";
+      st.textContent = stt === "untouched" ? (rec ? "on record" : "still mine") : bits.join(" · ");
     }
     PAINT[row.id] = paint; paint();
 
@@ -356,7 +360,7 @@
     var L = ["RATINGS · " + D.kind + " · inventory " + D.inv.hash + (STALE ? " (some ratings were given against " + OLDINV + ")" : "") + " · " + ALL.length + " attributes · " + ch.length + " changed · " + cf.length + " confirmed · " + un.length + " untouched"];
     L.push("CHANGED (mine -> yours)"); L.push(ch.length ? ch.join("\n") : "none");
     L.push("CONFIRMED (! = alert)"); L.push(cf.length ? cf.join(" · ") : "none");
-    L.push("UNTOUCHED (my rating stands)"); L.push(un.length ? un.join(" · ") : "none");
+    L.push(D.ruled ? "UNTOUCHED (the record stands; rows marked new carry my proposal)" : "UNTOUCHED (my rating stands)"); L.push(un.length ? un.join(" · ") : "none");
     if (notes.length) { L.push("NOTES"); L.push(notes.join("\n")); }
     return L.join("\n");
   }
@@ -418,6 +422,11 @@
   })();
 
   $("ep-name").textContent = D.endpoint;
+  if (D.ruled) {
+    var nf = ALL.filter(function (r) { return r.fresh; }).length;
+    $("lede-say").textContent = "You ruled these on " + D.ruled + ", so the dashed number is now the rating on record." +
+      (nf ? " " + nf + " rows marked new were added since and carry only my proposal. Rate those, then copy the text at the bottom and paste it to me." : " Change any row and copy the text again to overrule the record.");
+  }
   paintSummary();                                 /* nothing is saved at boot: the stale notice stays until the next change stamps the new inventory */
   window.__rate = { text: buildText, state: function () { return state; }, data: D };
 })();

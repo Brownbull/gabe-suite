@@ -26,7 +26,8 @@ const sections = [];
 let cur = null;
 for (const line of md.split("\n")) {
   const h = line.match(/^## (.+)$/);
-  if (h) { cur = /^The face/.test(h[1]) ? null : { title: h[1].trim(), rows: [] }; if (cur) sections.push(cur); continue; }
+  if (h && /^The face/.test(h[1])) break;                /* the inventory ends here; the face proposal and the notes are prose */
+  if (h) { cur = { title: h[1].trim(), rows: [] }; sections.push(cur); continue; }
   if (!cur || !line.startsWith("|") || /^\|\s*-{3}/.test(line) || /^\|\s*attribute\s*\|/.test(line)) continue;
   const cells = line.split("|").slice(1).map((c) => c.trim());
   while (cells.length && cells[cells.length - 1] === "") cells.pop();
@@ -38,7 +39,7 @@ for (const line of md.split("\n")) {
     id: slug(label0), label: label0.charAt(0).toUpperCase() + label0.slice(1), sub,
     type: unbold(type), cardFull: unbold(card), why: unbold(why), volatile: unbold(vol), rel: unbold(rel),
     first: unbold(first.replace(/\s*[—,]\s*\*\*.+?\*\*\s*$/, "")).replace(/\bfar\b/, "far (the face)"), gap: gapM ? unbold(gapM[1]).replace(/^feed gap:\s*/, "") : null,
-    mine: proposal(imp),
+    mine: proposal(imp.replace(/\s*\(proposed\)/, "")), fresh: /\(proposed\)/.test(imp),
   });
 }
 function proposal(cell) {                       /* "**3** if uncaught, else 1" → base 1 + alert · "alarm channel only" → base 1 + alert */
@@ -108,6 +109,11 @@ const EX = {
     return (un.length ? `${plural(un.length, "uncaught race")} · on ${list(un.map((x) => x.table), 2)}` : "no uncaught race") + (ok.length ? ` · ${ok.map((x) => x.table).join(", ")} is ${ok[0].state}` : ""); },
   "idempotency-claim": () => (f.repeat.key ? `${f.repeat.key.name} ${f.repeat.key.carrier}` + (f.repeat.required ? ` · required, a missing key ends ${f.repeat.required.status}` : "") : null),
 
+  "events-published": () => null,                       /* the lab's facts carry no event slice for this endpoint: none is published here */
+  "tasks-dispatched": () => { const d = L.conns.out.find((k) => k.kind === "dispatches"); return d ? `${plural(d.items.length, "task")} · ${list(d.items.map((x) => x.label), 3)}` : null; },
+  "outside-services-called": () => { const d = L.conns.out.find((k) => k.kind === "consumes"); return d ? list(d.items.map((x) => x.label), 3) : null; },
+  "delivery": () => (L.security.stream ? "streams its answer" : "one answer · no stream"),
+
   "request-scoped-state": () => (f.repeat.key && f.repeat.key.through ? `${f.repeat.key.through} is set by middleware and read by the handler` : null),
   "client-cache-effects": () => { const c = f.frontend.hook && f.frontend.hook.calls[0]; if (!c) return null; const k = (a) => a.map((x) => q(x.key.join("/"))).join(", "); return `on success · seeds ${k(c.seeds)} · invalidates ${k(c.invalidates)}`; },
 
@@ -136,7 +142,7 @@ const EX = {
     const allF = f.findings.concat(Object.values(f.arm_findings).flat());
     return `${plural(allF.length, "finding")} · ` + allF.map((x) => (FIND[x.id] || rawF)(x)).join(" · "); },
 };
-const NONE = { "little-helpers-with-a-type": "none to show · helper functions carry no type in the feed yet" };
+const NONE = { "little-helpers-with-a-type": "none to show · helper functions carry no type in the feed yet", "events-published": "none on this endpoint", "tasks-dispatched": "none on this endpoint", "outside-services-called": "none drawn on this endpoint" };
 for (const r of rows) {
   if (!(r.id in EX)) die("no example rule for row: " + r.id);
   let v = null; try { v = EX[r.id](); } catch (e) { die(`example for ${r.id} failed: ${e.message}`); }
@@ -162,7 +168,7 @@ k3 = swap(k3, 'mark(mhost, on ? "on" : "off");', 'if (mhost) mark(mhost, on ? "o
 
 /* ── 5 · the page ──────────────────────────────────────────────────────── */
 const data = {
-  kind: KIND, endpoint: `${I.method} ${I.path}`, head: f.head,
+  kind: KIND, endpoint: `${I.method} ${I.path}`, head: f.head, ruled: (md.match(/^Ruled:\s*(\d{4}-\d{2}-\d{2})\s*$/m) || [])[1] || null,
   inv: { file: "inventory-endpoint.md", hash: crypto.createHash("sha1").update(md).digest("hex").slice(0, 8) },
   ui: Object.fromEntries(Object.entries(W.ui).map(([k, v]) => [k, v.plain])),
   sections: sections.map((s) => ({ title: s.title, short: s.short, slug: s.slug, icon: s.icon, plain: s.plain, rows: s.rows })),

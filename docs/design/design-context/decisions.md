@@ -71,3 +71,15 @@ Revisit if: Gabe's corrections move more than a third of the ratings — then th
 ## D-011 — "Prism" means a point of view
 Date: 2026-09-18 · Decision: in the design context, a prism is a standpoint from which an element is read (data effects · in-flight state · decision points · structures · functions by how crucial they are · coverage · context · reach outward — candidates in `prisms.md`). The depth rule: detail where something can change the path, the data, the context or the flow; the rest is mentioned, never drilled.
 Note: the suite's authored "prism pages" (gabe-imagine) share the word and are a different thing.
+
+## D-012 — The kinds of ending are fixed slots, drawn even when empty
+Date: 2026-09-18 · Fader moved: Space (fixed slot vs flowing) · State (resting)
+Decision: success · refusal · framework · validation · uncaught are FIVE constant slots on an endpoint, always drawn in the same order; a kind with no ending is drawn hollow (the zero state), never removed; an empty kind that should not be empty raises an alert (a write endpoint with no refusal · a body with no validation). The same idea is expected on other element kinds, with their own constants.
+Reason (Gabe, on the rating sheet): "These families might be constants here in the API endpoint and later in other elements, so we will still show them even if they are empty. They might surface some kind of flag or warning." It is P6 (positional constancy) and the element-forms idea that an empty slot is a finding.
+Tests run: none. Revisit if: a kind is empty on every endpoint of an app, so its slot is only noise there.
+
+## D-013 — The endpoint inventory's ratings are ruled; request-scoped state sits at 1 by Gabe's own rule
+Date: 2026-09-18 · Input: the RATINGS text pasted from `rate-endpoint.html` (inventory 05cdd08f): 3 changed · 39 confirmed · 1 untouched.
+Decision: the ratings in `inventory-endpoint.md` are the record — file:line 1 · signature 2 (the async mark) · deciding branches 3 with an alert · own guards 3 left as proposed. Request-scoped state moves 2 → 1: he confirmed 2 but wrote "maybe a 1 since it's just information… if there is some important information that we can have by having this as a 2 (so we can filter something that is important), we might keep it as a 2", and today nothing can be filtered by it — the three instances the feed knows (auth context · idempotency key · database session) already ride on rows rated 2 or 3, and no generation arm reads request-scoped state in general.
+Also: four rows were ADDED after his pass, marked (proposed) — events published · tasks dispatched · outside services called · delivery (a stream) — because his note on `signature` described "other code subscribed to the action", which exists in the feed and was missing from the inventory. They wait for his rating.
+Revisit if: a generation arm reads request.state / context variables in general and finds state that no other row carries — then request-scoped state is worth a 2 again.

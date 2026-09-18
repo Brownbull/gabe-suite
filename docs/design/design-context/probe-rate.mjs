@@ -61,6 +61,14 @@ ok(await p.evaluate(() => [...document.querySelectorAll('.row .pl')].every(n => 
 ok(await p.evaluate(() => [...document.querySelectorAll('.row .ex')].every(n => n.textContent.trim().length > 8)), 'every row carries an example line');
 ok((await p.textContent('#n-all')).trim() === String(MDROWS), 'the lede counts the attributes', await p.textContent('#n-all'));
 ok((await p.textContent('#n-secs')).trim() === String(MDSECS), 'the lede counts the groups', await p.textContent('#n-secs'));
+const MDFRESH = md.split('\n').filter(l => l.startsWith('|') && /\(proposed\)/.test(l)).length, RULED = (md.match(/^Ruled:\s*(\S+)\s*$/m) || [])[1] || null;
+ok(await p.locator('.chip.fresh').count() === MDFRESH, 'every row the inventory marks (proposed) wears the new chip', `${await p.locator('.chip.fresh').count()} vs ${MDFRESH}`);
+if (RULED) {
+  ok((await p.textContent('#lede-say')).startsWith('You ruled these on ' + RULED), 'a ruled inventory says so in the lede', (await p.textContent('#lede-say')).slice(0, 60));
+  const fresh = ALL.find(r => r.fresh), old1 = ALL.find(r => !r.fresh);
+  ok(await row(old1.id).locator('.state').textContent() === 'on record', 'a ruled row at rest reads "on record"', await row(old1.id).locator('.state').textContent());
+  if (fresh) ok(await row(fresh.id).locator('.state').textContent() === 'still mine', 'a row added since the ruling still reads "still mine"', await row(fresh.id).locator('.state').textContent());
+}
 { // the race example is the page's one alarm-bearing fact: it must say what the steps say, never the one handled claim alone
   globalThis.window = {}; require(path.join(HERE, '../workflow-panel/_lab-ep.js'));
   const seen = new Map(); globalThis.window.LABEP.forms.paths.forEach(q => ((q.effects || {}).steps || []).forEach(st => { if (st.race) seen.set(st.table + '|' + JSON.stringify(st.race.keys), st.race.state); }));
