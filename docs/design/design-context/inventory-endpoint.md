@@ -14,7 +14,7 @@ first appear: far (face) · mid · near · tooltip · portrait. The channel colu
 | entity · cluster | category | 1 | 2 | where it lives; context, not behaviour | no | relation | mid |
 | declared status | category | 1 | 2 | the promise — it matters only beside what is produced | no | own | mid |
 | file:line | text | 1 | 2 | "can I open it?" (Q15) | yes | own | tooltip |
-| risk flag | state | 0–1 | 2 | a verdict from size; an alarm only when abnormal (P2) | yes | own | far, as an alert |
+| risk flag | state | 0–1 | 2 — an alert when abnormal | a verdict from size; quiet at rest (P2) | yes | own | far, as an alert |
 | signature (async · lines · returns) | quantity + text | 1 | 1 | detail | yes | own | portrait |
 | usage · fan-in | quantity | 1 | 1 | reach, not behaviour | yes | relation | tooltip |
 

@@ -1,0 +1,76 @@
+{
+  "_about": "Authored words for the rating sheet, keyed by the slug of each inventory row. The plain lines follow gabe-lens plain mode and are checked by ../workflow-panel/plain-audit.py. Facts are never typed here: the example under each row is computed by gen-rate-sheet.js from the lab's generated facts.",
+  "sections": {
+    "Identity": { "icon": "tag", "plain": "The endpoint's name and the place it lives." },
+    "Endings and decision points — what determines the path": { "short": "Endings and decision points", "icon": "git-branch", "plain": "The ways a request can end and the checks that decide it." },
+    "Data effects — read, write, modify, create, delete": { "short": "Data effects", "icon": "database", "plain": "The rows the endpoint reads and changes in the database." },
+    "In-flight state — ephemeral but alive during the process": { "short": "In-flight state", "icon": "timer", "plain": "The values that stay alive only while the request runs." },
+    "Structures": { "icon": "braces", "plain": "The shapes of the body that comes in and the body that goes out." },
+    "Functions — by how crucial they are": { "short": "Functions", "icon": "square-function", "plain": "The code that runs, sorted by how much it decides." },
+    "Coverage, context, client, findings": { "icon": "shield-check", "plain": "The proof from tests, the callers, and the things that look wrong." }
+  },
+  "rows": {
+    "method-path": { "plain": "The endpoint's name — the verb and the URL a client calls." },
+    "entity-cluster": { "plain": "The feature that owns the endpoint and the URL group it sits in." },
+    "declared-status": { "plain": "The success code the endpoint promises in its decorator." },
+    "file-line": { "plain": "The file and line where the handler starts." },
+    "risk-flag": { "plain": "A warning that the endpoint is unusually large or heavily used." },
+    "signature": { "plain": "The handler's outline — async or not, its length, the type it returns." },
+    "usage-fan-in": { "plain": "The number of callers that reach the endpoint." },
+
+    "kinds-of-ending": { "plain": "The families a request's ending can belong to — success, refusal, framework, validation, uncaught." },
+    "the-endings": { "plain": "Every distinct way a request to the endpoint can end." },
+    "the-stage-an-ending-leaves-from": { "plain": "The stage where a request stops — edge, gate, input, handler, answer or uncaught." },
+    "status-code-per-ending": { "plain": "The HTTP number each ending answers with." },
+    "own-guards": { "plain": "A check in the handler's own code that refuses the request." },
+    "deciding-branches": { "plain": "A branch inside a called function that changes how the request ends." },
+    "catches": { "plain": "A try/except that turns a failure into a status — or hides the failure." },
+    "switches": { "plain": "A setting or a swapped-in implementation that changes what the endpoint does." },
+    "steps-in-the-longest-chain": { "plain": "The count of steps on the longest way through the endpoint." },
+
+    "tables-touched": { "plain": "The database tables the endpoint reads or writes." },
+    "operation-per-table": { "plain": "The kind of touch each table gets — read, add, update or delete." },
+    "fate-of-the-writes-per-ending": { "plain": "The outcome of the writes on one ending — saved, rolled back or left unsaved." },
+    "the-moment-a-table-is-touched": { "plain": "The stage and step at which a table is touched." },
+    "provisions": { "plain": "A row the endpoint creates before the handler even starts." },
+    "race-on-a-unique-key": { "plain": "Two simultaneous requests that insert the same unique key." },
+    "idempotency-claim": { "plain": "A key that makes a request safe to send twice." },
+
+    "request-scoped-state": { "plain": "A value set early in the request that later steps rely on — the auth context, a key on request.state." },
+    "client-cache-effects": { "plain": "The cached queries the screen drops or refills after the answer." },
+
+    "request-shape": { "plain": "The schema the request body must match." },
+    "response-shape-per-ending": { "plain": "The body each ending answers with." },
+    "validation-cases": { "plain": "The rules that make a request body fail with a 422." },
+
+    "the-handler": { "plain": "The function that faces the API and receives the request." },
+    "decision-point-functions": { "plain": "A function whose raise or refusal becomes one of the endings." },
+    "data-touching-functions": { "plain": "A function that reads, writes or commits to the database." },
+    "context-giving-functions": { "plain": "A function that prepares context for the rest — authentication, the session, settings." },
+    "little-helpers-with-a-type": { "plain": "A small function that formats, caps or validates one value." },
+    "functions-behind-walk-levels": { "plain": "The count of functions reachable behind the handler and the depth of that walk." },
+
+    "coverage-per-condition": { "plain": "The share of endings and guards that a test proves." },
+    "cases": { "plain": "The named test cases that prove an ending." },
+    "journeys-workflow-step": { "plain": "The user journey the endpoint is one step of." },
+    "auth-scheme-gate": { "plain": "The login scheme and the function that checks it." },
+    "rate-limit": { "plain": "The cap on the requests one client may send per minute." },
+    "app-band": { "plain": "The middleware every request in the app passes through." },
+    "who-fetches-it": { "plain": "The frontend hook that calls the endpoint and the screen that uses the hook." },
+    "can-the-client-tell-the-endings-apart": { "plain": "The screen's ability to tell two different refusals apart." },
+    "findings": { "plain": "The anomalies the form check found on the endpoint." }
+  },
+  "ui": {
+    "rule3": { "plain": "A thing that can change the path, the data, the context or the flow." },
+    "rule2": { "plain": "A thing that gives context to something rated 3." },
+    "rule1": { "plain": "A thing that gets mentioned and never drilled into." },
+    "alert": { "plain": "An alert — quiet at rest, shown on the face only when the value is abnormal." },
+    "note": { "plain": "A short note that travels with the rating in the copied text." },
+    "confirm": { "plain": "A shortcut that accepts my rating for every row of the section you have not touched." },
+    "copy": { "plain": "The full text of your ratings, placed on the clipboard for pasting into the chat." },
+    "reset": { "plain": "A clean slate — every rating, alert and note of yours is cleared." },
+    "card": { "plain": "The spread across the 80 endpoints — smallest, middle and largest." },
+    "gap": { "plain": "A fact the map cannot produce yet, so a picture of it waits on new generation work." },
+    "detail": { "plain": "The amount of text under each attribute's name." }
+  }
+}
