@@ -55,17 +55,57 @@
   .grid .cellg { min-height: 58px; border: 1px solid var(--rule); border-radius: 8px; background: var(--card); display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: 7px; padding: 8px; }
   .grid .cellg.start { background: color-mix(in srgb, var(--accent) 10%, var(--card)); border-color: color-mix(in srgb, var(--accent) 40%, var(--rule)); }
   .grid .num { cursor: default; font-size: var(--fs-sm); min-width: 1.75em; height: 1.75em; }
-  .grid .num[data-mine="later"] { background: transparent; color: var(--ink); border: 1.5px solid var(--strong); }
+  .num[data-mine="later"] { background: transparent; color: var(--ink); border: 1.5px solid var(--strong); }
 
   /* ── one piece of work ── */
-  .works { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr)); gap: 14px; align-items: start; }
+  .works { display: flex; flex-direction: column; gap: 14px; }
+  .work { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 14px 28px; align-items: start; }
+  .work > .wl, .work > .wr { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .work > .how, .work > .note { grid-column: 1 / -1; }
+  @media (max-width: 900px) { .work { grid-template-columns: minmax(0, 1fr); } }
   .work h3 { margin: 0; font-size: 1.05em; display: flex; align-items: center; gap: 9px; }
   .work .gain { font-size: var(--fs-sm); color: var(--ink-soft); }
   .chips { display: flex; flex-wrap: wrap; gap: 5px; }
   .chips[hidden], .how[hidden] { display: none; }
   .chip { font-size: var(--fs-min); color: var(--ink-soft); border: 1px solid var(--rule); border-radius: 999px; padding: 0 8px; line-height: 1.6; cursor: default; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-sizing: border-box; }
   .chip.q { color: var(--accent); font-variant-numeric: tabular-nums; }
-  .how { font-size: var(--fs-xs); color: var(--ink-soft); border-top: 1px dashed var(--rule); padding-top: 8px; margin: 0; overflow-wrap: anywhere; }
+  .how { font-size: var(--fs-xs); color: var(--ink-soft); border-top: 1px dashed var(--rule); padding-top: 8px; margin: 0; overflow-wrap: anywhere; display: flex; flex-direction: column; gap: 8px; }
+  .how p { margin: 0; }
+
+  /* ── what a piece adds ── */
+  .idea { font-size: var(--af-size); color: var(--ink); font-weight: 650; text-wrap: balance; }
+  .chip.pv { color: var(--ink); border-color: color-mix(in srgb, var(--accent) 45%, var(--rule)); background: var(--accent-soft); }
+  .flds { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; font-size: var(--fs-sm); color: var(--ink-soft); }
+  .flds b { color: var(--ink); font-weight: 650; }
+  .flds .stt { font-size: var(--fs-min); color: var(--muted); border: 1px solid var(--rule); border-radius: 999px; padding: 0 7px; margin-left: 6px; white-space: nowrap; cursor: default; }
+  .flds .stt[data-s="new"] { border-style: dashed; color: var(--ink-soft); }
+  .eg { border: 1px solid var(--rule); border-radius: 8px; background: var(--raised); padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; font-size: var(--fs-xs); color: var(--ink-soft); }
+  .eg .when { font-size: var(--fs-min); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .eg ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px; color: var(--ink); overflow-wrap: anywhere; }
+  .eg li::before { content: "› "; color: var(--accent); }
+  /* coverage: a full disc answers the question · a half disc needs another piece · a ring lands on another card */
+  .cv { display: inline-block; width: .8em; height: .8em; border-radius: 50%; border: 1.5px solid var(--accent); box-sizing: border-box; vertical-align: -1px; margin-right: 5px; flex: 0 0 auto; }
+  .cv[data-c="full"] { background: var(--accent); }
+  .cv[data-c="half"] { background: linear-gradient(90deg, var(--accent) 50%, transparent 50%); }
+  .cv[data-c="fact"] { border-style: dotted; }
+  .cv[data-c="elsewhere"] { border-color: var(--muted); }
+
+  /* ── one by one: the prisms down, the pieces across ── */
+  .obo-wrap { overflow-x: auto; }
+  .obo { display: grid; gap: 0; font-size: var(--fs-sm); min-width: 760px; align-items: center; }
+  .obo > div { padding: 4px 6px; border-bottom: 1px solid var(--rule-soft); min-height: 28px; display: flex; align-items: center; box-sizing: border-box; }
+  .obo .c { justify-content: center; cursor: default; }
+  .obo .pn { color: var(--ink); gap: 8px; }
+  .obo .pn .qq { font-size: var(--fs-min); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .obo .hd { justify-content: center; border-bottom: 1px solid var(--rule); }
+  .obo .hd.l { justify-content: flex-start; font-size: var(--fs-min); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); }
+  .obo .cv { width: 1em; height: 1em; margin: 0; }
+  .obo .run { border-bottom: 0; align-items: flex-end; justify-content: center; height: 84px; padding-top: 10px; }
+  .obo .run i { display: block; width: 60%; border-radius: 4px 4px 0 0; background: var(--accent); min-height: 2px; }
+  .obo .run.now i { background: var(--rule); }
+  .obo .cnt { justify-content: center; border-bottom: 0; font-size: var(--fs-min); color: var(--ink-soft); font-variant-numeric: tabular-nums; min-height: 20px; }
+  .lg { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: var(--fs-xs); color: var(--ink-soft); align-items: center; }
+  .lg span { display: inline-flex; align-items: center; }
 
   /* ── the nine attributes ── */
   .rows { display: flex; flex-direction: column; gap: 8px; position: relative; }
@@ -109,6 +149,14 @@
     <div class="take" id="take1"></div>
   </section>
 
+  <section class="sec" data-sec="6" id="sec-obo">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"></path><path d="M7 16h2v-3h4V9h4V5h3"></path></svg>The effect, one by one</h2><span class="n" id="obo-n">—</span></div>
+    <p class="cap">Your eleven points of view down the side, the pieces of work across the top in the order I would do them. The bars count the questions you can fully answer after each piece.</p>
+    <div class="lg"><span><i class="cv" data-c="full"></i>a question of this view becomes fully answerable</span><span><i class="cv" data-c="half"></i>it improves, another piece finishes it</span><span><i class="cv" data-c="fact"></i>a new fact lands, no question moves yet</span><span><i class="cv" data-c="elsewhere"></i>the fact belongs on another card</span></div>
+    <div class="panel"><div class="obo-wrap"><div class="obo" id="obo"></div></div></div>
+    <div class="take" id="take3"></div>
+  </section>
+
   <section class="sec" data-sec="2" id="sec-wrong">
     <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>One wrong picture</h2><span class="n">found along the way</span></div>
     <div class="panel wrong"><p class="cap" id="wrong-plain"></p><div class="orders" id="orders"></div><p class="cap" id="wrong-fix"></p></div>
@@ -116,7 +164,7 @@
 
   <section class="sec" data-sec="3" id="sec-works">
     <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>The pieces of work</h2><span class="n" id="works-n">—</span></div>
-    <p class="cap">Cheapest first. Each card says what you gain, the questions it answers and the gaps it closes. "How" opens the technical detail.</p>
+    <p class="cap">One piece per row, cheapest first. On the left, the idea you gain, the points of view it feeds and the questions it moves. On the right, the new fields and what the card would show on a real endpoint. "How" opens the technical detail.</p>
     <div class="works" id="works"></div>
   </section>
 
@@ -172,7 +220,7 @@
     nb.addEventListener("click", function () { if (!note.hidden && note.value) { note.focus(); return; } note.hidden = !note.hidden; nb.setAttribute("aria-expanded", String(!note.hidden)); if (!note.hidden) note.focus(); }); note.type = "text"; note.maxLength = 240; note.placeholder = placeholder; note.setAttribute("aria-label", "Note");
     note.addEventListener("input", function () { var s = state.v[id] || (state.v[id] = { v: null, n: "" }); s.n = note.value; save(); nb.setAttribute("data-has", String(!!s.n)); paintOut(); }); noteHolder.appendChild(note);
     function paint() { var s = state.v[id] || {}; btns.forEach(function (b, i) { b.setAttribute("aria-pressed", String(s.v === opts[i][0])); b.setAttribute("data-mine", String(!s.v && mine === opts[i][0])); });
-      host.setAttribute("data-state", s.v ? "yours" : "mine"); st.textContent = !s.v ? "still mine" : s.v === mine ? "yours · same as mine" : "yours · I said " + opts.filter(function (o) { return o[0] === mine; })[0][1].toLowerCase();
+      (host.closest(".work, .row") || host).setAttribute("data-state", s.v ? "yours" : "mine");      /* the state belongs to the whole card or row */ st.textContent = !s.v ? "still mine" : s.v === mine ? "yours · same as mine" : "yours · I said " + opts.filter(function (o) { return o[0] === mine; })[0][1].toLowerCase();
       if (note.value !== (s.n || "")) note.value = s.n || "";
       if (s.n) note.hidden = false; else if (document.activeElement !== note) note.hidden = true;
       nb.setAttribute("data-has", String(!!s.n)); nb.setAttribute("aria-expanded", String(!note.hidden)); }
@@ -194,6 +242,25 @@
     $("grid-n").textContent = D.bundles.filter(function (b) { return b.mine === "do"; }).length + " to start now · " + D.bundles.filter(function (b) { return b.mine !== "do"; }).length + " can wait";
   })();
 
+  /* ═══ the effect, one by one ═══ */
+  (function () {
+    var O = D.oneByOne, g = $("obo"), stage = g.parentNode.parentNode, tip = tipFor(stage), N = D.bundles.length;
+    g.style.gridTemplateColumns = "minmax(20ch, 26ch) minmax(44px, .6fr) repeat(" + N + ", minmax(44px, 1fr))";
+    g.appendChild(el("div", "hd l", "point of view")); var h0 = el("div", "hd", "today"); h0.style.fontSize = "var(--fs-min)"; h0.style.color = "var(--ink-soft)"; g.appendChild(h0);
+    D.bundles.forEach(function (b) { var h = el("div", "hd"), n = el("span", "num", String(b.n)); n.setAttribute("data-mine", b.mine); h.appendChild(n); wire(h, tip, stage, ln("", b.name) + ln("", b.fx.idea)); g.appendChild(h); });
+    O.prisms.forEach(function (p) {
+      var pn = el("div", "pn"); pn.appendChild(el("span", null, p.name)); pn.appendChild(el("span", "qq", p.questions.join(" "))); g.appendChild(pn); g.appendChild(el("div", "c"));
+      p.cells.forEach(function (c, i) { var d = el("div", "c"); d.setAttribute("data-p", p.name); d.setAttribute("data-n", String(i + 1)); if (c) { var m = el("i", "cv"); m.setAttribute("data-c", c.mark); d.appendChild(m); wire(d, tip, stage, ln("", D.bundles[i].name + " · " + p.name) + (c.qs.length ? ln("questions", c.qs.join(" · ")) : "") + (c.gains ? ln("", c.gains) : "")); } g.appendChild(d); });
+    });
+    var lab = el("div", "pn"); lab.style.borderBottom = "0"; lab.appendChild(el("span", null, "questions you can fully answer")); g.appendChild(lab);
+    O.running.forEach(function (r, i) { var d = el("div", "run" + (i === 0 ? " now" : "")), bar = el("i"); bar.style.height = Math.round(64 * r.full.length / O.total) + "px"; d.appendChild(bar); d.setAttribute("data-after", String(r.after));
+      var gained = i === 0 ? r.full : r.full.filter(function (q) { return O.running[i - 1].full.indexOf(q) < 0; }); wire(d, tip, stage, ln("", r.full.length + " of " + O.total + " questions") + ln(i === 0 ? "already answerable" : "gained here", gained.join(" · ") || "none")); g.appendChild(d); });
+    var sp = el("div", "cnt"); g.appendChild(sp); O.running.forEach(function (r) { g.appendChild(el("div", "cnt", String(r.full.length))); });
+    var last = O.running[O.running.length - 1].full.length, els = O.questions.filter(function (q) { return q.elsewhere; }).map(function (q) { return q.id; }), never = O.questions.filter(function (q) { return q.fullAt === null && !q.elsewhere; }).map(function (q) { return q.id; });
+    $("obo-n").textContent = O.running[0].full.length + " of " + O.total + " today · " + last + " after all eleven";
+    take("take3", D.takes.obo.concat(els.length ? ["Not counted here, because the fact lands on another card: " + els.join(" · ") + "."] : []).concat(never.length ? ["Still only half answered after all eleven: " + never.join(" · ") + "."] : []));
+  })();
+
   /* ═══ 2 · the wrong picture ═══ */
   (function () {
     $("wrong-plain").textContent = D.wrong.plain; $("wrong-fix").textContent = D.wrong.fix;
@@ -205,18 +272,28 @@
   /* ═══ 3 · the pieces of work ═══ */
   var BV = [["do", "Do it", "do"], ["later", "Later", "later"], ["drop", "Drop", "dropb"]];
   D.bundles.forEach(function (b) {
-    var card = el("div", "panel work"), tip = tipFor(card), h = el("h3"); card.setAttribute("data-b", b.key);
-    h.appendChild(el("span", "num", String(b.n))); h.appendChild(document.createTextNode(b.name)); card.appendChild(h);
-    card.appendChild(el("p", "gain", b.gain));
-    var meta = el("div", "meta"), ef = effMark(b.effort); wire(ef, tip, card, ln("", D.effort[b.effort].plain)); meta.appendChild(ef);
-    var im = el("span", "imp"); im.appendChild(el("span", "rt", String(b.imp))); im.appendChild(document.createTextNode("importance")); wire(im, tip, card, ln("", D.ui.imp)); meta.appendChild(im); card.appendChild(meta);
-    if (b.questions.length) { card.appendChild(el("p", "lab", "the questions it answers")); var qc = el("div", "chips"); b.questions.forEach(function (q) { var c = el("span", "chip q", q.id); wire(c, tip, card, ln("", q.text)); qc.appendChild(c); }); card.appendChild(qc); }
-    card.appendChild(el("p", "lab", "the gaps it closes")); var cc = el("div", "chips");
-    b.closes.forEach(function (x) { var c = el("span", "chip", x.label); wire(c, tip, card, ln("", x.plain) + ln("alone it would cost", D.effort[x.effort].word) + ln("importance", String(x.imp))); cc.appendChild(c); }); card.appendChild(cc);
-    var fold = el("button", "btn fold", "How"); fold.type = "button"; fold.setAttribute("aria-expanded", "false"); var how = el("p", "how", b.work); how.hidden = true;
-    fold.addEventListener("click", function () { how.hidden = !how.hidden; fold.setAttribute("aria-expanded", String(!how.hidden)); }); card.appendChild(fold); card.appendChild(how);
-    verdict(card, tip, card, b.key, b.mine, BV, card, "a note — optional");
-    $("works").appendChild(card);
+    var outer = el("div", "panel work"), tip = tipFor(outer), h = el("h3"); outer.setAttribute("data-b", b.key);
+    var card = el("div", "wl"), right = el("div", "wr"); outer.appendChild(card); outer.appendChild(right);
+    var hn = el("span", "num", String(b.n)); hn.setAttribute("data-mine", b.mine); h.appendChild(hn); h.appendChild(document.createTextNode(b.name)); card.appendChild(h);
+    var meta = el("div", "meta"), ef = effMark(b.effort); wire(ef, tip, outer, ln("", D.effort[b.effort].plain)); meta.appendChild(ef);
+    var im = el("span", "imp"); im.appendChild(el("span", "rt", String(b.imp))); im.appendChild(document.createTextNode("importance")); wire(im, tip, outer, ln("", D.ui.imp)); meta.appendChild(im); card.appendChild(meta);
+    var fx = b.fx;
+    /* the drafters wrote each idea as "a handle: the sentence" — draw the handle as the idea and the sentence under it */
+    var cut = fx.idea.indexOf(": "), handle = cut > 0 && cut < 64 ? fx.idea.slice(0, cut) : fx.idea, rest = cut > 0 && cut < 64 ? fx.idea.slice(cut + 2) : "";
+    card.appendChild(el("p", "lab", "the idea you gain")); card.appendChild(el("p", "idea", handle)); if (rest) card.appendChild(el("p", "gain", rest.charAt(0).toUpperCase() + rest.slice(1)));
+    card.appendChild(el("p", "lab", "the points of view it feeds")); var pc = el("div", "chips");
+    fx.prisms.forEach(function (pv) { var c = el("span", "chip pv", pv.name); wire(c, tip, outer, ln("", pv.gains)); pc.appendChild(c); }); card.appendChild(pc);
+    right.appendChild(el("p", "lab", "new on the card")); var fl = el("ul", "flds");
+    fx.fields.forEach(function (f) { var li = el("li"), nm = el("b", null, f.name); li.appendChild(nm); li.appendChild(document.createTextNode(" — " + f.parts.join(" · "))); var s = el("span", "stt", f.status); s.setAttribute("data-s", f.status === "new" ? "new" : "has"); wire(s, tip, outer, ln("", D.ui["st-" + f.status.replace(/ /g, "-")])); li.appendChild(s); fl.appendChild(li); }); right.appendChild(fl);
+    var eg = el("div", "eg"); eg.appendChild(el("span", "when", "on " + D.endpoint + " · today")); eg.appendChild(el("span", null, fx.today)); eg.appendChild(el("span", "when", "after this piece")); var rows = el("ul"); fx.rows.forEach(function (r) { rows.appendChild(el("li", null, r)); }); eg.appendChild(rows); right.appendChild(eg);
+    card.appendChild(el("p", "lab", "the questions it moves")); var qc = el("div", "chips");
+    fx.questions.forEach(function (q) { var c = el("span", "chip q"), m = el("i", "cv"); m.setAttribute("data-c", q.coverage); c.appendChild(m); c.appendChild(document.createTextNode(q.id)); wire(c, tip, outer, ln("", q.text) + ln(q.coverage === "full" ? "fully answerable after this" : q.coverage === "half" ? "improves" + (q.needs ? ", piece " + q.needs + " finishes it" : "") : "lands on another card", q.why)); qc.appendChild(c); }); card.appendChild(qc);
+    var fold = el("button", "btn fold", "How"); fold.type = "button"; fold.setAttribute("aria-expanded", "false"); var how = el("div", "how"); how.hidden = true;
+    how.appendChild(el("p", "lab", "the gaps it closes")); var cc = el("div", "chips"); b.closes.forEach(function (x) { var c = el("span", "chip", x.label); wire(c, tip, outer, ln("", x.plain) + ln("alone it would cost", D.effort[x.effort].word) + ln("importance", String(x.imp))); cc.appendChild(c); }); how.appendChild(cc);
+    how.appendChild(el("p", "lab", "the work")); how.appendChild(el("p", null, b.work));
+    fold.addEventListener("click", function () { how.hidden = !how.hidden; fold.setAttribute("aria-expanded", String(!how.hidden)); });
+    verdict(card, tip, outer, b.key, b.mine, BV, outer, "a note — optional"); card.appendChild(fold); outer.appendChild(how);
+    $("works").appendChild(outer);
   });
   $("works-n").textContent = D.bundles.length + " pieces · " + D.counts.items + " leftovers · " + D.counts.verified + " verified against the map";
 

@@ -31,11 +31,38 @@ const closed = new Set(D.bundles.flatMap(x => x.closes.map(c => c.id))), judged 
 ok(judged.every(id => closed.has(id)), 'every judged item is closed by some piece of work, none lost', judged.filter(id => !closed.has(id)).join(', '));
 for (const bd of D.bundles) {
   const card = p.locator(`.work[data-b="${bd.key}"]`);
-  ok(await card.locator('.chips').last().locator('.chip').count() === bd.closes.length && await card.locator('.chip.q').count() === bd.questions.length, `card ${bd.n} lists the gaps it closes and the questions it answers`);
+  ok(await card.locator('.how .chip').count() === bd.closes.length, `card ${bd.n} keeps the gaps it closes, inside the fold`);
+  const fx = bd.fx;
+  ok(fx.idea.startsWith(await card.locator('.idea').textContent()) && (await card.locator('.idea').textContent()).length > 8, `card ${bd.n} opens its gain with the idea`);
+  ok(await card.locator('.chip.pv').count() === fx.prisms.length && fx.prisms.length > 0, `card ${bd.n} names the points of view it feeds`, await card.locator('.chip.pv').count());
+  ok(await card.locator('.flds li').count() === fx.fields.length && await card.locator('.eg li').count() === fx.rows.length && fx.rows.length >= 3, `card ${bd.n} lists the new fields and shows rows of the example endpoint`);
+  const marks = await card.locator('.chip.q .cv').evaluateAll(ns => ns.map(n => n.getAttribute('data-c')));
+  ok(JSON.stringify(marks) === JSON.stringify(fx.questions.map(q => q.coverage)), `card ${bd.n} marks each question full, half or elsewhere`, marks.join(','));
+  if (fx.fields.every(f => f.status === 'new')) ok(fx.rows.every(r => /^would say:/.test(r)), `card ${bd.n} adds facts nothing produces yet, so every example row says "would say"`);
 }
 const EFFN = { inventory: 1, lab: 2, arm: 3 };
 ok(await p.evaluate(E => [...document.querySelectorAll('.work')].every(c => c.querySelectorAll('.meta .eff .st i.on').length === E[window.__gaps.data.bundles.find(x => x.key === c.getAttribute('data-b')).effort]), EFFN), 'the lit steps on each card are its effort');
 ok(D.bundles.every((x, i) => i === 0 || EFFN[x.effort] >= EFFN[D.bundles[i - 1].effort]), 'the cards run cheapest first');
+
+// ── 1b · the effect, one by one: recomputed here, then measured on the page ──
+{
+  const O = D.oneByOne, QS = O.questions.map(q => q.id), touch = new Map(QS.map(q => [q, []]));
+  for (const bd of D.bundles) for (const q of bd.fx.questions) touch.get(q.id).push({ n: bd.n, c: q.coverage, needs: q.needs });
+  const fullAt = q => { const t = touch.get(q), fulls = t.filter(x => x.c === 'full').map(x => x.n), halves = t.filter(x => x.c === 'half');
+    const a = fulls.length ? Math.min(...fulls) : Infinity, h = (halves.length >= 2 || halves.some(x => x.needs)) ? Math.max(...halves.flatMap(x => [x.n, x.needs || 0])) : Infinity; const at = t.length ? Math.min(a, h) : 0; return Number.isFinite(at) ? at : null; };
+  const mine = [0, ...D.bundles.map(x => x.n)].map(k => QS.filter(q => fullAt(q) !== null && fullAt(q) <= k).length);
+  ok(JSON.stringify(mine) === JSON.stringify(O.running.map(r => r.full.length)), 'the running count of answerable questions matches an independent recomputation', mine.join(' '));
+  ok(mine.every((v, i) => i === 0 || v >= mine[i - 1]) && mine[mine.length - 1] > mine[0], 'the count never falls, and it rises over the eleven pieces', mine.join(' → '));
+  const drawn = await p.evaluate(() => [...document.querySelectorAll('#obo .cnt')].slice(1).map(n => Number(n.textContent)));
+  ok(JSON.stringify(drawn) === JSON.stringify(mine), 'the numbers under the bars are those counts', drawn.join(' '));
+  const hs = await p.evaluate(() => [...document.querySelectorAll('#obo .run i')].map(n => n.getBoundingClientRect().height));
+  ok(hs.every((hgt, i) => Math.abs(hgt - Math.max(2, Math.round(64 * mine[i] / O.total))) <= 1.5), 'each bar\'s height is its count', hs.map(Math.round).join(' '));
+  ok(await p.locator('#obo .pn').count() === O.prisms.length + 1 && O.prisms.length === 11, 'eleven points of view down the side');
+  let okCells = true; for (const pr of O.prisms) for (let i = 0; i < pr.cells.length; i++) { const c = pr.cells[i], got = await p.evaluate(({ n, name }) => { const d = [...document.querySelectorAll('#obo .c')].find(x => x.getAttribute('data-p') === name && x.getAttribute('data-n') === String(n)); const m = d && d.querySelector('.cv'); return m ? m.getAttribute('data-c') : null; }, { n: i + 1, name: pr.name }); if ((c ? c.mark : null) !== got) okCells = false; }
+  ok(okCells, 'every cell of the matrix wears the mark the data gives it');
+  const halfBg = await p.evaluate(() => { const g = s => getComputedStyle(document.querySelector(s)).backgroundImage + '|' + getComputedStyle(document.querySelector(s)).backgroundColor; return [g('.lg .cv[data-c="full"]'), g('.lg .cv[data-c="half"]'), g('.lg .cv[data-c="fact"]')]; });
+  ok(new Set(halfBg).size === 3, 'full, half and fact are three different drawings', halfBg.join(' || ').slice(0, 160));
+}
 
 // ── 2 · the grid places each piece by its cost and its importance ───────────
 for (const bd of D.bundles) {
@@ -88,6 +115,7 @@ ok(await p.locator('#af-motion').count() === 0 && await p.locator('#af-fonts .af
 const lightBg = await p.evaluate(() => getComputedStyle(document.body).backgroundColor); await p.emulateMedia({ colorScheme: 'dark' });
 ok(await p.evaluate(() => getComputedStyle(document.body).backgroundColor) !== lightBg, 'dark paints a different ground'); await shot(p, 'g-04-dark'); await p.emulateMedia({ colorScheme: 'light' });
 await p.locator('#sec-works').scrollIntoViewIfNeeded(); await shot(p, 'g-02-works');
+await p.locator('#sec-obo').scrollIntoViewIfNeeded(); await shot(p, 'g-06-one-by-one');
 await p.locator('#sec-attrs').scrollIntoViewIfNeeded(); await shot(p, 'g-05-attrs');
 await p.click('#copy'); await p.waitForFunction(() => document.getElementById('said').textContent.length > 0, { timeout: 4000 }).catch(() => {});
 const clip = await p.evaluate(() => navigator.clipboard.readText().catch(() => null)), said = await p.textContent('#said');

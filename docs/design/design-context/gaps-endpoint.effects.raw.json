@@ -1,0 +1,2982 @@
+{
+ "_about": "What each of the eleven pieces of work would ADD to the endpoint card, 2026-09-19: five AGENT drafters wrote each entry against the real facts (the lab's _lab-ep.js and the whole-app feed); a sixth agent re-opened the files, checked every value, status and coverage claim, and returned the corrected set. Never hand-edited; gen-gaps.js reads `verified.pieces`.",
+ "drafts": [
+  {
+   "key": "the-route-in-order",
+   "abstraction": "A numbered run: every way the request can end becomes the ordered list of checks, calls and forks it went through, with the one check that stopped it marked.",
+   "prisms": [
+    {
+     "name": "Endings",
+     "gains": "The three successes stop being three equal labels — \"first run\" is the route that got past all ten checks, and each of the nine refusals is named by the single check that ended it (Q11 moves)."
+    },
+    {
+     "name": "Gates and decisions",
+     "gains": "The checks stop being a set and become an order — passed, passed, stopped here — and the three app-wide checks stop being listed in the reverse of the order they run (Q6 moves, and the near half of Q17)."
+    },
+    {
+     "name": "Stages and order",
+     "gains": "Order inside a stage becomes readable instead of only the stage itself: which fork ran before which call inside the door's own code (Q7 moves)."
+    },
+    {
+     "name": "Data effects",
+     "gains": "The run gives the table touches a numbered spine to hang on, so \"when is this table touched\" stops being answered with a stage name (half of Q1 moves)."
+    }
+   ],
+   "fields": [
+    {
+     "name": "The numbered run",
+     "parts": [
+      "step number",
+      "what kind of step it is — a check, a call, a fork, a setting, a folded call, the ending",
+      "passed, or stopped here",
+      "file and line",
+      "what it is called, or the condition in the author's words"
+     ],
+     "status": "in the lab",
+     "source": "LABEP.forms.paths[].chain[] in _lab-ep.js (i · kind · hit · at · label · sub · fn) — 22 rows on the \"first run\" ending, all 14 endings carry one"
+    },
+    {
+     "name": "The checks in the order they ran",
+     "parts": [
+      "its place in the run",
+      "which check",
+      "passed or fired",
+      "which part of the request it belongs to — the app band, the body read, the lock, the body shape, the door's own code",
+      "the answer it would have given"
+     ],
+     "status": "in the lab",
+     "source": "the chain rows with kind \"gate\" and their hit flag (false = the request passed it, true = the one that ended it)"
+    },
+    {
+     "name": "The route that gets through",
+     "parts": [
+      "the ending's name",
+      "how many checks it passed",
+      "which single check stopped each of the other routes",
+      "a mark on the through-route"
+     ],
+     "status": "in the lab",
+     "source": "a reduction over LABEP.forms.paths[].chain[] gate rows — success paths carry 10 · 9 · 8 passed and 0 fired; every refusal exactly 1 fired"
+    },
+    {
+     "name": "The app-wide checks, in the order they run",
+     "parts": [
+      "which check",
+      "runs first, second or third",
+      "how many doors it covers"
+     ],
+     "status": "in the map",
+     "source": "forms.json middleware[id].order.runs (CORS 0 · rate limit 1 · idempotency 2); the card today reads LABEP.security.asgi[].order, which is the order they were registered in"
+    },
+    {
+     "name": "The condition behind a check",
+     "parts": [
+      "the condition in the author's words",
+      "the failure it catches, when it is a catch",
+      "where it is written"
+     ],
+     "status": "in the lab",
+     "source": "LABEP.forms.preconditions[].pred joined to the gate's exit id; the chain row's sub currently shows the catch (\"except ConsentRequiredError\") because via wins over pred at gen-endpoint-facts.py:123"
+    },
+    {
+     "name": "The folded call and why it was folded",
+     "parts": [
+      "which call",
+      "why nothing inside it changes the ending",
+      "file and line"
+     ],
+     "status": "in the lab",
+     "source": "chain rows with kind \"collapsed\" and their reason — both on this door read \"one return\" (apps/api/api/setup.py:191 and :204)"
+    }
+   ],
+   "today": "One number — \"22 steps on the longest route\" — plus the chain drawn inside whichever ending's record you open, with the three app-wide checks listed above it back to front.",
+   "after_rows": [
+    "2 · check · rate limit · passed · rate_limit.py:117",
+    "13 · call · complete_setup · setup.py:196",
+    "14 · fork · claimed.outcome is ClaimOutcome.REPLAY · not taken",
+    "17 · check · 409 consent required · stopped here · setup.py:374",
+    "first run · passed all 10 checks · the route that gets through",
+    "app band · CORS runs 1st · rate limit 2nd · idempotency 3rd"
+   ],
+   "questions": [
+    {
+     "id": "Q7",
+     "coverage": "full",
+     "needs": "—",
+     "why": "The ordered run is on the card for all fourteen endings; the only stretch it does not sequence is a call that changes nothing, and each of those says so where it sits — on this door both read \"one return\"."
+    },
+    {
+     "id": "Q6",
+     "coverage": "full",
+     "needs": "—",
+     "why": "Every check that can refuse now sits in its place with a passed-or-stopped mark, and the app band stops being drawn backwards; the two helpers that run on every request and can refuse nothing still leave no row, and that roster is part of \"inside-the-calls\"."
+    },
+    {
+     "id": "Q11",
+     "coverage": "full",
+     "needs": "—",
+     "why": "The through-route is read off the checks — \"first run\" passes all ten — and every other route names the one check that stopped it; how often each route is really taken cannot be read from code at all and stays out of the tool."
+    },
+    {
+     "id": "Q17",
+     "coverage": "half",
+     "needs": "inside-the-calls",
+     "why": "Three of the four things that decide a path — the door's own guard, the fork one call down, the setting chosen before the request arrived — are already labels on the run; the failures raised two calls deeper are recorded with their condition and still not loaded."
+    },
+    {
+     "id": "Q1",
+     "coverage": "half",
+     "needs": "why-a-touch-why-it-survives",
+     "why": "The run gives every table touch a numbered spine to sit on, but what an individual touch depends on is still a yes-or-no flag — 38 of the 92 database steps on the first-run route are marked conditional with no condition written."
+    }
+   ],
+   "evidence": [
+    {
+     "where": "docs/design/workflow-panel/_lab-ep.js → LABEP.forms.paths[12].chain[17] (the \"first run\" ending)",
+     "sample": "{\"i\":17,\"kind\":\"gate\",\"hit\":false,\"at\":\"apps/api/services/setup.py:374\",\"status\":409,\"label\":\"409 consent required\",\"sub\":\"except ConsentRequiredError\"}"
+    },
+    {
+     "where": "docs/design/workflow-panel/_lab-ep.js → LABEP.forms.paths[9].chain[17] (the \"consent required\" ending) and chain[13] of the through-route",
+     "sample": "the same check with hit:true; chain[13] = {\"kind\":\"call\",\"label\":\"complete_setup\",\"at\":\"apps/api/api/setup.py:196\"}"
+    },
+    {
+     "where": "reduction over LABEP.forms.paths[].chain[] gate rows, all 14 endings",
+     "sample": "first run 10 passed / 0 fired · already done 9/0 · replay 8/0 · rate limit (sensitive) 0 passed / 1 fired"
+    },
+    {
+     "where": "~/.cache/gabe-map-baselines/.check/gustify/forms.json → middleware[\"middleware:IdempotencyMiddleware\"].order",
+     "sample": "{\"of\":3,\"registered\":0,\"runs\":2} — while LABEP.security.asgi[0] is IdempotencyMiddleware with order 0, which the card prints as its place in the band"
+    },
+    {
+     "where": "docs/design/workflow-panel/_lab-ep.js → LABEP.forms.preconditions[2] (pred · exit · at)",
+     "sample": "\"latest is None or latest.policy_version != CONSENT_POLICY_VERSION\" → exit x:a086031223 at apps/api/services/setup.py:374"
+    }
+   ]
+  },
+  {
+   "key": "empty-means-what",
+   "abstraction": "An empty box with a reason: every blank says whether the reading looked and found nothing, never ran here, or does not apply to this kind of door — and each stage says what belongs in it.",
+   "prisms": [
+    {
+     "name": "Stages and order",
+     "gains": "Each stage gets a line saying what a door of this kind holds there, so \"nothing here\" can be read as normal or as a hole (Q5 moves, and this is the only piece that moves it)."
+    },
+    {
+     "name": "Overview and risk",
+     "gains": "The first look at a door stops mixing \"this door has none\" with \"nobody read this here\", so what is worth opening is chosen on what was actually measured (half of Q20 moves)."
+    },
+    {
+     "name": "Data effects",
+     "gains": "An ending with no writes now says the write reading ran on that route — the rate-limit 429 touches no table, and that becomes a fact instead of a blank; no question of this prism moves, its existing answers just become believable."
+    }
+   ],
+   "fields": [
+    {
+     "name": "Why this box is empty",
+     "parts": [
+      "looked and found nothing",
+      "no reading covers this here",
+      "a door of this kind has no such box — the box keeps its place",
+      "inferred rather than read",
+      "one line in plain words on hover"
+     ],
+     "status": "in the lab",
+     "source": "LABEP.forms.source.arms_on plus each block's own state word (defined · default · missing · n/a · unknown); the four drawn states already exist in _lab-ep.css:1199, while 12 places still decide with count ? lit : hollow"
+    },
+    {
+     "name": "Which readings ran on this app",
+     "parts": [
+      "the readings that ran",
+      "a part of a reading that did not run, and why",
+      "which box each reading fills"
+     ],
+     "status": "in the lab",
+     "source": "LABEP.forms.source.arms_on (8 readings) in the lab; forms.json arms{} carries present + reason per reading and per part"
+    },
+    {
+     "name": "What belongs at this stage",
+     "parts": [
+      "the stage",
+      "the topic",
+      "what any door of this kind holds there",
+      "how many this door holds"
+     ],
+     "status": "new",
+     "source": "window.STAGE_EXPECT at _lab-ep-panels.js:1213 holds the six lines for the tables topic only — the other 30 stage-by-topic lines exist in no file and no feed"
+    },
+    {
+     "name": "The roster of boxes for this kind of door",
+     "parts": [
+      "the box's name",
+      "the question it answers",
+      "filled, empty, or not applicable here"
+     ],
+     "status": "new",
+     "source": "KINDS[\"endpoint\"] in templates/center/generators/_a3_forms.py — 12 named slots with a question each, read by no page; only three reach the feed (this door: status contract missing · preconditions 3 · refusal reasons 8)"
+    }
+   ],
+   "today": "Nothing: the 429's \"no writes\" and the door's \"no declared refusals\" are drawn as the same blank as a reading that never ran, and only one topic of six — the tables — says what a stage should hold.",
+   "after_rows": [
+    "writes · none · looked and found nothing (the rate-limit 429 touches no table)",
+    "declared refusals · none · looked and found nothing — the door answers 400 · 401 · 409 · 422 · 429",
+    "refusal reasons · 8 refusals, 5 of them words only · no stable code found",
+    "readings that ran · all 8 · the writes, the routes, the tests and the screen were read here",
+    "would say: EDGE · tables · expected none before the request is let in · on this door: none, and none is expected",
+    "would say: repeat safety · filled on this door · across the app 6 filled · 45 empty · 29 no such box"
+   ],
+   "questions": [
+    {
+     "id": "Q5",
+     "coverage": "full",
+     "needs": "—",
+     "why": "Every stage on every topic gets its one line of what belongs there, and the part that tells a measured zero from an unread box rides in the same piece; the lines are still typed by hand per topic, so they do not travel to another kind of element until the roster is read from the machine."
+    },
+    {
+     "id": "Q20",
+     "coverage": "half",
+     "needs": "how-common",
+     "why": "Where this card is blind becomes visible box by box, which is most of the question; what is still missing is any ordering of which topic is worth opening first on this particular door, and that comes from the rarity and rank work."
+    }
+   ],
+   "evidence": [
+    {
+     "where": "docs/design/workflow-panel/_lab-ep.js → LABEP.forms.source.arms_on",
+     "sample": "[\"contract\",\"effects\",\"frontend\",\"kinds\",\"paths\",\"short\",\"switches\",\"tests\"] — all eight readings ran on this build"
+    },
+    {
+     "where": "docs/design/workflow-panel/_lab-ep.js → LABEP.forms.slots",
+     "sample": "K1 {\"declared\":[],\"produced\":[400,401,409,422,429],\"state\":\"missing\"} · U3 {\"rows\":3,\"state\":\"defined\"} · U7 {\"rows\":8,\"state\":\"missing\"}"
+    },
+    {
+     "where": "~/.cache/gabe-map-baselines/.check/gustify/forms.json → arms.contract.stats.repeat (across the app's 80 doors)",
+     "sample": "{\"defined\": 6, \"missing\": 45, \"n/a\": 29}"
+    },
+    {
+     "where": "docs/design/workflow-panel/_lab-ep.js → LABEP.forms.paths[0].effects (the \"rate limit (sensitive)\" 429)",
+     "sample": "0 steps · 0 writes · committed 0 · rolled back 0 — an empty the effects reading measured"
+    },
+    {
+     "where": "docs/design/workflow-panel/_lab-ep-panels.js:1213 → window.STAGE_EXPECT.data.EDGE",
+     "sample": "\"no table — the app band checks the request before any data is touched\" — the only topic with lines; 12 sites in the same file still choose with count ? lit : hollow"
+    }
+   ]
+  },
+  {
+   "key": "what-each-ending-carries",
+   "abstraction": "A refused request names the exact field that refused it, and every ending carries the instruction it hands back to the caller alongside the body.",
+   "prisms": [
+    {
+     "name": "Structures",
+     "gains": "The shape stops being one name for the whole endpoint: the refused ending points at a named field and the rule it broke, and the answering ending carries the headers it sets — Q13 moves; Q10 stays with the table's own card."
+    },
+    {
+     "name": "Stages and order",
+     "gains": "The INPUT stage, which today holds nothing at all, holds 42 rules over 23 places in the body — Q5 moves."
+    },
+    {
+     "name": "Client",
+     "gains": "What the caller is told to do next becomes readable — wait and retry on the 429, send a bearer token on the 401 — Q8 moves."
+    },
+    {
+     "name": "Gates and decisions",
+     "gains": "Forty-two more decisions become visible with the condition behind each one, instead of one row saying only 'shape check' — Q17 moves."
+    },
+    {
+     "name": "Proof",
+     "gains": "The refusal finally has a denominator to measure coverage against: 42 named conditions against 2 tests — Q4 moves."
+    },
+    {
+     "name": "Endings",
+     "gains": "Each ending carries what it actually answers with, not only a number and the stage it left from; Q3 was already answerable and stays so, Q11 does not move."
+    }
+   ],
+   "fields": [
+    {
+     "name": "the rules that refuse the body",
+     "parts": [
+      "the field, written the way the answer names it (body.household_format.units)",
+      "what the rule says, in the message the caller gets",
+      "the kind of refusal (missing · too short · too long · bad value · unknown field)",
+      "the allowed values, when the code fixes them",
+      "what the value is trimmed or lower-cased into before the rule runs",
+      "the file and line the rule is written on",
+      "how many rules there are, and over how many places in the body"
+     ],
+     "status": "in the lab",
+     "source": "LABEP.forms.endpoint.produced[] → the 422 row → cases[] (42 rows); the resolved exit LABEP.forms.exits['x:1b256011f1'] does not carry them (exit_rec, gen-endpoint-facts.py:89)"
+    },
+    {
+     "name": "what an ending sends back besides the body",
+     "parts": [
+      "the ending",
+      "the header name",
+      "its value when the code fixes it (Bearer), or a mark that it is worked out at the time",
+      "the file and line that sets it"
+     ],
+     "status": "in the lab",
+     "source": "LABEP.forms.responses[<exit>].headers — already attached to every one of the 12 exits as response, drawn nowhere (0 hits for 'headers' in _lab-ep-panels.js)"
+    },
+    {
+     "name": "who writes the answer",
+     "parts": [
+      "the ending",
+      "the media type of the answer",
+      "whether the app's own code or the framework's default handler writes it",
+      "the file and line"
+     ],
+     "status": "in the lab",
+     "source": "LABEP.forms.responses[<exit>].source and .media"
+    }
+   ],
+   "today": "One line — '422 · shape check' — beside a request shape named SetupCompleteRequest with 7 top-level fields, and not one ending names a field or a header.",
+   "after_rows": [
+    "422 · 42 rules · 23 places in the body",
+    "body.household_name · must not be blank · setup.py:45",
+    "body.household_format.units · one of metric, imperial · preferences.py:391",
+    "body.dietary.allergens · at most 5 items · preferences.py:97",
+    "429 · answer also sends Retry-After · set at rate_limit.py:127",
+    "401 · answer also sends WWW-Authenticate: Bearer · set by the framework's bearer check"
+   ],
+   "questions": [
+    {
+     "id": "Q13",
+     "coverage": "half",
+     "needs": "field-rules-and-anchors",
+     "why": "The refused ending now names the field and the answering ending its headers, but the request shape's own per-field rules (required, length, range) are still only a name and a type, and nothing says which fields a successful ending actually read."
+    },
+    {
+     "id": "Q5",
+     "coverage": "half",
+     "needs": "empty-means-what",
+     "why": "The INPUT stage finally holds something, but nothing yet states what a stage is supposed to hold, so an empty stage still cannot be told from one nothing measured."
+    },
+    {
+     "id": "Q8",
+     "coverage": "half",
+     "needs": "what-the-screen-does",
+     "why": "The caller's instruction per ending becomes readable, but what the screen shows or retries on each ending is still not read from the frontend."
+    },
+    {
+     "id": "Q17",
+     "coverage": "half",
+     "needs": "inside-the-calls",
+     "why": "Forty-two decisions gain their condition, but decisions taken more than one call deep are still folded into a single collapsed row."
+    },
+    {
+     "id": "Q4",
+     "coverage": "half",
+     "needs": "honest-proof",
+     "why": "The gap becomes countable — 42 conditions, 2 tests — but no test says which of the 42 rules it proved, and none of the 281 rules in the whole app carries a test reference."
+    },
+    {
+     "id": "Q3",
+     "coverage": "full",
+     "needs": "—",
+     "why": "It was already answerable from the 12 endings and their stages; this piece only adds what each one carries back."
+    },
+    {
+     "id": "Q10",
+     "coverage": "elsewhere",
+     "needs": "—",
+     "why": "The fields of a table and how they hang together belong to that table's own card, not to an endpoint's."
+    }
+   ],
+   "evidence": [
+    {
+     "where": "_lab-ep.js → LABEP.forms.endpoint.produced[] → the 422 row → cases[]",
+     "sample": "42 rules; one of them: body.household_format.units · \"units must be one of ['metric', 'imperial']\" · apps/api/schemas/preferences.py:391 · allowed metric, imperial · lower+strip first"
+    },
+    {
+     "where": "_lab-ep.js → LABEP.forms.responses['x:8437446a6c']",
+     "sample": "status 429 · headers {Retry-After} · media application/json · source apps/api/middleware/rate_limit.py:127"
+    },
+    {
+     "where": "_lab-ep.js → LABEP.forms.responses['x:9fd81887a2']",
+     "sample": "status 401 · headers {WWW-Authenticate: Bearer} · source fastapi/security/http.py:84-92"
+    },
+    {
+     "where": "_lab-ep.js → LABEP.forms.exits[] (12 rows)",
+     "sample": "every row carries a response record; none carries cases — checked on all 12"
+    },
+    {
+     "where": "gustify forms.json → endpoints[*].produced[].cases",
+     "sample": "281 rules over 42 of 80 endpoints; fewest 1 · middle 4 · most 42 (this endpoint). No rule anywhere carries a test reference (0 of 281)"
+    }
+   ]
+  },
+  {
+   "key": "whose-write",
+   "abstraction": "Every write gets an owner: what this endpoint's own code did, kept apart from what the login check had already done before the handler ran.",
+   "prisms": [
+    {
+     "name": "Data effects",
+     "gains": "Every table the endpoint touches is drawn in every layout with the pass that found it, and the one write that survives a refused request is named as the login check's rather than looking like a drawing fault — Q9 is answered, Q1 and Q2 move."
+    },
+    {
+     "name": "Overview and risk",
+     "gains": "The risk mark starts separating endpoints instead of covering them all — 11 of 80 carry a race of their own, and this endpoint is one of only two carrying ten — Q14 and Q20 move."
+    },
+    {
+     "name": "Stages and order",
+     "gains": "The gate stage gains the writing it does before the handler runs, so the first table touch has a place on the spine — Q5 moves."
+    }
+   ],
+   "fields": [
+    {
+     "name": "races on a unique key, split by owner",
+     "parts": [
+      "how many this endpoint's own code can hit",
+      "how many it inherits from the login check",
+      "how many are caught",
+      "the table and the columns that must stay unique",
+      "the file and line of each"
+     ],
+     "status": "in the lab",
+     "source": "LABEP.forms.paths[].effects.steps[].race, read beside the same step's dependency flag; the handled one also at LABEP.forms.repeat.claims[0]"
+    },
+    {
+     "name": "what the login check writes before the handler runs",
+     "parts": [
+      "the table",
+      "what it does (creates a row)",
+      "the file and line",
+      "the file and line where it is made permanent",
+      "whether it survives whatever ending the request takes"
+     ],
+     "status": "in the lab",
+     "source": "LABEP.forms.auth.provisions[0]"
+    },
+    {
+     "name": "how this table was found",
+     "parts": [
+      "the table",
+      "found by the code map's links · found by walking the request's effects · both",
+      "the reason the map has no link to it"
+     ],
+     "status": "new",
+     "source": "computed by comparing LABEP.data.tables (13) with LABEP.forms.paths[].effects.steps[].table (15); the hollow mark already exists at _lab-ep-panels.js:1004, the word for it does not, and the shared table list at :1511 never sees the extra two"
+    },
+    {
+     "name": "where the file says this belongs, against where its data says",
+     "parts": [
+      "the feature the file puts it in",
+      "the features its tables belong to, with a count each",
+      "the feature its callers say",
+      "the map's own word for the disagreement"
+     ],
+     "status": "in the lab",
+     "source": "LABEP.identity.home_ev"
+    }
+   ],
+   "today": "An alert reading eleven uncaught races — which 79 of the app's 80 endpoints also show — over a table list that is 15 in the default picture and 13 in every other layout.",
+   "after_rows": [
+    "races · 10 this endpoint's own · 1 from the login check · 1 caught",
+    "users · created by the login check · ownership.py:49 · kept whatever the ending",
+    "users · found by walking the effects only · never in the table list",
+    "ai_spend_log · found by walking the effects only · read at ai_credits.py:83",
+    "409 consent required · 9 writes undone · 1 uncertain · 1 kept (the login check's)",
+    "idempotency_keys · the one race that is caught · idempotency.py:140"
+   ],
+   "questions": [
+    {
+     "id": "Q9",
+     "coverage": "full",
+     "needs": "—",
+     "why": "The card now lists the two tables the map's links never named and says which pass found each, so the difference can be read off instead of only counted."
+    },
+    {
+     "id": "Q2",
+     "coverage": "half",
+     "needs": "why-a-touch-why-it-survives",
+     "why": "A kept write on a refused request is explained, but for the endpoint's own writes nothing yet names the line that committed or undid each one."
+    },
+    {
+     "id": "Q1",
+     "coverage": "half",
+     "needs": "the-route-in-order",
+     "why": "All 15 tables now appear with the stage they are touched at, but what a touch depends on, and its order inside a stage, still has no row."
+    },
+    {
+     "id": "Q14",
+     "coverage": "half",
+     "needs": "how-common",
+     "why": "The mark finally separates 11 endpoints from 69, but naming the riskiest endpoint still needs the same reading ranked across all 80."
+    },
+    {
+     "id": "Q20",
+     "coverage": "half",
+     "needs": "empty-means-what",
+     "why": "The face's alert starts saying something true of this endpoint, but a measured zero still cannot be told from a reading that never ran."
+    },
+    {
+     "id": "Q5",
+     "coverage": "half",
+     "needs": "empty-means-what",
+     "why": "The gate stage gains a real line, but nothing says what a gate stage is supposed to hold, so the line reads as a loose fact and not yet as a slot filled."
+    },
+    {
+     "id": "Q16",
+     "coverage": "elsewhere",
+     "needs": "—",
+     "why": "The undone writes are database rows, not the in-process state this question asks about; that needs a reading arm nothing has built."
+    }
+   ],
+   "evidence": [
+    {
+     "where": "_lab-ep.js → LABEP.forms.paths[].effects.steps[].race with the dependency flag",
+     "sample": "10 own uncaught sites (setup.py:108, 124, 144, 174, 194, 209, 226 · ownership.py:117, 132 · exploration.py:57), 1 inherited at ownership.py:50, 1 caught at idempotency.py:140"
+    },
+    {
+     "where": "_lab-ep.js → LABEP.forms.auth.provisions[0]",
+     "sample": "table users · op add · at apps/api/services/ownership.py:49 · made permanent at apps/api/auth/context.py:79 · state committed"
+    },
+    {
+     "where": "gustify forms.json → endpoints[*], own races counted apart from the login check's",
+     "sample": "69 endpoints none · 8 with one · 1 with two · 2 with ten; 79 of 80 inherit ownership.py:50; 65 of 101 refused-on-shape routes keep the users row"
+    },
+    {
+     "where": "_lab-ep.js → LABEP.data.tables (13) against LABEP.forms.paths[].effects.steps[].table (15)",
+     "sample": "effects-only: users, ai_spend_log; map-only: none"
+    },
+    {
+     "where": "_lab-ep.js → LABEP.identity.home_ev",
+     "sample": "file says auth · data says settings 10, auth 9, allergen 2, pantry 2, legal-consent 1 · callers say auth · the map's word: stay"
+    }
+   ]
+  },
+  {
+   "key": "honest-proof",
+   "abstraction": "A receipt sits behind every coverage mark: the test that proved it and what that test actually asked for, or the plain reason nothing here can prove it.",
+   "prisms": [
+    {
+     "name": "Proof",
+     "gains": "Q4 moves from a stamped word to something that can be opened: each check names the test that reached it and what that test demanded, and where no test reaches, the card says which of three reasons applies instead of claiming the check is untestable."
+    },
+    {
+     "name": "Gates and decisions",
+     "gains": "The rows this view reads stop over-claiming — the three catches (invalid token, a database conflict, anything else) and the rate-limit flag carry a reason or a measured value instead of \"no test can assert it\"; neither Q6 nor Q17 moves on its own."
+    },
+    {
+     "name": "Endings",
+     "gains": "Each ending carries what the test asked of it (a code, and the words the message must contain), and the walk line — what ran before and after this door — becomes readable; Q11 moves halfway, Q3 not at all."
+    },
+    {
+     "name": "Overview and risk",
+     "gains": "The coverage number on the face gets a denominator that means something — 12 tests came for this door against 135 that only passed through — and the 15 unnamed tests are admitted rather than hidden; Q20 moves, Q14 only in meaning."
+    }
+   ],
+   "fields": [
+    {
+     "name": "What the test asked for",
+     "parts": [
+      "the test's id and name",
+      "the answer code it expected",
+      "the words it required in the message",
+      "the checks it made on the answer's contents",
+      "the line it ran at"
+     ],
+     "status": "in the map",
+     "source": "forms.json test_cases[\"C1055\"].calls[].asserts (status · detail · attrs) and .role"
+    },
+    {
+     "name": "Why the test came here",
+     "parts": [
+      "came to exercise this door",
+      "only set something else up",
+      "arrived through a shared helper",
+      "proves the failure at the service, below the door"
+     ],
+     "status": "in the lab",
+     "source": "_lab-ep.js LABEP.forms.tests (act 15 · arranged_by 14 · helper_arranged 135) and LABEP.forms.paths[].tests[].conf = \"service raises\""
+    },
+    {
+     "name": "One test list instead of two",
+     "parts": [
+      "one row per test",
+      "its reason for being here",
+      "the check it is attached to",
+      "the three service-level tests today's list drops"
+     ],
+     "status": "in the lab",
+     "source": "LABEP.tests.cases (26 rows) against LABEP.forms.tests ∪ paths[].tests / exits[].tests (15 ids, incl. C1061 · C1065 · C1067)"
+    },
+    {
+     "name": "Values the tests gave a setting",
+     "parts": [
+      "the setting a switch reads",
+      "each value a test set, and which test set it",
+      "whether the default is what runs everywhere else"
+     ],
+     "status": "in the map",
+     "source": "forms.json settings[\"setting:rate_limit_enabled\"].tests and settings[\"setting:auth_provider\"].tests"
+    },
+    {
+     "name": "Why nothing proves this",
+     "parts": [
+      "no test reaches it",
+      "it can only be proven by reading the row back afterwards, and this reading opens answers only",
+      "a test set the value somewhere else, not through this door"
+     ],
+     "status": "new",
+     "source": "authored norm replacing the blanket word from gen-robot.js:12 NM (robot.json states.unmeasured)"
+    },
+    {
+     "name": "Tests that have no name",
+     "parts": [
+      "how many there are",
+      "which suite they come from",
+      "the word unnamed instead of a made-up id"
+     ],
+     "status": "in the lab",
+     "source": "LABEP.tests.case_files = [{corpus:\"web\", name:\"15 case(s)\"}]"
+    },
+    {
+     "name": "The step before and after",
+     "parts": [
+      "the walk's name",
+      "what runs before this door",
+      "what runs after it"
+     ],
+     "status": "in the lab",
+     "source": "LABEP.widening.steps_around"
+    }
+   ],
+   "today": "Ten of its 31 checks read \"no test can assert it today\", and the test list is 26 bare ids.",
+   "after_rows": [
+    "409 consent required · C1055 · asked for 409, message must contain \"consent\"",
+    "200 answer · C1049 · asked for 200 and 7 checks on the body (household name \"Casa Ruta\", credits 0 of 0)",
+    "rate-limit flag · tests run it off (C776) and on (C777) · off is what runs in the rest of the suite",
+    "real token verifier · 14 tests pick the real provider, first C128 · the mock runs by default",
+    "commit on success · no test here asserts it — it is proven by reading the row back, and this reading opens answers only",
+    "tests · 12 came for this door · 14 only set it up · 135 arrived through a shared helper · 15 web tests unnamed"
+   ],
+   "questions": [
+    {
+     "id": "Q4",
+     "coverage": "half",
+     "needs": "none of the eleven — joining a check on the answer's contents to the one arm it proves was left out as new work in the test-reading arm",
+     "why": "Every check would say what proved it or why nothing can, and each test would show what it asked for; what stays missing is the link from a body check to a branch — the 7 checks on the success route remain attached to the code 200 only."
+    },
+    {
+     "id": "Q11",
+     "coverage": "half",
+     "needs": "the-route-in-order",
+     "why": "This piece adds the walk position (consent before, the profile read after); which route is the expected one is read from the route spine the other piece builds, and nothing anywhere counts how often each ending really happens."
+    },
+    {
+     "id": "Q14",
+     "coverage": "elsewhere",
+     "needs": "how-common",
+     "why": "The coverage number here finally means something, but \"the least tested door\" is a ranking over all 80 doors, which is computed in the piece that compares them."
+    },
+    {
+     "id": "Q20",
+     "coverage": "half",
+     "needs": "empty-means-what",
+     "why": "The coverage topic gets an honest count and admits the unnamed tests; whether an empty topic means \"none here\" or \"not read here\" is the other piece's job."
+    }
+   ],
+   "evidence": [
+    {
+     "where": "/home/khujta/.cache/gabe-map-baselines/.check/gustify/forms.json → test_cases[\"C1055\"].calls[0].asserts",
+     "sample": "{\"status\": [409], \"detail\": [\"consent\"]} — test_setup_complete_without_consent_409_C1055, line 121"
+    },
+    {
+     "where": "same file → test_cases[\"C1049\"].calls[0].asserts.attrs",
+     "sample": "7 checks, incl. \"body['household']['name'] == 'Casa Ruta'\" and \"body['subscription']['credits_allowance'] == 0\" (feed-wide: 160 of 332 purposeful calls carry 318 such checks, none joined)"
+    },
+    {
+     "where": "same file → settings[\"setting:rate_limit_enabled\"].tests",
+     "sample": "{\"default_runs\": true, \"values\": [\"false\",\"true\"], \"sets\": [… value false via test_middleware_disabled_never_throttles_C776, value true via test_middleware_throttles_over_limit_C777 …]} — 6 sets in all"
+    },
+    {
+     "where": "/home/khujta/projects/gabe_lens/docs/design/workflow-panel/robot.json → levels[].conds[].cov.state",
+     "sample": "tally over the 31 checks: unmeasured 10 · untested 7 · partial 5 · covered 5 · gap 4; \"commit on success\" and \"provision add users\" both read unmeasured with no cases"
+    },
+    {
+     "where": "/home/khujta/projects/gabe_lens/docs/design/workflow-panel/_lab-ep.js → window.LABEP.forms.tests and window.LABEP.tests.cases / case_files",
+     "sample": "{act: 15, arranged_by: 14 ids, helper_arranged: 135 ids} beside a separate roster of 26 ids, and case_files = [{corpus: \"web\", name: \"15 case(s)\"}]"
+    }
+   ]
+  },
+  {
+   "key": "inside-the-calls",
+   "abstraction": "A call stops being a name on the route: it opens into the failures inside it, the condition behind each one, and which answer here that failure becomes.",
+   "prisms": [
+    {
+     "name": "Functions",
+     "gains": "Q18 and Q19 move: every function the door reaches wears the roles its own code shows, with a mark when one holds two, and the small helpers behind the walk arrive with read facts — lines, what they return, whether they call anything, whether they touch a table — instead of bare names; Q15 gains a line to open on each of them."
+    },
+    {
+     "name": "Gates and decisions",
+     "gains": "Q17 moves: the fork one and two calls below the handler shows the condition that takes it, and a failure the door never translates is named with the honest note that the reading stopped one call down; Q6 gains the checks that can refuse nothing, today invisible."
+    },
+    {
+     "name": "In-flight state",
+     "gains": "Q16 gains its one cheap true statement — the database session is handed to the handler and closes after the answer is sent, on 79 of 80 doors — while the rest of what is alive during a request still waits."
+    },
+    {
+     "name": "Endings",
+     "gains": "The uncaught bay stops being blank: two named failures with their conditions can reach the 500, so Q3's last ending has a cause instead of a label."
+    }
+   ],
+   "fields": [
+    {
+     "name": "What is inside a call",
+     "parts": [
+      "the function behind the name",
+      "each failure it can raise",
+      "the condition that raises it",
+      "which answer here that failure becomes",
+      "where it commits or takes a savepoint",
+      "the file and line"
+     ],
+     "status": "in the map",
+     "source": "forms.json functions{} filtered by reached_by[].root == \"endpoint:POST /setup/complete\" (5 rows: setup_complete · complete_setup · _load_setup_result · claim · _discard_claim)"
+    },
+    {
+     "name": "A failure this door does not translate",
+     "parts": [
+      "the message",
+      "the condition",
+      "the file and line",
+      "the note that the reading stopped one call down"
+     ],
+     "status": "in the map",
+     "source": "forms.json functions[\"apps/api/services/setup.py::_load_setup_result\"].raises[].translation = \"beyond one level\""
+    },
+    {
+     "name": "What each function does here",
+     "parts": [
+      "faces the web",
+      "decides an ending",
+      "reads or writes data",
+      "gives context to the rest",
+      "a mark when one function does two of these"
+     ],
+     "status": "in the lab",
+     "source": "LABEP.forms.branches[].fn ∪ forms.failure.catches[].fn ∪ forms.returns[].fn ∪ forms.paths[].effects.steps[].fn ∪ security.gates[].fn"
+    },
+    {
+     "name": "Checks that can refuse nothing",
+     "parts": [
+      "the name",
+      "what it hands the handler",
+      "that it can end no request",
+      "how many doors it runs on"
+     ],
+     "status": "in the map",
+     "source": "forms.json dependencies{} with exits == [] (get_session 79 doors · _resolve_verifier 79 · get_settings 12)"
+    },
+    {
+     "name": "When the session closes",
+     "parts": [
+      "that it hands back a database session",
+      "that it closes after the answer is sent",
+      "the doors it runs on"
+     ],
+     "status": "in the map",
+     "source": "forms.json dependencies[\"apps/api/db.py::get_session\"].teardown = true, applies_to = 79"
+    },
+    {
+     "name": "What a small helper does",
+     "parts": [
+      "how many lines",
+      "what it returns",
+      "whether it calls anything else",
+      "whether it touches a table",
+      "its one-line description"
+     ],
+     "status": "in the map",
+     "source": "archmap.json function_insight[…] (lines · returns · base · access · doc) for the 29 names behind the walk"
+    }
+   ],
+   "today": "A name and a line: step 13 reads \"call complete_setup\", and two steps say only \"one return\".",
+   "after_rows": [
+    "13 · call complete_setup · setup.py:196 — open: two failures inside",
+    "  refuses \"setup in progress\" when the claim is already running → the 409 at setup.py:200",
+    "  two calls down · \"cannot load setup graph for a user without a household\" when the lookup comes back empty · setup.py:240 · nothing here catches it",
+    "20 · _me_response_from_result · one return · 20 lines · builds the answer · touches no table",
+    "complete_setup · decides an ending and writes · get_auth_context · gives context, decides the 401 and adds a row to users",
+    "get_session · runs here · can refuse nothing · closes after the answer · 79 of 80 doors"
+   ],
+   "questions": [
+    {
+     "id": "Q17",
+     "coverage": "half",
+     "needs": "the-route-in-order",
+     "why": "The condition behind a fork one and two calls down arrives, with an honest note where the reading stopped; the near half — a check showing its condition instead of the exception it caught — is in the other piece, and nothing yet says what a request must carry to take an arm."
+    },
+    {
+     "id": "Q18",
+     "coverage": "full",
+     "needs": "—",
+     "why": "Every function the door reaches wears the roles its own code shows, four of them hold two at once here, and a function that shows none of the four is visible as such."
+    },
+    {
+     "id": "Q19",
+     "coverage": "half",
+     "needs": "why-a-touch-why-it-survives",
+     "why": "A helper arrives with facts instead of a name — 4 lines, returns a date, calls nothing, touches no table — but whether a step runs once or once per item is still squeezed into a single yes-or-no flag."
+    },
+    {
+     "id": "Q6",
+     "coverage": "half",
+     "needs": "the-route-in-order",
+     "why": "The checks that can refuse nothing stop being invisible, so the roster is the dependencies and not only the gates; the run order and the passed marks come from the other piece."
+    },
+    {
+     "id": "Q16",
+     "coverage": "half",
+     "needs": "alive-during-the-request",
+     "why": "One true statement lands — the session closes after the answer — while everything else alive during the request is still found only by a name search for one key."
+    },
+    {
+     "id": "Q15",
+     "coverage": "half",
+     "needs": "field-rules-and-anchors",
+     "why": "The deeper functions and each failure inside them arrive with a file and line to open; the shapes, the rules per field and the app-band anchors come with the other piece."
+    },
+    {
+     "id": "Q3",
+     "coverage": "half",
+     "needs": "the-route-in-order",
+     "why": "The 500 gains two named causes with their conditions; which stage each ending leaves from is the route spine's job."
+    }
+   ],
+   "evidence": [
+    {
+     "where": "/home/khujta/.cache/gabe-map-baselines/.check/gustify/forms.json → functions[\"apps/api/services/setup.py::complete_setup\"].raises[0]",
+     "sample": "{\"cls\": \"SetupInProgressError\", \"pred\": \"claimed.outcome is ClaimOutcome.IN_PROGRESS\", \"translation\": \"translated\", \"translated_by\": [{\"endpoint\": \"endpoint:POST /setup/complete\", \"at\": \"apps/api/api/setup.py:200\", \"status\": 409}]}"
+    },
+    {
+     "where": "same file → functions[\"apps/api/services/setup.py::_load_setup_result\"].raises[0]",
+     "sample": "{\"at\": \"apps/api/services/setup.py:240\", \"cls\": \"RuntimeError\", \"msg\": \"cannot load setup graph for a user without a household\", \"pred\": \"loaded is None\", \"translation\": \"beyond one level\", \"translated_by\": []}"
+    },
+    {
+     "where": "same file → dependencies[\"apps/api/db.py::get_session\"]",
+     "sample": "{\"at\": \"apps/api/db.py:51\", \"teardown\": true, \"applies_to\": 79, \"exits\": [], \"subdeps\": []} — and _resolve_verifier exits [] on 79, get_settings exits [] on 12"
+    },
+    {
+     "where": "/home/khujta/.cache/gabe-map-baselines/.check/gustify/archmap.json → function_insight[\"apps/api/services/ai_credits.py::month_start\"]",
+     "sample": "{\"lines\": 4, \"returns\": \"datetime\", \"base\": true, \"access\": {}, \"doc\": \"First instant of the current calendar month (UTC) — the credits window cutoff.\"}"
+    },
+    {
+     "where": "/home/khujta/projects/gabe_lens/docs/design/workflow-panel/_lab-ep.js → window.LABEP.forms.collapsed and the 22-step chain",
+     "sample": "[{\"call\": \"get_idempotency_key\", \"reason\": \"one return\", \"site\": \"apps/api/api/setup.py:191\"}, {\"call\": \"_me_response_from_result\", \"reason\": \"one return\", \"site\": \"apps/api/api/setup.py:204\"}] drawn as steps 11 and 20; step 13 = {\"kind\": \"call\", \"label\": \"complete_setup\", \"at\": \"apps/api/api/setup.py:196\"}"
+    }
+   ]
+  },
+  {
+   "key": "how-common",
+   "abstraction": "A normal for this application: every piece the door is built from says how many of the other 79 doors use it, so \"ordinary here, except for these three things\" is something you read off the card instead of guessing.",
+   "prisms": [
+    {
+     "name": "Standard or specialist",
+     "gains": "The whole point of view stops being empty — the only question it has (is this door standard or specialist?) becomes answerable, because each piece carries its count: a repeat key on 6 doors of 80, a value picked from a setting on 11, the tighter rate tier on 23."
+    },
+    {
+     "name": "Overview and risk",
+     "gains": "The face can place the door among its neighbours before anything is opened — 11th heaviest of 81, where the middle door has 4 functions behind it and the biggest has 135; Q14 moves as far as one card can take it, Q20 gains the size and proof context."
+    },
+    {
+     "name": "Proof",
+     "gains": "Coverage gets a scale to be read against: 4 of this door's 9 endings are named by a test, which is 6th best of 80 when the middle door names 1 in 6 and 28 doors name none; the question of what nothing reaches still belongs to another piece."
+    },
+    {
+     "name": "Gates and decisions",
+     "gains": "The refusal for too many requests gains the one fact that is a decision about this door — somebody put it on the tighter limit, where 23 doors sit and 56 do not; neither of this prism's questions is answered by it, it makes the ending readable."
+    },
+    {
+     "name": "Client",
+     "gains": "The who-fetches-it row carries its own count as a header, and a door nothing fetches reads as an honest floor — 28 doors here have no screen at all, with 2 fetches the map could not read named beside it."
+    }
+   ],
+   "fields": [
+    {
+     "name": "How many other doors use this piece",
+     "parts": [
+      "the piece — a dependency, a gate, a switch kind, a limiter, a catch outcome, a status, a repeat key",
+      "how many of the application's 80 doors use it",
+      "the share as a percentage",
+      "later: how many of the four applications read carry it at all"
+     ],
+     "status": "new",
+     "source": "counted in one pass over the whole-app feed's endpoints block (the same object the lab generator already holds in memory); the card carries this today for dependencies only, as the lab's feed-wide dependency counts"
+    },
+    {
+     "name": "Where this door sits in the application",
+     "parts": [
+      "its rank by how many functions sit behind it",
+      "the middle door's number",
+      "the biggest door, named, with its number",
+      "which size band it falls into"
+     ],
+     "status": "in the lab",
+     "source": "the lab facts' context.risk block — rank · behind_median · behind_max · behind_max_of · behind_bins — generated on every build and drawn nowhere"
+    },
+    {
+     "name": "How much of this door a test names, against the others",
+     "parts": [
+      "endings a test names",
+      "endings it can produce",
+      "its rank among the application's doors",
+      "what the middle door manages",
+      "how many doors name none"
+     ],
+     "status": "new",
+     "source": "computable from the feed's endpoints[].produced[].tests (this door 4 of 9, the app 122 of 577); no feed ranks it today"
+    },
+    {
+     "name": "Rate tier",
+     "parts": [
+      "tighter · standard · exempt",
+      "the cap and the window",
+      "the setting and the environment variable behind the cap",
+      "the switch that turns limiting on at all",
+      "how many doors sit on each tier"
+     ],
+     "status": "in the lab",
+     "source": "the lab facts' rate block (two limiter rows, the switch, the exempt list); only the 23 · 56 · 1 split is counted from the feed's endpoints[].rate"
+    },
+    {
+     "name": "A mark drawn only when it is unusual here",
+     "parts": [
+      "the piece",
+      "how many doors in this application have it",
+      "whether that makes it the norm or the exception here",
+      "and so whether the mark is drawn at all"
+     ],
+     "status": "new",
+     "source": "the app-wide counters this same loop writes; e.g. waiting without blocking is true of 80 of 81 doors here and of 34 of 545 in the biggest application read, so it is dead weight here and the whole story there"
+    },
+    {
+     "name": "Who fetches it, with its count and its floor",
+     "parts": [
+      "how many screens fetch this door, as the header of the list rather than a row of its own",
+      "the hooks themselves",
+      "when nothing fetches it: how many doors that is, and how many fetches the map could not read"
+     ],
+     "status": "in the map",
+     "source": "the map's web statistics — fetch sites 58 · matched 56 · unmatched 2 · dynamic 5; the count itself is already in the lab facts"
+    }
+   ],
+   "today": "Only the gates carry a comparison today — \"get_auth_context · 78 of 81 endpoints use it (96%)\" inside its hover — while this door's rank (11 of 81, middle 4, biggest 135) is generated and reaches no pixel.",
+   "after_rows": [
+    "size · 11th of 81 · middle door 4 functions behind · biggest 135",
+    "proof · 4 of 9 endings named by a test · 6th of 80 · 28 doors name none",
+    "rate limit · tighter tier · 23 doors here, 56 standard, 1 exempt · 20 a minute against the app's 120",
+    "repeat key · 6 of 80 doors here · 0 of 49 and 0 of 499 in the other two backends read",
+    "picks a value from a setting · 11 of 80 doors · here, the AI-credit tier",
+    "fetched by 1 screen · 28 doors have none · 2 fetch sites the map could not read"
+   ],
+   "questions": [
+    {
+     "id": "Q12",
+     "coverage": "full",
+     "needs": "",
+     "why": "Every piece this door carries gets its count inside the application at once, and the comparison across the four applications read arrives with the same piece's small committed digest — so \"standard\" becomes a reading rather than a judgement, honest about the one target that has no backend to measure."
+    },
+    {
+     "id": "Q14",
+     "coverage": "elsewhere",
+     "needs": "",
+     "why": "The card can now say where this door sits — 11th of 81, 4 of 9 endings tested, 6th of 80 — but naming which door is the densest or the least tested needs the same rows for all 80 at once, which is the far view's job and no piece of work here builds it."
+    },
+    {
+     "id": "Q20",
+     "coverage": "half",
+     "needs": "empty-means-what",
+     "why": "The size and proof counts give the overview real numbers to open on, but what an empty slot means — looked and found nothing, versus not read here — is the other piece's work."
+    },
+    {
+     "id": "Q4",
+     "coverage": "half",
+     "needs": "honest-proof",
+     "why": "You learn how this door's proof compares with its neighbours, not yet which of its conditions nothing reaches, which needs the piece that turns coverage words into what a test actually asserted."
+    },
+    {
+     "id": "Q8",
+     "coverage": "half",
+     "needs": "what-the-screen-does",
+     "why": "The count of screens and the honest floor under a zero land here; what the screen actually does on each ending — the message, the retry, the redirect — is the other piece's."
+    },
+    {
+     "id": "Q17",
+     "coverage": "half",
+     "needs": "the-route-in-order",
+     "why": "The tier says this door was deliberately put on the tighter limit, but what makes the request end at 429 rather than 200 is the ordered chain, drawn by the route piece."
+    }
+   ],
+   "evidence": [
+    {
+     "where": "docs/design/workflow-panel/_lab-ep.js → LABEP.context.risk",
+     "sample": "\"rank\": 11, \"behind_median\": 4, \"behind_max\": 135, \"behind_max_of\": \"BOOT lifespan\", \"of\": 81 — read once by endpoint-lab.html and never drawn"
+    },
+    {
+     "where": "gustify forms.json → endpoints{}.rate and endpoints{}.switches, counted over all 80",
+     "sample": "56 doors with one limiter · 23 with two (the tighter tier, this door among them) · 1 missing (GET /healthz); 11 of 80 doors carry a value switch — here the AI-credit tier, chef against free"
+    },
+    {
+     "where": "gustify forms.json → endpoints{}.produced[].tests, counted over all 80",
+     "sample": "POST /setup/complete 4 of 9 exits tested (rank 6 of 80); feed-wide 122 of 577; the middle door names 1 in 6; 28 doors name none"
+    },
+    {
+     "where": "docs/design/element-forms/census-b14.md → slot fill, U12 idempotency and K3 rate",
+     "sample": "idempotency: gustify 6 (8%) · gastify 0 (0%) · tier3 0 (0%); rate limit: gustify 79 (99%) · gastify 16 (33%) · tier3 0 (0%)"
+    },
+    {
+     "where": "gustify c4-graph.json → stats.web and cross_edges against the endpoint ids",
+     "sample": "{\"fetch_sites\":58,\"matched\":56,\"unmatched\":2,\"dynamic\":5}; all 56 inbound edges are a screen fetching a door, 51 doors have one, 28 of 81 have none"
+    }
+   ]
+  },
+  {
+   "key": "field-rules-and-anchors",
+   "abstraction": "An openable card: every block says the line it was read from, and every field of a shape or a table carries the rule that governs it, so a shape stops being a list of names and becomes a list of promises you can go and check.",
+   "prisms": [
+    {
+     "name": "Functions",
+     "gains": "A called function stops being a name with a size and becomes a place you can open — Q15 moves for the six of this door's twenty-seven calls the map knows a line for, and says so plainly for the rest."
+    },
+    {
+     "name": "Structures",
+     "gains": "The body shape shows the rule beside each field instead of seven bare names — must be sent, one to a hundred and twenty characters, unknown fields rejected — so Q13 moves; Q10's column rules ride along at no cost but belong on the table's own card."
+    },
+    {
+     "name": "Stages and order",
+     "gains": "The input stage can be read as rules rather than a list of names, so what a rejected request is made of is visible before the endings are drawn; neither of this prism's own questions is finished by it."
+    },
+    {
+     "name": "Data effects",
+     "gains": "The tables this door writes say what the database fills in when the handler sets nothing, and what deleting a parent row drags with it — context for writes the card already draws, with no question of the prism answered by it."
+    }
+   ],
+   "fields": [
+    {
+     "name": "The line a called function starts at",
+     "parts": [
+      "the function's name",
+      "its file",
+      "the line its definition starts at",
+      "how long it is",
+      "and, where the map knows no line for it, that it says so rather than guessing"
+     ],
+     "status": "in the map",
+     "source": "the whole-app feed's functions block, key `at` — 101 of 101 entries carry one; 6 of this door's 27 calls are in that roster"
+    },
+    {
+     "name": "The rule on each field of the body",
+     "parts": [
+      "field name",
+      "its type",
+      "must it be sent",
+      "its limits — shortest, longest, smallest, largest, a pattern",
+      "what happens to a field nobody declared: rejected or ignored",
+      "the line it is declared at"
+     ],
+     "status": "in the map",
+     "source": "the feed's schemas block — fields[].required · fields[].constraints · fields[].at, plus the class's extra policy and its own line"
+    },
+    {
+     "name": "The rule on each column of a table this door touches",
+     "parts": [
+      "column name",
+      "its database type",
+      "may it be empty",
+      "what the database writes when nobody sets it",
+      "what deleting the row it points at does to it",
+      "the unique and check rules on the table",
+      "the line it is declared at"
+     ],
+     "status": "in the map",
+     "source": "the feed's models block — columns{nullable · default · server_default · primary_key · fk.ondelete · at} and constraints{uniques · checks · indexes}"
+    },
+    {
+     "name": "Where an application-wide step is switched on",
+     "parts": [
+      "the step's name",
+      "the file and line where it is added to the application",
+      "its place in the run order"
+     ],
+     "status": "in the map",
+     "source": "the feed's middleware block — registered_at, with order{registered · runs · of}"
+    }
+   ],
+   "today": "The only anchor on the face reads \"apps/api/api/setup.py:254\" — the file's length, not the handler's line 183 — while the 7 body fields, the 86 table columns and the 26 application-wide step rows carry no rule and no line at all.",
+   "after_rows": [
+    "complete_setup · opens at services/setup.py:337 · 71 lines",
+    "_upsert_dietary · services/setup.py · no line in the map (21 of the 27 calls)",
+    "household_name · text · must be sent · 1 to 120 characters · schemas/setup.py:26",
+    "country · 2 letters · never empty · the database writes CL · models/preferences.py:58",
+    "household_id → households.id · deleting the household deletes this row · models/preferences.py:55",
+    "rate-limit step · added to the application at main.py:127 · runs 2nd of 3"
+   ],
+   "questions": [
+    {
+     "id": "Q15",
+     "coverage": "half",
+     "needs": "inside-the-calls",
+     "why": "After this piece every check, catch, fork, call site, database step, body field, table column and application-wide step opens at its line, and 6 of the 27 called functions do too — but a plain helper carries no line in any feed today, and the piece that brings the function roster brings the same six, so \"open THIS call\" is still owed for the rest."
+    },
+    {
+     "id": "Q10",
+     "coverage": "elsewhere",
+     "needs": "",
+     "why": "The column rules — may it be empty, what fills it, what a delete drags with it — arrive with this join, but they are the table's facts and belong on the table's own card, which was already ruled to be the face of that block."
+    },
+    {
+     "id": "Q13",
+     "coverage": "half",
+     "needs": "what-each-ending-carries",
+     "why": "The shape that goes in gains its rules field by field; what comes back per ending — the headers that tell the client to retry or to log in, and the exact field a rejected request tripped on — is the other piece, and for 41 of the 80 doors there is no declared answer shape to show at all."
+    }
+   ],
+   "evidence": [
+    {
+     "where": "gustify forms.json → functions[\"apps/api/services/setup.py::complete_setup\"].at",
+     "sample": "\"apps/api/services/setup.py:337\" — 101 of 101 functions in the roster carry one; the lab's walk rows carry a file and a size (71 lines) and no line"
+    },
+    {
+     "where": "gustify forms.json → schemas[\"schema:SetupCompleteRequest\"]",
+     "sample": "household_name {required: true, constraints {min_length 1, max_length 120}, at \"apps/api/schemas/setup.py:26\"}; extra \"forbid\" at setup.py:24; 6 of the 7 fields may be left out"
+    },
+    {
+     "where": "gustify forms.json → models[\"model:HouseholdFormatPreferences\"].columns.country",
+     "sample": "{\"at\":58,\"default\":\"CL\",\"server_default\":\"CL\",\"type\":\"String(2)\",\"nullable\":false} — against the lab's col triple, whose third slot is empty on all 86 columns"
+    },
+    {
+     "where": "gustify forms.json → models[\"model:HouseholdFormatPreferences\"].columns.household_id.fk and .constraints",
+     "sample": "{\"ondelete\":\"CASCADE\",\"target\":\"households.id\"}; unique uq_household_format_prefs_household at line 50, check ck_household_format_prefs_serving at line 51"
+    },
+    {
+     "where": "gustify forms.json → middleware[\"middleware:RateLimitMiddleware\"]",
+     "sample": "registered_at \"apps/api/main.py:127\", order {\"registered\":1,\"runs\":1,\"of\":3} — while all 26 step rows on this door's 14 routes carry no line"
+    }
+   ]
+  },
+  {
+   "key": "why-a-touch-why-it-survives",
+   "abstraction": "A table touch becomes a sentence instead of a checkbox: what made it run, how often it runs, and which save or undo settled it.",
+   "prisms": [
+    {
+     "name": "Data effects",
+     "gains": "Every touch says what it depended on and every write names the save or undo that settled it, so \"rolled back\" and \"maybe\" stop being verdicts the card hands down and become statements you can open — Q1's second half and Q2 both move."
+    },
+    {
+     "name": "Functions",
+     "gains": "A small function that runs once per item in a loop is told apart from one that runs once, which is the half of Q19 the tool can read without guessing what the helper is for."
+    },
+    {
+     "name": "Stages and order",
+     "gains": "A step in the running order says whether it happens once or repeats, so a route of 92 touches can be read as one row landing or many — Q7 gains repetition."
+    }
+   ],
+   "fields": [
+    {
+     "name": "Why this touch ran",
+     "parts": [
+      "the test, in the code's own words",
+      "how often: every time · on one arm of a fork · once per item in a loop · only after a failure",
+      "the file and line of that test"
+     ],
+     "status": "new",
+     "source": "nearest today: forms.json steps{} rows carry only `cond` (true on 239 of 524; on 83 of the 154 write steps)"
+    },
+    {
+     "name": "May not run",
+     "parts": [
+      "yes or no, per touch"
+     ],
+     "status": "in the lab",
+     "source": "_lab-ep.js LABEP.forms.paths[].effects.steps[].cond"
+    },
+    {
+     "name": "What settled this write",
+     "parts": [
+      "save or undo",
+      "its file and line",
+      "whether that statement itself only sometimes runs"
+     ],
+     "status": "new",
+     "source": "nearest today: forms.json endpoints[...].paths[].effects — the four lists committed · maybe_committed · rolled_back · uncommitted, with nothing joining a write to the statement that decided it"
+    },
+    {
+     "name": "Saved at — the one place the shape already exists",
+     "parts": [
+      "the save's file and line",
+      "for the login row only"
+     ],
+     "status": "in the lab",
+     "source": "_lab-ep.js LABEP.forms.auth.provisions[0].committed_at"
+    }
+   ],
+   "today": "A yes/no and two counts: on the first-run route 22 of the 49 writes say only \"may not run\", and the consent refusal says \"rolled back 5 · maybe 1\" with no line behind either word.",
+   "after_rows": [
+    "login row · add · saved at apps/api/auth/context.py:79",
+    "would say: repeat key · delete · apps/api/services/setup.py:333 · kept only if the save one line later runs, and that save itself only sometimes runs",
+    "would say: repeat key · 5 updates · undone by the undo at apps/api/services/setup.py:404",
+    "would say: users · add · apps/api/services/ownership.py:49 · on one arm of a fork, not every time",
+    "would say: first-run route · 22 of 49 writes name their test (today they say only \"may not run\")"
+   ],
+   "questions": [
+    {
+     "id": "Q1",
+     "coverage": "half",
+     "needs": "the-route-in-order",
+     "why": "The \"on what does it depend\" half is answered on the touch itself, in words; the \"at which moment\" half is the numbered running order, which the route piece draws."
+    },
+    {
+     "id": "Q2",
+     "coverage": "full",
+     "needs": "—",
+     "why": "Each write names the save or undo that settled it and whether that statement was itself conditional — the one thing the raters said was missing, and the reason a \"maybe\" is a maybe here."
+    },
+    {
+     "id": "Q7",
+     "coverage": "half",
+     "needs": "the-route-in-order",
+     "why": "The order gains repetition — which steps run once and which run per item — but the ordered list they attach to comes from the route piece."
+    },
+    {
+     "id": "Q19",
+     "coverage": "half",
+     "needs": "inside-the-calls",
+     "why": "Whether a step runs inside a loop lands here; what the 29 small functions below the walk actually do arrives with the piece that opens the calls, and the type word is left to the reader rather than guessed."
+    }
+   ],
+   "evidence": [
+    {
+     "where": "_lab-ep.js → LABEP.forms.paths[9].effects.steps[29] (the 409 \"consent required\" route)",
+     "sample": "{\"step\":\"st:5768e71cd4\",\"table\":\"idempotency_keys\",\"op\":\"delete\",\"at\":\"apps/api/services/setup.py:333\",\"cond\":true,\"bucket\":\"maybe_committed\"}"
+    },
+    {
+     "where": "_lab-ep.js → LABEP.forms.paths[9].effects.steps[30] and [27]",
+     "sample": "commit at apps/api/services/setup.py:334 with cond true; rollback at apps/api/services/setup.py:404 with cond false"
+    },
+    {
+     "where": "_lab-ep.js → LABEP.forms.paths[12].effects.steps (the path named \"first run\", 200)",
+     "sample": "92 steps · 49 writes · 22 of them cond true · 38 of the 92 touches cond true"
+    },
+    {
+     "where": "/home/khujta/.cache/gabe-map-baselines/.check/gustify/forms.json → steps{}",
+     "sample": "524 rows; cond true 239 / false 285; 154 write steps, 83 with cond true"
+    },
+    {
+     "where": "_lab-ep.js → LABEP.forms.auth.provisions[0]",
+     "sample": "{\"at\":\"apps/api/services/ownership.py:49\",\"committed_at\":\"apps/api/auth/context.py:79\",\"state\":\"committed\",\"step\":\"st:ba597dd4f4\",\"table\":\"users\"}"
+    }
+   ]
+  },
+  {
+   "key": "what-the-screen-does",
+   "abstraction": "An ending gains what the user actually sees: the message put up, whether anything is tried again, and where the screen sends them.",
+   "prisms": [
+    {
+     "name": "Client",
+     "gains": "The one prism that today can only say \"it can or cannot tell these apart\" starts saying what happens — the sentence shown, that nothing on this door is ever retried, and that 7 of the 9 endings that are not a success reach one shared message; Q8 moves from a yes/no to a fact per ending."
+    },
+    {
+     "name": "In-flight state",
+     "gains": "The client-cache half of this prism gets drawn where the endings are read — which lists are refreshed after a success and which are filled in straight away — and a refresh triggered inside an error branch would be named too; Q16's client half improves."
+    }
+   ],
+   "fields": [
+    {
+     "name": "What the screen does on this ending",
+     "parts": [
+      "the message, with the words it uses",
+      "a call made in that branch — a toast, a sign-out, a re-run",
+      "the element it renders",
+      "the file and line"
+     ],
+     "status": "new",
+     "source": "nearest today: forms.json frontend.reasons.sites[].branch keeps one word per site (\"none\" here) and the 29,946 walked rows are dropped"
+    },
+    {
+     "name": "Which client branch an ending reaches",
+     "parts": [
+      "the ending and its status",
+      "its own branch, or the shared one",
+      "where that branch is"
+     ],
+     "status": "in the map",
+     "source": "forms.json frontend.reasons.readers[\"endpoint:POST /setup/complete\"][0].routes — 9 endings routed, 7 to \"rest\", the two 409s to one site"
+    },
+    {
+     "name": "Tried again or not",
+     "parts": [
+      "retry on or off for this kind of call",
+      "where that rule is set"
+     ],
+     "status": "in the lab",
+     "source": "_lab-ep.js LABEP.forms.frontend.client.clients[0].policy.mutations.retry = {state:\"defined\", value:false}"
+    },
+    {
+     "name": "What is refreshed after a success",
+     "parts": [
+      "the lists refetched",
+      "the list filled in straight away",
+      "when it happens"
+     ],
+     "status": "in the lab",
+     "source": "_lab-ep.js LABEP.forms.frontend.hook.calls[0].invalidates / .seeds"
+    },
+    {
+     "name": "The two endings that share one message",
+     "parts": [
+      "the status they share",
+      "the two meanings",
+      "the line that cannot separate them"
+     ],
+     "status": "in the lab",
+     "source": "_lab-ep.js LABEP.forms.frontend.findings[0] (reason-collapsed, 409)"
+    }
+   ],
+   "today": "Only whether the screen can tell two endings apart: both 409s reach one line that cannot separate \"consent required\" from \"setup in progress\".",
+   "after_rows": [
+    "success · account and settings lists refetched · account list filled in straight away",
+    "409 consent required · shared branch · cannot be told from \"setup in progress\"",
+    "401 · 400 · 422 · 429 · 500 · no branch of their own — 7 of the 9 non-success endings reach the same message",
+    "every ending · never tried again — retry is off for this kind of call",
+    "would say: 409 · shows the \"setup in progress\" line, rendered in the error card (SetupScreen.tsx:43 → :99)",
+    "would say: 409 · nothing refreshed, nothing retried — the branch only sets a message"
+   ],
+   "questions": [
+    {
+     "id": "Q8",
+     "coverage": "full",
+     "needs": "—",
+     "why": "Message, retry and redirect are exactly the three the raters said no row carried, and all three land per ending; the endings that reach no branch of their own are named rather than left blank."
+    },
+    {
+     "id": "Q16",
+     "coverage": "half",
+     "needs": "alive-during-the-request",
+     "why": "The client-cache half of in-flight state gets onto the card here; what the server keeps alive while the request runs still needs its own reading."
+    }
+   ],
+   "evidence": [
+    {
+     "where": "/home/khujta/.cache/gabe-map-baselines/.check/gustify/forms.json → frontend.reasons.readers[\"endpoint:POST /setup/complete\"][0].routes",
+     "sample": "9 routes: 429,429,401,401,422,400,500 → site \"rest\"; the two 409s (x:f2caf456bd, x:a086031223) → site \"r-56477c4fb6\""
+    },
+    {
+     "where": "_lab-ep.js → LABEP.forms.frontend.findings[0]",
+     "sample": "{\"id\":\"reason-collapsed\",\"status\":409,\"details\":[\"consent required\",\"setup in progress\"],\"at\":\"apps/web/src/features/auth/SetupScreen.tsx:43\"}"
+    },
+    {
+     "where": "_lab-ep.js → LABEP.forms.frontend.hook.calls[0].invalidates / .seeds",
+     "sample": "invalidates [\"me\"] and [\"settings\"] onSuccess at apps/web/src/features/auth/useCompleteSetup.ts:45; seeds [\"me\"] at :43"
+    },
+    {
+     "where": "_lab-ep.js → LABEP.forms.frontend.client.clients[0].policy.mutations.retry",
+     "sample": "{\"state\":\"defined\",\"value\":false} — and this door's hook call is kind \"mutation\" (useMutation at useCompleteSetup.ts:34)"
+    },
+    {
+     "where": "gaps-endpoint.raw.json → investigators[id=\"A-Q8\"].exists[5].sample (the rows the reader walks and then drops)",
+     "sample": "the branch source is `if (error.status === 409) return t(\"auth.setup.error.in_progress\");` at SetupScreen.tsx:43, and the value lands in `<StatusCard tone=\"error\" role=\"alert\" …>` at line 99"
+    }
+   ]
+  },
+  {
+   "key": "alive-during-the-request",
+   "abstraction": "A list of the values that are alive only while the request runs, and of the ones that stay in the server afterwards, in place of the single key that happened to carry the right word in its name.",
+   "prisms": [
+    {
+     "name": "In-flight state",
+     "gains": "The prism stops resting on one value found by a name search: every value a middleware, a gate or the handler parks for later is listed with where it is set, where it is read and whether it dies with the answer — Q16 gets a reading instead of three instances borrowed from other rows."
+    },
+    {
+     "name": "Gates and decisions",
+     "gains": "Two rows that decide gain the backdrop behind them — the per-minute count is kept in this one server's memory, so the same caller can pass on another server, and the switch that turns the limit on is read from a settings object built once per server, so it cannot change without a restart; Q6 and Q17 gain context without gaining a verdict."
+    }
+   ],
+   "fields": [
+    {
+     "name": "Values alive during the request",
+     "parts": [
+      "what it is called",
+      "where it is set, and by what — a middleware, a gate, the handler",
+      "where it is read",
+      "whether it dies with the answer or stays in the server"
+     ],
+     "status": "new",
+     "source": "no feed carries it (ContextVar, lru_cache, BackgroundTasks, \"inflight\" all grep to 0 in forms.json, archmap.json, levels.json, c4-graph.json); nearest is forms.json endpoints[...].repeat.key, found by a name filter"
+    },
+    {
+     "name": "The repeat key's route",
+     "parts": [
+      "carried in a header",
+      "set by the first middleware",
+      "read in the handler"
+     ],
+     "status": "in the lab",
+     "source": "_lab-ep.js LABEP.forms.repeat.key"
+    },
+    {
+     "name": "Where a limit's count is kept",
+     "parts": [
+      "the counter object",
+      "where it is built",
+      "what it counts by",
+      "how long it lives"
+     ],
+     "status": "new",
+     "source": "nearest today: _lab-ep.js LABEP.forms.rate.limits[0] names the class, init_at (apps/api/middleware/rate_limit.py:103) and the key, never that the count sits in this server's memory"
+    },
+    {
+     "name": "The settings object this door reads",
+     "parts": [
+      "built once per server",
+      "which of this door's three guards reads it",
+      "the values it hands to the limit"
+     ],
+     "status": "new",
+     "source": "nearest today: _lab-ep.js LABEP.security.guards[2] = get_settings via param-dep (12 doors), with no note that it is cached for the life of the process"
+    },
+    {
+     "name": "How long the database session lives",
+     "parts": [
+      "opened for this request",
+      "closed after the answer"
+     ],
+     "status": "in the map",
+     "source": "forms.json dependencies[\"apps/api/db.py::get_session\"].teardown = true, applies_to 79 — carried onto the card by the piece that opens the calls"
+    }
+   ],
+   "today": "One value: the repeat key, listed only because its name contains the word the reader searches for.",
+   "after_rows": [
+    "repeat key · set by the first middleware (idempotency.py:25) · read in the handler (setup.py:191) · dies with the answer",
+    "would say: login context · built by the gate (auth/context.py) · read by the handler · dies with the answer",
+    "would say: sensitive-request count · built once when the server starts (rate_limit.py:103) · counted per caller address · stays in this server",
+    "would say: settings · built once per server · read at rate_limit.py:104 for the 20-a-minute limit · unchanged until a restart",
+    "would say: no lock on this route — read across the middleware, the gates, the handler and one call deeper"
+   ],
+   "questions": [
+    {
+     "id": "Q16",
+     "coverage": "half",
+     "needs": "inside-the-calls",
+     "why": "The general list lands, and with it the half nothing carries today — what outlives the request inside the server; the one everyday value the raters named, how long the database session lives, comes with the piece that opens the calls. This is also the condition the earlier ruling set for raising this row back to something worth filtering by."
+    },
+    {
+     "id": "Q6",
+     "coverage": "half",
+     "needs": "the-route-in-order",
+     "why": "Which gate stopped a request, and which it passed first, is the running order's job; what this piece adds is where that gate's count is kept."
+    },
+    {
+     "id": "Q17",
+     "coverage": "half",
+     "needs": "inside-the-calls",
+     "why": "The switch that decides the too-many-requests ending gains why its value is fixed until a restart; what still decides the path deeper down comes with the piece that opens the calls."
+    }
+   ],
+   "evidence": [
+    {
+     "where": "_lab-ep.js → LABEP.forms.repeat.key",
+     "sample": "{\"carrier\":\"header\",\"name\":\"Idempotency-Key\",\"set_at\":\"apps/api/middleware/idempotency.py:25\",\"read_at\":\"apps/api/api/setup.py:191\",\"through\":\"request.state.idempotency_key\"}"
+    },
+    {
+     "where": "_lab-ep.js → LABEP.forms.rate.limits[0] and LABEP.forms.rate.switch",
+     "sample": "{\"class\":\"SlidingWindowLimiter\",\"init_at\":\"apps/api/middleware/rate_limit.py:103\",\"key\":\"f'{ip}:sensitive'\",\"via\":\"RateLimitMiddleware\"}; switch = \"settings.rate_limit_enabled or settings.is_production\""
+    },
+    {
+     "where": "/home/khujta/.cache/gabe-map-baselines/.check/gustify/forms.json → settings[\"setting:rate_limit_sensitive_per_minute\"]",
+     "sample": "default 20, read once at apps/api/middleware/rate_limit.py:104 inside RateLimitMiddleware.__init__"
+    },
+    {
+     "where": "_lab-ep.js → LABEP.security.guards and LABEP.forms.auth.gates[0]",
+     "sample": "guards = get_auth_context (gate, 78 doors) · get_session (79) · get_settings (12); gate fn = apps/api/auth/context.py::get_auth_context"
+    },
+    {
+     "where": "grep over the four gustify feeds (forms.json, archmap.json, levels.json, c4-graph.json)",
+     "sample": "ContextVar 0 · lru_cache 0 · BackgroundTasks 0 · \"inflight\" 0 hits; forms.json dependencies[\"apps/api/db.py::get_session\"].teardown = true on 79 of 80 doors"
+    }
+   ]
+  }
+ ],
+ "verified": {
+  "pieces": [
+   {
+    "key": "the-route-in-order",
+    "abstraction": "A numbered run: every way the request can end becomes the ordered list of steps, checks, calls and forks it went through, with the one check that stopped it marked.",
+    "prisms": [
+     {
+      "name": "Endings",
+      "gains": "The three successes stop being three equal labels: 'first run' is the route that gets past all 10 checks, and every other route is named by the single check that stopped it (Q11 moves)."
+     },
+     {
+      "name": "Gates and decisions",
+      "gains": "The checks become an order — passed, passed, stopped here — and the three app-wide steps stop being listed in the reverse of the order they run (Q6 moves, and the near half of Q17: a check shows its condition, not only the failure it caught)."
+     },
+     {
+      "name": "Stages and order",
+      "gains": "What runs after what becomes a list to read on each of the 14 routes, where today there is a stage name and a count (Q7 moves)."
+     },
+     {
+      "name": "Data effects",
+      "gains": "The run is the spine a table touch hangs on, so 'when is this table touched' can point at a numbered step and not only at a stage (half of Q1 moves)."
+     }
+    ],
+    "fields": [
+     {
+      "name": "The numbered run, one per route",
+      "parts": [
+       "step number",
+       "kind of step — app-wide step, setting read, check, call, folded call, fork, catch, the ending",
+       "passed, or stopped here",
+       "file and line",
+       "its name, or the condition in the author's words"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.forms.paths[].chain[] in _lab-ep.js (i · kind · hit · at · label · sub · fn) — 14 routes, 22 rows on 'first run'; eight kinds: step · switch · gate · collapsed · call · branch · catch · exit"
+     },
+     {
+      "name": "The checks in the order they ran",
+      "parts": [
+       "its place in the run",
+       "which check",
+       "passed or stopped here",
+       "the part of the request it belongs to — app-wide, body read, login, body shape, the endpoint's own code",
+       "the answer it would have given"
+      ],
+      "status": "in the lab",
+      "source": "the same chain rows with kind 'gate' and their hit flag (false = passed, true = the one that ended the route); 88 such rows over the 14 routes"
+     },
+     {
+      "name": "The route that gets through",
+      "parts": [
+       "the route's name",
+       "how many checks it passed",
+       "the single check that stopped each other route",
+       "a mark on the through-route"
+      ],
+      "status": "in the lab",
+      "source": "a reduction over the gate rows of LABEP.forms.paths[].chain[] — the successes pass 10 · 9 · 8 and fire 0, every refusal fires exactly 1; the uncaught 500 also fires 0 (passes 7), so the rule is 'a success with the most checks passed'"
+     },
+     {
+      "name": "The app-wide steps, in the order they run",
+      "parts": [
+       "which step",
+       "runs first, second or third",
+       "how many endpoints it covers"
+      ],
+      "status": "in the lab",
+      "source": "the run's own rows (CORS at 0 · rate limit at 2–3 · idempotency at 4) and LABEP.security.asgi[].gates (80 each); the card today prints LABEP.security.asgi[].order, the order they were registered; forms.json middleware[id].order.runs agrees with the run (0 · 1 · 2)"
+     },
+     {
+      "name": "The condition behind a check",
+      "parts": [
+       "the condition in the author's words",
+       "the failure it catches, when it is a catch",
+       "where it is written"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.forms.preconditions[].pred joined by exit id; the chain row's sub shows the catch today ('except ConsentRequiredError') because via wins over pred at gen-endpoint-facts.py:123"
+     },
+     {
+      "name": "The folded call and why it was folded",
+      "parts": [
+       "which call",
+       "why nothing inside it changes the ending",
+       "file and line"
+      ],
+      "status": "in the lab",
+      "source": "chain rows with kind 'collapsed' and LABEP.forms.collapsed[] — both read 'one return' (apps/api/api/setup.py:191 and :204)"
+     }
+    ],
+    "today": "A count — 22 steps on the longest route — and the run drawn only inside the record of the ending you open; the three app-wide steps are listed as idempotency 0 · rate limit 1 · CORS 2, the reverse of the order they run.",
+    "after_rows": [
+     "2 · check · rate limit, tighter tier · passed · rate_limit.py:117",
+     "13 · call · complete_setup · api/setup.py:196",
+     "14 · fork · claimed.outcome is ClaimOutcome.REPLAY · not taken · services/setup.py:346",
+     "17 · check · 409 consent required · stopped here · services/setup.py:374",
+     "first run · passed all 10 checks · the route that gets through (already done 9 · replay 8)",
+     "app-wide steps · CORS runs 1st · rate limit 2nd · idempotency 3rd (today drawn the other way round)"
+    ],
+    "questions": [
+     {
+      "id": "Q7",
+      "coverage": "half",
+      "needs": "inside-the-calls",
+      "why": "The numbered run lands for all 14 routes and the endpoint's own calls sit in it in order; what happens inside a call further down is still one row — two failures raised two calls down have no place in the run until the calls are opened."
+     },
+     {
+      "id": "Q6",
+      "coverage": "half",
+      "needs": "inside-the-calls",
+      "why": "Every check that can refuse sits in its place with a passed-or-stopped mark, and the app-wide steps run in the right order; the helpers that run before the endpoint's own code and can refuse nothing (the database session, the settings) still have no place in that order."
+     },
+     {
+      "id": "Q11",
+      "coverage": "full",
+      "needs": "",
+      "why": "'First run' passes all 10 checks and every other route names the one check that stopped it, so expected and exception are read off the run; how often each route is really taken is not something code can say, and the card never claims it."
+     },
+     {
+      "id": "Q17",
+      "coverage": "half",
+      "needs": "inside-the-calls",
+      "why": "Three of the four things that decide a route — the endpoint's own check, the fork one call down, the setting chosen before the request arrived — are labels on the run, and a check gains its condition beside the failure it caught; the failures raised two calls deeper come with the piece that opens the calls."
+     },
+     {
+      "id": "Q1",
+      "coverage": "half",
+      "needs": "why-a-touch-why-it-survives",
+      "why": "The run gives every table touch a numbered spine to sit on, but what one touch depends on is still a yes-or-no mark — 38 of the 92 database steps on the first-run route say only 'may not run'."
+     }
+    ],
+    "evidence": [
+     {
+      "where": "docs/design/workflow-panel/_lab-ep.js → LABEP.forms.paths[12].chain[17] (the 'first run' route)",
+      "sample": "{i:17, kind:'gate', hit:false, at:'apps/api/services/setup.py:374', status:409, label:'409 consent required', sub:'except ConsentRequiredError'}"
+     },
+     {
+      "where": "_lab-ep.js → LABEP.forms.paths[9].chain[17] (the 'consent required' route) and paths[12].chain[13]",
+      "sample": "the same check with hit:true; chain[13] = {kind:'call', label:'complete_setup', at:'apps/api/api/setup.py:196'}"
+     },
+     {
+      "where": "reduction over LABEP.forms.paths[].chain[] gate rows, all 14 routes",
+      "sample": "first run 10 passed / 0 fired · already done 9/0 · replay 8/0 · rate limit (sensitive) 0 passed / 1 fired at rate_limit.py:117 · uncaught 500 7/0"
+     },
+     {
+      "where": "~/.cache/gabe-map-baselines/.check/gustify/forms.json → middleware['middleware:IdempotencyMiddleware'].order, against _lab-ep.js → LABEP.security.asgi[0]",
+      "sample": "{of:3, registered:0, runs:2} in the map; in the lab {name:'IdempotencyMiddleware', order:0, gates:80}, printed as 'app · order 0 · 80 gated'"
+     },
+     {
+      "where": "_lab-ep.js → LABEP.forms.preconditions[2] (pred · exit · at)",
+      "sample": "'latest is None or latest.policy_version != CONSENT_POLICY_VERSION' → exit x:a086031223 at apps/api/services/setup.py:374"
+     }
+    ]
+   },
+   {
+    "key": "empty-means-what",
+    "abstraction": "An empty box with a reason: every blank says whether the reading looked and found nothing, never ran here, or does not apply to this kind of endpoint — and each stage says what belongs in it.",
+    "prisms": [
+     {
+      "name": "Stages and order",
+      "gains": "Each stage gets a line, for every topic, saying what an endpoint of this kind holds there, so 'nothing here' can be read against something (Q5 moves, and this is the piece that finishes it)."
+     },
+     {
+      "name": "Overview and risk",
+      "gains": "The first look stops mixing 'this endpoint has none' with 'nobody read this here', so what is worth opening is chosen on what was actually read (half of Q20 moves)."
+     },
+     {
+      "name": "Data effects",
+      "gains": "A route with no writes now says the write reading ran on it — the rate-limit 429 stops before the login check and touches no table, as a fact and not a blank; no question of this view moves, its answers become believable."
+     }
+    ],
+    "fields": [
+     {
+      "name": "Why this box is empty",
+      "parts": [
+       "looked and found nothing",
+       "no reading covers this here",
+       "this kind of endpoint has no such box — the box keeps its place",
+       "inferred rather than read",
+       "one plain line on hover"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.forms.source.arms_on plus each block's own state word (defined · default · missing · n/a · unknown); the four drawn states exist at _lab-ep.css:1199, while 12 places in _lab-ep-panels.js still decide with count ? lit : hollow"
+     },
+     {
+      "name": "Which readings ran on this app",
+      "parts": [
+       "the readings that ran",
+       "a part of a reading that did not run, and why",
+       "which box each reading fills"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.forms.source.arms_on (8 readings); forms.json arms{} carries present + reason per reading and per part"
+     },
+     {
+      "name": "What belongs at this stage",
+      "parts": [
+       "the stage",
+       "the topic",
+       "what any endpoint of this kind holds there",
+       "how many this endpoint holds"
+      ],
+      "status": "new",
+      "source": "authored words, not a reading: window.STAGE_EXPECT at _lab-ep-panels.js:1213 holds the six lines of the tables topic only; the other 30 stage-by-topic lines are in no file and no feed (the judge prices them as hours of writing, not as generator work)"
+     },
+     {
+      "name": "The roster of boxes for this kind of endpoint",
+      "parts": [
+       "the box's name",
+       "the question it answers",
+       "filled, empty, or not applicable here"
+      ],
+      "status": "new",
+      "source": "KINDS['endpoint'] in templates/center/generators/_a3_forms.py — 12 named slots with a question each, read by no page and carried by no feed; three reach LABEP.forms.slots (K1 missing · U3 3 rows · U7 8 rows); lab-sized to carry, per the judge"
+     }
+    ],
+    "today": "An empty box is drawn one way whether the reading found nothing or never ran — 12 places decide it by count alone — and only one topic of six, the tables, says what each stage should hold.",
+    "after_rows": [
+     "writes · none · looked and found nothing (the rate-limit 429 stops before the login check runs)",
+     "declared refusals · none · looked and found nothing — the code answers 400 · 401 · 409 · 422 · 429",
+     "refusal reasons · 8 refusals · 5 carry words only · no stable code found",
+     "readings that ran · all 8 — routes, writes, settings, contract, kinds, short rules, tests, the screen",
+     "would say: INPUT · shapes · the body's shape and the rules on it belong here · on this endpoint: 1 shape, 7 fields",
+     "would say: repeat safety · filled on this endpoint · across the app 6 filled · 45 empty · 29 no such box"
+    ],
+    "questions": [
+     {
+      "id": "Q5",
+      "coverage": "full",
+      "needs": "",
+      "why": "Every stage gets its one line of what belongs there on all six topics, and the same piece tells a measured zero from a box nothing read — the two things the raters said were missing; the lines are written by hand for this kind of element until the roster is read from the generator's own list."
+     },
+     {
+      "id": "Q20",
+      "coverage": "half",
+      "needs": "how-common",
+      "why": "Where this card has nothing, and where nothing was read, becomes visible box by box; what is still missing is any sense of which topic is worth opening first on this endpoint, and that comes from the piece that says what is rare here."
+     }
+    ],
+    "evidence": [
+     {
+      "where": "docs/design/workflow-panel/_lab-ep.js → LABEP.forms.source.arms_on",
+      "sample": "['contract','effects','frontend','kinds','paths','short','switches','tests'] — all eight readings ran on this build"
+     },
+     {
+      "where": "_lab-ep.js → LABEP.forms.slots and LABEP.forms.findings",
+      "sample": "K1 {declared:[], produced:[400,401,409,422,429], state:'missing'} · U3 {rows:3, state:'defined'} · U7 {rows:8, state:'missing'} · finding text-only n:5"
+     },
+     {
+      "where": "~/.cache/gabe-map-baselines/.check/gustify/forms.json → arms.contract.stats.repeat (the app's 80 endpoints)",
+      "sample": "{defined: 6, missing: 45, n/a: 29}; this endpoint's LABEP.forms.repeat.state = 'defined'"
+     },
+     {
+      "where": "_lab-ep.js → LABEP.forms.paths[0].effects (the 'rate limit (sensitive)' 429)",
+      "sample": "{dependency:'not-run', steps:[], n:{committed:0, maybe_committed:0, rolled_back:0, uncommitted:0}} — an empty the write reading measured"
+     },
+     {
+      "where": "docs/design/workflow-panel/_lab-ep-panels.js:1213 → window.STAGE_EXPECT.data.EDGE",
+      "sample": "'no table — the app band checks the request before any data is touched' — the only topic with lines; 12 sites in the same file choose with ? \"lit\" : \"hollow\""
+     }
+    ]
+   },
+   {
+    "key": "what-each-ending-carries",
+    "abstraction": "A refusal with a name on it: the shape check says which field broke which rule, and every ending shows what it hands back to the caller besides the body.",
+    "prisms": [
+     {
+      "name": "Structures",
+      "gains": "The shape stops being one name for the whole endpoint: the refused ending points at a named field and the rule it broke, and an answering ending shows the headers it sets (Q13 moves)."
+     },
+     {
+      "name": "Stages and order",
+      "gains": "The INPUT stage, which today holds nothing at all, holds 42 rules over 23 places in the body (Q5 moves)."
+     },
+     {
+      "name": "Client",
+      "gains": "What the caller is told to do next becomes readable — wait and retry on the 429, send a bearer token on the 401 (Q8 moves)."
+     },
+     {
+      "name": "Gates and decisions",
+      "gains": "Forty-two more decisions become visible with the condition behind each, where today one row says only '422 pydantic error type' (Q17 moves)."
+     },
+     {
+      "name": "Proof",
+      "gains": "The shape refusal gets something to measure proof against — 42 named rules, reached today by 2 tests that check the code only; a new fact, no question of this view moves."
+     },
+     {
+      "name": "Endings",
+      "gains": "Each ending shows what it answers with, not only a number and the stage it left from; a new fact — both questions of this view stand where they were."
+     }
+    ],
+    "fields": [
+     {
+      "name": "The rules that refuse the body",
+      "parts": [
+       "the field, written the way the answer names it (body.household_format.units)",
+       "what the rule says, in the message the caller gets",
+       "the kind of refusal — missing · too short · too long · bad value · unknown field",
+       "the allowed values, when the code fixes them",
+       "what the value is trimmed or lower-cased into before the rule runs",
+       "the file and line the rule is written on",
+       "how many rules there are, and over how many places in the body"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.forms.endpoint.produced[] → the 422 row → cases[] (42 rows); the resolved ending LABEP.forms.exits['x:1b256011f1'] does not carry them (exit_rec, gen-endpoint-facts.py:89)"
+     },
+     {
+      "name": "What an ending sends back besides the body",
+      "parts": [
+       "the ending",
+       "the header name",
+       "its value when the code fixes it (Bearer), or a mark that it is worked out at the time",
+       "the file and line that sets it"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.forms.responses[<exit>].headers — attached to each of the 12 endings as response, drawn nowhere (0 hits for 'headers' in _lab-ep-panels.js)"
+     },
+     {
+      "name": "Who writes the answer",
+      "parts": [
+       "the ending",
+       "the media type of the answer",
+       "the app's own code, or the framework's default handler",
+       "the file and line"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.forms.responses[<exit>].source and .media"
+     }
+    ],
+    "today": "One row — '422 pydantic error type' — beside a body shape named SetupCompleteRequest with 7 top-level fields; no ending names a field or a header.",
+    "after_rows": [
+     "422 · 42 rules over 23 places in the body · 31 value rules · 7 unknown-field · 2 missing · 2 length",
+     "body.household_name · must not be blank · trimmed first · schemas/setup.py:45",
+     "body.household_format.units · one of metric, imperial · lower-cased and trimmed first · schemas/preferences.py:391",
+     "body.dietary.allergens · at most 5 items · schemas/preferences.py:97",
+     "429 · also sends Retry-After · written at middleware/rate_limit.py:127",
+     "401 not authenticated · also sends WWW-Authenticate: Bearer · written by the framework's bearer check"
+    ],
+    "questions": [
+     {
+      "id": "Q13",
+      "coverage": "half",
+      "needs": "field-rules-and-anchors",
+      "why": "The refused ending names the field and an answering ending its headers; the body shape's own per-field rules (must be sent, length, range) are still only a name and a type until the other piece."
+     },
+     {
+      "id": "Q5",
+      "coverage": "half",
+      "needs": "empty-means-what",
+      "why": "The INPUT stage finally holds something, but nothing yet states what a stage is supposed to hold, so its content cannot be read against a norm."
+     },
+     {
+      "id": "Q8",
+      "coverage": "half",
+      "needs": "what-the-screen-does",
+      "why": "What the caller is told per ending becomes readable; what the screen then shows or retries is still not read from the frontend."
+     },
+     {
+      "id": "Q17",
+      "coverage": "half",
+      "needs": "inside-the-calls",
+      "why": "Forty-two decisions gain their condition and say what the body must carry to pass; decisions taken more than one call deep are still a single folded row."
+     }
+    ],
+    "evidence": [
+     {
+      "where": "_lab-ep.js → LABEP.forms.endpoint.produced[] → the 422 row → cases[]",
+      "sample": "42 rules over 23 distinct places (extra_forbidden 7 · missing 2 · string_too_short 1 · string_too_long 1 · value_error 31); one of them: body.household_format.units · \"units must be one of ['metric', 'imperial']\" · apps/api/schemas/preferences.py:391 · normalises lower, strip"
+     },
+     {
+      "where": "_lab-ep.js → LABEP.forms.responses['x:8437446a6c']",
+      "sample": "{status:429, headers:{'Retry-After':'…'}, media:'application/json', source:'apps/api/middleware/rate_limit.py:127'}"
+     },
+     {
+      "where": "_lab-ep.js → LABEP.forms.responses['x:9fd81887a2']",
+      "sample": "{status:401, headers:{'WWW-Authenticate':'Bearer'}, source:'fastapi/security/http.py:84-92'}"
+     },
+     {
+      "where": "_lab-ep.js → LABEP.forms.exits[] (12 rows) and the chain label of the shape check",
+      "sample": "every ending carries a response record, none carries cases; the run's row reads '422 pydantic error type'; its tests are C1051 and C1052, both by code only"
+     },
+     {
+      "where": "gustify forms.json → endpoints[*].produced[].cases",
+      "sample": "281 rules over 42 of 80 endpoints; fewest 1 · middle 4 · most 42 (this endpoint); 0 of 281 carry a test reference"
+     }
+    ]
+   },
+   {
+    "key": "whose-write",
+    "abstraction": "An owner for every write: what this endpoint's own code did, kept apart from what the login check had already done before the handler ran.",
+    "prisms": [
+     {
+      "name": "Data effects",
+      "gains": "Every table the endpoint touches is drawn in every layout with the pass that found it, and the one write that survives a refused request is named as the login check's (Q9 is answered; Q1 and Q2 move)."
+     },
+     {
+      "name": "Overview and risk",
+      "gains": "The race mark starts separating endpoints instead of covering them all — 11 of 80 carry a race of their own, and this endpoint is one of only two that carry ten (Q20 moves; the fact also feeds Q14, which is asked across endpoints)."
+     }
+    ],
+    "fields": [
+     {
+      "name": "Races on a unique key, split by owner",
+      "parts": [
+       "how many this endpoint's own code can hit",
+       "how many it inherits from the login check",
+       "how many are caught",
+       "the table and the columns that must stay unique",
+       "the file and line of each"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.forms.paths[].effects.steps[].race, read beside the same step's dependency flag; the caught one also at LABEP.forms.repeat.claims[0]"
+     },
+     {
+      "name": "What the login check writes before the handler runs",
+      "parts": [
+       "the table",
+       "what it does (creates a row)",
+       "the file and line",
+       "the file and line where it is saved for good",
+       "that it stays whatever ending the request takes"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.forms.auth.provisions[0]"
+     },
+     {
+      "name": "How this table was found",
+      "parts": [
+       "the table",
+       "found by the code map's links · by walking the request's effects · both",
+       "who touches it — the login check, or the endpoint's own code"
+      ],
+      "status": "in the lab",
+      "source": "a comparison of two lists the lab already holds — LABEP.data.tables (13) against LABEP.forms.paths[].effects.steps[].table (15), with the step's dependency flag; the word itself is stored nowhere; the hollow mark exists at _lab-ep-panels.js:1004 and the shared table list at :1511 never sees the extra two"
+     },
+     {
+      "name": "Where the file says this belongs, against where its data says",
+      "parts": [
+       "the feature the file puts it in",
+       "the features its tables belong to, with a count each",
+       "the feature its callers say",
+       "the map's own word for the disagreement"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.identity.home_ev"
+     }
+    ],
+    "today": "A race mark that does not say whose it is — 11 inserts with no catch here, a mark 79 of the app's 80 endpoints carry — over a table list that is 15 in the default layout and 13 in every other.",
+    "after_rows": [
+     "races · 10 this endpoint's own · 1 from the login check · 1 caught (idempotency_keys · idempotency.py:140)",
+     "users · created by the login check · ownership.py:49 · saved at auth/context.py:79 · stays whatever the ending",
+     "users · ai_spend_log · found by walking the request's effects only · now in every layout (13 of 15 drawn today)",
+     "ai_spend_log · read by the endpoint's own code · ai_credits.py:83",
+     "409 consent required · 5 writes undone · 1 uncertain · 1 kept (the login check's)",
+     "filed under auth · its tables belong to settings 10 · auth 9 · allergen 2 · pantry 2 · legal-consent 1 · the map's word: stay"
+    ],
+    "questions": [
+     {
+      "id": "Q9",
+      "coverage": "full",
+      "needs": "",
+      "why": "The card lists the two tables the map's links never named, draws them in every layout and says which pass found each, so the difference is read off and not only counted."
+     },
+     {
+      "id": "Q2",
+      "coverage": "half",
+      "needs": "why-a-touch-why-it-survives",
+      "why": "A kept write on a refused request is explained — it is the login check's, saved before the handler ran; for the endpoint's own writes nothing yet names the line that saved or undid each one."
+     },
+     {
+      "id": "Q1",
+      "coverage": "half",
+      "needs": "why-a-touch-why-it-survives",
+      "why": "All 15 tables appear in every layout at the stage that touches them, the login check's at the gate; what a touch depends on still has no row, and its place in the run comes with the route piece."
+     },
+     {
+      "id": "Q14",
+      "coverage": "elsewhere",
+      "needs": "",
+      "why": "The mark now separates 11 endpoints from 69, which is what a comparison across all 80 would use; that comparison is a view across endpoints, not this card."
+     },
+     {
+      "id": "Q20",
+      "coverage": "half",
+      "needs": "empty-means-what",
+      "why": "The face's race mark starts saying something true of this endpoint, but a measured zero still cannot be told from a reading that never ran."
+     }
+    ],
+    "evidence": [
+     {
+      "where": "_lab-ep.js → LABEP.forms.paths[].effects.steps[].race with the dependency flag",
+      "sample": "10 own sites with no catch (setup.py:108, 124, 144, 174, 194, 209, 226 · ownership.py:117, 132 · exploration.py:57), 1 inherited at ownership.py:50 (users), 1 caught at idempotency.py:140"
+     },
+     {
+      "where": "_lab-ep.js → LABEP.forms.auth.provisions[0]",
+      "sample": "{table:'users', op:'add', at:'apps/api/services/ownership.py:49', committed_at:'apps/api/auth/context.py:79', state:'committed'}"
+     },
+     {
+      "where": "gustify forms.json → endpoints[*].paths[].effects.steps joined to steps{}.race, own counted apart from the login check's",
+      "sample": "own races per endpoint {0: 69, 1: 8, 2: 1, 10: 2} (the two tens: POST /setup/complete and POST /_e2e/seed); 79 of 80 inherit ownership.py:50; 65 of the 101 routes that end in a 422 keep the users row"
+     },
+     {
+      "where": "_lab-ep.js → LABEP.data.tables (13) against LABEP.forms.paths[].effects.steps[].table (15)",
+      "sample": "effects-only: users, ai_spend_log (a read at apps/api/services/ai_credits.py:83, dependency false); map-only: none"
+     },
+     {
+      "where": "_lab-ep.js → LABEP.forms.paths[9].effects.n and LABEP.identity.home_ev",
+      "sample": "consent route {committed:1, maybe_committed:1, rolled_back:5}; home_ev {by:'file', data:{settings:10, auth:9, allergen:2, pantry:2, 'legal-consent':1}, users:{auth:1}, verdict:'stay'}"
+     }
+    ]
+   },
+   {
+    "key": "honest-proof",
+    "abstraction": "A receipt behind every coverage mark: the test that proved it and what that test actually asked for, or the plain reason nothing here can prove it.",
+    "prisms": [
+     {
+      "name": "Proof",
+      "gains": "Q4 moves from a stamped word to something that can be opened: each check names the test that reached it and what that test asked for, and where no test reaches, the card says which of three reasons applies."
+     },
+     {
+      "name": "Gates and decisions",
+      "gains": "The rows this view reads stop over-claiming — the three catches and the rate-limit switch carry a reason or the values tests gave them, where today they read 'no test can assert it'; a new fact, neither question of this view moves."
+     },
+     {
+      "name": "Endings",
+      "gains": "Each ending carries what the test asked of it (a code, and the words the message must contain), and the walk around this endpoint — POST /consent before, GET /me after — becomes readable (Q11 moves halfway)."
+     },
+     {
+      "name": "Overview and risk",
+      "gains": "The coverage count on the face gets a meaning — 12 tests came for this endpoint against 135 that only arrived through a shared helper — and the 15 unnamed web tests are said to be unnamed (Q20 moves; the count also feeds Q14, which is asked across endpoints)."
+     }
+    ],
+    "fields": [
+     {
+      "name": "What the test asked for",
+      "parts": [
+       "the test's id and name",
+       "the answer code it expected",
+       "the words it required in the message",
+       "the checks it made on the answer's contents",
+       "the line it ran at"
+      ],
+      "status": "in the map",
+      "source": "forms.json test_cases['C1055'].calls[].asserts (status · detail · attrs) and .role — case_rec at gen-endpoint-facts.py:84 copies neither"
+     },
+     {
+      "name": "Why the test came here",
+      "parts": [
+       "came to exercise this endpoint",
+       "only set something else up",
+       "arrived through a shared helper",
+       "proves the failure at the service, below the endpoint"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.forms.tests (act 15 · arranged_by 14 · helper_arranged 135) and the conf word 'service raises' on LABEP.forms.exits[].tests[]"
+     },
+     {
+      "name": "One test list instead of two",
+      "parts": [
+       "one row per test",
+       "its reason for being here",
+       "the check it is attached to",
+       "the three service-level tests today's list drops"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.tests.cases (26 rows) against the ids cited by LABEP.forms.paths[].tests ∪ exits[].tests (15 ids, incl. C1061 · C1065 · C1067, which are not among the 26)"
+     },
+     {
+      "name": "Values the tests gave a setting",
+      "parts": [
+       "the setting a switch reads",
+       "each value a test set, and which test set it",
+       "whether the default is what runs everywhere else"
+      ],
+      "status": "in the map",
+      "source": "forms.json settings['setting:rate_limit_enabled'].tests and settings['setting:auth_provider'].tests"
+     },
+     {
+      "name": "Why nothing proves this",
+      "parts": [
+       "no test reaches it",
+       "it can only be proven by reading the row back afterwards, and this reading opens answers only",
+       "a test set the value somewhere else, not through this endpoint"
+      ],
+      "status": "new",
+      "source": "authored words replacing the blanket word from gen-robot.js:12 (NM = unmeasured; robot.json states.unmeasured) — no feed carries a reason; the piece mixes all three statuses"
+     },
+     {
+      "name": "Tests that have no name",
+      "parts": [
+       "how many there are",
+       "which suite they come from",
+       "the word unnamed instead of a made-up id"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.tests.case_files = [{corpus:'web', name:'15 case(s)'}]"
+     },
+     {
+      "name": "The step before and after",
+      "parts": [
+       "the walk's name",
+       "what runs before this endpoint",
+       "what runs after it"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.widening.steps_around"
+     }
+    ],
+    "today": "Ten of its 31 checks read 'no test can assert it today', and the test list is 26 bare ids that disagree with the 15 the checks cite.",
+    "after_rows": [
+     "409 consent required · C1055 · asked for 409 and the word 'consent' in the message · line 121",
+     "200 answer · C1049 · asked for 200 and 7 checks on the body (household name 'Casa Ruta', credits allowance 0)",
+     "rate-limit switch · tests set it off (C776) and on (C777) · off is the default, which the rest of the suite runs",
+     "token verifier · 13 tests set the provider to real, among them C128 · the mock is the default",
+     "would say: commit on success · proven only by reading the row back — this reading opens answers only (today: 'no test can assert it')",
+     "tests · 12 came for this endpoint · 14 only set it up · 135 arrived through a shared helper · 15 web tests unnamed"
+    ],
+    "questions": [
+     {
+      "id": "Q4",
+      "coverage": "half",
+      "needs": "",
+      "why": "Every check says what proved it or why nothing can, and each test shows what it asked for; what stays open is tying a check on the answer's contents to one route — the 7 body checks of C1049 stay attached to the code 200, which three routes share — and none of the eleven pieces builds that."
+     },
+     {
+      "id": "Q11",
+      "coverage": "half",
+      "needs": "the-route-in-order",
+      "why": "This piece adds where the endpoint sits in its walk (POST /consent before, GET /me after); which route is the expected one is read from the numbered run the other piece builds."
+     },
+     {
+      "id": "Q14",
+      "coverage": "elsewhere",
+      "needs": "",
+      "why": "The coverage count here finally means something, but 'the least tested' is a comparison over all 80 endpoints, which is a view across endpoints and not this card."
+     },
+     {
+      "id": "Q20",
+      "coverage": "half",
+      "needs": "empty-means-what",
+      "why": "The coverage topic gets a count that can be opened and admits the unnamed tests; whether an empty topic means 'none here' or 'not read here' is the other piece's job."
+     }
+    ],
+    "evidence": [
+     {
+      "where": "gustify forms.json → test_cases['C1055'].calls[0]",
+      "sample": "{asserts:{status:[409], detail:['consent']}, line:121, role:'act', refs:[{conf:'status+detail', exit:'x:a086031223'}]} — test_setup_complete_without_consent_409_C1055"
+     },
+     {
+      "where": "gustify forms.json → test_cases['C1049'].calls[0].asserts.attrs",
+      "sample": "7 checks, incl. \"body['household']['name'] == 'Casa Ruta'\" and \"body['subscription']['credits_allowance'] == 0\"; refs conf 'status' only"
+     },
+     {
+      "where": "gustify forms.json → settings['setting:rate_limit_enabled'].tests and settings['setting:auth_provider'].tests",
+      "sample": "rate_limit_enabled: default false, default_runs true, 6 sets (false via …disabled_never_throttles_C776, true via …throttles_over_limit_C777); auth_provider: default MOCK, 14 sets of REAL by 13 tests (C193 twice), one of them test_get_verifier_selects_firebase_when_real_C128"
+     },
+     {
+      "where": "docs/design/workflow-panel/robot.json → levels[].conds[].cov.state",
+      "sample": "tally over 31 checks: unmeasured 10 · untested 7 · partial 5 · covered 5 · gap 4; 'commit on success', 'rollback on refusal' and 'provision add users' all read unmeasured"
+     },
+     {
+      "where": "_lab-ep.js → LABEP.forms.tests, LABEP.tests.cases, LABEP.tests.case_files, LABEP.widening.steps_around",
+      "sample": "{act:15, arranged_by:14 ids, helper_arranged:135 ids}; forms.json test_cases gives 12 tests behind the 15 calls; a separate roster of 26 ids; [{corpus:'web', name:'15 case(s)'}]; [{workflow:'Initial setup — first run', prev:'POST /consent', next:'GET /me'}]"
+     }
+    ]
+   },
+   {
+    "key": "inside-the-calls",
+    "abstraction": "A call that opens: behind the name sit the failures it can raise, the condition behind each one, and the answer each becomes here.",
+    "prisms": [
+     {
+      "name": "Functions",
+      "gains": "Q18 and Q19 move: every function the endpoint reaches wears the roles its own code shows, with a mark when one holds two, and the small helpers behind the walk arrive with read facts — lines, what they return, whether they call anything, whether they touch a table — where today they are bare names."
+     },
+     {
+      "name": "Gates and decisions",
+      "gains": "Q17 and Q6 move: a failure one or two calls below the handler shows the condition that raises it, with a plain note where the reading stopped, and the helpers that can refuse nothing get their place in the order things are resolved."
+     },
+     {
+      "name": "Stages and order",
+      "gains": "A call in the run opens into what happens inside it, line by line, so the two failures raised two calls down get a place (Q7 moves)."
+     },
+     {
+      "name": "In-flight state",
+      "gains": "Q16 gains its one cheap true statement — the database session is handed to the handler and closed after the answer is sent, on 79 of 80 endpoints — while the rest of what is alive during a request still waits."
+     },
+     {
+      "name": "Endings",
+      "gains": "Two failures raised two calls down are named with their conditions; the reading stops one call down, so the card says it does not know which ending they become — a new fact, no question of this view moves."
+     }
+    ],
+    "fields": [
+     {
+      "name": "What is inside a call",
+      "parts": [
+       "the function behind the name",
+       "each failure it can raise",
+       "the condition that raises it",
+       "which answer here that failure becomes",
+       "where it saves or takes a savepoint",
+       "the file and line"
+      ],
+      "status": "in the map",
+      "source": "forms.json functions{} filtered by reached_by[].root == 'endpoint:POST /setup/complete' (5 rows: setup_complete · complete_setup · _load_setup_result · claim · _discard_claim)"
+     },
+     {
+      "name": "A failure whose answer the reading does not follow",
+      "parts": [
+       "the message",
+       "the condition",
+       "the file and line",
+       "the note that the reading stopped one call down"
+      ],
+      "status": "in the map",
+      "source": "forms.json functions['apps/api/services/setup.py::_load_setup_result'].raises[].translation = 'beyond one level' (two raises, at :240 and :243)"
+     },
+     {
+      "name": "What each function does here",
+      "parts": [
+       "faces the web",
+       "decides an ending",
+       "reads or writes data",
+       "gives context to the rest",
+       "a mark when one function does two of these"
+      ],
+      "status": "in the lab",
+      "source": "derived today from _lab-ep.js: LABEP.forms.branches[].fn ∪ forms.failure.catches[].fn ∪ forms.returns[].fn ∪ forms.paths[].effects.steps[].fn ∪ security.gates[].fn — the one field of this piece that needs no new carry"
+     },
+     {
+      "name": "Helpers that can refuse nothing",
+      "parts": [
+       "the name",
+       "what it hands the handler",
+       "that it can end no request",
+       "the order they are resolved in",
+       "how many endpoints it runs on"
+      ],
+      "status": "in the map",
+      "source": "forms.json dependencies{} with exits == [] (get_session 79 · _resolve_verifier 79 · get_settings 12) and get_auth_context.subdeps; the names and counts of two of them are already in the lab (LABEP.security.guards, gate:false, drawn as 'supplies a resource')"
+     },
+     {
+      "name": "When the session closes",
+      "parts": [
+       "that it hands back a database session",
+       "that it closes after the answer is sent",
+       "the endpoints it runs on"
+      ],
+      "status": "in the map",
+      "source": "forms.json dependencies['apps/api/db.py::get_session'].teardown = true, applies_to = 79"
+     },
+     {
+      "name": "What a small helper does",
+      "parts": [
+       "how many lines",
+       "what it returns",
+       "whether it calls anything else",
+       "whether it touches a table",
+       "its one-line description, when the code has one"
+      ],
+      "status": "in the map",
+      "source": "archmap.json function_insight[…] (lines · returns · base · access · doc) for the 29 names behind the walk; it carries no line number for them"
+     }
+    ],
+    "today": "A name and a line: step 13 reads 'call complete_setup · api/setup.py:196', and two steps say only 'one return'.",
+    "after_rows": [
+     "13 · call complete_setup · api/setup.py:196 — opens: 2 failures inside, 2 saves",
+     "  'setup in progress' · raised when claimed.outcome is ClaimOutcome.IN_PROGRESS · services/setup.py:348 → the 409 at api/setup.py:200",
+     "  two calls down · 'cannot load setup graph for a user without a household' · when loaded is None · services/setup.py:240 · the reading stops one call down — the answer it becomes is not read",
+     "20 · _me_response_from_result · one return · 20 lines · returns MeResponse · touches no table itself",
+     "complete_setup · decides an ending and writes · get_auth_context · gives context, decides the 401, adds the users row",
+     "get_session · runs before the handler · can refuse nothing · closes after the answer · 79 of 80 endpoints"
+    ],
+    "questions": [
+     {
+      "id": "Q17",
+      "coverage": "half",
+      "needs": "the-route-in-order",
+      "why": "The condition behind a failure one and two calls down arrives, with a plain note where the reading stopped; the near half — a check showing its condition and not only the failure it caught — is in the route piece, and what the body must carry to pass the shape check comes with the piece on what each ending carries."
+     },
+     {
+      "id": "Q18",
+      "coverage": "full",
+      "needs": "",
+      "why": "Every function the endpoint reaches wears the roles its own code shows, four of them hold two at once here, and a function that shows none of the four is visible as such — the overlap mark and the 'none' count are exactly what the raters said was missing."
+     },
+     {
+      "id": "Q19",
+      "coverage": "half",
+      "needs": "why-a-touch-why-it-survives",
+      "why": "A helper arrives with facts and not only a name — month_start: 4 lines, returns a date, calls nothing, touches no table — but whether a step runs once or once per item is still squeezed into one yes-or-no mark; the type word is left to the reader by design."
+     },
+     {
+      "id": "Q6",
+      "coverage": "half",
+      "needs": "the-route-in-order",
+      "why": "The helpers that can refuse nothing get the read fact that they end no request and their place in the order things are resolved (today two of them are only listed as supplying a resource); the run order and the passed marks of the checks themselves come from the route piece."
+     },
+     {
+      "id": "Q7",
+      "coverage": "half",
+      "needs": "the-route-in-order",
+      "why": "A call in the run opens into its failures, saves and savepoint by line, which places what happens two calls down; the run it opens from is the route piece's."
+     },
+     {
+      "id": "Q16",
+      "coverage": "half",
+      "needs": "alive-during-the-request",
+      "why": "One true statement lands — the session closes after the answer — while everything else alive during the request is still found only by a name search for one key."
+     }
+    ],
+    "evidence": [
+     {
+      "where": "gustify forms.json → functions['apps/api/services/setup.py::complete_setup'].raises[0]",
+      "sample": "{cls:'SetupInProgressError', at:'apps/api/services/setup.py:348', pred:'claimed.outcome is ClaimOutcome.IN_PROGRESS', translation:'translated', translated_by:[… {endpoint:'endpoint:POST /setup/complete', at:'apps/api/api/setup.py:200', status:409}]}; commits: 2 step ids"
+     },
+     {
+      "where": "gustify forms.json → functions['apps/api/services/setup.py::_load_setup_result'].raises[0]",
+      "sample": "{at:'apps/api/services/setup.py:240', cls:'RuntimeError', msg:'cannot load setup graph for a user without a household', pred:'loaded is None', translation:'beyond one level', translated_by:[]} — reached at depth 2 via complete_setup"
+     },
+     {
+      "where": "gustify forms.json → dependencies['apps/api/db.py::get_session'] and LABEP.security.guards",
+      "sample": "{at:'apps/api/db.py:51', teardown:true, applies_to:79, exits:[]}; _resolve_verifier exits [] on 79, get_settings exits [] on 12; in the lab get_session and get_settings already appear with gate:false and feedwide 79 / 12"
+     },
+     {
+      "where": "gustify archmap.json → function_insight['apps/api/api/setup.py::_me_response_from_result'] and ['apps/api/services/ai_credits.py::month_start']",
+      "sample": "{lines:20, returns:'MeResponse', base:false, access:{ops:[]}} · {lines:4, returns:'datetime', base:true, access:{}, doc:'First instant of the current calendar month (UTC) — the credits window cutoff.'}"
+     },
+     {
+      "where": "_lab-ep.js → LABEP.forms.collapsed and the 22-step run",
+      "sample": "[{call:'get_idempotency_key', reason:'one return', site:'apps/api/api/setup.py:191'}, {call:'_me_response_from_result', reason:'one return', site:'apps/api/api/setup.py:204'}] drawn as steps 11 and 20; step 13 = {kind:'call', label:'complete_setup', at:'apps/api/api/setup.py:196'}"
+     }
+    ]
+   },
+   {
+    "key": "how-common",
+    "abstraction": "A normal for this application: every piece the endpoint is built from says how many of the other 79 use it, so 'ordinary here, except for these three things' is read off the card and not guessed.",
+    "prisms": [
+     {
+      "name": "Standard or specialist",
+      "gains": "The whole point of view stops being empty — its one question becomes answerable, because each piece carries its count: a repeat key on 6 endpoints of 80, a value picked from a setting on 11, the tighter rate tier on 23 (Q12 moves)."
+     },
+     {
+      "name": "Overview and risk",
+      "gains": "The face can place the endpoint among its neighbours before anything is opened — 11th of 81 by what sits behind it, where the middle one has 4 functions behind it and the biggest 135 (Q20 moves; the position also feeds Q14, which is asked across endpoints)."
+     },
+     {
+      "name": "Proof",
+      "gains": "Coverage gets a scale to be read against: 4 of this endpoint's 9 produced endings are named by a test, 6th of 80, where the middle endpoint names 1 in 6 and 28 name none; a new fact, no question of this view moves."
+     },
+     {
+      "name": "Gates and decisions",
+      "gains": "The too-many-requests refusal gains the one fact that is a choice about this endpoint — it sits on the tighter limit, where 23 endpoints sit and 56 do not; a new fact, neither question of this view moves."
+     },
+     {
+      "name": "Client",
+      "gains": "The who-fetches-it list carries its own count as a header, and an endpoint nothing fetches reads as a floor — 28 of 81 have no screen, beside the 2 fetches that matched no endpoint and the 5 whose path is built at run time; a new fact, no question of this view moves."
+     }
+    ],
+    "fields": [
+     {
+      "name": "How many other endpoints use this piece",
+      "parts": [
+       "the piece — a dependency, a gate, a kind of switch, a limiter, a catch outcome, a status, a repeat key",
+       "how many of the application's 80 endpoints use it",
+       "the share as a percentage",
+       "later: how many of the four applications read carry it at all"
+      ],
+      "status": "in the map",
+      "source": "a tally over forms.json endpoints{} — the object gen-endpoint-facts.py already holds in memory (_fj); nothing new is read from code; the card carries this today for dependencies only (LABEP.feedwide.deps); the cross-app half reads the four feeds under ~/.cache, summarised in docs/design/element-forms/census-b14.md"
+     },
+     {
+      "name": "Where this endpoint sits in the application",
+      "parts": [
+       "its rank by how many functions sit behind it",
+       "the middle endpoint's number",
+       "the biggest one, named, with its number",
+       "which size band it falls into"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.context.risk — rank · behind_median · behind_max · behind_max_of · behind_bins — generated on every build and drawn nowhere"
+     },
+     {
+      "name": "How much of this endpoint a test names, against the others",
+      "parts": [
+       "endings a test names",
+       "endings the code can produce",
+       "its rank among the application's endpoints",
+       "what the middle endpoint manages",
+       "how many name none"
+      ],
+      "status": "in the map",
+      "source": "a tally over forms.json endpoints[].produced[].tests (this endpoint 4 of 9, the app 122 of 577); no feed stores the rank"
+     },
+     {
+      "name": "Rate tier",
+      "parts": [
+       "tighter · standard · exempt",
+       "the cap and the window",
+       "the setting and the environment variable behind the cap",
+       "the switch that turns limiting on at all",
+       "how many endpoints sit on each tier"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.forms.rate (two limiter rows, the switch, the exempt list); only the 23 · 56 · 1 split is a tally over forms.json endpoints[].rate"
+     },
+     {
+      "name": "A mark drawn only when it is unusual here",
+      "parts": [
+       "the piece",
+       "how many endpoints in this application have it",
+       "whether that makes it the norm or the exception here",
+       "and so whether the mark is drawn at all"
+      ],
+      "status": "in the map",
+      "source": "the same tally; e.g. async is true of 80 of 81 nodes in gustify's c4-graph.json and of 34 of 545 in the biggest application read, so the mark separates nothing here and nearly everything there"
+     },
+     {
+      "name": "Who fetches it, with its count and its floor",
+      "parts": [
+       "how many screens fetch this endpoint, as the header of the list",
+       "the hooks themselves",
+       "when nothing fetches it: how many endpoints that is, and how many fetches the map could not place"
+      ],
+      "status": "in the map",
+      "source": "c4-graph.json stats.web — fetch_sites 58 · matched 56 · unmatched 2 · dynamic 5; this endpoint's own count is already in the lab (LABEP.widening.fetched_by, 1 hook)"
+     }
+    ],
+    "today": "Only the dependencies carry a comparison — 'get_auth_context · 78 of 81 endpoints use it (96%)' inside a hover — while this endpoint's place (11th of 81 · middle 4 · biggest 135) is generated and drawn nowhere.",
+    "after_rows": [
+     "size · 11th of 81 · the middle endpoint has 4 functions behind it · the biggest 135 (BOOT lifespan)",
+     "proof · 4 of 9 produced endings named by a test · 6th of 80 · 28 endpoints name none",
+     "rate limit · tighter tier · 23 endpoints here, 56 standard, 1 exempt · 20 a minute against the app's 120",
+     "repeat key · 6 of 80 endpoints here · 0 of 49 and 0 of 499 in the other two backends read",
+     "picks a value from a setting · 11 of 80 endpoints · here, the AI-credit allowance (chef or free)",
+     "fetched by 1 screen · 28 of 81 have none · 2 fetches matched no endpoint · 5 build their path at run time"
+    ],
+    "questions": [
+     {
+      "id": "Q12",
+      "coverage": "full",
+      "needs": "",
+      "why": "Every piece this endpoint carries gets its count inside the application at once, and the comparison across the four applications read arrives with this same piece's small committed digest — so 'standard' becomes a reading; the one application with no backend says 'not measured'."
+     },
+     {
+      "id": "Q14",
+      "coverage": "elsewhere",
+      "needs": "",
+      "why": "The card can say where this endpoint sits — 11th of 81, 4 of 9 endings tested, 6th of 80 — but naming which endpoint is the densest or the least tested needs the same rows for all 80 at once, which is a view across endpoints that no piece here builds."
+     },
+     {
+      "id": "Q20",
+      "coverage": "half",
+      "needs": "empty-means-what",
+      "why": "The size and proof counts, and the marks that show only where this endpoint differs from the rest, say where to look first; what an empty box means — looked and found nothing, or not read here — is the other piece's work."
+     }
+    ],
+    "evidence": [
+     {
+      "where": "docs/design/workflow-panel/_lab-ep.js → LABEP.context.risk",
+      "sample": "{rank:11, of:81, behind_median:4, behind_max:135, behind_max_of:'BOOT lifespan', behind_bins:{'0':3,'1-4':41,'5-14':23,'15-39':8,'40+':6}} — read once by endpoint-lab.html for the risk chip, never drawn"
+     },
+     {
+      "where": "gustify forms.json → endpoints{}.rate and endpoints{}.switches, tallied over all 80",
+      "sample": "56 endpoints with one limiter · 23 with two (this one among them) · 1 missing (/healthz is exempt); switch kinds per endpoint: flag 79 · binding 79 · value 11 — here ai_credits_chef against ai_credits_free"
+     },
+     {
+      "where": "gustify forms.json → endpoints{}.produced[].tests, tallied over all 80",
+      "sample": "POST /setup/complete 4 of 9 (6th of 80 by share); app-wide 122 of 577; the middle share is 1 in 6; 28 endpoints name none"
+     },
+     {
+      "where": "docs/design/element-forms/census-b14.md → the endpoints row and the slot-fill rows U12 and K3",
+      "sample": "endpoints 80 · 49 · 499; idempotency: gustify 6 (8%) · gastify 0 (0%) · tier3 0 (0%) · the fourth 'not measured'; rate limit: 79 (99%) · 16 (33%) · 0 (0%)"
+     },
+     {
+      "where": "gustify c4-graph.json → stats.web; _lab-ep.js → LABEP.rate / LABEP.forms.rate.limits[].args",
+      "sample": "{fetch_sites:58, matched:56, unmatched:2 (both in useRecipeFilterModes), dynamic:5}; limits 20 (rate_limit_sensitive_per_minute) and 120 (rate_limit_per_minute), window 60"
+     }
+    ]
+   },
+   {
+    "key": "field-rules-and-anchors",
+    "abstraction": "A card you can open: every block says the line it was read from, and every field of the body carries the rule on it, so a shape stops being a list of names.",
+    "prisms": [
+     {
+      "name": "Functions",
+      "gains": "A called function stops being a name with a size and becomes a place you can open — for the 6 of this endpoint's 27 calls the map knows a line for, and it says so plainly for the other 21 (Q15 moves)."
+     },
+     {
+      "name": "Structures",
+      "gains": "The body shape shows the rule beside each field where today there are seven bare names — must be sent, 1 to 120 characters, unknown fields rejected — so Q13 moves; the column rules that ride along answer Q10, which belongs on the table's own card."
+     }
+    ],
+    "fields": [
+     {
+      "name": "The line a called function starts at",
+      "parts": [
+       "the function's name",
+       "its file",
+       "the line its definition starts at",
+       "how long it is",
+       "and, where no feed knows a line for it, that it says so"
+      ],
+      "status": "in the map",
+      "source": "forms.json functions{}.at — 101 of 101 entries carry one; 6 of the 27 functions in LABEP.functions.walk are in that roster; archmap.json function_insight carries a length and no line"
+     },
+     {
+      "name": "The rule on each field of the body",
+      "parts": [
+       "field name",
+       "its type",
+       "must it be sent",
+       "its limits — shortest, longest, smallest, largest, a pattern",
+       "what happens to a field nobody declared: rejected or ignored",
+       "the line it is declared at"
+      ],
+      "status": "in the map",
+      "source": "forms.json schemas{} — fields[].required · fields[].constraints · fields[].at, plus the class's extra policy and its own line (127 classes · 630 fields, all with a line)"
+     },
+     {
+      "name": "The rule on each column of a table this endpoint touches",
+      "parts": [
+       "column name",
+       "its database type",
+       "may it be empty",
+       "what the database writes when nobody sets it",
+       "what deleting the row it points at does to it",
+       "the unique and check rules on the table",
+       "the line it is declared at"
+      ],
+      "status": "in the map",
+      "source": "forms.json models{} — columns{nullable · default · server_default · primary_key · fk.ondelete · at} and constraints{uniques · checks · indexes} (57 models · 486 columns)"
+     },
+     {
+      "name": "Where an application-wide step is switched on",
+      "parts": [
+       "the step's name",
+       "the file and line where it is added to the application",
+       "its place in the run order"
+      ],
+      "status": "in the map",
+      "source": "forms.json middleware{}.registered_at with order{registered · runs · of}; mixed: the file and line are already in the lab's security block (LABEP.security.asgi[].file + .line, main.py:127) but blank on all 26 step rows of the 14 runs (at: null)"
+     }
+    ],
+    "today": "The only anchor on the face reads 'apps/api/api/setup.py:254' — the file's length, not the handler's line 183 — while the 7 body fields, the 86 table columns and the 26 app-wide step rows of the runs carry no rule and no line.",
+    "after_rows": [
+     "complete_setup · opens at services/setup.py:337 · 71 lines",
+     "_upsert_dietary · services/setup.py · 18 lines · no line in any feed (21 of the 27 calls)",
+     "household_name · text · must be sent · 1 to 120 characters · schemas/setup.py:26",
+     "country · String(2) · never empty · the database writes CL · models/preferences.py:58",
+     "household_id → households.id · deleting the household deletes this row · models/preferences.py:55",
+     "rate-limit step · added to the application at main.py:127 · runs 2nd of 3"
+    ],
+    "questions": [
+     {
+      "id": "Q15",
+      "coverage": "half",
+      "needs": "",
+      "why": "After this piece every check, catch, fork, call site, database step, body field, table column and app-wide step opens at its line, and 6 of the 27 called functions do too; the other 21 small helpers open at their file only, because no feed carries their line — and none of the eleven pieces adds it (the piece that opens the calls brings the same six)."
+     },
+     {
+      "id": "Q10",
+      "coverage": "elsewhere",
+      "needs": "",
+      "why": "The column rules — may it be empty, what fills it, what a delete drags with it — arrive with this join, but they are the table's facts and belong on the table's own card, already ruled to be the face of that block."
+     },
+     {
+      "id": "Q13",
+      "coverage": "half",
+      "needs": "what-each-ending-carries",
+      "why": "The shape that goes in gains its rule field by field; what comes back per ending — the headers and the exact field a refused request tripped on — is the other piece. One thing the raters named stays open after both: which body fields a given ending actually read, which no feed carries."
+     }
+    ],
+    "evidence": [
+     {
+      "where": "gustify forms.json → functions['apps/api/services/setup.py::complete_setup'].at, against _lab-ep.js → LABEP.functions.walk",
+      "sample": "'apps/api/services/setup.py:337'; the lab's walk row carries file + 71 lines and no line; the six with a line: get_auth_context :90 · build_auth_context :64 · complete_setup :337 · claim :114 · _discard_claim :312 · _load_setup_result :230"
+     },
+     {
+      "where": "gustify forms.json → schemas['schema:SetupCompleteRequest']",
+      "sample": "household_name {required:true, constraints:{min_length:1, max_length:120}, at:'apps/api/schemas/setup.py:26'}; extra 'forbid'; 6 of the 7 fields may be left out"
+     },
+     {
+      "where": "gustify forms.json → models['model:HouseholdFormatPreferences'].columns.country and .household_id",
+      "sample": "{at:58, default:'CL', server_default:'CL', type:'String(2)', nullable:false}; household_id {at:55, fk:{ondelete:'CASCADE', target:'households.id'}}; unique uq_household_format_prefs_household at line 50 — against the lab's column triples, whose third slot is empty on all 86"
+     },
+     {
+      "where": "gustify forms.json → middleware['middleware:RateLimitMiddleware']",
+      "sample": "registered_at 'apps/api/main.py:127', order {registered:1, runs:1, of:3}"
+     },
+     {
+      "where": "docs/design/workflow-panel/endpoint-lab.html:452 and _lab-ep.js → LABEP.identity / LABEP.forms.endpoint.line",
+      "sample": "the source chip prints I.file + ':' + I.flines = 'apps/api/api/setup.py:254' (flines is the file's length); the handler's line is 183"
+     }
+    ]
+   },
+   {
+    "key": "why-a-touch-why-it-survives",
+    "abstraction": "A table touch becomes a sentence instead of a checkbox: what made it run, how often it runs, and which save or undo settled it.",
+    "prisms": [
+     {
+      "name": "Data effects",
+      "gains": "Every touch says what it depended on and every write names the save or undo that settled it, so 'rolled back' and 'maybe' stop being words the card hands down and become statements you can open (Q1's second half and Q2 both move)."
+     },
+     {
+      "name": "Functions",
+      "gains": "A small function that runs once per item in a loop is told apart from one that runs once, which is the half of Q19 the tool can read without guessing what the helper is for."
+     },
+     {
+      "name": "Stages and order",
+      "gains": "A step says whether it happens once or repeats, so a route of 92 database steps can be read as one row landing or many; a new fact — neither question of this view is finished by it."
+     }
+    ],
+    "fields": [
+     {
+      "name": "Why this touch ran",
+      "parts": [
+       "the test, in the code's own words",
+       "how often: every time · on one arm of a fork · once per item in a loop · only after a failure",
+       "the file and line of that test"
+      ],
+      "status": "new",
+      "source": "no feed carries it; nearest today: forms.json steps{} rows carry only cond (true on 239 of 524; on 83 of the 154 write steps) — the walker in _a3_forms_effects.py holds the frame and the test and drops both"
+     },
+     {
+      "name": "May not run",
+      "parts": [
+       "yes or no, per touch"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.forms.paths[].effects.steps[].cond — the half that exists today"
+     },
+     {
+      "name": "What settled this write",
+      "parts": [
+       "save or undo",
+       "its file and line",
+       "whether that statement itself only sometimes runs"
+      ],
+      "status": "new",
+      "source": "no feed carries it; nearest today: forms.json endpoints[...].paths[].effects — the four lists committed · maybe_committed · rolled_back · uncommitted, with nothing joining a write to the statement that decided it"
+     },
+     {
+      "name": "Saved at — the one place the shape already exists",
+      "parts": [
+       "the save's file and line",
+       "for the login check's row only"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.forms.auth.provisions[0].committed_at"
+     }
+    ],
+    "today": "A yes/no and two counts: on the first-run route 22 of the 49 writes say only 'may not run', and the consent refusal says 'rolled back 5 · maybe 1' with no line behind either word.",
+    "after_rows": [
+     "users · add · saved at auth/context.py:79 (the one write that names its save today)",
+     "would say: idempotency_keys · delete · services/setup.py:333 · kept only if the save at :334 runs — and that save itself only sometimes runs",
+     "would say: idempotency_keys · 4 updates and 1 add · undone by the rollback at services/setup.py:404",
+     "would say: users · add · services/ownership.py:49 · the test that decides it, in the code's words (today: 'may not run')",
+     "would say: first run · 22 of 49 writes name their test and say once, per item, or only after a failure"
+    ],
+    "questions": [
+     {
+      "id": "Q1",
+      "coverage": "half",
+      "needs": "the-route-in-order",
+      "why": "The 'on what does it depend' half is answered on the touch itself, in words, with how often it runs; the 'at which moment' half is the numbered run, which the route piece draws."
+     },
+     {
+      "id": "Q2",
+      "coverage": "full",
+      "needs": "",
+      "why": "Each write names the save or undo that settled it and whether that statement was itself conditional — the one thing the raters said was missing, and the reason a 'maybe' is a maybe here."
+     },
+     {
+      "id": "Q19",
+      "coverage": "half",
+      "needs": "inside-the-calls",
+      "why": "Whether a step runs inside a loop lands here; what the 29 small functions below the walk actually do arrives with the piece that opens the calls, and the type word is left to the reader rather than guessed."
+     }
+    ],
+    "evidence": [
+     {
+      "where": "_lab-ep.js → LABEP.forms.paths[9].effects.steps[29] (the 409 'consent required' route)",
+      "sample": "{step:'st:5768e71cd4', table:'idempotency_keys', op:'delete', at:'apps/api/services/setup.py:333', cond:true, bucket:'maybe_committed'}"
+     },
+     {
+      "where": "_lab-ep.js → LABEP.forms.paths[9].effects.steps[30] and [27], and .n",
+      "sample": "commit at apps/api/services/setup.py:334 with cond true; rollback at apps/api/services/setup.py:404 with cond false; n = {committed:1, maybe_committed:1, rolled_back:5} — the five undone are 4 updates (idempotency.py:97–100) and 1 add (:139)"
+     },
+     {
+      "where": "_lab-ep.js → LABEP.forms.paths[12].effects.steps (the 'first run' route, 200)",
+      "sample": "92 steps · 49 writes (14 adds, 35 updates) · 22 of the writes cond true · 38 of the 92 steps cond true"
+     },
+     {
+      "where": "gustify forms.json → steps{}",
+      "sample": "524 rows; cond true 239 / false 285; 154 write steps, 83 with cond true; no 'loop', 'frame' or 'decided_by' key on any endpoint row"
+     },
+     {
+      "where": "_lab-ep.js → LABEP.forms.auth.provisions[0]",
+      "sample": "{at:'apps/api/services/ownership.py:49', committed_at:'apps/api/auth/context.py:79', state:'committed', cond:true, table:'users'}"
+     }
+    ]
+   },
+   {
+    "key": "what-the-screen-does",
+    "abstraction": "An ending gains what the user actually sees: the message put up, whether anything is tried again, and where the screen sends them.",
+    "prisms": [
+     {
+      "name": "Client",
+      "gains": "The view that today can only say 'it can or cannot tell these apart' starts saying what happens — the text shown, that nothing on this endpoint is ever tried again, and that 7 of the 9 routed endings have no branch of their own (Q8 moves from a yes/no to a fact per ending)."
+     },
+     {
+      "name": "In-flight state",
+      "gains": "The client-cache half of this view gets drawn where the endings are read — which queries are refetched after a success and which is filled in straight away (Q16's client half moves)."
+     }
+    ],
+    "fields": [
+     {
+      "name": "What the screen does on this ending",
+      "parts": [
+       "the message, with the words it uses",
+       "a call made in that branch — a toast, a sign-out, a re-run",
+       "the element it renders",
+       "the file and line"
+      ],
+      "status": "new",
+      "source": "no feed carries it; nearest today: forms.json frontend.reasons.sites[].branch keeps one word per site ('none' here) and the 29,946 walked rows are dropped"
+     },
+     {
+      "name": "Which client branch an ending reaches",
+      "parts": [
+       "the ending and its status",
+       "its own branch, or the general case",
+       "where that branch is"
+      ],
+      "status": "in the map",
+      "source": "forms.json frontend.reasons.readers['endpoint:POST /setup/complete'][0].routes — 9 endings routed, 7 to 'rest', the two 409s to one site; not in _lab-ep.js"
+     },
+     {
+      "name": "Tried again or not",
+      "parts": [
+       "retry on or off for this kind of call",
+       "where that rule is set"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.forms.frontend.client.clients[0].policy.mutations.retry = {state:'defined', value:false}"
+     },
+     {
+      "name": "What is refreshed after a success",
+      "parts": [
+       "the queries refetched",
+       "the query filled in straight away",
+       "when it happens"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.forms.frontend.hook.calls[0].invalidates / .seeds"
+     },
+     {
+      "name": "The two endings that share one message",
+      "parts": [
+       "the status they share",
+       "the two meanings",
+       "the line that cannot separate them"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.forms.frontend.findings[0] (reason-collapsed, 409) and .reason_sites[0]"
+     }
+    ],
+    "today": "Only whether the screen can tell two endings apart: both 409s reach one line (SetupScreen.tsx:43) that reads the code and cannot separate 'consent required' from 'setup in progress'.",
+    "after_rows": [
+     "success · 'me' and 'settings' refetched (useCompleteSetup.ts:45) · 'me' filled in straight away (:43)",
+     "409 consent required · 409 setup in progress · one shared branch at SetupScreen.tsx:43 · it reads the code only",
+     "429 · 429 · 401 · 401 · 422 · 400 · 500 · no branch of their own — 7 of the 9 routed endings fall to the general case",
+     "every ending · never tried again — retry is off for this kind of call (query/client.ts:23)",
+     "would say: both 409s · show the text 'auth.setup.error.in_progress' · in the alert card · SetupScreen.tsx:43 → :99",
+     "would say: 409 · the branch only returns a message — no call, no redirect, nothing refetched"
+    ],
+    "questions": [
+     {
+      "id": "Q8",
+      "coverage": "full",
+      "needs": "",
+      "why": "Message, retry and redirect are exactly the three the raters said no row carried, and all three land per ending; the endings that reach no branch of their own are named rather than left blank."
+     },
+     {
+      "id": "Q16",
+      "coverage": "half",
+      "needs": "alive-during-the-request",
+      "why": "The client-cache half of what is alive gets onto the card here; what the server keeps alive while the request runs still needs its own reading."
+     }
+    ],
+    "evidence": [
+     {
+      "where": "gustify forms.json → frontend.reasons.readers['endpoint:POST /setup/complete'][0].routes",
+      "sample": "9 routes: 429, 429, 401, 401, 422, 400, 500 → site 'rest'; the two 409s (x:f2caf456bd, x:a086031223) → site 'r-56477c4fb6'"
+     },
+     {
+      "where": "_lab-ep.js → LABEP.forms.frontend.findings[0] and .reason_sites[0]",
+      "sample": "{id:'reason-collapsed', status:409, details:['consent required','setup in progress'], at:'apps/web/src/features/auth/SetupScreen.tsx:43'}; the site reads 'status' === 409, branch 'none'"
+     },
+     {
+      "where": "_lab-ep.js → LABEP.forms.frontend.hook.calls[0].invalidates / .seeds",
+      "sample": "invalidates ['me'] and ['settings'] onSuccess at apps/web/src/features/auth/useCompleteSetup.ts:45; seeds ['me'] at :43; the call is useMutation at :34"
+     },
+     {
+      "where": "_lab-ep.js → LABEP.forms.frontend.client.clients[0]",
+      "sample": "at 'apps/web/src/lib/query/client.ts:23'; policy.mutations.retry {state:'defined', value:false}"
+     },
+     {
+      "where": "gaps-endpoint.raw.json → investigators[id='A-Q8'].exists[6].sample (the rows the reader walks and then drops)",
+      "sample": "the branch source is `if (error.status === 409) return t(\"auth.setup.error.in_progress\");` at SetupScreen.tsx:43, and the value lands in `<StatusCard tone=\"error\" role=\"alert\" …>` at line 99; 29,946 flow rows extracted and dropped"
+     }
+    ]
+   },
+   {
+    "key": "alive-during-the-request",
+    "abstraction": "A list of the values that are alive only while the request runs, and of the ones that stay in the server afterwards, in place of the single key that happened to carry the right word in its name.",
+    "prisms": [
+     {
+      "name": "In-flight state",
+      "gains": "The view stops resting on one value found by a name search: every value a middleware, a gate or the handler parks for later is listed with where it is set, where it is read and whether it goes with the answer (Q16 moves)."
+     },
+     {
+      "name": "Gates and decisions",
+      "gains": "Two rows that decide gain the backdrop behind them — the per-minute count is kept in this one server's memory, and the cap is read once when the rate-limit step is built; a new fact, neither question of this view moves."
+     }
+    ],
+    "fields": [
+     {
+      "name": "Values alive during the request",
+      "parts": [
+       "what it is called",
+       "where it is set, and by what — a middleware, a gate, the handler",
+       "where it is read",
+       "whether it goes with the answer or stays in the server"
+      ],
+      "status": "new",
+      "source": "no feed carries it (ContextVar, lru_cache, BackgroundTasks, 'inflight' all grep to 0 in forms.json, archmap.json, levels.json, c4-graph.json); nearest is forms.json endpoints[...].repeat.key, found by a name filter for 'idempot'"
+     },
+     {
+      "name": "The repeat key's route",
+      "parts": [
+       "carried in a header",
+       "where it is set",
+       "where it is read"
+      ],
+      "status": "in the lab",
+      "source": "LABEP.forms.repeat.key — the one instance that exists today"
+     },
+     {
+      "name": "Where a limit's count is kept",
+      "parts": [
+       "the counter",
+       "where it is built",
+       "what it counts by",
+       "how long it lives"
+      ],
+      "status": "new",
+      "source": "nearest today: LABEP.forms.rate.limits[] names the class, init_at (rate_limit.py:103 and :100) and the key, never that the count sits in this server's memory"
+     },
+     {
+      "name": "A setting read once for the life of the server",
+      "parts": [
+       "the setting",
+       "where it is read, and that this is when the step is built",
+       "the value it hands to the limit"
+      ],
+      "status": "new",
+      "source": "nearest today: forms.json settings['setting:rate_limit_sensitive_per_minute'].readers[0] — read at rate_limit.py:104 inside RateLimitMiddleware.__init__; no feed says what that means for the value's life"
+     },
+     {
+      "name": "How long the database session lives",
+      "parts": [
+       "opened for this request",
+       "closed after the answer"
+      ],
+      "status": "in the map",
+      "source": "forms.json dependencies['apps/api/db.py::get_session'].teardown = true, applies_to 79 — carried onto the card by the piece that opens the calls"
+     }
+    ],
+    "today": "One value: the repeat key (the Idempotency-Key header), found only because its name matches the one word the reader searches for.",
+    "after_rows": [
+     "Idempotency-Key · header · set at middleware/idempotency.py:25 · read at api/setup.py:191 · carried on the request",
+     "would say: Idempotency-Key · lives for this request only · gone with the answer",
+     "would say: login context · built by get_auth_context (auth/context.py:90) · read by the handler · gone with the answer",
+     "would say: tighter-limit counter · built once at rate_limit.py:103 · counted per caller address · stays in this server's memory",
+     "would say: the 20-a-minute cap · read once, when the rate-limit step is built (rate_limit.py:104) · fixed until a restart"
+    ],
+    "questions": [
+     {
+      "id": "Q16",
+      "coverage": "half",
+      "needs": "inside-the-calls",
+      "why": "The general list lands, and with it the half nothing carries today — what outlives the request inside the server; the one everyday value the raters named, how long the database session lives, comes with the piece that opens the calls, and the client's cache with the piece on what the screen does."
+     }
+    ],
+    "evidence": [
+     {
+      "where": "_lab-ep.js → LABEP.forms.repeat.key",
+      "sample": "{carrier:'header', name:'Idempotency-Key', set_at:'apps/api/middleware/idempotency.py:25', read_at:'apps/api/api/setup.py:191', through:'request.state.idempotency_key'}"
+     },
+     {
+      "where": "_lab-ep.js → LABEP.forms.rate.limits[0], limits[1] and .switch",
+      "sample": "{class:'SlidingWindowLimiter', limiter:'_sensitive', init_at:'apps/api/middleware/rate_limit.py:103', key:\"f'{ip}:sensitive'\"}; _global init_at :100; switch 'settings.rate_limit_enabled or settings.is_production'"
+     },
+     {
+      "where": "gustify forms.json → settings['setting:rate_limit_sensitive_per_minute']",
+      "sample": "default 20; readers[0] = {at:'apps/api/middleware/rate_limit.py:104', fn:'…::RateLimitMiddleware.__init__'}"
+     },
+     {
+      "where": "_lab-ep.js → LABEP.security.guards and gustify forms.json → dependencies['apps/api/auth/context.py::get_auth_context']",
+      "sample": "guards = get_auth_context (gate, 78) · get_session (79) · get_settings (12); get_auth_context at 'apps/api/auth/context.py:90'"
+     },
+     {
+      "where": "grep over the four gustify feeds (forms.json, archmap.json, levels.json, c4-graph.json)",
+      "sample": "ContextVar 0 · lru_cache 0 · BackgroundTasks 0 · \"inflight\" 0 · with_for_update 0 hits"
+     }
+    ]
+   }
+  ],
+  "corrections": [
+   {
+    "key": "the-route-in-order",
+    "what": "ALL PIECES — three things changed everywhere. (1) 'needs' is now an empty string when no piece finishes the question: the page generator (gen-gaps.js:41) stops on any non-empty 'needs' that is not a bundle name, so the drafters' '—' and the sentence in honest-proof's Q4 would have broken the build. (2) 'door' became 'endpoint' in every operator-facing string, and file names were made unambiguous inside rows (api/setup.py vs services/setup.py vs schemas/setup.py). (3) The generator treats a question no piece lists as answerable today and treats two halves as a whole, so I removed weak or redundant question entries that would have produced a false 'fully answerable' (listed per piece below). Left as is and worth knowing: by that rule the page will call Q13 fully answerable after piece 8 although one thing the raters named stays open (which body fields a given ending actually read — no feed carries it, said in the 'why'); Q4 and Q15 will read as never fully answerable within the eleven, which is the strict truth; Q3 is listed by no piece and so reads as answerable today, which matches the raters."
+   },
+   {
+    "key": "the-route-in-order",
+    "what": "Q7 full → half (needs inside-the-calls): the raters named 'calls deeper than one level are collapsed rather than sequenced', and the two failures raised two calls down have no place in the run until the calls are opened. Q6 full → half (needs inside-the-calls): the judge itself split A-Q6 across both bundles; the helpers that can refuse nothing have no place in the resolution order after this piece. Q11 kept full with the limit stated (traffic is never claimed). Q1 kept half."
+   },
+   {
+    "key": "the-route-in-order",
+    "what": "Status of 'the app-wide steps in the order they run': in the map → in the lab. The run order is readable off the chain already in _lab-ep.js (CORS at 0 · rate limit at 2–3 · idempotency at 4) and the 80-endpoints count is in LABEP.security.asgi[].gates; the map's middleware block only agrees. Values fixed: the kinds of step are eight, not six (app-wide step and catch were missing); '14 endings' → 14 routes (there are 12 endings); row 1 now says 'tighter tier', verified: the check at rate_limit.py:117 is the one the 'rate limit (sensitive)' route fires. 'Today' now quotes the real drawn order (idempotency 0 · rate limit 1 · CORS 2, printed as 'app · order N · 80 gated')."
+   },
+   {
+    "key": "empty-means-what",
+    "what": "The row 'would say: EDGE · tables · expected none…' quoted a line that EXISTS today — the tables topic is the one topic already written (STAGE_EXPECT.data.EDGE = 'no table — the app band checks the request before any data is touched'). Replaced by a row from an unwritten topic, anchored on real values (1 body shape, 7 fields). 'Today' reworded to the verified fact: 12 places decide by count alone. The two 'new' fields are kept 'new' because no feed carries them, but the source now says this is writing/registry work inside an inventory-sized piece (the piece mixes statuses). Row 1 now gives the measured reason the 429 has no writes (the login check never ran: effects.dependency = 'not-run'). Q20 kept half → how-common (the engineer's 'which topic is worth opening first' stays open after this piece, even though the judge counts Q20 as answered here)."
+   },
+   {
+    "key": "what-each-ending-carries",
+    "what": "The quoted value '422 · shape check' exists nowhere in the lab (grep: 0 hits); the real row reads '422 pydantic error type' — fixed in 'today' and in the Gates gain. Removed three question entries: Q3 (already answerable today per the raters — listing it 'full' would show a gain that is not one), Q4 (a fact for the Proof view, not a move: no piece ties a rule to a test, and keeping the half would make the page count Q4 as finished), Q10 (no table-field fact lands here, so 'elsewhere' did not apply). Proof and Endings stay listed as views that receive a new fact. Row 1 now carries the real split of the 42 rules (31 value · 7 unknown-field · 2 missing · 2 length)."
+   },
+   {
+    "key": "whose-write",
+    "what": "VALUE: '409 consent required · 9 writes undone' → 5. The lab's own count on that route is kept 1 · uncertain 1 · undone 5; nine is the number of rows, because four update steps are listed twice. STATUS: 'how this table was found' new → in the lab (a comparison of two lists already in _lab-ep.js; effort is inventory); its part 'the reason the map has no link to it' is carried by no feed and was replaced by 'who touches it — the login check or the endpoint's own code' (the dependency flag). 'Today' no longer claims the card prints 'eleven': 10 own + 1 inherited is derived, the card shows a mark per step."
+   },
+   {
+    "key": "whose-write",
+    "what": "COVERAGE/PRISMS: removed 'Stages and order' and Q5 (the tables topic's GATE line already says the user row is provisioned there — nothing of that view moves); removed Q16 ('elsewhere' needs a fact to land; none does). Q14 'half → how-common' changed to 'elsewhere' — how-common itself places Q14 in the view across endpoints, so it cannot be the piece that finishes it. Q1 'needs' changed to why-a-touch-why-it-survives (the condition on a touch is the main thing missing). Added the home-evidence row, which the draft described as a field and never showed."
+   },
+   {
+    "key": "honest-proof",
+    "what": "VALUES: 'real token verifier · 14 tests pick the real provider, first C128' → 13 distinct tests in 14 places (C193 sets it twice), and C128 is not the first — it is the one that checks the verifier choice. 'credits 0 of 0' → 'credits allowance 0' (the real assertion). The row for the authored reason ('commit on success…') now starts with 'would say:' because its field is new. 'Today' adds the verified disagreement (26 ids vs the 15 the checks cite). STATUS: the piece mixes all three — four fields in the lab, two in the map, one authored — now said in the source. COVERAGE: Q4 stays half with no finishing piece (the body-check-to-route join is outside the eleven); Q14's 'needs how-common' removed (elsewhere)."
+   },
+   {
+    "key": "inside-the-calls",
+    "what": "OVERCLAIM removed: 'nothing here catches it' and 'two named failures can reach the 500' — the feed's word is 'beyond one level' (translated_by is empty because the reading stopped one call down), so the row and the Endings gain now say the answer these failures become is not read. WRONG 'today': the helpers that can refuse nothing are NOT invisible today — get_session (79) and get_settings (12) are in the lab as dependencies drawn as 'supplies a resource'; what is new is the read fact that they end no request, the third one (_resolve_verifier, 79), the resolution order and close-after-answer. 'builds the answer' was not a read value → 'returns MeResponse'."
+   },
+   {
+    "key": "inside-the-calls",
+    "what": "COVERAGE: removed Q3 (already answerable today; the stage each ending leaves from is in the lab, so 'half → the-route-in-order' was wrong) and Q15 (the same six definition lines come with field-rules-and-anchors; keeping two halves would make the page count Q15 as finished while 21 of 27 helpers have no line in any feed). Added Q7 half (needs the-route-in-order) and the 'Stages and order' view, because the route piece now needs this piece to place what happens two calls down. Q17's 'why' no longer claims a gap no piece closes — what the body must carry comes with what-each-ending-carries."
+   },
+   {
+    "key": "how-common",
+    "what": "STATUS: three fields marked 'new' are tallies over the feed the generator already holds (the judge's effort is 'lab') → 'in the map'; nothing new is read from code. VALUE: '2 fetch sites the map could not read' conflated two counts → '2 fetches matched no endpoint · 5 build their path at run time' (c4 stats.web: unmatched 2, dynamic 5). '4 of 9 endings' now says 'produced endings' (the 200 is not among the nine). COVERAGE: removed Q4, Q8 and Q17 — the proof rank, the fetch count and the rate tier are new facts in those views but move none of their questions on this card (kept as view-level facts); Q4 in particular would have been counted as finished."
+   },
+   {
+    "key": "field-rules-and-anchors",
+    "what": "Unreproducible claim removed: 'for 41 of the 80 endpoints there is no declared answer shape' — the feed gives 39 with a resolved answer model by one measure and 75 with a declared name by another. STATUS note: the app-wide step's file and line are already in the lab's security block (main.py:127); they are blank only on the 26 step rows of the runs — the field is mixed, now said. COVERAGE: Q15 'half → inside-the-calls' changed to half with no finishing piece — archmap's function facts carry a length and no line, so 21 of the 27 helpers open at their file only after every piece. Removed the 'Stages and order' and 'Data effects' views: the field rules are the Structures view's fact and the column rules belong to the table's card. Verified and kept: the face anchor prints the file's length (254) as a line; the handler is at 183."
+   },
+   {
+    "key": "why-a-touch-why-it-survives",
+    "what": "VALUES: 'repeat key · 5 updates · undone' → idempotency_keys · 4 updates and 1 add (the five undone steps are idempotency.py:97–100 and :139); 'repeat key' is not a table name → idempotency_keys. The row 'users · add · on one arm of a fork' stated a frame no feed carries — reworded to anchor only on what exists (table, line, the 'may not run' mark). COVERAGE: removed Q7 — the raters named repetition under Q1 and Q19, not Q7, and listing it would push Q7's completion to this late piece; 'Stages and order' stays as a view that receives a fact. All counts re-verified (92 steps · 49 writes · 22 conditional · 38 of 92; feed 524 · 239 · 154 · 83)."
+   },
+   {
+    "key": "what-the-screen-does",
+    "what": "'reach the same message' → 'fall to the general case': the feed's word is 'rest' (no branch of their own), it does not say one shared message. 'account and settings lists' → the real query names 'me' and 'settings'. 'Today' now gives the real line (SetupScreen.tsx:43, reads the code only). The 'would say' message row now quotes the real text key from the source line the investigator recorded ('auth.setup.error.in_progress'), and notes it is shown for BOTH 409s. Statuses verified and the mix stated: one field new (the arm), one in the map (which branch an ending reaches — not in _lab-ep.js), three in the lab."
+   },
+   {
+    "key": "alive-during-the-request",
+    "what": "VALUES: 'set by the first middleware' is wrong by run order — the idempotency step is registered first and runs last of three; the row now names the file and line only. 'dies with the answer' on the repeat-key row is the NEW reading's word, so the row was split into the real part and a 'would say:' part. 'would say: no lock on this route' asserted a finding nobody has read (the 0 hits are feeds lacking the key, not code lacking a lock) → replaced. 'settings · built once per server' is in no feed → re-anchored on what is: the cap is read inside the rate-limit step's constructor at rate_limit.py:104. COVERAGE: removed Q6 and Q17 — the draft itself says they gain context without moving, and listing them would push both questions' completion to the last piece; 'Gates and decisions' stays as a view that receives a fact."
+   }
+  ]
+ }
+}

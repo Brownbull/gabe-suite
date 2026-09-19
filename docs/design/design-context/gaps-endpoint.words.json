@@ -172,6 +172,15 @@
     },
     "grid": {
       "plain": "A piece of work, placed by what it costs and how much it decides."
+    },
+    "st-in-the-lab": {
+      "plain": "A fact the lab already holds for this endpoint."
+    },
+    "st-in-the-map": {
+      "plain": "A fact the map produces for the whole app, not yet carried into the lab."
+    },
+    "st-new": {
+      "plain": "A fact nothing produces yet, so it needs new generation code."
     }
   },
   "takes": {
@@ -183,6 +192,11 @@
     "attrs": [
       "{nKeep} attributes earn a question of their own and stay. {nDemote} stay in the data and leave the card's rows. {nDrop} leave the inventory.",
       "The entity and the URL group stay as navigation, the way you already use them, and stop being a row."
+    ],
+    "obo": [
+      "Read a column top to bottom to see which points of view one piece feeds.",
+      "Read a row left to right to see when a point of view gets its answers.",
+      "The bars rise by {gainHours} questions over the {nHours} pieces that cost hours, and by {gainRest} over the other {nRest}."
     ]
   },
   "wrong": {
