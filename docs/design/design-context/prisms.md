@@ -26,7 +26,34 @@ function and writes, validates or calculates something. On that operation we wan
 | **context / security** | what gives context to the rest: authentication, limits | scheme · gate · provisions · limiters · the flag that turns them on | — |
 | **reach outward** (widening) | where the ending surfaces on the screen | hook → screen → route → app · the reason site · cache effects | — |
 
-These are CANDIDATES. Per the method, M1 (attribute × question) decides whether the real prisms differ from this list.
+These were the CANDIDATES. M1 measured them, and Gabe ruled on the result.
+
+## The eleven prisms of the API endpoint — RULED by Gabe on 2026-09-19 (D-015)
+
+M1 (20 questions × 47 attributes, `matrices-endpoint.html`) grouped his questions into eleven blocks. He pasted the ruling
+back: **every one kept**, no merge, no rename. The three merge candidates the page offered (Stages and order with Gates and
+decisions at 0.44 · Endings with Proof at 0.43 · Standard or specialist with that first pair at 0.41) stay apart.
+
+| # | prism | its questions | what it owns | the standpoint of his it matches |
+|---|---|---|---|---|
+| 1 | **Endings** | Q3 · Q11 | kinds of ending · declared status · journeys | the destinations of "what determines the path" |
+| 2 | **Data effects** | Q1 · Q2 · Q9 | operation per table · fate of the writes · provisions | his first standpoint: read · write · modify · create · delete |
+| 3 | **Overview and risk** | Q14 · Q20 | method + path · coverage · findings · risk flag · the size counts · outside services | none of his — what the face and the command panel answer before a view is chosen |
+| 4 | **Gates and decisions** | Q6 · Q17 | status code per ending · deciding branches · catches · rate limit | "what determines the path"; the lab's Security part |
+| 5 | **Standard or specialist** | Q12 | switches · idempotency claim · events · tasks · delivery | none of his — the common-versus-specialist lens (B14); it compares endpoints |
+| 6 | **Functions** | Q15 · Q18 · Q19 | the handler · file:line · decision-point, data-touching and little functions · signature | functions by how crucial they are |
+| 7 | **Stages and order** | Q5 · Q7 | the moment a table is touched · validation cases | the stage spine, read as a sequence — the console's time axis |
+| 8 | **In-flight state** | Q16 | request-scoped state · client cache effects | saved temporarily, alive during the process |
+| 9 | **Structures** | Q10 · Q13 | request shape | structures, the schemas |
+| 10 | **Proof** | Q4 | cases · race on a unique key | coverage; the lab's Tests part |
+| 11 | **Client** | Q8 | who fetches it · can the client tell the endings apart | reach outward; the lab's Widening part |
+
+Shared by three or more prisms (the top band): the endings · tables touched · own guards · context-giving functions · the
+stage an ending leaves from · response shape per ending · auth scheme + gate · app band.
+
+What this does to the six lab parts: all six survive (data → 2 · schemas → 9 · functions → 6 · tests → 10 · security → 4 ·
+widening → 11) and five are added (1 · 3 · 5 · 7 · 8). FOUR prisms rest on a single question — Standard or specialist (Q12) ·
+In-flight state (Q16) · Proof (Q4) · Client (Q8); that is weak evidence, kept by his ruling.
 
 ## Prism spec — to be filled one at a time, in the loop (template: the guide §10)
 
