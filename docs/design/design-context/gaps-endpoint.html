@@ -1,0 +1,657 @@
+<title>Endpoint Card Leftovers</title>
+
+<style>
+  /* ── font roster (H3) — the script keeps these in sync ─────────────── */
+  :root { --af-stack: ui-monospace, monospace; --af-size: 15px; --af-track: -0.025em; }
+
+  /* ── title face (H3) — ONLY the section title pills pin a face: a modern
+        condensed grotesque, set in caps. DIN lineage, so it reads as console
+        lettering rather than book type, and it holds a long title in a pill
+        without wrapping. Locally resolvable in order — Bahnschrift ships with
+        Windows 10+, DIN Alternate with macOS — so nothing routes through a
+        blocked webfont. Every OTHER title on the page stays in the body face:
+        one distinctive treatment, or the distinction is worthless. */
+  :root {
+    --af-title: "Bahnschrift", "DIN Alternate", "Roboto Condensed",
+                "Arial Narrow", ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* ── the legibility floor (H6) — the smallest text on a page is the text
+        most often unreadable. Secondary content sizes off THESE steps, never
+        below them: at the 15px base they compute to 13.8 / 12.8 / 12.3px.
+        They are calc() off the roster base, NOT bare `em`, because `em`
+        stacks: a .855em head inside a .92em table lands at 11.8px while both
+        authored values look safe. An absolute step cannot compound. */
+  :root {
+    --fs-sm:  calc(var(--af-size) * 0.92);
+    --fs-xs:  calc(var(--af-size) * 0.855);
+    --fs-min: calc(var(--af-size) * 0.82);
+  }
+
+  /* ══ skins (H5) — chrome only: ground, ink, rules, accent, geometry.
+        Sources: Catalog = docs/site/center/assets/a3.css · Blueprint = skin F ·
+        Mission Console = skin B (output/mockups/center-skins.css). B and F are
+        spec'd light-only; their dark arms are derived so the viewer's theme
+        toggle still answers. Chart series and status colours are NEVER themed. */
+
+  /* ── Catalog · cool developer portal (default) ── */
+  :root, :root[data-skin="catalog"] {
+    --ground:#f6f7f9; --card:#ffffff; --raised:#fbfcfd;
+    --ink:#141a24; --ink-soft:#3d4756; --muted:#7a8595;
+    --rule:#e7e9ee; --rule-soft:#eef0f4;
+    --accent:#4f46e5; --accent-soft:#eef0fe; --strong:#101726;
+    --radius:10px; --rail:5px;
+    --shadow:0 1px 2px rgba(16,24,40,.05), 0 4px 14px rgba(16,24,40,.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]), :root[data-skin="catalog"]:not([data-theme="light"]) {
+      --ground:#101726; --card:#1b2436; --raised:#212b40;
+      --ink:#e7ebf3; --ink-soft:#c7cfdd; --muted:#79839a;
+      --rule:#2c3648; --rule-soft:#232d3f;
+      --accent:#8b83f5; --accent-soft:#23214a; --strong:#c7cfdd;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="dark"], :root[data-skin="catalog"][data-theme="dark"] {
+    --ground:#101726; --card:#1b2436; --raised:#212b40;
+    --ink:#e7ebf3; --ink-soft:#c7cfdd; --muted:#79839a;
+    --rule:#2c3648; --rule-soft:#232d3f;
+    --accent:#8b83f5; --accent-soft:#23214a; --strong:#c7cfdd;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
+  }
+  :root[data-skin="catalog"][data-theme="light"] {
+    --ground:#f6f7f9; --card:#ffffff; --raised:#fbfcfd;
+    --ink:#141a24; --ink-soft:#3d4756; --muted:#7a8595;
+    --rule:#e7e9ee; --rule-soft:#eef0f4; --accent:#4f46e5; --accent-soft:#eef0fe;
+    --strong:#101726;
+  }
+
+  /* ── Blueprint · skin F, blue ink ── */
+  :root[data-skin="blueprint"] {
+    --ground:#f6f8fc; --card:#fdfeff; --raised:#f1f5fd;
+    --ink:#16233b; --ink-soft:#41547a; --muted:#8494b5;
+    --rule:#c3d0f0; --rule-soft:#dde5f8;
+    --accent:#1d4ed8; --accent-soft:#e4ecfe; --strong:#16233b;
+    --radius:6px; --rail:5px; --shadow:none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-skin="blueprint"]:not([data-theme="light"]) {
+      --ground:#0b1220; --card:#101a2e; --raised:#142138;
+      --ink:#dce6fa; --ink-soft:#a8bce4; --muted:#7286b0;
+      --rule:#23375f; --rule-soft:#1a2942;
+      --accent:#6f9bff; --accent-soft:#16264a; --strong:#a8bce4; --shadow:none;
+    }
+  }
+  :root[data-skin="blueprint"][data-theme="dark"] {
+    --ground:#0b1220; --card:#101a2e; --raised:#142138;
+    --ink:#dce6fa; --ink-soft:#a8bce4; --muted:#7286b0;
+    --rule:#23375f; --rule-soft:#1a2942;
+    --accent:#6f9bff; --accent-soft:#16264a; --strong:#a8bce4; --shadow:none;
+  }
+  :root[data-skin="blueprint"][data-theme="light"] {
+    --ground:#f6f8fc; --card:#fdfeff; --raised:#f1f5fd;
+    --ink:#16233b; --ink-soft:#41547a; --muted:#8494b5;
+    --rule:#c3d0f0; --rule-soft:#dde5f8; --accent:#1d4ed8; --accent-soft:#e4ecfe;
+    --strong:#16233b;
+  }
+
+  /* ── Mission Console · skin B, teal ops console ── */
+  :root[data-skin="mission"] {
+    --ground:#eef1f4; --card:#ffffff; --raised:#f6f8fa;
+    --ink:#1a2b36; --ink-soft:#4a6272; --muted:#7d92a0;
+    --rule:#c8d4dc; --rule-soft:#e2e9ee;
+    --accent:#0e7c8c; --accent-soft:#e0f1f4; --strong:#1a2b36;
+    --radius:4px; --rail:5px; --shadow:none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-skin="mission"]:not([data-theme="light"]) {
+      --ground:#0e161c; --card:#16222b; --raised:#1b2934;
+      --ink:#e3edf3; --ink-soft:#b3c6d2; --muted:#7d92a0;
+      --rule:#27394a; --rule-soft:#1e2c39;
+      --accent:#2ba7bb; --accent-soft:#0f3038; --strong:#b3c6d2; --shadow:none;
+    }
+  }
+  :root[data-skin="mission"][data-theme="dark"] {
+    --ground:#0e161c; --card:#16222b; --raised:#1b2934;
+    --ink:#e3edf3; --ink-soft:#b3c6d2; --muted:#7d92a0;
+    --rule:#27394a; --rule-soft:#1e2c39;
+    --accent:#2ba7bb; --accent-soft:#0f3038; --strong:#b3c6d2; --shadow:none;
+  }
+  :root[data-skin="mission"][data-theme="light"] {
+    --ground:#eef1f4; --card:#ffffff; --raised:#f6f8fa;
+    --ink:#1a2b36; --ink-soft:#4a6272; --muted:#7d92a0;
+    --rule:#c8d4dc; --rule-soft:#e2e9ee; --accent:#0e7c8c; --accent-soft:#e0f1f4;
+    --strong:#1a2b36;
+  }
+
+  /* ══ section blocks — page furniture, deliberately OUTSIDE the series and
+        status palettes so a section header can never be mistaken for data. */
+  :root {
+    --sec1:#2b3a55; --sec2:#2f4858; --sec3:#1f5453; --sec4:#2e5339;
+    --sec5:#5a4a2b; --sec6:#5c3340; --sec7:#4a3560; --sec8:#33415c;
+    --sec9:#6b3f2e;
+    --sec-ink:#f7f8fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sec1:#9fb4d6; --sec2:#a3bfcd; --sec3:#8fc9c4; --sec4:#a8cfa6;
+      --sec5:#d8c48d; --sec6:#d9a3b0; --sec7:#bda8dd; --sec8:#a6b6d9;
+      --sec9:#e3ab8f;
+      --sec-ink:#111722;
+    }
+  }
+  :root[data-theme="dark"] {
+    --sec1:#9fb4d6; --sec2:#a3bfcd; --sec3:#8fc9c4; --sec4:#a8cfa6;
+    --sec5:#d8c48d; --sec6:#d9a3b0; --sec7:#bda8dd; --sec8:#a6b6d9;
+    --sec9:#e3ab8f;
+    --sec-ink:#111722;
+  }
+  :root[data-theme="light"] {
+    --sec1:#2b3a55; --sec2:#2f4858; --sec3:#1f5453; --sec4:#2e5339;
+    --sec5:#5a4a2b; --sec6:#5c3340; --sec7:#4a3560; --sec8:#33415c;
+    --sec9:#6b3f2e;
+    --sec-ink:#f7f8fa;
+  }
+
+  /* ── chart series + status — never themed, validated (dataviz skill) ── */
+  :root {
+    --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+    --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; }
+  }
+  :root[data-theme="dark"] { --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; }
+
+  /* ══ the page: content anchored LEFT, never centred (H1) ═══════════ */
+  body {
+    background: var(--ground); color: var(--ink);
+    font-family: var(--af-stack); font-size: var(--af-size); letter-spacing: var(--af-track);
+    line-height: 1.55; text-align: left; -webkit-font-smoothing: antialiased;
+  }
+  /* ── scrollbars wear the skin ────────────────────────────────────────
+     A native scrollbar is the one piece of chrome the page does not own by
+     default, and it shows: a grey OS bar with stepper arrows sitting inside a
+     dark panel reads as a rendering fault, not as a control. Both engines are
+     addressed (Firefox takes the two `scrollbar-*` properties, WebKit/Blink the
+     pseudo-elements), the thumb is mixed from the skin's own accent so it moves
+     with the theme, and the stepper arrows are removed — a scroll bar is a
+     position indicator, not a set of buttons anyone clicks. */
+  :root {
+    --sb-thumb: color-mix(in srgb, var(--accent) 42%, var(--rule));
+    scrollbar-width: thin;
+    scrollbar-color: var(--sb-thumb) var(--rule-soft);
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--rule-soft); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--sb-thumb); border-radius: 999px;
+    border: 2px solid transparent; background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); background-clip: padding-box; }
+  ::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+  ::-webkit-scrollbar-corner { background: transparent; }
+
+  .artifact-page {
+    max-width: 74rem;
+    margin: 0 auto 0 clamp(16px, 4vw, 56px);   /* left-anchored, never `margin: 0 auto` */
+    padding: 32px 24px 48px;
+    display: flex; flex-direction: column; gap: 30px;
+    text-align: left;
+  }
+  .artifact-page > :first-child { padding-right: 56px; }   /* clear of the fixed cog */
+  :is(a, button, select, input, textarea, summary):focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px;
+  }
+  p { margin: 0; }
+
+  /* ══ the two devices (H5) — every skin, every section ══════════════ */
+  .sec { display: flex; flex-direction: column; gap: 14px; }
+  .sec-head { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--rule); padding-bottom: 8px; }
+  .sec-head .n { margin-left: auto; font-size: var(--fs-min); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+  /* Title = normal-size text in a PILL that hugs it, led by an icon.
+     Prominence is the background and the icon, never the type: no uppercase,
+     no tracking, no size bump. The pill's padding stays tight — a wide slab
+     reads as a banner and competes with the content it introduces. */
+  .sec-head h2 {
+    margin: 0; background: var(--sec, var(--strong)); color: var(--sec-ink, var(--ground));
+    padding: 2px 11px 2px 9px; border-radius: 999px;
+    font-family: var(--af-title);
+    font-size: 1em; font-weight: 600; letter-spacing: .045em; text-transform: uppercase;
+    line-height: 1.34;
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  /* Every title carries an icon (H6). Lucide geometry, inlined — the CSP
+     blocks icon CDNs, and an icon font would fall back silently. */
+  .sec-head h2 svg {
+    width: 1.02em; height: 1.02em; flex: 0 0 auto;
+    fill: none; stroke: currentColor; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .sec[data-sec="1"] { --sec: var(--sec1); } .sec[data-sec="2"] { --sec: var(--sec2); }
+  .sec[data-sec="3"] { --sec: var(--sec3); } .sec[data-sec="4"] { --sec: var(--sec4); }
+  .sec[data-sec="5"] { --sec: var(--sec5); } .sec[data-sec="6"] { --sec: var(--sec6); }
+  .sec[data-sec="7"] { --sec: var(--sec7); } .sec[data-sec="8"] { --sec: var(--sec8); }
+  .sec[data-sec="9"] { --sec: var(--sec9); }
+
+  .panel {
+    background: var(--card); border: 1px solid var(--rule);
+    border-radius: var(--radius, 10px); padding: 15px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  /* :root prefix so the rail beats the `border:` shorthand above at equal
+     specificity — without it the rail silently renders at 1px. */
+  :root .panel { border-left: var(--rail) solid var(--accent); }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; align-items: start; }
+
+  /* ══ cog + options panel (H2 — the only floating affordance) ═══════ */
+  .af-chrome { position: fixed; top: 14px; right: 14px; z-index: 200; }
+  .af-cog {
+    display: grid; place-items: center; width: 38px; height: 38px;
+    background: var(--card); color: var(--muted);
+    border: 1px solid var(--rule); border-radius: 10px; box-shadow: var(--shadow);
+    cursor: pointer; transition: color .15s ease, border-color .15s ease, transform .25s ease;
+  }
+  .af-cog:hover { color: var(--accent); border-color: var(--accent); }
+  .af-cog[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); transform: rotate(45deg); }
+  .af-cog svg { width: 18px; height: 18px; display: block; }
+  .af-panel {
+    position: absolute; top: 46px; right: 0; width: 262px;
+    background: var(--card); border: 1px solid var(--rule); border-radius: 12px;
+    box-shadow: var(--shadow); padding: 14px;
+    display: none; flex-direction: column; gap: 11px; max-height: 82vh; overflow-y: auto;
+  }
+  .af-panel[data-open="true"] { display: flex; }
+  .af-group { display: flex; flex-direction: column; gap: 7px; }
+  .af-legend { font-size: .72em; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .af-opt {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+    width: 100%; text-align: left; cursor: pointer; font-family: inherit;
+    background: var(--raised); color: var(--ink);
+    border: 1px solid var(--rule); border-radius: 8px; padding: 8px 11px;
+  }
+  .af-opt:hover { border-color: var(--accent); }
+  .af-opt[aria-checked="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .af-opt .af-name { font-size: 14px; line-height: 1.2; }
+  .af-opt .af-spec { font-size: 12px; color: var(--muted); letter-spacing: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .af-opt[aria-checked="true"] .af-spec { color: var(--accent); }
+  .af-foot { font-size: 12px; color: var(--muted); margin: 0; letter-spacing: 0; }
+  .af-divider { height: 1px; background: var(--rule-soft); }
+
+  /* motion primitives — global pause is wired to this attribute */
+  :root[data-motion="off"] *, :root[data-motion="off"] *::before { animation-play-state: paused !important; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+<style>
+  /* ══ the page's own rules — the kit block above is pasted verbatim by gen-gaps.js ══ */
+  .artifact-page { margin: 0 auto; }            /* operator rule: an artifact's column is centred */
+  :root { --alert:#a3470a; --alert-soft:#fbeadb; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --alert:#f0a35a; --alert-soft:#3b2914; } }
+  :root[data-theme="dark"] { --alert:#f0a35a; --alert-soft:#3b2914; }
+
+  .eyebrow { font-size: var(--fs-min); letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0; }
+  h1 { font-size: 2em; line-height: 1.15; margin: 8px 0 0; text-wrap: balance; }
+  .lede { color: var(--ink-soft); max-width: 70ch; margin: 12px 0 0; }
+  .cap { font-size: var(--fs-sm); color: var(--ink-soft); margin: 0; max-width: 78ch; }
+  .sec-head { flex-wrap: wrap; }
+  .sec-head h2 { flex: 0 1 auto; min-width: 0; }
+  .sec-head .n { flex: 0 1 auto; min-width: 0; font-variant-numeric: tabular-nums; }
+  .panel { position: relative; }
+  .lab { font-size: var(--fs-min); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 2px 0 0; }
+
+  .btn { font: inherit; font-size: var(--fs-sm); letter-spacing: inherit; cursor: pointer; border-radius: 8px; padding: 5px 11px; border: 1px solid var(--rule); background: var(--raised); color: var(--ink); }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn[data-mine="true"] { border: 1.5px dashed var(--accent); color: var(--accent); }                      /* dashed = my recommendation */
+  .btn[aria-pressed="true"] { border: 1.5px solid var(--accent); background: var(--accent); color: var(--ground); }   /* solid = yours */
+  .btn.pri { background: var(--accent); border-color: var(--accent); color: var(--ground); }
+  .btn.pri:hover { filter: brightness(1.08); color: var(--ground); }
+  .btn.fold { background: transparent; color: var(--ink-soft); font-size: var(--fs-xs); padding: 3px 9px; align-self: flex-start; }
+  .btn[data-armed="true"] { border-color: var(--alert); color: var(--alert); background: var(--alert-soft); }
+  .verdict { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .state { font-size: var(--fs-min); color: var(--muted); letter-spacing: .04em; margin-left: 4px; }
+  [data-state="yours"] .state { color: var(--accent); }
+  .note[hidden] { display: none; }
+  .btn.nb { background: transparent; color: var(--ink-soft); font-size: var(--fs-xs); padding: 3px 9px; }
+  .btn.nb[data-has="true"] { border-color: var(--accent); color: var(--accent); }
+  .note { font: inherit; letter-spacing: inherit; font-size: var(--fs-sm); color: var(--ink); background: var(--raised); border: 1px solid var(--rule); border-radius: 8px; padding: 6px 10px; width: 100%; box-sizing: border-box; }
+
+  .take { border: 1px dashed var(--rule); border-radius: var(--radius, 10px); padding: 10px 14px; background: var(--raised); display: flex; flex-direction: column; gap: 4px; }
+  .take b { font-size: var(--fs-min); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 650; }
+  .take ul { margin: 0; padding-left: 1.15em; display: flex; flex-direction: column; gap: 3px; font-size: var(--fs-sm); color: var(--ink-soft); }
+
+  /* marks: a round black badge is a PIECE OF WORK's number · an outlined square is an importance · lit steps are an effort */
+  .num { display: inline-grid; place-items: center; min-width: 1.5em; height: 1.5em; padding: 0 .3em; box-sizing: border-box; border-radius: 999px; background: var(--strong); color: var(--ground); font-size: var(--fs-min); font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 0; flex: 0 0 auto; }
+  .rt { flex: 0 0 auto; display: inline-grid; place-items: center; width: 1.45em; height: 1.45em; border: 1px solid var(--rule); border-radius: 5px; font-size: var(--fs-min); font-variant-numeric: tabular-nums; color: var(--ink); background: var(--raised); letter-spacing: 0; }
+  .eff { display: inline-flex; align-items: center; gap: 7px; font-size: var(--fs-min); color: var(--ink-soft); cursor: default; white-space: nowrap; }
+  .eff .st { display: inline-flex; gap: 2px; }
+  .eff .st i { width: 9px; height: 9px; border-radius: 2px; border: 1px solid var(--rule); display: block; box-sizing: border-box; }
+  .eff .st i.on { background: var(--accent); border-color: var(--accent); }
+  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+  .meta .imp { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-min); color: var(--ink-soft); cursor: default; }
+
+  /* ── the grid: effort across, importance down ── */
+  .grid { display: grid; grid-template-columns: minmax(14ch, auto) repeat(3, minmax(0, 1fr)); gap: 6px; font-size: var(--fs-min); color: var(--ink-soft); }
+  .grid .hx, .grid .hy { display: flex; align-items: center; gap: 7px; padding: 2px 4px; letter-spacing: .06em; }
+  .grid .hx { justify-content: center; }
+  .grid .cellg { min-height: 58px; border: 1px solid var(--rule); border-radius: 8px; background: var(--card); display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: 7px; padding: 8px; }
+  .grid .cellg.start { background: color-mix(in srgb, var(--accent) 10%, var(--card)); border-color: color-mix(in srgb, var(--accent) 40%, var(--rule)); }
+  .grid .num { cursor: default; font-size: var(--fs-sm); min-width: 1.75em; height: 1.75em; }
+  .grid .num[data-mine="later"] { background: transparent; color: var(--ink); border: 1.5px solid var(--strong); }
+
+  /* ── one piece of work ── */
+  .works { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr)); gap: 14px; align-items: start; }
+  .work h3 { margin: 0; font-size: 1.05em; display: flex; align-items: center; gap: 9px; }
+  .work .gain { font-size: var(--fs-sm); color: var(--ink-soft); }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chips[hidden], .how[hidden] { display: none; }
+  .chip { font-size: var(--fs-min); color: var(--ink-soft); border: 1px solid var(--rule); border-radius: 999px; padding: 0 8px; line-height: 1.6; cursor: default; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-sizing: border-box; }
+  .chip.q { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .how { font-size: var(--fs-xs); color: var(--ink-soft); border-top: 1px dashed var(--rule); padding-top: 8px; margin: 0; overflow-wrap: anywhere; }
+
+  /* ── the nine attributes ── */
+  .rows { display: flex; flex-direction: column; gap: 8px; position: relative; }
+  .row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 24rem) auto; gap: 8px 20px; align-items: start; background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius, 10px); padding: 11px 14px; }
+  .row .nm { font-weight: 650; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .row .pl { font-size: var(--fs-sm); color: var(--ink-soft); margin-top: 3px; }
+  .row .qn { font-size: var(--fs-sm); color: var(--ink); }
+  .row .qn.none { color: var(--muted); }
+  .row .ctl { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+  .row .note { grid-column: 1 / -1; }
+  @media (max-width: 860px) { .row { grid-template-columns: minmax(0, 1fr); } .row .ctl { align-items: flex-start; } }
+
+  /* ── the wrong picture ── */
+  .wrong { border-left-color: var(--alert) !important; }
+  .orders { display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; align-items: center; font-size: var(--fs-sm); color: var(--ink-soft); }
+  .orders .seq { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .orders .box { border: 1px solid var(--rule); border-radius: 6px; padding: 2px 9px; background: var(--raised); color: var(--ink); }
+  .orders .arr { color: var(--muted); }
+
+  .tip { position: absolute; pointer-events: none; opacity: 0; background: var(--ink); color: var(--ground); font-size: var(--fs-min); letter-spacing: 0; line-height: 1.45; padding: 6px 9px; border-radius: 7px; z-index: 9; max-width: 46ch; transition: opacity .12s ease; }
+  .tip[data-show="true"] { opacity: 1; }
+  .tip .k { opacity: .68; margin-right: 6px; }
+  .tip .ln { display: block; }
+
+  .out { font: inherit; letter-spacing: inherit; font-size: var(--fs-sm); line-height: 1.5; color: var(--ink); background: var(--raised); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; width: 100%; box-sizing: border-box; min-height: 14em; resize: vertical; white-space: pre; overflow: auto; }
+  .acts { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; position: relative; }
+  .said { font-size: var(--fs-sm); color: var(--accent); min-height: 1.4em; }
+</style>
+
+<div class="artifact-page">
+  <header>
+    <p class="eyebrow">design context · loop 1 · between step 2 and step 3</p>
+    <h1>What the matrix left over, and what it costs</h1>
+    <p class="lede"><span id="n-items">—</span> leftovers from the matrix, each checked against the real map by six agents and verified by a seventh. They fold into <span id="n-b">—</span> pieces of work. My recommendation sits dashed on every one. Press a button to make it yours, then copy the text at the bottom.</p>
+  </header>
+
+  <section class="sec" data-sec="1" id="sec-grid">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"></path><circle cx="8" cy="8" r="1.5"></circle><circle cx="15" cy="12" r="1.5"></circle><circle cx="18" cy="17" r="1.5"></circle></svg>Cost against importance</h2><span class="n" id="grid-n">—</span></div>
+    <p class="cap">Each number is one piece of work. A filled number is one I would start now, a hollow one can wait.</p>
+    <div class="panel"><div class="grid" id="grid"></div></div>
+    <div class="take" id="take1"></div>
+  </section>
+
+  <section class="sec" data-sec="2" id="sec-wrong">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>One wrong picture</h2><span class="n">found along the way</span></div>
+    <div class="panel wrong"><p class="cap" id="wrong-plain"></p><div class="orders" id="orders"></div><p class="cap" id="wrong-fix"></p></div>
+  </section>
+
+  <section class="sec" data-sec="3" id="sec-works">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>The pieces of work</h2><span class="n" id="works-n">—</span></div>
+    <p class="cap">Cheapest first. Each card says what you gain, the questions it answers and the gaps it closes. "How" opens the technical detail.</p>
+    <div class="works" id="works"></div>
+  </section>
+
+  <section class="sec" data-sec="4" id="sec-attrs">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"></path><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"></circle></svg>Attributes no question needs</h2><span class="n" id="attrs-n">—</span></div>
+    <p class="cap">For each one, the question it could answer from data we already have. Where no question is worth asking, the attribute goes.</p>
+    <div class="rows" id="attrs"></div>
+    <div class="take" id="take2"></div>
+  </section>
+
+  <section class="sec" data-sec="5" id="sec-copy">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="m9 14 2 2 4-4"></path></svg>Your ruling</h2><span class="n">paste this back to me</span></div>
+    <div class="panel">
+      <textarea class="out" id="out" readonly spellcheck="false" aria-label="Your ruling as text"></textarea>
+      <div class="acts"><button class="btn pri" type="button" id="copy">Copy my ruling</button><button class="btn" type="button" id="reset">Clear everything</button><span class="said" id="said" aria-live="polite"></span></div>
+    </div>
+  </section>
+</div>
+
+<div class="af-chrome">
+  <button class="af-cog" id="af-cog" type="button" aria-expanded="false" aria-controls="af-panel" aria-label="Display options">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.2"></circle>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    </svg>
+  </button>
+
+  <div class="af-panel" id="af-panel" data-open="false">
+    <div class="af-group" role="radiogroup" aria-label="Font family" id="af-fonts"><p class="af-legend">Font family</p></div>
+    <div class="af-divider"></div>
+    <div class="af-group" role="radiogroup" aria-label="Theme" id="af-skins"><p class="af-legend">Theme</p></div>
+    <p class="af-foot" id="af-foot">—</p>
+  </div>
+</div>
+<script>
+var MOTION = { on: true };   /* animations read this before scheduling work */
+
+(function () {
+  "use strict";
+
+  /* Add an entry to either roster to add an option — nothing else changes. */
+  var FONTS = [
+    { id: "mono",  label: "Mono",     stack: 'ui-monospace, monospace', size: 15, track: -0.025 },
+    { id: "segoe", label: "Segoe UI", stack: '"Segoe UI", sans-serif',  size: 16, track: -0.015 }
+  ];
+  var SKINS = [
+    { id: "catalog",   label: "Catalog",         note: "center · indigo" },
+    { id: "blueprint", label: "Blueprint",       note: "skin F · blue" },
+    { id: "mission",   label: "Mission Console", note: "skin B · teal" }
+  ];
+  var FKEY = "gabe:artifact:font", SKEY = "gabe:artifact:skin";
+
+  var root = document.documentElement;
+  var cog = document.getElementById("af-cog"), panel = document.getElementById("af-panel");
+  var fhost = document.getElementById("af-fonts"), shost = document.getElementById("af-skins");
+  var mhost = document.getElementById("af-motion"), foot = document.getElementById("af-foot");
+
+  function read(key, list, dflt) {          /* sandboxed frames can throw on storage */
+    try {
+      var v = window.localStorage.getItem(key);
+      return list.some(function (x) { return x.id === v; }) ? v : dflt;
+    } catch (e) { return dflt; }
+  }
+  function write(key, v) { try { window.localStorage.setItem(key, v); } catch (e) {} }
+
+  function opt(host, item, spec, onPick) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "af-opt";
+    b.setAttribute("role", "radio"); b.setAttribute("data-id", item.id); b.setAttribute("aria-checked", "false");
+    var n = document.createElement("span");
+    n.className = "af-name"; n.textContent = item.label;
+    if (item.stack) n.style.fontFamily = item.stack;      /* preview its own face */
+    var s = document.createElement("span");
+    s.className = "af-spec"; s.textContent = spec;
+    b.appendChild(n); b.appendChild(s);
+    b.addEventListener("click", function () { onPick(item.id); });
+    host.appendChild(b);
+  }
+  function mark(host, id) {
+    host.querySelectorAll(".af-opt").forEach(function (o) {
+      o.setAttribute("aria-checked", String(o.getAttribute("data-id") === id));
+    });
+  }
+
+  function applyFont(id) {
+    var f = FONTS.filter(function (x) { return x.id === id; })[0] || FONTS[0];
+    root.style.setProperty("--af-stack", f.stack);
+    root.style.setProperty("--af-size", f.size + "px");
+    root.style.setProperty("--af-track", f.track + "em");
+    write(FKEY, f.id); mark(fhost, f.id);
+    foot.textContent = f.size + "px · " + f.track + "em";
+  }
+  function applySkin(id) {
+    root.setAttribute("data-skin", id);
+    write(SKEY, id); mark(shost, id);
+  }
+  function setMotion(on) {
+    MOTION.on = on;
+    root.setAttribute("data-motion", on ? "on" : "off");
+    /* Rebuild BEFORE pausing. A rebuild replaces the SVG, and a
+       pauseAnimations() called on the old element does nothing for the new
+       one — which is why four SMIL patterns kept running through "Paused"
+       even after the rebuild hook landed. Order: rebuild, then freeze. */
+    if (window.__rebuildMotion) window.__rebuildMotion();
+    document.querySelectorAll("svg").forEach(function (s) {
+      if (s.pauseAnimations && s.unpauseAnimations) { on ? s.unpauseAnimations() : s.pauseAnimations(); }
+    });
+    if (mhost) mark(mhost, on ? "on" : "off");
+  }
+
+  FONTS.forEach(function (f) { opt(fhost, f, f.size + " / " + f.track, applyFont); });
+  SKINS.forEach(function (s) { opt(shost, s, s.note, applySkin); });
+  if (mhost) [{ id: "on", label: "Playing" }, { id: "off", label: "Paused" }].forEach(function (m) {
+    opt(mhost, m, m.id === "on" ? "loops + replays" : "frozen", function (id) { setMotion(id === "on"); });
+  });
+
+  function open(next) { panel.setAttribute("data-open", String(next)); cog.setAttribute("aria-expanded", String(next)); }
+  cog.addEventListener("click", function (e) { e.stopPropagation(); open(panel.getAttribute("data-open") !== "true"); });
+  panel.addEventListener("click", function (e) { e.stopPropagation(); });
+  document.addEventListener("click", function () { if (panel.getAttribute("data-open") === "true") open(false); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && panel.getAttribute("data-open") === "true") { open(false); cog.focus(); }
+  });
+
+  applyFont(read(FKEY, FONTS, "mono"));
+  applySkin(read(SKEY, SKINS, "catalog"));
+  setMotion(!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  window.__setSkin = applySkin;
+  window.__setMotion = setMotion;
+})();
+</script>
+<script>window.GAPS_DATA = {"kind":"endpoint-card","hash":"c2f7f9c5","first":"Do 'the-route-in-order' first: give the ordered chain its inventory rows (the numbered steps per ending, the checks passed or fired in run order, the route that passes the most checks) and correct the app band the lab currently draws in reverse. Everything it needs is already in _lab-ep.js (LABEP.forms.paths[].chain[], verified on all 14 endings), it is hours of work, it is a 3, and it answers Q7, Q6, Q11 and half of Q17 across three prisms you ruled 'keep'. It is also the spine the later arm work hangs on — a touch's condition, a write's decider and a helper's loop each need a step in this sequence to attach to.","bundles":[{"key":"the-route-in-order","n":1,"name":"The route, in order","gain":"The numbered steps of each ending, the checks it passed or fired, and the route that passes every check.","mine":"do","effort":"inventory","imp":3,"questions":[{"id":"Q6","text":"Which gate stopped this request, and which ones did it pass first?"},{"id":"Q7","text":"What executes after what inside the door?"},{"id":"Q11","text":"Which route is the expected one, and which are the exceptions?"},{"id":"Q17","text":"What determines the path — what makes this a 401, a 402 or a 200?"}],"closes":[{"id":"A-Q7","label":"the ordered chain per ending (eight kinds of step, in request order)","plain":"The numbered list of everything one request runs through — each check, call, fork, setting and catch, in order, down to the answer it leaves with — is already generated and already drawn; only its inventory row is missing, because the sheet priced its length (22) and never the list.","why":"Inventory: every field (i · kind · hit · at · label · fn) is in LABEP.forms.paths[].chain[] for all 14 endings. 3: the chain is the flow itself (Q7) and the thing every later gap (a touch's condition, a write's decider, a loop) has to attach to.","effort":"inventory","imp":3,"rec":"now","kind":"analysis"},{"id":"A-Q6","label":"the checks met, in run order (passed · fired)","plain":"The checks a request met, in the order they ran, each marked 'passed' or 'stopped it here', are already in the facts — and those same facts show the lab's top band draws the three app-wide checks in the order they were registered, which is the reverse of the order they run.","why":"Inventory: the row and the band fix both read the chain already in _lab-ep.js (no new carry needed). 2: order and passed marks give context to the check that fired, which is already a 3 — but the backwards band is a wrong statement on screen today, which is why it goes now. The roster of dependencies that refuse nothing is lab effort and rides 'inside-the-calls'.","effort":"inventory","imp":2,"rec":"now","kind":"analysis"},{"id":"A-Q11","label":"the route that passes every check, and the check each other route fires","plain":"The route that gets through every check can be read straight off the facts — 'first run' passes all 10 checks, 'already done' 9, 'replay' 8, and every refusal is exactly one check firing; how often each route is really taken is something no reading of code can tell.","why":"Inventory: one reduction in the panel over facts already loaded. 3: it is the path — prism 1 needs a through-route for the exceptions to be exceptions to. One correction: the uncaught-500 route also fires no check, so the rule is 'a success ending with the most checks passed', not 'fires none'. Real frequency is 'outside' and stays out.","effort":"inventory","imp":3,"rec":"now","kind":"analysis"},{"id":"B-steps-longest","label":"Steps in the longest chain","plain":"The '22 steps' figure is the maximum of fourteen numbers the chain panel already prints one per ending, so the row goes once the chain itself has one.","why":"Inventory, 1: a size that cannot change a route and is already visible; what the raters liked was the spread (a 429 stops after 4 steps and touches nothing, the first-run 200 after 22 with 92 database steps), and that reads off the endings themselves.","effort":"inventory","imp":1,"rec":"drop","kind":"analysis"},{"id":"A-Q17","label":"the predicate per decision point, with the deeper raises the route does not translate","plain":"The condition behind every fork — the handler's own check, the fork one call down, the caught failure, the setting chosen before the request arrived — is already in the facts for all four kinds; what is missing is the failures raised two calls down, which the feed records with their condition and the lab never loads.","why":"Lab: one resolver in gen-endpoint-facts.py filtering forms.json functions{} by reached_by[].root, joined to the chain's call/collapsed rows by fn. 3: Q17 is literally 'what determines the path'; 'beyond one level' is the map saying where it stopped reading, a fact about the reading, not a grade of the code.","effort":"lab","imp":3,"rec":"now","kind":"analysis"}],"work":"Three inventory rows — the ordered chain per ending, the checks met in run order (passed · fired), the route that passes the most checks — all read from LABEP.forms.paths[].chain[] (i · kind · hit · at · label). One reduction in _lab-ep-panels.js (chain rows with kind 'gate', hit false/true; the expected route = a success ending with the most passed, because the uncaught-500 route also fires none). Re-order the app band from the chain (CORS → RateLimit → Idempotency) instead of LABEP.security.asgi's registration index and reword _lab-ep-panels.js:1853. In gen-endpoint-facts.py:123 carry the predicate beside `via` so a dependency check shows its condition. Delete the 'steps in the longest chain' row. A-Q17's near half (three of four predicate kinds are already chain labels) lands here; its far half is 'inside-the-calls'.","gainLong":"Q7, Q6, Q11 and the near half of Q17 answered from facts that already exist; prisms 1 (Endings), 4 (Gates and decisions) and 7 (Stages and order) get their spine; one wrong picture — the app band drawn backwards — is removed."},{"key":"empty-means-what","n":2,"name":"What an empty slot means","gain":"An empty slot that tells a measured zero from a reading that never ran, plus the norm for each stage.","mine":"do","effort":"inventory","imp":3,"questions":[{"id":"Q5","text":"What should be at this stage for this topic?"},{"id":"Q20","text":"What is inside this element, and what is there to explore — implications, effects, impact, coverage?"}],"closes":[{"id":"A-Q20","label":"why this slot is empty (measured zero · not read here · not applicable)","plain":"An empty slot is drawn the same way whether the reading looked and found nothing or never ran, because twelve places in the panel decide with 'count ? lit : hollow' — while the facts already say which reading arms were on and carry a state word (defined · missing · n/a · unknown) per block.","why":"Inventory: every input and the four CSS states exist; it is one helper. 3: it decides whether every other empty row on the card can be believed — an empty 'fate of the writes' means 'no writes' only if the effects arm ran.","effort":"inventory","imp":3,"rec":"now","kind":"analysis"},{"id":"A-Q5","label":"expected slots at this stage (the kind's norm)","plain":"The line that says what a stage is supposed to hold — a norm for the kind of element, never a grade of this one — exists for one topic of six (data); the other thirty stage-by-topic cells have no line, and the machine's own slot roster for an endpoint is read by no page.","why":"Inventory: the hover, the 'on this door: n' fact row and the probe are built; thirty one-line norms are authoring (generating them from _a3_forms.KINDS is a later, lab-sized step). 2 not 3 — a norm gives context to a slot rather than changing a route — but it is the whole answer to Q5 and what D-012's hollow slots need to be empty against.","effort":"inventory","imp":2,"rec":"now","kind":"analysis"}],"work":"One slotState() helper replacing the twelve `? \"lit\" : \"hollow\"` ternaries in _lab-ep-panels.js, reading LABEP.forms.source.arms_on and each block's own .state → lit · hollow (read, zero rows) · hatched (the arm that fills it is off, or state 'unknown') · blank (state 'n/a', the cell keeps its place); the CSS for the four states exists. Extend STAGE_EXPECT (_lab-ep-panels.js:1213) from the `data` topic to the other five — thirty one-line norms — folding DSTG[].holds into it so one norm is not worded twice. Later and lab-sized: import _a3_forms.KINDS['endpoint'] in gen-endpoint-facts.py so the norm is generated rather than typed.","gainLong":"An empty slot reads as 'looked, found nothing', 'not read here' or 'this kind has no such slot'; Q5 and Q20 are answered; D-012's hollow slots get something to be empty against — all as a norm for the kind, never a grade of this endpoint."},{"key":"what-each-ending-carries","n":3,"name":"What each ending carries","gain":"The rules behind the validation ending, and the headers each ending sends back.","mine":"do","effort":"inventory","imp":3,"questions":[{"id":"Q5","text":"What should be at this stage for this topic?"},{"id":"Q13","text":"What shape goes in and what shape comes back on this ending?"}],"closes":[{"id":"C-validation-cases","label":"validation cases, the 422 rules","plain":"The 42 ways this request body can be refused before the handler runs — which field, which rule, the message, the line — are already in the lab's facts; the inventory note saying they are not is out of date.","why":"Inventory: the fact rides on forms.endpoint.produced; two lines in exit_rec put it on the 422 ending where a panel will look. 3 (proposed, was 2): each case is a decision point that produces an ending, the same class as own guards, and it is the only place a request FIELD is named per ending.","effort":"inventory","imp":3,"rec":"now","kind":"analysis"},{"id":"A-Q13","label":"response headers per ending","plain":"The headers each ending sends back (a 429 says when to retry, a 401 names the login scheme it wants) are already in the facts and named by no inventory row; the per-field rules of the request body (required, length, range) sit in the feed one join away.","why":"Inventory for the headers (already on every exit as .response.headers); the field rules are lab and ride 'field-rules-and-anchors'. 2: a shape gives an ending its content and never chooses the ending — so on your rating question, being needed by four questions (Q5 Q8 Q10 Q13) argues for showing it EARLIER (mid, on the ending's block), not for a 3; a 3 would only add an 18th claimant to a face that holds five.","effort":"inventory","imp":2,"rec":"now","kind":"analysis"}],"work":"In exit_rec (gen-endpoint-facts.py:89) copy `cases` onto the resolved 422 exit and lift response.headers onto the drawn exit row; count the cases in forms.counts. In the inventory: strike 'not in the lab's facts yet' on validation cases, set its cardinality to 1 · 4 · 42 over 42 of 80 endpoints, propose its rating 2 → 3, and add the row 'response headers per ending'. The per-field body rules (required · length · range) are the lab half and live in 'field-rules-and-anchors'.","gainLong":"The INPUT stage stops being an empty slab (42 field · rule · message · line rows on this endpoint); the ANSWER stage shows what the client is told to do next (Retry-After on the 429, WWW-Authenticate on the 401)."},{"key":"whose-write","n":4,"name":"Whose write it is","gain":"The writes of the endpoint told apart from the writes of its login check, so the race alert stops firing almost everywhere.","mine":"do","effort":"inventory","imp":2,"questions":[{"id":"Q9","text":"Which tables does the door touch that the Data panel never draws?"}],"closes":[{"id":"B-race","label":"race on a unique key — the endpoint's own, the gate's counted apart","plain":"The 'uncaught race' alert as defined fires on 79 of 80 endpoints because every one inherits the login check's insert; counted on the endpoint's own code it fires on 11 — and this endpoint is one of the two that carry ten.","why":"Inventory: a filter on a boolean already on every step. 2 for the fact (your 3-as-an-alert stands): it is the one face-level mark that is currently wallpaper, which is why it goes now. Keep the word a fact — a unique key on the table and no catch around the insert, shown beside the one the same app does catch — never 'unsafe'.","effort":"inventory","imp":2,"rec":"now","kind":"analysis"},{"id":"B-provisions","label":"Provisions","plain":"A users row is created and committed by the login check before the handler starts — on 79 of 80 endpoints, from one line of code — which is why even a refused request shows a committed write (65 of the app's validation refusals do).","why":"Inventory: the flag (effects.steps[].dependency) and the commit line are loaded. 2: it explains a 3 (a committed write on a refusal would otherwise read as a drawing bug); say it once on the GATE stage — the app-wide roster of what a gate provisions belongs on the dependency's own card.","effort":"inventory","imp":2,"rec":"now","kind":"analysis"},{"id":"A-Q9","label":"how this table was found (map access edge · route effects · both)","plain":"Two tables this endpoint touches (users, ai_spend_log) are known only to the per-route effects and not to the map's table list; the default layout draws them hollow with the reason, every other layout drops them — and 'users' is missing precisely because the login check, not the handler, writes it.","why":"Inventory: lift the merge that stgRows already does into dtables and name the provenance. 2: provenance on a row that is already a 3; it goes now only because it is the same filter over effects.steps as the race and provision split.","effort":"inventory","imp":2,"rec":"now","kind":"analysis"},{"id":"B-entity-cluster","label":"home evidence — the entity the file says, against the entities its callers and its tables say","plain":"The entity and URL group are the crumb you already navigate by, so a row would only repeat the frame; the fact underneath that is worth a row is that this endpoint is filed under 'auth' while its table touches belong to 'settings' (10) before 'auth' (9).","why":"Inventory: the three witnesses are already in LABEP.identity.home_ev and the table blocks are already painted by owning entity. 2, later: no question needs it and nothing on the card is wrong without it; the label itself stays navigation (identity.above is the ladder), never a content row. Stating the witnesses is analysis; nothing re-homes and the map's own word here is 'stay'.","effort":"inventory","imp":2,"rec":"later","kind":"analysis"}],"work":"One split on LABEP.forms.paths[].effects.steps[].dependency in the Data panel code: count uncaught races on the endpoint's own steps apart from the gate's; say the gate's provision once on the GATE stage ('this check creates a users row before your handler, committed whatever the ending'); lift stgRows' effects-only merge (_lab-ep-panels.js:1004) into dtables (:1511) so every layout draws the same table set, with a 'how found' word (map edge · route effects · both). Optional rider: a home-evidence row from LABEP.identity.home_ev, the table blocks being already painted by owning entity.","gainLong":"The race alert goes from 79 of 80 endpoints (wallpaper) to 11; a committed write on a refused request is explained instead of looking like a drawing bug; no layout silently hides a touched table."},{"key":"honest-proof","n":5,"name":"Proof you can open","gain":"Coverage words backed by what a test really asserted, in place of one word stamped by kind.","mine":"do","effort":"lab","imp":3,"questions":[{"id":"Q4","text":"Which conditions of this door does a test prove, and which does nothing reach?"}],"closes":[{"id":"A-Q4","label":"what the case asserts on this condition (status · detail · code · other), and the values tests give a switch's setting","plain":"The word 'unmeasured — no test can assert it' is stamped on ten of this endpoint's 31 conditions by kind, not by looking; the feed already records which tests set each setting to which value and what each test actually asserted, and neither reaches the lab.","why":"Lab: two carries (asserts + role in case_rec; settings[key].tests for the settings this endpoint's switches name) and gen-robot.js stops inventing the word. 3: coverage per condition is a ruled 3 and this is what its words mean. One caution the investigator skipped: a test that sets the setting somewhere (a middleware unit test) shows the value was exercised, not this endpoint's arm — say 'values tests give this setting', never 'covered'; joining a non-status assertion to the arm it proves is arm work and stays out.","effort":"lab","imp":3,"rec":"now","kind":"analysis"},{"id":"B-cases","label":"case role on this endpoint (act · arranged · helper-arranged · service-raises)","plain":"Test cases on this endpoint come as two lists that disagree — 26 anonymous ids on the Tests panel, 15 cited by the conditions — and neither says whether a test came here on purpose (15 calls from 12 tests) or only passed through to set something else up (14 tests, plus 135 through a helper).","why":"Inventory: both rosters and the role split are already in _lab-ep.js; it is a merge and a role word. 2: an id changes nothing by itself, but it is what lets the coverage mark (a 3) be opened, and prism 10 (Proof) has no other carrier.","effort":"inventory","imp":2,"rec":"now","kind":"analysis"},{"id":"B-journeys","label":"workflow step (prev · next in the named walk)","plain":"The step before and after this endpoint in its named walk (POST /consent → here → GET /me) is one line already in the facts; the 27 broad test cases that merely pass through it compare endpoints, not this request, and one of them is a lump of 15 unnamed web tests wearing a fake id.","why":"Inventory, and nothing to generate. 1: neither half changes this request's route or data — split the row when prism 1 gets its spec (prev/next stays a tooltip, the pass-through list goes to the far view), and give the web lump the state word `unnamed` when the tests roster is rebuilt.","effort":"inventory","imp":1,"rec":"later","kind":"analysis"}],"work":"gen-endpoint-facts.py: case_rec (:84) also carries `asserts` and `role` from test_cases[cid].calls[] matched by line; a new carry of forms.json settings[key].tests for the settings this endpoint's switches name (switches[].settings, or conditions{}.terms[].fields); the TESTS block (:364-379) builds ONE roster from forms.tests ∪ the ids the conditions cite, each stamped act · arranged · helper-arranged · service-raises, and the web lump gets the state word `unnamed`. gen-robot.js:12 retires the blanket 'unmeasured': a switch shows 'values tests give this setting', an effect/provision/race shows the norm 'proven by a database read-back; this reading opens response assertions only'. Split the journeys row (prev/next stays a tooltip; pass-through test cases go to the far view). Excluded: joining a non-status assertion to the arm it proves — that is a new part in the tests arm.","gainLong":"Coverage words become facts that were read, not a word stamped by kind; prism 10 (Proof) gets a carrier that can be opened; the Tests panel and the conditions stop disagreeing (26 vs 15)."},{"key":"inside-the-calls","n":6,"name":"Inside the calls","gain":"The functions behind a folded step, each with its raises, refusals, commits and roles.","mine":"do","effort":"lab","imp":3,"questions":[{"id":"Q6","text":"Which gate stopped this request, and which ones did it pass first?"},{"id":"Q16","text":"What did the door save temporarily — cache, or something ephemeral that was alive and important during the process?"},{"id":"Q17","text":"What determines the path — what makes this a 401, a 402 or a 200?"},{"id":"Q18","text":"Which functions are the crucial ones: facing the API, deciding the ending, touching the database, giving context?"},{"id":"Q19","text":"Which little functions sit inside the loop, and of what type (formatting · capping · validation…)?"}],"closes":[{"id":"A-Q17","label":"the predicate per decision point, with the deeper raises the route does not translate","plain":"The condition behind every fork — the handler's own check, the fork one call down, the caught failure, the setting chosen before the request arrived — is already in the facts for all four kinds; what is missing is the failures raised two calls down, which the feed records with their condition and the lab never loads.","why":"Lab: one resolver in gen-endpoint-facts.py filtering forms.json functions{} by reached_by[].root, joined to the chain's call/collapsed rows by fn. 3: Q17 is literally 'what determines the path'; 'beyond one level' is the map saying where it stopped reading, a fact about the reading, not a grade of the code.","effort":"lab","imp":3,"rec":"now","kind":"analysis"},{"id":"A-Q18 + C-decision-point-functions","label":"roles per function (api-facing · decides an ending · touches the data · gives context), with a mark when one function holds two","plain":"A role per function — faces the API, decides an ending, touches the data, gives context — can be derived today from facts already loaded, and four of this endpoint's functions hold two roles at once (complete_setup decides and writes; get_auth_context gives context, raises the 401 and adds a users row).","why":"Inventory: a union of `fn` keys already in _lab-ep.js; the richer version is the functions{} carry in the same bundle. 3 for the deciding role. On your rating question: keep 'context-giving' at 2 as a ROLE and let a function wear its highest role — get_auth_context is a 3 because it decides and writes, while get_session and get_settings (they can refuse nothing) stay 2; flipping the whole row to 3 would promote two functions that sit on 79 and 12 endpoints and change no route.","effort":"inventory","imp":3,"rec":"now","kind":"analysis"},{"id":"A-Q6","label":"the checks met, in run order (passed · fired)","plain":"The checks a request met, in the order they ran, each marked 'passed' or 'stopped it here', are already in the facts — and those same facts show the lab's top band draws the three app-wide checks in the order they were registered, which is the reverse of the order they run.","why":"Inventory: the row and the band fix both read the chain already in _lab-ep.js (no new carry needed). 2: order and passed marks give context to the check that fired, which is already a 3 — but the backwards band is a wrong statement on screen today, which is why it goes now. The roster of dependencies that refuse nothing is lab effort and rides 'inside-the-calls'.","effort":"inventory","imp":2,"rec":"now","kind":"analysis"},{"id":"A-Q19 + C-little-helpers","label":"how often a step runs (once · once per item in a loop · only on one arm · only on a failure)","plain":"Whether a step runs once or once per item in a loop is the part of this question the feed cannot answer (the loop is merged with 'if' and 'try' into one yes/no flag); what a small helper does — 4 lines, returns a date, calls nothing, touches no table — is in a feed the lab does not read.","why":"Arm for the loop word, and it is the same edit as A-Q1 — with one correction: the investigator's 'widen cond into a word' would change every step id, because mint() hashes cond; add a `frame` field instead. 2 for the loop (one row or N rows landing), 1 for the helpers, whose read facts are lab effort and ride 'inside-the-calls'. A TYPE word guessed from a name (format · cap · validate) would be the tool judging; show the read facts and let the reader supply the word.","effort":"arm","imp":2,"rec":"later","kind":"analysis"},{"id":"A-Q16 + C-request-scoped-state","label":"in-flight values — request-scoped · process-scoped (where set · where read · when it dies)","plain":"Values that live only while a request runs (a key a middleware parks on the request, the login context) or that outlive it inside the server process (the rate limiter's counters, cached settings) are listed by no reading; the one that is known was found by a name filter for 'idempot'.","why":"Arm: the reader exists but is locked to one name, and no generator looks for process-scoped state at all. 2: D-013 stands for the request half (every known instance rides another row); the process half explains rows that decide (why a 429's window is per server, why a switch cannot change without a restart) without deciding anything itself. The session's life (closes after the answer) is a cheap partial that rides 'inside-the-calls'.","effort":"arm","imp":2,"rec":"later","kind":"analysis"}],"work":"One pass in gen-endpoint-facts.py forms_slice: carry forms.json functions{} filtered by reached_by[].root == this endpoint (raises with pred · translation · translated_by, refusals, commits, swallows, savepoints, at), forms.json dependencies{} for this endpoint's dependencies (resolution order, exits, teardown), and archmap.json function_insight (lines · returns · base · access · doc) for the names in functions.behind; join them to the chain's call/collapsed rows by fn. The roles-per-function mark (A-Q18) needs none of this and can be derived today from _lab-ep.js; it lands in the same Functions view. Riders: the dependencies that refuse nothing (A-Q6), the session that closes after the answer (A-Q16's cheap half), the helper facts (A-Q19's lab half).","gainLong":"A 'collapsed · one return' row can be opened; the two RuntimeErrors two calls down appear with their conditions and the honest 'beyond one level'; functions that both decide and write are marked; get_session shows as 'ran, refused nothing, closes after the answer'."},{"key":"how-common","n":7,"name":"How common each piece is","gain":"The count of other endpoints that use the same piece, so the odd one out becomes visible.","mine":"do","effort":"lab","imp":2,"questions":[{"id":"Q12","text":"Is this door built from standard pieces, or did it go specialist?"},{"id":"Q14","text":"Which door is the densest, the riskiest, the least tested?"}],"closes":[{"id":"A-Q12","label":"how common this piece is (endpoints in this app · apps of the four)","plain":"A count of how many of the app's 80 endpoints use the same piece exists for one family only (dependencies: get_session 79, get_auth_context 78); switches, limiters, catches, statuses and idempotency claims have none, though the generator already holds the whole feed in memory.","why":"Lab: one loop over the already-loaded endpoints beside the existing feed-wide block; the cross-app half needs a small committed digest because the four caches are not in the repo. 2: rarity says where to look, not what happens — but it is the WHOLE of prism 5 (Standard or specialist), which you ruled 'keep' and which is otherwise empty.","effort":"lab","imp":2,"rec":"now","kind":"analysis"},{"id":"A-Q14","label":"where this endpoint sits in the app (rank · median · the largest)","plain":"This endpoint's place among the app's 81 — rank 11 by functions behind it, median 4, largest 135 — is already generated and reaches no pixel; a single 'riskiest' score would be a grade, and should not be built.","why":"Inventory for the size line; the 'least tested' rank is one more accumulator in the how-common loop (lab). 2: position in a distribution is context. The diagnostic half is restated, not filled: keep the three named rules and say which fired; the ranked LIST of endpoints belongs to the far view, only this endpoint's position belongs here.","effort":"inventory","imp":2,"rec":"now","kind":"both"},{"id":"B-rate-limit","label":"rate tier (tighter · standard · exempt), with the cap as its detail","plain":"The rate-limit tier (this endpoint sits on the tighter one: 20 a minute against the app's 120) is a per-endpoint choice made by URL prefix — 23 endpoints tighter, 56 standard, 1 exempt — while 'has a limiter' is true of 79 of 80 and separates nothing.","why":"Inventory for the mark (two limiter rows are already loaded); the 23 · 56 · 1 comparison is one counter in the how-common loop. 2, later: the cap never changes what this code decides — it gives the 429 ending and the client's retry their context — so reframe the row as the TIER on the 429 ending with the cap as its detail.","effort":"inventory","imp":2,"rec":"later","kind":"analysis"},{"id":"B-signature","label":"Signature","plain":"The handler's line count belongs beside 'functions behind' (21 lines with 29 behind means it delegates), its return type is the poor copy of the response shape, and the async mark separates nothing in this app (every endpoint is async) while it would separate almost everything in the largest study app (34 of 545).","why":"Inventory: all three fragments are loaded and have better homes; nothing new to read per endpoint. 2 by your ruling, kept — but draw the async mark only when it differs from the app's own norm, which is one counter in the how-common loop; that is an odd-one-out fact, not a grade.","effort":"inventory","imp":2,"rec":"later","kind":"analysis"},{"id":"B-usage-fan-in","label":"Usage · fan-in","plain":"Fan-in is literally the length of the who-fetches-it list (every one of the 56 inbound edges in this app is a screen fetching an endpoint), so the number should head that row rather than be its own; the only value worth a mark is zero — 28 of 81 endpoints have no screen fetching them.","why":"Inventory, 1: the count is never drilled — you open the hook. Drop the row, keep the count as the header of 'who fetches it', and say a zero as a floor ('no screen in the scanned frontend fetches this', beside the 2 unmatched and 5 dynamic fetch sites) — 'unused' would be a verdict the map cannot support.","effort":"inventory","imp":1,"rec":"drop","kind":"analysis"}],"work":"Draw today what is already generated: 'rank 11 of 81 · median 4 · largest 135 (BOOT lifespan)' from LABEP.context.risk on the risk chip's card (endpoint-lab.html:458-480), keeping the three named rules and which fired — no score. Then one loop over the already-loaded _fj['endpoints'] in gen-endpoint-facts.py writing feedwide.pieces{} — for each piece this endpoint uses (dependency · switch kind · limiter tier · catch outcome · status · media type · idempotency idiom) how many of the others use it — plus the exits-tested rank, the async norm, the rate-tier split (23 · 56 · 1) and the no-screen floor (28 of 81; 2 unmatched · 5 dynamic from c4 stats.web). Later: a small committed cross-app digest written by census-b14.py, because its four feeds live in ~/.cache outside the repo.","gainLong":"Prism 5 (Standard or specialist) stops being empty; marks that are true of nearly every endpoint (async, 'has a limiter', fan-in 1) give way to odd-one-out marks that separate something."},{"key":"field-rules-and-anchors","n":8,"name":"Field rules, and a line to open","gain":"The rule beside each field of a shape, and a file and line on every block.","mine":"later","effort":"lab","imp":2,"questions":[{"id":"Q10","text":"What fields does this entity carry, and how do they hang together?"},{"id":"Q13","text":"What shape goes in and what shape comes back on this ending?"},{"id":"Q15","text":"Where in the code is this — can I open it?"}],"closes":[{"id":"A-Q15","label":"anchor per element (file:line on every block, not only the handler)","plain":"A file-and-line on every block is already there for checks, catches, forks, call sites, database steps and frontend hooks; only the definition line of a called function, a body shape, a table class and the three app-wide checks stop at the file name.","why":"Lab: one join of four `at` keys the feed already has. 1 by your own ruling (file:line 2 → 1), so by the rule it cannot be 'now' — the investigators' 'now' is corrected; it rides free when the field-rules join is done.","effort":"lab","imp":1,"rec":"later","kind":"analysis"},{"id":"A-Q10","label":"column facts of a table, which belong on the table's card","plain":"Column facts of a table — may it be empty, what fills it by default, what happens to it when the row it points at is deleted — are in the feed for all 486 columns and belong on the table's own card, not on the endpoint's.","why":"Lab: the same generator join that carries the anchors would carry them. 2 and not-here: Q10 asks about the entity's fields, the Blocks card is the table's face (D-007), and a column's default never changes this request's route. Which column a given ending wrote would be a new arm and is not proposed.","effort":"lab","imp":2,"rec":"not-here","kind":"analysis"},{"id":"A-Q13","label":"response headers per ending","plain":"The headers each ending sends back (a 429 says when to retry, a 401 names the login scheme it wants) are already in the facts and named by no inventory row; the per-field rules of the request body (required, length, range) sit in the feed one join away.","why":"Inventory for the headers (already on every exit as .response.headers); the field rules are lab and ride 'field-rules-and-anchors'. 2: a shape gives an ending its content and never chooses the ending — so on your rating question, being needed by four questions (Q5 Q8 Q10 Q13) argues for showing it EARLIER (mid, on the ending's block), not for a 3; a 3 would only add an 18th claimant to a face that holds five.","effort":"inventory","imp":2,"rec":"now","kind":"analysis"}],"work":"One join in gen-endpoint-facts.py of blocks it does not read today: forms.json schemas{} (required · constraints · extra policy · at per field) in schema_rec (:298), models{} (nullable · defaults · ondelete · constraints · at) in the DATA block (:275), functions{}.at in fn_rec (:330), middleware{}.registered_at on the chain's 'step' rows (:117). No new extraction. The column facts belong to the table's card (A-Q10 is not-here) but ride this join at no extra cost.","gainLong":"Every block can be opened at its line; the body shape shows its rule beside the field; the table's card gets its column facts when it is built."},{"key":"why-a-touch-why-it-survives","n":9,"name":"Why a touch happens, and why it survives","gain":"The condition on each table touch, and the commit or rollback that decided the fate of a write.","mine":"later","effort":"arm","imp":3,"questions":[{"id":"Q1","text":"At which moment is a table touched, and on what does that depend?"},{"id":"Q2","text":"On THIS ending, which tables were written, and did the write survive?"},{"id":"Q19","text":"Which little functions sit inside the loop, and of what type (formatting · capping · validation…)?"}],"closes":[{"id":"A-Q1","label":"the condition on a touch (the predicate and the frame: branch · loop · except · every time)","plain":"The condition under which a table is touched — 'only when this is true', 'once per item in a loop', 'only after a failure', or 'every time' — is known to the code reader while it walks the function and is then thrown away, leaving only a yes/no 'conditional' flag.","why":"Arm: the walker holds the frame and the test, the emit line drops both, and no feed carries them. 3: whether a row is written IS the data, and half the writes here are conditional. Two corrections to the investigators: the new field cannot be named `when` (mint() already writes when:'teardown'), and `cond` must stay a bool because mint() hashes it into the step id — add `frame` and the predicate beside it. The free half (the cond flag, already in the lab) goes onto the existing 'moment a table is touched' row today.","effort":"arm","imp":3,"rec":"later","kind":"analysis"},{"id":"A-Q2","label":"what decided each write's fate (the commit or rollback statement, and whether it was conditional)","plain":"The statement that decided whether a write survived — the commit or rollback line that ran after it, and whether that line was itself conditional — sits in a loop variable while the four survival buckets are computed and is never written down.","why":"Arm: _rollup knows the decider and discards it; replaying its rule inside the lab generator would put one law in two files exactly where its corner cases live. 3: 'fate of the writes' is a ruled 3 that today states a conclusion ('rolled back', 'maybe') with no line behind it, which reads as a grade; the decider is the fact underneath.","effort":"arm","imp":3,"rec":"later","kind":"analysis"},{"id":"A-Q19 + C-little-helpers","label":"how often a step runs (once · once per item in a loop · only on one arm · only on a failure)","plain":"Whether a step runs once or once per item in a loop is the part of this question the feed cannot answer (the loop is merged with 'if' and 'try' into one yes/no flag); what a small helper does — 4 lines, returns a date, calls nothing, touches no table — is in a feed the lab does not read.","why":"Arm for the loop word, and it is the same edit as A-Q1 — with one correction: the investigator's 'widen cond into a word' would change every step id, because mint() hashes cond; add a `frame` field instead. 2 for the loop (one row or N rows landing), 1 for the helpers, whose read facts are lab effort and ride 'inside-the-calls'. A TYPE word guessed from a name (format · cap · validate) would be the tool judging; show the read facts and let the reader supply the word.","effort":"arm","imp":2,"rec":"later","kind":"analysis"}],"work":"ONE pass in templates/center/generators/_a3_forms_effects.py: emit the frame (branch · loop · except · after) and the unparsed test from _walk's stack as two ADDED fields on the steps{} row — not named `when` (taken by teardown) and leaving `cond` a bool (it is hashed into the step id, so widening it would re-key every step) — and return decided_by from _rollup beside the four bucket lists. tests/forms-effects gains mutation cases (move a write into a loop; delete a rollback), one dry run on the four study targets with the numbers in the commit message, one propagation, two carry lines in eff_rec. Do not replay the rollup rule in the lab generator.","gainLong":"'Rolled back' and 'maybe' get a line number behind them; the 83 conditional writes get their condition; Q19's 'inside the loop' becomes readable. This is the first ARM to build — three gaps, one file, one battery, one dry run."},{"key":"what-the-screen-does","n":10,"name":"What the screen does on each ending","gain":"The message, redirect or retry the user gets for each ending.","mine":"later","effort":"arm","imp":3,"questions":[{"id":"Q8","text":"What does the client do with each ending — can it tell two 409s apart?"}],"closes":[{"id":"A-Q8","label":"what the screen does on this ending (message · retry · redirect)","plain":"What the screen does when an ending arrives is three-quarters known already — this endpoint is never retried, two cached queries are refetched on success, both 409s land on one branch that cannot tell them apart — but the message, call or element inside that branch is read by the frontend reader and then discarded.","why":"Arm: _branch() holds the rows that answer it and keeps one classification word. 3: a retry repeats the whole route and a redirect leaves the screen — both change the flow. The known three-quarters is inventory and can go on the CLIENT screen of the stage board today; which ending reaches which client branch (7 of 9 fall to one generic branch) is a lab carry of frontend.reasons.readers.","effort":"arm","imp":3,"rec":"later","kind":"analysis"}],"work":"In _a3_fe_reason.py, where _branch() (:75) already holds the rows inside a client branch, keep them: emit does[] per reason site (the call and its literal arguments, the returned value, the element rendered), classified against rosters in _a3_forms_fe.py (surface calls · retry members beside the existing nav and invalidate rosters); tests/forms-frontend, dry run, propagation. Before that, two cheap steps: draw the known three-quarters on the CLIENT screen (no retry on this mutation, two keys refetched on success, the collapsed 409, the guard's redirect) from _lab-ep.js, and carry forms.json frontend.reasons.readers so each ending shows which client branch it reaches; replace the hard-coded RequireSetup lookup (gen-endpoint-facts.py:206).","gainLong":"Prism 11 (Client) can say what the user sees per ending, as a fact — including that 7 of this endpoint's 9 refusals fall to one generic branch."},{"key":"alive-during-the-request","n":11,"name":"What stays alive during the request","gain":"The values held only while a request runs, and the ones the server keeps between requests.","mine":"later","effort":"arm","imp":2,"questions":[{"id":"Q16","text":"What did the door save temporarily — cache, or something ephemeral that was alive and important during the process?"}],"closes":[{"id":"A-Q16 + C-request-scoped-state","label":"in-flight values — request-scoped · process-scoped (where set · where read · when it dies)","plain":"Values that live only while a request runs (a key a middleware parks on the request, the login context) or that outlive it inside the server process (the rate limiter's counters, cached settings) are listed by no reading; the one that is known was found by a name filter for 'idempot'.","why":"Arm: the reader exists but is locked to one name, and no generator looks for process-scoped state at all. 2: D-013 stands for the request half (every known instance rides another row); the process half explains rows that decide (why a 429's window is per server, why a switch cannot change without a restart) without deciding anything itself. The session's life (closes after the answer) is a cheap partial that rides 'inside-the-calls'.","effort":"arm","imp":2,"rec":"later","kind":"analysis"}],"work":"A new `inflight` part in the kinds arm: lift _a3_forms_contract.py's _read()/_state_setter() out from behind the (?i)idempot name filter and walk every middleware, dependency, the handler and one call level for request.state writes and reads, ContextVar set/reset, a reached @lru_cache/@cache callee, a counter built in a middleware __init__, a LOCK_CALLS hit, a BackgroundTasks parameter — rows of {name, scope: request | process, set_at, read_at, dies}. tests/forms-kinds, dry run on the four targets, propagation.","gainLong":"Prism 8 (In-flight state) gets a general reading instead of one value found by name; the process-scoped half explains why a 429's window is per server and why a setting cannot change without a restart. Lowest priority of the three arms (importance 2; D-013 stands for the request half)."}],"attrs":[{"id":"B-provisions","label":"Provisions","mine":"keep","question":"Why does a refused request still show a committed write?","plain":"A users row the login check adds before the handler runs, on almost every endpoint.","detail":"A users row is created and committed by the login check before the handler starts — on 79 of 80 endpoints, from one line of code — which is why even a refused request shows a committed write (65 of the app's validation refusals do).","why":"Inventory: the flag (effects.steps[].dependency) and the commit line are loaded. 2: it explains a 3 (a committed write on a refusal would otherwise read as a drawing bug); say it once on the GATE stage — the app-wide roster of what a gate provisions belongs on the dependency's own card.","imp":2,"inBundle":4},{"id":"B-race","label":"Race on a unique key","mine":"keep","question":"Which unique inserts of this endpoint's own code have no catch around them?","plain":"An alert that fires almost everywhere today, because it counts the login check's insert too.","detail":"The 'uncaught race' alert as defined fires on 79 of 80 endpoints because every one inherits the login check's insert; counted on the endpoint's own code it fires on 11 — and this endpoint is one of the two that carry ten.","why":"Inventory: a filter on a boolean already on every step. 2 for the fact (your 3-as-an-alert stands): it is the one face-level mark that is currently wallpaper, which is why it goes now. Keep the word a fact — a unique key on the table and no catch around the insert, shown beside the one the same app does catch — never 'unsafe'.","imp":2,"inBundle":4},{"id":"B-cases","label":"Cases","mine":"keep","question":"Which tests came to this endpoint on purpose, and which only passed through?","plain":"Two case lists that disagree today, neither saying what a test came here to do.","detail":"Test cases on this endpoint come as two lists that disagree — 26 anonymous ids on the Tests panel, 15 cited by the conditions — and neither says whether a test came here on purpose (15 calls from 12 tests) or only passed through to set something else up (14 tests, plus 135 through a helper).","why":"Inventory: both rosters and the role split are already in _lab-ep.js; it is a merge and a role word. 2: an id changes nothing by itself, but it is what lets the coverage mark (a 3) be opened, and prism 10 (Proof) has no other carrier.","imp":2,"inBundle":5},{"id":"B-entity-cluster","label":"Entity · cluster","mine":"demote","question":"Is this endpoint filed under the entity its tables belong to?","plain":"The crumb you already navigate by, so a row of its own only repeats the frame.","detail":"The entity and URL group are the crumb you already navigate by, so a row would only repeat the frame; the fact underneath that is worth a row is that this endpoint is filed under 'auth' while its table touches belong to 'settings' (10) before 'auth' (9).","why":"Inventory: the three witnesses are already in LABEP.identity.home_ev and the table blocks are already painted by owning entity. 2, later: no question needs it and nothing on the card is wrong without it; the label itself stays navigation (identity.above is the ladder), never a content row. Stating the witnesses is analysis; nothing re-homes and the map's own word here is 'stay'.","imp":2,"inBundle":4},{"id":"B-signature","label":"Signature","mine":"demote","question":"Does this handler differ from the norm of the app, in being async or in its size?","plain":"Three fragments with better homes, and an async mark that separates nothing in this app.","detail":"The handler's line count belongs beside 'functions behind' (21 lines with 29 behind means it delegates), its return type is the poor copy of the response shape, and the async mark separates nothing in this app (every endpoint is async) while it would separate almost everything in the largest study app (34 of 545).","why":"Inventory: all three fragments are loaded and have better homes; nothing new to read per endpoint. 2 by your ruling, kept — but draw the async mark only when it differs from the app's own norm, which is one counter in the how-common loop; that is an odd-one-out fact, not a grade.","imp":2,"inBundle":7},{"id":"B-rate-limit","label":"Rate limit","mine":"demote","question":"Which rate tier does this endpoint sit on, against the rest of the app?","plain":"A cap that never changes what the code decides, though its tier is a real choice per endpoint.","detail":"The rate-limit tier (this endpoint sits on the tighter one: 20 a minute against the app's 120) is a per-endpoint choice made by URL prefix — 23 endpoints tighter, 56 standard, 1 exempt — while 'has a limiter' is true of 79 of 80 and separates nothing.","why":"Inventory for the mark (two limiter rows are already loaded); the 23 · 56 · 1 comparison is one counter in the how-common loop. 2, later: the cap never changes what this code decides — it gives the 429 ending and the client's retry their context — so reframe the row as the TIER on the 429 ending with the cap as its detail.","imp":2,"inBundle":7},{"id":"B-journeys","label":"Journeys · workflow step","mine":"demote","question":"Which step comes before this endpoint in its named walk, and which comes after?","plain":"One useful line of before and after, mixed with broad tests that only pass through.","detail":"The step before and after this endpoint in its named walk (POST /consent → here → GET /me) is one line already in the facts; the 27 broad test cases that merely pass through it compare endpoints, not this request, and one of them is a lump of 15 unnamed web tests wearing a fake id.","why":"Inventory, and nothing to generate. 1: neither half changes this request's route or data — split the row when prism 1 gets its spec (prev/next stays a tooltip, the pass-through list goes to the far view), and give the web lump the state word `unnamed` when the tests roster is rebuilt.","imp":1,"inBundle":5},{"id":"B-steps-longest","label":"Steps in the longest chain","mine":"drop","question":"","plain":"A maximum of numbers the chain already shows one per ending, so the row adds nothing once the chain has one.","detail":"The '22 steps' figure is the maximum of fourteen numbers the chain panel already prints one per ending, so the row goes once the chain itself has one.","why":"Inventory, 1: a size that cannot change a route and is already visible; what the raters liked was the spread (a 429 stops after 4 steps and touches nothing, the first-run 200 after 22 with 92 database steps), and that reads off the endings themselves.","imp":1,"inBundle":1},{"id":"B-usage-fan-in","label":"Usage · fan-in","mine":"drop","question":"","plain":"A count that is the length of the list of screens that fetch the endpoint, so it belongs on that row.","detail":"Fan-in is literally the length of the who-fetches-it list (every one of the 56 inbound edges in this app is a screen fetching an endpoint), so the number should head that row rather than be its own; the only value worth a mark is zero — 28 of 81 endpoints have no screen fetching them.","why":"Inventory, 1: the count is never drilled — you open the hook. Drop the row, keep the count as the header of 'who fetches it', and say a zero as a floor ('no screen in the scanned frontend fetches this', beside the 2 unmatched and 5 dynamic fetch sites) — 'unused' would be a verdict the map cannot support.","imp":1,"inBundle":7}],"notHere":[{"id":"A-Q10","plain":"Column facts of a table — may it be empty, what fills it by default, what happens to it when the row it points at is deleted — are in the feed for all 486 columns and belong on the table's own card, not on the endpoint's."}],"wrong":{"title":"One picture in the lab is wrong today","plain":"The Security panel lists the three app-wide checks in the order the code registers them, and they run in the reverse order.","fix":"The first piece of work corrects it, because the route already carries the true order.","drawn":["Idempotency","RateLimit","CORS"],"runs":["CORS","RateLimit","Idempotency"],"isWrong":true},"effort":{"inventory":{"word":"hours","steps":1,"plain":"A fact the lab already holds, so the work is a row in the inventory and a few lines in a panel."},"lab":{"word":"about a day","steps":2,"plain":"A fact the map already produces, so the work is carrying it into the lab with its probe."},"arm":{"word":"days","steps":3,"plain":"A fact no feed carries, so the work is new generation code with its test battery and a dry run on the four study apps."},"outside":{"word":"not from code","steps":0,"plain":"A fact that reading code cannot produce, such as real traffic."}},"ui":{"do":"A piece of work to start now, in the order of the cards.","later":"A piece of work worth doing, after the ones marked do.","dropb":"A piece of work that is not worth its cost.","keep":"An attribute that stays on the card as a row of its own.","demote":"An attribute that stays in the data and shows only on hover or inside another row.","dropa":"An attribute that leaves the inventory.","imp":"The highest importance among the gaps this work closes, by your depth rule.","grid":"A piece of work, placed by what it costs and how much it decides."},"takes":{"grid":["The upper left corner is where to start: work that costs hours and closes gaps rated 3.","4 of the 11 pieces cost hours, because the map already produces the fact and only the inventory never named it.","Nothing on this page grades the code. Each piece adds a fact about what is there and how it behaves."],"attrs":["3 attributes earn a question of their own and stay. 4 stay in the data and leave the card's rows. 2 leave the inventory.","The entity and the URL group stay as navigation, the way you already use them, and stop being a row."]},"counts":{"items":29,"verified":29,"diagnostic":1}};</script>
+<script>
+(function () {
+  "use strict";
+  var D = window.GAPS_DATA, KEY = "gabe:gaps:" + D.kind;
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+  function $(id) { return document.getElementById(id); }
+  function ln(k, v) { return '<span class="ln">' + (k ? '<span class="k">' + esc(k) + "</span>" : "") + esc(v) + "</span>"; }
+  function tipFor(stage) { var t = el("div", "tip"); t.setAttribute("role", "tooltip"); stage.appendChild(t); return t; }
+  function wire(node, tip, stage, html) {
+    node.addEventListener("mousemove", function (e) { var box = stage.getBoundingClientRect(); tip.innerHTML = typeof html === "function" ? html() : html; tip.setAttribute("data-show", "true");
+      var left = e.clientX - box.left + 14, top = e.clientY - box.top - tip.offsetHeight - 12; if (top < 0) top = e.clientY - box.top + 22;
+      tip.style.left = Math.max(0, Math.min(left, box.width - tip.offsetWidth - 4)) + "px"; tip.style.top = top + "px"; });
+    node.addEventListener("mouseleave", function () { tip.setAttribute("data-show", "false"); });
+  }
+  function effMark(e) { var w = D.effort[e], s = el("span", "eff"), st = el("span", "st"); for (var i = 0; i < 3; i++) { var b = el("i"); if (i < w.steps) b.className = "on"; st.appendChild(b); } s.appendChild(st); s.appendChild(document.createTextNode(w.word)); return s; }
+  function take(id, items) { var t = $(id); t.appendChild(el("b", null, "Take from this")); var ul = el("ul"); items.forEach(function (s) { ul.appendChild(el("li", null, s)); }); t.appendChild(ul); }
+
+  /* ── state: a verdict per piece of work and per attribute, keyed by their own ids ── */
+  var VALID = {}; D.bundles.forEach(function (b) { VALID[b.key] = 1; }); D.attrs.forEach(function (a) { VALID[a.id] = 1; });
+  var state = (function () { try { var s = JSON.parse(window.localStorage.getItem(KEY) || "null"); if (s && s.v) { Object.keys(s.v).forEach(function (k) { if (!VALID[k]) delete s.v[k]; }); return s; } } catch (e) {} return { v: {} }; })();
+  function save() { try { window.localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  var PAINT = [];
+  function verdict(host, tip, stage, id, mine, opts, noteHolder, placeholder) {
+    var v = el("div", "verdict"); v.setAttribute("role", "group"); var st = el("span", "state");
+    var btns = opts.map(function (o) { var b = el("button", "btn", o[1]); b.type = "button"; b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", function () { var s = state.v[id] || (state.v[id] = { v: null, n: "" }); s.v = s.v === o[0] ? null : o[0]; save(); paint(); paintOut(); }); wire(b, tip, stage, ln("", D.ui[o[2]])); v.appendChild(b); return b; });
+    var nb = el("button", "btn nb", "Note"); nb.type = "button"; nb.setAttribute("aria-expanded", "false"); v.appendChild(nb);
+    v.appendChild(st); host.appendChild(v);
+    var note = el("input", "note"); note.hidden = true;
+    nb.addEventListener("click", function () { if (!note.hidden && note.value) { note.focus(); return; } note.hidden = !note.hidden; nb.setAttribute("aria-expanded", String(!note.hidden)); if (!note.hidden) note.focus(); }); note.type = "text"; note.maxLength = 240; note.placeholder = placeholder; note.setAttribute("aria-label", "Note");
+    note.addEventListener("input", function () { var s = state.v[id] || (state.v[id] = { v: null, n: "" }); s.n = note.value; save(); nb.setAttribute("data-has", String(!!s.n)); paintOut(); }); noteHolder.appendChild(note);
+    function paint() { var s = state.v[id] || {}; btns.forEach(function (b, i) { b.setAttribute("aria-pressed", String(s.v === opts[i][0])); b.setAttribute("data-mine", String(!s.v && mine === opts[i][0])); });
+      host.setAttribute("data-state", s.v ? "yours" : "mine"); st.textContent = !s.v ? "still mine" : s.v === mine ? "yours · same as mine" : "yours · I said " + opts.filter(function (o) { return o[0] === mine; })[0][1].toLowerCase();
+      if (note.value !== (s.n || "")) note.value = s.n || "";
+      if (s.n) note.hidden = false; else if (document.activeElement !== note) note.hidden = true;
+      nb.setAttribute("data-has", String(!!s.n)); nb.setAttribute("aria-expanded", String(!note.hidden)); }
+    PAINT.push(paint); paint();
+  }
+
+  /* ═══ 1 · the grid ═══ */
+  (function () {
+    var g = $("grid"), tip = tipFor(g.parentNode), stage = g.parentNode, EFF = ["inventory", "lab", "arm"], IMP = [3, 2, 1];
+    g.appendChild(el("div", "hy", ""));
+    EFF.forEach(function (e) { var h = el("div", "hx"); h.appendChild(effMark(e)); wire(h, tip, stage, ln("", D.effort[e].plain)); g.appendChild(h); });
+    IMP.forEach(function (imp) {
+      if (!D.bundles.some(function (b) { return b.imp === imp; })) return;
+      var hy = el("div", "hy"); hy.appendChild(el("span", "rt", String(imp))); hy.appendChild(document.createTextNode("importance")); wire(hy, tip, stage, ln("", D.ui.imp)); g.appendChild(hy);
+      EFF.forEach(function (e, ei) { var c = el("div", "cellg" + (imp === 3 && ei === 0 ? " start" : "")); c.setAttribute("data-e", e); c.setAttribute("data-i", String(imp));
+        D.bundles.filter(function (b) { return b.effort === e && b.imp === imp; }).forEach(function (b) { var n = el("span", "num", String(b.n)); n.setAttribute("data-mine", b.mine); n.setAttribute("data-b", b.key); wire(n, tip, stage, ln("", b.name) + ln("", b.gain)); c.appendChild(n); });
+        g.appendChild(c); });
+    });
+    $("grid-n").textContent = D.bundles.filter(function (b) { return b.mine === "do"; }).length + " to start now · " + D.bundles.filter(function (b) { return b.mine !== "do"; }).length + " can wait";
+  })();
+
+  /* ═══ 2 · the wrong picture ═══ */
+  (function () {
+    $("wrong-plain").textContent = D.wrong.plain; $("wrong-fix").textContent = D.wrong.fix;
+    function seq(list) { var s = el("div", "seq"); list.forEach(function (x, i) { if (i) s.appendChild(el("span", "arr", "then")); s.appendChild(el("span", "box", x)); }); return s; }
+    var o = $("orders"); o.appendChild(el("span", null, "the lab lists")); o.appendChild(seq(D.wrong.drawn)); o.appendChild(el("span", null, "they run")); o.appendChild(seq(D.wrong.runs));
+    if (!D.wrong.isWrong) $("sec-wrong").hidden = true;
+  })();
+
+  /* ═══ 3 · the pieces of work ═══ */
+  var BV = [["do", "Do it", "do"], ["later", "Later", "later"], ["drop", "Drop", "dropb"]];
+  D.bundles.forEach(function (b) {
+    var card = el("div", "panel work"), tip = tipFor(card), h = el("h3"); card.setAttribute("data-b", b.key);
+    h.appendChild(el("span", "num", String(b.n))); h.appendChild(document.createTextNode(b.name)); card.appendChild(h);
+    card.appendChild(el("p", "gain", b.gain));
+    var meta = el("div", "meta"), ef = effMark(b.effort); wire(ef, tip, card, ln("", D.effort[b.effort].plain)); meta.appendChild(ef);
+    var im = el("span", "imp"); im.appendChild(el("span", "rt", String(b.imp))); im.appendChild(document.createTextNode("importance")); wire(im, tip, card, ln("", D.ui.imp)); meta.appendChild(im); card.appendChild(meta);
+    if (b.questions.length) { card.appendChild(el("p", "lab", "the questions it answers")); var qc = el("div", "chips"); b.questions.forEach(function (q) { var c = el("span", "chip q", q.id); wire(c, tip, card, ln("", q.text)); qc.appendChild(c); }); card.appendChild(qc); }
+    card.appendChild(el("p", "lab", "the gaps it closes")); var cc = el("div", "chips");
+    b.closes.forEach(function (x) { var c = el("span", "chip", x.label); wire(c, tip, card, ln("", x.plain) + ln("alone it would cost", D.effort[x.effort].word) + ln("importance", String(x.imp))); cc.appendChild(c); }); card.appendChild(cc);
+    var fold = el("button", "btn fold", "How"); fold.type = "button"; fold.setAttribute("aria-expanded", "false"); var how = el("p", "how", b.work); how.hidden = true;
+    fold.addEventListener("click", function () { how.hidden = !how.hidden; fold.setAttribute("aria-expanded", String(!how.hidden)); }); card.appendChild(fold); card.appendChild(how);
+    verdict(card, tip, card, b.key, b.mine, BV, card, "a note — optional");
+    $("works").appendChild(card);
+  });
+  $("works-n").textContent = D.bundles.length + " pieces · " + D.counts.items + " leftovers · " + D.counts.verified + " verified against the map";
+
+  /* ═══ 4 · the attributes ═══ */
+  var AV = [["keep", "Keep", "keep"], ["demote", "Demote", "demote"], ["drop", "Drop", "dropa"]];
+  (function () {
+    var host = $("attrs"), tip = tipFor(host);
+    D.attrs.forEach(function (a) {
+      var r = el("div", "row"); r.setAttribute("data-a", a.id);
+      var c1 = el("div"), nm = el("div", "nm"); nm.appendChild(document.createTextNode(a.label)); if (a.inBundle) { var nb = el("span", "num", String(a.inBundle)); wire(nb, tip, host, ln("", "The piece of work that gives this attribute its question.")); nm.appendChild(nb); }
+      c1.appendChild(nm); c1.appendChild(el("p", "pl", a.plain)); wire(nm, tip, host, ln("", a.detail)); r.appendChild(c1);
+      var c2 = el("div"); c2.appendChild(el("p", "lab", "the question it could answer")); c2.appendChild(el("p", "qn" + (a.question ? "" : " none"), a.question || "None worth asking.")); r.appendChild(c2);
+      var c3 = el("div", "ctl"); r.appendChild(c3); verdict(c3, tip, host, a.id, a.mine, AV, r, "a note — optional");
+      host.appendChild(r);
+    });
+    $("attrs-n").textContent = D.attrs.length + " attributes";
+  })();
+
+  take("take1", D.takes.grid); take("take2", D.takes.attrs);
+  $("n-items").textContent = D.counts.items; $("n-b").textContent = D.bundles.length;
+
+  /* ═══ 5 · your ruling ═══ */
+  function line(id, label, mine) { var s = state.v[id] || {}; return label + ": " + (s.v || mine) + (s.v ? (s.v === mine ? " (yours, same as mine)" : " (yours, I said " + mine + ")") : " (mine, untouched)") + (s.n ? " | " + s.n.replace(/\s+/g, " ").trim() : ""); }
+  function buildText() {
+    var L = ["RULING · leftovers · " + D.kind + " · eval " + D.hash + " · " + D.bundles.length + " pieces of work · " + D.attrs.length + " attributes"];
+    L.push("WORK (do · later · drop)"); D.bundles.forEach(function (b) { L.push(line(b.key, b.n + " " + b.name, b.mine)); });
+    L.push("ATTRIBUTES (keep · demote · drop)"); D.attrs.forEach(function (a) { L.push(line(a.id, a.label, a.mine)); });
+    var mineN = D.bundles.concat(D.attrs).filter(function (x) { return !(state.v[x.key || x.id] || {}).v; }).length;
+    L.push(mineN ? mineN + " untouched (my recommendation stands)" : "every line is yours"); return L.join("\n");
+  }
+  function paintOut() { $("out").value = buildText(); }
+  $("copy").addEventListener("click", function () {
+    var out = $("out"), say = $("said");
+    function done(ok) { say.textContent = ok ? "Copied. Paste it into the chat." : "Select the text above and press Ctrl+C."; if (!ok) { out.focus(); out.select(); } window.setTimeout(function () { say.textContent = ""; }, 5000); }
+    function fallback() { var ok = false; out.focus(); out.select(); try { ok = document.execCommand("copy"); } catch (e) {} done(ok); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(out.value).then(function () { done(true); }, fallback); else fallback();
+  });
+  var reset = $("reset"), armT = null;
+  reset.addEventListener("click", function () {
+    if (reset.getAttribute("data-armed") !== "true") { reset.setAttribute("data-armed", "true"); reset.textContent = "Press again to clear"; armT = window.setTimeout(function () { reset.setAttribute("data-armed", "false"); reset.textContent = "Clear everything"; }, 4000); return; }
+    window.clearTimeout(armT); reset.setAttribute("data-armed", "false"); reset.textContent = "Clear everything"; state = { v: {} }; save(); PAINT.forEach(function (f) { f(); }); paintOut();
+  });
+  paintOut();
+  window.__gaps = { text: buildText, data: D };
+})();
+</script>

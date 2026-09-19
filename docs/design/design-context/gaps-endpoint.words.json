@@ -1,0 +1,197 @@
+{
+  "_about": "Authored words for the evaluation page of what M1 left over (endpoint card). Bundles are keyed by the judge's bundle name in gaps-endpoint.raw.json; if a bundle appears or vanishes, gen-gaps.js stops. Plain lines follow gabe-lens plain mode (../workflow-panel/plain-audit.py). Numbers are never typed here.",
+  "effort": {
+    "inventory": {
+      "word": "hours",
+      "steps": 1,
+      "plain": "A fact the lab already holds, so the work is a row in the inventory and a few lines in a panel."
+    },
+    "lab": {
+      "word": "about a day",
+      "steps": 2,
+      "plain": "A fact the map already produces, so the work is carrying it into the lab with its probe."
+    },
+    "arm": {
+      "word": "days",
+      "steps": 3,
+      "plain": "A fact no feed carries, so the work is new generation code with its test battery and a dry run on the four study apps."
+    },
+    "outside": {
+      "word": "not from code",
+      "steps": 0,
+      "plain": "A fact that reading code cannot produce, such as real traffic."
+    }
+  },
+  "bundles": {
+    "the-route-in-order": {
+      "name": "The route, in order",
+      "mine": "do",
+      "gain": "The numbered steps of each ending, the checks it passed or fired, and the route that passes every check.",
+      "extraQ": []
+    },
+    "empty-means-what": {
+      "name": "What an empty slot means",
+      "mine": "do",
+      "gain": "An empty slot that tells a measured zero from a reading that never ran, plus the norm for each stage.",
+      "extraQ": []
+    },
+    "what-each-ending-carries": {
+      "name": "What each ending carries",
+      "mine": "do",
+      "gain": "The rules behind the validation ending, and the headers each ending sends back.",
+      "extraQ": [
+        "Q5"
+      ]
+    },
+    "whose-write": {
+      "name": "Whose write it is",
+      "mine": "do",
+      "gain": "The writes of the endpoint told apart from the writes of its login check, so the race alert stops firing almost everywhere.",
+      "extraQ": []
+    },
+    "honest-proof": {
+      "name": "Proof you can open",
+      "mine": "do",
+      "gain": "Coverage words backed by what a test really asserted, in place of one word stamped by kind.",
+      "extraQ": []
+    },
+    "inside-the-calls": {
+      "name": "Inside the calls",
+      "mine": "do",
+      "gain": "The functions behind a folded step, each with its raises, refusals, commits and roles.",
+      "extraQ": []
+    },
+    "how-common": {
+      "name": "How common each piece is",
+      "mine": "do",
+      "gain": "The count of other endpoints that use the same piece, so the odd one out becomes visible.",
+      "extraQ": []
+    },
+    "field-rules-and-anchors": {
+      "name": "Field rules, and a line to open",
+      "mine": "later",
+      "gain": "The rule beside each field of a shape, and a file and line on every block.",
+      "extraQ": []
+    },
+    "why-a-touch-why-it-survives": {
+      "name": "Why a touch happens, and why it survives",
+      "mine": "later",
+      "gain": "The condition on each table touch, and the commit or rollback that decided the fate of a write.",
+      "extraQ": []
+    },
+    "what-the-screen-does": {
+      "name": "What the screen does on each ending",
+      "mine": "later",
+      "gain": "The message, redirect or retry the user gets for each ending.",
+      "extraQ": []
+    },
+    "alive-during-the-request": {
+      "name": "What stays alive during the request",
+      "mine": "later",
+      "gain": "The values held only while a request runs, and the ones the server keeps between requests.",
+      "extraQ": []
+    }
+  },
+  "attrs": {
+    "B-provisions": {
+      "label": "Provisions",
+      "mine": "keep",
+      "question": "Why does a refused request still show a committed write?",
+      "plain": "A users row the login check adds before the handler runs, on almost every endpoint."
+    },
+    "B-race": {
+      "label": "Race on a unique key",
+      "mine": "keep",
+      "question": "Which unique inserts of this endpoint's own code have no catch around them?",
+      "plain": "An alert that fires almost everywhere today, because it counts the login check's insert too."
+    },
+    "B-cases": {
+      "label": "Cases",
+      "mine": "keep",
+      "question": "Which tests came to this endpoint on purpose, and which only passed through?",
+      "plain": "Two case lists that disagree today, neither saying what a test came here to do."
+    },
+    "B-entity-cluster": {
+      "label": "Entity · cluster",
+      "mine": "demote",
+      "question": "Is this endpoint filed under the entity its tables belong to?",
+      "plain": "The crumb you already navigate by, so a row of its own only repeats the frame."
+    },
+    "B-signature": {
+      "label": "Signature",
+      "mine": "demote",
+      "question": "Does this handler differ from the norm of the app, in being async or in its size?",
+      "plain": "Three fragments with better homes, and an async mark that separates nothing in this app."
+    },
+    "B-rate-limit": {
+      "label": "Rate limit",
+      "mine": "demote",
+      "question": "Which rate tier does this endpoint sit on, against the rest of the app?",
+      "plain": "A cap that never changes what the code decides, though its tier is a real choice per endpoint."
+    },
+    "B-journeys": {
+      "label": "Journeys · workflow step",
+      "mine": "demote",
+      "question": "Which step comes before this endpoint in its named walk, and which comes after?",
+      "plain": "One useful line of before and after, mixed with broad tests that only pass through."
+    },
+    "B-steps-longest": {
+      "label": "Steps in the longest chain",
+      "mine": "drop",
+      "question": "",
+      "plain": "A maximum of numbers the chain already shows one per ending, so the row adds nothing once the chain has one."
+    },
+    "B-usage-fan-in": {
+      "label": "Usage · fan-in",
+      "mine": "drop",
+      "question": "",
+      "plain": "A count that is the length of the list of screens that fetch the endpoint, so it belongs on that row."
+    }
+  },
+  "ui": {
+    "do": {
+      "plain": "A piece of work to start now, in the order of the cards."
+    },
+    "later": {
+      "plain": "A piece of work worth doing, after the ones marked do."
+    },
+    "dropb": {
+      "plain": "A piece of work that is not worth its cost."
+    },
+    "keep": {
+      "plain": "An attribute that stays on the card as a row of its own."
+    },
+    "demote": {
+      "plain": "An attribute that stays in the data and shows only on hover or inside another row."
+    },
+    "dropa": {
+      "plain": "An attribute that leaves the inventory."
+    },
+    "imp": {
+      "plain": "The highest importance among the gaps this work closes, by your depth rule."
+    },
+    "grid": {
+      "plain": "A piece of work, placed by what it costs and how much it decides."
+    }
+  },
+  "takes": {
+    "grid": [
+      "The upper left corner is where to start: work that costs hours and closes gaps rated 3.",
+      "{nHours} of the {nBundles} pieces cost hours, because the map already produces the fact and only the inventory never named it.",
+      "Nothing on this page grades the code. Each piece adds a fact about what is there and how it behaves."
+    ],
+    "attrs": [
+      "{nKeep} attributes earn a question of their own and stay. {nDemote} stay in the data and leave the card's rows. {nDrop} leave the inventory.",
+      "The entity and the URL group stay as navigation, the way you already use them, and stop being a row."
+    ]
+  },
+  "wrong": {
+    "title": "One picture in the lab is wrong today",
+    "plain": "The Security panel lists the three app-wide checks in the order the code registers them, and they run in the reverse order.",
+    "fix": "The first piece of work corrects it, because the route already carries the true order."
+  },
+  "labels": {
+    "C-validation-cases": "validation cases, the 422 rules",
+    "A-Q10": "column facts of a table, which belong on the table's card"
+  }
+}

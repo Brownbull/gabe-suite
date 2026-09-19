@@ -1,0 +1,265 @@
+<title>Endpoint Card Leftovers</title>
+
+<!--__KIT1__-->
+<style>
+  /* ══ the page's own rules — the kit block above is pasted verbatim by gen-gaps.js ══ */
+  .artifact-page { margin: 0 auto; }            /* operator rule: an artifact's column is centred */
+  :root { --alert:#a3470a; --alert-soft:#fbeadb; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --alert:#f0a35a; --alert-soft:#3b2914; } }
+  :root[data-theme="dark"] { --alert:#f0a35a; --alert-soft:#3b2914; }
+
+  .eyebrow { font-size: var(--fs-min); letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0; }
+  h1 { font-size: 2em; line-height: 1.15; margin: 8px 0 0; text-wrap: balance; }
+  .lede { color: var(--ink-soft); max-width: 70ch; margin: 12px 0 0; }
+  .cap { font-size: var(--fs-sm); color: var(--ink-soft); margin: 0; max-width: 78ch; }
+  .sec-head { flex-wrap: wrap; }
+  .sec-head h2 { flex: 0 1 auto; min-width: 0; }
+  .sec-head .n { flex: 0 1 auto; min-width: 0; font-variant-numeric: tabular-nums; }
+  .panel { position: relative; }
+  .lab { font-size: var(--fs-min); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 2px 0 0; }
+
+  .btn { font: inherit; font-size: var(--fs-sm); letter-spacing: inherit; cursor: pointer; border-radius: 8px; padding: 5px 11px; border: 1px solid var(--rule); background: var(--raised); color: var(--ink); }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn[data-mine="true"] { border: 1.5px dashed var(--accent); color: var(--accent); }                      /* dashed = my recommendation */
+  .btn[aria-pressed="true"] { border: 1.5px solid var(--accent); background: var(--accent); color: var(--ground); }   /* solid = yours */
+  .btn.pri { background: var(--accent); border-color: var(--accent); color: var(--ground); }
+  .btn.pri:hover { filter: brightness(1.08); color: var(--ground); }
+  .btn.fold { background: transparent; color: var(--ink-soft); font-size: var(--fs-xs); padding: 3px 9px; align-self: flex-start; }
+  .btn[data-armed="true"] { border-color: var(--alert); color: var(--alert); background: var(--alert-soft); }
+  .verdict { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .state { font-size: var(--fs-min); color: var(--muted); letter-spacing: .04em; margin-left: 4px; }
+  [data-state="yours"] .state { color: var(--accent); }
+  .note[hidden] { display: none; }
+  .btn.nb { background: transparent; color: var(--ink-soft); font-size: var(--fs-xs); padding: 3px 9px; }
+  .btn.nb[data-has="true"] { border-color: var(--accent); color: var(--accent); }
+  .note { font: inherit; letter-spacing: inherit; font-size: var(--fs-sm); color: var(--ink); background: var(--raised); border: 1px solid var(--rule); border-radius: 8px; padding: 6px 10px; width: 100%; box-sizing: border-box; }
+
+  .take { border: 1px dashed var(--rule); border-radius: var(--radius, 10px); padding: 10px 14px; background: var(--raised); display: flex; flex-direction: column; gap: 4px; }
+  .take b { font-size: var(--fs-min); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 650; }
+  .take ul { margin: 0; padding-left: 1.15em; display: flex; flex-direction: column; gap: 3px; font-size: var(--fs-sm); color: var(--ink-soft); }
+
+  /* marks: a round black badge is a PIECE OF WORK's number · an outlined square is an importance · lit steps are an effort */
+  .num { display: inline-grid; place-items: center; min-width: 1.5em; height: 1.5em; padding: 0 .3em; box-sizing: border-box; border-radius: 999px; background: var(--strong); color: var(--ground); font-size: var(--fs-min); font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 0; flex: 0 0 auto; }
+  .rt { flex: 0 0 auto; display: inline-grid; place-items: center; width: 1.45em; height: 1.45em; border: 1px solid var(--rule); border-radius: 5px; font-size: var(--fs-min); font-variant-numeric: tabular-nums; color: var(--ink); background: var(--raised); letter-spacing: 0; }
+  .eff { display: inline-flex; align-items: center; gap: 7px; font-size: var(--fs-min); color: var(--ink-soft); cursor: default; white-space: nowrap; }
+  .eff .st { display: inline-flex; gap: 2px; }
+  .eff .st i { width: 9px; height: 9px; border-radius: 2px; border: 1px solid var(--rule); display: block; box-sizing: border-box; }
+  .eff .st i.on { background: var(--accent); border-color: var(--accent); }
+  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+  .meta .imp { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-min); color: var(--ink-soft); cursor: default; }
+
+  /* ── the grid: effort across, importance down ── */
+  .grid { display: grid; grid-template-columns: minmax(14ch, auto) repeat(3, minmax(0, 1fr)); gap: 6px; font-size: var(--fs-min); color: var(--ink-soft); }
+  .grid .hx, .grid .hy { display: flex; align-items: center; gap: 7px; padding: 2px 4px; letter-spacing: .06em; }
+  .grid .hx { justify-content: center; }
+  .grid .cellg { min-height: 58px; border: 1px solid var(--rule); border-radius: 8px; background: var(--card); display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: 7px; padding: 8px; }
+  .grid .cellg.start { background: color-mix(in srgb, var(--accent) 10%, var(--card)); border-color: color-mix(in srgb, var(--accent) 40%, var(--rule)); }
+  .grid .num { cursor: default; font-size: var(--fs-sm); min-width: 1.75em; height: 1.75em; }
+  .grid .num[data-mine="later"] { background: transparent; color: var(--ink); border: 1.5px solid var(--strong); }
+
+  /* ── one piece of work ── */
+  .works { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr)); gap: 14px; align-items: start; }
+  .work h3 { margin: 0; font-size: 1.05em; display: flex; align-items: center; gap: 9px; }
+  .work .gain { font-size: var(--fs-sm); color: var(--ink-soft); }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chips[hidden], .how[hidden] { display: none; }
+  .chip { font-size: var(--fs-min); color: var(--ink-soft); border: 1px solid var(--rule); border-radius: 999px; padding: 0 8px; line-height: 1.6; cursor: default; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-sizing: border-box; }
+  .chip.q { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .how { font-size: var(--fs-xs); color: var(--ink-soft); border-top: 1px dashed var(--rule); padding-top: 8px; margin: 0; overflow-wrap: anywhere; }
+
+  /* ── the nine attributes ── */
+  .rows { display: flex; flex-direction: column; gap: 8px; position: relative; }
+  .row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 24rem) auto; gap: 8px 20px; align-items: start; background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius, 10px); padding: 11px 14px; }
+  .row .nm { font-weight: 650; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .row .pl { font-size: var(--fs-sm); color: var(--ink-soft); margin-top: 3px; }
+  .row .qn { font-size: var(--fs-sm); color: var(--ink); }
+  .row .qn.none { color: var(--muted); }
+  .row .ctl { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+  .row .note { grid-column: 1 / -1; }
+  @media (max-width: 860px) { .row { grid-template-columns: minmax(0, 1fr); } .row .ctl { align-items: flex-start; } }
+
+  /* ── the wrong picture ── */
+  .wrong { border-left-color: var(--alert) !important; }
+  .orders { display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; align-items: center; font-size: var(--fs-sm); color: var(--ink-soft); }
+  .orders .seq { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .orders .box { border: 1px solid var(--rule); border-radius: 6px; padding: 2px 9px; background: var(--raised); color: var(--ink); }
+  .orders .arr { color: var(--muted); }
+
+  .tip { position: absolute; pointer-events: none; opacity: 0; background: var(--ink); color: var(--ground); font-size: var(--fs-min); letter-spacing: 0; line-height: 1.45; padding: 6px 9px; border-radius: 7px; z-index: 9; max-width: 46ch; transition: opacity .12s ease; }
+  .tip[data-show="true"] { opacity: 1; }
+  .tip .k { opacity: .68; margin-right: 6px; }
+  .tip .ln { display: block; }
+
+  .out { font: inherit; letter-spacing: inherit; font-size: var(--fs-sm); line-height: 1.5; color: var(--ink); background: var(--raised); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; width: 100%; box-sizing: border-box; min-height: 14em; resize: vertical; white-space: pre; overflow: auto; }
+  .acts { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; position: relative; }
+  .said { font-size: var(--fs-sm); color: var(--accent); min-height: 1.4em; }
+</style>
+
+<div class="artifact-page">
+  <header>
+    <p class="eyebrow">design context · loop 1 · between step 2 and step 3</p>
+    <h1>What the matrix left over, and what it costs</h1>
+    <p class="lede"><span id="n-items">—</span> leftovers from the matrix, each checked against the real map by six agents and verified by a seventh. They fold into <span id="n-b">—</span> pieces of work. My recommendation sits dashed on every one. Press a button to make it yours, then copy the text at the bottom.</p>
+  </header>
+
+  <section class="sec" data-sec="1" id="sec-grid">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"></path><circle cx="8" cy="8" r="1.5"></circle><circle cx="15" cy="12" r="1.5"></circle><circle cx="18" cy="17" r="1.5"></circle></svg>Cost against importance</h2><span class="n" id="grid-n">—</span></div>
+    <p class="cap">Each number is one piece of work. A filled number is one I would start now, a hollow one can wait.</p>
+    <div class="panel"><div class="grid" id="grid"></div></div>
+    <div class="take" id="take1"></div>
+  </section>
+
+  <section class="sec" data-sec="2" id="sec-wrong">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>One wrong picture</h2><span class="n">found along the way</span></div>
+    <div class="panel wrong"><p class="cap" id="wrong-plain"></p><div class="orders" id="orders"></div><p class="cap" id="wrong-fix"></p></div>
+  </section>
+
+  <section class="sec" data-sec="3" id="sec-works">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>The pieces of work</h2><span class="n" id="works-n">—</span></div>
+    <p class="cap">Cheapest first. Each card says what you gain, the questions it answers and the gaps it closes. "How" opens the technical detail.</p>
+    <div class="works" id="works"></div>
+  </section>
+
+  <section class="sec" data-sec="4" id="sec-attrs">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"></path><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"></circle></svg>Attributes no question needs</h2><span class="n" id="attrs-n">—</span></div>
+    <p class="cap">For each one, the question it could answer from data we already have. Where no question is worth asking, the attribute goes.</p>
+    <div class="rows" id="attrs"></div>
+    <div class="take" id="take2"></div>
+  </section>
+
+  <section class="sec" data-sec="5" id="sec-copy">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="m9 14 2 2 4-4"></path></svg>Your ruling</h2><span class="n">paste this back to me</span></div>
+    <div class="panel">
+      <textarea class="out" id="out" readonly spellcheck="false" aria-label="Your ruling as text"></textarea>
+      <div class="acts"><button class="btn pri" type="button" id="copy">Copy my ruling</button><button class="btn" type="button" id="reset">Clear everything</button><span class="said" id="said" aria-live="polite"></span></div>
+    </div>
+  </section>
+</div>
+
+<!--__KIT2__-->
+<!--__KIT3__-->
+<script>window.GAPS_DATA = /*__DATA__*/null;</script>
+<script>
+(function () {
+  "use strict";
+  var D = window.GAPS_DATA, KEY = "gabe:gaps:" + D.kind;
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+  function $(id) { return document.getElementById(id); }
+  function ln(k, v) { return '<span class="ln">' + (k ? '<span class="k">' + esc(k) + "</span>" : "") + esc(v) + "</span>"; }
+  function tipFor(stage) { var t = el("div", "tip"); t.setAttribute("role", "tooltip"); stage.appendChild(t); return t; }
+  function wire(node, tip, stage, html) {
+    node.addEventListener("mousemove", function (e) { var box = stage.getBoundingClientRect(); tip.innerHTML = typeof html === "function" ? html() : html; tip.setAttribute("data-show", "true");
+      var left = e.clientX - box.left + 14, top = e.clientY - box.top - tip.offsetHeight - 12; if (top < 0) top = e.clientY - box.top + 22;
+      tip.style.left = Math.max(0, Math.min(left, box.width - tip.offsetWidth - 4)) + "px"; tip.style.top = top + "px"; });
+    node.addEventListener("mouseleave", function () { tip.setAttribute("data-show", "false"); });
+  }
+  function effMark(e) { var w = D.effort[e], s = el("span", "eff"), st = el("span", "st"); for (var i = 0; i < 3; i++) { var b = el("i"); if (i < w.steps) b.className = "on"; st.appendChild(b); } s.appendChild(st); s.appendChild(document.createTextNode(w.word)); return s; }
+  function take(id, items) { var t = $(id); t.appendChild(el("b", null, "Take from this")); var ul = el("ul"); items.forEach(function (s) { ul.appendChild(el("li", null, s)); }); t.appendChild(ul); }
+
+  /* ── state: a verdict per piece of work and per attribute, keyed by their own ids ── */
+  var VALID = {}; D.bundles.forEach(function (b) { VALID[b.key] = 1; }); D.attrs.forEach(function (a) { VALID[a.id] = 1; });
+  var state = (function () { try { var s = JSON.parse(window.localStorage.getItem(KEY) || "null"); if (s && s.v) { Object.keys(s.v).forEach(function (k) { if (!VALID[k]) delete s.v[k]; }); return s; } } catch (e) {} return { v: {} }; })();
+  function save() { try { window.localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  var PAINT = [];
+  function verdict(host, tip, stage, id, mine, opts, noteHolder, placeholder) {
+    var v = el("div", "verdict"); v.setAttribute("role", "group"); var st = el("span", "state");
+    var btns = opts.map(function (o) { var b = el("button", "btn", o[1]); b.type = "button"; b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", function () { var s = state.v[id] || (state.v[id] = { v: null, n: "" }); s.v = s.v === o[0] ? null : o[0]; save(); paint(); paintOut(); }); wire(b, tip, stage, ln("", D.ui[o[2]])); v.appendChild(b); return b; });
+    var nb = el("button", "btn nb", "Note"); nb.type = "button"; nb.setAttribute("aria-expanded", "false"); v.appendChild(nb);
+    v.appendChild(st); host.appendChild(v);
+    var note = el("input", "note"); note.hidden = true;
+    nb.addEventListener("click", function () { if (!note.hidden && note.value) { note.focus(); return; } note.hidden = !note.hidden; nb.setAttribute("aria-expanded", String(!note.hidden)); if (!note.hidden) note.focus(); }); note.type = "text"; note.maxLength = 240; note.placeholder = placeholder; note.setAttribute("aria-label", "Note");
+    note.addEventListener("input", function () { var s = state.v[id] || (state.v[id] = { v: null, n: "" }); s.n = note.value; save(); nb.setAttribute("data-has", String(!!s.n)); paintOut(); }); noteHolder.appendChild(note);
+    function paint() { var s = state.v[id] || {}; btns.forEach(function (b, i) { b.setAttribute("aria-pressed", String(s.v === opts[i][0])); b.setAttribute("data-mine", String(!s.v && mine === opts[i][0])); });
+      host.setAttribute("data-state", s.v ? "yours" : "mine"); st.textContent = !s.v ? "still mine" : s.v === mine ? "yours · same as mine" : "yours · I said " + opts.filter(function (o) { return o[0] === mine; })[0][1].toLowerCase();
+      if (note.value !== (s.n || "")) note.value = s.n || "";
+      if (s.n) note.hidden = false; else if (document.activeElement !== note) note.hidden = true;
+      nb.setAttribute("data-has", String(!!s.n)); nb.setAttribute("aria-expanded", String(!note.hidden)); }
+    PAINT.push(paint); paint();
+  }
+
+  /* ═══ 1 · the grid ═══ */
+  (function () {
+    var g = $("grid"), tip = tipFor(g.parentNode), stage = g.parentNode, EFF = ["inventory", "lab", "arm"], IMP = [3, 2, 1];
+    g.appendChild(el("div", "hy", ""));
+    EFF.forEach(function (e) { var h = el("div", "hx"); h.appendChild(effMark(e)); wire(h, tip, stage, ln("", D.effort[e].plain)); g.appendChild(h); });
+    IMP.forEach(function (imp) {
+      if (!D.bundles.some(function (b) { return b.imp === imp; })) return;
+      var hy = el("div", "hy"); hy.appendChild(el("span", "rt", String(imp))); hy.appendChild(document.createTextNode("importance")); wire(hy, tip, stage, ln("", D.ui.imp)); g.appendChild(hy);
+      EFF.forEach(function (e, ei) { var c = el("div", "cellg" + (imp === 3 && ei === 0 ? " start" : "")); c.setAttribute("data-e", e); c.setAttribute("data-i", String(imp));
+        D.bundles.filter(function (b) { return b.effort === e && b.imp === imp; }).forEach(function (b) { var n = el("span", "num", String(b.n)); n.setAttribute("data-mine", b.mine); n.setAttribute("data-b", b.key); wire(n, tip, stage, ln("", b.name) + ln("", b.gain)); c.appendChild(n); });
+        g.appendChild(c); });
+    });
+    $("grid-n").textContent = D.bundles.filter(function (b) { return b.mine === "do"; }).length + " to start now · " + D.bundles.filter(function (b) { return b.mine !== "do"; }).length + " can wait";
+  })();
+
+  /* ═══ 2 · the wrong picture ═══ */
+  (function () {
+    $("wrong-plain").textContent = D.wrong.plain; $("wrong-fix").textContent = D.wrong.fix;
+    function seq(list) { var s = el("div", "seq"); list.forEach(function (x, i) { if (i) s.appendChild(el("span", "arr", "then")); s.appendChild(el("span", "box", x)); }); return s; }
+    var o = $("orders"); o.appendChild(el("span", null, "the lab lists")); o.appendChild(seq(D.wrong.drawn)); o.appendChild(el("span", null, "they run")); o.appendChild(seq(D.wrong.runs));
+    if (!D.wrong.isWrong) $("sec-wrong").hidden = true;
+  })();
+
+  /* ═══ 3 · the pieces of work ═══ */
+  var BV = [["do", "Do it", "do"], ["later", "Later", "later"], ["drop", "Drop", "dropb"]];
+  D.bundles.forEach(function (b) {
+    var card = el("div", "panel work"), tip = tipFor(card), h = el("h3"); card.setAttribute("data-b", b.key);
+    h.appendChild(el("span", "num", String(b.n))); h.appendChild(document.createTextNode(b.name)); card.appendChild(h);
+    card.appendChild(el("p", "gain", b.gain));
+    var meta = el("div", "meta"), ef = effMark(b.effort); wire(ef, tip, card, ln("", D.effort[b.effort].plain)); meta.appendChild(ef);
+    var im = el("span", "imp"); im.appendChild(el("span", "rt", String(b.imp))); im.appendChild(document.createTextNode("importance")); wire(im, tip, card, ln("", D.ui.imp)); meta.appendChild(im); card.appendChild(meta);
+    if (b.questions.length) { card.appendChild(el("p", "lab", "the questions it answers")); var qc = el("div", "chips"); b.questions.forEach(function (q) { var c = el("span", "chip q", q.id); wire(c, tip, card, ln("", q.text)); qc.appendChild(c); }); card.appendChild(qc); }
+    card.appendChild(el("p", "lab", "the gaps it closes")); var cc = el("div", "chips");
+    b.closes.forEach(function (x) { var c = el("span", "chip", x.label); wire(c, tip, card, ln("", x.plain) + ln("alone it would cost", D.effort[x.effort].word) + ln("importance", String(x.imp))); cc.appendChild(c); }); card.appendChild(cc);
+    var fold = el("button", "btn fold", "How"); fold.type = "button"; fold.setAttribute("aria-expanded", "false"); var how = el("p", "how", b.work); how.hidden = true;
+    fold.addEventListener("click", function () { how.hidden = !how.hidden; fold.setAttribute("aria-expanded", String(!how.hidden)); }); card.appendChild(fold); card.appendChild(how);
+    verdict(card, tip, card, b.key, b.mine, BV, card, "a note — optional");
+    $("works").appendChild(card);
+  });
+  $("works-n").textContent = D.bundles.length + " pieces · " + D.counts.items + " leftovers · " + D.counts.verified + " verified against the map";
+
+  /* ═══ 4 · the attributes ═══ */
+  var AV = [["keep", "Keep", "keep"], ["demote", "Demote", "demote"], ["drop", "Drop", "dropa"]];
+  (function () {
+    var host = $("attrs"), tip = tipFor(host);
+    D.attrs.forEach(function (a) {
+      var r = el("div", "row"); r.setAttribute("data-a", a.id);
+      var c1 = el("div"), nm = el("div", "nm"); nm.appendChild(document.createTextNode(a.label)); if (a.inBundle) { var nb = el("span", "num", String(a.inBundle)); wire(nb, tip, host, ln("", "The piece of work that gives this attribute its question.")); nm.appendChild(nb); }
+      c1.appendChild(nm); c1.appendChild(el("p", "pl", a.plain)); wire(nm, tip, host, ln("", a.detail)); r.appendChild(c1);
+      var c2 = el("div"); c2.appendChild(el("p", "lab", "the question it could answer")); c2.appendChild(el("p", "qn" + (a.question ? "" : " none"), a.question || "None worth asking.")); r.appendChild(c2);
+      var c3 = el("div", "ctl"); r.appendChild(c3); verdict(c3, tip, host, a.id, a.mine, AV, r, "a note — optional");
+      host.appendChild(r);
+    });
+    $("attrs-n").textContent = D.attrs.length + " attributes";
+  })();
+
+  take("take1", D.takes.grid); take("take2", D.takes.attrs);
+  $("n-items").textContent = D.counts.items; $("n-b").textContent = D.bundles.length;
+
+  /* ═══ 5 · your ruling ═══ */
+  function line(id, label, mine) { var s = state.v[id] || {}; return label + ": " + (s.v || mine) + (s.v ? (s.v === mine ? " (yours, same as mine)" : " (yours, I said " + mine + ")") : " (mine, untouched)") + (s.n ? " | " + s.n.replace(/\s+/g, " ").trim() : ""); }
+  function buildText() {
+    var L = ["RULING · leftovers · " + D.kind + " · eval " + D.hash + " · " + D.bundles.length + " pieces of work · " + D.attrs.length + " attributes"];
+    L.push("WORK (do · later · drop)"); D.bundles.forEach(function (b) { L.push(line(b.key, b.n + " " + b.name, b.mine)); });
+    L.push("ATTRIBUTES (keep · demote · drop)"); D.attrs.forEach(function (a) { L.push(line(a.id, a.label, a.mine)); });
+    var mineN = D.bundles.concat(D.attrs).filter(function (x) { return !(state.v[x.key || x.id] || {}).v; }).length;
+    L.push(mineN ? mineN + " untouched (my recommendation stands)" : "every line is yours"); return L.join("\n");
+  }
+  function paintOut() { $("out").value = buildText(); }
+  $("copy").addEventListener("click", function () {
+    var out = $("out"), say = $("said");
+    function done(ok) { say.textContent = ok ? "Copied. Paste it into the chat." : "Select the text above and press Ctrl+C."; if (!ok) { out.focus(); out.select(); } window.setTimeout(function () { say.textContent = ""; }, 5000); }
+    function fallback() { var ok = false; out.focus(); out.select(); try { ok = document.execCommand("copy"); } catch (e) {} done(ok); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(out.value).then(function () { done(true); }, fallback); else fallback();
+  });
+  var reset = $("reset"), armT = null;
+  reset.addEventListener("click", function () {
+    if (reset.getAttribute("data-armed") !== "true") { reset.setAttribute("data-armed", "true"); reset.textContent = "Press again to clear"; armT = window.setTimeout(function () { reset.setAttribute("data-armed", "false"); reset.textContent = "Clear everything"; }, 4000); return; }
+    window.clearTimeout(armT); reset.setAttribute("data-armed", "false"); reset.textContent = "Clear everything"; state = { v: {} }; save(); PAINT.forEach(function (f) { f(); }); paintOut();
+  });
+  paintOut();
+  window.__gaps = { text: buildText, data: D };
+})();
+</script>
