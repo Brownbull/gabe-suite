@@ -5016,6 +5016,25 @@ window.LABEP = {
    ],
    "note": "an arms-on build of the same twin (scripts/forms-dryrun.sh writes one to ~/.cache/gabe-map-baselines/.check/<target>/forms.json)"
   },
+  "through": {
+   "id": "p:0f099873d5",
+   "name": "first run",
+   "passed": 10,
+   "checks": 10,
+   "others": [
+    {
+     "id": "p:1ac75d260a",
+     "name": "already done",
+     "passed": 9
+    },
+    {
+     "id": "p:bba821f362",
+     "name": "replay",
+     "passed": 8
+    }
+   ],
+   "rule": "the success ending that passes the most checks; how often a route is really taken cannot be read from code"
+  },
   "paths": [
    {
     "id": "p:51719726e3",
@@ -5093,7 +5112,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": "settings.rate_limit_enabled or settings.is_production ∧ path starts /api/v1/cooking/sessions or path starts /api/v1/pantry/items/batch or path starts /api/v1/pantry/reset/apply or path starts /api/v1/pantry/resolve-batch or path starts /api/v1/recipe-creation or path starts /api/v1/setup/complete or path starts /api/v1/shopping/items ∧ not self._sensitive.allow(key, now)",
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._sensitive.allow(key, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 3,
@@ -5155,6 +5176,8 @@ window.LABEP = {
      "steps": 4,
      "gates": 1,
      "catches": 0,
+     "passed": 0,
+     "fired": 1,
      "branches": 0,
      "calls": 0
     }
@@ -5235,7 +5258,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._sensitive.allow(key, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 3,
@@ -5249,7 +5274,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": "settings.rate_limit_enabled or settings.is_production ∧ not self._global.allow(gkey, now)",
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._global.allow(gkey, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 4,
@@ -5311,6 +5338,8 @@ window.LABEP = {
      "steps": 5,
      "gates": 2,
      "catches": 0,
+     "passed": 1,
+     "fired": 1,
      "branches": 0,
      "calls": 0
     }
@@ -5388,7 +5417,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._sensitive.allow(key, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 3,
@@ -5402,7 +5433,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._global.allow(gkey, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 4,
@@ -5426,7 +5459,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 6,
@@ -5488,6 +5523,8 @@ window.LABEP = {
      "steps": 7,
      "gates": 3,
      "catches": 0,
+     "passed": 2,
+     "fired": 1,
      "branches": 0,
      "calls": 0
     }
@@ -5565,7 +5602,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._sensitive.allow(key, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 3,
@@ -5579,7 +5618,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._global.allow(gkey, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 4,
@@ -5603,7 +5644,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 6,
@@ -5665,6 +5708,8 @@ window.LABEP = {
      "steps": 7,
      "gates": 3,
      "catches": 0,
+     "passed": 2,
+     "fired": 1,
      "branches": 0,
      "calls": 0
     }
@@ -5745,7 +5790,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._sensitive.allow(key, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 3,
@@ -5759,7 +5806,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._global.allow(gkey, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 4,
@@ -5783,7 +5832,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 6,
@@ -5797,7 +5848,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 7,
@@ -5811,7 +5864,9 @@ window.LABEP = {
       "sub": "HTTPBearer bearer_scheme",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": null,
+      "via": "HTTPBearer bearer_scheme"
      },
      {
       "i": 8,
@@ -5873,6 +5928,8 @@ window.LABEP = {
      "steps": 9,
      "gates": 5,
      "catches": 0,
+     "passed": 4,
+     "fired": 1,
      "branches": 0,
      "calls": 0
     }
@@ -5950,7 +6007,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._sensitive.allow(key, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 3,
@@ -5964,7 +6023,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._global.allow(gkey, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 4,
@@ -5988,7 +6049,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 6,
@@ -6002,7 +6065,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 7,
@@ -6016,7 +6081,9 @@ window.LABEP = {
       "sub": "HTTPBearer bearer_scheme",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": null,
+      "via": "HTTPBearer bearer_scheme"
      },
      {
       "i": 8,
@@ -6041,7 +6108,9 @@ window.LABEP = {
       "sub": "except InvalidTokenError",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": null,
+      "via": "except InvalidTokenError"
      },
      {
       "i": 10,
@@ -6149,6 +6218,8 @@ window.LABEP = {
      "steps": 12,
      "gates": 6,
      "catches": 1,
+     "passed": 5,
+     "fired": 1,
      "branches": 0,
      "calls": 0
     }
@@ -6245,7 +6316,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._sensitive.allow(key, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 3,
@@ -6259,7 +6332,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._global.allow(gkey, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 4,
@@ -6283,7 +6358,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 6,
@@ -6297,7 +6374,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 7,
@@ -6311,7 +6390,9 @@ window.LABEP = {
       "sub": "HTTPBearer bearer_scheme",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": null,
+      "via": "HTTPBearer bearer_scheme"
      },
      {
       "i": 8,
@@ -6336,7 +6417,9 @@ window.LABEP = {
       "sub": "except InvalidTokenError",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": null,
+      "via": "except InvalidTokenError"
      },
      {
       "i": 10,
@@ -6350,7 +6433,9 @@ window.LABEP = {
       "sub": null,
       "split": "own-params",
       "cond": null,
-      "exit_kind": "validation"
+      "exit_kind": "validation",
+      "pred": null,
+      "via": null
      },
      {
       "i": 11,
@@ -6570,6 +6655,8 @@ window.LABEP = {
      "steps": 12,
      "gates": 7,
      "catches": 0,
+     "passed": 6,
+     "fired": 1,
      "branches": 0,
      "calls": 0
     }
@@ -6657,7 +6744,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._sensitive.allow(key, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 3,
@@ -6671,7 +6760,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._global.allow(gkey, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 4,
@@ -6695,7 +6786,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 6,
@@ -6709,7 +6802,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 7,
@@ -6723,7 +6818,9 @@ window.LABEP = {
       "sub": "HTTPBearer bearer_scheme",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": null,
+      "via": "HTTPBearer bearer_scheme"
      },
      {
       "i": 8,
@@ -6748,7 +6845,9 @@ window.LABEP = {
       "sub": "except InvalidTokenError",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": null,
+      "via": "except InvalidTokenError"
      },
      {
       "i": 10,
@@ -6762,7 +6861,9 @@ window.LABEP = {
       "sub": null,
       "split": "own-params",
       "cond": null,
-      "exit_kind": "validation"
+      "exit_kind": "validation",
+      "pred": null,
+      "via": null
      },
      {
       "i": 11,
@@ -6788,7 +6889,9 @@ window.LABEP = {
       "sub": "key is None",
       "split": null,
       "cond": "key is None",
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "key is None",
+      "via": null
      },
      {
       "i": 13,
@@ -6999,6 +7102,8 @@ window.LABEP = {
      "steps": 14,
      "gates": 8,
      "catches": 0,
+     "passed": 7,
+     "fired": 1,
      "branches": 0,
      "calls": 1
     }
@@ -7095,7 +7200,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._sensitive.allow(key, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 3,
@@ -7109,7 +7216,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._global.allow(gkey, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 4,
@@ -7133,7 +7242,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 6,
@@ -7147,7 +7258,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 7,
@@ -7161,7 +7274,9 @@ window.LABEP = {
       "sub": "HTTPBearer bearer_scheme",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": null,
+      "via": "HTTPBearer bearer_scheme"
      },
      {
       "i": 8,
@@ -7186,7 +7301,9 @@ window.LABEP = {
       "sub": "except InvalidTokenError",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": null,
+      "via": "except InvalidTokenError"
      },
      {
       "i": 10,
@@ -7200,7 +7317,9 @@ window.LABEP = {
       "sub": null,
       "split": "own-params",
       "cond": null,
-      "exit_kind": "validation"
+      "exit_kind": "validation",
+      "pred": null,
+      "via": null
      },
      {
       "i": 11,
@@ -7226,7 +7345,9 @@ window.LABEP = {
       "sub": "key is None",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "key is None",
+      "via": null
      },
      {
       "i": 13,
@@ -7262,7 +7383,9 @@ window.LABEP = {
       "sub": "except SetupInProgressError",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "claimed.outcome is ClaimOutcome.IN_PROGRESS",
+      "via": "except SetupInProgressError"
      },
      {
       "i": 16,
@@ -7704,6 +7827,8 @@ window.LABEP = {
      "steps": 18,
      "gates": 9,
      "catches": 1,
+     "passed": 8,
+     "fired": 1,
      "branches": 1,
      "calls": 2
     }
@@ -7818,7 +7943,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._sensitive.allow(key, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 3,
@@ -7832,7 +7959,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._global.allow(gkey, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 4,
@@ -7856,7 +7985,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 6,
@@ -7870,7 +8001,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 7,
@@ -7884,7 +8017,9 @@ window.LABEP = {
       "sub": "HTTPBearer bearer_scheme",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": null,
+      "via": "HTTPBearer bearer_scheme"
      },
      {
       "i": 8,
@@ -7909,7 +8044,9 @@ window.LABEP = {
       "sub": "except InvalidTokenError",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": null,
+      "via": "except InvalidTokenError"
      },
      {
       "i": 10,
@@ -7923,7 +8060,9 @@ window.LABEP = {
       "sub": null,
       "split": "own-params",
       "cond": null,
-      "exit_kind": "validation"
+      "exit_kind": "validation",
+      "pred": null,
+      "via": null
      },
      {
       "i": 11,
@@ -7949,7 +8088,9 @@ window.LABEP = {
       "sub": "key is None",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "key is None",
+      "via": null
      },
      {
       "i": 13,
@@ -7985,7 +8126,9 @@ window.LABEP = {
       "sub": "except SetupInProgressError",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "claimed.outcome is ClaimOutcome.IN_PROGRESS",
+      "via": "except SetupInProgressError"
      },
      {
       "i": 16,
@@ -8009,7 +8152,9 @@ window.LABEP = {
       "sub": "except ConsentRequiredError",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "latest is None or latest.policy_version != CONSENT_POLICY_VERSION",
+      "via": "except ConsentRequiredError"
      },
      {
       "i": 18,
@@ -8601,6 +8746,8 @@ window.LABEP = {
      "steps": 21,
      "gates": 10,
      "catches": 2,
+     "passed": 9,
+     "fired": 1,
      "branches": 2,
      "calls": 2
     }
@@ -8775,7 +8922,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._sensitive.allow(key, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 3,
@@ -8789,7 +8938,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._global.allow(gkey, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 4,
@@ -8813,7 +8964,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 6,
@@ -8827,7 +8980,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 7,
@@ -8841,7 +8996,9 @@ window.LABEP = {
       "sub": "HTTPBearer bearer_scheme",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": null,
+      "via": "HTTPBearer bearer_scheme"
      },
      {
       "i": 8,
@@ -8866,7 +9023,9 @@ window.LABEP = {
       "sub": "except InvalidTokenError",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": null,
+      "via": "except InvalidTokenError"
      },
      {
       "i": 10,
@@ -8880,7 +9039,9 @@ window.LABEP = {
       "sub": null,
       "split": "own-params",
       "cond": null,
-      "exit_kind": "validation"
+      "exit_kind": "validation",
+      "pred": null,
+      "via": null
      },
      {
       "i": 11,
@@ -8906,7 +9067,9 @@ window.LABEP = {
       "sub": "key is None",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "key is None",
+      "via": null
      },
      {
       "i": 13,
@@ -9649,6 +9812,8 @@ window.LABEP = {
      "steps": 18,
      "gates": 8,
      "catches": 0,
+     "passed": 8,
+     "fired": 0,
      "branches": 1,
      "calls": 3
     }
@@ -9823,7 +9988,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._sensitive.allow(key, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 3,
@@ -9837,7 +10004,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._global.allow(gkey, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 4,
@@ -9861,7 +10030,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 6,
@@ -9875,7 +10046,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 7,
@@ -9889,7 +10062,9 @@ window.LABEP = {
       "sub": "HTTPBearer bearer_scheme",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": null,
+      "via": "HTTPBearer bearer_scheme"
      },
      {
       "i": 8,
@@ -9914,7 +10089,9 @@ window.LABEP = {
       "sub": "except InvalidTokenError",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": null,
+      "via": "except InvalidTokenError"
      },
      {
       "i": 10,
@@ -9928,7 +10105,9 @@ window.LABEP = {
       "sub": null,
       "split": "own-params",
       "cond": null,
-      "exit_kind": "validation"
+      "exit_kind": "validation",
+      "pred": null,
+      "via": null
      },
      {
       "i": 11,
@@ -9954,7 +10133,9 @@ window.LABEP = {
       "sub": "key is None",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "key is None",
+      "via": null
      },
      {
       "i": 13,
@@ -9990,7 +10171,9 @@ window.LABEP = {
       "sub": "except SetupInProgressError",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "claimed.outcome is ClaimOutcome.IN_PROGRESS",
+      "via": "except SetupInProgressError"
      },
      {
       "i": 16,
@@ -10838,6 +11021,8 @@ window.LABEP = {
      "steps": 20,
      "gates": 9,
      "catches": 0,
+     "passed": 9,
+     "fired": 0,
      "branches": 2,
      "calls": 3
     }
@@ -11012,7 +11197,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._sensitive.allow(key, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 3,
@@ -11026,7 +11213,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._global.allow(gkey, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 4,
@@ -11050,7 +11239,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 6,
@@ -11064,7 +11255,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 7,
@@ -11078,7 +11271,9 @@ window.LABEP = {
       "sub": "HTTPBearer bearer_scheme",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": null,
+      "via": "HTTPBearer bearer_scheme"
      },
      {
       "i": 8,
@@ -11103,7 +11298,9 @@ window.LABEP = {
       "sub": "except InvalidTokenError",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": null,
+      "via": "except InvalidTokenError"
      },
      {
       "i": 10,
@@ -11117,7 +11314,9 @@ window.LABEP = {
       "sub": null,
       "split": "own-params",
       "cond": null,
-      "exit_kind": "validation"
+      "exit_kind": "validation",
+      "pred": null,
+      "via": null
      },
      {
       "i": 11,
@@ -11143,7 +11342,9 @@ window.LABEP = {
       "sub": "key is None",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "key is None",
+      "via": null
      },
      {
       "i": 13,
@@ -11179,7 +11380,9 @@ window.LABEP = {
       "sub": "except SetupInProgressError",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "claimed.outcome is ClaimOutcome.IN_PROGRESS",
+      "via": "except SetupInProgressError"
      },
      {
       "i": 16,
@@ -11203,7 +11406,9 @@ window.LABEP = {
       "sub": "except ConsentRequiredError",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "latest is None or latest.policy_version != CONSENT_POLICY_VERSION",
+      "via": "except ConsentRequiredError"
      },
      {
       "i": 18,
@@ -12789,6 +12994,8 @@ window.LABEP = {
      "steps": 22,
      "gates": 10,
      "catches": 0,
+     "passed": 10,
+     "fired": 0,
      "branches": 3,
      "calls": 3
     }
@@ -12864,7 +13071,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._sensitive.allow(key, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 3,
@@ -12878,7 +13087,9 @@ window.LABEP = {
       "sub": "RateLimitMiddleware",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": "not self._global.allow(gkey, now)",
+      "via": "RateLimitMiddleware"
      },
      {
       "i": 4,
@@ -12902,7 +13113,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 6,
@@ -12916,7 +13129,9 @@ window.LABEP = {
       "sub": null,
       "split": "body-parse",
       "cond": null,
-      "exit_kind": "framework"
+      "exit_kind": "framework",
+      "pred": null,
+      "via": null
      },
      {
       "i": 7,
@@ -12930,7 +13145,9 @@ window.LABEP = {
       "sub": "HTTPBearer bearer_scheme",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": null,
+      "via": "HTTPBearer bearer_scheme"
      },
      {
       "i": 8,
@@ -12955,7 +13172,9 @@ window.LABEP = {
       "sub": "except InvalidTokenError",
       "split": null,
       "cond": null,
-      "exit_kind": "refusal"
+      "exit_kind": "refusal",
+      "pred": null,
+      "via": "except InvalidTokenError"
      },
      {
       "i": 10,
@@ -12969,7 +13188,9 @@ window.LABEP = {
       "sub": null,
       "split": "own-params",
       "cond": null,
-      "exit_kind": "validation"
+      "exit_kind": "validation",
+      "pred": null,
+      "via": null
      },
      {
       "i": 11,
@@ -13175,6 +13396,8 @@ window.LABEP = {
      "steps": 12,
      "gates": 7,
      "catches": 0,
+     "passed": 7,
+     "fired": 0,
      "branches": 0,
      "calls": 0
     }
@@ -21279,11 +21502,14 @@ window.LABEP = {
    {
     "file": "apps/api/main.py",
     "gates": 80,
-    "line": 124,
-    "order": 0,
+    "line": 132,
+    "order": 2,
     "scope": "all",
-    "name": "IdempotencyMiddleware",
-    "id": "middleware:IdempotencyMiddleware"
+    "name": "CORSMiddleware",
+    "id": "middleware:CORSMiddleware",
+    "runs": 0,
+    "registered": 2,
+    "of": 3
    },
    {
     "file": "apps/api/main.py",
@@ -21292,16 +21518,22 @@ window.LABEP = {
     "order": 1,
     "scope": "all",
     "name": "RateLimitMiddleware",
-    "id": "middleware:RateLimitMiddleware"
+    "id": "middleware:RateLimitMiddleware",
+    "runs": 1,
+    "registered": 1,
+    "of": 3
    },
    {
     "file": "apps/api/main.py",
     "gates": 80,
-    "line": 132,
-    "order": 2,
+    "line": 124,
+    "order": 0,
     "scope": "all",
-    "name": "CORSMiddleware",
-    "id": "middleware:CORSMiddleware"
+    "name": "IdempotencyMiddleware",
+    "id": "middleware:IdempotencyMiddleware",
+    "runs": 2,
+    "registered": 0,
+    "of": 3
    }
   ],
   "app_middleware": {
@@ -21360,7 +21592,8 @@ window.LABEP = {
   "idempotency_table": "idempotency_keys",
   "commits": true,
   "stream": false,
-  "exported": true
+  "exported": true,
+  "asgi_order": "runs"
  },
  "git_touches": {
   "commits": [],

@@ -1959,6 +1959,42 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
     ok(await p.$eval('#portt', e => e.textContent) === 'first run', 'the portrait names the path as its subject');
     ok((await p.$$('#portbody .ptchain .ptcr')).length === N.frSteps, `the path record draws all ${N.frSteps} chain steps, in order`); }
 
+  // ── LEFTOVERS piece 1 · THE ROUTE, IN ORDER: checks passed and fired per route · the through-route · the condition on a PASSED check ·
+  //    the app band in the order it RUNS (it was drawn in registration order, the reverse) ──
+  { const rowsOf = () => p.$$eval('#portbody .ptrow', els => els.map(e => [e.querySelector('.k').textContent, e.querySelector('.v').textContent]));
+    const F1 = await p.evaluate(() => { const f = window.LABEP.forms, by = n => f.paths.find(x => x.names.drawn === n);
+      const gates = x => x.chain.filter(c => c.kind === 'gate');
+      return { through: f.through, fr: by('first run').n, cr: by('consent required').n, crId: by('consent required').id, frId: by('first run').id,
+        crPassedWithPred: gates(by('consent required')).filter(c => c.hit === false && c.pred).map(c => ({ i: c.i, pred: c.pred })),
+        recount: f.paths.map(x => [x.n.passed, gates(x).filter(c => c.hit === false).length, x.n.fired, gates(x).filter(c => c.hit === true).length]),
+        succ: f.paths.filter(x => x.kind === 'success').map(x => [x.names.drawn, x.n.passed]),
+        refusalsFireOne: f.paths.filter(x => x.kind !== 'success' && x.kind !== 'uncaught').every(x => x.n.fired === 1) }; });
+    ok(F1.recount.every(r => r[0] === r[1] && r[2] === r[3]), 'every route\'s passed and fired counts are the chain\'s own gate rows, recounted here');
+    ok(F1.through && F1.through.name === 'first run' && F1.succ.every(s => s[1] <= F1.through.passed) && F1.through.passed === F1.through.checks, 'the through-route is the success ending that passes the most checks — all of them', JSON.stringify(F1.succ));
+    ok(F1.refusalsFireOne, 'every refusal is exactly one check firing');
+    let rows = await rowsOf(); const get = k => (rows.find(r => r[0] === k) || [])[1];
+    ok(get('checks') === `${F1.fr.passed} passed · ${F1.fr.fired} fired`, 'the path record counts the checks this route passed and fired', get('checks'));
+    ok(/passes every check/.test(get('route') || ''), 'the through-route says so on its own record', get('route'));
+    await p.evaluate(id => window.selectPath(id), F1.crId); await p.waitForTimeout(260);
+    rows = await rowsOf();
+    ok(get('checks') === `${F1.cr.passed} passed · ${F1.cr.fired} fired` && F1.cr.fired === 1 && !rows.some(r => r[0] === 'route'), 'a refusal\'s record counts its one fired check and makes no through-route claim', JSON.stringify(rows.filter(r => r[0] === 'checks' || r[0] === 'route')));
+    ok(F1.crPassedWithPred.length >= 2, 'a PASSED check carries its condition too (the feed fills it only on the one that fired)', F1.crPassedWithPred.length);
+    { const g = F1.crPassedWithPred[F1.crPassedWithPred.length - 1];
+      await p.$eval(`#portbody .ptchain .ptcr[data-step="${g.i}"]`, e => e.scrollIntoView({ block: 'center' })); await p.hover(`#portbody .ptchain .ptcr[data-step="${g.i}"]`); await p.waitForTimeout(260);
+      const card = await p.evaluate(() => { const c = document.getElementById('hover'); return c && !c.hidden ? c.innerText : ''; });
+      ok(card.includes(g.pred.slice(0, 30)) && /passed it/.test(card), 'hovering a passed check shows the condition it checked', card.replace(/\s+/g, ' ').slice(0, 160)); }
+    await p.mouse.move(5, 5); await p.evaluate(id => window.selectPath(id), F1.frId); await p.waitForTimeout(260); }
+  { await p.evaluate(() => { window.showTab('security'); }); await p.waitForTimeout(320);
+    const B = await p.evaluate(() => { const asgi = window.LABEP.security.asgi, fr = window.LABEP.forms.paths.find(x => x.names.drawn === 'first run');
+      const seen = []; fr.chain.forEach(c => { const hit = asgi.find(m => new RegExp(m.name.replace(/Middleware$/, ''), 'i').test((c.label || '') + ' ' + (c.at || '')) || (/rate_limit/.test(c.at || '') && /Rate/i.test(m.name))); if (hit && !seen.includes(hit.name)) seen.push(hit.name); });
+      return { lanes: [...document.querySelectorAll('#panel .lane[data-lane]')].map(e => [e.dataset.lane, e.querySelector('.lo').textContent]), chainOrder: seen,
+        runs: asgi.map(m => [m.name, m.runs, m.registered]), word: window.LABEP.security.asgi_order }; });
+    ok(B.word === 'runs' && B.runs.every(r => r[1] !== null), 'the feed gives the app-wide steps a RUN order', JSON.stringify(B.runs));
+    ok(JSON.stringify(B.lanes.map(l => l[0])) === JSON.stringify(B.chainOrder) && B.chainOrder.length === B.lanes.length, 'the app band is drawn in the order the ROUTE runs it — read off the chain, never the registration index', B.lanes.map(l => l[0]).join(' → ') + ' vs chain ' + B.chainOrder.join(' → '));
+    ok(B.lanes.map(l => l[1]).join(',') === B.lanes.map((_, i) => String(i + 1)).join(','), 'and numbered 1 · 2 · 3 in that order', B.lanes.map(l => l[1]).join(','));
+    ok(B.runs.some(r => r[1] !== r[2]), 'the run order differs from the registration order in this app, so the old picture was wrong, not merely relabelled', JSON.stringify(B.runs));
+    await p.evaluate(() => { window.showTab('data'); }); await p.waitForTimeout(200); }
+
   const fpOf = () => p.evaluate(() => { const parts = [];
     ['#cmd', '#pathstrip', '#panel', '#headstrip', '#portbody', '#portvars', '#cmd .cmdtip'].forEach(sel => { const e = document.querySelector(sel);
       if (!e) { parts.push(sel + ':none'); return; } const cs = getComputedStyle(e);

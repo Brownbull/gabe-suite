@@ -114,6 +114,7 @@ def forms_slice(fj: dict, ID: str, ep: dict) -> dict:
             o.update({"settings": w.get("settings"), "expr": w.get("expr"), "when": w.get("when"), "refs": w.get("refs"), "settings_class": w.get("settings_class")})
         return o
 
+    _pre_pred = {g_.get("exit"): g_.get("pred") for g_ in (ep.get("preconditions") or []) if g_.get("exit")}   # a guard's condition, joined to the ending it produces
     def step_rec(c, i):
         k = c.get("kind"); o = {"i": i, "kind": k, "phase": c.get("phase"), "hit": c.get("hit"), "at": c.get("at"), "ref": c.get("ref")}
         if k == "step":
@@ -121,6 +122,7 @@ def forms_slice(fj: dict, ID: str, ep: dict) -> dict:
         elif k == "gate":
             x = exit_rec(c["ref"]); o["status"] = x.get("status"); o["label"] = (str(x.get("status") or "?") + " " + (x.get("detail") or x.get("code") or x.get("reason") or "")).strip()
             o["sub"] = x.get("via") or x.get("pred"); o["split"] = c.get("split"); o["cond"] = c.get("cond"); o["exit_kind"] = x.get("kind")
+            o["pred"] = x.get("pred") or _pre_pred.get(c.get("ref")); o["via"] = x.get("via")   # the condition in the author's words — on a PASSED check too (the feed fills `cond` only on the one that fired)
         elif k == "switch":
             w = switch_rec(c["ref"]); o["label"] = w.get("kind")
             st = w.get("settings"); o["sub"] = w.get("port") or (", ".join(sorted(st)) if isinstance(st, dict) else ", ".join(st) if isinstance(st, list) else None) or w.get("via")
@@ -182,6 +184,7 @@ def forms_slice(fj: dict, ID: str, ep: dict) -> dict:
                       "tests": [case_rec(t) for t in (p.get("tests") or [])],
                       "partial": p.get("partial"), "proven_by": p.get("proven_by"), "anywhere": p.get("anywhere"),
                       "n": {"steps": len(chain), "gates": sum(1 for c in chain if c["kind"] == "gate"), "catches": sum(1 for c in chain if c["kind"] == "catch"),
+                            "passed": sum(1 for c in chain if c["kind"] == "gate" and c.get("hit") is False), "fired": sum(1 for c in chain if c["kind"] == "gate" and c.get("hit") is True),
                             "branches": sum(1 for c in chain if c["kind"] == "branch"), "calls": sum(1 for c in chain if c["kind"] in ("call", "collapsed"))}})
     # exits in request order: every produced / framework / return row, with the paths that end there
     by_exit = {}
@@ -208,7 +211,11 @@ def forms_slice(fj: dict, ID: str, ep: dict) -> dict:
                 "guard": (guard | {"piece": "fe:apps/web/src/routes/RequireSetup.tsx#RequireSetup"}) if guard else None,
                 "screens": {k: v for k, v in fe_named("InitialSetupScreen.tsx").items()},
                 "client": fe.get("client"), "present": bool(fe)}
-    return {"paths": paths, "exits": exits, "stages": [{"phase": ph, "exits": stage_of.get(ph, [])} for ph in PHASES],
+    _succ = sorted((p for p in paths if p["kind"] == "success"), key=lambda p: (-p["n"]["passed"], p["id"]))
+    through = ({"id": _succ[0]["id"], "name": _succ[0]["names"]["drawn"], "passed": _succ[0]["n"]["passed"], "checks": _succ[0]["n"]["gates"],
+                "others": [{"id": p["id"], "name": p["names"]["drawn"], "passed": p["n"]["passed"]} for p in _succ[1:]],
+                "rule": "the success ending that passes the most checks; how often a route is really taken cannot be read from code"} if _succ else None)
+    return {"through": through, "paths": paths, "exits": exits, "stages": [{"phase": ph, "exits": stage_of.get(ph, [])} for ph in PHASES],
             "preconditions": [dict(g, exit_rec=exit_rec(g.get("exit"))) for g in (ep.get("preconditions") or [])],
             "branches": list(branches.values()), "switches": [switch_rec(i) for i in switches],
             "collapsed": ep.get("collapsed") or [], "returns": returns,
@@ -532,6 +539,14 @@ def main() -> int:
                                           "note": "an arms-on build of the same twin (scripts/forms-dryrun.sh writes one to ~/.cache/gabe-map-baselines/.check/<target>/forms.json)" if forms_path else "the example feed as committed (arms off by default)"}}
                 if _fe:
                     forms_block.update(forms_slice(_fj, ID, _fe))
+                _mw = _fj.get("middleware") or {}
+                for _m in security["asgi"]:
+                    _o = (_mw.get(_m.get("id")) or {}).get("order") or {}
+                    _m["runs"] = _o.get("runs"); _m["registered"] = _o.get("registered"); _m["of"] = _o.get("of")
+                if security["asgi"] and all(_m.get("runs") is not None for _m in security["asgi"]):
+                    security["asgi"].sort(key=lambda _m: _m["runs"]); security["asgi_order"] = "runs"
+                else:
+                    security["asgi_order"] = "registered"; security["asgi_order_why"] = "the feed carries no run order for the app-wide steps (the kinds arm is off) — this is the order the code registers them in, which Starlette runs in reverse"
             else:
                 forms_block = {"state": "absent", "reason": _fj.get("reason") or "forms.json holds no forms", "endpoint": None}
         except Exception as _exc:  # noqa: BLE001

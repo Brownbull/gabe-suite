@@ -39,7 +39,7 @@ tooltip · portrait. The channel column stays empty until M3 (the channel budget
 | the endings (paths) | relation list | 2 · 9 · 22 | **3** | the endings ARE the behaviour | with code | own | mid |
 | the stage an ending leaves from | order (1 of 8) | 1 per ending | **3** | position gives the structure quickly (D-007) | with code | own | far / mid |
 | the ordered chain per ending (the eight kinds of step, in request order) | order (relation list) | 4 · 14 · 22 | **3** (proposed) | the chain IS the flow, and every later fact attaches to one of its steps; already in the lab's facts (piece 1) | with code | own | near |
-| the checks met, in run order (passed · fired) | order (relation list) | to measure when piece 1 lands | 2 (proposed) | order and the passed marks give context to the check that fired | with code | own | mid |
+| the checks met, in run order (passed · fired) | order (relation list) | 0 · 6 · 10 on an endpoint's longest route (0 · 4 · 10 over all 743 routes) | 2 (proposed) | order and the passed marks give context to the check that fired | with code | own | mid |
 | the route that passes every check (and the check each other route fires) | relation | 1 per endpoint | **3** (proposed) | the through-route the exceptions are exceptions to; how often a route is really taken cannot be read from code | with code | own | mid |
 | the predicate per decision point (with the deeper raises the route does not translate) | text + relation | to measure when piece 6 lands | **3** (proposed) | what determines the path, in the author's words | with code | relation | near |
 | status code per ending | category + text | 2 · 7 · 11 distinct | 2 | specific — the middle's filter, never the command | with code | own | mid |

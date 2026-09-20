@@ -475,10 +475,10 @@
     band.append(E("div", { class: "bhd" }, sechd("shield", "App band", SEC.asgi.length, false), E("span", { class: "bnote" }, "scope ALL · gates " + (SEC.app_middleware || {}).gates_endpoints + " of " + FW.endpoints + " endpoints" + ((SEC.app_middleware || {}).saturated ? " — saturated: it separates nothing" : ""))));
     var lanes = E("div", { class: "lanes" });
     SEC.asgi.forEach(function(m){
-      var lane = E("div", { class: "lane" }, E("span", { class: "lo" }, String(m.order)), ico("shield", 13, S.OPC.gate), E("b", null, esc(m.name)), E("span", { class: "lg2" }, m.gates + " gated"));
-      lane.dataset.lane = m.name;
-      bind(lane, card({ title: m.name, icon: "shield", color: S.OPC.gate, sub: "ASGI middleware · order " + m.order + " · scope " + m.scope,
-        rows: [["runs", "before every handler, in order " + m.order], ["gates", m.gates + " endpoints"], ["file", m.file + ":" + m.line], ["tie to this door", "— measured at APP scope only; no per-endpoint wire exists"]],
+      var lane = E("div", { class: "lane" }, E("span", { class: "lo" }, runsNo(m)), ico("shield", 13, S.OPC.gate), E("b", null, esc(m.name)), E("span", { class: "lg2" }, m.gates + " gated"));
+      lane.dataset.lane = m.name; lane.dataset.runs = m.runs == null ? "" : String(m.runs);
+      bind(lane, card({ title: m.name, icon: "shield", color: S.OPC.gate, sub: "ASGI middleware · " + runsWord(m) + " · scope " + m.scope,
+        rows: [["runs", "before every handler — " + runsWord(m)], ["registered", m.registered == null ? "—" : ordinal(m.registered + 1) + " in the code — the last one registered runs first"], ["gates", m.gates + " endpoints"], ["file", m.file + ":" + m.line], ["tie to this door", "— measured at APP scope only; no per-endpoint wire exists"]],
         body: "H — posture: the band is LIT because it is measured; the tie to this one door is not, so no wire is drawn." }));
       lanes.append(lane); });
     band.append(lanes); body.append(band);
@@ -1850,9 +1850,9 @@
     stop({ icon: "down", title: "request", sub: F.identity.method + " " + F.identity.path, col: S.OPC.read,
       card: card({ title: "the request arrives", icon: "down", sub: F.identity.method + " " + F.identity.path, rows: [["body", (F.data.schemas.request.name || "—") + " · " + (F.data.schemas.request.cols || []).length + " fields"]] }) });
     lane.append(E("i", { class: "sarr", html: ico("drill", 13, "var(--muted)") }));
-    SEC.asgi.forEach(function(m){ stop({ lane: m.name, icon: "shield", title: m.name.replace(/Middleware$/, ""), sub: "app · order " + m.order + " · " + m.gates + " gated", col: S.OPC.gate, cls: "app",
+    SEC.asgi.forEach(function(m){ stop({ lane: m.name, icon: "shield", title: m.name.replace(/Middleware$/, ""), sub: "app · " + runsWord(m) + " · " + m.gates + " gated", col: S.OPC.gate, cls: "app",
       card: card({ title: m.name, icon: "shield", color: S.OPC.gate, sub: "ASGI middleware · scope " + m.scope,
-        rows: [["order", String(m.order)], ["gates", m.gates + " of " + FW.endpoints + " endpoints"], ["file", m.file + ":" + m.line], ["tie to this door", "— measured at APP scope only"]] }) });
+        rows: [["runs", runsWord(m)], ["gates", m.gates + " of " + FW.endpoints + " endpoints"], ["file", m.file + ":" + m.line], ["tie to this door", "— measured at APP scope only"]] }) });
       lane.append(E("i", { class: "sarr", html: ico("drill", 13, "var(--muted)") })); });
     SEC.guards.forEach(function(g){ stop({ dep: g.name, icon: g.gate ? "key" : "link", title: g.name, sub: g.via + (g.gate ? " · GATE" : " · resource") + " · " + Math.round(100 * g.feedwide / FW.endpoints) + "% of doors", col: g.gate ? S.OPC.gate : "var(--muted)", cls: g.gate ? "gate" : "",
       card: card({ title: g.name, icon: g.gate ? "key" : "link", color: g.gate ? S.OPC.gate : null, sub: g.via,
@@ -3171,6 +3171,10 @@
       if (hd && hd.nextSibling) panelEl.insertBefore(strip, hd.nextSibling); else panelEl.insertBefore(strip, panelEl.firstChild); } }
 
   /* ══ THE THREE PORTRAITS — Path · Exit · Case, on the card law (a record mirrors its thing) ══ */
+  /* an app-wide step's place is the order it RUNS in (the feed's middleware order); the registration index is the reverse and is never shown as "order" */
+  function ordinal(n){ var s = ["th", "st", "nd", "rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+  function runsNo(m){ return m.runs == null ? "?" : String(m.runs + 1); }
+  function runsWord(m){ return m.runs == null ? "run order not read (the kinds reading is off)" : "runs " + ordinal(m.runs + 1) + " of " + m.of; }
   function ptRow(k, v, col){ return '<div class="ptrow"><span class="k">' + esc(k) + '</span><span class="v"' + (col ? ' style="color:' + col + '"' : "") + ">" + esc(v) + "</span></div>"; }
   function ptSec(t){ return '<div class="ptsec">' + esc(t) + "</div>"; }
   function pathPortrait(box, F, S){ var p = selPath(F);
@@ -3179,7 +3183,9 @@
     b.insertAdjacentHTML("beforeend", '<div class="ptttl">' + ico(K.ico || "info", 15, col) + "<b>" + esc(pathWord(p)) + "</b></div>");
     b.insertAdjacentHTML("beforeend", ptRow("status", String(p.status), col) + ptRow("kind", K.word || p.kind) + ptRow("stage", p.phase)
       + ptRow("exit", (p.exit || {}).detail || (p.exit || {}).kind || "—") + ptRow("via", (p.exit || {}).via || "—")
-      + ptRow("at", (p.exit || {}).at || "—"));
+      + ptRow("at", (p.exit || {}).at || "—")
+      + ptRow("checks", p.n.passed + " passed · " + p.n.fired + " fired")
+      + (F.forms.through && F.forms.through.id === p.id ? ptRow("route", "passes every check — the route that gets through") : ""));
     b.insertAdjacentHTML("beforeend", ptSec("the chain · " + p.n.steps + " steps"));
     var tb = E("div", { class: "ptchain" });
     (p.chain || []).forEach(function(c){
@@ -3194,7 +3200,7 @@
       if (c.hit === true) r.append(E("i", { class: "ptcf" }, "fired"));
       bind(r, function(){ return cmdc({ title: String(c.label || c.kind), value: c.kind, icon: ci,
         rows: [["step", String(c.i)], ["stage", c.phase || "—"], ["at", c.at || "—"], c.hit != null ? ["fired", c.hit ? "yes — this is the one that ended it" : "no — the request passed it"] : null,
-               c.cond ? ["condition", String(c.cond).slice(0, 160)] : null, c.fn ? ["function", String(c.fn)] : null],
+               (c.cond || c.pred) ? ["condition", String(c.cond || c.pred).slice(0, 160)] : null, c.fn ? ["function", String(c.fn)] : null],
         plain: c.kind === "gate" ? "a check that can end the request right here" : c.kind === "switch" ? "a setting or a binding that changes what happens next"
           : c.kind === "branch" ? "a fork in the handler — this path took one arm" : c.kind === "catch" ? "where the raise was caught and turned into an answer"
           : c.kind === "exit" ? "the ending itself" : "one step the request runs through" }); });
