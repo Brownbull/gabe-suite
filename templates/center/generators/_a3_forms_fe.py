@@ -37,6 +37,23 @@ HTTP_VERBS = frozenset({"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTION
 CLIENT_HOOKS = frozenset({"useQueryClient"})                  # the value a helper is handed when it writes the cache
 MUTATE_CALLS = frozenset({"mutate", "mutateAsync"})           # `m.mutate(body, { onError })` — the callback's error is m's request
 REASON_MEMBERS = ("detail", "code")                             # what a client reads to tell two refusals of one status apart (Slice 11c)
+# ── what a reason branch does (Slice 11e) ────────────────────────────────────────────────────────────�
+# A class comes from a library BINDER or a library callee SHAPE, never from a local name: `navigate`, `t`, `refetch`, `setX` are just locals.
+DOES_CLASSES = ("navigate", "throw", "render", "return", "retry", "refresh", "request", "message", "surface", "state", "log", "other")   # ladder order
+DOES_STATES = ("read", "mixed", "empty", "beyond one level", "no-rows", "unread")     # `beyond one level`: the comparison is handed back, the caller decides (the estate's phrase, D29)
+DOES_CAP = 24
+NAV_BINDERS = frozenset({"useNavigate"})                    # react-router v6/v7 · @tanstack/react-router: const navigate = useNavigate(); navigate("/x") · navigate({ to })
+NAV_ROUTER_BINDERS = frozenset({"useRouter"})               # next/navigation · next/router · @tanstack/react-router
+NAV_ROUTER_METHODS = frozenset({"push", "replace", "navigate"})   # next: router.push/replace · TanStack: router.navigate({ to })
+NAV_CALLS = frozenset({"redirect", "permanentRedirect"})    # next/navigation: CALLED, not thrown; the thrown TanStack redirect stays NAV_THROWS
+NAV_STATIC = frozenset({"NextResponse.redirect", "Response.redirect"})   # next/server route handlers · the Fetch API static
+NAV_PLATFORM = r"(?:window\.)?location\.(?:assign|replace|reload)"       # DOM Location (`location.href = …` is an assignment: no flow row)
+REFETCH_MEMBERS = frozenset({"refetch"})                    # @tanstack/query-core QueryObserverResult.refetch
+MESSAGE_BINDERS = {"useTranslations": None}                 # next-intl: the bound value IS t. react-i18next's useTranslation waits for a target that installs it (D29)
+SURFACE_CALLS = frozenset({"toast"})                         # the export sonner · react-hot-toast · react-toastify share: toast(msg) and toast.<level>(msg); the row's `from` says library or project
+SURFACE_LEVELS = frozenset({"error", "success", "warning", "warn", "info", "message", "loading"})   # sonner levels + react-toastify's warn
+STATE_BINDERS = frozenset({"useState", "useReducer"})        # react: index 1 of the bound pair is the setter / dispatch
+LOG_CALLS = r"console\.(?:error|warn|info|log|debug)"       # the Console API
 # the defaults a query client uses when nothing sets them, READ from the installed package — each value names its source
 # and the lowest version it was read on; a lock file below that version (or none) reads `unknown`, never a guess
 LIBRARY_DEFAULTS = {

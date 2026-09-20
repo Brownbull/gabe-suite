@@ -149,7 +149,7 @@ assert f2["frontend"]["pieces"]["fe:src/lib/useMe.ts#useMe"]["form"] == "hook" a
 assert a["stats"]["guards"] == 7 and a["stats"]["findings"] == {"action-uncalled": 1, "dead-control": 4, "no-rollback": 1, "redirect-loop": 1} and "fe:src/components/Views.tsx#SyncError" in f2["frontend"]["pieces"] and "fe:src/store/prefs.ts#usePrefsStore" in f2["frontend"]["stores"] and a["bytes"] > 0 and sorted(f2["arms"]) == sorted(F.ARM_ORDER), a
 assert f2["present"] is False and f2["arm_findings"]["frontend"][0]["id"] == "redirect-loop" and "fe:src/routes/RequireSetup.tsx#RequireSetup" in f2["frontend"]["pieces"]
 f6 = B.extend_frontend(copy.deepcopy(FORMS_R), fe_arm, HERE / "fixture", {}, graph=GRAPH)
-assert f6["arms"]["frontend"]["stats"]["findings"] == {"action-uncalled": 1, "branch-unproduced": 1, "client-detail-unmatched": 1, "dead-control": 4, "no-rollback": 1, "reason-collapsed": 1, "redirect-loop": 1} and len(f6["frontend"]["reasons"]["sites"]) == 14, f6["arms"]["frontend"]["stats"]
+assert f6["arms"]["frontend"]["stats"]["findings"] == {"action-uncalled": 1, "branch-unproduced": 1, "client-detail-unmatched": 1, "dead-control": 4, "no-rollback": 1, "reason-collapsed": 1, "redirect-loop": 1} and len(f6["frontend"]["reasons"]["sites"]) == 25, f6["arms"]["frontend"]["stats"]
 B._flow = lambda repo: (None, "extractor timed out after 300s")
 f4 = B.extend_frontend({"present": True, "endpoints": {}}, fe_arm, HERE / "fixture", {}, graph=GRAPH)
 assert f4["arms"]["frontend"]["reason"] == "flow capture: extractor timed out after 300s" and "frontend" not in f4
@@ -282,14 +282,168 @@ assert (rq["receiver"], rq["branch"], rq["endpoints"], rq["origins"][0]["kind"])
 un = S[at("src/lib/api/errors.ts", "value.status >= 400")]
 assert (un["endpoints"], un["origins"][0]["kind"], un["origins"][0]["reason"]) == ([], "unknown", "no call site passes error"), un
 rd = {(x["fn"], x["receiver"]): x for x in r["readers"]["endpoint:POST /setup/complete"]}
-assert sorted(rd) == [("ErrorBody", "error"), ("conflictMessage", "error"), ("setupErrorMessage", "error")], sorted(rd)
+assert sorted(rd) == [("ErrorBody", "error"), ("SetupFailure", "complete.error"), ("conflictMessage", "error"), ("setupErrorMessage", "error")], sorted(rd)
 assert {x["exit"]: x["site"] for x in rd[("setupErrorMessage", "error")]["routes"]} == {"x:401": "rest", "x:inprog": s409["id"], "x:consent": s409["id"], "x:locked": "rest", "x:500": "rest"}
 assert {x["exit"]: x["site"] for x in rd[("ErrorBody", "error")]["routes"]}["x:locked"] == eb["id"]
 assert not [s for s in r["sites"] if s["at"].startswith("src/lib/api/client.ts")] and all(re.fullmatch(r"r-[0-9a-f]{10}", s["id"]) for s in r["sites"])
 lm, sv = S[at(f, "res.status === 401")], S[at(f, "response.status === 422")]
 assert [(o["kind"], o["endpoints"]) for o in lm["origins"]] == [("fetch", ["endpoint:GET /me"])] and [(o["kind"], o["endpoints"]) for o in sv["origins"]] == [("fetch", ["endpoint:PATCH /settings"])], (lm, sv)
-assert rs == {"sites": 14, "reads_status": 11, "reads_detail": 1, "reads_code": 2, "joined": 11, "unknown": 3, "endpoints": 3, "routed": 9, "rest": 11}, rs
+does_stats = rs.pop("does")                          # Slice 11e adds ONE stats key; the nine before it keep their meaning (F21 reads the new one)
+assert rs == {"sites": 25, "reads_status": 22, "reads_detail": 1, "reads_code": 2, "joined": 14, "unknown": 11, "endpoints": 3, "routed": 12, "rest": 13}, rs   # SetupFailureEdges adds 8 comparisons on a plain parameter: no request reached, the routing stays put
+assert json.dumps(reason(), sort_keys=True) == json.dumps(reason(), sort_keys=True), "the reason part is deterministic"
 assert len([s for s in r["sites"] if s["at"].startswith("src/store/session.ts")]) == 1, "a store action's comparison is counted once, not again in its action body"
+PY
+
+py "F21 · what a reason branch DOES (Slice 11e), from the REAL capture — FIRE: a returned literal, a read detail, a rendered element, a quoted detail site, a call classed by its binder, and one row per class in walk order; SILENT: a comparison that picks a value, one handed back to the caller, a store action, the transport file" <<'PY'
+r, rs, _ = reason()
+S = {s["at"]: s for s in r["sites"]}
+f, g = "src/routes/SetupForm.tsx", "src/routes/SetupFailure.tsx"
+cls = lambda s: [d["class"] for d in s["does"]]
+s409 = S[at(f, "error.status === 409) return")]
+assert [(d["class"], d.get("literal")) for d in s409["does"]] == [("return", "setup in progress")] and s409["branch"] == "none" and s409["does_state"] == "read", s409
+cm = S[at(f, "error.status === 409) {")]
+assert cm["branch"] == "reads" and cls(cm) == ["return"] and cm["does"][0]["reads"] == ["detail"], cm                     # the word is untouched; the row carries its evidence
+eb = S[at(f, 'error.code === "setup_locked"')]
+assert [(d["class"], d["k"], d.get("tag")) for d in eb["does"]] == [("render", "ret", "p")] and "branch" not in eb, eb     # a code site has no word, and now has rows: ONE row for a returned tree
+dt = next(s for s in r["sites"] if s["reads"] == "detail")
+assert [(d["class"], d.get("literal")) for d in dt["does"]] == [("return", "consent")] and dt["does_state"] == "read", dt   # the QUOTED pattern: a detail site finds its branch
+rq = S[at("src/routes/RequireSetup.tsx", ".status === 401")]
+assert [(d["class"], d["callee"], d.get("from")) for d in rq["does"]] == [("other", "signOut", "bind:useAuth")] and rq["ctx"] == ["callback:useEffect"], rq
+assert not [d for d in rq["does"] if d.get("callee") == "pushToast"], "a row under the NEGATED guard is not the branch's"
+a, b, c = S[at(g, "status === 401")], S[at(g, "status === LOCKED")], S[at(g, "status === 500")]
+assert [(d["class"], d.get("to"), d.get("from"), d.get("bare")) for d in a["does"]] == [("navigate", "/login", "bind:useNavigate", None), ("return", None, None, True)], a["does"]
+assert [(d["class"], d["how"], d.get("by")) for d in b["does"]] == [("retry", "mutate", "name")] and b["value"] == 423, b["does"]   # a named constant: the row belongs to the NEAREST comparison, and says it matched by name
+assert cls(c) == ["surface", "message", "refresh", "refresh", "state", "log", "request", "other", "state", "throw"], cls(c)
+by = {d["class"] + str(i): d for i, d in enumerate(c["does"])}
+assert (by["surface0"]["level"], by["message1"]["key"], by["message1"]["from"]) == ("error", "failed", "bind:useTranslations"), c["does"][:2]
+assert (by["refresh2"]["how"], by["refresh2"]["key"], by["refresh3"]["how"]) == ("invalidate", ["me"], "refetch"), c["does"][2:4]      # another request's refetch is a refresh, never a retry
+assert (by["request6"]["method"], by["request6"]["endpoint"]) == ("GET", "endpoint:GET /me") and by["state8"]["in"] == ["callback:setTimeout"] and by["state8"]["returned"] is True, c["does"][6:9]
+assert (by["throw9"]["callee"], by["throw9"]["args"]) == ("Error", ["failed"]) and not [d for d in c["does"] if d["k"] == "new"], c["does"][-1]   # the thrown `new Error(…)` is the throw's own row
+me = S[at(f, "me.error.status === 401")]
+assert (me["does"], me["does_state"], me["branch"]) == ([], "no-rows", "value"), me                                        # SILENT: a comparison that picks a value
+assert [s["does_state"] for s in r["sites"] if s["at"].startswith("src/lib/api/errors.ts")] == ["beyond one level"] * 2    # SILENT: handed back to the caller, who decides — not followed
+assert [(s["does"], s["does_state"]) for s in r["sites"] if s["at"].startswith("src/store/session.ts")] == [([], "no-rows")]  # SILENT: a value inside a call's argument is not a comparison handed back
+assert not [s for s in r["sites"] if s["at"].startswith("src/lib/api/client.ts")]
+assert all(d["class"] in FER.FF.DOES_CLASSES and d["at"].startswith(s["piece"][3:].split("#")[0] + ":") for s in r["sites"] for d in s["does"]) and all(s["does_state"] in FER.FF.DOES_STATES for s in r["sites"])
+assert all((s["does_state"] in ("read", "mixed")) == bool(s["does"]) for s in r["sites"]), "a state word that says rows were read means rows"
+ds = rs["does"]
+assert ds["rows"] == sum(len(s["does"]) for s in r["sites"]) and sorted(ds["sites"]) == sorted(FER.FF.DOES_STATES) and sorted(ds["classes"]) == sorted(FER.FF.DOES_CLASSES) and sum(ds["sites"].values()) == len(r["sites"]) and ds["narrowed"] == 2, ds
+# the shapes the review of the four dry-run feeds found (SetupFailureEdges.tsx) — each row pinned WHOLE, so a stray `when`, `in`, `passes` or `returned` fails
+e = "src/routes/SetupFailureEdges.tsx"
+E = lambda text, nth=1: S[at(e, text, nth)]
+picks, effect = E("failure.status === 403", 1), E("failure.status === 403", 2)
+assert (picks["does"], picks["does_state"], picks.get("ctx")) == ([], "no-rows", None), picks                              # SILENT: it picks a value and opens no branch — the identical `if` in the effect owns its rows
+assert effect["does"] == [{"k": "call", "at": at(e, "onRetry();"), "callee": "onRetry", "from": "param", "class": "other"}] and effect["ctx"] == ["callback:useEffect"], effect   # a destructured props parameter IS a parameter
+assert [s["does_state"] for s in r["sites"] if s["at"] == at(e, "f.status === 401")] == ["beyond one level"] * 2            # grouping parentheses are not a call: still the function's own answer
+assert E("failure.status === 503")["does"] == [{"k": "call", "at": at(e, "refetch();"), "callee": "refetch", "from": "bind:useMe", "class": "refresh", "how": "refetch"}]   # a destructured member is its binder's; on a plain parameter's comparison it is another request's
+assert E("failure.status === 409")["does"] == [{"k": "new", "at": at(e, 'return new Response("")'), "callee": "Response", "args": [""], "class": "other", "returned": True}]   # `return new X()` is ONE row
+assert E("failure.status === 410")["does"] == [{"k": "call", "at": at(e, "return NextResponse.redirect("), "callee": "NextResponse.redirect", "class": "navigate", "to": "/auth/create-account", "returned": True}]   # the wrapped `new URL("/…")` feeds `to` and is not a row
+w = E("failure.status === 502")["does"]
+assert [(d["callee"], d.get("from"), d["class"]) for d in w[:2]] == [("res .json() .catch", "param", "other"), ("res .json", "param", "other")], w[:2]   # a wrapped chain keeps its text and finds its name
+assert (w[2]["class"], w[2]["in"]) == ("return", ["callback:catch"]) and (w[3]["class"], w[3]["callee"], w[3].get("clipped"), len(w[3]["value"])) == ("throw", "Error", True, 80) and len(w) == 4, w[2:]
+assert not [d for s in r["sites"] for d in s["does"] if d.get("clipped") and "value" not in d and "callee" not in d], "clipped sits on a row that carries the clipped text"
+PY
+
+py "F22 · the class comes from the BINDER and the request, never from a local name — mutants: a renamed navigation hook, a fetch aimed at the site's own endpoint, a mutate on another request, a swapped guard polarity" <<'PY'
+g = "src/routes/SetupFailure.tsx"
+def does(flow, text):
+    r, _, _ = reason(flow)
+    return next(s for s in r["sites"] if s["at"] == at(g, text))["does"]
+def mut(fn):
+    m = copy.deepcopy(FLOW); fn(m["byFile"][g]["flow"]["bodies"]["SetupFailure"]["rows"]); return m
+def rename_hook(rows):
+    next(x for x in rows if x.get("callee") == "useNavigate")["callee"] = "useNav"
+assert [d["class"] for d in does(mut(rename_hook), "status === 401")] == ["other", "return"], "a local called `navigate` is only a name: without the library binder it is class other"
+def aim_fetch(rows):
+    x = next(x for x in rows if x.get("callee") == "fetch"); x["args"] = ["/api/v1/setup/complete"]; x["opts"] = {"method": "POST"}; x["props"] = {"method": "POST"}
+got = [d for d in does(mut(aim_fetch), "status === 500") if d.get("callee") == "fetch"]
+assert [(d["class"], d["how"]) for d in got] == [("retry", "fetch")], got                                       # the SAME request sent again is a retry …
+def other_mutation(rows):
+    next(x for x in rows if x.get("callee") == "complete.mutate")["callee"] = "save.mutate"
+assert [d["class"] for d in does(mut(other_mutation), "status === LOCKED")] == ["request"], "… and a mutate on ANOTHER request is a request"
+def flip(rows):
+    for x in rows:
+        for gd in x.get("guards") or []:
+            if gd["pred"].endswith("=== 500"): gd["neg"] = True
+r2, _, _ = reason(mut(flip))
+s500 = next(s for s in r2["sites"] if s["at"] == at(g, "status === 500"))
+assert s500["does"] == [] and s500["does_state"] in ("no-rows", "empty"), "rows under the ELSE arm are not the branch's"
+def retest(rows):                                                                                               # `else { if (same comparison) { … } }` — the rows are the NESTED comparison's
+    for x in rows:
+        gs = x.get("guards") or []
+        if gs and gs[0]["pred"].endswith("=== 500"): x["guards"] = [{"pred": gs[0]["pred"], "neg": True}, *gs]
+assert does(mut(retest), "status === 500") == [], "a row whose guard AT THE SITE'S DEPTH is negated is not the branch's, whatever a deeper guard says"
+def nav_prop(rows):                                                                                             # `navigate` handed in as a prop, aimed at a path that happens to be an endpoint's
+    next(x for x in rows if x.get("callee") == "useNavigate")["callee"] = "useNav"
+    next(x for x in rows if x.get("callee") == "navigate")["args"] = ["/me"]
+assert [(d["class"], d.get("endpoint")) for d in does(mut(nav_prop), "status === 401")] == [("other", None), ("return", None)], "a literal path alone is never a request, even when it joins an endpoint"
+def deeper(rows):
+    next(x for x in rows if x.get("callee") == "console.warn")["guards"].append({"pred": "verbose"})
+got = {d.get("callee"): d.get("when") for d in does(mut(deeper), "status === 500")}
+assert got["console.warn"] == [{"pred": "verbose"}] and got["toast.error"] is None, got                          # `when` is what ELSE must hold, never the branch condition itself
+e = "src/routes/SetupFailureEdges.tsx"
+def edges(fn):
+    m = copy.deepcopy(FLOW); fn(m["byFile"][e]["flow"]["bodies"]["SetupFailureEdges"]["rows"]); return m
+def site(flow, text, nth=1):
+    r, _, _ = reason(flow)
+    return next(s for s in r["sites"] if s["at"] == at(e, text, nth))
+def swap_receiver(rows):                                                                                        # the design's own example: `const { error, refetch } = useMe()` … `if (error?.status === 503) refetch()`
+    for x in rows:
+        if x.get("left") == "failure.status" and x.get("right") == 503: x["left"] = "error?.status"
+        for gd in x.get("guards") or []:
+            if gd["pred"] == "failure.status === 503": gd["pred"] = "error?.status === 503"
+assert [(d["class"], d["how"]) for d in site(edges(swap_receiver), "failure.status === 503")["does"]] == [("retry", "refetch")], "the comparison's receiver and the refetch come from ONE call: the same request again"
+def only_lets(rows):
+    for x in rows:
+        if x.get("callee") == "onRetry": x["k"] = "let"
+assert (site(edges(only_lets), "failure.status === 403", 2)["does"], site(edges(only_lets), "failure.status === 403", 2)["does_state"]) == ([], "empty")
+def long_guard(rows):
+    for x in rows:
+        if x.get("callee") == "onRetry": x["guards"] = [{"pred": "a" * 130}]
+assert site(edges(long_guard), "failure.status === 403", 2)["does_state"] == "unread"
+def flood(rows):
+    i, x = next((i, x) for i, x in enumerate(rows) if x.get("callee") == "onRetry")
+    rows[i:i] = [copy.deepcopy(x) for _ in range(29)]
+s30 = site(edges(flood), "failure.status === 403", 2)
+assert (len(s30["does"]), s30["does_more"], s30["does_state"]) == (24, 6, "read"), s30["does_more"]
+def same_line(rows):
+    i, x = next((i, x) for i, x in enumerate(rows) if x["k"] == "cmp" and x.get("right") == 503)
+    rows.insert(i + 1, copy.deepcopy(x))
+r9, _, _ = reason(edges(same_line))
+assert [(s["does_state"], len(s["does"])) for s in r9["sites"] if s["at"] == at(e, "failure.status === 503")] == [("mixed", 1)] * 2, "two that read the same on ONE line share the rows, and say so"
+def apart(rows):                                                                                                # the same comparison twice, on two lines: each owns its rows
+    for x in rows:
+        if x.get("right") == 409 and x["k"] == "cmp": x["right"] = 503
+        for gd in x.get("guards") or []:
+            if gd["pred"] == "failure.status === 409": gd["pred"] = "failure.status === 503"
+        x["after"] = [a for a in x.get("after") or [] if a["pred"] != "failure.status === 409"]
+r8, _, _ = reason(edges(apart))
+assert [[d["callee"] for d in s["does"]] for s in r8["sites"] if s["value"] == 503] == [["refetch"], ["Response"]] and all(s["does_state"] == "read" for s in r8["sites"] if s["value"] == 503), "line order parts two identical branches"
+PY
+
+py "F23 · arms only add (Slice 11e): with the new keys stripped, the reason part over the capture is byte-equal to a reading with no does[] — the word, the ids, the origins, the routes and the findings never move" <<'PY'
+r, rs, found = reason()
+keep = copy.deepcopy(r)
+for s in keep["sites"]:
+    for k in ("does", "does_state", "does_more", "ctx"): s.pop(k, None)
+ids = [s["id"] for s in r["sites"]]
+assert len(set(ids)) == len(ids) and all(set(s) <= {"id", "piece", "at", "receiver", "reads", "op", "value", "classified", "branch", "origins", "endpoints"} for s in keep["sites"]), "a site carries only the Slice 11c keys once the new ones are stripped"
+saved, FER._does = FER._does, (lambda *a, **k: ([], "no-rows", False, 0))          # the reading with the new pass switched off
+try:
+    r0, rs0, found0 = reason()
+finally:
+    FER._does = saved
+for s in r0["sites"]:
+    for k in ("does", "does_state", "does_more", "ctx"): s.pop(k, None)
+rs.pop("does"); rs0.pop("does")
+assert json.dumps([keep, rs, found], sort_keys=True) == json.dumps([r0, rs0, found0], sort_keys=True)
+g = "src/routes/SetupFailure.tsx"                                                                              # the WORD rests on the Slice 11c textual selection, never on the narrowed rows
+m = copy.deepcopy(FLOW)
+x = next(x for x in m["byFile"][g]["flow"]["bodies"]["SetupFailure"]["rows"] if x.get("callee") == "complete.mutate")
+x["guards"], x["refs"] = [{"pred": "complete.error?.status === 401"}], ["complete.error.detail"]              # a dead twin AFTER the 401 branch returned, reading the detail
+r1, rs1, _ = reason(m)
+s401 = next(s for s in r1["sites"] if s["at"] == at(g, "status === 401"))
+assert s401["branch"] == "reads" and [d["class"] for d in s401["does"]] == ["navigate", "return"], s401      # the word says reads (the textual selection holds the twin); the rows do not carry the twin
 PY
 
 py "F14 · reason findings FIRE: a status-only branch on a shared status, a status no reached endpoint produces, a code no exit says; SILENT on a branch that reads the detail, a status with no shared-status, a site that reaches no endpoint" <<'PY'

@@ -391,7 +391,8 @@ def extend_frontend(forms, fe, repo, cfg: dict | None = None, graph: dict | None
             frontend["pieces"] = dict(sorted(frontend["pieces"].items()))
             frontend["client"], cstats = FEF.client_part(flow, repo, hooks)
             import _a3_fe_reason as FER
-            frontend["reasons"], rstats, rfound = FER.reason_part(flow, forms, hooks, frontend["client"]["transport"], {p["id"] for p in (fe or {}).get("pieces") or []})
+            frontend["reasons"], rstats, rfound = FER.reason_part(flow, forms, hooks, frontend["client"]["transport"], {p["id"] for p in (fe or {}).get("pieces") or []},
+                                                                  {p["id"] for p in (fe or {}).get("pieces") or [] if p.get("kind") == "store"})
             import _a3_fe_controls as FEC
             controls, kstats, kfound = FEC.controls_part(flow, fe)
             for pid, ctl in controls.items():                                # a component that also queries or guards keeps both
