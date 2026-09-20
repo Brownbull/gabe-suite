@@ -1,0 +1,280 @@
+<title>Leftovers Review</title>
+
+<!--__KIT1__-->
+<style>
+  /* ══ the page's own rules — the kit block above is pasted verbatim by gen-review.js ══ */
+  .artifact-page { margin: 0 auto; }            /* operator rule: an artifact's column is centred */
+  .eyebrow { font-size: var(--fs-min); letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0; }
+  h1 { font-size: 2em; line-height: 1.15; margin: 8px 0 0; text-wrap: balance; }
+  .lede { color: var(--ink-soft); max-width: 72ch; margin: 12px 0 0; }
+  .cap { font-size: var(--fs-sm); color: var(--ink-soft); margin: 0; max-width: 80ch; }
+  .sec-head { flex-wrap: wrap; }
+  .sec-head .n { flex: 0 1 auto; min-width: 0; font-variant-numeric: tabular-nums; }
+  .lab { font-size: var(--fs-min); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 2px 0 0; }
+  .panel { position: relative; }
+
+  .btn { font: inherit; font-size: var(--fs-sm); letter-spacing: inherit; cursor: pointer; border-radius: 8px; padding: 5px 11px; border: 1px solid var(--rule); background: var(--raised); color: var(--ink); }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn[data-mine="true"] { border: 1.5px dashed var(--accent); color: var(--accent); }                      /* dashed = my pick */
+  .btn[aria-pressed="true"] { border: 1.5px solid var(--accent); background: var(--accent); color: var(--ground); }   /* filled = yours */
+  .btn.pri { background: var(--accent); border-color: var(--accent); color: var(--ground); }
+  .btn.pri:hover { filter: brightness(1.08); color: var(--ground); }
+  .btn.nb { background: transparent; color: var(--ink-soft); font-size: var(--fs-xs); padding: 3px 9px; }
+  .btn.nb[data-has="true"] { border-color: var(--accent); color: var(--accent); }
+  .btn.sm { font-size: var(--fs-xs); padding: 2px 8px; border-radius: 6px; }
+  .verdict { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .state { font-size: var(--fs-min); color: var(--muted); letter-spacing: .04em; margin-left: 4px; }
+  [data-state="yours"] .state { color: var(--accent); }
+  .note { font: inherit; letter-spacing: inherit; font-size: var(--fs-sm); color: var(--ink); background: var(--raised); border: 1px solid var(--rule); border-radius: 8px; padding: 6px 10px; width: 100%; box-sizing: border-box; resize: vertical; min-height: 2.6em; }
+  .note[hidden] { display: none; }
+
+  /* the key: what dashed and filled mean, drawn with the real buttons */
+  .key { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; font-size: var(--fs-sm); color: var(--ink-soft); margin-top: 14px; }
+  .key span { display: inline-flex; align-items: center; gap: 7px; }
+  .key .btn { cursor: default; pointer-events: none; }
+
+  /* ── the lab, as a map ── */
+  .labmap { position: relative; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; background: #0b1020; }
+  .labmap img { display: block; width: 100%; height: auto; }
+  .labmap .rg { position: absolute; border: 2px solid var(--accent); border-radius: 6px; box-sizing: border-box; }
+  .labmap .rg b { position: absolute; left: -2px; top: -2px; transform: translateY(-100%); background: var(--accent); color: var(--ground); font-size: var(--fs-min); font-weight: 650; letter-spacing: .04em; padding: 1px 7px; border-radius: 5px 5px 0 0; white-space: nowrap; }
+  .labmap .rg[data-r="middle"] b { top: auto; bottom: -2px; transform: translateY(100%); border-radius: 0 0 5px 5px; }
+  .labmap .rg[data-r="parts"] b { left: auto; right: -2px; top: 50%; transform: translate(100%, -50%); border-radius: 0 5px 5px 0; }
+
+  /* ── the 36 lines ── */
+  .norms { display: flex; flex-direction: column; gap: 14px; }
+  .ngroup { display: flex; flex-direction: column; gap: 3px; }
+  .ngroup h3 { margin: 0 0 3px; font-size: 1em; color: var(--ink); display: flex; gap: 8px; align-items: baseline; }
+  .ngroup h3 span { font-size: var(--fs-min); color: var(--muted); font-weight: 400; }
+  .nrow { display: grid; grid-template-columns: 6.2em minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; padding: 5px 8px; border-radius: 7px; border: 1px solid transparent; }
+  .nrow:nth-child(even) { background: var(--raised); }
+  .nrow[data-v="strike"] .ln { text-decoration: line-through; color: var(--muted); }
+  .nrow[data-state="yours"] { border-color: var(--accent); }
+  .nrow .st { font-size: var(--fs-min); letter-spacing: .08em; color: var(--muted); padding-top: 2px; }
+  .nrow .ln { font-size: var(--fs-sm); color: var(--ink); overflow-wrap: anywhere; }
+  .nrow .ln mark { background: var(--accent-soft); color: var(--accent); border-radius: 3px; padding: 0 2px; }
+  .nrow .db { display: block; font-size: var(--fs-xs); color: var(--accent); margin-top: 2px; }
+  .nrow .note { grid-column: 2 / -1; }
+  @media (max-width: 760px) { .nrow { grid-template-columns: minmax(0, 1fr); } .nrow .note { grid-column: 1 / -1; } }
+
+  /* ── one decision per card ── */
+  .cards { display: flex; flex-direction: column; gap: 14px; }
+  .dec { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 14px 28px; align-items: start; }
+  .dec[data-state="yours"] { border-left-color: var(--strong) !important; }
+  .dec > .dl, .dec > .dr { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .dec > .full { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; }
+  @media (max-width: 900px) { .dec { grid-template-columns: minmax(0, 1fr); } }
+  .dec h3 { margin: 0; font-size: 1.05em; text-wrap: balance; }
+  .dec .what { font-size: var(--fs-sm); color: var(--ink-soft); margin: 0; }
+  .dec .why { font-size: var(--fs-sm); color: var(--ink); margin: 0; border-left: 2px dashed var(--accent); padding-left: 9px; }
+  .where { margin: 0; padding: 0; list-style: none; counter-reset: w; display: flex; flex-direction: column; gap: 3px; font-size: var(--fs-sm); color: var(--ink); }
+  .where li { counter-increment: w; display: flex; gap: 8px; align-items: baseline; overflow-wrap: anywhere; }
+  .where li::before { content: counter(w); flex: 0 0 auto; width: 1.5em; height: 1.5em; line-height: 1.5em; text-align: center; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-size: var(--fs-min); font-variant-numeric: tabular-nums; }
+  .shot { display: block; max-width: 100%; height: auto; border: 1px solid var(--rule); border-radius: 8px; background: #0b1020; }
+  .facts { border: 1px solid var(--rule); border-radius: 8px; background: var(--raised); padding: 9px 11px; display: flex; flex-direction: column; gap: 6px; font-size: var(--fs-sm); color: var(--ink-soft); }
+  .facts b { color: var(--ink); font-weight: 650; }
+  .facts ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px; color: var(--ink); overflow-wrap: anywhere; }
+  .facts li::before { content: "› "; color: var(--accent); }
+  .facts table { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: var(--fs-sm); }
+  .facts th, .facts td { text-align: left; padding: 2px 14px 2px 0; font-weight: 400; color: var(--ink); }
+  .facts th { color: var(--muted); font-size: var(--fs-min); letter-spacing: .06em; text-transform: uppercase; }
+  .facts pre[hidden] { display: none; }
+  .facts .btn.nb { align-self: flex-start; }
+  .facts pre { margin: 0; font: inherit; font-size: var(--fs-xs); color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip { font-size: var(--fs-min); color: var(--ink); border: 1px solid var(--rule); border-radius: 999px; padding: 0 9px; line-height: 1.7; cursor: help; background: var(--card); }
+
+  .tip { position: absolute; pointer-events: none; opacity: 0; background: var(--ink); color: var(--ground); font-size: var(--fs-min); letter-spacing: 0; line-height: 1.45; padding: 6px 9px; border-radius: 7px; z-index: 9; max-width: 46ch; transition: opacity .12s ease; }
+  .tip[data-show="true"] { opacity: 1; }
+
+  .out { font: inherit; letter-spacing: inherit; font-size: var(--fs-sm); line-height: 1.5; color: var(--ink); background: var(--raised); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; width: 100%; box-sizing: border-box; min-height: 16em; resize: vertical; white-space: pre; overflow: auto; }
+  .acts { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .said { font-size: var(--fs-sm); color: var(--accent); min-height: 1.4em; }
+  .plainlist { margin: 0; padding-left: 1.15em; display: flex; flex-direction: column; gap: 3px; font-size: var(--fs-sm); color: var(--ink-soft); }
+  a.link { color: var(--accent); overflow-wrap: anywhere; }
+</style>
+
+<div class="artifact-page">
+  <header>
+    <p class="eyebrow" id="eyebrow"></p>
+    <h1 id="title"></h1>
+    <p class="lede" id="lede"></p>
+    <p class="lede" id="order"></p>
+    <div class="key"><span><button class="btn" data-mine="true" type="button" tabindex="-1">dashed</button>what I would pick</span><span><button class="btn" aria-pressed="true" type="button" tabindex="-1">filled</button>what you ruled</span><span id="count" class="state"></span></div>
+  </header>
+
+  <section class="sec" data-sec="8" id="sec-map">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>Where things are in the lab</h2><span class="n" id="map-n"></span></div>
+    <p class="cap" id="labnote"></p>
+    <div class="panel"><div class="labmap" id="labmap"></div></div>
+  </section>
+
+  <section class="sec" data-sec="1" id="sec-1">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg><span id="s1"></span></h2><span class="n" id="s1-n"></span></div>
+    <p class="cap" id="s1note"></p>
+    <div class="panel"><p class="cap" id="normsHow"></p><div class="norms" id="norms"></div></div>
+    <div class="cards" id="cards-1"></div>
+  </section>
+
+  <section class="sec" data-sec="2" id="sec-2">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M9 3v18"></path></svg><span id="s2"></span></h2><span class="n" id="s2-n"></span></div>
+    <p class="cap" id="s2note"></p>
+    <div class="cards" id="cards-2"></div>
+  </section>
+
+  <section class="sec" data-sec="3" id="sec-3">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="19" r="3"></circle><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path><circle cx="18" cy="5" r="3"></circle></svg><span id="s3"></span></h2><span class="n" id="s3-n"></span></div>
+    <p class="cap" id="s3note"></p>
+    <div class="cards" id="cards-3"></div>
+  </section>
+
+  <section class="sec" data-sec="4" id="sec-4">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"></path><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"></path><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"></path></svg><span id="s4"></span></h2><span class="n" id="s4-n"></span></div>
+    <p class="cap" id="s4note"></p>
+    <div class="cards" id="cards-4"></div>
+  </section>
+
+  <section class="sec" data-sec="5" id="sec-5">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg><span id="s5"></span></h2><span class="n" id="s5-n"></span></div>
+    <p class="cap" id="s5note"></p>
+    <div class="panel"><p class="cap"><a class="link" id="rate-link" target="_blank" rel="noopener"></a></p></div>
+  </section>
+
+  <section class="sec" data-sec="6" id="sec-copy">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="m9 14 2 2 4-4"></path></svg><span id="copy-t"></span></h2><span class="n">paste this back to me</span></div>
+    <p class="cap" id="copynote"></p>
+    <div class="panel">
+      <textarea class="out" id="out" readonly spellcheck="false" aria-label="Your review as text"></textarea>
+      <div class="acts"><button class="btn pri" type="button" id="copy">Copy my review</button><button class="btn" type="button" id="reset">Clear everything</button><span class="said" id="said" aria-live="polite"></span></div>
+    </div>
+    <div class="panel"><p class="cap" id="skip"></p><p class="cap" id="checked"></p><ul class="plainlist" id="checked-list"></ul></div>
+  </section>
+</div>
+
+<!--__KIT2__-->
+<!--__KIT3__-->
+<script>window.REVIEW_DATA = /*__DATA__*/null;</script>
+<script>
+(function () {
+  "use strict";
+  var D = window.REVIEW_DATA, KEY = "gabe:review:leftovers";   /* a STABLE key: a republish keeps your rulings; an option that no longer exists is dropped on load */
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  ["eyebrow", "title", "lede", "order", "s1", "s1note", "s2", "s2note", "s3", "s3note", "s4", "s4note", "s5", "s5note", "copynote", "normsHow", "skip", "checked"].forEach(function (k) { $(k).textContent = D.ui[k]; });
+  $("copy-t").textContent = D.ui.copy; $("labnote").textContent = D.ui.lab; $("map-n").textContent = D.ui.mapcap;
+  D.checked.forEach(function (s) { $("checked-list").appendChild(el("li", null, s)); });
+
+  /* ── state: one verdict + one note per id; nothing is saved at boot ── */
+  var NORM_OPTS = [["ok", "ok"], ["strike", "strike"], ["reword", "reword"]], VALID = {};
+  D.norms.forEach(function (n) { VALID[n.id] = NORM_OPTS.map(function (o) { return o[0]; }); });
+  D.decisions.forEach(function (d) { VALID[d.id] = d.options.map(function (o) { return o[0]; }); });
+  var state = (function () { try { var s = JSON.parse(window.localStorage.getItem(KEY) || "null"); if (s && s.v) { Object.keys(s.v).forEach(function (k) { if (!VALID[k] || (s.v[k].v && VALID[k].indexOf(s.v[k].v) < 0)) delete s.v[k]; }); return s; } } catch (e) {} return { v: {} }; })();
+  function save() { try { window.localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  var painters = [];
+  function verdict(host, holder, id, mine, opts, small, placeholder) {
+    var v = el("div", "verdict"), st = el("span", "state");
+    var btns = opts.map(function (o) { var b = el("button", "btn" + (small ? " sm" : ""), o[1]); b.type = "button"; b.setAttribute("aria-pressed", "false"); b.setAttribute("data-v", o[0]);
+      b.addEventListener("click", function () { var s = state.v[id] || (state.v[id] = { v: null, n: "" }); s.v = s.v === o[0] ? null : o[0]; if (!s.v && !s.n) delete state.v[id]; save(); paint(); paintOut(); }); v.appendChild(b); return b; });
+    var nb = el("button", "btn nb", "note"); nb.type = "button"; nb.setAttribute("aria-expanded", "false"); v.appendChild(nb); v.appendChild(st);
+    var note = el("textarea", "note"); note.hidden = true; note.rows = 2; note.placeholder = placeholder || "a note for me"; note.setAttribute("aria-label", "note");
+    nb.addEventListener("click", function () { note.hidden = !note.hidden; nb.setAttribute("aria-expanded", String(!note.hidden)); if (!note.hidden) note.focus(); });
+    note.addEventListener("input", function () { var s = state.v[id] || (state.v[id] = { v: null, n: "" }); s.n = note.value; if (!s.v && !s.n) delete state.v[id]; save(); nb.setAttribute("data-has", String(!!note.value)); paintOut(); });
+    function paint() { var s = state.v[id] || {}; btns.forEach(function (b, i) { b.setAttribute("aria-pressed", String(s.v === opts[i][0])); b.setAttribute("data-mine", String(!s.v && opts[i][0] === mine)); });
+      holder.setAttribute("data-state", s.v ? "yours" : "mine"); holder.setAttribute("data-v", s.v || mine); st.textContent = s.v ? (s.v === mine ? "yours · same as my pick" : "yours") : "my pick";
+      note.value = s.n || ""; nb.setAttribute("data-has", String(!!s.n)); if (s.n) { note.hidden = false; nb.setAttribute("aria-expanded", "true"); } }
+    painters.push(paint); host.appendChild(v); return { note: note, paint: paint };
+  }
+
+  /* ── the lab as a map: the five regions, outlined on the real picture ── */
+  (function () { var m = $("labmap"), img = el("img"); img.src = D.map.img; img.alt = "the endpoint lab, whole"; m.appendChild(img);
+    var NAMES = { head: "header strip", parts: "part buttons", middle: "middle panel", portrait: "portrait", command: "COMMAND panel" };
+    Object.keys(D.map.regions).forEach(function (k) { var r = D.map.regions[k]; if (!r) return; var b = el("div", "rg"); b.setAttribute("data-r", k);
+      b.style.left = (r[0] * 100) + "%"; b.style.top = (r[1] * 100) + "%"; b.style.width = (r[2] * 100) + "%"; b.style.height = (r[3] * 100) + "%"; b.appendChild(el("b", null, NAMES[k] || k)); m.appendChild(b); }); })();
+
+  /* ── the 36 lines, by topic ── */
+  (function () { var host = $("norms"), by = {}; D.norms.forEach(function (n) { (by[n.topic] = by[n.topic] || []).push(n); });
+    Object.keys(by).forEach(function (t) { var g = el("div", "ngroup"), first = by[t][0], h = el("h3", null, first.partWord.toLowerCase() === first.topicWord ? first.partWord : first.partWord + " — " + first.topicWord); h.appendChild(el("span", null, by[t].length + " stages")); g.appendChild(h);
+      by[t].forEach(function (n) { var r = el("div", "nrow"); r.setAttribute("data-norm", n.id); r.appendChild(el("span", "st", n.stage));
+        var ln = el("span", "ln"); ln.innerHTML = esc(n.line).replace(/\b(door|lock)\b/g, "<mark>$1</mark>"); if (n.doubt) ln.appendChild(el("span", "db", "I doubt this one. " + n.doubt)); r.appendChild(ln);
+        var c = el("div"); r.appendChild(c); var x = verdict(c, r, n.id, n.mine, NORM_OPTS, true, "how you would say it, or why it goes"); r.appendChild(x.note); g.appendChild(r); });
+      host.appendChild(g); });
+    $("s1-n").textContent = D.norms.length + " lines · " + D.decisions.filter(function (d) { return d.step === 1; }).length + " rules"; })();
+
+  /* ── facts beside a rule: generated, shown with plain labels ── */
+  function tbl(head, rows) { var t = el("table"), tr = el("tr"); head.forEach(function (h) { tr.appendChild(el("th", null, h)); }); t.appendChild(tr);
+    rows.forEach(function (r) { var x = el("tr"); r.forEach(function (c) { x.appendChild(el("td", null, String(c))); }); t.appendChild(x); }); return t; }
+  function list(items) { var u = el("ul"); items.forEach(function (s) { u.appendChild(el("li", null, s)); }); return u; }
+  function chipRow(items, stage, tip) { var c = el("div", "chips"); items.forEach(function (x) { var s = el("span", "chip", x.k);
+      s.addEventListener("mousemove", function (e) { var b = stage.getBoundingClientRect(); tip.textContent = x.plain; tip.setAttribute("data-show", "true"); tip.style.left = Math.min(e.clientX - b.left + 12, b.width - 300) + "px"; tip.style.top = (e.clientY - b.top + 14) + "px"; });
+      s.addEventListener("mouseleave", function () { tip.setAttribute("data-show", "false"); }); c.appendChild(s); }); return c; }
+  var WORDS = ["the norm", "common", "rare", "only here"];
+  function factsNode(fx, stage, tip) { var v = fx.v, box = el("div", "facts");
+    if (fx.key === "thresholds") { var row = function (label, t) { return [label].concat(WORDS.map(function (w) { return (t.here[w] || 0) + " · " + (t.all[w] || 0); })); };
+      box.appendChild(el("b", null, "What each pair of cut-offs gives, on this endpoint · across the app's " + v.keys + " kinds of piece"));
+      box.appendChild(tbl(["cut-offs"].concat(WORDS), [row("9 in 10 · 1 in 10", v.a), row("8 in 10 · 2 in 10", v.b)]));
+      box.appendChild(el("b", null, v.moved.length ? "Pieces of this endpoint that would change word" : "No piece of this endpoint would change word"));
+      if (v.moved.length) box.appendChild(list(v.moved.map(function (m) { return m.words + " · " + m.n + " of " + m.of + " · " + m.from + " becomes " + m.to; }))); }
+    else if (fx.key === "roles") { box.appendChild(el("b", null, "Functions that hold two roles or more, of " + v.of));
+      box.appendChild(list(["any raise counts: " + v.now.length + " · " + v.now.join(", "), "only a raise answered here: " + v.ifAnswered.length + " · " + v.ifAnswered.join(", "), "a raise alone never counts: " + v.ifNever.length + " · " + v.ifNever.join(", ")]));
+      box.appendChild(el("span", null, "Marked as deciding by a raise alone: " + (v.onlyRaise.join(", ") || "none") + ". Marked only because an ending is its own: " + (v.helperOnly.join(", ") || "none") + "."));
+      if (v.ifAnswered.join("|") === v.ifNever.join("|")) box.appendChild(el("span", null, "On this endpoint the last two options give the same list, because this endpoint answers none of the raises of " + (v.onlyRaise.join(", ") || "those functions") + ". They differ on endpoints that do.")); }
+    else if (fx.key === "through") { box.appendChild(el("b", null, "The success routes of this endpoint"));
+      box.appendChild(list([v.name + " · passes " + v.passed + " of " + v.checks + " checks · named as the route that gets through"].concat(v.others.map(function (o) { return o.name + " · passes " + o.passed; }))));
+      box.appendChild(el("span", null, v.tie.length ? "A tie on this endpoint: " + v.tie.join(", ") + " passes as many checks." : "No tie on this endpoint.")); box.appendChild(el("span", null, v.rule)); }
+    else if (fx.key === "caseroles") { box.appendChild(el("b", null, "The " + v.length + " words the lab can stamp, with their counts here")); box.appendChild(list(v.map(function (r) { return r.words + " · " + r.n; }))); }
+    else if (fx.key === "deporder") { box.appendChild(el("b", null, "The order the lab says today")); box.appendChild(list(v.rows.map(function (r) { return r.order + " · " + r.name + " · asked for by " + r.asked_by.join(" and ") + (r.guessed ? " · a GUESS: the clipped signature does not show it, so it was placed last" : ""); })));
+      box.appendChild(el("span", null, v.clipped ? "The map clipped this handler's signature, so a place can be a guess." : "The map kept this handler's whole signature.")); }
+    else if (fx.key === "slotwords") { box.appendChild(el("b", null, "The sentences, as the lab's code holds them")); box.appendChild(list(v)); }
+    else if (fx.key === "afterhandler") { box.appendChild(el("b", null, "What the map reads")); box.appendChild(list(v.map(function (r) { return r.name + " · its closing code runs after the handler · on " + r.n + " of " + r.of + " endpoints"; }))); }
+    else if (fx.key === "p10") { box.appendChild(el("b", null, "One place the client reads a failure, as the part would write it" + (v.predicted ? " · predicted from the source, not yet produced by a run" : "")));
+      /* the example as a reading first — the raw row stays one click away */
+      var ex = null; try { ex = JSON.parse(v.example); } catch (e) {}
+      if (ex) { var short = function (at) { return String(at || "").split("/").slice(-1)[0]; };
+        box.appendChild(list(["the place: " + short(ex.at) + " · the client checks " + ex.receiver + "." + ex.reads + " " + ex.op + " " + ex.value + (ex.endpoints && ex.endpoints.length ? " · it reaches " + ex.endpoints.map(function (e) { return String(e).replace(/^endpoint:/, ""); }).join(", ") : ""),
+          "the word the branch would carry: " + ex.does_state].concat((ex.does || []).map(function (r, i) { return "row " + (i + 1) + ": a " + r.k + " to " + (r.callee || r.tag || r.value || "—") + " at " + short(r.at) + " · class " + r["class"] + (r.from ? " · the name came from " + String(r.from).replace(/^bind:/, "") : ""); }))));
+        var fold = el("button", "btn nb", "show the raw row"); fold.type = "button"; fold.setAttribute("aria-expanded", "false"); var pre = el("pre"); pre.textContent = v.example; pre.hidden = true;
+        fold.addEventListener("click", function () { pre.hidden = !pre.hidden; fold.setAttribute("aria-expanded", String(!pre.hidden)); fold.textContent = pre.hidden ? "show the raw row" : "hide the raw row"; });
+        box.appendChild(fold); box.appendChild(pre); }
+      else { var pre2 = el("pre"); pre2.textContent = v.example; box.appendChild(pre2); }
+      box.appendChild(el("b", null, "The " + v.classes.length + " classes a row can take · hover one")); box.appendChild(chipRow(v.classes, stage, tip));
+      box.appendChild(el("b", null, "The " + v.states.length + " words a branch can carry · hover one")); box.appendChild(chipRow(v.states, stage, tip));
+      box.appendChild(el("b", null, "The design lists " + v.steps + " landing steps and " + v.risks + " risks · about one to two days of building, then these machine runs, one at a time")); box.appendChild(list(v.runs.map(function (r) { return "step " + r.step + " · " + r.cost; }))); }
+    else if (fx.key === "p11") { box.appendChild(el("b", null, "What the lab says today")); box.appendChild(list(v.today)); box.appendChild(el("b", null, "What it would say after")); box.appendChild(list(v.after));
+      box.appendChild(el("b", null, "The " + v.kinds.length + " kinds of row · hover one")); box.appendChild(chipRow(v.kinds, stage, tip));
+      box.appendChild(el("span", null, "The design lists " + v.steps + " landing steps and " + v.risks + " risks. About four days of work.")); }
+    return box; }
+
+  /* ── one decision per card ── */
+  D.decisions.forEach(function (d) { var card = el("div", "panel dec"), tip = el("div", "tip"); card.setAttribute("data-dec", d.id); tip.setAttribute("role", "tooltip");
+    var L = el("div", "dl"), R = el("div", "dr"); L.appendChild(el("h3", null, d.title)); L.appendChild(el("p", "what", d.what));
+    L.appendChild(el("p", "lab", d.shot ? "to see it live" : "where to check it")); var w = el("ol", "where"); d.where.forEach(function (s) { w.appendChild(el("li", null, s)); }); L.appendChild(w);
+    L.appendChild(el("p", "lab", "my pick, and why")); L.appendChild(el("p", "why", d.why));
+    var x = verdict(L, card, d.id, d.mine, d.options, false, "a note for me"); L.appendChild(x.note);
+    if (d.shot) { var im = el("img", "shot"); im.src = d.shot; im.alt = d.title; im.loading = "lazy"; R.appendChild(im); }
+    if (d.shot2) { var im2 = el("img", "shot"); im2.src = d.shot2; im2.alt = d.title + ", the other card"; im2.loading = "lazy"; R.appendChild(im2); }
+    if (d.facts) R.appendChild(factsNode(d.facts, card, tip));
+    card.appendChild(L); if (R.childNodes.length) card.appendChild(R); else L.style.gridColumn = "1 / -1"; card.appendChild(tip); $("cards-" + d.step).appendChild(card); });
+  [2, 3, 4].forEach(function (s) { $("s" + s + "-n").textContent = D.decisions.filter(function (d) { return d.step === s; }).length + " to rule"; });
+  $("s5-n").textContent = D.ratings.proposed + " rows"; var a = $("rate-link"); a.href = D.ratings.url; a.textContent = "Open the rating sheet · " + D.ratings.proposed + " rows marked (proposed)";
+
+  /* ── the text to paste back ── */
+  var STEP = { 1: "RULES I WROTE", 2: "LAYOUTS I TOUCHED", 3: "PIECE 10", 4: "PIECE 11" };
+  function line(id, label, mine) { var s = state.v[id] || {}; return label + ": " + (s.v || mine) + (s.v ? (s.v === mine ? " (yours, same as my pick)" : " (yours, I picked " + mine + ")") : " (my pick, not ruled)") + (s.n ? " | " + s.n.replace(/\s*\n\s*/g, " / ") : ""); }
+  function buildText() { var out = [], touched = D.norms.filter(function (n) { var s = state.v[n.id]; return s && (s.v || s.n); }), all = D.norms.concat(D.decisions), yours = all.filter(function (x) { return (state.v[x.id] || {}).v; }).length;
+    out.push("REVIEW · leftovers · " + D.hash + " · " + D.endpoint + " @ " + D.head); out.push(yours + " yours · " + (all.length - yours) + " left as my pick"); out.push("");
+    out.push("NORM LINES (ok · strike · reword) — " + D.norms.length + " lines; listed: the ones you touched, and any I doubt that you left alone");
+    var untouchedDoubt = D.norms.filter(function (n) { return n.mine !== "ok" && touched.indexOf(n) < 0; });
+    if (!touched.length && !untouchedDoubt.length) out.push("none touched"); touched.concat(untouchedDoubt).forEach(function (n) { out.push(line(n.id, n.topicWord + " · " + n.stage, n.mine)); });
+    [1, 2, 3, 4].forEach(function (s) { out.push(""); out.push(STEP[s]); D.decisions.filter(function (d) { return d.step === s; }).forEach(function (d) { out.push(line(d.id, d.id, d.mine)); }); });
+    return out.join("\n"); }
+  function paintOut() { $("out").value = buildText(); var all = D.norms.concat(D.decisions), yours = all.filter(function (x) { return (state.v[x.id] || {}).v; }).length; $("count").textContent = yours + " of " + all.length + " ruled by you"; }
+  $("copy").addEventListener("click", function () { var out = $("out"), say = $("said");
+    function done(ok) { say.textContent = ok ? "Copied. Paste it into the chat." : "Select the text above and press Ctrl+C."; if (!ok) { out.focus(); out.select(); } }
+    function fallback() { var ok = false; out.focus(); out.select(); try { ok = document.execCommand("copy"); } catch (e) {} done(ok); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(out.value).then(function () { done(true); }, fallback); else fallback(); });
+  var armed = false; $("reset").addEventListener("click", function () { var b = $("reset"); if (!armed) { armed = true; b.textContent = "Press again to clear"; setTimeout(function () { armed = false; b.textContent = "Clear everything"; }, 3500); return; }
+    armed = false; b.textContent = "Clear everything"; state = { v: {} }; save(); painters.forEach(function (p) { p(); }); paintOut(); $("said").textContent = "Cleared."; });
+  painters.forEach(function (p) { p(); }); paintOut();
+})();
+</script>

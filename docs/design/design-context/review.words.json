@@ -1,0 +1,723 @@
+{
+ "_about": "Authored lines for review-leftovers.html. Every number on the page is generated; only the sentences here are written. Page prose sits under `text`; one-line hover descriptions sit under `plain` and are audited by docs/design/workflow-panel/plain-audit.py.",
+ "ui": {
+  "eyebrow": {
+   "text": "Review · the leftovers program"
+  },
+  "title": {
+   "text": "What needs your eyes before the next build"
+  },
+  "lede": {
+   "text": "Everything here is a choice I made while building, shown with what it looks like and what I would pick. A dashed button is my pick, a filled one is yours. Rule what you disagree with, then copy the text at the bottom and paste it into the chat."
+  },
+  "order": {
+   "text": "The order is by risk: what I wrote comes first, because no check can catch a wrong sentence."
+  },
+  "lab": {
+   "text": "Most pictures below come from the endpoint lab. To see one live, open docs/design/workflow-panel/endpoint-lab.html and follow the numbered clicks on the card. The lab is wide, so scroll right for the portrait and the command panel."
+  },
+  "mapcap": {
+   "text": "The five regions the cards point at."
+  },
+  "s1": {
+   "text": "Sentences and rules I wrote"
+  },
+  "s1note": {
+   "text": "The lab reads its facts out of the map, and a probe recounts them. These are different: I wrote them, so only you can check them."
+  },
+  "s2": {
+   "text": "Layouts of yours that I touched"
+  },
+  "s2note": {
+   "text": "Each of these added something to a record or a card you had already ruled on. Most cards offer keep it, move it, take it off for now, or build it as a switchable option. The open call and the place card carry their own choices."
+  },
+  "s3": {
+   "text": "Piece 10: what the screen does on each ending"
+  },
+  "s3note": {
+   "text": "The lab already says which client branch an ending reaches. This part would add what that branch does. It changes the map's generators, so it waits for your word."
+  },
+  "s4": {
+   "text": "Piece 11: what stays alive during a request"
+  },
+  "s4note": {
+   "text": "About four days of work. Of the three pieces that need new generation work (piece 9, which you ruled later, piece 10 and this one) the evaluation ranks this one last. You ruled it do in D-016, so the first card asks when, and dropping it would reopen that ruling. The second card asks whether it keeps its name."
+  },
+  "s5": {
+   "text": "Rows still waiting for your rating"
+  },
+  "s5note": {
+   "text": "These rows were added after your last rating. Each one shows what this endpoint really has, except in-flight values, which has nothing to quote until piece 11 is built. The rows for events, tasks and outside services read \"none on this endpoint\", which is a measured zero. The row for what the screen does shows where the branch is, not yet what it does."
+  },
+  "copy": {
+   "text": "Copy your review"
+  },
+  "copynote": {
+   "text": "Every line says whether the value is yours or my pick. Paste the text into the chat and I act on it."
+  },
+  "normsHow": {
+   "text": "Read each line as if it were said about any endpoint of this kind. Strike one that grades, or that is only true of this app. Reword one that is right but badly said."
+  },
+  "skip": {
+   "text": "You can skip the probe counts, the mutant runs, the commit messages and the generator code. Those are checked by machine."
+  },
+  "checked": {
+   "text": "Three facts I had corrected were checked against the app's own source on 2026-09-20."
+  }
+ },
+ "facts_checked": [
+  "The handler is at api/setup.py line 183, and the file is 254 lines long.",
+  "main.py adds Idempotency at line 124, RateLimit at 127 and CORS at 132, so they run in the reverse order.",
+  "RedirectIfSetupComplete.tsx exists and is a route guard."
+ ],
+ "topics": {
+  "data": "tables",
+  "schemas": "shapes",
+  "functions": "functions",
+  "tests": "tests",
+  "widening": "the client",
+  "security": "security"
+ },
+ "norm_doubts": {
+  "data.GATE": "It says \"here the user row\", which is true of this app and not of the kind.",
+  "security.EDGE": "It names the repeat key as an app-wide check. In this app's own tally a repeat key is rare, and neither other backend that was read has one."
+ },
+ "classes": {
+  "navigate": {
+   "plain": "a move to another screen"
+  },
+  "throw": {
+   "plain": "a failure the branch raises itself"
+  },
+  "render": {
+   "plain": "an element drawn on the screen"
+  },
+  "return": {
+   "plain": "a value handed back — often the message to show"
+  },
+  "retry": {
+   "plain": "the same request sent again"
+  },
+  "refresh": {
+   "plain": "cached data refetched or rewritten"
+  },
+  "request": {
+   "plain": "a call to another endpoint"
+  },
+  "message": {
+   "plain": "a translated message looked up by its key"
+  },
+  "surface": {
+   "plain": "a toast shown to the user"
+  },
+  "state": {
+   "plain": "a change to what the screen remembers"
+  },
+  "log": {
+   "plain": "a line written to the console"
+  },
+  "other": {
+   "plain": "a call no known idiom matches — kept with its name"
+  }
+ },
+ "states": {
+  "read": {
+   "plain": "a branch that was read and has rows"
+  },
+  "mixed": {
+   "plain": "two branches alike in text — their rows cannot be told apart"
+  },
+  "empty": {
+   "plain": "a branch holding only comparisons and aliases"
+  },
+  "returned": {
+   "plain": "a comparison handed back to the caller, who decides"
+  },
+  "no-rows": {
+   "plain": "a branch doing something the reading has no row for, such as an assignment"
+  },
+  "unread": {
+   "plain": "a condition too long to read"
+  }
+ },
+ "kinds11": {
+  "state": {
+   "plain": "a value set on the request by one step and read by a later one"
+  },
+  "contextvar": {
+   "plain": "a context variable set for the life of the request"
+  },
+  "dependency-value": {
+   "plain": "a value a helper hands to the handler"
+  },
+  "background": {
+   "plain": "work queued to run after the answer"
+  },
+  "lock": {
+   "plain": "a lock taken while the request runs"
+  },
+  "cache": {
+   "plain": "a function whose result is kept for the life of the server"
+  },
+  "built-once": {
+   "plain": "an object built once when the server starts, such as a limit's counter"
+  },
+  "setting-once": {
+   "plain": "a setting read once at start, so it is fixed until a restart"
+  }
+ },
+ "decisions": [
+  {
+   "id": "vocab",
+   "step": 1,
+   "title": "The words door and lock",
+   "what": "{oldWords} of the {norms} lines still say \"door\" or \"lock\". So does the rest of the lab: {doorElsewhere} more drawn strings in _lab-ep-panels.js and endpoint-lab.html still say them, such as panel heads, hover cards, the header \"This door's deps\" and the GATE stage's own line \"the lock on the door\". The phrase \"login check\" appears in only {loginCheck} generated strings. Replacing the words in these {oldWords} lines alone leaves them disagreeing with their neighbours. Replacing them everywhere is a sweep of the whole lab.",
+   "where": [
+    "The lines are in the table above this card, with each old word marked.",
+    "In code: docs/design/workflow-panel/_lab-ep-panels.js line 1237, the declaration STAGE_EXPECT."
+   ],
+   "options": [
+    [
+     "sweep",
+     "replace them everywhere in the lab"
+    ],
+    [
+     "replace",
+     "replace them in these lines only"
+    ],
+    [
+     "keep",
+     "keep door and lock"
+    ]
+   ],
+   "mine": "sweep",
+   "why": "One word per thing. The evaluation page says endpoint and the lab's newer rows do too. Its older strings still say door, so only a sweep gets to one word."
+  },
+  {
+   "id": "slot-words",
+   "step": 1,
+   "title": "Why a command counts nothing",
+   "what": "A command that counts nothing says why on its hover. I wrote the sentences below. With every reading on, the one about a reading that did not run never shows on this endpoint, so the lab cannot show it to you.",
+   "facts": "slotwords",
+   "where": [
+    "In code: docs/design/workflow-panel/_lab-ep-panels.js line 2814, the function slotWhy."
+   ],
+   "options": [
+    [
+     "ok",
+     "these sentences are right"
+    ],
+    [
+     "reword",
+     "reword, see my note"
+    ]
+   ],
+   "mine": "ok",
+   "why": "They say whether a zero was measured or never read, which decides whether every other empty row can be believed."
+  },
+  {
+   "id": "thresholds",
+   "step": 1,
+   "title": "When a piece is called the norm, or rare",
+   "what": "Almost every count of a piece carries a word. Two cut-offs I chose decide the norm and rare, and one rule sits above both: a piece only one endpoint carries always reads only here. The rate tier is the exception, because it shows its tiers and no word.",
+   "facts": "thresholds",
+   "where": [
+    "COMMAND panel, PATHS, Walk a path, pick setup in progress.",
+    "In the portrait header, click the second icon, Exit.",
+    "Read the row IN THIS APP, just under the row AT. The word ends the line.",
+    "In code: docs/design/workflow-panel/_ep_pieces.py line 65, the function word_for."
+   ],
+   "options": [
+    [
+     "9-1",
+     "9 in 10 · 1 in 10"
+    ],
+    [
+     "8-2",
+     "8 in 10 · 2 in 10"
+    ],
+    [
+     "other",
+     "other, see my note"
+    ]
+   ],
+   "mine": "9-1",
+   "why": "A strict norm keeps the word rare, so the later mark for something unusual stays meaningful."
+  },
+  {
+   "id": "roles-raise",
+   "step": 1,
+   "title": "Does raising a failure count as deciding an ending",
+   "what": "A function is marked as deciding an ending when it holds a fork, a catch, the answer or a raise. A helper is marked too when one of the endpoint's endings is its own. The raise is the doubtful one: the map follows a raise one call up, and deeper than that it does not read which answer the raise becomes.",
+   "facts": "roles",
+   "where": [
+    "In the lab: part FUNCTIONS, click a function block, read the row does in the portrait.",
+    "In code: docs/design/workflow-panel/_ep_joins.py line 169."
+   ],
+   "options": [
+    [
+     "any-raise",
+     "any raise counts"
+    ],
+    [
+     "answered",
+     "only a raise this endpoint answers"
+    ],
+    [
+     "never",
+     "a raise alone never counts"
+    ]
+   ],
+   "mine": "any-raise",
+   "why": "A raise changes the path whatever answer it becomes. Your depth rule puts detail where the path can change."
+  },
+  {
+   "id": "through",
+   "step": 1,
+   "title": "Which route is named the one that gets through",
+   "what": "One success route is named as the route that passes every check. I picked the success ending that passes the most checks. When two success routes pass the same number, today the generator picks by the route's internal id, a tie-break nobody can see.",
+   "facts": "through",
+   "where": [
+    "In the lab: COMMAND panel, PATHS, Walk a path, pick first run. The portrait row ROUTE says it.",
+    "In code: docs/design/workflow-panel/gen-endpoint-facts.py line 219."
+   ],
+   "options": [
+    [
+     "tie-none",
+     "the most checks, and none named when two tie"
+    ],
+    [
+     "most-checks",
+     "the most checks, as it is today"
+    ],
+    [
+     "none",
+     "name no route"
+    ]
+   ],
+   "mine": "tie-none",
+   "why": "The other endings read as exceptions to it, so naming it helps. On a tie, naming nothing is more honest than a hidden pick."
+  },
+  {
+   "id": "dep-order",
+   "step": 1,
+   "title": "The order the helpers are resolved in",
+   "what": "Every helper says where it sits in the order they are resolved. That order is my reading, not the framework's: the handler's helpers as its signature names them, each one's own helpers first, a helper asked for twice keeping its first place. I find it by searching the signature's text, which the map clips when it is long. A helper whose name falls past the clip is placed last without saying so.",
+   "facts": "deporder",
+   "where": [
+    "In the lab: part SECURITY, the header This door's deps, then hover any helper.",
+    "In code: docs/design/workflow-panel/_ep_joins.py line 98."
+   ],
+   "options": [
+    [
+     "mark",
+     "say the order, and mark a place the signature did not give"
+    ],
+    [
+     "keep",
+     "say the order as it is"
+    ]
+   ],
+   "mine": "mark",
+   "why": "An order that guesses without saying so is the kind of claim you asked me not to make."
+  },
+  {
+   "id": "case-roles",
+   "step": 1,
+   "title": "The reasons a test case is listed on this endpoint",
+   "what": "Every test case is stamped with how it reached this endpoint, or that it never called it. The lab can stamp {roleWords} words and {rolesHere} occur here. The rest are shown with a count of 0 so you rule the whole set.",
+   "facts": "caseroles",
+   "where": [
+    "In the lab: part TESTS, hover any case chip, read the row ROLE."
+   ],
+   "options": [
+    [
+     "ok",
+     "these words are right"
+    ],
+    [
+     "reword",
+     "reword, see my note"
+    ]
+   ],
+   "mine": "ok",
+   "why": "The words come from how the test really calls the endpoint, not from its name."
+  },
+  {
+   "id": "after-handler",
+   "step": 1,
+   "title": "After the handler, or after the answer is sent",
+   "what": "The evaluation page, gaps-endpoint.html, said under piece 6 that the database session closes after the answer is sent. The map only says its closing code runs after the handler. I changed the lab to the map's words.",
+   "facts": "afterhandler",
+   "where": [
+    "In the lab: part SECURITY, hover the dependency get_session, read the row AFTER THE HANDLER."
+   ],
+   "options": [
+    [
+     "handler",
+     "after the handler"
+    ],
+    [
+     "answer",
+     "after the answer is sent"
+    ]
+   ],
+   "mine": "handler",
+   "why": "Whether it runs before or after the answer leaves is a rule of the framework version, and the map does not read it."
+  },
+  {
+   "id": "found-by",
+   "step": 2,
+   "title": "A fifth row on the table record",
+   "what": "Your table record had four fact rows. I added a fifth, found by, which says whether the map's edge or a route's steps found the table.",
+   "shot": "found-by",
+   "where": [
+    "Part DATA.",
+    "Click the table block users in the GATE stage. It is one of the tables only a route's steps know.",
+    "Read the row found by in the portrait on the right, and hover its info icon for the reason.",
+    "Then click locations to see the same row on a table both sources found."
+   ],
+   "options": [
+    [
+     "keep",
+     "keep the fifth row"
+    ],
+    [
+     "move",
+     "move it to the model's card"
+    ],
+    [
+     "option",
+     "build it as an option"
+    ],
+    [
+     "off",
+     "take it off for now"
+    ]
+   ],
+   "mine": "keep",
+   "why": "{routeOnly} of this endpoint's {tables} tables ({routeOnlyNames}) are known to a route's steps only, so the row changes whether you trust the list."
+  },
+  {
+   "id": "fn-rows",
+   "step": 2,
+   "title": "Three new rows on the function record",
+   "what": "The function record gained the rows does, inside and map facts.",
+   "shot": "fn-rows",
+   "where": [
+    "Part FUNCTIONS.",
+    "Click the block complete_setup.",
+    "Read the portrait on the right."
+   ],
+   "options": [
+    [
+     "keep",
+     "keep the three rows"
+    ],
+    [
+     "move",
+     "move them to hover cards"
+    ],
+    [
+     "option",
+     "build them as an option"
+    ],
+    [
+     "off",
+     "take it off for now"
+    ]
+   ],
+   "mine": "keep",
+   "why": "They answer three of your questions about functions in the one place a function is opened."
+  },
+  {
+   "id": "open-call",
+   "step": 2,
+   "title": "A call on a route is always open",
+   "what": "Under the call {callName} the route now lists the {insideRows} rows inside it: {insideKinds}. I built it always open, with no way to close it. That goes against your rule that I build options and you decide.",
+   "shot": "open-call",
+   "where": [
+    "COMMAND panel, PATHS, Walk a path, pick first run.",
+    "In the portrait, scroll the chain to step {callStep}."
+   ],
+   "options": [
+    [
+     "option",
+     "build open and closed as an option"
+    ],
+    [
+     "keep",
+     "keep it always open"
+    ],
+    [
+     "closed",
+     "closed until clicked"
+    ]
+   ],
+   "mine": "option",
+   "why": "This is a display choice, and those are yours to make by seeing both."
+  },
+  {
+   "id": "ending-sections",
+   "step": 2,
+   "title": "Two new rows and a new section on an ending's record",
+   "what": "An ending's record gained two rows near the top, IN THIS APP and IN THE OTHER APPS, which count how many endpoints can answer with the same status code. Lower down it gained the section ON THE CLIENT, which says which client branch the ending reaches.",
+   "shot": "ending-sections",
+   "where": [
+    "COMMAND panel, PATHS, Walk a path, pick setup in progress.",
+    "In the portrait header, click the second icon, Exit.",
+    "Read the rows IN THIS APP and IN THE OTHER APPS just under the row AT, then scroll down to the section ON THE CLIENT."
+   ],
+   "options": [
+    [
+     "keep",
+     "keep both sections"
+    ],
+    [
+     "move",
+     "move them to hover cards"
+    ],
+    [
+     "option",
+     "build them as an option"
+    ],
+    [
+     "off",
+     "take it off for now"
+    ]
+   ],
+   "mine": "keep",
+   "why": "They are the only place the client and the rest of the app show up on an ending."
+  },
+  {
+   "id": "rules-on-hover",
+   "step": 2,
+   "title": "Field and column rules ride hover cards",
+   "what": "Every column now carries its rule: may it be empty, what fills it, and its line. A column that points at another table also says what a delete there does. I put all of it on the hover card, because you had already ruled on the record's rows.",
+   "shot": "column-rule",
+   "where": [
+    "Part DATA, click the table block locations.",
+    "In the portrait, hover the field order. Its card also says the name the database uses.",
+    "Then hover household_id to read what a delete of the household does."
+   ],
+   "options": [
+    [
+     "keep",
+     "keep them on hover"
+    ],
+    [
+     "rows",
+     "show the rule in the record's table"
+    ],
+    [
+     "option",
+     "build both as an option"
+    ],
+    [
+     "off",
+     "take it off for now"
+    ]
+   ],
+   "mine": "keep",
+   "why": "A hover costs no room, and your record keeps its shape."
+  },
+  {
+   "id": "place-card",
+   "step": 2,
+   "title": "Where this endpoint's place in the app is shown",
+   "what": "The place reads {place} of {placeOf} by functions behind, which counts how many functions each one reaches, heaviest first. The {placeOf} are the app's {appEndpoints} endpoints plus {placeTop}, the app's startup, which the map draws as an endpoint and which is the heaviest. Among the endpoints alone this one is {placeEp} of {appEndpoints}. The evaluation's plan for piece 7 asked for the place on the risk card. An older ruling of yours, pinned in the probe (probe-eplab.mjs line 251), says the risk card carries no comparison with the rest of the app, so I put it on the header's card for the whole app.",
+   "shot": "place-everything",
+   "shot2": "place-risk",
+   "where": [
+    "In the header strip, hover the last small icon on the right, the globe, after the file path.",
+    "Then hover the red warning chip beside the status.",
+    "The pinned ruling: docs/design/workflow-panel/probe-eplab.mjs line 251."
+   ],
+   "options": [
+    [
+     "everything",
+     "on the whole-app card"
+    ],
+    [
+     "risk",
+     "on the risk card"
+    ],
+    [
+     "both",
+     "on both"
+    ]
+   ],
+   "mine": "everything",
+   "why": "Your older ruling was clear, and the whole-app card is about the app."
+  },
+  {
+   "id": "p10",
+   "step": 3,
+   "title": "Build piece 10's generation part",
+   "what": "It adds, on every place the client reads a failure, the list of what that branch does. In this app {feReaders} of {appEndpoints} endpoints have client code that reads their failures, so the row appears there. The design predicts that some of those places carry a word and no list.",
+   "facts": "p10",
+   "where": [
+    "The full design: docs/design/element-forms/plans/slice-11e-does.plan.md. Read the worked example under What is written, then the first three risks."
+   ],
+   "options": [
+    [
+     "land",
+     "land it"
+    ],
+    [
+     "hold",
+     "hold it"
+    ]
+   ],
+   "mine": "land",
+   "why": "The lab half already shows where each branch is. The row for what the branch does is not drawn at all until this lands. The cost beyond the build: nothing downstream reads this block, so only its own battery would catch a regression. If that row would not change how you read an ending, hold it."
+  },
+  {
+   "id": "p10-nav",
+   "step": 3,
+   "title": "A roster for useNavigate",
+   "what": "To class a call as a navigation, the reading must know the hook useNavigate. You struck the guard built from that hook earlier. This classes a row and builds no guard.",
+   "where": [
+    "docs/design/element-forms/amendment-1.md line 1149, the note on the struck guard."
+   ],
+   "options": [
+    [
+     "yes",
+     "allow the roster"
+    ],
+    [
+     "no",
+     "leave it out"
+    ]
+   ],
+   "mine": "yes",
+   "why": "Without it every navigation in a branch reads as an unknown call."
+  },
+  {
+   "id": "p10-word",
+   "step": 3,
+   "title": "The word for a comparison the caller decides",
+   "what": "Some client functions only hand the comparison back, and their caller decides what happens. The design names that returned, one of the six words on the card above, and calls it its own spelling of the map's beyond one level. Ruling beyond one level renames it.",
+   "where": [
+    "docs/design/element-forms/plans/slice-11e-does.plan.md line 167, the block State words under the heading How a row is classed."
+   ],
+   "options": [
+    [
+     "beyond one level",
+     "beyond one level"
+    ],
+    [
+     "returned",
+     "returned"
+    ]
+   ],
+   "mine": "beyond one level",
+   "why": "The map already uses that phrase for the same limit on the backend."
+  },
+  {
+   "id": "p10-toast",
+   "step": 3,
+   "title": "toast as a library idiom",
+   "what": "Three popular libraries (sonner, react-hot-toast and react-toastify) share the name toast, but none of the four study apps installs one. One app, tier3, has its own toast with the same shape.",
+   "where": [
+    "docs/design/element-forms/plans/slice-11e-does.plan.md, the section Rosters."
+   ],
+   "options": [
+    [
+     "yes",
+     "keep toast"
+    ],
+    [
+     "no",
+     "leave it out"
+    ]
+   ],
+   "mine": "yes",
+   "why": "The row says where the name came from, so a project's own toast still reads as the project's."
+  },
+  {
+   "id": "p10-i18n",
+   "step": 3,
+   "title": "useTranslation with no app using it",
+   "what": "The roster for translated messages has one entry an app uses, and one that no app uses.",
+   "where": [
+    "docs/design/element-forms/plans/slice-11e-does.plan.md, the section Rosters."
+   ],
+   "options": [
+    [
+     "no",
+     "leave it out until an app uses it"
+    ],
+    [
+     "yes",
+     "add it now"
+    ]
+   ],
+   "mine": "no",
+   "why": "A roster entry nobody can check is a guess."
+  },
+  {
+   "id": "p11",
+   "step": 4,
+   "title": "When to build piece 11",
+   "what": "Today the lab shows one such value, and only because its name contains the word the filter searches for. This part would read them in general: every value alive only while a request runs, and every one that stays in the server between requests. The design names one thing to cut if the scope must shrink, the rows for values a helper hands to the handler, and does not say how much time that saves.",
+   "facts": "p11",
+   "where": [
+    "The full design: docs/design/element-forms/plans/kinds-inflight.plan.md. Read the worked example at the top and the first risk."
+   ],
+   "options": [
+    [
+     "after-10",
+     "after piece 10"
+    ],
+    [
+     "now",
+     "now, before piece 10"
+    ],
+    [
+     "small",
+     "a smaller first pass, without the helper-value rows"
+    ],
+    [
+     "drop",
+     "drop it, which reopens D-016"
+    ]
+   ],
+   "mine": "after-10",
+   "why": "It is the largest and the least urgent. Seeing piece 10's row in the lab first costs nothing."
+  },
+  {
+   "id": "p11-name",
+   "step": 4,
+   "title": "The name inflight",
+   "what": "The design calls the new part inflight. That word already names the board's view of work in progress. The design's own alternative is alive, and it says a rename is cheap only before its third landing step, when the registry is written.",
+   "where": [
+    "CLAUDE.md, the bullet The in-flight projection."
+   ],
+   "options": [
+    [
+     "keep",
+     "keep the name"
+    ],
+    [
+     "alive",
+     "rename it to alive"
+    ],
+    [
+     "rename",
+     "another name, see my note"
+    ]
+   ],
+   "mine": "keep",
+   "why": "The prism you kept in D-015 is called In-flight state, and the part's files sit under the forms prefix, apart from the board's write-inflight.py."
+  }
+ ],
+ "parts": {
+  "data": "Data",
+  "schemas": "Schemas",
+  "functions": "Functions",
+  "tests": "Tests",
+  "widening": "Widening",
+  "security": "Security"
+ }
+}
