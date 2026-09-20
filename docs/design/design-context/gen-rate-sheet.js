@@ -92,7 +92,10 @@ const EX = {
   "how-this-table-was-found": () => { const drawn = new Set(L.data.tables.map((t) => t.table)), only = Object.keys(tables).filter((t) => !drawn.has(t)); return only.length ? `${only.join(", ")} · known to the route effects only` : null; },
   "in-flight-values": () => null,
   "response-headers-per-ending": () => { const h = f.exits.filter((e) => e.response && e.response.headers && Object.keys(e.response.headers).length).map((e) => `${e.status} sends ${Object.keys(e.response.headers).join(", ")}`); return h.length ? [...new Set(h)].join(" · ") : null; },
-  "field-rules-of-the-request-body": () => null,
+  "field-rules-of-the-request-body": () => { const rq = L.data.schemas.request, R = rq && rq.rules; if (!R) return null;
+    const k = Object.keys(R).find((n) => R[n].required && Object.keys(R[n].constraints).length) || Object.keys(R)[0], r = R[k], c = r.constraints;
+    return `${k} · ${r.required ? "must be sent" : "has a default"}` + (c.min_length != null && c.max_length != null ? ` · ${c.min_length} to ${c.max_length} characters` : Object.keys(c).length ? ` · ${Object.keys(c).map((x) => x + " " + c[x]).join(" · ")}` : "")
+      + ` · ${String(r.at).split("/").slice(-2).join("/")}` + (rq.extra && rq.extra.policy ? ` · a field nobody declared is ${rq.extra.policy === "forbid" ? "refused" : rq.extra.policy === "ignore" ? "ignored" : "kept"}` : ""); },
   "roles-per-function": () => { const D = L.functions.does; if (!D) return null; const two = D.rows.find((r) => r.does.length >= 2 && !r.does.includes("faces the web"));
     return (two ? `${two.name} · ${two.does.join(" and ")} · ` : "") + `${D.two_or_more} of ${D.of} functions hold two or more · ${D.none} show none`; },
   "what-the-case-asserts-on-this-condition": () => { const r = (L.tests.roster || []).find((x) => x.role === "act" && x.asserts && x.asserts.detail); return r ? `${r.cid} asserts ` + Object.keys(r.asserts).map((k) => `${k} ${[].concat(r.asserts[k]).join(" | ")}`).join(" · ") : null; },
@@ -140,7 +143,7 @@ const EX = {
     const allF = f.findings.concat(Object.values(f.arm_findings).flat());
     return `${plural(allF.length, "finding")} · ` + allF.map((x) => (FIND[x.id] || rawF)(x)).join(" · "); },
 };
-const LANDS = { "in-flight-values": 11, "field-rules-of-the-request-body": 8, "what-the-screen-does-on-this-ending": 10 };
+const LANDS = { "in-flight-values": 11, "what-the-screen-does-on-this-ending": 10 };
 const NONE = Object.assign(Object.fromEntries(Object.entries(LANDS).map(([k, n]) => [k, `nothing to quote yet · piece ${n} of the work brings it`])), { "little-helpers-with-a-type": "none to show · helper functions carry no type in the feed yet", "events-published": "none on this endpoint", "tasks-dispatched": "none on this endpoint", "outside-services-called": "none drawn on this endpoint" });
 for (const r of rows) {
   if (!(r.id in EX)) die("no example rule for row: " + r.id);

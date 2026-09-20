@@ -5085,10 +5085,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:132",
       "ref": null,
       "label": "CORSMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 1,
@@ -5232,10 +5233,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:132",
       "ref": null,
       "label": "CORSMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 1,
@@ -5392,10 +5394,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:132",
       "ref": null,
       "label": "CORSMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 1,
@@ -5445,10 +5448,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:124",
       "ref": null,
       "label": "IdempotencyMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 5,
@@ -5578,10 +5582,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:132",
       "ref": null,
       "label": "CORSMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 1,
@@ -5631,10 +5636,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:124",
       "ref": null,
       "label": "IdempotencyMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 5,
@@ -5767,10 +5773,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:132",
       "ref": null,
       "label": "CORSMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 1,
@@ -5820,10 +5827,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:124",
       "ref": null,
       "label": "IdempotencyMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 5,
@@ -5985,10 +5993,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:132",
       "ref": null,
       "label": "CORSMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 1,
@@ -6038,10 +6047,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:124",
       "ref": null,
       "label": "IdempotencyMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 5,
@@ -6694,10 +6704,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:132",
       "ref": null,
       "label": "CORSMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 1,
@@ -6747,10 +6758,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:124",
       "ref": null,
       "label": "IdempotencyMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 5,
@@ -7155,10 +7167,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:132",
       "ref": null,
       "label": "CORSMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 1,
@@ -7208,10 +7221,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:124",
       "ref": null,
       "label": "IdempotencyMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 5,
@@ -7637,10 +7651,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:132",
       "ref": null,
       "label": "CORSMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 1,
@@ -7690,10 +7705,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:124",
       "ref": null,
       "label": "IdempotencyMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 5,
@@ -8423,10 +8439,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:132",
       "ref": null,
       "label": "CORSMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 1,
@@ -8476,10 +8493,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:124",
       "ref": null,
       "label": "IdempotencyMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 5,
@@ -9567,10 +9585,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:132",
       "ref": null,
       "label": "CORSMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 1,
@@ -9620,10 +9639,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:124",
       "ref": null,
       "label": "IdempotencyMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 5,
@@ -10904,10 +10924,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:132",
       "ref": null,
       "label": "CORSMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 1,
@@ -10957,10 +10978,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:124",
       "ref": null,
       "label": "IdempotencyMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 5,
@@ -12384,10 +12406,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:132",
       "ref": null,
       "label": "CORSMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 1,
@@ -12437,10 +12460,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:124",
       "ref": null,
       "label": "IdempotencyMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 5,
@@ -14394,10 +14418,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:132",
       "ref": null,
       "label": "CORSMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 1,
@@ -14447,10 +14472,11 @@ window.LABEP = {
       "kind": "step",
       "phase": "middleware",
       "hit": null,
-      "at": null,
+      "at": "apps/api/main.py:124",
       "ref": null,
       "label": "IdempotencyMiddleware",
-      "sub": "middleware"
+      "sub": "middleware",
+      "at_is": "where the step is added to the application"
      },
      {
       "i": 5,
@@ -18536,6 +18562,30 @@ window.LABEP = {
     "calls_with_map_facts": 2
    },
    "reading": "the feed follows a failure ONE call down; a failure raised deeper says 'beyond one level' — the answer it becomes is not read"
+  },
+  "rules": {
+   "counts": {
+    "shapes": 13,
+    "shapes_with_rules": 13,
+    "fields": 53,
+    "fields_limited": 17,
+    "fields_required": 19,
+    "tables": 15,
+    "tables_with_rules": 15,
+    "columns": 102,
+    "columns_filled_by_db": 51,
+    "columns_cascade": 12,
+    "columns_renamed_in_db": 1,
+    "functions": 28,
+    "functions_with_line": 7,
+    "steps": 26,
+    "steps_with_line": 26
+   },
+   "state": {
+    "schemas": "present",
+    "models": "present"
+   },
+   "reading": "a rule is the feed's own reading of the declaration; which body fields a given ending actually read is in no feed"
   }
  },
  "identity": {
@@ -18617,7 +18667,10 @@ window.LABEP = {
     "kind": "everything",
     "label": "everything"
    }
-  ]
+  ],
+  "line": 183,
+  "at": "apps/api/api/setup.py:183",
+  "flines_is": "the file's length in lines — not a line to open"
  },
  "conns": {
   "out": [
@@ -20154,7 +20207,73 @@ window.LABEP = {
     "cols_more": 0,
     "file": "apps/api/models/consent.py",
     "id": "model:ConsentRecord",
-    "found": "both"
+    "found": "both",
+    "at": "apps/api/models/consent.py:21",
+    "rules": {
+     "columns": {
+      "accepted_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/consent.py:31",
+       "db_name": null
+      },
+      "created_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/consent.py:34",
+       "db_name": null
+      },
+      "id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "primary key",
+       "primary_key": true,
+       "default": "uuid.uuid4",
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/consent.py:26",
+       "db_name": null
+      },
+      "policy_version": {
+       "type": "String(32)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/consent.py:30",
+       "db_name": null
+      },
+      "user_id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": {
+        "ondelete": "CASCADE",
+        "target": "users.id"
+       },
+       "at": "apps/api/models/consent.py:27",
+       "db_name": null
+      }
+     },
+     "uniques": [],
+     "checks": [],
+     "indexes": []
+    }
    },
    {
     "table": "households",
@@ -20184,7 +20303,48 @@ window.LABEP = {
     "cols_more": 0,
     "file": "apps/api/models/household.py",
     "id": "model:Household",
-    "found": "both"
+    "found": "both",
+    "at": "apps/api/models/household.py:14",
+    "rules": {
+     "columns": {
+      "created_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/household.py:21",
+       "db_name": null
+      },
+      "id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "primary key",
+       "primary_key": true,
+       "default": "uuid.uuid4",
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/household.py:19",
+       "db_name": null
+      },
+      "name": {
+       "type": "String(120)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/household.py:20",
+       "db_name": null
+      }
+     },
+     "uniques": [],
+     "checks": [],
+     "indexes": []
+    }
    },
    {
     "table": "household_format_preferences",
@@ -20251,7 +20411,131 @@ window.LABEP = {
     "cols_more": 0,
     "file": "apps/api/models/preferences.py",
     "id": "model:HouseholdFormatPreferences",
-    "found": "both"
+    "found": "both",
+    "at": "apps/api/models/preferences.py:45",
+    "rules": {
+     "columns": {
+      "auto_discount_servings": {
+       "type": "Boolean",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": false,
+       "server_default": "false",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:69",
+       "db_name": null
+      },
+      "country": {
+       "type": "String(2)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": "CL",
+       "server_default": "CL",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:58",
+       "db_name": null
+      },
+      "created_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:72",
+       "db_name": null
+      },
+      "currency": {
+       "type": "String(3)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": "CLP",
+       "server_default": "CLP",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:60",
+       "db_name": null
+      },
+      "default_servings": {
+       "type": "Integer",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": 2,
+       "server_default": "2",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:61",
+       "db_name": null
+      },
+      "household_id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": {
+        "ondelete": "CASCADE",
+        "target": "households.id"
+       },
+       "at": "apps/api/models/preferences.py:55",
+       "db_name": null
+      },
+      "id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "primary key",
+       "primary_key": true,
+       "default": "uuid.uuid4",
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/preferences.py:54",
+       "db_name": null
+      },
+      "units": {
+       "type": "String(16)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": "metric",
+       "server_default": "metric",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:59",
+       "db_name": null
+      },
+      "updated_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:75",
+       "db_name": null
+      }
+     },
+     "uniques": [
+      {
+       "name": "uq_household_format_prefs_household",
+       "cols": [
+        "household_id"
+       ],
+       "at": "apps/api/models/preferences.py:50"
+      }
+     ],
+     "checks": [
+      {
+       "name": "ck_household_format_prefs_serving",
+       "sql": null,
+       "at": "apps/api/models/preferences.py:51"
+      }
+     ],
+     "indexes": []
+    }
    },
    {
     "table": "idempotency_keys",
@@ -20310,7 +20594,113 @@ window.LABEP = {
     "cols_more": 0,
     "file": "apps/api/models/idempotency.py",
     "id": "model:IdempotencyKey",
-    "found": "both"
+    "found": "both",
+    "at": "apps/api/models/idempotency.py:18",
+    "rules": {
+     "columns": {
+      "completed_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": true,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/idempotency.py:35",
+       "db_name": null
+      },
+      "created_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/idempotency.py:32",
+       "db_name": null
+      },
+      "id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "primary key",
+       "primary_key": true,
+       "default": "uuid.uuid4",
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/idempotency.py:26",
+       "db_name": null
+      },
+      "key": {
+       "type": "String(255)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/idempotency.py:27",
+       "db_name": null
+      },
+      "operation": {
+       "type": "String(120)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/idempotency.py:28",
+       "db_name": null
+      },
+      "owner_scope": {
+       "type": "String(255)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/idempotency.py:29",
+       "db_name": null
+      },
+      "result_ref": {
+       "type": "String(255)",
+       "nullable": true,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/idempotency.py:31",
+       "db_name": null
+      },
+      "status": {
+       "type": "String(32)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": "pending",
+       "server_default": "pending",
+       "fk": null,
+       "at": "apps/api/models/idempotency.py:30",
+       "db_name": null
+      }
+     },
+     "uniques": [
+      {
+       "name": "uq_idempotency_key_op_owner",
+       "cols": [
+        "key",
+        "operation",
+        "owner_scope"
+       ],
+       "at": "apps/api/models/idempotency.py:23"
+      }
+     ],
+     "checks": [],
+     "indexes": []
+    }
    },
    {
     "table": "locations",
@@ -20380,7 +20770,143 @@ window.LABEP = {
     "cols_more": 0,
     "file": "apps/api/models/location.py",
     "id": "model:Location",
-    "found": "both"
+    "found": "both",
+    "at": "apps/api/models/location.py:25",
+    "rules": {
+     "columns": {
+      "active": {
+       "type": "Boolean",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": true,
+       "server_default": "true",
+       "fk": null,
+       "at": "apps/api/models/location.py:68",
+       "db_name": null
+      },
+      "color": {
+       "type": "String(20)",
+       "nullable": true,
+       "nullable_from": "keyword",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/location.py:53",
+       "db_name": null
+      },
+      "created_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/location.py:76",
+       "db_name": null
+      },
+      "order": {
+       "type": "Integer",
+       "nullable": true,
+       "nullable_from": "keyword",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/location.py:64",
+       "db_name": "display_order"
+      },
+      "household_id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": {
+        "ondelete": "CASCADE",
+        "target": "households.id"
+       },
+       "at": "apps/api/models/location.py:44",
+       "db_name": null
+      },
+      "icon": {
+       "type": "String(40)",
+       "nullable": true,
+       "nullable_from": "keyword",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/location.py:54",
+       "db_name": null
+      },
+      "id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "primary key",
+       "primary_key": true,
+       "default": "uuid.uuid4",
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/location.py:43",
+       "db_name": null
+      },
+      "is_principal": {
+       "type": "Boolean",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": false,
+       "server_default": "false",
+       "fk": null,
+       "at": "apps/api/models/location.py:48",
+       "db_name": null
+      },
+      "name": {
+       "type": "String(120)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/location.py:47",
+       "db_name": null
+      },
+      "type": {
+       "type": "String(20)",
+       "nullable": true,
+       "nullable_from": "keyword",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/location.py:75",
+       "db_name": null
+      }
+     },
+     "uniques": [],
+     "checks": [],
+     "indexes": [
+      {
+       "name": "ix_locations_household_id",
+       "cols": [
+        "household_id"
+       ],
+       "at": "apps/api/models/location.py:32"
+      },
+      {
+       "name": "uq_location_principal_per_household",
+       "cols": [
+        "household_id"
+       ],
+       "at": "apps/api/models/location.py:37"
+      }
+     ]
+    }
    },
    {
     "table": "memberships",
@@ -20432,7 +20958,100 @@ window.LABEP = {
     "cols_more": 0,
     "file": "apps/api/models/household.py",
     "id": "model:Membership",
-    "found": "both"
+    "found": "both",
+    "at": "apps/api/models/household.py:26",
+    "rules": {
+     "columns": {
+      "created_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/household.py:44",
+       "db_name": null
+      },
+      "household_id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": {
+        "ondelete": "CASCADE",
+        "target": "households.id"
+       },
+       "at": "apps/api/models/household.py:39",
+       "db_name": null
+      },
+      "id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "primary key",
+       "primary_key": true,
+       "default": "uuid.uuid4",
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/household.py:38",
+       "db_name": null
+      },
+      "role": {
+       "type": "String(32)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/household.py:43",
+       "db_name": null
+      },
+      "user_id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": {
+        "ondelete": "CASCADE",
+        "target": "users.id"
+       },
+       "at": "apps/api/models/household.py:42",
+       "db_name": null
+      }
+     },
+     "uniques": [
+      {
+       "name": "uq_membership_household_user",
+       "cols": [
+        "household_id",
+        "user_id"
+       ],
+       "at": "apps/api/models/household.py:31"
+      }
+     ],
+     "checks": [],
+     "indexes": [
+      {
+       "name": "ix_memberships_household_id",
+       "cols": [
+        "household_id"
+       ],
+       "at": "apps/api/models/household.py:34"
+      },
+      {
+       "name": "ix_memberships_user_id",
+       "cols": [
+        "user_id"
+       ],
+       "at": "apps/api/models/household.py:35"
+      }
+     ]
+    }
    },
    {
     "table": "setup_completion_state",
@@ -20484,7 +21103,92 @@ window.LABEP = {
     "cols_more": 0,
     "file": "apps/api/models/setup.py",
     "id": "model:SetupCompletionState",
-    "found": "both"
+    "found": "both",
+    "at": "apps/api/models/setup.py:19",
+    "rules": {
+     "columns": {
+      "completed": {
+       "type": "Boolean",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": false,
+       "server_default": "false",
+       "fk": null,
+       "at": "apps/api/models/setup.py:27",
+       "db_name": null
+      },
+      "completed_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": true,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/setup.py:28",
+       "db_name": null
+      },
+      "created_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/setup.py:29",
+       "db_name": null
+      },
+      "id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "primary key",
+       "primary_key": true,
+       "default": "uuid.uuid4",
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/setup.py:25",
+       "db_name": null
+      },
+      "updated_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/setup.py:32",
+       "db_name": null
+      },
+      "user_id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": {
+        "ondelete": "CASCADE",
+        "target": "users.id"
+       },
+       "at": "apps/api/models/setup.py:26",
+       "db_name": null
+      }
+     },
+     "uniques": [
+      {
+       "name": "uq_setup_completion_user",
+       "cols": [
+        "user_id"
+       ],
+       "at": "apps/api/models/setup.py:23"
+      }
+     ],
+     "checks": [],
+     "indexes": []
+    }
    },
    {
     "table": "subscription_entitlement",
@@ -20531,7 +21235,81 @@ window.LABEP = {
     "cols_more": 0,
     "file": "apps/api/models/subscription.py",
     "id": "model:SubscriptionEntitlement",
-    "found": "both"
+    "found": "both",
+    "at": "apps/api/models/subscription.py:21",
+    "rules": {
+     "columns": {
+      "created_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/subscription.py:30",
+       "db_name": null
+      },
+      "id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "primary key",
+       "primary_key": true,
+       "default": "uuid.uuid4",
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/subscription.py:27",
+       "db_name": null
+      },
+      "tier": {
+       "type": "String(16)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": "free",
+       "server_default": "free",
+       "fk": null,
+       "at": "apps/api/models/subscription.py:29",
+       "db_name": null
+      },
+      "updated_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/subscription.py:33",
+       "db_name": null
+      },
+      "user_id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": {
+        "ondelete": "CASCADE",
+        "target": "users.id"
+       },
+       "at": "apps/api/models/subscription.py:28",
+       "db_name": null
+      }
+     },
+     "uniques": [
+      {
+       "name": "uq_subscription_entitlement_user",
+       "cols": [
+        "user_id"
+       ],
+       "at": "apps/api/models/subscription.py:25"
+      }
+     ],
+     "checks": [],
+     "indexes": []
+    }
    },
    {
     "table": "user_dietary_profile",
@@ -20583,7 +21361,92 @@ window.LABEP = {
     "cols_more": 0,
     "file": "apps/api/models/preferences.py",
     "id": "model:UserDietaryProfile",
-    "found": "both"
+    "found": "both",
+    "at": "apps/api/models/preferences.py:97",
+    "rules": {
+     "columns": {
+      "allergens": {
+       "type": "JSON",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": "list",
+       "server_default": "[]",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:111",
+       "db_name": null
+      },
+      "created_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:117",
+       "db_name": null
+      },
+      "id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "primary key",
+       "primary_key": true,
+       "default": "uuid.uuid4",
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/preferences.py:109",
+       "db_name": null
+      },
+      "preferences": {
+       "type": "JSON",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": "list",
+       "server_default": "[]",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:114",
+       "db_name": null
+      },
+      "updated_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:120",
+       "db_name": null
+      },
+      "user_id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": {
+        "ondelete": "CASCADE",
+        "target": "users.id"
+       },
+       "at": "apps/api/models/preferences.py:110",
+       "db_name": null
+      }
+     },
+     "uniques": [
+      {
+       "name": "uq_user_dietary_profile_user",
+       "cols": [
+        "user_id"
+       ],
+       "at": "apps/api/models/preferences.py:107"
+      }
+     ],
+     "checks": [],
+     "indexes": []
+    }
    },
    {
     "table": "user_exploration_preferences",
@@ -20655,7 +21518,158 @@ window.LABEP = {
     "cols_more": 2,
     "file": "apps/api/models/preferences.py",
     "id": "model:UserExplorationPreferences",
-    "found": "both"
+    "found": "both",
+    "at": "apps/api/models/preferences.py:125",
+    "rules": {
+     "columns": {
+      "comfort_techniques": {
+       "type": "JSON",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": "list",
+       "server_default": "[]",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:157",
+       "db_name": null
+      },
+      "comfort_time": {
+       "type": "JSON",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": "list",
+       "server_default": "[]",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:160",
+       "db_name": null
+      },
+      "created_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:182",
+       "db_name": null
+      },
+      "curiosity_techniques": {
+       "type": "JSON",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": "list",
+       "server_default": "[]",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:154",
+       "db_name": null
+      },
+      "explore_regions": {
+       "type": "JSON",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": "list",
+       "server_default": "[]",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:151",
+       "db_name": null
+      },
+      "id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "primary key",
+       "primary_key": true,
+       "default": "uuid.uuid4",
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/preferences.py:149",
+       "db_name": null
+      },
+      "preference_tastes": {
+       "type": "JSON",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": "list",
+       "server_default": "[]",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:173",
+       "db_name": null
+      },
+      "preference_temperature": {
+       "type": "String(20)",
+       "nullable": true,
+       "nullable_from": "keyword",
+       "primary_key": false,
+       "default": "None",
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/preferences.py:179",
+       "db_name": null
+      },
+      "preference_textures": {
+       "type": "JSON",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": "list",
+       "server_default": "[]",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:176",
+       "db_name": null
+      },
+      "skill_complexity_cap": {
+       "type": "Integer",
+       "nullable": true,
+       "nullable_from": "keyword",
+       "primary_key": false,
+       "default": "None",
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/preferences.py:163",
+       "db_name": null
+      },
+      "updated_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:185",
+       "db_name": null
+      },
+      "user_id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": {
+        "ondelete": "CASCADE",
+        "target": "users.id"
+       },
+       "at": "apps/api/models/preferences.py:150",
+       "db_name": null
+      }
+     },
+     "uniques": [
+      {
+       "name": "uq_user_exploration_prefs_user",
+       "cols": [
+        "user_id"
+       ],
+       "at": "apps/api/models/preferences.py:147"
+      }
+     ],
+     "checks": [],
+     "indexes": []
+    }
    },
    {
     "table": "user_format_preferences",
@@ -20702,7 +21716,81 @@ window.LABEP = {
     "cols_more": 0,
     "file": "apps/api/models/preferences.py",
     "id": "model:UserFormatPreferences",
-    "found": "both"
+    "found": "both",
+    "at": "apps/api/models/preferences.py:80",
+    "rules": {
+     "columns": {
+      "created_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:89",
+       "db_name": null
+      },
+      "id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "primary key",
+       "primary_key": true,
+       "default": "uuid.uuid4",
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/preferences.py:86",
+       "db_name": null
+      },
+      "language": {
+       "type": "String(8)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": "es",
+       "server_default": "es",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:88",
+       "db_name": null
+      },
+      "updated_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:92",
+       "db_name": null
+      },
+      "user_id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": {
+        "ondelete": "CASCADE",
+        "target": "users.id"
+       },
+       "at": "apps/api/models/preferences.py:87",
+       "db_name": null
+      }
+     },
+     "uniques": [
+      {
+       "name": "uq_user_format_prefs_user",
+       "cols": [
+        "user_id"
+       ],
+       "at": "apps/api/models/preferences.py:84"
+      }
+     ],
+     "checks": [],
+     "indexes": []
+    }
    },
    {
     "table": "user_notification_preferences",
@@ -20759,7 +21847,103 @@ window.LABEP = {
     "cols_more": 0,
     "file": "apps/api/models/preferences.py",
     "id": "model:UserNotificationPreferences",
-    "found": "both"
+    "found": "both",
+    "at": "apps/api/models/preferences.py:213",
+    "rules": {
+     "columns": {
+      "cooking": {
+       "type": "Boolean",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": true,
+       "server_default": "true",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:221",
+       "db_name": null
+      },
+      "created_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:224",
+       "db_name": null
+      },
+      "id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "primary key",
+       "primary_key": true,
+       "default": "uuid.uuid4",
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/preferences.py:219",
+       "db_name": null
+      },
+      "pantry": {
+       "type": "Boolean",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": true,
+       "server_default": "true",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:223",
+       "db_name": null
+      },
+      "shopping": {
+       "type": "Boolean",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": true,
+       "server_default": "true",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:222",
+       "db_name": null
+      },
+      "updated_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:227",
+       "db_name": null
+      },
+      "user_id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": {
+        "ondelete": "CASCADE",
+        "target": "users.id"
+       },
+       "at": "apps/api/models/preferences.py:220",
+       "db_name": null
+      }
+     },
+     "uniques": [
+      {
+       "name": "uq_user_notification_prefs_user",
+       "cols": [
+        "user_id"
+       ],
+       "at": "apps/api/models/preferences.py:217"
+      }
+     ],
+     "checks": [],
+     "indexes": []
+    }
    },
    {
     "table": "user_privacy_permissions",
@@ -20816,7 +22000,103 @@ window.LABEP = {
     "cols_more": 0,
     "file": "apps/api/models/preferences.py",
     "id": "model:UserPrivacyPermissions",
-    "found": "both"
+    "found": "both",
+    "at": "apps/api/models/preferences.py:190",
+    "rules": {
+     "columns": {
+      "allow_reminders": {
+       "type": "Boolean",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": true,
+       "server_default": "true",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:204",
+       "db_name": null
+      },
+      "created_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:205",
+       "db_name": null
+      },
+      "id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "primary key",
+       "primary_key": true,
+       "default": "uuid.uuid4",
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/preferences.py:196",
+       "db_name": null
+      },
+      "share_culinary_preferences": {
+       "type": "Boolean",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": false,
+       "server_default": "false",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:201",
+       "db_name": null
+      },
+      "share_shopping_data": {
+       "type": "Boolean",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": false,
+       "server_default": "false",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:198",
+       "db_name": null
+      },
+      "updated_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/preferences.py:208",
+       "db_name": null
+      },
+      "user_id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": {
+        "ondelete": "CASCADE",
+        "target": "users.id"
+       },
+       "at": "apps/api/models/preferences.py:197",
+       "db_name": null
+      }
+     },
+     "uniques": [
+      {
+       "name": "uq_user_privacy_permissions_user",
+       "cols": [
+        "user_id"
+       ],
+       "at": "apps/api/models/preferences.py:194"
+      }
+     ],
+     "checks": [],
+     "indexes": []
+    }
    },
    {
     "table": "users",
@@ -20865,7 +22145,90 @@ window.LABEP = {
     "file": "apps/api/models/identity.py",
     "id": "model:User",
     "found": "route effects",
-    "found_why": "only the login check touches it, before the handler runs — the map's access edge starts at the handler"
+    "found_why": "only the login check touches it, before the handler runs — the map's access edge starts at the handler",
+    "at": "apps/api/models/identity.py:18",
+    "rules": {
+     "columns": {
+      "auth_provider": {
+       "type": "String(32)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/identity.py:27",
+       "db_name": null
+      },
+      "auth_provider_id": {
+       "type": "String(255)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/identity.py:28",
+       "db_name": null
+      },
+      "created_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/identity.py:31",
+       "db_name": null
+      },
+      "display_name": {
+       "type": "String(120)",
+       "nullable": true,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/identity.py:30",
+       "db_name": null
+      },
+      "email": {
+       "type": "String(320)",
+       "nullable": true,
+       "nullable_from": "annotation",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/identity.py:29",
+       "db_name": null
+      },
+      "id": {
+       "type": null,
+       "nullable": false,
+       "nullable_from": "primary key",
+       "primary_key": true,
+       "default": "uuid.uuid4",
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/identity.py:26",
+       "db_name": null
+      }
+     },
+     "uniques": [
+      {
+       "name": "uq_users_provider_identity",
+       "cols": [
+        "auth_provider",
+        "auth_provider_id"
+       ],
+       "at": "apps/api/models/identity.py:23"
+      }
+     ],
+     "checks": [],
+     "indexes": []
+    }
    },
    {
     "table": "ai_spend_log",
@@ -20921,7 +22284,111 @@ window.LABEP = {
     "file": "apps/api/models/ai_spend.py",
     "id": "model:AiSpendLog",
     "found": "route effects",
-    "found_why": "a step of a route touches it; the map's access edge does not carry it"
+    "found_why": "a step of a route touches it; the map's access edge does not carry it",
+    "at": "apps/api/models/ai_spend.py:20",
+    "rules": {
+     "columns": {
+      "cost_usd": {
+       "type": "Float",
+       "nullable": false,
+       "nullable_from": "keyword",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/ai_spend.py:30",
+       "db_name": null
+      },
+      "credits_charged": {
+       "type": "Integer",
+       "nullable": false,
+       "nullable_from": "keyword",
+       "primary_key": false,
+       "default": 0,
+       "server_default": "0",
+       "fk": null,
+       "at": "apps/api/models/ai_spend.py:37",
+       "db_name": null
+      },
+      "id": {
+       "type": "UUID",
+       "nullable": false,
+       "nullable_from": "primary key",
+       "primary_key": true,
+       "default": "uuid.uuid4",
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/ai_spend.py:26",
+       "db_name": null
+      },
+      "mode": {
+       "type": "String(40)",
+       "nullable": false,
+       "nullable_from": "keyword",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/ai_spend.py:32",
+       "db_name": null
+      },
+      "model_tier": {
+       "type": "String(8)",
+       "nullable": false,
+       "nullable_from": "keyword",
+       "primary_key": false,
+       "default": "full",
+       "server_default": "full",
+       "fk": null,
+       "at": "apps/api/models/ai_spend.py:41",
+       "db_name": null
+      },
+      "occurred_at": {
+       "type": "DateTime(timezone=True)",
+       "nullable": false,
+       "nullable_from": "keyword",
+       "primary_key": false,
+       "default": null,
+       "server_default": "now()",
+       "fk": null,
+       "at": "apps/api/models/ai_spend.py:27",
+       "db_name": null
+      },
+      "total_tokens": {
+       "type": "Integer",
+       "nullable": false,
+       "nullable_from": "keyword",
+       "primary_key": false,
+       "default": 0,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/ai_spend.py:33",
+       "db_name": null
+      },
+      "user_id": {
+       "type": "UUID",
+       "nullable": true,
+       "nullable_from": "keyword",
+       "primary_key": false,
+       "default": null,
+       "server_default": null,
+       "fk": null,
+       "at": "apps/api/models/ai_spend.py:31",
+       "db_name": null
+      }
+     },
+     "uniques": [],
+     "checks": [],
+     "indexes": [
+      {
+       "name": "ix_ai_spend_log_occurred_at",
+       "cols": [
+        "occurred_at"
+       ],
+       "at": "apps/api/models/ai_spend.py:24"
+      }
+     ]
+    }
    }
   ],
   "both": [
@@ -22326,6 +23793,111 @@ window.LABEP = {
       "usage": {
        "fk_in": 0,
        "internal": 3
+      },
+      "at": "apps/api/schemas/preferences.py:360",
+      "extra": {
+       "policy": "forbid",
+       "at": "apps/api/schemas/preferences.py:363",
+       "state": "defined"
+      },
+      "rules": {
+       "country": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:365",
+        "annotation": "str",
+        "validators": [
+         {
+          "name": "_check_country",
+          "kind": "field_validator",
+          "at": "apps/api/schemas/preferences.py:372",
+          "normalises": [
+           "strip",
+           "upper"
+          ],
+          "rules": [
+           {
+            "msg": "country must be a 2-letter ISO code",
+            "pred": "len(country) != 2 or not country.isalpha()",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:375"
+           }
+          ]
+         }
+        ]
+       },
+       "units": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:366",
+        "annotation": "str",
+        "validators": [
+         {
+          "name": "_check_units",
+          "kind": "field_validator",
+          "at": "apps/api/schemas/preferences.py:388",
+          "normalises": [
+           "lower",
+           "strip"
+          ],
+          "rules": [
+           {
+            "msg": "units must be one of ['metric', 'imperial']",
+            "pred": "units not in ALLOWED_UNITS",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:391"
+           }
+          ]
+         }
+        ]
+       },
+       "currency": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:367",
+        "annotation": "str",
+        "validators": [
+         {
+          "name": "_check_currency",
+          "kind": "field_validator",
+          "at": "apps/api/schemas/preferences.py:380",
+          "normalises": [
+           "strip",
+           "upper"
+          ],
+          "rules": [
+           {
+            "msg": "currency must be a 3-letter ISO 4217 code",
+            "pred": "len(currency) != 3 or not currency.isalpha()",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:383"
+           }
+          ]
+         }
+        ]
+       },
+       "default_servings": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:368",
+        "annotation": "int",
+        "validators": [
+         {
+          "name": "_check_servings",
+          "kind": "field_validator",
+          "at": "apps/api/schemas/preferences.py:396",
+          "normalises": [],
+          "rules": [
+           {
+            "msg": "default_servings must be one of [1, 2, 3, 4, 5, 8, 10, 20]",
+            "pred": "value not in ALLOWED_SERVINGS",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:398"
+           }
+          ]
+         }
+        ]
+       }
       }
      },
      {
@@ -22349,6 +23921,39 @@ window.LABEP = {
       "usage": {
        "fk_in": 0,
        "internal": 2
+      },
+      "at": "apps/api/schemas/preferences.py:402",
+      "extra": {
+       "policy": "forbid",
+       "at": "apps/api/schemas/preferences.py:405",
+       "state": "defined"
+      },
+      "rules": {
+       "language": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:407",
+        "annotation": "str",
+        "validators": [
+         {
+          "name": "_check_language",
+          "kind": "field_validator",
+          "at": "apps/api/schemas/preferences.py:411",
+          "normalises": [
+           "lower",
+           "strip"
+          ],
+          "rules": [
+           {
+            "msg": "language must not be empty",
+            "pred": "not language",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:414"
+           }
+          ]
+         }
+        ]
+       }
       }
      },
      {
@@ -22382,6 +23987,100 @@ window.LABEP = {
       "usage": {
        "fk_in": 0,
        "internal": 3
+      },
+      "at": "apps/api/schemas/preferences.py:107",
+      "extra": {
+       "policy": "forbid",
+       "at": "apps/api/schemas/preferences.py:122",
+       "state": "defined"
+      },
+      "rules": {
+       "allergens": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:124",
+        "annotation": "list[str]",
+        "validators": [
+         {
+          "name": "_check_allergens",
+          "kind": "field_validator",
+          "at": "apps/api/schemas/preferences.py:130",
+          "normalises": [
+           "lower",
+           "strip"
+          ],
+          "rules": [
+           {
+            "msg": "allergens contains an empty tag",
+            "pred": "not tag",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:92"
+           },
+           {
+            "msg": "allergens allows at most 5 items (got {len(cleaned)})",
+            "pred": "len(cleaned) > max_items",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:97"
+           },
+           {
+            "msg": "unknown allergens code(s) {unknown}; valid: {sorted(allowed)}",
+            "pred": "allowed is not None and unknown",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:101"
+           }
+          ]
+         }
+        ]
+       },
+       "preferences": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:125",
+        "annotation": "list[str]",
+        "validators": [
+         {
+          "name": "_check_preferences",
+          "kind": "field_validator",
+          "at": "apps/api/schemas/preferences.py:137",
+          "normalises": [
+           "lower",
+           "strip"
+          ],
+          "rules": [
+           {
+            "msg": "preferences contains an empty tag",
+            "pred": "not tag",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:92"
+           },
+           {
+            "msg": "preferences allows at most 20 items (got {len(cleaned)})",
+            "pred": "len(cleaned) > max_items",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:97"
+           }
+          ]
+         }
+        ]
+       },
+       "diet": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:126",
+        "annotation": "str | None",
+        "validators": [
+         {
+          "name": "_normalize_diet",
+          "kind": "field_validator",
+          "at": "apps/api/schemas/preferences.py:142",
+          "normalises": [
+           "lower",
+           "strip"
+          ],
+          "rules": []
+         }
+        ]
+       }
       }
      },
      {
@@ -22440,6 +24139,283 @@ window.LABEP = {
       "usage": {
        "fk_in": 0,
        "internal": 4
+      },
+      "at": "apps/api/schemas/preferences.py:165",
+      "extra": {
+       "policy": "forbid",
+       "at": "apps/api/schemas/preferences.py:182",
+       "state": "defined"
+      },
+      "rules": {
+       "explore_regions": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:184",
+        "annotation": "list[str]",
+        "validators": [
+         {
+          "name": "_check_explore_regions",
+          "kind": "field_validator",
+          "at": "apps/api/schemas/preferences.py:196",
+          "normalises": [
+           "lower",
+           "strip"
+          ],
+          "rules": [
+           {
+            "msg": "explore_regions contains an empty tag",
+            "pred": "not tag",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:92"
+           },
+           {
+            "msg": "explore_regions allows at most 3 items (got {len(cleaned)})",
+            "pred": "len(cleaned) > max_items",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:97"
+           },
+           {
+            "msg": "unknown explore_regions code(s) {unknown}; valid: {sorted(allowed)}",
+            "pred": "allowed is not None and unknown",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:101"
+           }
+          ]
+         }
+        ]
+       },
+       "curiosity_techniques": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:185",
+        "annotation": "list[str]",
+        "validators": [
+         {
+          "name": "_check_curiosity_techniques",
+          "kind": "field_validator",
+          "at": "apps/api/schemas/preferences.py:206",
+          "normalises": [
+           "lower",
+           "strip"
+          ],
+          "rules": [
+           {
+            "msg": "curiosity_techniques contains an empty tag",
+            "pred": "not tag",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:92"
+           },
+           {
+            "msg": "curiosity_techniques allows at most 3 items (got {len(cleaned)})",
+            "pred": "len(cleaned) > max_items",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:97"
+           },
+           {
+            "msg": "unknown curiosity_techniques code(s) {unknown}; valid: {sorted(allowed)}",
+            "pred": "allowed is not None and unknown",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:101"
+           }
+          ]
+         }
+        ]
+       },
+       "comfort_techniques": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:186",
+        "annotation": "list[str]",
+        "validators": [
+         {
+          "name": "_check_comfort_techniques",
+          "kind": "field_validator",
+          "at": "apps/api/schemas/preferences.py:216",
+          "normalises": [
+           "lower",
+           "strip"
+          ],
+          "rules": [
+           {
+            "msg": "comfort_techniques contains an empty tag",
+            "pred": "not tag",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:92"
+           },
+           {
+            "msg": "comfort_techniques allows at most 3 items (got {len(cleaned)})",
+            "pred": "len(cleaned) > max_items",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:97"
+           },
+           {
+            "msg": "unknown comfort_techniques code(s) {unknown}; valid: {sorted(allowed)}",
+            "pred": "allowed is not None and unknown",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:101"
+           }
+          ]
+         }
+        ]
+       },
+       "comfort_time": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:187",
+        "annotation": "list[str]",
+        "validators": [
+         {
+          "name": "_check_comfort_time",
+          "kind": "field_validator",
+          "at": "apps/api/schemas/preferences.py:226",
+          "normalises": [
+           "lower",
+           "strip"
+          ],
+          "rules": [
+           {
+            "msg": "comfort_time contains an empty tag",
+            "pred": "not tag",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:92"
+           },
+           {
+            "msg": "comfort_time allows at most 3 items (got {len(cleaned)})",
+            "pred": "len(cleaned) > max_items",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:97"
+           },
+           {
+            "msg": "unknown comfort_time code(s) {unknown}; valid: {sorted(allowed)}",
+            "pred": "allowed is not None and unknown",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:101"
+           }
+          ]
+         }
+        ]
+       },
+       "skill_complexity_cap": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:188",
+        "annotation": "int | None",
+        "validators": [
+         {
+          "name": "_check_skill_complexity_cap",
+          "kind": "field_validator",
+          "at": "apps/api/schemas/preferences.py:236",
+          "normalises": [],
+          "rules": [
+           {
+            "msg": "skill_complexity_cap must be null or in 1..5 (got {value})",
+            "pred": "not MIN_SKILL_COMPLEXITY_CAP <= value <= MAX_SKILL_COMPLEXITY_CAP",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:53"
+           }
+          ]
+         }
+        ]
+       },
+       "preference_tastes": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:190",
+        "annotation": "list[str]",
+        "validators": [
+         {
+          "name": "_check_preference_tastes",
+          "kind": "field_validator",
+          "at": "apps/api/schemas/preferences.py:241",
+          "normalises": [
+           "lower",
+           "strip"
+          ],
+          "rules": [
+           {
+            "msg": "preference_tastes contains an empty tag",
+            "pred": "not tag",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:92"
+           },
+           {
+            "msg": "preference_tastes allows at most 3 items (got {len(cleaned)})",
+            "pred": "len(cleaned) > max_items",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:97"
+           },
+           {
+            "msg": "unknown preference_tastes code(s) {unknown}; valid: {sorted(allowed)}",
+            "pred": "allowed is not None and unknown",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:101"
+           }
+          ]
+         }
+        ]
+       },
+       "preference_textures": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:191",
+        "annotation": "list[str]",
+        "validators": [
+         {
+          "name": "_check_preference_textures",
+          "kind": "field_validator",
+          "at": "apps/api/schemas/preferences.py:251",
+          "normalises": [
+           "lower",
+           "strip"
+          ],
+          "rules": [
+           {
+            "msg": "preference_textures contains an empty tag",
+            "pred": "not tag",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:92"
+           },
+           {
+            "msg": "preference_textures allows at most 3 items (got {len(cleaned)})",
+            "pred": "len(cleaned) > max_items",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:97"
+           },
+           {
+            "msg": "unknown preference_textures code(s) {unknown}; valid: {sorted(allowed)}",
+            "pred": "allowed is not None and unknown",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:101"
+           }
+          ]
+         }
+        ]
+       },
+       "preference_temperature": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:192",
+        "annotation": "str | None",
+        "validators": [
+         {
+          "name": "_check_preference_temperature",
+          "kind": "field_validator",
+          "at": "apps/api/schemas/preferences.py:261",
+          "normalises": [
+           "lower",
+           "strip"
+          ],
+          "rules": [
+           {
+            "msg": "unknown preference_temperature code {code}; valid: {sorted(allowed)}",
+            "pred": "code not in allowed",
+            "type": "value_error",
+            "at": "apps/api/schemas/preferences.py:75"
+           }
+          ]
+         }
+        ]
+       }
       }
      },
      {
@@ -22473,6 +24449,35 @@ window.LABEP = {
       "usage": {
        "fk_in": 0,
        "internal": 2
+      },
+      "at": "apps/api/schemas/preferences.py:418",
+      "extra": {
+       "policy": "forbid",
+       "at": "apps/api/schemas/preferences.py:421",
+       "state": "defined"
+      },
+      "rules": {
+       "share_shopping_data": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:423",
+        "annotation": "bool",
+        "validators": []
+       },
+       "share_culinary_preferences": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:424",
+        "annotation": "bool",
+        "validators": []
+       },
+       "allow_reminders": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:425",
+        "annotation": "bool",
+        "validators": []
+       }
       }
      },
      {
@@ -22506,12 +24511,118 @@ window.LABEP = {
       "usage": {
        "fk_in": 0,
        "internal": 2
+      },
+      "at": "apps/api/schemas/preferences.py:428",
+      "extra": {
+       "policy": "forbid",
+       "at": "apps/api/schemas/preferences.py:431",
+       "state": "defined"
+      },
+      "rules": {
+       "cooking": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:433",
+        "annotation": "bool",
+        "validators": []
+       },
+       "shopping": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:434",
+        "annotation": "bool",
+        "validators": []
+       },
+       "pantry": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/preferences.py:435",
+        "annotation": "bool",
+        "validators": []
+       }
       }
      }
     ],
     "usage": {
      "fk_in": 0,
      "internal": 3
+    },
+    "at": "apps/api/schemas/setup.py:21",
+    "extra": {
+     "policy": "forbid",
+     "at": "apps/api/schemas/setup.py:24",
+     "state": "defined"
+    },
+    "rules": {
+     "household_name": {
+      "required": true,
+      "constraints": {
+       "max_length": 120,
+       "min_length": 1
+      },
+      "at": "apps/api/schemas/setup.py:26",
+      "annotation": "str",
+      "validators": [
+       {
+        "name": "_strip_name",
+        "kind": "field_validator",
+        "at": "apps/api/schemas/setup.py:42",
+        "normalises": [
+         "strip"
+        ],
+        "rules": [
+         {
+          "msg": "household_name must not be blank",
+          "pred": "not name",
+          "type": "value_error",
+          "at": "apps/api/schemas/setup.py:45"
+         }
+        ]
+       }
+      ]
+     },
+     "household_format": {
+      "required": false,
+      "constraints": {},
+      "at": "apps/api/schemas/setup.py:27",
+      "annotation": "HouseholdFormatInput",
+      "validators": []
+     },
+     "user_format": {
+      "required": false,
+      "constraints": {},
+      "at": "apps/api/schemas/setup.py:28",
+      "annotation": "UserFormatInput",
+      "validators": []
+     },
+     "dietary": {
+      "required": false,
+      "constraints": {},
+      "at": "apps/api/schemas/setup.py:29",
+      "annotation": "DietaryProfileInput",
+      "validators": []
+     },
+     "exploration": {
+      "required": false,
+      "constraints": {},
+      "at": "apps/api/schemas/setup.py:32",
+      "annotation": "ExplorationPreferencesInput",
+      "validators": []
+     },
+     "privacy": {
+      "required": false,
+      "constraints": {},
+      "at": "apps/api/schemas/setup.py:35",
+      "annotation": "PrivacyPermissionsInput",
+      "validators": []
+     },
+     "notifications": {
+      "required": false,
+      "constraints": {},
+      "at": "apps/api/schemas/setup.py:36",
+      "annotation": "NotificationPreferencesInput",
+      "validators": []
+     }
     }
    },
    "response": {
@@ -22593,6 +24704,42 @@ window.LABEP = {
       "usage": {
        "fk_in": 0,
        "internal": 2
+      },
+      "at": "apps/api/schemas/responses.py:15",
+      "extra": {
+       "policy": "ignore",
+       "at": null,
+       "state": "default"
+      },
+      "rules": {
+       "id": {
+        "required": true,
+        "constraints": {},
+        "at": "apps/api/schemas/responses.py:18",
+        "annotation": "uuid.UUID",
+        "validators": []
+       },
+       "email": {
+        "required": true,
+        "constraints": {},
+        "at": "apps/api/schemas/responses.py:19",
+        "annotation": "str | None",
+        "validators": []
+       },
+       "display_name": {
+        "required": true,
+        "constraints": {},
+        "at": "apps/api/schemas/responses.py:20",
+        "annotation": "str | None",
+        "validators": []
+       },
+       "auth_provider": {
+        "required": true,
+        "constraints": {},
+        "at": "apps/api/schemas/responses.py:21",
+        "annotation": "str",
+        "validators": []
+       }
       }
      },
      {
@@ -22621,6 +24768,28 @@ window.LABEP = {
       "usage": {
        "fk_in": 0,
        "internal": 2
+      },
+      "at": "apps/api/schemas/responses.py:32",
+      "extra": {
+       "policy": "ignore",
+       "at": null,
+       "state": "default"
+      },
+      "rules": {
+       "id": {
+        "required": true,
+        "constraints": {},
+        "at": "apps/api/schemas/responses.py:35",
+        "annotation": "uuid.UUID",
+        "validators": []
+       },
+       "name": {
+        "required": true,
+        "constraints": {},
+        "at": "apps/api/schemas/responses.py:36",
+        "annotation": "str",
+        "validators": []
+       }
       }
      },
      {
@@ -22654,6 +24823,35 @@ window.LABEP = {
       "usage": {
        "fk_in": 0,
        "internal": 2
+      },
+      "at": "apps/api/schemas/responses.py:39",
+      "extra": {
+       "policy": "ignore",
+       "at": null,
+       "state": "default"
+      },
+      "rules": {
+       "id": {
+        "required": true,
+        "constraints": {},
+        "at": "apps/api/schemas/responses.py:42",
+        "annotation": "uuid.UUID",
+        "validators": []
+       },
+       "role": {
+        "required": true,
+        "constraints": {},
+        "at": "apps/api/schemas/responses.py:43",
+        "annotation": "str",
+        "validators": []
+       },
+       "household_id": {
+        "required": true,
+        "constraints": {},
+        "at": "apps/api/schemas/responses.py:44",
+        "annotation": "uuid.UUID",
+        "validators": []
+       }
       }
      },
      {
@@ -22702,6 +24900,56 @@ window.LABEP = {
       "usage": {
        "fk_in": 0,
        "internal": 2
+      },
+      "at": "apps/api/schemas/responses.py:146",
+      "extra": {
+       "policy": "ignore",
+       "at": null,
+       "state": "default"
+      },
+      "rules": {
+       "household_format": {
+        "required": true,
+        "constraints": {},
+        "at": "apps/api/schemas/responses.py:147",
+        "annotation": "HouseholdFormatBlock",
+        "validators": []
+       },
+       "user_format": {
+        "required": true,
+        "constraints": {},
+        "at": "apps/api/schemas/responses.py:148",
+        "annotation": "UserFormatBlock",
+        "validators": []
+       },
+       "dietary": {
+        "required": true,
+        "constraints": {},
+        "at": "apps/api/schemas/responses.py:149",
+        "annotation": "DietaryBlock",
+        "validators": []
+       },
+       "privacy": {
+        "required": true,
+        "constraints": {},
+        "at": "apps/api/schemas/responses.py:150",
+        "annotation": "PrivacyBlock",
+        "validators": []
+       },
+       "notifications": {
+        "required": true,
+        "constraints": {},
+        "at": "apps/api/schemas/responses.py:151",
+        "annotation": "NotificationBlock",
+        "validators": []
+       },
+       "exploration": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/responses.py:154",
+        "annotation": "ExplorationBlock",
+        "validators": []
+       }
       }
      },
      {
@@ -22735,12 +24983,91 @@ window.LABEP = {
       "usage": {
        "fk_in": 0,
        "internal": 3
+      },
+      "at": "apps/api/schemas/responses.py:135",
+      "extra": {
+       "policy": "ignore",
+       "at": null,
+       "state": "default"
+      },
+      "rules": {
+       "tier": {
+        "required": true,
+        "constraints": {},
+        "at": "apps/api/schemas/responses.py:138",
+        "annotation": "str",
+        "validators": []
+       },
+       "credits_allowance": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/responses.py:142",
+        "annotation": "int",
+        "validators": []
+       },
+       "credits_remaining": {
+        "required": false,
+        "constraints": {},
+        "at": "apps/api/schemas/responses.py:143",
+        "annotation": "int",
+        "validators": []
+       }
       }
      }
     ],
     "usage": {
      "fk_in": 0,
      "internal": 2
+    },
+    "at": "apps/api/schemas/responses.py:157",
+    "extra": {
+     "policy": "ignore",
+     "at": null,
+     "state": "default"
+    },
+    "rules": {
+     "setup_required": {
+      "required": true,
+      "constraints": {},
+      "at": "apps/api/schemas/responses.py:158",
+      "annotation": "bool",
+      "validators": []
+     },
+     "user": {
+      "required": true,
+      "constraints": {},
+      "at": "apps/api/schemas/responses.py:159",
+      "annotation": "UserSummary",
+      "validators": []
+     },
+     "household": {
+      "required": false,
+      "constraints": {},
+      "at": "apps/api/schemas/responses.py:160",
+      "annotation": "HouseholdSummary | None",
+      "validators": []
+     },
+     "membership": {
+      "required": false,
+      "constraints": {},
+      "at": "apps/api/schemas/responses.py:161",
+      "annotation": "MembershipSummary | None",
+      "validators": []
+     },
+     "preferences": {
+      "required": false,
+      "constraints": {},
+      "at": "apps/api/schemas/responses.py:162",
+      "annotation": "PreferencesSummary | None",
+      "validators": []
+     },
+     "subscription": {
+      "required": true,
+      "constraints": {},
+      "at": "apps/api/schemas/responses.py:163",
+      "annotation": "SubscriptionSummary",
+      "validators": []
+     }
     }
    },
    "touched": [
@@ -22806,7 +25133,8 @@ window.LABEP = {
     "tables": 0,
     "used_by_api_files": 1,
     "used_by_other_files": 0
-   }
+   },
+   "at": "apps/api/api/setup.py:184"
   },
   "behind": {
    "depth": 5,
@@ -22870,7 +25198,9 @@ window.LABEP = {
       "used_by_other_files": 1
      },
      "rel": "calls",
-     "via": "setup_complete"
+     "via": "setup_complete",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     },
     {
      "id": "apps/api/auth/context.py#get_auth_context",
@@ -22917,7 +25247,8 @@ window.LABEP = {
       "used_by_other_files": 4
      },
      "rel": "depends",
-     "via": "setup_complete"
+     "via": "setup_complete",
+     "at": "apps/api/auth/context.py:90"
     },
     {
      "id": "apps/api/services/setup.py#complete_setup",
@@ -22973,7 +25304,8 @@ window.LABEP = {
       "used_by_other_files": 5
      },
      "rel": "calls",
-     "via": "setup_complete"
+     "via": "setup_complete",
+     "at": "apps/api/services/setup.py:337"
     }
    ],
    [
@@ -23021,7 +25353,8 @@ window.LABEP = {
       "used_by_other_files": 1
      },
      "rel": "calls",
-     "via": "get_auth_context"
+     "via": "get_auth_context",
+     "at": "apps/api/auth/context.py:64"
     },
     {
      "id": "apps/api/services/idempotency.py#claim",
@@ -23068,7 +25401,8 @@ window.LABEP = {
       "used_by_other_files": 6
      },
      "rel": "calls",
-     "via": "complete_setup"
+     "via": "complete_setup",
+     "at": "apps/api/services/idempotency.py:114"
     },
     {
      "id": "apps/api/services/idempotency.py#complete",
@@ -23106,7 +25440,9 @@ window.LABEP = {
       "used_by_other_files": 20
      },
      "rel": "calls",
-     "via": "complete_setup"
+     "via": "complete_setup",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     },
     {
      "id": "apps/api/services/ownership.py#ensure_principal_household",
@@ -23165,7 +25501,9 @@ window.LABEP = {
       "used_by_other_files": 2
      },
      "rel": "calls",
-     "via": "complete_setup"
+     "via": "complete_setup",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     },
     {
      "id": "apps/api/services/ownership.py#load_household_context",
@@ -23214,7 +25552,9 @@ window.LABEP = {
       "used_by_other_files": 2
      },
      "rel": "calls",
-     "via": "complete_setup"
+     "via": "complete_setup",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     },
     {
      "id": "apps/api/services/setup.py#_discard_claim",
@@ -23252,7 +25592,8 @@ window.LABEP = {
       "used_by_other_files": 1
      },
      "rel": "calls",
-     "via": "complete_setup"
+     "via": "complete_setup",
+     "at": "apps/api/services/setup.py:312"
     },
     {
      "id": "apps/api/services/setup.py#_load_setup_result",
@@ -23332,7 +25673,8 @@ window.LABEP = {
       "used_by_other_files": 1
      },
      "rel": "calls",
-     "via": "complete_setup"
+     "via": "complete_setup",
+     "at": "apps/api/services/setup.py:230"
     },
     {
      "id": "apps/api/services/setup.py#_stamp_completion",
@@ -23375,7 +25717,9 @@ window.LABEP = {
       "used_by_other_files": 1
      },
      "rel": "calls",
-     "via": "complete_setup"
+     "via": "complete_setup",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     },
     {
      "id": "apps/api/services/setup.py#_upsert_dietary",
@@ -23418,7 +25762,9 @@ window.LABEP = {
       "used_by_other_files": 2
      },
      "rel": "calls",
-     "via": "complete_setup"
+     "via": "complete_setup",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     },
     {
      "id": "apps/api/services/setup.py#_upsert_exploration",
@@ -23456,7 +25802,9 @@ window.LABEP = {
       "used_by_other_files": 1
      },
      "rel": "calls",
-     "via": "complete_setup"
+     "via": "complete_setup",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     },
     {
      "id": "apps/api/services/setup.py#_upsert_format_prefs",
@@ -23499,7 +25847,9 @@ window.LABEP = {
       "used_by_other_files": 1
      },
      "rel": "calls",
-     "via": "complete_setup"
+     "via": "complete_setup",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     },
     {
      "id": "apps/api/services/setup.py#_upsert_notifications",
@@ -23542,7 +25892,9 @@ window.LABEP = {
       "used_by_other_files": 1
      },
      "rel": "calls",
-     "via": "complete_setup"
+     "via": "complete_setup",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     },
     {
      "id": "apps/api/services/setup.py#_upsert_privacy",
@@ -23585,7 +25937,9 @@ window.LABEP = {
       "used_by_other_files": 1
      },
      "rel": "calls",
-     "via": "complete_setup"
+     "via": "complete_setup",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     },
     {
      "id": "apps/api/services/setup.py#_upsert_subscription",
@@ -23628,7 +25982,9 @@ window.LABEP = {
       "used_by_other_files": 1
      },
      "rel": "calls",
-     "via": "complete_setup"
+     "via": "complete_setup",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     },
     {
      "id": "apps/api/services/setup.py#_upsert_user_format",
@@ -23671,7 +26027,9 @@ window.LABEP = {
       "used_by_other_files": 1
      },
      "rel": "calls",
-     "via": "complete_setup"
+     "via": "complete_setup",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     },
     {
      "id": "apps/api/services/consent.py#latest_consent",
@@ -23709,7 +26067,9 @@ window.LABEP = {
       "used_by_other_files": 2
      },
      "rel": "calls",
-     "via": "complete_setup"
+     "via": "complete_setup",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     }
    ],
    [
@@ -23751,7 +26111,9 @@ window.LABEP = {
       "used_by_other_files": 1
      },
      "rel": "binds",
-     "via": "build_auth_context"
+     "via": "build_auth_context",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     },
     {
      "id": "apps/api/auth/verifier.py#MockTokenVerifier.verify",
@@ -23783,7 +26145,9 @@ window.LABEP = {
       "used_by_other_files": 1
      },
      "rel": "binds",
-     "via": "build_auth_context"
+     "via": "build_auth_context",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     },
     {
      "id": "apps/api/services/ownership.py#resolve_or_create_user",
@@ -23826,7 +26190,9 @@ window.LABEP = {
       "used_by_other_files": 1
      },
      "rel": "calls",
-     "via": "build_auth_context"
+     "via": "build_auth_context",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     },
     {
      "id": "apps/api/services/idempotency.py#_lookup",
@@ -23864,7 +26230,9 @@ window.LABEP = {
       "used_by_other_files": 1
      },
      "rel": "calls",
-     "via": "claim"
+     "via": "claim",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     },
     {
      "id": "apps/api/services/idempotency.py#_outcome_for",
@@ -23903,7 +26271,9 @@ window.LABEP = {
       "used_by_other_files": 1
      },
      "rel": "calls",
-     "via": "claim"
+     "via": "claim",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     },
     {
      "id": "apps/api/services/ownership.py#get_principal_location",
@@ -23941,7 +26311,9 @@ window.LABEP = {
       "used_by_other_files": 1
      },
      "rel": "calls",
-     "via": "ensure_principal_household"
+     "via": "ensure_principal_household",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     },
     {
      "id": "apps/api/services/exploration.py#upsert_exploration_preferences",
@@ -23984,7 +26356,9 @@ window.LABEP = {
       "used_by_other_files": 2
      },
      "rel": "calls",
-     "via": "_upsert_exploration"
+     "via": "_upsert_exploration",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     }
    ],
    [
@@ -24024,7 +26398,9 @@ window.LABEP = {
       "used_by_other_files": 2
      },
      "rel": "calls",
-     "via": "_outcome_for"
+     "via": "_outcome_for",
+     "at": null,
+     "at_why": "no feed carries this function's line — it opens at its file"
     }
    ]
   ],

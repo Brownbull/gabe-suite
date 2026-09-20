@@ -267,7 +267,7 @@
     hc.dataset.fn = h.name || "";
     bind(hc, card({ title: h.name, icon: "function", color: S.KINDCOL["function"], sub: "the handler · role " + (h.role || "—") + " · entity " + (h.entity || "—"),
       rows: [["signature", (F.identity.sig || {}).async ? "async" : "sync"], ["body", ((F.identity.sig || {}).lines || "?") + " lines"], ["returns", (F.identity.sig || {}).returns || "—"],
-             ["file", h.file + (F.identity.flines ? ":" + F.identity.flines : "")], ["fan-in", F.identity.fanin + " caller (graph in-degree)"], ["docstring", F.identity.doc ? "present" : "— none in the feed"]],
+             ["file", F.identity.at || h.file], ["fan-in", F.identity.fanin + " caller (graph in-degree)"], ["docstring", F.identity.doc ? "present" : "— none in the feed"]],
       body: "<code>" + esc(F.identity.gsig || "") + "</code>", station: h.id }));
     body.append(hc);
 
@@ -1406,9 +1406,9 @@
     row("entity", ico("entity", 14, ec), E("span", { class: "v", style: "color:" + ec }, esc(t.entity || "—")));
     row("model", ico("doc", 14, S.KINDCOL.schema), E("span", { class: "v" }, esc(t.model)),
       card({ title: t.model, icon: "doc", color: S.KINDCOL.schema, sub: "the model",
-        rows: [["maps", "the table " + t.table], ["lives in", String(t.file || "—")]],
+        rows: [["maps", "the table " + t.table], ["lives in", String(t.at || t.file || "—")]].concat(tableRuleRows(t)),
         body: "the Python class that maps to this table — each row of the table is one instance of it." }));
-    row("file", ico("file", 14, "var(--muted)"), E("span", { class: "v" }, esc(t.file || "—")));
+    row("file", ico("file", 14, "var(--muted)"), E("span", { class: "v" }, esc(t.at || t.file || "—")));
     row("channel", ico("role", 14, S.OPC.call),
       E("span", { class: "v" }, E("i", { class: "rcchip", style: chipLook(t.rw, S) }, t.rw === "rw" ? "reads + writes" : t.rw === "w" ? "writes" : "reads")));
     /* leftovers piece 4 — how this table was found: the map's access edge, the steps of a route, or both */
@@ -1431,7 +1431,8 @@
         rows: [["kind", tc.word + " — " + tc.plain], ["in", t.table],
                isFk ? ["points at", "→ " + (isFk === true ? "another table" : isFk)] : null,
                fkIn(t, c[0]).length ? ["pointed at by", fkIn(t, c[0]).join(" · ") + " — among the tables this door touches"] : null,
-               isUq ? ["unique", "the DB refuses a second row with this value"] : null] }));
+               isUq ? ["unique", "the DB refuses a second row with this value"] : null].concat(columnRuleRows(t, c[0])) }));
+      f.dataset.col = c[0];
       list.append(f); });
     b.append(list);
     if (t.cols_more) b.append(E("div", { class: "ptsec" }, "+" + t.cols_more + " more the feed did not carry"));
@@ -1996,7 +1997,7 @@
     SCHS = out; return out; }
   function shapeRec(sc, dir, parent, via, seq){ return { name: sc.name, dir: dir, top: !parent, parent: parent, via: via, seq: seq,
     entity: sc.entity || "—", entity_color: sc.entity_color || "#888", file: sc.file, flines: sc.flines, doc: sc.doc || "",
-    cols: sc.cols || [], cols_more: sc.cols_more || 0 }; }
+    cols: sc.cols || [], cols_more: sc.cols_more || 0, at: sc.at || null, rules: sc.rules || null, rules_why: sc.rules_why || null, extra: sc.extra || null }; }
   function schByName(F, n){ return schShapes(F).filter(function(s){ return s.name === n; })[0] || null; }
   function schShown(F){ return schShapes(F).filter(function(s){ return schDirOn(s.dir); }); }
   function schFields(list){ return list.reduce(function(n, s){ return n + s.cols.length; }, 0); }
@@ -2159,7 +2160,7 @@
     var h = '<div class="bchd"><span class="bci">' + ico("schema", 16, schIconCol(s, S)) + "</span><b>" + esc(s.name) + "</b></div>";
     h += '<div class="bcln" data-ln="entity"><span class="bci">' + ico("entity", 14, s.entity_color) + '</span><span class="bcent" style="color:' + s.entity_color + '">' + esc(s.entity) + "</span></div>";
     h += '<div class="bcln" data-ln="via"><span class="bci">' + ico(s.top ? SCHDIR[s.dir].icon : "link", 14, "var(--muted)") + '</span><span class="bcmodel">' + esc(viaWords(s)) + "</span></div>";
-    h += '<div class="bcln" data-ln="file"><span class="bci">' + ico("file", 14, "var(--muted)") + '</span><span class="bcfile">' + esc((s.file || "—") + (s.flines ? ":" + s.flines : "")) + "</span></div>";
+    h += '<div class="bcln" data-ln="file"><span class="bci">' + ico("file", 14, "var(--muted)") + '</span><span class="bcfile">' + esc(s.at || s.file || "—") + "</span></div>";
     if (s.top && s.dir === "out") { var cons = (F.widening || {}).response_consumers || [];
       h += '<div class="bcln" data-ln="shared"><span class="bci">' + ico("globe", 14, "var(--muted)") + '</span><span class="bcmodel">' + (cons.length ? "also returned by " + esc(cons.join(" · ")) : "returned by this door alone") + "</span></div>"; }
     h += '<div class="bcsep"></div>';
@@ -2248,7 +2249,11 @@
     row("channel", ico("role", 14, S.OPC.call), E("span", { class: "v" }, E("i", { class: "rcchip", style: dirLook(s.dir, S) }, SCHDIR[s.dir].word + " — " + SCHDIR[s.dir].long)));
     row("entity", ico("entity", 14, s.entity_color), E("span", { class: "v", style: "color:" + s.entity_color }, esc(s.entity)));
     row(s.top ? "body" : "parent", ico(s.top ? SCHDIR[s.dir].icon : "link", 14, "var(--muted)"), E("span", { class: "v" }, esc(viaWords(s))));
-    row("file", ico("file", 14, "var(--muted)"), E("span", { class: "v" }, esc((s.file || "—") + (s.flines ? ":" + s.flines : ""))));
+    row("file", ico("file", 14, "var(--muted)"), E("span", { class: "v" }, esc(s.at || s.file || "—")),
+      card({ title: s.name, icon: "file", sub: s.at ? "where it is declared" : "its file — the feed reads no line for it",
+        rows: [["declared at", s.at || "—"], s.flines ? ["the file", s.flines + " lines long"] : null,
+               ["a field nobody declared", s.extra && s.extra.policy ? (s.extra.policy === "forbid" ? "is refused" : s.extra.policy === "ignore" ? "is ignored" : "is kept") + " (extra = " + s.extra.policy + (s.extra.at ? " · " + shortAt(s.extra.at) : " · the default") + ")" : "not read"]],
+        plain: "the line this shape is written at — and what it does with a field it does not know" }));
     if (s.top && s.dir === "out") { var cons = (F.widening || {}).response_consumers || [], pn = (F.identity.payload || {}).n;
       row("shared", ico("globe", 14, "var(--muted)"), E("span", { class: "v" }, cons.length ? esc(cons.join(" · ")) : "this door alone"),
         card({ title: "payload", icon: "down", color: S.OPC.write, sub: "the response contract",
@@ -2268,7 +2273,9 @@
         E("span", { class: "c-t ft" }, typeWbr(c[1])));
       bind(f, card({ title: c[0], sub: String(c[1] || "—"), icon: isS ? "schema" : "table", color: tc.col(S),
         rows: [["kind", tc.word + " — " + tc.plain], ["in", s.name], isOpt(c[1]) ? ["optional", "accepts None"] : null,
-               isS ? ["the shape", nb ? nb.name + " · " + nb.cols.length + " fields, with a block of its own" : schBase(c[1]) + " — named, but the feed does not carry its fields"] : null] }));
+               isS ? ["the shape", nb ? nb.name + " · " + nb.cols.length + " fields, with a block of its own" : schBase(c[1]) + " — named, but the feed does not carry its fields"] : null]
+          .concat(fieldRuleRows(s, c[0])) }));
+      f.dataset.field = c[0];
       tab.append(f); });
     b.append(tab);
     if (s.cols_more) b.append(E("div", { class: "ptsec" }, "+" + s.cols_more + " more the feed did not carry"));
@@ -2329,7 +2336,7 @@
     function rec(f, lv, handler){ return { id: f.id, name: f.name, file: f.file, role: f.role || "pure", entity: f.entity || "—", entity_color: entColOf(F, f.entity),
       level: lv, via: handler ? null : f.via, seq: seq++, handler: handler, lines: f.lines, async: !!f.async, returns: f.returns || "—", god: !!f.god,
       commits: !!f.commits, conf: handler ? "extracted" : (f.conf || "extracted"), ops: f.ops || [], calls: [],
-      key: String(f.id || "").replace("#", "::"), insight: f.insight || null }; }
+      key: String(f.id || "").replace("#", "::"), insight: f.insight || null, at: f.at || null, at_why: f.at_why || null }; }
     out.push(rec(FN.handler, 0, true));
     FN.walk.forEach(function(level, i){ level.forEach(function(f){ out.push(rec(f, i + 1, false)); }); });
     out.forEach(function(x){ x.calls = out.filter(function(y){ return !y.handler && y.via === x.name; }); });
@@ -2467,7 +2474,7 @@
     var h = '<div class="bchd"><span class="bci">' + ico("function", 16, fnIconCol(x, S)) + "</span><b>" + esc(x.name) + "</b>" + (x.commits ? '<i class="cdot"></i>' : "") + "</div>";
     h += '<div class="bcln" data-ln="entity"><span class="bci">' + ico("entity", 14, x.entity_color) + '</span><span class="bcent" style="color:' + x.entity_color + '">' + esc(x.entity) + "</span></div>";
     h += '<div class="bcln" data-ln="via"><span class="bci">' + ico(x.handler ? "target" : "link", 14, "var(--muted)") + '</span><span class="bcmodel">' + esc(fnViaWords(x)) + (x.conf === "inferred" ? " · an inferred hop" : "") + "</span></div>";
-    h += '<div class="bcln" data-ln="file"><span class="bci">' + ico("file", 14, "var(--muted)") + '</span><span class="bcfile">' + esc(x.file + (x.handler && I.flines ? ":" + I.flines : "")) + "</span></div>";
+    h += '<div class="bcln" data-ln="file"><span class="bci">' + ico("file", 14, "var(--muted)") + '</span><span class="bcfile">' + esc(x.at || x.file) + "</span></div>";
     h += '<div class="bcln" data-ln="size"><span class="bci">' + ico("info", 14, "var(--muted)") + '</span><span class="bcmodel">' + (x.lines == null ? "?" : x.lines) + " lines" + (x.async ? " · async" : "") + " · → " + camelWbr(x.returns) + "</span></div>";
     if (x.handler) h += '<div class="bcln" data-ln="signature"><span class="bci">' + ico("doc", 14, "var(--muted)") + '</span><span class="bcfile">' + esc(String(I.gsig || "—").slice(0, 70)) + "…</span></div>"
       + '<div class="bcln" data-ln="doc"><span class="bci">' + ico("doc", 14, "var(--muted)") + '</span><span class="bcmodel">' + (I.doc ? esc(I.doc.slice(0, 70)) : "no docstring in the feed") + "</span></div>";
@@ -2547,7 +2554,8 @@
     row("level", ico(x.handler ? "target" : "link", 14, "var(--muted)"), E("span", { class: "v" }, esc(x.handler ? "L0 · the door's own function" : "L" + x.level + " · called by " + x.via)),
       x.handler ? null : card({ title: "hop " + x.level, icon: "layers", sub: x.conf === "inferred" ? "an inferred hop" : "an extracted hop",
         body: x.conf === "inferred" ? "graft resolved this call; the scanner did not prove it — a floor, never a census." : "proven by the suite's own AST pass." }));
-    row("file", ico("file", 14, "var(--muted)"), E("span", { class: "v" }, esc(x.file + (x.handler && I.flines ? ":" + I.flines : ""))));
+    row("file", ico("file", 14, "var(--muted)"), E("span", { class: "v" }, esc(x.at || x.file)),
+      x.at ? null : card({ title: x.name, icon: "file", sub: "opens at its file", body: esc(x.at_why || "no feed carries this function's line") }));
     row("size", ico("info", 14, "var(--muted)"), E("span", { class: "v" }, (x.lines == null ? "?" : x.lines) + " lines" + (x.async ? " · async" : "") + " · → " + camelWbr(x.returns)),
       x.god ? card({ title: "over the size flag", icon: "alert", sub: "god-object", body: "its body runs past 50 lines — the station's size flag." }) : null);
     if (x.commits) row("commits", ico("key", 14, S.OPC.write), E("span", { class: "v" }, "ends a DB transaction"));
@@ -2809,6 +2817,36 @@
   /* ── PROOF YOU CAN OPEN (leftovers piece 5): why a test came to this endpoint, and what it really asked for ── */
   var ROLEWORD = { act: "tests this endpoint", arranged: "calls it to set something else up", "service-raises": "proves an ending from the service side, without calling the endpoint",
                    "helper-arranged": "reaches it only through a shared helper", "named-only": "listed by the map, makes no call here" };
+  /* leftovers piece 8 — the rule on a field or a column, in words, from the feed's own reading of the declaration */
+  var LIMITW = { min_length: "at least {v} characters", max_length: "at most {v} characters", ge: "{v} or more", gt: "more than {v}", le: "{v} or less", lt: "less than {v}",
+                 pattern: "must match {v}", multiple_of: "a multiple of {v}", min_items: "at least {v} items", max_items: "at most {v} items" };
+  function limitWords(cs){ return Object.keys(cs || {}).sort().map(function(k){ var v = cs[k]; v = (v && typeof v === "object") ? JSON.stringify(v) : String(v);
+    return (LIMITW[k] ? LIMITW[k].replace("{v}", v) : k.replace(/_/g, " ") + " " + v).replace(/\b1 (character|item)s\b/, "1 $1"); }); }
+  function fieldRuleRows(sc, name){ if (!sc) return [];
+    if (!sc.rules) return sc.rules_why ? [["its rule", "not read — " + sc.rules_why]] : [];
+    var r = sc.rules[name]; if (!r) return [["its rule", "the feed reads no declaration for this field"]];
+    var lim = limitWords(r.constraints), out = [["must be sent", r.required ? "yes — a body without it is refused" : "no — it has a default"]];
+    out.push(["its limits", lim.length ? lim.join(" · ") : "none declared"]);
+    (r.validators || []).forEach(function(v){ out.push(["also checked by", v.name + (v.normalises.length ? " — it " + v.normalises.join(", ") + "s the value first" : "")
+      + (v.rules.length ? " · refuses when " + v.rules.map(function(x){ return x.pred + (x.msg ? " (“" + x.msg + "”)" : ""); }).join(" · ") : "")]); });
+    out.push(["declared at", r.at || "—"]); return out; }
+  var ONDEL = { CASCADE: "deleting that row deletes this one", "SET NULL": "deleting that row empties this column", RESTRICT: "that row cannot be deleted while this one points at it",
+                "NO ACTION": "that row cannot be deleted while this one points at it", "SET DEFAULT": "deleting that row resets this column" };
+  function columnRuleRows(t, name){ if (!t) return [];
+    if (!t.rules) return t.rules_why ? [["its rule", "not read — " + t.rules_why]] : [];
+    var c = (t.rules.columns || {})[name]; if (!c) return [["its rule", "the feed reads no declaration for this column"]];
+    var out = [["may be empty", c.nullable === true ? "yes" : c.nullable === false ? "no" : "not read"]];
+    out.push(["when nobody sets it", c.server_default != null ? "the database writes " + c.server_default : c.default != null ? "the code writes " + c.default : "nothing fills it"]);
+    if (c.fk) out.push(["if the row it points at is deleted", c.fk.ondelete ? (ONDEL[String(c.fk.ondelete).toUpperCase()] || c.fk.ondelete) : "no rule declared"]);
+    if (c.type) out.push(["database type", c.type]);
+    if (c.db_name) out.push(["in the database", "the column is named " + c.db_name]);
+    out.push(["declared at", c.at || "—"]); return out; }
+  function tableRuleRows(t){ if (!t || !t.rules) return [];
+    var R = t.rules, out = [];
+    (R.uniques || []).forEach(function(u){ out.push(["unique", u.cols.join(" + ") + " · " + (u.at || "—")]); });
+    (R.checks || []).forEach(function(k){ out.push(["check", (k.name || "unnamed") + " · " + (k.at || "—")]); });
+    if (!out.length) out.push(["table rules", "no unique or check rule declared"]);
+    return out; }
   /* leftovers piece 7 — how common a piece is: its count in this app and in the other apps read, as two card rows */
   function commonPiece(F, key){ var P = (F.feedwide || {}).pieces; if (!P) return null; return (P.rows || []).filter(function(r){ return r.key === key; })[0] || null; }
   function commonRows(F, key){ var r = commonPiece(F, key); if (!r) return [];
@@ -2946,9 +2984,9 @@
       cap: function(){ return untested.length + " exits no case asserts"; }, act: go("tests", null) });
     L.push({ cmd: "handler", ico: "file", verb: "Open the handler", state: "lit",
       card: function(){ return cmdc({ title: "open the handler", value: (F.functions.handler || {}).name, icon: "file",
-        rows: [["file", F.identity.file + ":" + F.identity.flines], ["lines", String((F.identity.sig || {}).lines)], ["in the lab", "opens Functions with the handler selected"]],
+        rows: [["file", F.identity.at || F.identity.file], ["lines", String((F.identity.sig || {}).lines)], ["in the lab", "opens Functions with the handler selected"]],
         plain: "the file and line this door is written at — where you go to change it" }); },
-      cap: function(){ return F.identity.file + ":" + F.identity.flines; },
+      cap: function(){ return F.identity.at || F.identity.file; },
       act: go("functions", (F.functions.handler || {}).name) });
     L.push({ cmd: "up", ico: "layers", verb: "Up to entity", state: "hatched",
       card: function(){ return cmdc({ title: "up to entity", value: (F.identity.above || []).length + " levels", icon: "layers",

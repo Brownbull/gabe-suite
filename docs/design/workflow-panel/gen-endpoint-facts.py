@@ -30,6 +30,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from _ep_pieces import common_block, proof_rank  # noqa: E402  (leftovers piece 7 — the shared piece tally)
+from _ep_joins import _short_detail, field_rules, inside_the_calls  # noqa: E402  (pieces 6 and 8 — the joins of feed blocks the lab did not read)
 REPO = HERE.parents[2]
 EX = REPO / "templates" / "center" / "shell" / "example" / "codebase-graph-station"
 OUT = HERE / "_lab-ep.js"
@@ -53,14 +54,6 @@ def load_workflows() -> list:
 
 
 PHASES = ("middleware", "security", "dependency", "body-parse", "validation", "handler", "uncaught")   # _a3_forms.PHASES + the body-parse split
-
-
-def _short_detail(d):
-    """`{'detail': 'Rate limit exceeded. Try again shortly.'}` → the sentence; a plain string stays."""
-    if not d:
-        return None
-    m = re.match(r"^\{'detail': '(.*)'\}$", str(d))
-    return m.group(1) if m else str(d)
 
 
 def forms_slice(fj: dict, ID: str, ep: dict) -> dict:
@@ -244,156 +237,6 @@ def forms_slice(fj: dict, ID: str, ep: dict) -> dict:
                        "cases": sum(len(x.get("cases") or []) for x in exits),
                        "cases_by_type": dict(collections.Counter(c.get("type") for x in exits for c in (x.get("cases") or []))),
                        "exits_with_headers": sum(1 for x in exits if ((x.get("response") or {}).get("headers")))}}
-
-
-def inside_the_calls(fj: dict, ID: str, forms_block: dict, functions: dict, security: dict, gsig: str, n_endpoints: int, insight_rec, insight_state: dict) -> None:
-    """Leftovers piece 6 — a call that opens. Three carries, nothing invented:
-    `forms.inside` = the feed's functions{} rows this endpoint reaches (raises with their condition and the answer each becomes HERE ·
-    refusals · saves · savepoints · swallows), joined to the chain's call / collapsed rows by `file::fn`;
-    `security.resolution` = this endpoint's dependencies{} rows in the order they are resolved (can it end a request · does it run code after the handler);
-    `functions.does` = what each function's own code shows it doing here (faces the web · decides an ending · reads or writes data · gives context)."""
-    FN, steps = fj.get("functions"), fj.get("steps") or {}
-    short = lambda k: str(k or "").split("::")[-1]
-    # ── inside ────────────────────────────────────────────────────────────────────────────────
-    if FN is None:
-        forms_block["inside"] = {"state": "absent", "why": "the feed carries no functions{} — the kinds reading is off", "functions": [], "calls": {}, "counts": {}}
-    else:
-        recs = []
-        for key, f in FN.items():
-            reach = next((r for r in (f.get("reached_by") or []) if r.get("root") == ID), None)
-            if not reach:
-                continue
-            raises = []
-            for r in f.get("raises") or []:
-                here = [{"exit": t.get("exit"), "status": t.get("status"), "at": t.get("at")} for t in (r.get("translated_by") or []) if t.get("endpoint") == ID]
-                lost = [{"exit": t.get("exit"), "status": t.get("status")} for t in (r.get("untranslated_at") or []) if t.get("endpoint") == ID]
-                other = sum(1 for t in (r.get("translated_by") or []) + (r.get("untranslated_at") or []) if t.get("endpoint") != ID)
-                raises.append({"cls": r.get("cls"), "msg": r.get("msg"), "pred": r.get("pred"), "at": r.get("at"), "through": r.get("through") or [],
-                               "translation": r.get("translation"), "here": here, "uncaught_here": lost, "on_other_endpoints": other,
-                               # the feed's word is app-wide; on THIS endpoint a failure is answered, left uncaught, or neither — it never borrows another endpoint's answer
-                               "here_word": "translated" if here else ("uncaught" if lost else
-                                            ("answered on another endpoint only" if r.get("translation") in ("translated", "mixed", "untranslated") else (r.get("translation") or "unknown")))})
-            refusals = [{"at": r.get("at"), "pred": r.get("pred"), "status": r.get("status"),
-                         "exit": next((t.get("exit") for t in (r.get("surfaces_on") or []) if t.get("endpoint") == ID), None)} for r in (f.get("refusals") or [])]
-            recs.append({"fn": key, "name": short(key), "file": key.split("::")[0], "at": f.get("at"), "depth": reach.get("depth"), "via": reach.get("via"), "site": reach.get("site"),
-                         "paths": reach.get("paths") or [], "raises": raises, "refusals": refusals,
-                         "commits": [{"step": c, "op": (steps.get(c) or {}).get("op"), "at": (steps.get(c) or {}).get("at")} for c in (f.get("commits") or [])],
-                         "savepoints": list(f.get("savepoints") or []), "swallows": list(f.get("swallows") or []),
-                         "also_reached_by": sum(1 for r in (f.get("reached_by") or []) if r.get("root") != ID)})
-        _line = lambda at: int(str(at or ":0").rsplit(":", 1)[-1]) if str(at or "").rsplit(":", 1)[-1].isdigit() else 0
-        recs.sort(key=lambda r: (r["depth"] or 0, _line(r["site"]), r["fn"]))
-        by_fn = {r["fn"]: r for r in recs}
-
-        def under(key, seen=()):
-            out = []
-            for r in recs:
-                if r["via"] == key and r["fn"] not in seen and r["fn"] != key:
-                    out += [r["fn"]] + under(r["fn"], seen + (key,))
-            return out
-        calls = {}
-        for p in forms_block.get("paths") or []:
-            for c in p.get("chain") or []:
-                if c.get("kind") in ("call", "collapsed") and c.get("fn") and c["fn"] not in calls:
-                    opens = ([c["fn"]] if c["fn"] in by_fn else []) + under(c["fn"])
-                    calls[c["fn"]] = {"opens": opens, "insight": insight_rec(c["fn"]),
-                                      "n": {"raises": sum(len(by_fn[k]["raises"]) for k in opens), "refusals": sum(len(by_fn[k]["refusals"]) for k in opens),
-                                            "commits": sum(len(by_fn[k]["commits"]) for k in opens), "savepoints": sum(len(by_fn[k]["savepoints"]) for k in opens),
-                                            "swallows": sum(len(by_fn[k]["swallows"]) for k in opens)}}
-        allr = [x for r in recs for x in r["raises"]]
-        forms_block["inside"] = {"state": "present", "why": None, "functions": recs, "calls": calls, "insight": insight_state,
-                                 "counts": {"functions": len(recs), "raises": len(allr), "raises_by_word": dict(collections.Counter(x["here_word"] for x in allr)),
-                                            "refusals": sum(len(r["refusals"]) for r in recs), "commits": sum(len(r["commits"]) for r in recs),
-                                            "savepoints": sum(len(r["savepoints"]) for r in recs), "swallows": sum(len(r["swallows"]) for r in recs),
-                                            "deepest": max((r["depth"] or 0 for r in recs), default=0), "calls_on_chain": len(calls),
-                                            "calls_that_open": sum(1 for v in calls.values() if v["opens"]), "calls_with_map_facts": sum(1 for v in calls.values() if v["insight"])},
-                                 "reading": "the feed follows a failure ONE call down; a failure raised deeper says 'beyond one level' — the answer it becomes is not read"}
-    # ── the helpers, in the order they are resolved ──────────────────────────────────────────
-    DEP = fj.get("dependencies")
-    if DEP is None:
-        security["resolution"] = {"state": "absent", "why": "the feed carries no dependencies{} — the kinds reading is off", "rows": []}
-    else:
-        named = collections.defaultdict(list)
-        for k in DEP:
-            named[short(k)].append(k)
-
-        def key_of(g):
-            if g.get("fn") in DEP:
-                return g["fn"]
-            ks = named.get(g.get("name")) or []
-            return ks[0] if len(ks) == 1 else None
-        top = sorted(security.get("guards") or [], key=lambda g: (gsig.find(g["name"] + ")") if (g["name"] + ")") in gsig else len(gsig), 0))
-        order, asked = [], collections.defaultdict(list)
-
-        def resolve(k, by):
-            asked[k].append(by)
-            if k in order:
-                return
-            for sub in (DEP.get(k) or {}).get("subdeps") or []:
-                resolve(sub, short(k))
-            order.append(k)
-        unresolved = []
-        for g in top:
-            k = key_of(g)
-            (resolve(k, "the handler") if k else unresolved.append(g.get("name")))
-        rows = []
-        for i, k in enumerate(order):
-            d = DEP.get(k) or {}
-            ex = [{"id": x.get("id"), "status": x.get("status"), "detail": _short_detail(x.get("detail")), "at": x.get("at"), "pred": x.get("pred"), "via": x.get("via")} for x in (d.get("exits") or [])]
-            inh = [{"id": x.get("id"), "status": x.get("status"), "detail": _short_detail(x.get("detail")), "via": x.get("via")} for x in (d.get("inherited_exits") or [])]
-            rows.append({"key": k, "name": short(k), "at": d.get("at"), "kind": d.get("kind"), "order": i + 1, "of": len(order), "asked_by": asked[k],
-                         "exits": ex, "inherited_exits": inh, "can_end_the_request": bool(ex or inh), "subdeps": [short(x) for x in (d.get("subdeps") or [])],
-                         "runs_after_the_handler": bool(d.get("teardown")), "effects": d.get("effects") or [], "applies_to": d.get("applies_to"), "endpoints": n_endpoints,
-                         "in_the_map_list": any(key_of(g) == k for g in top), "present": k in DEP})
-        security["resolution"] = {"state": "present", "why": None, "rows": rows, "unresolved": unresolved,
-                                  "rule": "the order the handler's signature asks for them, each one's own helpers first; a helper asked for twice keeps its first place",
-                                  "counts": {"rows": len(rows), "can_end": sum(1 for r in rows if r["can_end_the_request"]), "end_nothing": sum(1 for r in rows if not r["can_end_the_request"]),
-                                             "after_the_handler": sum(1 for r in rows if r["runs_after_the_handler"]), "beyond_the_map_list": sum(1 for r in rows if not r["in_the_map_list"])}}
-        by_name = {r["name"]: r for r in rows}
-        for g in security.get("guards") or []:
-            g["resolved"] = by_name.get(g["name"])
-    # ── what each function does here ──────────────────────────────────────────────────────────
-    walk = [functions["handler"]] + [x for lvl in functions.get("walk") or [] for x in lvl] if functions.get("handler", {}).get("loaded") else []
-    keys = {str(x["id"]).replace("#", "::"): x for x in walk}
-    decides = collections.defaultdict(set)
-    for b in forms_block.get("branches") or []:
-        decides[b.get("fn")].add("a fork that picks the ending")
-    for c in ((forms_block.get("failure") or {}).get("catches") or []):
-        decides[c.get("fn")].add("catches a failure")
-    for r in forms_block.get("returns") or []:
-        if r.get("status") is not None:
-            decides[r.get("fn")].add("returns the answer")
-    for r in (forms_block.get("inside") or {}).get("functions") or []:
-        if r["raises"] or r["refusals"]:
-            decides[r["fn"]].add("raises or refuses")
-    for r in (security.get("resolution") or {}).get("rows") or []:
-        if r["exits"]:
-            decides[r["key"]].add("can end the request")
-    data = collections.defaultdict(set)
-    for p in forms_block.get("paths") or []:
-        for st in ((p.get("effects") or {}).get("steps") or []):
-            if st.get("fn"):   # a step with no table is the transaction itself: a flush, a commit, a rollback, a savepoint
-                data[st["fn"]].add(("writes" if st.get("op") != "read" else "reads") if st.get("table") else "ends or holds a transaction")
-    for k, x in keys.items():
-        for o in x.get("ops") or []:
-            data[k].add("writes" if o.get("rw") == "w" else "reads")
-    context = {r["key"] for r in (security.get("resolution") or {}).get("rows") or []}
-    every = list(dict.fromkeys(list(keys) + [k for k in list(decides) + list(data) + sorted(context) if k]))
-    does = []
-    for k in every:
-        d = collections.OrderedDict()
-        if keys.get(k, {}).get("handler") or (functions.get("handler") or {}).get("id", "").replace("#", "::") == k:
-            d["faces the web"] = ["the route names it"]
-        if decides.get(k):
-            d["decides an ending"] = sorted(decides[k])
-        if data.get(k):
-            d["reads or writes data"] = sorted(data[k])
-        if k in context:
-            d["gives context"] = ["the handler is handed what it returns"]
-        does.append({"fn": k, "name": short(k), "does": list(d), "why": d, "on_the_walk": k in keys})
-    functions["does"] = {"rows": does, "two_or_more": sum(1 for r in does if len(r["does"]) >= 2), "none": sum(1 for r in does if not r["does"]), "of": len(does),
-                         "by_role": dict(collections.Counter(w for r in does for w in r["does"])),
-                         "rule": "a role is lit only when the function's own code shows it: the route names it · a fork, a catch, a raise or the answer is in it · a step of a route touches a table in it · the handler is handed what it returns"}
-    functions["insight"] = insight_state
 
 
 def main() -> int:
@@ -824,6 +667,8 @@ def main() -> int:
                 feedwide["pieces"] = dict(common_block(_fj, ID, _digest, _app), app=_app)
                 feedwide["proof"] = proof_rank(_fj.get("endpoints") or {}, ID)
                 feedwide["forms_endpoints"] = len(_fj.get("endpoints") or {})
+                # leftovers piece 8 — the rule on every field and column, and the line every block opens at
+                forms_block["rules"] = field_rules(_fj, ID, identity, schemas_out, tables_by_name, functions, forms_block)
                 _mw = _fj.get("middleware") or {}
                 for _m in security["asgi"]:
                     _o = (_mw.get(_m.get("id")) or {}).get("order") or {}

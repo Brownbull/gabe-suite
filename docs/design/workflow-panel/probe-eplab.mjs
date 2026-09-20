@@ -101,7 +101,8 @@ ok(await p.evaluate(() => window.COPYTXT.portrait()) === PORTBOOT,
 
 // the head strip carries the station card's head
 const head = await p.$eval('#headstrip', e => e.innerText);
-for (const s of [F.identity.path, String(F.identity.status), F.identity.file + ':' + F.identity.flines]) ok(head.includes(s), 'head strip shows ' + s);
+for (const s of [F.identity.path, String(F.identity.status), F.identity.at || F.identity.file]) ok(head.includes(s), 'head strip shows ' + s);
+ok(!F.identity.line || !head.includes(F.identity.file + ':' + F.identity.flines) || F.identity.line === F.identity.flines, 'the head strip opens the handler at ITS line — never the file\'s length dressed as a line (leftovers piece 8)', F.identity.file + ':' + F.identity.flines);
 // the ENTITY is no longer its own chip (the UP trio carries it, operator 2026-09-11) — it must still be
 // reachable: a chip drawn in the entity's own colour whose hover card names it. No-loss, not no-text.
 { const entChip = await p.$(`#headstrip .hpile.right .hel:nth-child(2)`);
@@ -2684,6 +2685,61 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
   await p.waitForTimeout(260);
   ok(errs.length === errsBefore, 'the stages picture raises no page error anywhere in this section', errs.slice(errsBefore, errsBefore + 3).join(' | '));
 }
+
+// ══ LEFTOVERS piece 8 · FIELD RULES, AND A LINE TO OPEN — the rule beside every field and column · the line every block opens at ══
+{ const errs0 = errs.length;
+  const R8 = await p.evaluate(() => { const L = window.LABEP, f = L.forms, D = L.data, shapes = [];
+    const walkS = sc => { if (sc && sc.present) { shapes.push(sc); (sc.nested || []).forEach(walkS); } }; walkS(D.schemas.request); walkS(D.schemas.response);
+    const fns = [L.functions.handler].concat(L.functions.walk.flat()), steps = f.paths.flatMap(x => x.chain.filter(c => c.kind === 'step'));
+    const withRules = shapes.filter(s => s.rules), req = D.schemas.request;
+    const pickF = req && req.rules ? Object.keys(req.rules).map(k => Object.assign({ name: k }, req.rules[k])).find(r => r.required && Object.keys(r.constraints).length) : null;
+    const tbl = D.tables.find(t => t.rules && Object.values(t.rules.columns).some(c => c.server_default != null) && Object.values(t.rules.columns).some(c => c.fk && c.fk.ondelete));
+    const colD = tbl ? Object.keys(tbl.rules.columns).find(k => tbl.rules.columns[k].server_default != null && tbl.cols.some(c => c[0] === k)) : null;
+    const colF = tbl ? Object.keys(tbl.rules.columns).find(k => (tbl.rules.columns[k].fk || {}).ondelete && tbl.cols.some(c => c[0] === k)) : null;
+    return { c: f.rules.counts, shapes: shapes.length, withRules: withRules.length, fields: withRules.reduce((n, s) => n + Object.keys(s.rules).length, 0),
+      complete: withRules.every(s => s.cols.every(c => s.rules[c[0]])), inFile: withRules.every(s => Object.values(s.rules).every(r => String(r.at).startsWith(s.file + ':'))),
+      tables: D.tables.length, tWith: D.tables.filter(t => t.rules).length, colsIn: D.tables.filter(t => t.rules).every(t => t.cols.every(c => t.rules.columns[c[0]]) && Object.values(t.rules.columns).every(c => String(c.at).startsWith(t.file + ':'))),
+      fns: fns.length, fnLine: fns.filter(x => x.at).length, noLineSaysSo: fns.filter(x => !x.at).every(x => !!x.at_why), steps: steps.length, stepLine: steps.filter(c => c.at).length,
+      I: { at: L.identity.at, file: L.identity.file, line: L.identity.line, flines: L.identity.flines }, reqName: req && req.name, reqAt: req && req.at, extra: req && req.extra, pickF,
+      tbl: tbl && tbl.table, tblAt: tbl && tbl.at, colD, colDv: tbl && colD && tbl.rules.columns[colD], colF, colFv: tbl && colF && tbl.rules.columns[colF],
+      fnWith: (fns.find(x => x.at && !x.handler) || {}).name, fnWithAt: (fns.find(x => x.at && !x.handler) || {}).at, fnWithout: (fns.find(x => !x.at) || {}).name, fnWithoutFile: (fns.find(x => !x.at) || {}).file }; });
+  ok(R8.c.shapes === R8.shapes && R8.c.shapes_with_rules === R8.withRules && R8.c.fields === R8.fields && R8.c.tables === R8.tables && R8.c.tables_with_rules === R8.tWith
+    && R8.c.functions === R8.fns && R8.c.functions_with_line === R8.fnLine && R8.c.steps_with_line === R8.stepLine, 'field rules: every count is the lab\'s own recount — shapes · fields · tables · functions with a line · app-wide steps with a line', JSON.stringify(R8.c));
+  ok(R8.withRules > 0 && R8.complete && R8.inFile, 'every field a shape draws has its rule, and every rule is declared in the shape\'s own file', `${R8.withRules} shapes · ${R8.fields} fields`);
+  ok(R8.tWith > 0 && R8.colsIn, 'every column a table draws has its rule, declared in the model\'s own file', `${R8.tWith} of ${R8.tables} tables`);
+  ok(R8.noLineSaysSo && R8.fnLine >= 1 && R8.fnLine < R8.fns, 'a function opens at its line where a feed knows one — and says so where none does', `${R8.fnLine} of ${R8.fns} carry a line`);
+  ok(R8.I.at === R8.I.file + ':' + R8.I.line && R8.I.line !== R8.I.flines, 'the handler opens at its own line, which is not the file\'s length', JSON.stringify(R8.I));
+  const hov8 = async sel => { if (!(await p.$$(sel)).length) return ''; await p.$eval(sel, e => e.scrollIntoView({ block: 'center' })); await p.hover(sel); await p.waitForTimeout(240);
+    const t = (await p.$eval('#hover', e => e.hidden ? '' : e.innerText)).replace(/\s+/g, ' '); await p.mouse.move(5, 1030); await p.evaluate(() => window.hoverHide()); return t; };
+  await p.evaluate(n => { window.clearPath(); window.showTab('schemas'); window.selectIn('schemas', n); }, R8.reqName); await p.waitForTimeout(380);
+  if (R8.pickF) { const h = await hov8(`#portbody .rctab .fld[data-field="${R8.pickF.name}"]`);
+    ok(/MUST BE SENT\s*yes/i.test(h) && /ITS LIMITS/i.test(h) && Object.values(R8.pickF.constraints).every(v => h.includes(String(v))) && h.includes(R8.pickF.at), 'a body field\'s card says whether it must be sent, its limits, and the line it is declared at', h.slice(-300));
+    ok(!R8.pickF.validators.length || (/ALSO CHECKED BY/i.test(h) && h.includes(R8.pickF.validators[0].name)), 'and the validator that also checks it', h.slice(-200)); }
+  else ok(false, 'the request body has a required field with limits (the probe needs one to read the card)');
+  { const v = await p.$eval('#portbody .rcrow[data-row="file"] .v', e => e.textContent).catch(() => null), h = await hov8('#portbody .rcrow[data-row="file"] .rcinfo');
+    ok(v === R8.reqAt && /A FIELD NOBODY DECLARED/i.test(h) && (!R8.extra || !R8.extra.policy || h.includes('extra = ' + R8.extra.policy)), 'the shape opens at the line it is declared at, and says what it does with a field nobody declared', v + ' · ' + h.slice(-160)); }
+  await p.evaluate(() => { window.selectIn('schemas', null); window.showTab('data'); window.showVariant('data', 'blocks'); }); await p.waitForTimeout(300);
+  if (R8.tbl) { await p.evaluate(n => window.selectIn('data', n), R8.tbl); await p.waitForTimeout(340);
+    const v = await p.$eval('#portbody .rcrow[data-row="file"] .v', e => e.textContent).catch(() => null);
+    ok(v === R8.tblAt, 'a table opens at the line its model is declared at', String(v));
+    const hd = await hov8(`#portbody .rctab .fld[data-col="${R8.colD}"]`), hf = await hov8(`#portbody .rctab .fld[data-col="${R8.colF}"]`);
+    ok(/MAY BE EMPTY/i.test(hd) && hd.includes('the database writes ' + R8.colDv.server_default) && hd.includes(R8.colDv.at), 'a column\'s card says whether it may be empty, what the database writes when nobody sets it, and its line', hd.slice(-260));
+    ok(/IF THE ROW IT POINTS AT IS DELETED/i.test(hf) && /delet|empt|cannot/.test(hf.split(/IF THE ROW IT POINTS AT IS DELETED/i)[1] || ''), 'a column that points at another table says what a delete there does to it', hf.slice(-220));
+    const hm = await hov8('#portbody .rcrow[data-row="model"] .rcinfo');
+    ok(/UNIQUE|CHECK|TABLE RULES/i.test(hm), 'the table\'s unique and check rules ride the model\'s card — the record keeps its five rows', hm.slice(-200));
+    await p.evaluate(() => { window.selectIn('data', null); window.showVariant('data', window.PANELS.data.defaultVariant); }); await p.waitForTimeout(240); }
+  else ok(false, 'a table has a database default and a delete rule (the probe needs one to read the cards)');
+  await p.evaluate(() => { window.showTab('functions'); }); await p.waitForTimeout(300);
+  { const fileRow = async n => { await p.evaluate(x => window.selectIn('functions', x), n); await p.waitForTimeout(280); return p.$eval('#portbody .rcrow[data-row="file"] .v', e => e.textContent).catch(() => null); };
+    ok(!R8.fnWith || (await fileRow(R8.fnWith)) === R8.fnWithAt, 'a function the feed knows a line for opens at it', String(R8.fnWithAt));
+    if (R8.fnWithout) { const v = await fileRow(R8.fnWithout), h = await hov8('#portbody .rcrow[data-row="file"] .rcinfo');
+      ok(v === R8.fnWithoutFile && /no feed carries/.test(h), 'one it knows no line for opens at its file, and says why', v + ' · ' + h.slice(-120)); }
+    await p.evaluate(() => window.selectIn('functions', null)); await p.waitForTimeout(160); }
+  await p.evaluate(() => { window.showTab('data'); window.selectPath(window.LABEP.forms.through.id); }); await p.waitForTimeout(400);
+  { const h = await hov8('#portbody .ptcr.k-step');
+    ok(/AT\s+\S+:\d+/.test(h), 'an app-wide step on a route opens at the line it is added to the application', h.slice(0, 200)); }
+  await p.evaluate(() => { window.clearPath(); window.showTab('data'); }); await p.waitForTimeout(240);
+  ok(errs.length === errs0, 'the field rules raise no page error', errs.slice(errs0, errs0 + 3).join(' | ')); }
 
 // ══ LEFTOVERS piece 7 · HOW COMMON EACH PIECE IS — a count in this app and in the other apps read · this endpoint's place · never a grade ══
 { const errs0 = errs.length;

@@ -27,7 +27,7 @@ tooltip · portrait. The channel column stays empty until M3 (the channel budget
 | method + path | category + text | 1 | **3** | the door's name — every question starts from it | no | own | far |
 | entity · cluster | category | 1 | 1 | DEMOTED 2026-09-19: the crumb he already navigates by — navigation, never a content row (the home evidence underneath may earn a row later) | no | relation | tooltip |
 | declared status | category | 1 | 2 | the promise — it matters only beside what is produced | no | own | mid |
-| file:line (on every block, not only the handler) | text | 1 per block | 1 | "can I open it?" (Q15) — a data point for blocks, details and hovers, never the face (Gabe); piece 8 carries the missing definition lines | yes | own | tooltip |
+| file:line (on every block, not only the handler) | text | 1 per block; functions with a line 0 · 4 · 8 of 1 · 10 · 31 per endpoint (322 of 989 — the rest open at their file and say so); every app-wide step, body field, column, check, catch and fork has one | 1 | "can I open it?" (Q15) — a data point for blocks, details and hovers, never the face (Gabe); piece 8 carries the missing definition lines | yes | own | tooltip |
 | risk flag | state | 0–1 | 2 — an alert when abnormal | a verdict from size; quiet at rest (P2) | yes | own | far, as an alert |
 | signature (async · lines · returns) | quantity + text | 1 | 2 | async is worth a mark (Gabe); KEPT as a row 2026-09-19 against the agent's advice (every endpoint of this app is async, so the mark separates nothing here — it would in the largest study app, 34 of 545) | yes | own | mid for the async mark; portrait for the rest |
 
@@ -80,7 +80,7 @@ tooltip · portrait. The channel column stays empty until M3 (the channel budget
 | response shape per ending | relation | 2 · 9 · 22 | 2 | what each ending answers with | with code | relation | mid / near |
 | delivery (one answer · a stream) | category | 1 of 80 endpoints streams | 2 (proposed) | a stream changes what the client must do with the answer | with code | own | mid |
 | response headers per ending | relation | 0 · 2 · 5 endings per endpoint send one (1 endpoint sends none) | 2 (proposed) | what the client is told to do next — a 429 says when to retry, a 401 names the login scheme | with code | own | near |
-| field rules of the request body (required · length · range · allowed values) | relation | to measure when piece 8 lands | 2 (proposed) | the rule beside the field, so a shape stops being a list of names | with code | relation | near |
+| field rules of the request body (required · length · range · allowed values) | relation | body fields with a rule 0 · 2 · 29 per endpoint (45 of 80 read a body; 260 fields): must be sent 0 · 0 · 9 · carry a limit or a validator 0 · 0 · 17 on 23 endpoints; column rules ride the same join: 0 · 51 · 174 columns, of which the database fills 0 · 12 · 51 and a delete elsewhere reaches 0 · 8 · 24 | 2 (proposed) | the rule beside the field, so a shape stops being a list of names | with code | relation | near |
 | validation cases (the 422 rules) | relation | 1 · 4 · 42 over 42 of 80 endpoints | 2 | decision points at INPUT; already in the lab's facts — the old note was out of date (piece 3). The evaluation proposes a 3: each case produces an ending | with code | relation | near |
 
 ## Functions — by how crucial they are

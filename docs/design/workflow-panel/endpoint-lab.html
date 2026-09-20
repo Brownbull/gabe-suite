@@ -449,9 +449,10 @@
                    ["untyped tests", (F.tests.by_status["no code in name"] || []).length + " of " + F.tests.cases.length + " name no code"]],
             plainKey: "status" }) }); } },
     { key: "source", word: "source", note: "the file and line the handler is defined at",
-      build: function(){ return chip({ key: "source", icon: "file", label: "source", value: I.file + ":" + I.flines, cls: "srcchip",
-        card: hcard({ title: I.file, value: "line " + I.flines, icon: "file",
+      build: function(){ return chip({ key: "source", icon: "file", label: "source", value: I.at || I.file, cls: "srcchip",   /* the handler's own line — `flines` is the file's LENGTH (leftovers piece 8) */
+        card: hcard({ title: I.file, value: I.line ? "line " + I.line : "line not read", icon: "file",
           rows: [["handler", F.functions.handler.name || "—"],
+                 ["the file", I.flines ? I.flines + " lines long" : "—"],
                  ["body", (I.sig ? (I.sig.async ? "async · " : "") + I.sig.lines + " lines" : "—")],
                  ["returns", (I.sig || {}).returns || "—"]],
           plainKey: "source" }) }); } },
