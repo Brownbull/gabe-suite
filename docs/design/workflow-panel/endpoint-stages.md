@@ -63,7 +63,7 @@ should be there in that stage for that specific topic." One plain line per stage
 | GATE | the rows the lock reads or creates to know who is knocking — here the user row, provisioned before the body is read |
 | INPUT | no table — the body is read and checked against its shape, not against the database |
 | HANDLER | the reads and writes the door's own code makes — every table it touches, in the order it touches them |
-| EFFECTS | the fate of each write — committed, still open, or rolled back — decided by the ending |
+| EFFECTS | the fate of each write, committed, still open or rolled back — decided by the ending |
 | ANSWER | no table — the reply is built from what was already read; nothing is touched here |
 
 The other topics add their column when they are carried onto the spine. The BLOCKS card stays the table's face in every

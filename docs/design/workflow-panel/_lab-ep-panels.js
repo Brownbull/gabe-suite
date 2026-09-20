@@ -1215,8 +1215,45 @@
     GATE:    "the rows the lock reads or creates to know who is knocking — here the user row, provisioned before the body is read",
     INPUT:   "no table — the body is read and checked against its shape, not against the database",
     HANDLER: "the reads and writes the door's own code makes — every table it touches, in the order it touches them",
-    EFFECTS: "the fate of each write — committed, still open, or rolled back — decided by the ending",
-    ANSWER:  "no table — the reply is built from what was already read; nothing is touched here" } };
+    EFFECTS: "the fate of each write, committed, still open or rolled back — decided by the ending",
+    ANSWER:  "no table — the reply is built from what was already read; nothing is touched here" },
+  /* leftovers piece 2 — the norm for the OTHER five topics, one line per stage: what a stage holds for this KIND of element,
+     never a grade of this one. Authored; generating them from the slot registry (_a3_forms.KINDS) is a later step. */
+  schemas: {
+    EDGE:    "no shape — the app band reads headers and the address, never the body",
+    GATE:    "the credential the lock expects — the header it rides on and the scheme it follows",
+    INPUT:   "the request shape — every field the body must carry, and the rules that refuse it",
+    HANDLER: "the shapes the door's own code builds on the way — the values it hands to the functions it calls",
+    EFFECTS: "the table shapes behind each write — the model a saved row has to fit",
+    ANSWER:  "the response shape of each ending — the body a success returns, the detail a refusal returns" },
+  functions: {
+    EDGE:    "the app-wide steps — the middleware every request runs through, in the order it runs",
+    GATE:    "the functions that give context — who is calling, the database session, the settings",
+    INPUT:   "the framework's own reader — it parses the body and checks it against the shape",
+    HANDLER: "the handler and the functions it calls — the ones that decide an ending, the ones that touch the data",
+    EFFECTS: "the functions that settle a write — the commit, the rollback, the savepoint",
+    ANSWER:  "the function that builds the reply — it turns what was read into the response shape" },
+  tests: {
+    EDGE:    "a test for each app-wide refusal — the rate limit answering before the door is reached",
+    GATE:    "a test for each way the lock says no — no credential, an invalid credential",
+    INPUT:   "a test for each rule on the body — a missing field, a value out of range",
+    HANDLER: "a test for each guard and each fork — one per ending the door's own code can choose",
+    EFFECTS: "a test that reads the database back — the row saved on success, the row absent after a refusal",
+    ANSWER:  "a test of the reply itself — the status, the fields of the body, the headers" },
+  widening: {
+    EDGE:    "the address the client calls — the method, the path, and the wrapper that sends it",
+    GATE:    "the credential the client attaches — and the screen's move when the lock refuses it",
+    INPUT:   "the form the screen fills — the fields it collects before it calls",
+    HANDLER: "no client piece — the door's own work is invisible to the screen",
+    EFFECTS: "the cached answers the screen drops or refills once the writes are done",
+    ANSWER:  "the branch of the screen each ending reaches — the message, the redirect, the retry" },
+  security: {
+    EDGE:    "the app-wide checks — the rate limit, the origin rules, the repeat key",
+    GATE:    "the login scheme and the function that checks it — with the rows it may create on the way in",
+    INPUT:   "the rules a body has to pass — sizes, ranges, allowed values",
+    HANDLER: "the guards the door's own code adds — whose row this is, whether this caller may do this",
+    EFFECTS: "the writes a refusal leaves behind — what is undone when the door says no, what is kept",
+    ANSWER:  "the detail each refusal gives the caller, and the headers the reply sends" } };
   /* which tables belong under which stage — the ONE rule, read by both stage distributions */
   function stgPlacement(F){ var C = stgCfg(), idx = stgIndex(F), p = pathById(F, (window.SEL || {}).path);
     var per = p ? idx.per[p.id] : null, out = {}, first = {};
@@ -2689,9 +2726,28 @@
     if (o.label && z >= 64) el.append(E("span", { class: "clbl" }, esc(o.label)));
     if (o.flag) { var fg = E("i", { class: "cflag" }); fg.insertAdjacentHTML("beforeend", ico("swords", 11, "currentColor"));
       bind(fg, function(){ return flagCard(o.flag, F, S); }); el.classList.add("hasflag"); el.append(fg); }
-    tipBind(el, o.card, o.cap);
+    /* an empty cell says WHY it is empty — before the plain line, which stays last (the hover-card law) */
+    var why = (o.state === "hollow" || o.state === "hatched") && o.card ? slotWhy(F, o.state, o.arm) : null;
+    el.dataset.slot = o.state || "lit";
+    tipBind(el, why ? function(){ var h = o.card(), note = '<div class="cpnote slotwhy">' + esc(why) + "</div>", i = h.indexOf('<div class="cpend">');
+      return i < 0 ? h + note : h.slice(0, i) + note + h.slice(i); } : o.card, o.cap);
     if (o.act) el.addEventListener("click", function(ev){ ev.stopPropagation(); o.act(); });
     return el; }
+
+  /* ── WHAT AN EMPTY SLOT MEANS (leftovers piece 2). A slot is LIT when it holds facts · HOLLOW when the reading that fills it
+     RAN here and found none (a measured zero) · HATCHED when that reading did not run on this feed (a zero would be a guess) ·
+     BLANK when this kind of element has no such slot. `arm` is the reading that fills the slot; null = the endpoint pass itself. ── */
+  var PART_ARM = { data: "effects", schemas: "short", functions: "kinds", tests: "tests", widening: "frontend", security: "contract" };
+  function armsOn(F){ var fm = (F && F.forms) || {}; return fm.state === "present" ? (((fm.source || {}).arms_on) || []) : null; }
+  function slotState(F, n, arm, notApplicable){
+    if (notApplicable) return "blank";
+    if (n) return "lit";
+    var on = armsOn(F); if (!on) return "hatched";
+    return !arm || on.indexOf(arm) >= 0 ? "hollow" : "hatched"; }
+  function slotWhy(F, state, arm){
+    return state === "hatched" ? (armsOn(F) ? "the " + arm + " reading did not run on this feed — a zero here would be a guess" : "this feed carries no form for the endpoint — nothing was read")
+      : state === "hollow" ? "the reading ran and found none — a measured zero" : state === "blank" ? "this kind of element has no such slot" : null; }
+  window.slotState = slotState; window.slotWhy = slotWhy;
 
   /* ── the 15 VERBS of the kind card (path-map-status.md §6, the entity command card) ── */
   function cmdVerbs(F, S){
@@ -2712,17 +2768,17 @@
         plain: "one cell per way a request through this door can end — pick one and the whole console follows it" }); },
       cap: function(){ return "walk a path — " + cells.length + " ways this door can end"; },
       act: function(){ window.CMD.mode = window.CMD.mode === "path" ? "cmd" : "path"; window.drawCmd(); } });
-    L.push({ cmd: "prev", ico: "up", verb: "Previous exit", state: exits.length ? "lit" : "hollow",
+    L.push({ cmd: "prev", ico: "up", verb: "Previous exit", state: slotState(F, exits.length, null), arm: null,
       card: function(){ return cmdc({ title: "previous exit", value: ex ? ex.status + " · " + ex.phase : "none open", icon: "up",
         rows: [["order", "request order — " + (fm.stages || []).length + " stages"], ["now", ex ? ex.id : "—"]],
         plain: "step back one ending, the way the request meets them" }); },
       cap: function(){ return "previous exit in request order"; }, act: function(){ window.stepExit(-1); } });
-    L.push({ cmd: "next", ico: "down", verb: "Next exit", state: exits.length ? "lit" : "hollow",
+    L.push({ cmd: "next", ico: "down", verb: "Next exit", state: slotState(F, exits.length, null), arm: null,
       card: function(){ return cmdc({ title: "next exit", value: exits.length + " exits", icon: "down",
         rows: [["order", "request order"], ["now", ex ? ex.id : "—"]],
         plain: "step forward one ending, the way the request meets them" }); },
       cap: function(){ return "next exit in request order"; }, act: function(){ window.stepExit(1); } });
-    L.push({ cmd: "refusals", ico: "shield", verb: "Show refusals", state: refus.length ? "lit" : "hollow", badge: refus.length, col: kindCol("refusal", S),
+    L.push({ cmd: "refusals", ico: "shield", verb: "Show refusals", state: slotState(F, refus.length, "paths"), arm: "paths", badge: refus.length, col: kindCol("refusal", S),
       card: function(){ return cmdc({ title: "show refusals", value: refus.length, icon: "shield", color: kindCol("refusal", S),
         rows: [["written refusals", String(refus.length)], ["framework", String(paths.filter(function(p){ return p.kind === "framework"; }).length) + " — FastAPI answered first"],
                ["validation", String(paths.filter(function(p){ return p.kind === "validation"; }).length)], ["uncaught", String(paths.filter(function(p){ return p.kind === "uncaught"; }).length) + " — shown apart, it is not a refusal"],
@@ -2730,14 +2786,14 @@
         plain: "every ending someone wrote on purpose to stop the request" }); },
       cap: function(){ return refus.length + " written refusals · the 500 is counted apart"; },
       act: function(){ window.CMD.mode = "path"; window.CMD.only = window.CMD.only === "refusal" ? null : "refusal"; window.drawCmd(); } });
-    L.push({ cmd: "success", ico: "target", verb: "Show success", state: succ.length ? "lit" : "hollow", badge: succ.length, col: kindCol("success", S),
+    L.push({ cmd: "success", ico: "target", verb: "Show success", state: slotState(F, succ.length, "paths"), arm: "paths", badge: succ.length, col: kindCol("success", S),
       card: function(){ return cmdc({ title: "show success", value: succ.length, icon: "target", color: kindCol("success", S),
         rows: [["paths", succ.map(function(p){ return p.names.drawn; }).join(" · ")], ["all", "GENERATED — the drawn-by-hand source is gone"],
                ["declared", (fm.declared || {}).response_model ? fm.declared.response_model.name + " · " + fm.declared.success.status : "—"]],
         plain: "the ways the work finished — all three come from the feed now, none is drawn by hand" }); },
       cap: function(){ return succ.length + " success paths, all generated"; },
       act: function(){ window.CMD.mode = "path"; window.CMD.only = window.CMD.only === "success" ? null : "success"; window.drawCmd(); } });
-    L.push({ cmd: "writes", ico: "table", verb: "Show writes", state: writes.length ? "lit" : "hollow", badge: writes.length, col: S.OPC.write,
+    L.push({ cmd: "writes", ico: "table", verb: "Show writes", state: slotState(F, writes.length, "effects"), arm: "effects", badge: writes.length, col: S.OPC.write,
       card: function(){ return cmdc({ title: "show writes", value: writes.length + " table(s)", icon: "table", color: S.OPC.write,
         rows: [["scope", sel ? "this path — " + pathWord(sel) : "every path"],
                sel ? ["committed", String(sel.effects.n.committed)] : null,
@@ -2747,25 +2803,25 @@
         fields: writes, plain: "the tables this ending changes, and whether the change survived" }); },
       cap: function(){ return writes.length + " tables written" + (sel ? " on " + pathWord(sel) : " across every path"); },
       act: go("data", writes[0] || null) });
-    L.push({ cmd: "pre", ico: "angle", verb: "Show preconditions", state: (fm.preconditions || []).length ? "lit" : "hollow", badge: (fm.preconditions || []).length, col: S.OPC.gate,
+    L.push({ cmd: "pre", ico: "angle", verb: "Show preconditions", state: slotState(F, (fm.preconditions || []).length, null), arm: null, badge: (fm.preconditions || []).length, col: S.OPC.gate,
       card: function(){ return cmdc({ title: "show preconditions", value: (fm.preconditions || []).length, icon: "angle", color: S.OPC.gate,
         rows: (fm.preconditions || []).map(function(x){ return [String(x.status), x.pred]; }),
         plain: "the tests the handler runs before it will do the work" }); },
       cap: function(){ return (fm.preconditions || []).length + " preconditions before the work runs"; },
       act: go("security", null) });
-    L.push({ cmd: "gates", ico: "key", verb: "Show gates", state: gateN ? "lit" : "hollow", badge: gateN, col: S.OPC.gate,
+    L.push({ cmd: "gates", ico: "key", verb: "Show gates", state: slotState(F, gateN, "paths"), arm: "paths", badge: gateN, col: S.OPC.gate,
       card: function(){ return cmdc({ title: "show gates", value: gateN, icon: "key", color: S.OPC.gate,
         rows: [["scope", sel ? "crossed on " + pathWord(sel) : "every gate in the feed"],
                ["deps", ((F.security || {}).guards || []).length + " · " + ((F.security || {}).gates || []).length + " can refuse"],
                ["app band", ((F.security || {}).asgi || []).length + " ASGI lanes, app scope"]],
         plain: "every check the request has to get past before the work runs" }); },
       cap: function(){ return gateN + " gates" + (sel ? " on this path" : " in the feed"); }, act: go("security", null) });
-    L.push({ cmd: "findings", ico: "alert", verb: "Show findings", state: (fm.findings || []).length ? "lit" : "hollow", badge: (fm.findings || []).length, col: (S.BADGE_COL.role || {}).accessor,
+    L.push({ cmd: "findings", ico: "alert", verb: "Show findings", state: slotState(F, (fm.findings || []).length, null), arm: null, badge: (fm.findings || []).length, col: (S.BADGE_COL.role || {}).accessor,
       card: function(){ return cmdc({ title: "show findings", value: (fm.findings || []).length, icon: "alert", color: (S.BADGE_COL.role || {}).accessor,
         rows: (fm.findings || []).map(function(f){ return [f.id, f.slot + (f.status ? " · " + f.status : "") + (f.n ? " · " + f.n : "")]; }),
         plain: "the faults the forms pass found in the way this door answers" }); },
       cap: function(){ return (fm.findings || []).map(function(f){ return f.id; }).join(" · "); }, act: go("security", null) });
-    L.push({ cmd: "declared", ico: "info", verb: "Declared vs produced", state: (K1.produced || []).length ? "lit" : "hollow", badge: (K1.produced || []).length,
+    L.push({ cmd: "declared", ico: "info", verb: "Declared vs produced", state: slotState(F, (K1.produced || []).length, null), arm: null, badge: (K1.produced || []).length,
       card: function(){ return cmdc({ title: "declared vs produced", value: (K1.declared || []).length + " declared · " + (K1.produced || []).length + " produced", icon: "info",
         rows: [["declares", ((fm.declared || {}).success || {}).status ? String(fm.declared.success.status) : "—"],
                ["declares refusals", (fm.declared || {}).refusals && fm.declared.refusals.length ? fm.declared.refusals.join(" · ") : "none"],
@@ -2773,14 +2829,14 @@
         plain: "the door's promise beside what it actually answers — the gap a client cannot plan for" }); },
       cap: function(){ return "declares " + (((fm.declared || {}).success || {}).status || "—") + " · produces " + (K1.produced || []).join(" · "); },
       act: go("tests", null) });
-    L.push({ cmd: "tests", ico: "test", verb: "Tests for this exit", state: testN ? "lit" : "hollow", badge: testN, col: testCol(),
+    L.push({ cmd: "tests", ico: "test", verb: "Tests for this exit", state: slotState(F, testN, "tests"), arm: "tests", badge: testN, col: testCol(),
       card: function(){ return cmdc({ title: "tests for this exit", value: testN + " case(s)", icon: "test", color: testCol(),
         rows: [["exit", ex ? ex.status + " · " + ex.phase : "no exit open — counting every exit"],
                ["join", C.join === "exact" ? "exact — the forms tests arm" : C.join === "parsed" ? "name-parsed, dashed" : "off"]],
         fields: ex ? (ex.tests || []).map(function(t){ return t.case + " · " + t.conf; }) : null,
         plain: "the cases that prove this ending — and how sure the join is" }); },
       cap: function(){ return testN + " cases prove " + (ex ? ex.status : "the exits"); }, act: go("tests", null) });
-    L.push({ cmd: "untested", ico: "swords", verb: "Untested exits", state: untested.length ? "lit" : "hollow", badge: untested.length, col: (S.BADGE_COL.role || {}).accessor,
+    L.push({ cmd: "untested", ico: "swords", verb: "Untested exits", state: slotState(F, untested.length, "tests"), arm: "tests", badge: untested.length, col: (S.BADGE_COL.role || {}).accessor,
       card: function(){ return cmdc({ title: "untested exits", value: untested.length + " of " + exits.length, icon: "swords", color: (S.BADGE_COL.role || {}).accessor,
         rows: untested.map(function(e){ return [String(e.status), e.phase + (e.via ? " · " + e.via : "")]; }),
         plain: "endings no case has ever asserted — nothing proves the client sees what the door sends" }); },
@@ -3096,7 +3152,7 @@
       lb.addEventListener("click", function(ev){ ev.stopPropagation(); window.selectPath(p.id); });
       row.append(lb);
       CMDPARTS.forEach(function(k){ var f = partFacts(F, p, k);
-        var cell = E("span", { class: "cmxc st-" + (f.n ? "lit" : "hollow") });
+        var cell = E("span", { class: "cmxc st-" + slotState(F, f.n, PART_ARM[k]) });
         cell.dataset.part = k; cell.dataset.path = p.id;
         cell.style.setProperty("--tc", window.PANELS[k].col);
         if (f.n) cell.append(E("i", null, esc(String(f.n))));

@@ -2684,6 +2684,45 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
   ok(errs.length === errsBefore, 'the stages picture raises no page error anywhere in this section', errs.slice(errsBefore, errsBefore + 3).join(' | '));
 }
 
+// ══ LEFTOVERS piece 2 · WHAT AN EMPTY SLOT MEANS — lit · hollow (read, zero) · hatched (not read here) · blank (no such slot) ══
+{ const errs0 = errs.length;
+  const T = await p.evaluate(() => { const F = window.LABEP, off = JSON.parse(JSON.stringify(F)), none = JSON.parse(JSON.stringify(F));
+    off.forms.source.arms_on = off.forms.source.arms_on.filter(a => a !== 'effects'); none.forms = { state: 'absent', reason: 'no form' };
+    return { lit: window.slotState(F, 3, 'effects'), hollow: window.slotState(F, 0, 'effects'), base: window.slotState(F, 0, null), hatched: window.slotState(off, 0, 'effects'),
+      stillLit: window.slotState(off, 2, 'effects'), baseOff: window.slotState(off, 0, null), noForm: window.slotState(none, 0, 'effects'), blank: window.slotState(F, 0, 'effects', true) }; });
+  ok(T.lit === 'lit' && T.hollow === 'hollow' && T.base === 'hollow' && T.hatched === 'hatched' && T.stillLit === 'lit' && T.baseOff === 'hollow' && T.noForm === 'hatched' && T.blank === 'blank',
+    'a slot is lit with facts · hollow when its reading ran and found none · hatched when that reading did not run · blank when the kind has no such slot', JSON.stringify(T));
+  const id429 = await p.evaluate(() => window.LABEP.forms.paths.find(x => x.status === 429).id);
+  await p.evaluate(id => { window.CMD.verbs = 'rows'; window.CMD.grp = null; window.selectPath(id); window.CMD.mode = 'cmd'; window.drawCmd(); }, id429); await p.waitForTimeout(260);
+  const W = '#cmd .cmdcell[data-cmd="writes"]';
+  const read = () => p.$eval(W, e => ({ slot: e.dataset.slot, cls: e.className, bg: getComputedStyle(e).backgroundImage }));
+  let c = await read();
+  ok(c.slot === 'hollow' && /st-hollow/.test(c.cls), 'on a route that writes nothing the writes cell is HOLLOW — the effects reading ran here', JSON.stringify(c).slice(0, 120));
+  await p.hover(W); await p.waitForTimeout(200);
+  ok(/a measured zero/.test(await p.$eval('#hover', e => e.innerText)), 'and its card says the zero was measured');
+  await p.mouse.move(5, 1030); await p.evaluate(() => window.hoverHide());
+  const slotsOf = () => p.$$eval('#cmd .cmdcell[data-cmd]', els => els.map(e => e.dataset.cmd + '=' + e.dataset.slot));
+  const beforeOff = await slotsOf();
+  await p.evaluate(() => { const a = window.LABEP.forms.source.arms_on; window.__armsKeep = a.slice(); a.splice(a.indexOf('effects'), 1); window.drawCmd(); }); await p.waitForTimeout(220);
+  c = await read();
+  ok(c.slot === 'hatched' && /st-hatched/.test(c.cls) && /repeating-linear-gradient/.test(c.bg), 'with the effects reading OFF the same zero is drawn HATCHED — a zero would be a guess', JSON.stringify(c).slice(0, 160));
+  await p.hover(W); await p.waitForTimeout(200);
+  { const h = await p.$eval('#hover', e => e.innerText);
+    ok(/effects reading did not run on this feed/.test(h), 'and its card says which reading did not run', h.replace(/\s+/g, ' ').slice(0, 140));
+    ok(await p.$eval('#hover', e => { const w = e.querySelector('.slotwhy'), end = e.querySelector('.cpend'); return !!w && (!end || (w.compareDocumentPosition(end) & Node.DOCUMENT_POSITION_FOLLOWING) > 0); }), 'the reason sits BEFORE the plain line, which stays last'); }
+  await p.mouse.move(5, 1030); await p.evaluate(() => window.hoverHide());
+  { const afterOff = await slotsOf(), moved = afterOff.filter((x, i) => x !== beforeOff[i]);
+    ok(moved.length === 1 && moved[0] === 'writes=hatched', 'only the slot the missing reading fills changes — every other cell keeps the state it had', moved.join(',') || 'none moved'); }
+  await p.evaluate(() => { const a = window.LABEP.forms.source.arms_on; a.length = 0; window.__armsKeep.forEach(x => a.push(x)); window.clearPath(); window.drawCmd(); }); await p.waitForTimeout(200);
+  ok((await read()).slot === 'lit', 'with every reading back and no route in force the writes cell is lit again');
+  const E6 = await p.evaluate(() => { const X = window.STAGE_EXPECT, out = { topics: Object.keys(X), bad: [] };
+    Object.keys(X).forEach(t => { const ks = Object.keys(X[t]).join(','); if (ks !== 'EDGE,GATE,INPUT,HANDLER,EFFECTS,ANSWER') out.bad.push(t + ' keys ' + ks);
+      Object.keys(X[t]).forEach(k => { const v = X[t][k]; if (/[.!?]\s+[A-Z]/.test(v) || (v.match(/—/g) || []).length > 1 || v.length > 150 || /\b(bad|unsafe|risky|wrong|should fix|missing here)\b/i.test(v)) out.bad.push(t + '.' + k); }); });
+    out.parts = (window.PARTORDER || []).join(','); return out; });
+  ok(E6.topics.length === 6 && E6.topics.slice().sort().join(',') === E6.parts.split(',').sort().join(','), 'every one of the six topics has its norm per stage, keyed like the part buttons', E6.topics.join(',') + ' vs ' + E6.parts);
+  ok(E6.bad.length === 0, 'every norm is one sentence, at most one dash, under 150 characters, and grades nothing', E6.bad.join(' · '));
+  ok(errs.length === errs0, 'the slot states raise no page error', errs.slice(errs0, errs0 + 3).join(' | ')); }
+
 // ── THE RAIL, GROUPED BY REGION (operator 2026-09-17: "I don't know which ones are affecting the mid
 //    panel, the portrait, or the commands"). The blocks are the console's own order, every header says
 //    which region its dials reach, and NOTHING was dropped on the way: the control roster below was

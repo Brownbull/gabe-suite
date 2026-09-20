@@ -98,7 +98,10 @@ const EX = {
   "how-common-this-piece-is": () => Object.keys(L.feedwide.deps).slice(0, 3).map((d) => `${d} on ${L.feedwide.deps[d]} of ${L.feedwide.endpoints}`).join(" · "),
   "where-this-endpoint-sits-in-the-app": () => null,
   "why-this-slot-is-empty": () => `readings that ran here: ${f.source.arms_on.join(", ")}`,
-  "expected-slots-at-this-stage": () => null,
+  "expected-slots-at-this-stage": () => {               /* the norms are authored in the lab's panels file; read the registry, never retype a line */
+    const src = fs.readFileSync(path.join(HERE, "../workflow-panel/_lab-ep-panels.js"), "utf8"), a = src.indexOf("var STAGE_EXPECT = window.STAGE_EXPECT = "), b = src.indexOf("} };", a);
+    if (a < 0 || b < 0) return null; const X = Function("return (" + src.slice(a + "var STAGE_EXPECT = window.STAGE_EXPECT = ".length, b + 3) + ")")();
+    return `${Object.keys(X).length} topics × ${Object.keys(X.functions || {}).length} stages · GATE for functions: ${q(X.functions.GATE)}`; },
   "what-the-screen-does-on-this-ending": () => null,
 
   "request-scoped-state": () => (f.repeat.key && f.repeat.key.through ? `${f.repeat.key.through} is set by middleware and read by the handler` : null),
@@ -129,7 +132,7 @@ const EX = {
     const allF = f.findings.concat(Object.values(f.arm_findings).flat());
     return `${plural(allF.length, "finding")} · ` + allF.map((x) => (FIND[x.id] || rawF)(x)).join(" · "); },
 };
-const LANDS = { "in-flight-values": 11, "field-rules-of-the-request-body": 8, "roles-per-function": 6, "what-the-case-asserts-on-this-condition": 5, "case-role-on-this-endpoint": 5, "where-this-endpoint-sits-in-the-app": 7, "expected-slots-at-this-stage": 2, "what-the-screen-does-on-this-ending": 10 };
+const LANDS = { "in-flight-values": 11, "field-rules-of-the-request-body": 8, "roles-per-function": 6, "what-the-case-asserts-on-this-condition": 5, "case-role-on-this-endpoint": 5, "where-this-endpoint-sits-in-the-app": 7, "what-the-screen-does-on-this-ending": 10 };
 const NONE = Object.assign(Object.fromEntries(Object.entries(LANDS).map(([k, n]) => [k, `nothing to quote yet · piece ${n} of the work brings it`])), { "little-helpers-with-a-type": "none to show · helper functions carry no type in the feed yet", "events-published": "none on this endpoint", "tasks-dispatched": "none on this endpoint", "outside-services-called": "none drawn on this endpoint" });
 for (const r of rows) {
   if (!(r.id in EX)) die("no example rule for row: " + r.id);
