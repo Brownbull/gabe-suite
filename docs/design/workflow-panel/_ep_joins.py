@@ -2,7 +2,9 @@
 
 `inside_the_calls` (leftovers piece 6): functions{} · dependencies{} · what each function does here.
 `field_rules` (leftovers piece 8): schemas{} · models{} · functions{}.at · middleware{}.registered_at — the rule on every
-field and column, and the line every block can be opened at. Nothing is extracted here: every value is the feed's own, and
+field and column, and the line every block can be opened at.
+`client_joins` (leftovers piece 10, the lab half): frontend.reasons.readers — which client branch each ending reaches — and the
+guards and screens tied to this endpoint BY THE FEED'S OWN JOINS, never by a name typed here. Nothing is extracted here: every value is the feed's own, and
 a block the feed lacks is said so in the feed's state words."""
 from __future__ import annotations
 
@@ -251,3 +253,69 @@ def field_rules(fj: dict, ID: str, identity: dict, schemas_out: dict, tables: li
                     c["at"] = reg; c["at_is"] = "where the step is added to the application"; n["steps_with_line"] += 1
     return {"counts": dict(n), "state": {"schemas": "present" if S else ("absent" if S is None else "empty"), "models": "present" if M else ("absent" if M is None else "empty")},
             "reading": "a rule is the feed's own reading of the declaration; which body fields a given ending actually read is in no feed"}
+
+
+def client_joins(fj: dict, ID: str, forms_block: dict, climbed: list) -> None:
+    """Leftovers piece 10, the lab half — what is already known about the client, joined and not typed.
+    `readers`: every ending routed to the client branch it reaches (its own, or the general case), from frontend.reasons.readers.
+    `guards`: a guard is tied to this endpoint when it READS a query whose key this endpoint's hook refreshes on success
+              (hook.invalidates / hook.seeds → the query hook under that key → the guards whose conditions name that hook).
+    `screens`: the forms pieces that live in the files of the components the lab's climb reaches from the fetching hook."""
+    fe = fj.get("frontend") or {}
+    F = forms_block.get("frontend")
+    if not fe or F is None:
+        return
+    P = fe.get("pieces") or {}
+    sites = {x.get("id"): x for x in ((fe.get("reasons") or {}).get("sites") or [])}
+    exits = {x.get("id"): x for x in forms_block.get("exits") or []}
+    readers = []
+    for r in ((fe.get("reasons") or {}).get("readers") or {}).get(ID) or []:
+        routes, by_site = [], collections.defaultdict(list)
+        for rt in r.get("routes") or []:
+            st, x = sites.get(rt.get("site")) or {}, exits.get(rt.get("exit")) or {}
+            own = rt.get("site") != "rest"
+            routes.append({"exit": rt.get("exit"), "status": rt.get("status"), "detail": x.get("detail"), "kind": x.get("kind"), "site": rt.get("site"), "own_branch": own,
+                           "at": st.get("at"), "reads": st.get("reads"), "op": st.get("op"), "value": st.get("value"), "does": st.get("does")})
+            if own:
+                by_site[rt.get("site")].append(rt.get("exit"))
+        shared = [{"site": k, "at": (sites.get(k) or {}).get("at"), "reads": (sites.get(k) or {}).get("reads"), "exits": v,
+                   "statuses": sorted({exits.get(e, {}).get("status") for e in v if exits.get(e, {}).get("status") is not None})} for k, v in by_site.items() if len(v) > 1]
+        readers.append({"fn": r.get("fn"), "piece": r.get("piece"), "receiver": r.get("receiver"), "routes": routes, "shared": shared,
+                        "n": {"routed": len(routes), "own_branch": sum(1 for x in routes if x["own_branch"]), "general": sum(1 for x in routes if not x["own_branch"])}})
+    F["readers"] = readers
+    F["readers_state"] = "present" if readers else ("absent" if (fe.get("reasons") or {}).get("readers") is not None else "not_emitted")
+    # what the success refreshes, and whether the call is tried again
+    hook = F.get("hook") or {}
+    call = next((c for c in hook.get("calls") or [] if c.get("endpoint") == ID), None) or {}
+    touched = [{"key": x.get("key"), "how": "refetched", "at": x.get("at"), "when": x.get("when")} for x in call.get("invalidates") or []] + \
+              [{"key": x.get("key"), "how": "filled in straight away", "at": x.get("at"), "when": x.get("when")} for x in call.get("seeds") or []]
+    F["after_success"] = touched
+    pol = (((fe.get("client") or {}).get("clients") or [{}])[0].get("policy") or {})
+    side = "mutations" if call.get("kind") == "mutation" else "queries"
+    F["retry"] = dict((pol.get(side) or {}).get("retry") or {"state": "unknown"}, kind=call.get("kind"), side=side)
+    # the guards that read what this endpoint refreshes
+    keys = [x["key"] for x in touched if isinstance(x.get("key"), list)]
+    under = {}
+    for pid, pc in P.items():
+        if pc.get("form") != "hook":
+            continue
+        for c in pc.get("calls") or []:
+            k = c.get("key")
+            if c.get("kind") == "query" and isinstance(k, list):
+                hit = next((key for key in keys if k[:len(key)] == key), None)
+                if hit is not None:
+                    under[pid] = {"key": hit, "endpoint": c.get("endpoint")}
+    guards = []
+    for pid in sorted(P):
+        pc = P[pid]
+        if pc.get("form") != "guard":
+            continue
+        reads = sorted({w.get("hook") for x in pc.get("exits") or [] for w in (x.get("when") or []) + (x.get("passed") or []) if w.get("hook") in under})
+        if reads:
+            guards.append(dict(pc, piece=pid, via=[dict(under[h], hook=h) for h in reads]))
+    F["guards"] = guards
+    F["guard"] = next((g for g in guards if g.get("effects")), guards[0] if guards else None)   # kept for the readers that take one; `guards` is the whole answer
+    files = {str(c).split("#")[0] for c in climbed}
+    F["screens"] = {pid: pc for pid, pc in P.items() if pid in climbed or pid.split("#")[0] in files}
+    F["joins_rule"] = {"guards": "a guard reads a query whose key this endpoint's hook refetches or fills in on success",
+                       "screens": "the pieces in the files of the components that reach the fetching hook", "typed_names": 0}

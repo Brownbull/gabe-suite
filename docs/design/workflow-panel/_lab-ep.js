@@ -17660,81 +17660,500 @@ window.LABEP = {
      ]
     },
     "mounts": 1,
-    "piece": "fe:apps/web/src/routes/RequireSetup.tsx#RequireSetup"
+    "piece": "fe:apps/web/src/routes/RequireSetup.tsx#RequireSetup",
+    "via": [
+     {
+      "key": [
+       "me"
+      ],
+      "endpoint": "endpoint:GET /me",
+      "hook": "fe:apps/web/src/features/me/useMe.ts#useMe"
+     }
+    ]
    },
+   "guards": [
+    {
+     "at": "apps/web/src/routes/RedirectIfSetupComplete.tsx:20",
+     "chain": [
+      {
+       "exit": "x-9b271e1ae1",
+       "guard": "fe:apps/web/src/routes/RequireAuth.tsx#RequireAuth",
+       "id": "p-cec4214c5d",
+       "through": []
+      },
+      {
+       "exit": "x-1a327a5054",
+       "guard": "fe:apps/web/src/routes/RequireAuth.tsx#RequireAuth",
+       "id": "p-eba617e48b",
+       "through": []
+      },
+      {
+       "exit": "x-b9e5fb4a46",
+       "guard": "fe:apps/web/src/routes/RedirectIfSetupComplete.tsx#RedirectIfSetupComplete",
+       "id": "p-0f6b32b8fd",
+       "through": [
+        "x-cf0f658e15"
+       ]
+      },
+      {
+       "exit": "x-034ee6d39a",
+       "guard": "fe:apps/web/src/routes/RedirectIfSetupComplete.tsx#RedirectIfSetupComplete",
+       "id": "p-f772aaccde",
+       "through": [
+        "x-cf0f658e15"
+       ]
+      },
+      {
+       "exit": "x-41c33ab344",
+       "guard": "fe:apps/web/src/routes/RedirectIfSetupComplete.tsx#RedirectIfSetupComplete",
+       "id": "p-2ab5c50dd2",
+       "ready": true,
+       "through": [
+        "x-cf0f658e15"
+       ]
+      }
+     ],
+     "effects": [],
+     "exits": [
+      {
+       "at": "apps/web/src/routes/RedirectIfSetupComplete.tsx:29",
+       "id": "x-b9e5fb4a46",
+       "kind": "render",
+       "passed": [],
+       "tag": "AuthSplash",
+       "when": [
+        {
+         "class": "pending",
+         "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+         "member": "isPending",
+         "name": "isPending",
+         "neg": false
+        }
+       ]
+      },
+      {
+       "at": "apps/web/src/routes/RedirectIfSetupComplete.tsx:35",
+       "decided_by": {
+        "endpoint": "endpoint:GET /me",
+        "field": "setup_required",
+        "response_model": "MeResponse",
+        "state": "defined"
+       },
+       "id": "x-034ee6d39a",
+       "kind": "nav",
+       "passed": [
+        {
+         "class": "pending",
+         "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+         "member": "isPending",
+         "name": "isPending",
+         "neg": true
+        }
+       ],
+       "to": "/",
+       "when": [
+        {
+         "class": "error",
+         "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+         "member": "isError",
+         "name": "isError",
+         "neg": true
+        },
+        {
+         "class": "data",
+         "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+         "member": "data",
+         "name": "data",
+         "neg": false
+        },
+        {
+         "class": "data",
+         "field": "setup_required",
+         "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+         "member": "data",
+         "name": "data.setup_required",
+         "neg": true
+        },
+        {
+         "name": "redoRequested",
+         "neg": true
+        }
+       ]
+      },
+      {
+       "at": "apps/web/src/routes/RedirectIfSetupComplete.tsx:38",
+       "id": "x-41c33ab344",
+       "kind": "outlet",
+       "passed": [
+        {
+         "class": "pending",
+         "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+         "member": "isPending",
+         "name": "isPending",
+         "neg": true
+        },
+        {
+         "neg": true,
+         "opaque": "!isError && data && !data.setup_required && !redoRequested"
+        }
+       ],
+       "tag": "Outlet",
+       "when": []
+      }
+     ],
+     "form": "guard",
+     "hooks": {
+      "data": "fe:apps/web/src/features/me/useMe.ts#useMe",
+      "isError": "fe:apps/web/src/features/me/useMe.ts#useMe",
+      "isPending": "fe:apps/web/src/features/me/useMe.ts#useMe"
+     },
+     "k3": {
+      "pairs": [
+       {
+        "exit": "x-4af500576c",
+        "on": "data.setup_required",
+        "state": "exclusive",
+        "with": "fe:apps/web/src/routes/RequireSetup.tsx#RequireSetup"
+       }
+      ],
+      "state": "safe",
+      "targets": [
+       {
+        "exit": "x-034ee6d39a",
+        "state": "safe",
+        "to": "/"
+       }
+      ]
+     },
+     "mounts": 1,
+     "piece": "fe:apps/web/src/routes/RedirectIfSetupComplete.tsx#RedirectIfSetupComplete",
+     "via": [
+      {
+       "key": [
+        "me"
+       ],
+       "endpoint": "endpoint:GET /me",
+       "hook": "fe:apps/web/src/features/me/useMe.ts#useMe"
+      }
+     ]
+    },
+    {
+     "at": "apps/web/src/routes/RequireSetup.tsx:29",
+     "chain": [
+      {
+       "exit": "x-9b271e1ae1",
+       "guard": "fe:apps/web/src/routes/RequireAuth.tsx#RequireAuth",
+       "id": "p-1af79d57a6",
+       "through": []
+      },
+      {
+       "exit": "x-1a327a5054",
+       "guard": "fe:apps/web/src/routes/RequireAuth.tsx#RequireAuth",
+       "id": "p-77a7caa171",
+       "through": []
+      },
+      {
+       "exit": "x-9aa64e71f6",
+       "guard": "fe:apps/web/src/routes/RequireSetup.tsx#RequireSetup",
+       "id": "p-c59ee662c9",
+       "through": [
+        "x-cf0f658e15"
+       ]
+      },
+      {
+       "effect": "e-e3b90cd8c0",
+       "exit": "x-e627d1f159",
+       "guard": "fe:apps/web/src/routes/RequireSetup.tsx#RequireSetup",
+       "id": "p-70222df8bf",
+       "through": [
+        "x-cf0f658e15"
+       ]
+      },
+      {
+       "effect": "e-e1474802ba",
+       "exit": "x-e627d1f159",
+       "guard": "fe:apps/web/src/routes/RequireSetup.tsx#RequireSetup",
+       "id": "p-aa8077e62c",
+       "through": [
+        "x-cf0f658e15"
+       ]
+      },
+      {
+       "exit": "x-4af500576c",
+       "guard": "fe:apps/web/src/routes/RequireSetup.tsx#RequireSetup",
+       "id": "p-58cadcb596",
+       "through": [
+        "x-cf0f658e15"
+       ]
+      },
+      {
+       "exit": "x-249eb1b535",
+       "guard": "fe:apps/web/src/routes/RequireSetup.tsx#RequireSetup",
+       "id": "p-664b293338",
+       "ready": true,
+       "through": [
+        "x-cf0f658e15"
+       ]
+      }
+     ],
+     "effects": [
+      {
+       "at": "apps/web/src/routes/RequireSetup.tsx:39",
+       "call": "signOut",
+       "hook": "fe:apps/web/src/auth/useAuth.ts#useAuth",
+       "id": "e-e3b90cd8c0",
+       "lands": "unknown",
+       "member": "signOut",
+       "when": [
+        {
+         "class": "error",
+         "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+         "member": "isError",
+         "name": "isError",
+         "neg": false
+        },
+        {
+         "neg": false,
+         "opaque": "isApiError(error)"
+        },
+        {
+         "class": "error",
+         "field": "status",
+         "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+         "member": "error",
+         "name": "error.status",
+         "neg": false,
+         "value": "401"
+        }
+       ]
+      },
+      {
+       "at": "apps/web/src/routes/RequireSetup.tsx:41",
+       "call": "pushToast",
+       "hook": "fe:apps/web/src/store/ui.ts#useUiStore",
+       "id": "e-e1474802ba",
+       "lands": "unknown",
+       "member": "pushToast",
+       "when": [
+        {
+         "neg": true,
+         "opaque": "isError && isApiError(error) && error.status === 401"
+        },
+        {
+         "class": "error",
+         "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+         "member": "isError",
+         "name": "isError",
+         "neg": false
+        }
+       ]
+      }
+     ],
+     "exits": [
+      {
+       "at": "apps/web/src/routes/RequireSetup.tsx:46",
+       "id": "x-9aa64e71f6",
+       "kind": "render",
+       "passed": [],
+       "tag": "AuthSplash",
+       "when": [
+        {
+         "class": "pending",
+         "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+         "member": "isPending",
+         "name": "isPending",
+         "neg": false
+        }
+       ]
+      },
+      {
+       "at": "apps/web/src/routes/RequireSetup.tsx:52",
+       "effects": [
+        "e-e3b90cd8c0",
+        "e-e1474802ba"
+       ],
+       "id": "x-e627d1f159",
+       "kind": "render",
+       "passed": [
+        {
+         "class": "pending",
+         "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+         "member": "isPending",
+         "name": "isPending",
+         "neg": true
+        }
+       ],
+       "tag": "AuthSplash",
+       "when": [
+        {
+         "class": "error",
+         "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+         "member": "isError",
+         "name": "isError",
+         "neg": false
+        }
+       ]
+      },
+      {
+       "at": "apps/web/src/routes/RequireSetup.tsx:60",
+       "decided_by": {
+        "endpoint": "endpoint:GET /me",
+        "field": "setup_required",
+        "response_model": "MeResponse",
+        "state": "defined"
+       },
+       "id": "x-4af500576c",
+       "kind": "nav",
+       "passed": [
+        {
+         "class": "pending",
+         "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+         "member": "isPending",
+         "name": "isPending",
+         "neg": true
+        },
+        {
+         "class": "error",
+         "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+         "member": "isError",
+         "name": "isError",
+         "neg": true
+        }
+       ],
+       "to": "/setup",
+       "when": [
+        {
+         "class": "data",
+         "field": "setup_required",
+         "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+         "member": "data",
+         "name": "data.setup_required",
+         "neg": false
+        }
+       ]
+      },
+      {
+       "at": "apps/web/src/routes/RequireSetup.tsx:63",
+       "id": "x-249eb1b535",
+       "kind": "outlet",
+       "passed": [
+        {
+         "class": "pending",
+         "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+         "member": "isPending",
+         "name": "isPending",
+         "neg": true
+        },
+        {
+         "class": "error",
+         "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+         "member": "isError",
+         "name": "isError",
+         "neg": true
+        },
+        {
+         "class": "data",
+         "field": "setup_required",
+         "hook": "fe:apps/web/src/features/me/useMe.ts#useMe",
+         "member": "data",
+         "name": "data.setup_required",
+         "neg": true
+        }
+       ],
+       "tag": "Outlet",
+       "when": []
+      }
+     ],
+     "form": "guard",
+     "hooks": {
+      "data": "fe:apps/web/src/features/me/useMe.ts#useMe",
+      "error": "fe:apps/web/src/features/me/useMe.ts#useMe",
+      "isError": "fe:apps/web/src/features/me/useMe.ts#useMe",
+      "isPending": "fe:apps/web/src/features/me/useMe.ts#useMe",
+      "pushToast": "fe:apps/web/src/store/ui.ts#useUiStore",
+      "signOut": "fe:apps/web/src/auth/useAuth.ts#useAuth",
+      "t": "fe:apps/web/src/i18n/useT.ts#useT"
+     },
+     "k3": {
+      "pairs": [
+       {
+        "exit": "x-034ee6d39a",
+        "on": "data.setup_required",
+        "state": "exclusive",
+        "with": "fe:apps/web/src/routes/RedirectIfSetupComplete.tsx#RedirectIfSetupComplete"
+       }
+      ],
+      "state": "safe",
+      "targets": [
+       {
+        "exit": "x-4af500576c",
+        "state": "safe",
+        "to": "/setup"
+       }
+      ]
+     },
+     "mounts": 1,
+     "piece": "fe:apps/web/src/routes/RequireSetup.tsx#RequireSetup",
+     "via": [
+      {
+       "key": [
+        "me"
+       ],
+       "endpoint": "endpoint:GET /me",
+       "hook": "fe:apps/web/src/features/me/useMe.ts#useMe"
+      }
+     ]
+    }
+   ],
    "screens": {
-    "fe:apps/web/src/features/auth/screens/InitialSetupScreen.tsx#HouseholdStep": {
-     "at": "apps/web/src/features/auth/screens/InitialSetupScreen.tsx:593",
-     "controls": [
+    "fe:apps/web/src/features/auth/useCompleteSetup.ts#useCompleteSetup": {
+     "at": "apps/web/src/features/auth/useCompleteSetup.ts:31",
+     "calls": [
       {
-       "at": "apps/web/src/features/auth/screens/InitialSetupScreen.tsx:619",
-       "handler": {
-        "onClick": "() => onSelectHouseholdMode(mode)"
-       },
-       "id": "c-c3228daf2a",
-       "state": "live",
-       "tag": "HouseholdModeButton"
-      }
-     ],
-     "form": "component"
-    },
-    "fe:apps/web/src/features/auth/screens/InitialSetupScreen.tsx#SetupContent": {
-     "at": "apps/web/src/features/auth/screens/InitialSetupScreen.tsx:385",
-     "controls": [
-      {
-       "at": "apps/web/src/features/auth/screens/InitialSetupScreen.tsx:486",
-       "handler": {
-        "onClick": "onNext"
-       },
-       "id": "c-60deb6d99a",
-       "state": "live",
-       "tag": "Button",
-       "when": [
-        "selectedStepIndex === 0"
-       ]
-      },
-      {
-       "at": "apps/web/src/features/auth/screens/InitialSetupScreen.tsx:490",
-       "handler": {
-        "onClick": "onBack"
-       },
-       "id": "c-3b5952e3c0",
-       "state": "live",
-       "tag": "Button",
-       "when": [
-        "!selectedStepIndex === 0",
-        "!selectedStep === \"complete\""
-       ]
-      },
-      {
-       "at": "apps/web/src/features/auth/screens/InitialSetupScreen.tsx:492",
-       "handler": {
-        "onClick": "onNext"
-       },
-       "id": "c-4e5f4884b0",
-       "state": "live",
-       "tag": "Button",
-       "when": [
-        "!selectedStepIndex === 0"
+       "at": "apps/web/src/features/auth/useCompleteSetup.ts:34",
+       "callee": "useMutation",
+       "endpoint": "endpoint:POST /setup/complete",
+       "fetch": [
+        {
+         "at": "apps/web/src/features/auth/useCompleteSetup.ts:36",
+         "callee": "apiFetch",
+         "method": "POST",
+         "path": "/api/v1/setup/complete",
+         "wrapper": "fe:apps/web/src/lib/api/client.ts#apiFetch"
+        }
+       ],
+       "invalidates": [
+        {
+         "at": "apps/web/src/features/auth/useCompleteSetup.ts:45",
+         "call": "invalidateQueries",
+         "key": [
+          "me"
+         ],
+         "when": "onSuccess"
+        },
+        {
+         "at": "apps/web/src/features/auth/useCompleteSetup.ts:45",
+         "call": "invalidateQueries",
+         "key": [
+          "settings"
+         ],
+         "when": "onSuccess"
+        }
+       ],
+       "kind": "mutation",
+       "options": {},
+       "seeds": [
+        {
+         "at": "apps/web/src/features/auth/useCompleteSetup.ts:43",
+         "key": [
+          "me"
+         ],
+         "when": "onSuccess"
+        }
        ]
       }
      ],
-     "form": "component"
-    },
-    "fe:apps/web/src/features/auth/screens/InitialSetupScreen.tsx#SetupStateTabs": {
-     "at": "apps/web/src/features/auth/screens/InitialSetupScreen.tsx:336",
-     "controls": [
-      {
-       "at": "apps/web/src/features/auth/screens/InitialSetupScreen.tsx:341",
-       "handler": {
-        "onClick": "() => onSelect(item.id)"
-       },
-       "id": "c-ca7c71300c",
-       "state": "live",
-       "tag": "button"
-      }
-     ],
-     "form": "component"
+     "form": "hook"
     }
    },
    "client": {
@@ -17916,7 +18335,190 @@ window.LABEP = {
      }
     }
    },
-   "present": true
+   "present": true,
+   "readers": [
+    {
+     "fn": "setupErrorMessage",
+     "piece": "fe:apps/web/src/features/auth/SetupScreen.tsx#setupErrorMessage",
+     "receiver": "error",
+     "routes": [
+      {
+       "exit": "x:8437446a6c",
+       "status": 429,
+       "detail": "Rate limit exceeded. Try again shortly.",
+       "kind": "refusal",
+       "site": "rest",
+       "own_branch": false,
+       "at": null,
+       "reads": null,
+       "op": null,
+       "value": null,
+       "does": null
+      },
+      {
+       "exit": "x:a7992af811",
+       "status": 429,
+       "detail": "Rate limit exceeded. Try again shortly.",
+       "kind": "refusal",
+       "site": "rest",
+       "own_branch": false,
+       "at": null,
+       "reads": null,
+       "op": null,
+       "value": null,
+       "does": null
+      },
+      {
+       "exit": "x:9fd81887a2",
+       "status": 401,
+       "detail": "Not authenticated",
+       "kind": "refusal",
+       "site": "rest",
+       "own_branch": false,
+       "at": null,
+       "reads": null,
+       "op": null,
+       "value": null,
+       "does": null
+      },
+      {
+       "exit": "x:18e726cdeb",
+       "status": 401,
+       "detail": "invalid token",
+       "kind": "refusal",
+       "site": "rest",
+       "own_branch": false,
+       "at": null,
+       "reads": null,
+       "op": null,
+       "value": null,
+       "does": null
+      },
+      {
+       "exit": "x:1b256011f1",
+       "status": 422,
+       "detail": null,
+       "kind": "validation",
+       "site": "rest",
+       "own_branch": false,
+       "at": null,
+       "reads": null,
+       "op": null,
+       "value": null,
+       "does": null
+      },
+      {
+       "exit": "x:13ce9b79e0",
+       "status": 400,
+       "detail": "Idempotency-Key required",
+       "kind": "refusal",
+       "site": "rest",
+       "own_branch": false,
+       "at": null,
+       "reads": null,
+       "op": null,
+       "value": null,
+       "does": null
+      },
+      {
+       "exit": "x:f2caf456bd",
+       "status": 409,
+       "detail": "setup in progress",
+       "kind": "refusal",
+       "site": "r-56477c4fb6",
+       "own_branch": true,
+       "at": "apps/web/src/features/auth/SetupScreen.tsx:43",
+       "reads": "status",
+       "op": "===",
+       "value": 409,
+       "does": null
+      },
+      {
+       "exit": "x:a086031223",
+       "status": 409,
+       "detail": "consent required",
+       "kind": "refusal",
+       "site": "r-56477c4fb6",
+       "own_branch": true,
+       "at": "apps/web/src/features/auth/SetupScreen.tsx:43",
+       "reads": "status",
+       "op": "===",
+       "value": 409,
+       "does": null
+      },
+      {
+       "exit": "x:17b6cdc4d4",
+       "status": 500,
+       "detail": null,
+       "kind": "uncaught",
+       "site": "rest",
+       "own_branch": false,
+       "at": null,
+       "reads": null,
+       "op": null,
+       "value": null,
+       "does": null
+      }
+     ],
+     "shared": [
+      {
+       "site": "r-56477c4fb6",
+       "at": "apps/web/src/features/auth/SetupScreen.tsx:43",
+       "reads": "status",
+       "exits": [
+        "x:f2caf456bd",
+        "x:a086031223"
+       ],
+       "statuses": [
+        409
+       ]
+      }
+     ],
+     "n": {
+      "routed": 9,
+      "own_branch": 2,
+      "general": 7
+     }
+    }
+   ],
+   "readers_state": "present",
+   "after_success": [
+    {
+     "key": [
+      "me"
+     ],
+     "how": "refetched",
+     "at": "apps/web/src/features/auth/useCompleteSetup.ts:45",
+     "when": "onSuccess"
+    },
+    {
+     "key": [
+      "settings"
+     ],
+     "how": "refetched",
+     "at": "apps/web/src/features/auth/useCompleteSetup.ts:45",
+     "when": "onSuccess"
+    },
+    {
+     "key": [
+      "me"
+     ],
+     "how": "filled in straight away",
+     "at": "apps/web/src/features/auth/useCompleteSetup.ts:43",
+     "when": "onSuccess"
+    }
+   ],
+   "retry": {
+    "state": "defined",
+    "value": false,
+    "kind": "mutation",
+    "side": "mutations"
+   },
+   "joins_rule": {
+    "guards": "a guard reads a query whose key this endpoint's hook refetches or fills in on success",
+    "screens": "the pieces in the files of the components that reach the fetching hook",
+    "typed_names": 0
+   }
   },
   "phases": [
    "middleware",

@@ -110,7 +110,8 @@ const EX = {
     const src = fs.readFileSync(path.join(HERE, "../workflow-panel/_lab-ep-panels.js"), "utf8"), a = src.indexOf("var STAGE_EXPECT = window.STAGE_EXPECT = "), b = src.indexOf("} };", a);
     if (a < 0 || b < 0) return null; const X = Function("return (" + src.slice(a + "var STAGE_EXPECT = window.STAGE_EXPECT = ".length, b + 3) + ")")();
     return `${Object.keys(X).length} topics × ${Object.keys(X.functions || {}).length} stages · GATE for functions: ${q(X.functions.GATE)}`; },
-  "what-the-screen-does-on-this-ending": () => null,
+  "what-the-screen-does-on-this-ending": () => { const rd = (f.frontend.readers || [])[0]; if (!rd) return null; const sh = rd.shared[0];   /* the routing half is real (piece 10, lab half); what the branch DOES waits for the generation part */
+    return (sh ? `${sh.exits.length} endings (${sh.statuses.join(" · ")}) share one client branch at ${String(sh.at).split("/").slice(-1)[0]} · ` : "") + `${rd.n.general} of ${rd.n.routed} routed endings fall to the general case · what the branch does is not read yet`; },
 
   "request-scoped-state": () => (f.repeat.key && f.repeat.key.through ? `${f.repeat.key.through} is set by middleware and read by the handler` : null),
   "client-cache-effects": () => { const c = f.frontend.hook && f.frontend.hook.calls[0]; if (!c) return null; const k = (a) => a.map((x) => q(x.key.join("/"))).join(", "); return `on success · seeds ${k(c.seeds)} · invalidates ${k(c.invalidates)}`; },
@@ -143,7 +144,7 @@ const EX = {
     const allF = f.findings.concat(Object.values(f.arm_findings).flat());
     return `${plural(allF.length, "finding")} · ` + allF.map((x) => (FIND[x.id] || rawF)(x)).join(" · "); },
 };
-const LANDS = { "in-flight-values": 11, "what-the-screen-does-on-this-ending": 10 };
+const LANDS = { "in-flight-values": 11 };
 const NONE = Object.assign(Object.fromEntries(Object.entries(LANDS).map(([k, n]) => [k, `nothing to quote yet · piece ${n} of the work brings it`])), { "little-helpers-with-a-type": "none to show · helper functions carry no type in the feed yet", "events-published": "none on this endpoint", "tasks-dispatched": "none on this endpoint", "outside-services-called": "none drawn on this endpoint" });
 for (const r of rows) {
   if (!(r.id in EX)) die("no example rule for row: " + r.id);

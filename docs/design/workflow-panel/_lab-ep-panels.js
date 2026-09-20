@@ -2738,7 +2738,7 @@
     if (FE.hook && FE.hook.piece) out.rung[String(FE.hook.piece).split("#").pop()] = "fetches";
     (FE.reason_sites || []).forEach(function(r){ if (String(r.value) === String(p.status)) out.rung[String(r.piece).split("/").pop().replace(/\.tsx?#.*$/, "").replace(/#.*$/, "")] = "reads";
       if (String(r.value) === String(p.status)) out.rung[String(r.piece).split("#").pop()] = "reads"; });
-    if (String(p.status) === "401" && FE.guard) (FE.guard.effects || []).forEach(function(e){ out.rung[e.call] = "effect"; });
+    if (String(p.status) === "401") (FE.guards || (FE.guard ? [FE.guard] : [])).forEach(function(g){ (g.effects || []).forEach(function(e){ out.rung[e.call] = "effect"; }); });
     return out; }
 
   /* what this path gives each PART — the matrix's fill and the "on this path" strip read the same rule */
@@ -2752,9 +2752,10 @@
     else if (part === "functions") { n = Object.keys(o.fn).length; words = Object.keys(o.fn); }
     else if (part === "tests") { n = Object.keys(o["case"]).length; words = Object.keys(o["case"]).map(function(c){ return c + " · " + o["case"][c]; }); }
     else if (part === "widening") { var sites = (FE.reason_sites || []).filter(function(r2){ return String(r2.value) === String(p.status); });
-      var eff = String(p.status) === "401" && FE.guard ? (FE.guard.effects || []).length : 0;
+      var gEff = (FE.guards || (FE.guard ? [FE.guard] : [])).reduce(function(a, g){ return a.concat(g.effects || []); }, []);   /* every tied guard, not one typed name (leftovers piece 10) */
+      var eff = String(p.status) === "401" ? gEff.length : 0;
       n = sites.length + eff; words = sites.map(function(s){ return String(s.piece).split("#").pop() + " reads " + s.reads; })
-        .concat(eff ? (FE.guard.effects || []).map(function(e){ return e.call; }) : []);
+        .concat(eff ? gEff.map(function(e){ return e.call; }) : []);
       if (cmdCfg().matrix === "hook") { n += FE.hook ? 1 : 0; if (FE.hook) words.push(String(FE.hook.piece).split("#").pop() + " fetches"); } }
     else if (part === "security") { n = (p.n.gates || 0) + (p.switches || []).length;
       words = [(p.n.gates || 0) + " gate(s) crossed", (p.switches || []).length + " switch(es)"]; }
@@ -2817,6 +2818,24 @@
   /* ── PROOF YOU CAN OPEN (leftovers piece 5): why a test came to this endpoint, and what it really asked for ── */
   var ROLEWORD = { act: "tests this endpoint", arranged: "calls it to set something else up", "service-raises": "proves an ending from the service side, without calling the endpoint",
                    "helper-arranged": "reaches it only through a shared helper", "named-only": "listed by the map, makes no call here" };
+  /* leftovers piece 10 (the lab half) — what the client does with one ending, from the feed's own routing: its own branch or the general case,
+     whether the call is tried again, and — on a success — what is refreshed and which guards read it */
+  function clientRows(F, e){ var FE = ((FRM(F) || {}).frontend) || {}, out = [];
+    if (!FE.present) return [["the client", "not read — the frontend reading is off"]];
+    var rd = (FE.readers || [])[0], rt = rd ? (rd.routes || []).filter(function(r){ return r.exit === e.id; })[0] : null;
+    if (e.kind === "success") {
+      var ref = (FE.after_success || []).filter(function(x){ return x.how === "refetched"; }), fil = (FE.after_success || []).filter(function(x){ return x.how !== "refetched"; });
+      out.push(["then refetched", ref.length ? ref.map(function(x){ return "“" + (x.key || []).join(" · ") + "”"; }).join(" and ") + " · " + shortAt(ref[0].at) : "nothing"]);
+      if (fil.length) out.push(["filled in at once", fil.map(function(x){ return "“" + (x.key || []).join(" · ") + "”"; }).join(" and ") + " · " + shortAt(fil[0].at)]);
+      if ((FE.guards || []).length) out.push(["guards that read it", FE.guards.map(function(g){ return String(g.piece).split("#").pop(); }).join(" · ")]); }
+    else if (rt) out.push(["its branch", rt.own_branch ? "its own, at " + shortAt(rt.at) + " — it reads the " + (rt.reads || "status") + " only"
+        + ((rd.shared || []).some(function(sh){ return sh.exits.indexOf(e.id) >= 0; }) ? ", so " + (rd.shared.filter(function(sh){ return sh.exits.indexOf(e.id) >= 0; })[0].exits.length) + " endings share it" : "")
+      : "none of its own — it falls to the general case, as " + rd.n.general + " of the " + rd.n.routed + " routed endings do"]);
+    else out.push(["its branch", rd ? "the client's reading routes no branch to this ending" : "no client code reads this endpoint's failures"]);
+    if (rt && rt.does) out.push(["what it does", String(rt.does)]);
+    var ry = FE.retry || {};
+    if (e.kind !== "success") out.push(["tried again", ry.state === "defined" || ry.state === "default" ? (ry.value === false || ry.value === 0 ? "never — retry is off for this kind of call" : "yes — " + String(ry.value) + " (" + ry.state + ")") : "not read"]);
+    return out; }
   /* leftovers piece 8 — the rule on a field or a column, in words, from the feed's own reading of the declaration */
   var LIMITW = { min_length: "at least {v} characters", max_length: "at most {v} characters", ge: "{v} or more", gt: "more than {v}", le: "{v} or less", lt: "less than {v}",
                  pattern: "must match {v}", multiple_of: "a multiple of {v}", min_items: "at least {v} items", max_items: "at most {v} items" };
@@ -3497,6 +3516,8 @@
           plain: "one rule on the body — break it and the request ends here with a 422" }); });
         cl.append(r2); });
       b.append(cl); }
+    b.insertAdjacentHTML("beforeend", ptSec("on the client"));
+    b.insertAdjacentHTML("beforeend", '<div class="ptclient">' + clientRows(F, e).map(function(r){ return ptRow(r[0], r[1]); }).join("") + "</div>");
     b.insertAdjacentHTML("beforeend", ptSec("paths that end here · " + (e.paths || []).length));
     var pl = E("div", { class: "pttbl" });
     (e.paths || []).forEach(function(id){ var p = pathById(F, id); if (!p) return;

@@ -30,7 +30,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from _ep_pieces import common_block, proof_rank  # noqa: E402  (leftovers piece 7 — the shared piece tally)
-from _ep_joins import _short_detail, field_rules, inside_the_calls  # noqa: E402  (pieces 6 and 8 — the joins of feed blocks the lab did not read)
+from _ep_joins import _short_detail, client_joins, field_rules, inside_the_calls  # noqa: E402  (pieces 6 and 8 — the joins of feed blocks the lab did not read)
 REPO = HERE.parents[2]
 EX = REPO / "templates" / "center" / "shell" / "example" / "codebase-graph-station"
 OUT = HERE / "_lab-ep.js"
@@ -207,15 +207,11 @@ def forms_slice(fj: dict, ID: str, ep: dict) -> dict:
     for x in exits:
         stage_of.setdefault(x.get("phase"), []).append(x["id"])
     fe_pieces = fe.get("pieces") or {}
-    def fe_named(sub):
-        return {k: v for k, v in fe_pieces.items() if sub in k}
     hook = next((v | {"piece": k} for k, v in fe_pieces.items() if v.get("form") == "hook" and any(c.get("endpoint") == ID for c in (v.get("calls") or []))), None)
     reason_sites = [s for s in ((fe.get("reasons") or {}).get("sites") or []) if ID in (s.get("endpoints") or [])]
     fe_findings = [f for f in ((fj.get("arm_findings") or {}).get("frontend") or []) if f.get("endpoint") == ID]
-    guard = fe_pieces.get("fe:apps/web/src/routes/RequireSetup.tsx#RequireSetup")
-    frontend = {"hook": hook, "reason_sites": reason_sites, "findings": fe_findings,
-                "guard": (guard | {"piece": "fe:apps/web/src/routes/RequireSetup.tsx#RequireSetup"}) if guard else None,
-                "screens": {k: v for k, v in fe_named("InitialSetupScreen.tsx").items()},
+    # guards · screens · readers are joined in _ep_joins.client_joins — by the feed's own links, never by a name typed here (leftovers piece 10)
+    frontend = {"hook": hook, "reason_sites": reason_sites, "findings": fe_findings, "guard": None, "guards": [], "screens": {},
                 "client": fe.get("client"), "present": bool(fe)}
     _succ = sorted((p for p in paths if p["kind"] == "success"), key=lambda p: (-p["n"]["passed"], p["id"]))
     through = ({"id": _succ[0]["id"], "name": _succ[0]["names"]["drawn"], "passed": _succ[0]["n"]["passed"], "checks": _succ[0]["n"]["gates"],
@@ -667,6 +663,7 @@ def main() -> int:
                 feedwide["pieces"] = dict(common_block(_fj, ID, _digest, _app), app=_app)
                 feedwide["proof"] = proof_rank(_fj.get("endpoints") or {}, ID)
                 feedwide["forms_endpoints"] = len(_fj.get("endpoints") or {})
+                client_joins(_fj, ID, forms_block, [p["id"] for p in fetch_pieces] + [p["id"] for lvl in chain for p in lvl])
                 # leftovers piece 8 — the rule on every field and column, and the line every block opens at
                 forms_block["rules"] = field_rules(_fj, ID, identity, schemas_out, tables_by_name, functions, forms_block)
                 _mw = _fj.get("middleware") or {}

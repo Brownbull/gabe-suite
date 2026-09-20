@@ -2686,6 +2686,36 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
   ok(errs.length === errsBefore, 'the stages picture raises no page error anywhere in this section', errs.slice(errsBefore, errsBefore + 3).join(' | '));
 }
 
+// ══ LEFTOVERS piece 10 (the lab half) · WHAT THE CLIENT DOES WITH EACH ENDING — its own branch or the general case · tried again · what a success refreshes · the guards that read it ══
+{ const errs0 = errs.length;
+  const K = await p.evaluate(() => { const f = window.LABEP.forms, FE = f.frontend, rd = (FE.readers || [])[0] || { routes: [], shared: [], n: {} };
+    return { present: FE.present, rd, exitIds: f.exits.map(e => e.id), after: FE.after_success || [], retry: FE.retry || {}, guards: (FE.guards || []).map(g => ({ piece: g.piece, via: g.via })), guard: FE.guard && FE.guard.piece,
+      rawRetry: (((((FE.client || {}).clients || [])[0] || {}).policy || {})[(FE.retry || {}).side] || {}).retry || null,
+      rule: FE.joins_rule, succ: (f.exits.find(e => e.kind === 'success') || {}).id, sharedExit: ((rd.shared[0] || {}).exits || [])[0], sharedN: ((rd.shared[0] || {}).exits || []).length,
+      general: (rd.routes.find(r => !r.own_branch) || {}).exit }; });
+  ok(K.rd.routes.length > 0 && K.rd.routes.every(r => K.exitIds.indexOf(r.exit) >= 0 && r.own_branch === (r.site !== 'rest')) && K.rd.n.routed === K.rd.routes.length
+    && K.rd.n.own_branch === K.rd.routes.filter(r => r.own_branch).length && K.rd.n.general === K.rd.routes.filter(r => !r.own_branch).length,
+    'the client: every routed ending is an ending of this endpoint, it has its own branch or falls to the general case, and the counts are their own recount', JSON.stringify(K.rd.n));
+  ok(!!K.rawRetry && K.rawRetry.value === K.retry.value && K.rawRetry.state === K.retry.state, 'whether the call is tried again is the client policy\'s own value for this kind of call — a recount against the raw policy the lab carries', JSON.stringify([K.rawRetry, K.retry]));
+  ok(K.rd.shared.every(s => s.exits.length > 1 && s.exits.every(e => K.rd.routes.some(r => r.exit === e && r.site === s.site))), 'endings that share one client branch are grouped by the branch they share', JSON.stringify(K.rd.shared.map(s => [s.at, s.statuses])));
+  { const keys = K.after.map(x => JSON.stringify(x.key));
+    ok(K.guards.length > 0 && K.guards.every(g => g.via.length && g.via.every(v => keys.indexOf(JSON.stringify(v.key)) >= 0)) && K.guards.some(g => g.piece === K.guard) && K.rule.typed_names === 0,
+      'a guard is tied to this endpoint by a provable join — it reads a query whose key the success refreshes — never by a typed name', K.guards.map(g => g.piece.split('#').pop()).join(' · ')); }
+  const clientRows = async id => { await p.evaluate(x => { window.showTab('data'); window.selectExit(x); }, id); await p.waitForTimeout(380);
+    return p.$$eval('#portbody .ptclient .ptrow', els => els.map(e => [e.querySelector('.k').textContent, e.querySelector('.v').textContent])); };
+  { const rows = await clientRows(K.succ), get = k => (rows.find(r => r[0] === k) || [])[1] || '';
+    ok(K.after.filter(x => x.how === 'refetched').every(x => get('then refetched').includes(x.key.join(' · '))) && K.guards.every(g => get('guards that read it').includes(g.piece.split('#').pop())),
+      'the success ending says what is refetched, and which guards read it', JSON.stringify(rows)); }
+  if (K.sharedExit) { const rows = await clientRows(K.sharedExit), v = (rows.find(r => r[0] === 'its branch') || [])[1] || '';
+    ok(/its own, at /.test(v) && v.includes(K.sharedN + ' endings share it'), 'an ending with its own client branch says where it is, and that another ending shares it', v);
+    const ry = (rows.find(r => r[0] === 'tried again') || [])[1] || '';
+    ok((K.retry.value === false) === /^never/.test(ry), 'and whether the call is tried again is the client policy\'s own word', ry + ' · ' + JSON.stringify(K.retry)); }
+  else ok(false, 'two endings share a client branch (the probe needs a pair to read the record)');
+  if (K.general) { const rows = await clientRows(K.general), v = (rows.find(r => r[0] === 'its branch') || [])[1] || '';
+    ok(/none of its own/.test(v) && v.includes(K.rd.n.general + ' of the ' + K.rd.n.routed), 'an ending with no branch of its own says it falls to the general case, and how many do', v); }
+  await p.evaluate(() => { window.clearPath(); window.showTab('data'); }); await p.waitForTimeout(240);
+  ok(errs.length === errs0, 'the client facts raise no page error', errs.slice(errs0, errs0 + 3).join(' | ')); }
+
 // ══ LEFTOVERS piece 8 · FIELD RULES, AND A LINE TO OPEN — the rule beside every field and column · the line every block opens at ══
 { const errs0 = errs.length;
   const R8 = await p.evaluate(() => { const L = window.LABEP, f = L.forms, D = L.data, shapes = [];
