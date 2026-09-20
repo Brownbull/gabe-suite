@@ -54,7 +54,7 @@ const EX = {
   "file-line": () => `${I.file}:${f.endpoint.line}`,
   "risk-flag": () => (I.risk.large || I.risk.god ? `flagged ${I.risk.conflict} · ${I.risk.behind} functions sit behind the handler` : "no flag on this endpoint"),
   "signature": () => `${I.sig.async ? "async" : "sync"} · ${I.sig.lines} lines · returns ${I.sig.returns}`,
-  "usage-fan-in": () => `fan-in ${I.fanin} · ${plural(I.usage.api, "caller")} from the API side, ${I.usage.internal} internal`,
+  "usage-fan-in__dropped": () => `fan-in ${I.fanin} · ${plural(I.usage.api, "caller")} from the API side, ${I.usage.internal} internal`,
 
   "kinds-of-ending": () => ["success", "refusal", "framework", "validation", "uncaught"].filter((k) => f.counts.by_kind[k]).map((k) => `${k} ${f.counts.by_kind[k]}`).join(" · "),
   "the-endings": () => { const names = f.paths.filter((p) => p.phase === "handler").map((p) => q(p.names.drawn)).slice(0, 4); return `${f.paths.length} endings · among them ${names.join(", ")} and ${f.paths.length - names.length} more`; },
@@ -64,7 +64,7 @@ const EX = {
   "deciding-branches": () => `${plural(f.branches.length, "branch").replace("branchs", "branches")} inside ${f.branches[0].call} · ${f.branches.map((b) => b.token).join(" · ")}`,
   "catches": () => { const c = f.failure.catches[0]; return `${plural(f.failure.catches.length, "catch").replace("catchs", "catches")} · ${c.types.join(", ")} ${c.outcome === "translate" ? "becomes a " + c.answers.join("/") : "is " + c.outcome}`; },
   "switches": () => `${plural(f.switches.length, "switch").replace("switchs", "switches")} · ` + f.switches.map((s) => `${s.kind} ${s.port || (s.branches && s.branches[0] && s.branches[0].setting) || (s.settings && Object.keys(s.settings).join(" + ")) || "?"}`).join(" · "),
-  "steps-in-the-longest-chain": () => { const p = f.paths.slice().sort((a, b) => b.chain.length - a.chain.length)[0]; if (p.chain.length !== f.counts.steps_max) die("steps_max disagrees with the longest chain"); return `${p.chain.length} steps on ${q(p.names.drawn)} (${p.status})`; },
+  "steps-in-the-longest-chain__dropped": () => { const p = f.paths.slice().sort((a, b) => b.chain.length - a.chain.length)[0]; if (p.chain.length !== f.counts.steps_max) die("steps_max disagrees with the longest chain"); return `${p.chain.length} steps on ${q(p.names.drawn)} (${p.status})`; },
 
   "tables-touched": () => `${Object.keys(tables).length} tables across all endings` + (L.data.tables.length !== Object.keys(tables).length ? ` · the Data panel draws ${L.data.tables.length} of them` : ""),
   "operation-per-table": () => { const ro = Object.keys(tables).filter((t) => [...tables[t]].every((o) => o === "read")); return `read only: ${ro.join(", ") || "none"} · written: ${Object.keys(tables).length - ro.length} tables`; },
@@ -83,6 +83,24 @@ const EX = {
   "outside-services-called": () => { const d = L.conns.out.find((k) => k.kind === "consumes"); return d ? list(d.items.map((x) => x.label), 3) : null; },
   "delivery": () => (L.security.stream ? "streams its answer" : "one answer · no stream"),
 
+  /* rows the second ruling added (2026-09-19): real values where the lab already holds the fact, else honest-empty until the piece lands */
+  "the-ordered-chain-per-ending": () => { const p = f.paths.slice().sort((a, b) => b.chain.length - a.chain.length)[0], k = {}; p.chain.forEach((c) => { k[c.kind] = (k[c.kind] || 0) + 1; }); return `${p.chain.length} steps on ${q(p.names.drawn)} · ` + Object.keys(k).map((x) => `${k[x]} ${x}`).join(" · "); },
+  "the-checks-met-in-run-order": () => { const passed = (x) => x.chain.filter((c) => c.kind === "gate" && !c.hit).length, p = f.paths.filter((x) => x.chain.some((c) => c.kind === "gate" && c.hit)).sort((a, b) => passed(b) - passed(a))[0], g = p.chain.filter((c) => c.kind === "gate"); return `on ${q(p.names.drawn)} · ${g.filter((c) => !c.hit).length} passed, then ${g.filter((c) => c.hit).map((c) => q(c.label)).join(", ")} stopped it`; },
+  "the-route-that-passes-every-check": () => { const s = f.paths.filter((p) => p.kind === "success").map((p) => ({ n: p.names.drawn, g: p.chain.filter((c) => c.kind === "gate" && !c.hit).length })).sort((a, b) => b.g - a.g); return s.map((x) => `${q(x.n)} passes ${x.g}`).join(" · "); },
+  "the-predicate-per-decision-point": () => `${q(f.preconditions[0].pred)} on a guard · ${q(f.branches[0].pred)} on a fork`,
+  "how-this-table-was-found": () => { const drawn = new Set(L.data.tables.map((t) => t.table)), only = Object.keys(tables).filter((t) => !drawn.has(t)); return only.length ? `${only.join(", ")} · known to the route effects only` : null; },
+  "in-flight-values": () => null,
+  "response-headers-per-ending": () => { const h = f.exits.filter((e) => e.response && e.response.headers && Object.keys(e.response.headers).length).map((e) => `${e.status} sends ${Object.keys(e.response.headers).join(", ")}`); return h.length ? [...new Set(h)].join(" · ") : null; },
+  "field-rules-of-the-request-body": () => null,
+  "roles-per-function": () => null,
+  "what-the-case-asserts-on-this-condition": () => null,
+  "case-role-on-this-endpoint": () => null,
+  "how-common-this-piece-is": () => Object.keys(L.feedwide.deps).slice(0, 3).map((d) => `${d} on ${L.feedwide.deps[d]} of ${L.feedwide.endpoints}`).join(" · "),
+  "where-this-endpoint-sits-in-the-app": () => null,
+  "why-this-slot-is-empty": () => `readings that ran here: ${f.source.arms_on.join(", ")}`,
+  "expected-slots-at-this-stage": () => null,
+  "what-the-screen-does-on-this-ending": () => null,
+
   "request-scoped-state": () => (f.repeat.key && f.repeat.key.through ? `${f.repeat.key.through} is set by middleware and read by the handler` : null),
   "client-cache-effects": () => { const c = f.frontend.hook && f.frontend.hook.calls[0]; if (!c) return null; const k = (a) => a.map((x) => q(x.key.join("/"))).join(", "); return `on success · seeds ${k(c.seeds)} · invalidates ${k(c.invalidates)}`; },
 
@@ -99,9 +117,9 @@ const EX = {
 
   "coverage-per-condition": () => `${tested.length} of ${f.paths.length} endings have a test · none on ${list(f.paths.filter((p) => !(p.tests || []).length).map((p) => q(p.names.drawn)), 3)}`,
   "cases": () => `${L.tests.cases.length + (L.tests.cases_more || 0)} cases · ` + Object.keys(L.tests.by_state).map((k) => `${L.tests.by_state[k]} ${k}`).join(" · "),
-  "journeys-workflow-step": () => { const w = L.tests.workflows[0]; return w ? `step ${w.step_index[0] + 1} of ${w.steps.length} in ${q(w.name)}` : null; },
+  "workflow-step": () => { const w = L.tests.workflows[0]; return w ? `step ${w.step_index[0] + 1} of ${w.steps.length} in ${q(w.name)}` : null; },
   "auth-scheme-gate": () => { const s = f.auth.schemes[0]; return s ? `${s.scheme} on the ${s.header} ${s.carrier} · checked by ${f.auth.gates.map((g) => g.name).join(", ")}` : null; },
-  "rate-limit": () => f.rate.limits.map((l) => { const a = Object.fromEntries(l.args.map((x) => [x.param, x.value])); return `${a.limit} per ${a.window_seconds} s (${l.limiter.replace(/^_/, "")})`; }).join(" · "),
+  "rate-tier": () => f.rate.limits.map((l) => { const a = Object.fromEntries(l.args.map((x) => [x.param, x.value])); return `${a.limit} per ${a.window_seconds} s (${l.limiter.replace(/^_/, "")})`; }).join(" · "),
   "app-band": () => `${L.security.app_middleware.count} middleware · the same on all ${L.security.app_middleware.gates_endpoints} endpoints`,
   "who-fetches-it": () => `${f.frontend.hook.piece.split("#")[1]} → ${list(Object.keys(f.frontend.screens).map((k) => k.split("#")[1]), 3)}`,
   "can-the-client-tell-the-endings-apart": () => { const x = (f.frontend.findings || []).find((y) => y.id === "reason-collapsed"); return x ? `two ${x.status}s, ${x.details.map(q).join(" and ")}, reach one branch in ${x.at.split("/").pop().split(":")[0]}` : "no collapsed reason on this endpoint"; },
@@ -111,7 +129,8 @@ const EX = {
     const allF = f.findings.concat(Object.values(f.arm_findings).flat());
     return `${plural(allF.length, "finding")} · ` + allF.map((x) => (FIND[x.id] || rawF)(x)).join(" · "); },
 };
-const NONE = { "little-helpers-with-a-type": "none to show · helper functions carry no type in the feed yet", "events-published": "none on this endpoint", "tasks-dispatched": "none on this endpoint", "outside-services-called": "none drawn on this endpoint" };
+const LANDS = { "in-flight-values": 11, "field-rules-of-the-request-body": 8, "roles-per-function": 6, "what-the-case-asserts-on-this-condition": 5, "case-role-on-this-endpoint": 5, "where-this-endpoint-sits-in-the-app": 7, "expected-slots-at-this-stage": 2, "what-the-screen-does-on-this-ending": 10 };
+const NONE = Object.assign(Object.fromEntries(Object.entries(LANDS).map(([k, n]) => [k, `nothing to quote yet · piece ${n} of the work brings it`])), { "little-helpers-with-a-type": "none to show · helper functions carry no type in the feed yet", "events-published": "none on this endpoint", "tasks-dispatched": "none on this endpoint", "outside-services-called": "none drawn on this endpoint" });
 for (const r of rows) {
   if (!(r.id in EX)) die("no example rule for row: " + r.id);
   let v = null; try { v = EX[r.id](); } catch (e) { die(`example for ${r.id} failed: ${e.message}`); }

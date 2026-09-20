@@ -3,7 +3,7 @@
 
      node docs/design/design-context/gen-matrices.js [--check] [--table]
 
-   READS   inventory-endpoint.md (via inventory-parse.js — the ratings on record) · m1-input.json (what the raters saw) ·
+   READS   m1-round1.inventory.md (the inventory as the raters saw it, via inventory-parse.js) · m1-input.json (what the raters saw) ·
            m1-endpoint.json (the merged matrix, written by m1-merge.js) · m1-cluster.js (the reordering, arithmetic only) ·
            prisms-endpoint.json (authored: block names, plain lines, the face budget, the takes) · the gabe-artifact kit ·
            matrices.tpl.html
@@ -19,7 +19,8 @@ const die = (m) => { console.error("gen-matrices: " + m); process.exit(2); };
 const rd = (f) => JSON.parse(fs.readFileSync(path.join(HERE, f), "utf8"));
 
 const { parseInventory, parseQuestions } = require("./inventory-parse.js"), { cluster } = require("./m1-cluster.js");
-let inv; try { inv = parseInventory(path.join(HERE, "inventory-endpoint.md")); } catch (e) { die(e.message); }
+/* M1 round 1 is a RECORD: it reads the inventory as the raters saw it (m1-round1.inventory.md), never the living file, which keeps changing */
+let inv; try { inv = parseInventory(path.join(HERE, "m1-round1.inventory.md")); } catch (e) { die(e.message); }
 const inp = rd("m1-input.json"), M = rd("m1-endpoint.json"), W = rd("prisms-endpoint.json"), qs = parseQuestions(path.join(HERE, "questions.md"));
 if (M.unjudged.length && !process.argv.includes("--draft")) die("hard splits without a verdict (use --draft to build on the median): " + M.unjudged.join(", "));
 const ids = inv.rows.map((r) => r.id), seen = inp.attrs.map((a) => a.id);

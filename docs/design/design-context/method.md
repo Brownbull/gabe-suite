@@ -72,5 +72,8 @@ the three depths of a hover (D-009), and where the animation and centring rules 
 and waits on Gabe: `matrices-endpoint.html` shows M1 reordered into eleven blocks, the ladder of joins with the cut, the shared band, the face the
 questions earn, and M2 by rule (D-014). His ruling on the blocks (Keep · Merge · Drop + a name) is what step 3 starts from.
 
+**Status 2026-09-19:** the eleven prisms are ruled (D-015). What M1 left over was evaluated and ruled (D-016): ten pieces of work are being
+landed in the order of `program-leftovers.md`; the inventory grew to 61 rows, 20 of them proposed. M1 round 2 and step 3 (M3) wait on the pieces.
+
 Two known conflicts with the rules are queued for the loop, not patched ahead of it: PATHS ▸ listing codes in the command
 panel (D-008) and the long hovers on headers, command cells and rail controls (D-009).

@@ -53,9 +53,6 @@
     "signature": {
       "plain": "The handler's outline — async or not, its length, the type it returns."
     },
-    "usage-fan-in": {
-      "plain": "The number of callers that reach the endpoint."
-    },
     "kinds-of-ending": {
       "plain": "The families a request's ending can belong to — success, refusal, framework, validation, uncaught."
     },
@@ -79,9 +76,6 @@
     },
     "switches": {
       "plain": "A setting or a swapped-in implementation that changes what the endpoint does."
-    },
-    "steps-in-the-longest-chain": {
-      "plain": "The count of steps on the longest way through the endpoint."
     },
     "tables-touched": {
       "plain": "The database tables the endpoint reads or writes."
@@ -155,14 +149,8 @@
     "cases": {
       "plain": "The named test cases that prove an ending."
     },
-    "journeys-workflow-step": {
-      "plain": "The user journey the endpoint is one step of."
-    },
     "auth-scheme-gate": {
       "plain": "The login scheme and the function that checks it."
-    },
-    "rate-limit": {
-      "plain": "The cap on the requests one client may send per minute."
     },
     "app-band": {
       "plain": "The middleware every request in the app passes through."
@@ -175,6 +163,60 @@
     },
     "findings": {
       "plain": "The anomalies the form check found on the endpoint."
+    },
+    "the-ordered-chain-per-ending": {
+      "plain": "The numbered steps a request runs through on one ending — each check, call, fork, setting and catch, down to the answer."
+    },
+    "the-checks-met-in-run-order": {
+      "plain": "The checks a request met, in the order they ran, each marked as passed or as the one that stopped it."
+    },
+    "the-route-that-passes-every-check": {
+      "plain": "The ending that gets past every check, and the single check that stops each of the others."
+    },
+    "the-predicate-per-decision-point": {
+      "plain": "The condition behind each fork, in the author's own words."
+    },
+    "how-this-table-was-found": {
+      "plain": "The source that says a table is touched — the map's own edge, the steps of a route, or both."
+    },
+    "in-flight-values": {
+      "plain": "The values alive only while a request runs, and the ones the server keeps between requests."
+    },
+    "response-headers-per-ending": {
+      "plain": "The headers an ending sends back beside its body — a retry delay, a login scheme."
+    },
+    "field-rules-of-the-request-body": {
+      "plain": "The rule on each field of the request body — required, a length, a range, a list of allowed values."
+    },
+    "roles-per-function": {
+      "plain": "The part each function plays here — facing the API, deciding an ending, touching the data, giving context."
+    },
+    "what-the-case-asserts-on-this-condition": {
+      "plain": "The thing a test really checked on a condition — the status, the message, a code, or something else."
+    },
+    "case-role-on-this-endpoint": {
+      "plain": "The reason a test came to this endpoint — to test it, or only to set something up for another test."
+    },
+    "workflow-step": {
+      "plain": "The step before this endpoint in its named walk, and the step after."
+    },
+    "rate-tier": {
+      "plain": "The rate tier this endpoint sits on, tighter, standard or exempt — the cap is its detail."
+    },
+    "how-common-this-piece-is": {
+      "plain": "The count of other endpoints that use the same piece, so the odd one out is visible."
+    },
+    "where-this-endpoint-sits-in-the-app": {
+      "plain": "The place of this endpoint among all the others — its rank, the middle value and the largest."
+    },
+    "why-this-slot-is-empty": {
+      "plain": "The reason a slot is empty — we looked and found nothing, we did not look, or the kind has no such slot."
+    },
+    "expected-slots-at-this-stage": {
+      "plain": "The line that says what a stage normally holds for this kind of element."
+    },
+    "what-the-screen-does-on-this-ending": {
+      "plain": "The thing the user gets on an ending — a message, a retry, or a redirect."
     }
   },
   "ui": {
