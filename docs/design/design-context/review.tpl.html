@@ -46,6 +46,8 @@
   .ngroup { display: flex; flex-direction: column; gap: 3px; }
   .ngroup h3 { margin: 0 0 3px; font-size: 1em; color: var(--ink); display: flex; gap: 8px; align-items: baseline; }
   .ngroup h3 span { font-size: var(--fs-min); color: var(--muted); font-weight: 400; }
+  .ngroup h3 .drawn { border: 1px solid var(--rule); border-radius: 999px; padding: 0 8px; }
+  .ngroup h3 .drawn[data-drawn="true"] { color: var(--accent); border-color: var(--accent); }
   .nrow { display: grid; grid-template-columns: 6.2em minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; padding: 5px 8px; border-radius: 7px; border: 1px solid transparent; }
   .nrow:nth-child(even) { background: var(--raised); }
   .nrow[data-v="strike"] .ln { text-decoration: line-through; color: var(--muted); }
@@ -210,7 +212,7 @@
       var sz = el("span", "sz", D.sizes[im.size].word); sz.setAttribute("data-size", im.size); sz.title = D.sizes[im.size].plain; left.appendChild(sz); r.appendChild(left); r.appendChild(el("div", null, im.does)); host.appendChild(r); }); })();
   /* ── the 36 lines, by topic ── */
   (function () { var host = $("norms"), by = {}; D.norms.forEach(function (n) { (by[n.topic] = by[n.topic] || []).push(n); });
-    Object.keys(by).forEach(function (t) { var g = el("div", "ngroup"), first = by[t][0], h = el("h3", null, first.partWord.toLowerCase() === first.topicWord ? first.partWord : first.partWord + " — " + first.topicWord); h.appendChild(el("span", null, by[t].length + " stages")); g.appendChild(h);
+    Object.keys(by).forEach(function (t) { var g = el("div", "ngroup"), first = by[t][0], h = el("h3", null, first.partWord.toLowerCase() === first.topicWord ? first.partWord : first.partWord + " — " + first.topicWord); h.appendChild(el("span", null, by[t].length + " stages")); var dr = el("span", "drawn", D.drawnWords[first.drawn ? "yes" : "no"]); dr.setAttribute("data-drawn", String(!!first.drawn)); h.appendChild(dr); g.appendChild(h);
       by[t].forEach(function (n) { var r = el("div", "nrow"); r.setAttribute("data-norm", n.id); r.appendChild(el("span", "st", n.stage));
         var ln = el("span", "ln"); ln.innerHTML = esc(n.line).replace(/\b(door|lock)\b/g, "<mark>$1</mark>"); if (n.doubt) ln.appendChild(el("span", "db", "I doubt this one. " + n.doubt)); r.appendChild(ln);
         var c = el("div"); r.appendChild(c); var x = verdict(c, r, n.id, n.mine, NORM_OPTS, true, "how you would say it, or why it goes"); r.appendChild(x.note); g.appendChild(r); });
@@ -258,7 +260,7 @@
       box.appendChild(el("b", null, "The design lists " + v.steps + " landing steps and " + v.risks + " risks · about one to two days of building, then these machine runs, one at a time")); box.appendChild(list(v.runs.map(function (r) { return "step " + r.step + " · " + r.cost; }))); }
     else if (fx.key === "p11") { box.appendChild(el("b", null, "What the lab says today")); box.appendChild(list(v.today)); box.appendChild(el("b", null, "What it would say after")); box.appendChild(list(v.after));
       box.appendChild(el("b", null, "The " + v.kinds.length + " kinds of row · hover one")); box.appendChild(chipRow(v.kinds, stage, tip));
-      box.appendChild(el("span", null, "The design lists " + v.steps + " landing steps and " + v.risks + " risks. About four days of work.")); }
+      box.appendChild(el("b", null, "The design lists " + v.steps + " landing steps and " + v.risks + " risks · the plan's own estimates for the steps that carry one")); box.appendChild(list(v.stepsCost.map(function (r) { return "step " + r.step + " · " + r.name + " · " + r.cost; }))); }
     return box; }
 
   /* ── one decision per card ── */

@@ -41,7 +41,7 @@
    "text": "Piece 11: what stays alive during a request"
   },
   "s4note": {
-   "text": "About four days of work. Of the three pieces that need new generation work (piece 9, which you ruled later, piece 10 and this one) the evaluation ranks this one last. You ruled it do in D-016, so the first card asks when, and dropping it would reopen that ruling. The second card asks whether it keeps its name."
+   "text": "The longest piece of the program. The plan's own step estimates are listed on the first card. Of the three pieces that need new generation work (piece 9, which you ruled later, piece 10 and this one) the evaluation ranks this one last. You ruled it do in D-016, so the first card asks when, and dropping it would reopen that ruling. The second card asks whether it keeps its name."
   },
   "s5": {
    "text": "Rows still waiting for your rating"
@@ -56,7 +56,7 @@
    "text": "Every line says whether the value is yours or my pick. Paste the text into the chat and I act on it."
   },
   "normsHow": {
-   "text": "Read each line as if it were said about any endpoint of this kind. Strike one that grades, or that is only true of this app. Reword one that is right but badly said."
+   "text": "Read each line as if it were said about any endpoint of this kind. Strike one that grades, or that is only true of this app. Reword one that is right but badly said. Only {drawnTopics} of the {topicsN} topics is drawn in the lab today. Each group says whether its lines are drawn, or written ahead of a surface that does not exist yet."
   },
   "skip": {
    "text": "You can skip the probe counts, the mutant runs, the commit messages and the generator code. Those are checked by machine."
@@ -197,16 +197,16 @@
     ]
    ],
    "mine": "sweep",
-   "why": "One word per thing. The evaluation page says endpoint and the lab's newer rows do too. Its older strings still say door, so only a sweep gets to one word.",
+   "why": "One word per thing. The evaluation page says endpoint and the lab's newer rows do too. Its older strings still say door, so a sweep gets the lab's own words to one. Two sentences it lifts from the suite's legend would still say door.",
    "live": "none",
    "impacts": {
     "sweep": {
      "size": "words",
-     "does": "I replace the old words in all {doorTotal} drawn strings of the lab's two files, and in the probe asserts that quote them. After it the lab says endpoint and login check everywhere, as the evaluation page does."
+     "does": "I replace the old words in the {doorTotal} drawn strings the lab owns, the {oldWords} lines above included, whatever you ruled on them one by one, and in the probe asserts that quote them. The lab still says door where it lifts the suite legend's own sentences word for word: the endpoint kind's line, \"the API door the frontend knocks on\", which the probe pins as verbatim, and the gate role's line. Changing those is a separate change to the suite's station, in both its copies, with its own battery and the twins."
     },
     "replace": {
      "size": "words",
-     "does": "I change these {oldWords} lines only. The stage hovers then say endpoint while {doorElsewhere} strings around them still say door."
+     "does": "I change these {oldWords} lines only. Only the ones in the Data topic are drawn today, so those stage hovers change while {doorElsewhere} strings around them still say door. The rest change words the lab does not yet draw."
     },
     "keep": {
      "size": "none",
@@ -218,7 +218,7 @@
    "id": "slot-words",
    "step": 1,
    "title": "Why a command counts nothing",
-   "what": "A command that counts nothing says why on its hover. I wrote the sentences below. With every reading on, the one about a reading that did not run never shows on this endpoint, so the lab cannot show it to you.",
+   "what": "A command that counts nothing says why on its hover. I wrote the sentences below. On this endpoint the lab can show you only one of them, the measured zero. Two need a reading switched off or a feed without forms, and one is drawn nowhere today.",
    "facts": "slotwords",
    "where": [
     "In code: docs/design/workflow-panel/_lab-ep-panels.js line 2814, the function slotWhy."
@@ -239,7 +239,7 @@
    "impacts": {
     "ok": {
      "size": "none",
-     "does": "The sentences stay. They show on the hover of every command that counts nothing."
+     "does": "The sentences stay. On this endpoint only the measured-zero sentence shows. The ones about a reading that did not run and a feed with no form need a reading switched off, or a feed without forms. The one about a kind with no such slot is drawn nowhere today, because a blank cell carries no hover."
     },
     "reword": {
      "size": "words",
@@ -283,11 +283,11 @@
     },
     "8-2": {
      "size": "facts",
-     "does": "{movedWords}, listed beside this card. {appWordsShift}, so a later mark for something unusual would fire more often."
+     "does": "{movedWords}, listed beside this card. {appWordsShift}, so a later mark for something unusual would fire more often. The cut-offs are written in two places and both change: the facts script, with the rule sentence it carries, and the probe's own copy of the rule, which rechecks every word."
     },
     "other": {
      "size": "facts",
-     "does": "I apply the cut-offs in your note and show you this same table again before anything else reads the words."
+     "does": "I apply the cut-offs in your note, in the facts script and in the probe's own copy of the rule, and show you this same table again before anything else reads the words."
     }
    }
   },
@@ -371,7 +371,7 @@
     },
     "none": {
      "size": "lab",
-     "does": "The ROUTE row and the mark on the through-route leave every route's record. Every ending then reads as equal, with no route to measure the others against."
+     "does": "The ROUTE row leaves the record of the through-route, the only place it is drawn, and the probe assert that reads it back goes with it. Every ending then reads as equal, with no route to measure the others against. The fact stays in the lab's facts, because the probe and this page still find routes by it."
     }
    }
   },
@@ -467,7 +467,7 @@
    "impacts": {
     "handler": {
      "size": "none",
-     "does": "The lab keeps the map's own words."
+     "does": "The lab keeps the map's own words. The evaluation page keeps saying the session closes after the answer is sent, under piece 6 and in piece 11's list, until its record is corrected. That is a separate small change to that page, not to the lab."
     },
     "answer": {
      "size": "generator",
@@ -515,7 +515,7 @@
     },
     "move": {
      "size": "lab",
-     "does": "The row leaves the record, which goes back to your four rows. The same fact then shows on the info card of the model row. One probe assert is rewritten."
+     "does": "The row leaves the record, which goes back to your four rows, and the same fact shows on the info card of the model row. The probe asserts that read that row are rewritten: the record's row list, the row's two values and its info card."
     },
     "option": {
      "size": "lab",
@@ -566,15 +566,15 @@
     },
     "move": {
      "size": "lab",
-     "does": "The three rows leave the record and their content moves to the hover card of the function block. The record goes back to what you ruled."
+     "does": "The three rows leave the record and their content moves to the hover card of the function block. The record goes back to what you ruled, and the probe asserts that read these rows by name are rewritten."
     },
     "option": {
      "size": "lab",
-     "does": "I add a switch to the rail for each of the three rows, so you can see the record with and without them."
+     "does": "I add a switch to the rail for each of the three rows, so you can see the record with and without them. The probe asserts learn the switch."
     },
     "off": {
      "size": "lab",
-     "does": "The three rows leave the record. The facts stay in the lab's facts and show nowhere, so three of your questions about functions lose their answer on the card."
+     "does": "The three rows leave the record. The facts stay in the lab's facts and show nowhere, so three of your questions about functions lose their answer on the card. The probe asserts that read these rows by name are removed."
     }
    }
   },
@@ -612,7 +612,7 @@
     },
     "keep": {
      "size": "none",
-     "does": "Every route's record stays {insideRows} rows longer on this endpoint."
+     "does": "Only the routes that reach {callName} keep records {insideRows} rows longer: the success routes and the conflict routes that come back from it. The routes that end before the handler calls it are unchanged."
     },
     "closed": {
      "size": "lab",
@@ -726,7 +726,7 @@
    "id": "place-card",
    "step": 2,
    "title": "Where this endpoint's place in the app is shown",
-   "what": "The place reads {place} of {placeOf} by functions behind, which counts how many functions each one reaches, heaviest first. The {placeOf} are the app's {appEndpoints} endpoints plus {placeTop}, the app's startup, which the map draws as an endpoint and which is the heaviest. Among the endpoints alone this one is {placeEp} of {appEndpoints}. The evaluation's plan for piece 7 asked for the place on the risk card. An older ruling of yours, pinned in the probe (probe-eplab.mjs line 251), says the risk card carries no comparison with the rest of the app, so I put it on the header's card for the whole app. Whatever you rule, I correct the count so it reads of {appEndpoints} endpoints, since the startup is not one.",
+   "what": "The place reads {place} of {placeOf} by functions behind, which counts how many functions each one reaches, heaviest first. The {placeOf} are the app's {appEndpoints} endpoints plus {placeTop}, the app's startup, which the map draws as an endpoint and which is the heaviest. Among the endpoints alone this one is {placeEp} of {appEndpoints}. The evaluation's plan for piece 7 asked for the place on the risk card. An older ruling of yours, pinned in the probe (probe-eplab.mjs line 251), says the risk card carries no comparison with the rest of the app, so I put it on the header's card for the whole app. Whatever you rule, I take the startup out of the counts on that card, since it is not an endpoint. The place row and the async row below it both count {placeOf} today and would read of {appEndpoints}.",
    "shot": "place-everything",
    "shot2": "place-risk",
    "where": [
@@ -753,16 +753,16 @@
    "live": "optional",
    "impacts": {
     "everything": {
-     "size": "none",
-     "does": "The place stays on the whole-app card, and your older ruling on the risk card stands."
+     "size": "facts",
+     "does": "The place stays on the whole-app card, and your older ruling on the risk card stands. The count correction still happens, and it is a facts change: the card then reads {placeEp} of {appEndpoints}, and the biggest it names is an endpoint instead of {placeTop}."
     },
     "risk": {
      "size": "lab",
-     "does": "I move the three rows to the risk card and retire the probe assert that pins your older ruling, since this ruling replaces it."
+     "does": "I move the three rows to the risk card. Your older ruling is pinned in two places in the probe and both asserts are retired, since this ruling replaces it. The assert that proves the whole-app card carries these rows is rewritten. The count correction happens here too."
     },
     "both": {
      "size": "lab",
-     "does": "The rows show on both cards. Your older ruling is retired here too, and the same three lines are then said twice in the header."
+     "does": "The rows show on both cards. Both probe asserts that pin your older ruling are retired here too, and the same three lines are then said twice in the header. The count correction happens here too."
     }
    }
   },
@@ -791,10 +791,10 @@
    "impacts": {
     "land": {
      "size": "generator",
-     "does": "I build the part: {p10files} generator files change, the frontend battery gains a fixture and new cases, then come the dry runs on the four study apps, the doctor, and both app twins, whose centres regenerate. After it the ON THE CLIENT section gains the row for what the branch does, on the {feReaders} endpoints whose client reads failures."
+     "does": "I build the part, starting with the spec block in the amendment that records your rulings below. {p10files} generator files change, the frontend battery gains a fixture and new cases and the asserts the fixture moves are updated, the recorded examples and the acceptance sheet follow, then the dry runs on the four study apps, the doctor, the docs and both app twins, whose centres regenerate. A second commit then carries it into the lab, with a fresh feed, the facts script, the panel and a new probe assert. Only after that does the ON THE CLIENT section gain the row, on the {feReaders} endpoints whose client reads failures."
     },
     "hold": {
-     "size": "design",
+     "size": "none",
      "does": "Nothing is built. The design stays a draft in the repo, and the lab keeps saying where a branch is and not what it does. Picking it up later costs the same work, plus a re-read of the plan."
     }
    }
@@ -818,7 +818,7 @@
     ]
    ],
    "mine": "yes",
-   "why": "Without it every navigation in a branch reads as an unknown call.",
+   "why": "Without it a navigation made through that hook, the way gustify and gastify navigate from code, reads as an unknown call.",
    "live": "none",
    "impacts": {
     "yes": {
@@ -827,7 +827,7 @@
     },
     "no": {
      "size": "design",
-     "does": "The roster leaves the design. Once built, every navigation in a branch reads as a call no idiom matches, still visible by its name."
+     "does": "The useNavigate entry leaves the design. Once built, a navigation made through that hook, which is how react-router and TanStack Router apps such as gustify and gastify navigate from code, reads as a call no idiom matches, still visible by its name. A router's push, the Next redirects, a location change and the Navigate element keep classing as a move to another screen."
     }
    }
   },
@@ -882,12 +882,12 @@
     ]
    ],
    "mine": "yes",
-   "why": "The row says where the name came from, so a project's own toast still reads as the project's.",
+   "why": "A toast is the most common way a screen tells the user something failed. The row is meant to say where the name came from, and the first dry run is what proves that.",
    "live": "none",
    "impacts": {
     "yes": {
      "size": "design",
-     "does": "The design keeps toast. Once built, a toast call is classed as shown to the user, and the row says whether the name came from a library or from the project."
+     "does": "The design keeps toast. Once built, a toast call is classed as shown to the user. That the row also says whether the name came from a library or from the project is the design's expectation, not something captured. No study app installs one of the libraries, and tier3's own toast could not be captured because that app has no install, so the first dry run on tier3 is what proves it."
     },
     "no": {
      "size": "design",
@@ -959,20 +959,20 @@
    "live": "none",
    "impacts": {
     "after-10": {
-     "size": "design",
+     "size": "none",
      "does": "Nothing is built now. Piece 11 starts once piece 10 has landed and you have seen its row in the lab."
     },
     "now": {
      "size": "generator",
-     "does": "I start it before piece 10: first a lift out of one existing arm that must leave its output byte for byte the same, then a new module, a battery, the dry runs, the doctor and both twins. About four days, during which piece 10 waits."
+     "does": "I start it before piece 10. First comes a spec you approve again, with two rulings this page does not ask: the slot it takes on your scorecard, and the order of a later second pass. Then come the lift out of one existing arm that must leave its output byte for byte the same, the new module, a battery, the dry runs, the doctor and both twins. Nothing shows in the lab until a second commit carries it there. The plan's own step estimates are listed beside this card, and piece 10 waits the whole time."
     },
     "small": {
      "size": "generator",
-     "does": "The same build without the rows for values a helper hands to the handler. The design does not say how much that saves, so I would measure it first and tell you."
+     "does": "The same build without the rows for values a helper hands to the handler. One of the rows this card shows under what it would say after is such a row, the login context built by get_auth_context, so it would not appear, and neither would the database session's row. The design does not say how much time that saves, so I would measure it first and tell you."
     },
     "drop": {
      "size": "design",
-     "does": "Nothing is built and D-016 is reopened. The In-flight state view keeps one value found by a name search, and the rest of what is alive during a request stays unread."
+     "does": "Nothing is built, and I reopen D-016 in decisions.md. The In-flight state view keeps one value found by a name search, and the rest of what is alive during a request stays unread."
     }
    }
   },
@@ -1059,15 +1059,19 @@
  "norm_impacts": {
   "ok": {
    "size": "none",
-   "does": "The line stays as it is. It keeps showing on the hover of that stage, in that topic."
+   "does": "The line stays as it is. Only the Data topic's lines are drawn today: on the stage header's hover, on the \"also at\" card, and as the text of a stage with no table. The lines of the other topics are written but drawn nowhere yet, so ruling them settles the words before their surface exists."
   },
   "strike": {
-   "size": "words",
-   "does": "I remove the line. That stage then shows no expectation for that topic, and says so, never a blank."
+   "size": "lab",
+   "does": "I remove the line. Where the lab draws it, which today is the Data topic only, a missing line would show as an empty space, so I add a fallback that says the stage has no expectation for that topic. The probe asserts that pin a line for every stage of every topic are rewritten with it."
   },
   "reword": {
    "size": "words",
    "does": "I replace the line with the words in your note. With no note I propose a rewording and show it to you before it lands."
   }
+ },
+ "drawn_words": {
+  "yes": "drawn in the lab today",
+  "no": "written, drawn nowhere yet"
  }
 }

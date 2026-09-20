@@ -21,8 +21,9 @@ const panels = fs.readFileSync(path.join(WP, "_lab-ep-panels.js"), "utf8");
 function lift(decl) { const i = panels.indexOf(decl); if (i < 0) die("the lab no longer declares `" + decl + "`"); let j = panels.indexOf("{", i), d = 0, k = j;
   for (; k < panels.length; k++) { if (panels[k] === "{") d++; else if (panels[k] === "}") { d--; if (!d) break; } } return (0, eval)("(" + panels.slice(j, k + 1) + ")"); }
 const NORMS = lift("var STAGE_EXPECT = window.STAGE_EXPECT = "), ROLEWORD = lift("var ROLEWORD = ");
+const drawnTopic = (t) => new RegExp("STAGE_EXPECT\\." + t + "\\b").test(panels);   /* a topic is drawn only when some code reads its lines */
 const norms = []; for (const t of Object.keys(NORMS)) { if (!W.topics[t]) die("no word for the topic " + t); for (const st of Object.keys(NORMS[t])) { const id = t + "." + st;
-  norms.push({ id, topic: t, topicWord: W.topics[t], partWord: (W.parts || {})[t] || die("no part name for the topic " + t), stage: st, line: NORMS[t][st], doubt: W.norm_doubts[id] || null, mine: W.norm_doubts[id] ? "reword" : "ok", old: /\b(door|lock)\b/.test(NORMS[t][st]) }); } }
+  norms.push({ id, topic: t, drawn: drawnTopic(t), topicWord: W.topics[t], partWord: (W.parts || {})[t] || die("no part name for the topic " + t), stage: st, line: NORMS[t][st], doubt: W.norm_doubts[id] || null, mine: W.norm_doubts[id] ? "reword" : "ok", old: /\b(door|lock)\b/.test(NORMS[t][st]) }); } }
 for (const k of Object.keys(W.norm_doubts)) if (!norms.some((n) => n.id === k)) die("a doubt names a line that no longer exists: " + k);
 
 /* how many DRAWN strings outside the 36 lines still say door or lock — quoted strings only, comments stripped */
@@ -62,7 +63,8 @@ const ex = /```json\n([\s\S]*?)```/.exec(PLAN10.schema) || die("the plan's worke
 const FX = rd(path.join(HERE, "gaps-endpoint.effects.raw.json")).verified.pieces.find((x) => x.key === "alive-during-the-request") || die("no effects entry for piece 11");
 const runs10 = PLAN10.landing_order.map((s, i) => { const m = /COST:\s*([^]*?)(?:\s+PASS\b|$)/.exec(s); return m && /\bmin/.test(m[1]) ? { step: i, cost: m[1].trim().replace(/\s+/g, " ").slice(0, 150) } : null; }).filter(Boolean);
 FACTS.p10 = { runs: runs10, example: ex[1].trim(), predicted: /predicted from source/i.test(PLAN10.schema), classes: worded(classes, W.classes, "class"), states: worded(states, W.states, "state word"), steps: PLAN10.landing_order.length, risks: PLAN10.risks.length };
-FACTS.p11 = { today: FX.after_rows.filter((r) => !/^would say:/i.test(r)), after: FX.after_rows.filter((r) => /^would say:/i.test(r)).map((r) => r.replace(/^would say:\s*/i, "")), kinds: worded(kinds, W.kinds11, "row kind"), steps: PLAN11.landing_order.length, risks: PLAN11.risks.length };
+const steps11 = PLAN11.landing_order.map((s, i) => { const m = /\((~[^)]*?\b(?:days?|h)\b[^)]*)\)/.exec(s), name = /^\s*\d+\s*·\s*([^,(:—]+)/.exec(s); return m ? { step: i, name: name ? name[1].trim().slice(0, 40) : "step " + i, cost: m[1].replace(/^~/, "about ") } : null; }).filter(Boolean);
+FACTS.p11 = { stepsCost: steps11, today: FX.after_rows.filter((r) => !/^would say:/i.test(r)), after: FX.after_rows.filter((r) => /^would say:/i.test(r)).map((r) => r.replace(/^would say:\s*/i, "")), kinds: worded(kinds, W.kinds11, "row kind"), steps: PLAN11.landing_order.length, risks: PLAN11.risks.length };
 
 /* ── pictures: committed inputs, taken with real clicks ── */
 const SH = path.join(HERE, "review-shots"), clicks = rd(path.join(SH, "clicks.json"));
@@ -94,8 +96,9 @@ if (new Set(decisions.map((d) => d.id)).size !== decisions.length) die("two deci
 const inv = fs.readFileSync(path.join(HERE, "inventory-endpoint.md"), "utf8"), proposed = inv.split("\n").filter((l) => /^\|/.test(l) && /\(proposed\)/.test(l)).length;
 const text = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v.text]));
 const liveN = (k) => W.decisions.filter((x) => x.live === k).length; for (const x of W.decisions) if (!W.live_words[x.live]) die(x.id + ": no word for live = " + x.live);
-const uiText = text(W.ui); uiText.livenote = uiText.livenote.replace("{liveWorth}", liveN("worth")).replace("{liveOptional}", liveN("optional")).replace("{liveNone}", liveN("none"));
-const data = { kind: "leftovers-review", liveWords: W.live_words, sizes: W.sizes, normImpacts: W.norm_impacts, endpoint: `${L.identity.method} ${L.identity.path}`, head: L.head, ui: uiText, checked: W.facts_checked, norms, decisions,
+Object.assign(TOK, { liveWorth: liveN("worth"), liveOptional: liveN("optional"), liveNone: liveN("none"), topicsN: Object.keys(NORMS).length, drawnTopics: Object.keys(NORMS).filter(drawnTopic).length });
+const uiText = Object.fromEntries(Object.entries(text(W.ui)).map(([k, v]) => [k, fill(v)]));
+const data = { kind: "leftovers-review", drawnWords: W.drawn_words, liveWords: W.live_words, sizes: W.sizes, normImpacts: W.norm_impacts, endpoint: `${L.identity.method} ${L.identity.path}`, head: L.head, ui: uiText, checked: W.facts_checked, norms, decisions,
   map: { img: png("lab-map"), regions: clicks.regions }, ratings: { proposed, url: "https://claude.ai/artifact/B9RnoRC3JV993XZYtAb9fJ" },
   hash: crypto.createHash("sha1").update(JSON.stringify([norms.map((n) => [n.id, n.line]), W.decisions.map((d) => [d.id, d.options, d.mine])])).digest("hex").slice(0, 8) };
 
