@@ -810,7 +810,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
       rows: [...b.querySelectorAll('.rcrow')].map(r => ({ k: r.dataset.row, label: (r.querySelector('.k') || {}).textContent, icon: !!r.querySelector('.rci svg'), v: (r.querySelector('.v') || {}).textContent, info: !!r.querySelector('.rcinfo svg') })),
       heads: [...b.querySelectorAll('.rctab .rcth > span')].map(s => s.firstChild ? s.firstChild.textContent.trim() : ''), fp: (b.querySelector('.rctab .rcth .rcfp') || {}).textContent }; }, pk.table);
   ok(rec && rec.name === pk.table && rec.glyph && rec.glyph === rec.cardGlyph, 'the record opens like the block card — the table glyph in the same colour, then its name', JSON.stringify(rec && { n: rec.name, g: rec.glyph, c: rec.cardGlyph }));
-  ok(rec && rec.rows.map(r => r.k).join(',') === 'entity,model,file,channel,found by' && rec.rows.every(r => r.icon && r.label === r.k), 'then one row per fact, each led by its icon and its label — entity · model · file · channel · found by (leftovers piece 4 added the fifth fact, on the record\'s own law)', JSON.stringify(rec && rec.rows));
+  ok(rec && rec.rows.map(r => r.k).join(',') === 'entity,model,file,channel' && rec.rows.every(r => r.icon && r.label === r.k), 'then one row per fact, each led by its icon and its label (D-017: how the table was found is a fact about the map, hidden until more information is on) — entity · model · file · channel · found by (leftovers piece 4 added the fifth fact, on the record\'s own law)', JSON.stringify(rec && rec.rows));
   { const m = rec && rec.rows.find(r => r.k === 'model');
     ok(m && m.v === pk.model && m.info && !/python class/i.test(rec.text), 'the model row is just the class — the explanation waits on an info icon at its end', JSON.stringify(m)); }
   ok(rec && !/\binside\b/i.test(rec.text) && !/foreign keys\s*\n?\s*\w+\s*→/i.test(rec.text.split('FIELDS')[0] || ''), 'no INSIDE row and no FOREIGN KEYS row above the fields — the table carries both', JSON.stringify(rec && rec.rows.map(r => r.k)));
@@ -2756,7 +2756,7 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
     ok(/MAY BE EMPTY/i.test(hd) && hd.includes('the database writes ' + R8.colDv.server_default) && hd.includes(R8.colDv.at), 'a column\'s card says whether it may be empty, what the database writes when nobody sets it, and its line', hd.slice(-260));
     ok(/IF THE ROW IT POINTS AT IS DELETED/i.test(hf) && /delet|empt|cannot/.test(hf.split(/IF THE ROW IT POINTS AT IS DELETED/i)[1] || ''), 'a column that points at another table says what a delete there does to it', hf.slice(-220));
     const hm = await hov8('#portbody .rcrow[data-row="model"] .rcinfo');
-    ok(/UNIQUE|CHECK|TABLE RULES/i.test(hm), 'the table\'s unique and check rules ride the model\'s card — the record keeps its five rows', hm.slice(-200));
+    ok(/UNIQUE|CHECK|TABLE RULES/i.test(hm), 'the table\'s unique and check rules ride the model\'s card — the record keeps its four rows', hm.slice(-200));
     await p.evaluate(() => { window.selectIn('data', null); window.showVariant('data', window.PANELS.data.defaultVariant); }); await p.waitForTimeout(240); }
   else ok(false, 'a table has a database default and a delete rule (the probe needs one to read the cards)');
   await p.evaluate(() => { window.showTab('functions'); }); await p.waitForTimeout(300);
@@ -2938,14 +2938,18 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
     ok(!/PROVISIONED HERE/i.test(e), 'and no other stage repeats it', e.slice(0, 100)); }
   await p.evaluate(() => { window.showVariant('data', 'blocks'); }); await p.waitForTimeout(320);
   ok(R.routeOnly.length > 0 && (await p.$$eval('#panel .blk', els => els.map(e => e.dataset.table))).filter(t => R.routeOnly.indexOf(t) >= 0).length === R.routeOnly.length, 'the Blocks layout draws the route-only tables too — one table set for every layout', R.routeOnly.join(','));
+  /* D-017: how a table was found is a fact about the MAP — hidden by default, back when more information is on; the fact itself stays generated */
   const foundRow = async tbl => { await p.evaluate(t => window.selectIn('data', t), tbl); await p.waitForTimeout(300);
     return p.$eval('#portbody .rcrow[data-row="found by"] .v', e => e.textContent).catch(() => null); };
-  ok((await foundRow(R.routeOnly[0])) === "a route's steps only", 'a table\'s portrait record says how it was found — here by a route\'s steps only', String(await foundRow(R.routeOnly[0])));
+  ok((await foundRow(R.routeOnly[0])) === null && R.routeOnly.length > 0, 'a table\'s record does NOT show how the map found it — that is a fact about the map, not about the table (D-017)', String(await foundRow(R.routeOnly[0])));
+  await p.evaluate(() => { window.MOREINFO = true; });
+  ok((await foundRow(R.routeOnly[0])) === "a route's steps only", 'with more information on, the record says how it was found — here by a route\'s steps only', String(await foundRow(R.routeOnly[0])));
   { let t = '';
     if ((await p.$$('#portbody .rcrow[data-row="found by"] .rcinfo')).length) { await p.hover('#portbody .rcrow[data-row="found by"] .rcinfo'); await p.waitForTimeout(220);
       t = (await p.$eval('#hover', e => e.innerText)).replace(/\s+/g, ' '); await p.mouse.move(5, 1030); await p.evaluate(() => window.hoverHide()); }
     ok(/does not carry this table/.test(t) && /WHY/i.test(t), 'and its info card says which source lacks it, and why', t.slice(0, 220)); }
   ok((await foundRow('households')) === "the map's edge and a route's steps", 'a table both sources know says so', String(await foundRow('households')));
+  await p.evaluate(() => { window.MOREINFO = false; });
   await p.evaluate(() => { window.showVariant('data', window.PANELS.data.defaultVariant); }); await p.waitForTimeout(240);
   ok(errs.length === errs0, 'the owner facts raise no page error', errs.slice(errs0, errs0 + 3).join(' | ')); }
 

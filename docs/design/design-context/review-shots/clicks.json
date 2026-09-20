@@ -1,14 +1,12 @@
 {
- "foundBy": {
+ "record": {
   "part": "15Data",
-  "block": "users",
-  "value": "a route's steps only",
+  "block": "locations",
   "rows": [
    "entity",
    "model",
    "file",
-   "channel",
-   "found by"
+   "channel"
   ]
  },
  "fnRows": {

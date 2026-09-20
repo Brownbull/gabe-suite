@@ -1411,8 +1411,9 @@
     row("file", ico("file", 14, "var(--muted)"), E("span", { class: "v" }, esc(t.at || t.file || "—")));
     row("channel", ico("role", 14, S.OPC.call),
       E("span", { class: "v" }, E("i", { class: "rcchip", style: chipLook(t.rw, S) }, t.rw === "rw" ? "reads + writes" : t.rw === "w" ? "writes" : "reads")));
-    /* leftovers piece 4 — how this table was found: the map's access edge, the steps of a route, or both */
-    if (t.found) row("found by", ico("link", 14, "var(--muted)"),
+    /* leftovers piece 4 — how this table was found: the map's access edge, the steps of a route, or both.
+       D-017 (2026-09-20): a fact about the MAP, not about the table — hidden unless "more information" is on. The switch has no control yet; it is built with the display step. */
+    if (t.found && window.MOREINFO) row("found by", ico("link", 14, "var(--muted)"),
       E("span", { class: "v" }, esc(t.found === "both" ? "the map's edge and a route's steps" : t.found === "map edge" ? "the map's edge only" : "a route's steps only")),
       card({ title: "found by", icon: "link", sub: t.found,
         rows: [["the map's access edge", t.found === "route effects" ? "does not carry this table" : "carries it"], ["the steps of a route", t.found === "map edge" ? "none touches it" : "touch it"]]

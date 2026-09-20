@@ -8,10 +8,10 @@
    "text": "What needs your eyes before the next build"
   },
   "lede": {
-   "text": "Everything here is a choice I made while building, shown with what it looks like and what I would pick. A dashed button is my pick, a filled one is yours. Rule what you disagree with, then copy the text at the bottom and paste it into the chat."
+   "text": "Every card is one choice I made while building. It shows the choice in a sentence, why I picked what I picked, and what each option sets in motion. Click an option to make it yours. A dashed option is my pick, a filled one is yours. When you are done, copy the text at the bottom and paste it into the chat."
   },
   "order": {
-   "text": "The order is by risk: what I wrote comes first, because no check can catch a wrong sentence."
+   "text": "The order is by risk: what I wrote comes first, because no check can catch a wrong sentence. Details you do not need in order to rule sit behind \"more\" on each card."
   },
   "lab": {
    "text": "Most pictures below come from the endpoint lab. To see one live, open docs/design/workflow-panel/endpoint-lab.html and follow the numbered clicks on the card. The lab is wide, so scroll right for the portrait and the command panel."
@@ -68,7 +68,16 @@
    "text": "You can rule almost everything from this page. {liveWorth} cards are worth seeing live in the lab, because the choice is about how something feels when you use it. On {liveOptional} more the lab is optional, since the picture or the numbers are already on the card. The other {liveNone} have nothing to see in the lab."
   },
   "impactnote": {
-   "text": "Under every decision, each option says what it sets in motion: what I would change, what you would then see, and what it costs. The small tag is the size of the work. The option in force, yours or my pick, is the highlighted one."
+   "text": "Each option says what it sets in motion, with a small tag for the size of the work. The option in force, yours or my pick, is the highlighted one."
+  },
+  "s6": {
+   "text": "Left to my pick by your rule"
+  },
+  "s6note": {
+   "text": "You ruled that facts about how the map knows something, and choices inside our own framework, are nice to have and not critical (D-017). These {mapN} decisions are of that nature, so they are folded away and keep my pick. Open any of them if you want to rule it anyway."
+  },
+  "normsFold": {
+   "text": "{undrawnLines} more lines are written for topics the lab does not draw yet. They keep my pick unless you open them."
   }
  },
  "facts_checked": [
@@ -212,7 +221,9 @@
      "size": "none",
      "does": "The lab keeps two words for one thing, and keeps disagreeing with the evaluation page."
     }
-   }
+   },
+   "nature": "code",
+   "short": "The lab still says \"door\" and \"lock\" where the rest of your documents say \"endpoint\". Which word stays?"
   },
   {
    "id": "slot-words",
@@ -245,7 +256,9 @@
      "size": "words",
      "does": "I change the sentences in one function of the lab. Every command that counts nothing then says your words."
     }
-   }
+   },
+   "nature": "map",
+   "short": "The sentences that say why a command counts nothing: a measured zero, or a reading that did not run."
   },
   {
    "id": "thresholds",
@@ -289,7 +302,9 @@
      "size": "facts",
      "does": "I apply the cut-offs in your note, in the facts script and in the probe's own copy of the rule, and show you this same table again before anything else reads the words."
     }
-   }
+   },
+   "nature": "code",
+   "short": "When does a piece read as the norm, and when as rare? I chose the two cut-offs."
   },
   {
    "id": "roles-raise",
@@ -331,7 +346,9 @@
      "size": "facts",
      "does": "A raise never lights the role. {neverHere} On an endpoint that answers a raise, the raising function loses the mark unless it also holds a fork, a catch or the answer."
     }
-   }
+   },
+   "nature": "code",
+   "short": "Does a function that only raises a failure count as deciding an ending?"
   },
   {
    "id": "through",
@@ -373,7 +390,9 @@
      "size": "lab",
      "does": "The ROUTE row leaves the record of the through-route, the only place it is drawn, and the probe assert that reads it back goes with it. Every ending then reads as equal, with no route to measure the others against. The fact stays in the lab's facts, because the probe and this page still find routes by it."
     }
-   }
+   },
+   "nature": "code",
+   "short": "Which success route is named as the one that gets through, and what happens on a tie?"
   },
   {
    "id": "dep-order",
@@ -407,7 +426,9 @@
      "size": "none",
      "does": "{guessed} keeps reading as resolved last, as if that had been read."
     }
-   }
+   },
+   "nature": "map",
+   "short": "One helper's place in the order is a guess. Should the lab mark it as a guess?"
   },
   {
    "id": "case-roles",
@@ -440,7 +461,9 @@
      "size": "words",
      "does": "I change the words in one table of the lab. Every case chip and every case record then say your words."
     }
-   }
+   },
+   "nature": "code",
+   "short": "The words that say why a test case is listed on this endpoint."
   },
   {
    "id": "after-handler",
@@ -473,14 +496,15 @@
      "size": "generator",
      "does": "The lab would claim more than the map reads. To say it truthfully the map must first read the framework's rule for when a helper's closing code runs, which is new generator work."
     }
-   }
+   },
+   "nature": "map",
+   "short": "The lab says the session's closing code runs \"after the handler\", which is all the map reads."
   },
   {
    "id": "found-by",
    "step": 2,
    "title": "A fifth row on the table record",
    "what": "Your table record had four fact rows. I added a fifth, found by, which says whether the map's edge or a route's steps found the table.",
-   "shot": "found-by",
    "where": [
     "Part DATA.",
     "Click the table block users in the GATE stage. It is one of the tables only a route's steps know.",
@@ -525,6 +549,13 @@
      "size": "lab",
      "does": "The row leaves the record. The fact stays in the lab's facts, but the table list then mixes two sources without saying which found what."
     }
+   },
+   "nature": "map",
+   "short": "A fifth row on the table record said which reading found the table.",
+   "ruled": {
+    "by": "D-017",
+    "value": "more-info",
+    "says": "You ruled it on 2026-09-20: how a table was found is a fact about the map, not about the table. The row is hidden in the lab, the record is back to your four rows, and the fact waits for the \"more information\" option."
    }
   },
   {
@@ -576,7 +607,9 @@
      "size": "lab",
      "does": "The three rows leave the record. The facts stay in the lab's facts and show nowhere, so three of your questions about functions lose their answer on the card. The probe asserts that read these rows by name are removed."
     }
-   }
+   },
+   "nature": "code",
+   "short": "The function record gained three rows: what it does here, what sits inside it, and the map's facts about it."
   },
   {
    "id": "open-call",
@@ -618,7 +651,9 @@
      "size": "lab",
      "does": "The rows hide until you click the call. The call row still says what it holds, so nothing is lost, and the chain goes back to its steps alone."
     }
-   }
+   },
+   "nature": "code",
+   "short": "A call on a route is always open, listing what is inside it. Should it open only when clicked?"
   },
   {
    "id": "ending-sections",
@@ -669,7 +704,9 @@
      "size": "lab",
      "does": "Both leave the record. The facts stay generated, and no card then shows the client or the rest of the app on an ending."
     }
-   }
+   },
+   "nature": "code",
+   "short": "An ending's record gained how common its status is, and which client branch it reaches."
   },
   {
    "id": "rules-on-hover",
@@ -720,7 +757,9 @@
      "size": "lab",
      "does": "The rules leave the hover cards. The facts stay generated and show nowhere, so a shape goes back to being a list of names."
     }
-   }
+   },
+   "nature": "code",
+   "short": "Every field and column carries its rule, but only on hover."
   },
   {
    "id": "place-card",
@@ -764,7 +803,9 @@
      "size": "lab",
      "does": "The rows show on both cards. Both probe asserts that pin your older ruling are retired here too, and the same three lines are then said twice in the header. The count correction happens here too."
     }
-   }
+   },
+   "nature": "code",
+   "short": "This endpoint's place in the app sits on the whole-app card, not on the risk card."
   },
   {
    "id": "p10",
@@ -797,7 +838,9 @@
      "size": "none",
      "does": "Nothing is built. The design stays a draft in the repo, and the lab keeps saying where a branch is and not what it does. Picking it up later costs the same work, plus a re-read of the plan."
     }
-   }
+   },
+   "nature": "code",
+   "short": "Build the part that says what the screen does on each ending, or hold it."
   },
   {
    "id": "p10-nav",
@@ -829,7 +872,9 @@
      "size": "design",
      "does": "The useNavigate entry leaves the design. Once built, a navigation made through that hook, which is how react-router and TanStack Router apps such as gustify and gastify navigate from code, reads as a call no idiom matches, still visible by its name. A router's push, the Next redirects, a location change and the Navigate element keep classing as a move to another screen."
     }
-   }
+   },
+   "nature": "map",
+   "short": "A list of navigation idioms the new reading would know."
   },
   {
    "id": "p10-word",
@@ -861,7 +906,9 @@
      "size": "design",
      "does": "The design keeps its own word. The map then has two words for one limit, one on the backend and one on the client."
     }
-   }
+   },
+   "nature": "map",
+   "short": "The word the new reading uses when the caller decides."
   },
   {
    "id": "p10-toast",
@@ -893,7 +940,9 @@
      "size": "design",
      "does": "toast leaves the design. Once built, every toast reads as a call no idiom matches, still visible by its name."
     }
-   }
+   },
+   "nature": "map",
+   "short": "Whether toast counts as a known way to tell the user."
   },
   {
    "id": "p10-i18n",
@@ -925,7 +974,9 @@
      "size": "design",
      "does": "The entry stays, cited to the library's public documentation only, with no app to check it against."
     }
-   }
+   },
+   "nature": "map",
+   "short": "Whether one translation library that no app uses is listed."
   },
   {
    "id": "p11",
@@ -974,7 +1025,9 @@
      "size": "design",
      "does": "Nothing is built, and I reopen D-016 in decisions.md. The In-flight state view keeps one value found by a name search, and the rest of what is alive during a request stays unread."
     }
-   }
+   },
+   "nature": "code",
+   "short": "When to build the reading of what stays alive during a request."
   },
   {
    "id": "p11-name",
@@ -1014,7 +1067,9 @@
      "size": "design",
      "does": "I rename the design to the word in your note, at the same zero cost, as long as it happens before the third landing step."
     }
-   }
+   },
+   "nature": "map",
+   "short": "The internal name of piece 11's part."
   }
  ],
  "parts": {

@@ -21,11 +21,9 @@ const label = sel => p.$eval(sel, e => (e.textContent || '').trim().replace(/\s+
 const part = async word => { await p.click(`#tabs .tab[data-tab="${word}"]`); await wait(380); };
 const cmdGroup = async g => { const back = await p.$('#cmd [data-cmd="back"]'); if (back) { await back.click(); await wait(250); } await p.click(`#cmd [data-cmd="grp-${g}"]`); await wait(380); };
 
-/* 1 · the table record — five rows, "found by" the fifth */
-await part('data'); await p.click('#panel [data-table="users"]'); await wait(420); await calm();   /* users: one of the tables only a route's steps know — the case the row exists for */
-clicks.foundBy = { part: await label('#tabs .tab[data-tab="data"]'), block: 'users', value: await p.$eval('#portbody .rcrow[data-row="found by"] .v', e => e.textContent), rows: await p.$$eval('#portbody .rcrow', els => els.map(e => e.dataset.row)) };
-await shot('found-by', '#port');
-await p.click('#panel [data-table="locations"]'); await wait(420); await calm();
+/* 1 · the table record — four rows again: how a table was found is a fact about the map, hidden until "more information" is on (D-017) */
+await part('data'); await p.click('#panel [data-table="locations"]'); await wait(420); await calm();
+clicks.record = { part: await label('#tabs .tab[data-tab="data"]'), block: 'locations', rows: await p.$$eval('#portbody .rcrow', els => els.map(e => e.dataset.row)) };
 /* 1b · a column's rule rides its hover card (piece 8) — the attribute the map draws, the name the database uses */
 await p.$eval('#portbody .rctab .fld[data-col="order"]', e => e.scrollIntoView({ block: 'center' })); await p.hover('#portbody .rctab .fld[data-col="order"]'); await wait(320);
 { const h = await (await p.$('#hover')).boundingBox(), r = await (await p.$('#port')).boundingBox(), x = Math.min(h.x, r.x), y = Math.min(h.y, r.y);

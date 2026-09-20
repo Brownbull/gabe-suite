@@ -88,7 +88,8 @@ TOK.insideKinds = kindsIn(nIn);
     neverHere: R.ifNever.join("|") === R.ifAnswered.join("|") ? "Here the list is the same as the option above." : "Here " + R.ifNever.length + " functions then hold two roles.",
     twoNow: R.now.length, twoAnswered: R.ifAnswered.length, onlyRaise: R.onlyRaise.join(" and ") || "no function", guessed: FACTS.deporder.rows.filter((r) => r.guessed).map((r) => r.name).join(" and ") || "no helper", p10files: files.length }); } if (String(invRow[2]) !== String(L.feedwide.forms_endpoints)) die("the inventory and the lab disagree on how many endpoints the app has");
 const fill = (s) => String(s).replace(/\{(\w+)\}/g, (m, k) => (k in TOK ? TOK[k] : die("no value for the token {" + k + "}")));
-const decisions = W.decisions.map((d0) => { const d = Object.assign({}, d0, { what: fill(d0.what), why: fill(d0.why), where: d0.where.map(fill) });
+const decisions = W.decisions.map((d0) => { if (!["code", "map"].includes(d0.nature) || !d0.short) die(d0.id + ": needs a nature (code | map) and a one-sentence summary");
+  const d = Object.assign({}, d0, { what: fill(d0.what), why: fill(d0.why), short: fill(d0.short), where: d0.where.map(fill) });
   for (const o of d0.options) { const im = (d0.impacts || {})[o[0]]; if (!im || !W.sizes[im.size]) die(`${d0.id}: the option "${o[0]}" says nothing about what it sets in motion`); }
   d.impacts = Object.fromEntries(Object.entries(d0.impacts).map(([k, v]) => [k, { size: v.size, does: fill(v.does) }])); if (d.facts && !FACTS[d.facts]) die(`${d.id}: no facts named ${d.facts}`); if (!d.options.some((o) => o[0] === d.mine)) die(`${d.id}: my pick "${d.mine}" is not one of its options`);
   return Object.assign({}, d, { facts: d.facts ? { key: d.facts, v: FACTS[d.facts] } : null, shot: d.shot ? png(d.shot) : null, shot2: d.shot2 ? png(d.shot2) : null }); });
@@ -96,7 +97,7 @@ if (new Set(decisions.map((d) => d.id)).size !== decisions.length) die("two deci
 const inv = fs.readFileSync(path.join(HERE, "inventory-endpoint.md"), "utf8"), proposed = inv.split("\n").filter((l) => /^\|/.test(l) && /\(proposed\)/.test(l)).length;
 const text = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v.text]));
 const liveN = (k) => W.decisions.filter((x) => x.live === k).length; for (const x of W.decisions) if (!W.live_words[x.live]) die(x.id + ": no word for live = " + x.live);
-Object.assign(TOK, { liveWorth: liveN("worth"), liveOptional: liveN("optional"), liveNone: liveN("none"), topicsN: Object.keys(NORMS).length, drawnTopics: Object.keys(NORMS).filter(drawnTopic).length });
+Object.assign(TOK, { mapN: W.decisions.filter((x) => x.nature === "map").length, undrawnLines: norms.filter((n) => !n.drawn).length, liveWorth: liveN("worth"), liveOptional: liveN("optional"), liveNone: liveN("none"), topicsN: Object.keys(NORMS).length, drawnTopics: Object.keys(NORMS).filter(drawnTopic).length });
 const uiText = Object.fromEntries(Object.entries(text(W.ui)).map(([k, v]) => [k, fill(v)]));
 const data = { kind: "leftovers-review", drawnWords: W.drawn_words, liveWords: W.live_words, sizes: W.sizes, normImpacts: W.norm_impacts, endpoint: `${L.identity.method} ${L.identity.path}`, head: L.head, ui: uiText, checked: W.facts_checked, norms, decisions,
   map: { img: png("lab-map"), regions: clicks.regions }, ratings: { proposed, url: "https://claude.ai/artifact/B9RnoRC3JV993XZYtAb9fJ" },
