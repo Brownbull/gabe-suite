@@ -109,7 +109,8 @@ const EX = {
 
   "request-shape": () => { const r = L.data.schemas.request; return r && r.present ? `${r.name} · ${r.cols.length + (r.cols_more || 0)} fields` : null; },
   "response-shape-per-ending": () => { const v = Object.values(f.responses), m = v.find((r) => r.model); return `${m.model} with ${m.fields.length} fields on the ${m.status} · ${v.filter((r) => !r.model && r.body && r.body.detail).length} other endings answer with a detail`; },
-  "validation-cases": () => { const e = f.exits.find((x) => x.kind === "validation"); return e ? `${plural(e.tests.length, "test")} prove a ${e.status} · ${e.tests.map((t) => t.case).join(", ")} · the rules themselves are not in the lab's facts yet` : null; },
+  "validation-cases": () => { const e = f.exits.find((x) => x.kind === "validation"); if (!e || !(e.cases || []).length) return null; const by = f.counts.cases_by_type || {};
+    return `${plural(e.cases.length, "rule")} · ${Object.keys(by).map((k) => by[k] + " " + k).join(" · ")} · e.g. ${e.cases[1].loc} ${e.cases[1].type}`; },
 
   "the-handler": () => `${L.functions.handler.name} · ${L.functions.handler.async ? "async" : "sync"}, ${L.functions.handler.lines} lines, returns ${L.functions.handler.returns}`,
   "decision-point-functions": () => `${f.branches[0].call} · ${f.branches.length} of its branches change the ending (${f.branches.map((b) => b.token).join(" · ")})`,

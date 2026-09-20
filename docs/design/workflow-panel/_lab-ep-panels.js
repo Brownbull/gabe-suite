@@ -3299,7 +3299,24 @@
       + ptRow("pred", e.pred || "—") + ptRow("form", (e.form || "—") + " · " + e.state) + ptRow("at", e.at || "—"));
     b.insertAdjacentHTML("beforeend", ptSec("response"));
     b.insertAdjacentHTML("beforeend", ptRow("media", r.media || "—") + ptRow("model", r.model || "—")
-      + ptRow("body", r.body ? Object.keys(r.body).join(" · ") : "—") + ptRow("fields", (r.fields || []).join(" · ") || "—"));
+      + ptRow("body", r.body ? Object.keys(r.body).join(" · ") : "—") + ptRow("fields", (r.fields || []).join(" · ") || "—")
+      + ptRow("headers", r.headers && Object.keys(r.headers).length ? Object.keys(r.headers).map(function(k){ return k + (r.headers[k] && r.headers[k] !== "…" ? ": " + r.headers[k] : ""); }).join(" · ") : "— none beside the body"));
+    /* leftovers piece 3 — a validation ending lists the rules that produce it: the field, the kind of refusal, the rule, the line */
+    if ((e.cases || []).length) {
+      var byT = {}; e.cases.forEach(function(c){ byT[c.type] = (byT[c.type] || 0) + 1; });
+      b.insertAdjacentHTML("beforeend", ptSec("the rules that refuse the body · " + e.cases.length));
+      b.insertAdjacentHTML("beforeend", ptRow("kinds", Object.keys(byT).map(function(k){ return byT[k] + " " + k; }).join(" · ")));
+      var cl = E("div", { class: "ptchain ptcases" });
+      e.cases.forEach(function(c, i){ var r2 = E("div", { class: "ptcr k-case" }); r2.dataset.caseType = c.type || "";
+        r2.insertAdjacentHTML("beforeend", '<span class="ptci">' + String(i + 1) + "</span>");
+        r2.insertAdjacentHTML("beforeend", '<span class="ptcg">' + ico("schema", 12, "var(--muted)") + "</span>");
+        r2.append(E("b", null, esc(String(c.loc || c.param || "body"))));
+        r2.append(E("span", { class: "ptcs" }, esc(String(c.type || "") + (c.rule ? " · " + c.rule : ""))));
+        bind(r2, function(){ return cmdc({ title: String(c.loc || "body"), value: c.type, icon: "schema",
+          rows: [["rule", c.rule || "—"], ["kind of refusal", c.type || "—"], ["at", c.at || "—"], ["shape", String(c.schema || "—").replace(/^schema:/, "")]],
+          plain: "one rule on the body — break it and the request ends here with a 422" }); });
+        cl.append(r2); });
+      b.append(cl); }
     b.insertAdjacentHTML("beforeend", ptSec("paths that end here · " + (e.paths || []).length));
     var pl = E("div", { class: "pttbl" });
     (e.paths || []).forEach(function(id){ var p = pathById(F, id); if (!p) return;

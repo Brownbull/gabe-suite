@@ -96,7 +96,10 @@ def forms_slice(fj: dict, ID: str, ep: dict) -> dict:
                 "at": r.get("at"), "detail": _short_detail(r.get("detail")), "code": r.get("code"), "via": r.get("via"),
                 "pred": r.get("pred"), "state": r.get("state"), "form": r.get("form"), "split": r.get("split"),
                 "reason": r.get("reason"), "tests": [case_rec(t) for t in (r.get("tests") or [])],
-                "response": responses.get(ref)}
+                "response": responses.get(ref),
+                # leftovers piece 3 — what each ending carries: the rules that refuse the body (the short arm's 422 cases, as the feed wrote them)
+                "cases": [{"id": c.get("id"), "loc": c.get("loc"), "param": c.get("param"), "type": c.get("type"), "rule": c.get("rule"), "at": c.get("at"), "schema": c.get("schema")}
+                          for c in (r.get("cases") or []) if isinstance(c, dict)] or None}
 
     def switch_rec(ref):
         w = switches.get(ref)
@@ -227,7 +230,10 @@ def forms_slice(fj: dict, ID: str, ep: dict) -> dict:
                        "switches": len(switches), "preconditions": len(pre), "catches": len(catches), "branches": len(branches),
                        "by_kind": dict(collections.Counter(p["kind"] for p in paths)),
                        "by_status": {str(k): v for k, v in sorted(collections.Counter(p["status"] for p in paths).items(), key=lambda kv: (kv[0] is None, kv[0]))},
-                       "steps_max": max((p["n"]["steps"] for p in paths), default=0)}}
+                       "steps_max": max((p["n"]["steps"] for p in paths), default=0),
+                       "cases": sum(len(x.get("cases") or []) for x in exits),
+                       "cases_by_type": dict(collections.Counter(c.get("type") for x in exits for c in (x.get("cases") or []))),
+                       "exits_with_headers": sum(1 for x in exits if ((x.get("response") or {}).get("headers")))}}
 
 
 def main() -> int:

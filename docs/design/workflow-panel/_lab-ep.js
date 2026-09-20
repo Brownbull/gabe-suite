@@ -5076,7 +5076,8 @@ window.LABEP = {
       "media": "application/json",
       "source": "apps/api/middleware/rate_limit.py:127",
       "status": 429
-     }
+     },
+     "cases": null
     },
     "chain": [
      {
@@ -5222,7 +5223,8 @@ window.LABEP = {
       "media": "application/json",
       "source": "apps/api/middleware/rate_limit.py:127",
       "status": 429
-     }
+     },
+     "cases": null
     },
     "chain": [
      {
@@ -5381,7 +5383,8 @@ window.LABEP = {
       "media": "application/json",
       "source": "fastapi/routing.py:427",
       "status": 422
-     }
+     },
+     "cases": null
     },
     "chain": [
      {
@@ -5566,7 +5569,8 @@ window.LABEP = {
       "media": "application/json",
       "source": "fastapi/routing.py:447",
       "status": 400
-     }
+     },
+     "cases": null
     },
     "chain": [
      {
@@ -5754,7 +5758,8 @@ window.LABEP = {
       "media": "application/json",
       "source": "fastapi/security/http.py:84-92",
       "status": 401
-     }
+     },
+     "cases": null
     },
     "chain": [
      {
@@ -5971,7 +5976,8 @@ window.LABEP = {
       "media": "application/json",
       "source": "fastapi/exception_handlers.py:11-17",
       "status": 401
-     }
+     },
+     "cases": null
     },
     "chain": [
      {
@@ -6280,7 +6286,387 @@ window.LABEP = {
       "media": "application/json",
       "source": "fastapi/exception_handlers.py:20-26",
       "status": 422
-     }
+     },
+     "cases": [
+      {
+       "id": "case:schema:SetupCompleteRequest/__model__/extra_forbidden",
+       "loc": "body",
+       "param": "body",
+       "type": "extra_forbidden",
+       "rule": "extra=\"forbid\"",
+       "at": "apps/api/schemas/setup.py:24",
+       "schema": "schema:SetupCompleteRequest"
+      },
+      {
+       "id": "case:schema:SetupCompleteRequest/household_name/missing",
+       "loc": "body.household_name",
+       "param": "body",
+       "type": "missing",
+       "rule": null,
+       "at": "apps/api/schemas/setup.py:26",
+       "schema": "schema:SetupCompleteRequest"
+      },
+      {
+       "id": "case:schema:SetupCompleteRequest/household_name/string_too_short",
+       "loc": "body.household_name",
+       "param": "body",
+       "type": "string_too_short",
+       "rule": "min_length=1",
+       "at": "apps/api/schemas/setup.py:26",
+       "schema": "schema:SetupCompleteRequest"
+      },
+      {
+       "id": "case:schema:SetupCompleteRequest/household_name/string_too_long",
+       "loc": "body.household_name",
+       "param": "body",
+       "type": "string_too_long",
+       "rule": "max_length=120",
+       "at": "apps/api/schemas/setup.py:26",
+       "schema": "schema:SetupCompleteRequest"
+      },
+      {
+       "id": "case:schema:HouseholdFormatInput/household_format.__model__/extra_forbidden",
+       "loc": "body.household_format",
+       "param": "body",
+       "type": "extra_forbidden",
+       "rule": "extra=\"forbid\"",
+       "at": "apps/api/schemas/preferences.py:363",
+       "schema": "schema:HouseholdFormatInput"
+      },
+      {
+       "id": "case:schema:HouseholdFormatInput/household_format.country/value_error/_check_country.0",
+       "loc": "body.household_format.country",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:375",
+       "schema": "schema:HouseholdFormatInput"
+      },
+      {
+       "id": "case:schema:HouseholdFormatInput/household_format.currency/value_error/_check_currency.0",
+       "loc": "body.household_format.currency",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:383",
+       "schema": "schema:HouseholdFormatInput"
+      },
+      {
+       "id": "case:schema:HouseholdFormatInput/household_format.units/value_error/_check_units.0",
+       "loc": "body.household_format.units",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:391",
+       "schema": "schema:HouseholdFormatInput"
+      },
+      {
+       "id": "case:schema:HouseholdFormatInput/household_format.default_servings/value_error/_check_servings.0",
+       "loc": "body.household_format.default_servings",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:398",
+       "schema": "schema:HouseholdFormatInput"
+      },
+      {
+       "id": "case:schema:UserFormatInput/user_format.__model__/extra_forbidden",
+       "loc": "body.user_format",
+       "param": "body",
+       "type": "extra_forbidden",
+       "rule": "extra=\"forbid\"",
+       "at": "apps/api/schemas/preferences.py:405",
+       "schema": "schema:UserFormatInput"
+      },
+      {
+       "id": "case:schema:UserFormatInput/user_format.language/value_error/_check_language.0",
+       "loc": "body.user_format.language",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:414",
+       "schema": "schema:UserFormatInput"
+      },
+      {
+       "id": "case:schema:DietaryProfileInput/dietary.__model__/extra_forbidden",
+       "loc": "body.dietary",
+       "param": "body",
+       "type": "extra_forbidden",
+       "rule": "extra=\"forbid\"",
+       "at": "apps/api/schemas/preferences.py:122",
+       "schema": "schema:DietaryProfileInput"
+      },
+      {
+       "id": "case:schema:DietaryProfileInput/dietary.allergens/value_error/_check_allergens.0",
+       "loc": "body.dietary.allergens",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:92",
+       "schema": "schema:DietaryProfileInput"
+      },
+      {
+       "id": "case:schema:DietaryProfileInput/dietary.allergens/value_error/_check_allergens.1",
+       "loc": "body.dietary.allergens",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:97",
+       "schema": "schema:DietaryProfileInput"
+      },
+      {
+       "id": "case:schema:DietaryProfileInput/dietary.allergens/value_error/_check_allergens.2",
+       "loc": "body.dietary.allergens",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:101",
+       "schema": "schema:DietaryProfileInput"
+      },
+      {
+       "id": "case:schema:DietaryProfileInput/dietary.preferences/value_error/_check_preferences.0",
+       "loc": "body.dietary.preferences",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:92",
+       "schema": "schema:DietaryProfileInput"
+      },
+      {
+       "id": "case:schema:DietaryProfileInput/dietary.preferences/value_error/_check_preferences.1",
+       "loc": "body.dietary.preferences",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:97",
+       "schema": "schema:DietaryProfileInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.__model__/extra_forbidden",
+       "loc": "body.exploration",
+       "param": "body",
+       "type": "extra_forbidden",
+       "rule": "extra=\"forbid\"",
+       "at": "apps/api/schemas/preferences.py:182",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.explore_regions/value_error/_check_explore_regions.0",
+       "loc": "body.exploration.explore_regions",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:92",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.explore_regions/value_error/_check_explore_regions.1",
+       "loc": "body.exploration.explore_regions",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:97",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.explore_regions/value_error/_check_explore_regions.2",
+       "loc": "body.exploration.explore_regions",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:101",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.curiosity_techniques/value_error/_check_curiosity_techniques.0",
+       "loc": "body.exploration.curiosity_techniques",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:92",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.curiosity_techniques/value_error/_check_curiosity_techniques.1",
+       "loc": "body.exploration.curiosity_techniques",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:97",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.curiosity_techniques/value_error/_check_curiosity_techniques.2",
+       "loc": "body.exploration.curiosity_techniques",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:101",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.comfort_techniques/value_error/_check_comfort_techniques.0",
+       "loc": "body.exploration.comfort_techniques",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:92",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.comfort_techniques/value_error/_check_comfort_techniques.1",
+       "loc": "body.exploration.comfort_techniques",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:97",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.comfort_techniques/value_error/_check_comfort_techniques.2",
+       "loc": "body.exploration.comfort_techniques",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:101",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.comfort_time/value_error/_check_comfort_time.0",
+       "loc": "body.exploration.comfort_time",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:92",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.comfort_time/value_error/_check_comfort_time.1",
+       "loc": "body.exploration.comfort_time",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:97",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.comfort_time/value_error/_check_comfort_time.2",
+       "loc": "body.exploration.comfort_time",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:101",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.skill_complexity_cap/value_error/_check_skill_complexity_cap.0",
+       "loc": "body.exploration.skill_complexity_cap",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:53",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.preference_tastes/value_error/_check_preference_tastes.0",
+       "loc": "body.exploration.preference_tastes",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:92",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.preference_tastes/value_error/_check_preference_tastes.1",
+       "loc": "body.exploration.preference_tastes",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:97",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.preference_tastes/value_error/_check_preference_tastes.2",
+       "loc": "body.exploration.preference_tastes",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:101",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.preference_textures/value_error/_check_preference_textures.0",
+       "loc": "body.exploration.preference_textures",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:92",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.preference_textures/value_error/_check_preference_textures.1",
+       "loc": "body.exploration.preference_textures",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:97",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.preference_textures/value_error/_check_preference_textures.2",
+       "loc": "body.exploration.preference_textures",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:101",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:ExplorationPreferencesInput/exploration.preference_temperature/value_error/_check_preference_temperature.0",
+       "loc": "body.exploration.preference_temperature",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/preferences.py:75",
+       "schema": "schema:ExplorationPreferencesInput"
+      },
+      {
+       "id": "case:schema:PrivacyPermissionsInput/privacy.__model__/extra_forbidden",
+       "loc": "body.privacy",
+       "param": "body",
+       "type": "extra_forbidden",
+       "rule": "extra=\"forbid\"",
+       "at": "apps/api/schemas/preferences.py:421",
+       "schema": "schema:PrivacyPermissionsInput"
+      },
+      {
+       "id": "case:schema:NotificationPreferencesInput/notifications.__model__/extra_forbidden",
+       "loc": "body.notifications",
+       "param": "body",
+       "type": "extra_forbidden",
+       "rule": "extra=\"forbid\"",
+       "at": "apps/api/schemas/preferences.py:431",
+       "schema": "schema:NotificationPreferencesInput"
+      },
+      {
+       "id": "case:schema:SetupCompleteRequest/household_name/value_error/_strip_name.0",
+       "loc": "body.household_name",
+       "param": "body",
+       "type": "value_error",
+       "rule": null,
+       "at": "apps/api/schemas/setup.py:45",
+       "schema": "schema:SetupCompleteRequest"
+      },
+      {
+       "id": "case:framework:body/missing",
+       "loc": "body",
+       "param": "body",
+       "type": "missing",
+       "rule": null,
+       "at": null,
+       "schema": null
+      }
+     ]
     },
     "chain": [
      {
@@ -6708,7 +7094,8 @@ window.LABEP = {
       "media": "application/json",
       "source": "fastapi/exception_handlers.py:11-17",
       "status": 400
-     }
+     },
+     "cases": null
     },
     "chain": [
      {
@@ -7164,7 +7551,8 @@ window.LABEP = {
       "media": "application/json",
       "source": "fastapi/exception_handlers.py:11-17",
       "status": 409
-     }
+     },
+     "cases": null
     },
     "chain": [
      {
@@ -7907,7 +8295,8 @@ window.LABEP = {
       "media": "application/json",
       "source": "fastapi/exception_handlers.py:11-17",
       "status": 409
-     }
+     },
+     "cases": null
     },
     "chain": [
      {
@@ -8886,7 +9275,8 @@ window.LABEP = {
       "model": "MeResponse",
       "source": "apps/api/schemas/responses.py:157",
       "status": 200
-     }
+     },
+     "cases": null
     },
     "chain": [
      {
@@ -9952,7 +10342,8 @@ window.LABEP = {
       "model": "MeResponse",
       "source": "apps/api/schemas/responses.py:157",
       "status": 200
-     }
+     },
+     "cases": null
     },
     "chain": [
      {
@@ -11161,7 +11552,8 @@ window.LABEP = {
       "model": "MeResponse",
       "source": "apps/api/schemas/responses.py:157",
       "status": 200
-     }
+     },
+     "cases": null
     },
     "chain": [
      {
@@ -13035,7 +13427,8 @@ window.LABEP = {
       "media": "text/plain",
       "source": "starlette ServerErrorMiddleware",
       "status": 500
-     }
+     },
+     "cases": null
     },
     "chain": [
      {
@@ -13431,6 +13824,7 @@ window.LABEP = {
      "source": "apps/api/middleware/rate_limit.py:127",
      "status": 429
     },
+    "cases": null,
     "paths": [
      "p:51719726e3"
     ]
@@ -13462,6 +13856,7 @@ window.LABEP = {
      "source": "apps/api/middleware/rate_limit.py:127",
      "status": 429
     },
+    "cases": null,
     "paths": [
      "p:da0a053b53"
     ]
@@ -13493,6 +13888,7 @@ window.LABEP = {
      "source": "fastapi/security/http.py:84-92",
      "status": 401
     },
+    "cases": null,
     "paths": [
      "p:e8c672a046"
     ]
@@ -13521,6 +13917,7 @@ window.LABEP = {
      "source": "fastapi/exception_handlers.py:11-17",
      "status": 401
     },
+    "cases": null,
     "paths": [
      "p:ec6c43e906"
     ]
@@ -13549,6 +13946,7 @@ window.LABEP = {
      "source": "fastapi/routing.py:447",
      "status": 400
     },
+    "cases": null,
     "paths": [
      "p:201d91702d"
     ]
@@ -13577,6 +13975,7 @@ window.LABEP = {
      "source": "fastapi/routing.py:427",
      "status": 422
     },
+    "cases": null,
     "paths": [
      "p:57de16a71b"
     ]
@@ -13624,6 +14023,386 @@ window.LABEP = {
      "source": "fastapi/exception_handlers.py:20-26",
      "status": 422
     },
+    "cases": [
+     {
+      "id": "case:schema:SetupCompleteRequest/__model__/extra_forbidden",
+      "loc": "body",
+      "param": "body",
+      "type": "extra_forbidden",
+      "rule": "extra=\"forbid\"",
+      "at": "apps/api/schemas/setup.py:24",
+      "schema": "schema:SetupCompleteRequest"
+     },
+     {
+      "id": "case:schema:SetupCompleteRequest/household_name/missing",
+      "loc": "body.household_name",
+      "param": "body",
+      "type": "missing",
+      "rule": null,
+      "at": "apps/api/schemas/setup.py:26",
+      "schema": "schema:SetupCompleteRequest"
+     },
+     {
+      "id": "case:schema:SetupCompleteRequest/household_name/string_too_short",
+      "loc": "body.household_name",
+      "param": "body",
+      "type": "string_too_short",
+      "rule": "min_length=1",
+      "at": "apps/api/schemas/setup.py:26",
+      "schema": "schema:SetupCompleteRequest"
+     },
+     {
+      "id": "case:schema:SetupCompleteRequest/household_name/string_too_long",
+      "loc": "body.household_name",
+      "param": "body",
+      "type": "string_too_long",
+      "rule": "max_length=120",
+      "at": "apps/api/schemas/setup.py:26",
+      "schema": "schema:SetupCompleteRequest"
+     },
+     {
+      "id": "case:schema:HouseholdFormatInput/household_format.__model__/extra_forbidden",
+      "loc": "body.household_format",
+      "param": "body",
+      "type": "extra_forbidden",
+      "rule": "extra=\"forbid\"",
+      "at": "apps/api/schemas/preferences.py:363",
+      "schema": "schema:HouseholdFormatInput"
+     },
+     {
+      "id": "case:schema:HouseholdFormatInput/household_format.country/value_error/_check_country.0",
+      "loc": "body.household_format.country",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:375",
+      "schema": "schema:HouseholdFormatInput"
+     },
+     {
+      "id": "case:schema:HouseholdFormatInput/household_format.currency/value_error/_check_currency.0",
+      "loc": "body.household_format.currency",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:383",
+      "schema": "schema:HouseholdFormatInput"
+     },
+     {
+      "id": "case:schema:HouseholdFormatInput/household_format.units/value_error/_check_units.0",
+      "loc": "body.household_format.units",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:391",
+      "schema": "schema:HouseholdFormatInput"
+     },
+     {
+      "id": "case:schema:HouseholdFormatInput/household_format.default_servings/value_error/_check_servings.0",
+      "loc": "body.household_format.default_servings",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:398",
+      "schema": "schema:HouseholdFormatInput"
+     },
+     {
+      "id": "case:schema:UserFormatInput/user_format.__model__/extra_forbidden",
+      "loc": "body.user_format",
+      "param": "body",
+      "type": "extra_forbidden",
+      "rule": "extra=\"forbid\"",
+      "at": "apps/api/schemas/preferences.py:405",
+      "schema": "schema:UserFormatInput"
+     },
+     {
+      "id": "case:schema:UserFormatInput/user_format.language/value_error/_check_language.0",
+      "loc": "body.user_format.language",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:414",
+      "schema": "schema:UserFormatInput"
+     },
+     {
+      "id": "case:schema:DietaryProfileInput/dietary.__model__/extra_forbidden",
+      "loc": "body.dietary",
+      "param": "body",
+      "type": "extra_forbidden",
+      "rule": "extra=\"forbid\"",
+      "at": "apps/api/schemas/preferences.py:122",
+      "schema": "schema:DietaryProfileInput"
+     },
+     {
+      "id": "case:schema:DietaryProfileInput/dietary.allergens/value_error/_check_allergens.0",
+      "loc": "body.dietary.allergens",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:92",
+      "schema": "schema:DietaryProfileInput"
+     },
+     {
+      "id": "case:schema:DietaryProfileInput/dietary.allergens/value_error/_check_allergens.1",
+      "loc": "body.dietary.allergens",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:97",
+      "schema": "schema:DietaryProfileInput"
+     },
+     {
+      "id": "case:schema:DietaryProfileInput/dietary.allergens/value_error/_check_allergens.2",
+      "loc": "body.dietary.allergens",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:101",
+      "schema": "schema:DietaryProfileInput"
+     },
+     {
+      "id": "case:schema:DietaryProfileInput/dietary.preferences/value_error/_check_preferences.0",
+      "loc": "body.dietary.preferences",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:92",
+      "schema": "schema:DietaryProfileInput"
+     },
+     {
+      "id": "case:schema:DietaryProfileInput/dietary.preferences/value_error/_check_preferences.1",
+      "loc": "body.dietary.preferences",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:97",
+      "schema": "schema:DietaryProfileInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.__model__/extra_forbidden",
+      "loc": "body.exploration",
+      "param": "body",
+      "type": "extra_forbidden",
+      "rule": "extra=\"forbid\"",
+      "at": "apps/api/schemas/preferences.py:182",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.explore_regions/value_error/_check_explore_regions.0",
+      "loc": "body.exploration.explore_regions",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:92",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.explore_regions/value_error/_check_explore_regions.1",
+      "loc": "body.exploration.explore_regions",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:97",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.explore_regions/value_error/_check_explore_regions.2",
+      "loc": "body.exploration.explore_regions",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:101",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.curiosity_techniques/value_error/_check_curiosity_techniques.0",
+      "loc": "body.exploration.curiosity_techniques",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:92",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.curiosity_techniques/value_error/_check_curiosity_techniques.1",
+      "loc": "body.exploration.curiosity_techniques",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:97",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.curiosity_techniques/value_error/_check_curiosity_techniques.2",
+      "loc": "body.exploration.curiosity_techniques",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:101",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.comfort_techniques/value_error/_check_comfort_techniques.0",
+      "loc": "body.exploration.comfort_techniques",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:92",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.comfort_techniques/value_error/_check_comfort_techniques.1",
+      "loc": "body.exploration.comfort_techniques",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:97",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.comfort_techniques/value_error/_check_comfort_techniques.2",
+      "loc": "body.exploration.comfort_techniques",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:101",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.comfort_time/value_error/_check_comfort_time.0",
+      "loc": "body.exploration.comfort_time",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:92",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.comfort_time/value_error/_check_comfort_time.1",
+      "loc": "body.exploration.comfort_time",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:97",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.comfort_time/value_error/_check_comfort_time.2",
+      "loc": "body.exploration.comfort_time",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:101",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.skill_complexity_cap/value_error/_check_skill_complexity_cap.0",
+      "loc": "body.exploration.skill_complexity_cap",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:53",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.preference_tastes/value_error/_check_preference_tastes.0",
+      "loc": "body.exploration.preference_tastes",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:92",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.preference_tastes/value_error/_check_preference_tastes.1",
+      "loc": "body.exploration.preference_tastes",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:97",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.preference_tastes/value_error/_check_preference_tastes.2",
+      "loc": "body.exploration.preference_tastes",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:101",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.preference_textures/value_error/_check_preference_textures.0",
+      "loc": "body.exploration.preference_textures",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:92",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.preference_textures/value_error/_check_preference_textures.1",
+      "loc": "body.exploration.preference_textures",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:97",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.preference_textures/value_error/_check_preference_textures.2",
+      "loc": "body.exploration.preference_textures",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:101",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:ExplorationPreferencesInput/exploration.preference_temperature/value_error/_check_preference_temperature.0",
+      "loc": "body.exploration.preference_temperature",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/preferences.py:75",
+      "schema": "schema:ExplorationPreferencesInput"
+     },
+     {
+      "id": "case:schema:PrivacyPermissionsInput/privacy.__model__/extra_forbidden",
+      "loc": "body.privacy",
+      "param": "body",
+      "type": "extra_forbidden",
+      "rule": "extra=\"forbid\"",
+      "at": "apps/api/schemas/preferences.py:421",
+      "schema": "schema:PrivacyPermissionsInput"
+     },
+     {
+      "id": "case:schema:NotificationPreferencesInput/notifications.__model__/extra_forbidden",
+      "loc": "body.notifications",
+      "param": "body",
+      "type": "extra_forbidden",
+      "rule": "extra=\"forbid\"",
+      "at": "apps/api/schemas/preferences.py:431",
+      "schema": "schema:NotificationPreferencesInput"
+     },
+     {
+      "id": "case:schema:SetupCompleteRequest/household_name/value_error/_strip_name.0",
+      "loc": "body.household_name",
+      "param": "body",
+      "type": "value_error",
+      "rule": null,
+      "at": "apps/api/schemas/setup.py:45",
+      "schema": "schema:SetupCompleteRequest"
+     },
+     {
+      "id": "case:framework:body/missing",
+      "loc": "body",
+      "param": "body",
+      "type": "missing",
+      "rule": null,
+      "at": null,
+      "schema": null
+     }
+    ],
     "paths": [
      "p:a90ffd3af4"
     ]
@@ -13749,6 +14528,7 @@ window.LABEP = {
      "source": "apps/api/schemas/responses.py:157",
      "status": 200
     },
+    "cases": null,
     "paths": [
      "p:bba821f362",
      "p:1ac75d260a",
@@ -13789,6 +14569,7 @@ window.LABEP = {
      "source": "fastapi/exception_handlers.py:11-17",
      "status": 400
     },
+    "cases": null,
     "paths": [
      "p:fd1039c2ca"
     ]
@@ -13836,6 +14617,7 @@ window.LABEP = {
      "source": "fastapi/exception_handlers.py:11-17",
      "status": 409
     },
+    "cases": null,
     "paths": [
      "p:2adb89467d"
     ]
@@ -13901,6 +14683,7 @@ window.LABEP = {
      "source": "fastapi/exception_handlers.py:11-17",
      "status": 409
     },
+    "cases": null,
     "paths": [
      "p:5c8ba607f9"
     ]
@@ -13927,6 +14710,7 @@ window.LABEP = {
      "source": "starlette ServerErrorMiddleware",
      "status": 500
     },
+    "cases": null,
     "paths": [
      "p:3ee19bd271"
     ]
@@ -14022,7 +14806,8 @@ window.LABEP = {
       "media": "application/json",
       "source": "fastapi/exception_handlers.py:11-17",
       "status": 400
-     }
+     },
+     "cases": null
     }
    },
    {
@@ -14078,7 +14863,8 @@ window.LABEP = {
       "media": "application/json",
       "source": "fastapi/exception_handlers.py:11-17",
       "status": 409
-     }
+     },
+     "cases": null
     }
    },
    {
@@ -14154,7 +14940,8 @@ window.LABEP = {
       "media": "application/json",
       "source": "fastapi/exception_handlers.py:11-17",
       "status": 409
-     }
+     },
+     "cases": null
     }
    }
   ],
@@ -15919,7 +16706,16 @@ window.LABEP = {
     "429": 2,
     "500": 1
    },
-   "steps_max": 22
+   "steps_max": 22,
+   "cases": 42,
+   "cases_by_type": {
+    "extra_forbidden": 7,
+    "missing": 2,
+    "string_too_short": 1,
+    "string_too_long": 1,
+    "value_error": 31
+   },
+   "exits_with_headers": 3
   }
  },
  "identity": {

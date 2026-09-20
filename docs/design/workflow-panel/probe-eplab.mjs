@@ -2684,6 +2684,38 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
   ok(errs.length === errsBefore, 'the stages picture raises no page error anywhere in this section', errs.slice(errsBefore, errsBefore + 3).join(' | '));
 }
 
+// ══ LEFTOVERS piece 3 · WHAT EACH ENDING CARRIES — the rules behind the validation ending · the headers an ending sends back ══
+{ const errs0 = errs.length;
+  const G = await p.evaluate(() => { const f = window.LABEP.forms, v = f.exits.find(e => e.kind === 'validation'), byT = {};
+    f.exits.forEach(e => (e.cases || []).forEach(c => { byT[c.type] = (byT[c.type] || 0) + 1; }));
+    return { vId: v && v.id, n: v && v.cases ? v.cases.length : 0, first: v && v.cases ? v.cases[0] : null, counts: f.counts, byT,
+      total: f.exits.reduce((a, e) => a + (e.cases || []).length, 0), withCases: f.exits.filter(e => (e.cases || []).length).map(e => e.kind),
+      hdr: f.exits.filter(e => e.response && e.response.headers && Object.keys(e.response.headers).length).map(e => ({ id: e.id, status: e.status, keys: Object.keys(e.response.headers) })),
+      plain: f.exits.find(e => e.kind === 'refusal' && !(e.response && e.response.headers && Object.keys(e.response.headers).length)).id }; });
+  ok(G.n > 0 && G.total === G.counts.cases && JSON.stringify(G.byT) === JSON.stringify(G.counts.cases_by_type), 'the rules that refuse the body reach the lab, and the counts are their own recount', JSON.stringify({ n: G.n, counts: G.counts.cases }));
+  ok(G.withCases.every(k => k === 'validation'), 'only a validation ending carries rules', G.withCases.join(','));
+  ok(G.first && G.first.loc && G.first.type && G.first.at && G.first.schema, 'a rule names its field, its kind of refusal, its line and its shape', JSON.stringify(G.first));
+  const rowsOf = () => p.$$eval('#portbody .ptrow', els => els.map(e => [e.querySelector('.k').textContent, e.querySelector('.v').textContent]));
+  await p.evaluate(id => window.selectExit(id), G.vId); await p.waitForTimeout(300);
+  ok((await p.$$('#portbody .ptcases .ptcr')).length === G.n, `the validation ending's record lists all ${G.n} rules`, (await p.$$('#portbody .ptcases .ptcr')).length);
+  ok((await p.$eval('#portbody .ptcases .ptcr b', e => e.textContent).catch(() => null)) === (G.first || {}).loc, 'each row leads with the field, the way the answer names it');
+  { const kinds = ((await rowsOf()).find(r => r[0] === 'kinds') || [])[1] || '';
+    ok(Object.keys(G.byT).every(k => kinds.includes(G.byT[k] + ' ' + k)), 'and one row counts them by kind of refusal', kinds); }
+  { let h = '';
+    if ((await p.$$('#portbody .ptcases .ptcr')).length) { await p.$eval('#portbody .ptcases .ptcr', e => e.scrollIntoView({ block: 'center' })); await p.hover('#portbody .ptcases .ptcr'); await p.waitForTimeout(220);
+      h = (await p.$eval('#hover', e => e.innerText)).replace(/\s+/g, ' '); }
+    ok(!!G.first && h.includes(G.first.at) && /ends here with a 422/.test(h), 'a rule\'s hover gives its line and says what breaking it does', h.slice(0, 150)); }
+  await p.mouse.move(5, 1030); await p.evaluate(() => window.hoverHide());
+  ok(G.hdr.length === G.counts.exits_with_headers && G.hdr.length > 0, 'the endings that send a header beside the body are counted');
+  if (G.hdr.length) { await p.evaluate(id => window.selectExit(id), G.hdr[0].id); await p.waitForTimeout(260); }
+  { const hv = ((await rowsOf()).find(r => r[0] === 'headers') || [])[1] || '', h0 = G.hdr[0] || { keys: ['(no ending sends a header)'], status: '?' };
+    ok(h0.keys.every(k => hv.includes(k)), `the ${h0.status} ending's record names the header it sends`, hv);
+    ok((await p.$$('#portbody .ptcases')).length === 0, 'and an ending that is not a validation ending draws no rules section'); }
+  await p.evaluate(id => window.selectExit(id), G.plain); await p.waitForTimeout(260);
+  ok(/none beside the body/.test(((await rowsOf()).find(r => r[0] === 'headers') || [])[1] || ''), 'an ending that sends only its body says so');
+  await p.evaluate(() => { window.clearPath(); }); await p.waitForTimeout(200);
+  ok(errs.length === errs0, 'the ending records raise no page error', errs.slice(errs0, errs0 + 3).join(' | ')); }
+
 // ══ LEFTOVERS piece 2 · WHAT AN EMPTY SLOT MEANS — lit · hollow (read, zero) · hatched (not read here) · blank (no such slot) ══
 { const errs0 = errs.length;
   const T = await p.evaluate(() => { const F = window.LABEP, off = JSON.parse(JSON.stringify(F)), none = JSON.parse(JSON.stringify(F));

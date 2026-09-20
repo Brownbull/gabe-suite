@@ -79,7 +79,7 @@ tooltip · portrait. The channel column stays empty until M3 (the channel budget
 | request shape | relation | 0–1 | 2 | what must come in | with code | relation | mid (block) |
 | response shape per ending | relation | 2 · 9 · 22 | 2 | what each ending answers with | with code | relation | mid / near |
 | delivery (one answer · a stream) | category | 1 of 80 endpoints streams | 2 (proposed) | a stream changes what the client must do with the answer | with code | own | mid |
-| response headers per ending | relation | to measure when piece 3 lands | 2 (proposed) | what the client is told to do next — a 429 says when to retry, a 401 names the login scheme | with code | own | near |
+| response headers per ending | relation | 0 · 2 · 5 endings per endpoint send one (1 endpoint sends none) | 2 (proposed) | what the client is told to do next — a 429 says when to retry, a 401 names the login scheme | with code | own | near |
 | field rules of the request body (required · length · range · allowed values) | relation | to measure when piece 8 lands | 2 (proposed) | the rule beside the field, so a shape stops being a list of names | with code | relation | near |
 | validation cases (the 422 rules) | relation | 1 · 4 · 42 over 42 of 80 endpoints | 2 | decision points at INPUT; already in the lab's facts — the old note was out of date (piece 3). The evaluation proposes a 3: each case produces an ending | with code | relation | near |
 
