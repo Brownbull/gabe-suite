@@ -84,7 +84,9 @@ const decisions = W.decisions.map((d0) => { const d = Object.assign({}, d0, { wh
 if (new Set(decisions.map((d) => d.id)).size !== decisions.length) die("two decisions share an id");
 const inv = fs.readFileSync(path.join(HERE, "inventory-endpoint.md"), "utf8"), proposed = inv.split("\n").filter((l) => /^\|/.test(l) && /\(proposed\)/.test(l)).length;
 const text = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v.text]));
-const data = { kind: "leftovers-review", endpoint: `${L.identity.method} ${L.identity.path}`, head: L.head, ui: text(W.ui), checked: W.facts_checked, norms, decisions,
+const liveN = (k) => W.decisions.filter((x) => x.live === k).length; for (const x of W.decisions) if (!W.live_words[x.live]) die(x.id + ": no word for live = " + x.live);
+const uiText = text(W.ui); uiText.livenote = uiText.livenote.replace("{liveWorth}", liveN("worth")).replace("{liveOptional}", liveN("optional")).replace("{liveNone}", liveN("none"));
+const data = { kind: "leftovers-review", liveWords: W.live_words, endpoint: `${L.identity.method} ${L.identity.path}`, head: L.head, ui: uiText, checked: W.facts_checked, norms, decisions,
   map: { img: png("lab-map"), regions: clicks.regions }, ratings: { proposed, url: "https://claude.ai/artifact/B9RnoRC3JV993XZYtAb9fJ" },
   hash: crypto.createHash("sha1").update(JSON.stringify([norms.map((n) => [n.id, n.line]), W.decisions.map((d) => [d.id, d.options, d.mine])])).digest("hex").slice(0, 8) };
 

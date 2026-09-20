@@ -65,6 +65,9 @@
   .dec > .full { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; }
   @media (max-width: 900px) { .dec { grid-template-columns: minmax(0, 1fr); } }
   .dec h3 { margin: 0; font-size: 1.05em; text-wrap: balance; }
+  .live { align-self: flex-start; font-size: var(--fs-min); letter-spacing: .04em; border-radius: 999px; padding: 1px 9px; border: 1px solid var(--rule); color: var(--muted); }
+  .live[data-live="worth"] { border-color: var(--accent); color: var(--ground); background: var(--accent); }
+  .live[data-live="optional"] { color: var(--ink-soft); }
   .dec .what { font-size: var(--fs-sm); color: var(--ink-soft); margin: 0; }
   .dec .why { font-size: var(--fs-sm); color: var(--ink); margin: 0; border-left: 2px dashed var(--accent); padding-left: 9px; }
   .where { margin: 0; padding: 0; list-style: none; counter-reset: w; display: flex; flex-direction: column; gap: 3px; font-size: var(--fs-sm); color: var(--ink); }
@@ -105,6 +108,7 @@
 
   <section class="sec" data-sec="8" id="sec-map">
     <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>Where things are in the lab</h2><span class="n" id="map-n"></span></div>
+    <p class="cap" id="livenote"></p>
     <p class="cap" id="labnote"></p>
     <div class="panel"><div class="labmap" id="labmap"></div></div>
   </section>
@@ -162,7 +166,7 @@
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   ["eyebrow", "title", "lede", "order", "s1", "s1note", "s2", "s2note", "s3", "s3note", "s4", "s4note", "s5", "s5note", "copynote", "normsHow", "skip", "checked"].forEach(function (k) { $(k).textContent = D.ui[k]; });
-  $("copy-t").textContent = D.ui.copy; $("labnote").textContent = D.ui.lab; $("map-n").textContent = D.ui.mapcap;
+  $("copy-t").textContent = D.ui.copy; $("labnote").textContent = D.ui.lab; $("livenote").textContent = D.ui.livenote; $("map-n").textContent = D.ui.mapcap;
   D.checked.forEach(function (s) { $("checked-list").appendChild(el("li", null, s)); });
 
   /* ── state: one verdict + one note per id; nothing is saved at boot ── */
@@ -247,8 +251,8 @@
 
   /* ── one decision per card ── */
   D.decisions.forEach(function (d) { var card = el("div", "panel dec"), tip = el("div", "tip"); card.setAttribute("data-dec", d.id); tip.setAttribute("role", "tooltip");
-    var L = el("div", "dl"), R = el("div", "dr"); L.appendChild(el("h3", null, d.title)); L.appendChild(el("p", "what", d.what));
-    L.appendChild(el("p", "lab", d.shot ? "to see it live" : "where to check it")); var w = el("ol", "where"); d.where.forEach(function (s) { w.appendChild(el("li", null, s)); }); L.appendChild(w);
+    var L = el("div", "dl"), R = el("div", "dr"); L.appendChild(el("h3", null, d.title)); var lv = el("span", "live", D.liveWords[d.live]); lv.setAttribute("data-live", d.live); L.appendChild(lv); L.appendChild(el("p", "what", d.what));
+    L.appendChild(el("p", "lab", d.live === "none" ? "where to read it" : d.live === "worth" ? "see it live — the exact clicks" : "to see it live, if you want — the exact clicks")); var w = el("ol", "where"); d.where.forEach(function (s) { w.appendChild(el("li", null, s)); }); L.appendChild(w);
     L.appendChild(el("p", "lab", "my pick, and why")); L.appendChild(el("p", "why", d.why));
     var x = verdict(L, card, d.id, d.mine, d.options, false, "a note for me"); L.appendChild(x.note);
     if (d.shot) { var im = el("img", "shot"); im.src = d.shot; im.alt = d.title; im.loading = "lazy"; R.appendChild(im); }

@@ -63,6 +63,9 @@
   },
   "checked": {
    "text": "Three facts I had corrected were checked against the app's own source on 2026-09-20."
+  },
+  "livenote": {
+   "text": "You can rule almost everything from this page. {liveWorth} cards are worth seeing live in the lab, because the choice is about how something feels when you use it. On {liveOptional} more the lab is optional, since the picture or the numbers are already on the card. The other {liveNone} have nothing to see in the lab."
   }
  },
  "facts_checked": [
@@ -191,7 +194,8 @@
     ]
    ],
    "mine": "sweep",
-   "why": "One word per thing. The evaluation page says endpoint and the lab's newer rows do too. Its older strings still say door, so only a sweep gets to one word."
+   "why": "One word per thing. The evaluation page says endpoint and the lab's newer rows do too. Its older strings still say door, so only a sweep gets to one word.",
+   "live": "none"
   },
   {
    "id": "slot-words",
@@ -213,7 +217,8 @@
     ]
    ],
    "mine": "ok",
-   "why": "They say whether a zero was measured or never read, which decides whether every other empty row can be believed."
+   "why": "They say whether a zero was measured or never read, which decides whether every other empty row can be believed.",
+   "live": "none"
   },
   {
    "id": "thresholds",
@@ -242,7 +247,8 @@
     ]
    ],
    "mine": "9-1",
-   "why": "A strict norm keeps the word rare, so the later mark for something unusual stays meaningful."
+   "why": "A strict norm keeps the word rare, so the later mark for something unusual stays meaningful.",
+   "live": "optional"
   },
   {
    "id": "roles-raise",
@@ -269,7 +275,8 @@
     ]
    ],
    "mine": "any-raise",
-   "why": "A raise changes the path whatever answer it becomes. Your depth rule puts detail where the path can change."
+   "why": "A raise changes the path whatever answer it becomes. Your depth rule puts detail where the path can change.",
+   "live": "optional"
   },
   {
    "id": "through",
@@ -296,7 +303,8 @@
     ]
    ],
    "mine": "tie-none",
-   "why": "The other endings read as exceptions to it, so naming it helps. On a tie, naming nothing is more honest than a hidden pick."
+   "why": "The other endings read as exceptions to it, so naming it helps. On a tie, naming nothing is more honest than a hidden pick.",
+   "live": "optional"
   },
   {
    "id": "dep-order",
@@ -319,7 +327,8 @@
     ]
    ],
    "mine": "mark",
-   "why": "An order that guesses without saying so is the kind of claim you asked me not to make."
+   "why": "An order that guesses without saying so is the kind of claim you asked me not to make.",
+   "live": "optional"
   },
   {
    "id": "case-roles",
@@ -341,7 +350,8 @@
     ]
    ],
    "mine": "ok",
-   "why": "The words come from how the test really calls the endpoint, not from its name."
+   "why": "The words come from how the test really calls the endpoint, not from its name.",
+   "live": "optional"
   },
   {
    "id": "after-handler",
@@ -363,7 +373,8 @@
     ]
    ],
    "mine": "handler",
-   "why": "Whether it runs before or after the answer leaves is a rule of the framework version, and the map does not read it."
+   "why": "Whether it runs before or after the answer leaves is a rule of the framework version, and the map does not read it.",
+   "live": "optional"
   },
   {
    "id": "found-by",
@@ -396,7 +407,8 @@
     ]
    ],
    "mine": "keep",
-   "why": "{routeOnly} of this endpoint's {tables} tables ({routeOnlyNames}) are known to a route's steps only, so the row changes whether you trust the list."
+   "why": "{routeOnly} of this endpoint's {tables} tables ({routeOnlyNames}) are known to a route's steps only, so the row changes whether you trust the list.",
+   "live": "optional"
   },
   {
    "id": "fn-rows",
@@ -428,7 +440,8 @@
     ]
    ],
    "mine": "keep",
-   "why": "They answer three of your questions about functions in the one place a function is opened."
+   "why": "They answer three of your questions about functions in the one place a function is opened.",
+   "live": "optional"
   },
   {
    "id": "open-call",
@@ -455,7 +468,8 @@
     ]
    ],
    "mine": "option",
-   "why": "This is a display choice, and those are yours to make by seeing both."
+   "why": "This is a display choice, and those are yours to make by seeing both.",
+   "live": "worth"
   },
   {
    "id": "ending-sections",
@@ -487,7 +501,8 @@
     ]
    ],
    "mine": "keep",
-   "why": "They are the only place the client and the rest of the app show up on an ending."
+   "why": "They are the only place the client and the rest of the app show up on an ending.",
+   "live": "optional"
   },
   {
    "id": "rules-on-hover",
@@ -519,7 +534,8 @@
     ]
    ],
    "mine": "keep",
-   "why": "A hover costs no room, and your record keeps its shape."
+   "why": "A hover costs no room, and your record keeps its shape.",
+   "live": "worth"
   },
   {
    "id": "place-card",
@@ -548,7 +564,8 @@
     ]
    ],
    "mine": "everything",
-   "why": "Your older ruling was clear, and the whole-app card is about the app."
+   "why": "Your older ruling was clear, and the whole-app card is about the app.",
+   "live": "optional"
   },
   {
    "id": "p10",
@@ -570,7 +587,8 @@
     ]
    ],
    "mine": "land",
-   "why": "The lab half already shows where each branch is. The row for what the branch does is not drawn at all until this lands. The cost beyond the build: nothing downstream reads this block, so only its own battery would catch a regression. If that row would not change how you read an ending, hold it."
+   "why": "The lab half already shows where each branch is. The row for what the branch does is not drawn at all until this lands. The cost beyond the build: nothing downstream reads this block, so only its own battery would catch a regression. If that row would not change how you read an ending, hold it.",
+   "live": "none"
   },
   {
    "id": "p10-nav",
@@ -591,7 +609,8 @@
     ]
    ],
    "mine": "yes",
-   "why": "Without it every navigation in a branch reads as an unknown call."
+   "why": "Without it every navigation in a branch reads as an unknown call.",
+   "live": "none"
   },
   {
    "id": "p10-word",
@@ -612,7 +631,8 @@
     ]
    ],
    "mine": "beyond one level",
-   "why": "The map already uses that phrase for the same limit on the backend."
+   "why": "The map already uses that phrase for the same limit on the backend.",
+   "live": "none"
   },
   {
    "id": "p10-toast",
@@ -633,7 +653,8 @@
     ]
    ],
    "mine": "yes",
-   "why": "The row says where the name came from, so a project's own toast still reads as the project's."
+   "why": "The row says where the name came from, so a project's own toast still reads as the project's.",
+   "live": "none"
   },
   {
    "id": "p10-i18n",
@@ -654,7 +675,8 @@
     ]
    ],
    "mine": "no",
-   "why": "A roster entry nobody can check is a guess."
+   "why": "A roster entry nobody can check is a guess.",
+   "live": "none"
   },
   {
    "id": "p11",
@@ -684,7 +706,8 @@
     ]
    ],
    "mine": "after-10",
-   "why": "It is the largest and the least urgent. Seeing piece 10's row in the lab first costs nothing."
+   "why": "It is the largest and the least urgent. Seeing piece 10's row in the lab first costs nothing.",
+   "live": "none"
   },
   {
    "id": "p11-name",
@@ -709,7 +732,8 @@
     ]
    ],
    "mine": "keep",
-   "why": "The prism you kept in D-015 is called In-flight state, and the part's files sit under the forms prefix, apart from the board's write-inflight.py."
+   "why": "The prism you kept in D-015 is called In-flight state, and the part's files sit under the forms prefix, apart from the board's write-inflight.py.",
+   "live": "none"
   }
  ],
  "parts": {
@@ -719,5 +743,10 @@
   "tests": "Tests",
   "widening": "Widening",
   "security": "Security"
+ },
+ "live_words": {
+  "worth": "worth seeing live in the lab",
+  "optional": "you can rule it from here · the lab is optional",
+  "none": "nothing to see in the lab"
  }
 }
