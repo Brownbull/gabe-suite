@@ -2685,6 +2685,46 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
   ok(errs.length === errsBefore, 'the stages picture raises no page error anywhere in this section', errs.slice(errsBefore, errsBefore + 3).join(' | '));
 }
 
+// ══ LEFTOVERS piece 7 · HOW COMMON EACH PIECE IS — a count in this app and in the other apps read · this endpoint's place · never a grade ══
+{ const errs0 = errs.length;
+  const DG = JSON.parse(fs.readFileSync(path.join(HERE, 'pieces-digest.json'), 'utf8')).apps;
+  const C7 = await p.evaluate(() => { const L = window.LABEP, FW = L.feedwide, f = L.forms;
+    return { P: FW.pieces, Q: FW.proof, A: FW.async, W: FW.screens, R: L.context.risk, head: L.head,
+      testedHere: f.exits.filter(e => e.row === 'produced' && (e.tests || []).length).length, producedHere: f.counts.produced,
+      statuses: [...new Set(f.exits.map(e => e.status).filter(s => s != null))], scheme: ((f.auth.schemes || [])[0] || {}).scheme, hasKey: !!(f.repeat && f.repeat.key),
+      fetchedBy: L.widening.fetched_by.length }; });
+  const P = C7.P || { rows: [] }, mineApp = DG[P.app] || {};
+  ok(P.rows.length > 0 && mineApp.state === 'present' && mineApp.head === C7.head && P.of === mineApp.endpoints && P.rows.every(r => r.n === (mineApp.pieces[r.key] || 0) && r.n >= 1),
+    'how common: every piece this endpoint carries has its count, and the count is the committed digest\'s count for the same app and head', P.rows.filter(r => r.n !== ((mineApp.pieces || {})[r.key] || 0)).map(r => r.key + ' ' + r.n).join(', '));
+  { const word = (n, of) => n <= 1 ? 'only here' : n / of >= 0.9 ? 'the norm' : n / of <= 0.1 ? 'rare' : 'common';
+    ok(P.rows.every(r => r.word === word(r.n, r.of)) && Object.keys(P.by_word).every(w => P.by_word[w] === P.rows.filter(r => r.word === w).length), 'the word beside a count follows the stated rule, and the word counts are their own recount', JSON.stringify(P.by_word)); }
+  ok(C7.statuses.every(s => P.rows.some(r => r.key === 'status:' + s)) && (!C7.hasKey || P.rows.some(r => r.key === 'repeat:key')) && (!C7.scheme || P.rows.some(r => r.key === 'auth:scheme:' + C7.scheme)),
+    'the pieces are this endpoint\'s own: every status it can answer, its repeat key, its login scheme', C7.statuses.join(' '));
+  ok(P.rows.every(r => r.elsewhere.every(e => e.app !== P.app && (e.state === 'present' ? (e.n === ((DG[e.app].pieces || {})[r.key] || 0) && e.of === DG[e.app].endpoints) : e.n === null))),
+    'the other apps: a count where an app was read, and no number at all where it could not be', P.rows[0] ? JSON.stringify(P.rows[0].elsewhere) : '');
+  ok(P.rate_tiers.reduce((n, x) => n + x.n, 0) === P.of && P.rows.filter(r => r.family === 'rate').length === 1, 'the rate tiers split the whole app, and this endpoint sits on exactly one', JSON.stringify(P.rate_tiers));
+  ok(C7.Q.tested === C7.testedHere && C7.Q.produced === C7.producedHere && C7.Q.rank <= C7.Q.rank_to && C7.Q.rank_to - C7.Q.rank + 1 === C7.Q.ties && C7.Q.rank_to <= C7.Q.of && C7.Q.app.tested <= C7.Q.app.produced,
+    'the proof place: the endings a test names are the lab\'s own recount, and a tie says the places it spans', JSON.stringify(C7.Q));
+  ok(C7.A.n <= C7.A.of && C7.W.fetched_by === C7.fetchedBy && C7.W.with_none <= C7.W.of, 'the async norm and the no-screen floor are counts over the map\'s endpoints', JSON.stringify(C7.A));
+  const hov7 = async sel => { if (!(await p.$$(sel)).length) return ''; await p.$eval(sel, e => e.scrollIntoView({ block: 'center' })); await p.hover(sel); await p.waitForTimeout(240);
+    const t = (await p.$eval('#hover', e => e.hidden ? '' : e.innerText)).replace(/\s+/g, ' '); await p.mouse.move(5, 1030); await p.evaluate(() => window.hoverHide()); return t; };
+  { const h = await hov7('.habove .upchip:last-child'), risk = await hov7('.flagchip');
+    ok(!C7.R.rank || (/ITS PLACE/i.test(h) && h.includes(' of ' + C7.R.of) && h.includes(String(C7.R.behind_max)) && h.includes(C7.R.behind_max_of) && /\d(st|nd|rd|th) of/.test(h) && /ITS PROOF/i.test(h) && h.includes(C7.Q.tested + ' of its ' + C7.Q.produced)),
+      'the app-level card — everything, one level up — says where this endpoint sits: its place, the middle endpoint, the biggest, its proof', h.slice(-320));
+    ok(!/ITS PLACE/i.test(risk) && !/BOOT lifespan/.test(risk), 'and the risk card stays about this endpoint alone (the older ruling holds)', risk.slice(-120)); }
+  const st = C7.statuses.find(s => s !== 429 && s >= 400), row = P.rows.find(r => r.key === 'status:' + st);
+  await p.evaluate(s => { window.showTab('data'); window.selectExit(window.LABEP.forms.exits.find(e => e.status === s).id); }, st); await p.waitForTimeout(420);
+  { const rows = await p.$$eval('#portbody .ptrow', els => els.map(e => [e.querySelector('.k').textContent, e.querySelector('.v').textContent])), get = k => (rows.find(r => r[0] === k) || [])[1] || '';
+    ok(!!row && get('in this app').includes(row.n + ' of ' + row.of) && get('in this app').includes(row.word) && /not measured/.test(get('in the other apps')), `an ending\'s record says how many endpoints can answer ${st} — here and in the other apps read`, JSON.stringify(rows.slice(-2))); }
+  await p.evaluate(() => { window.selectExit(window.LABEP.forms.exits.find(e => e.status === 429).id); }); await p.waitForTimeout(420);
+  { const rows = await p.$$eval('#portbody .ptrow', els => els.map(e => [e.querySelector('.k').textContent, e.querySelector('.v').textContent])), tier = P.rows.find(r => r.family === 'rate'), v = (rows.find(r => r[0] === 'rate tier') || [])[1] || '';
+    ok(!!tier && v.includes(tier.n + ' of ' + tier.of), 'the rate-limit ending says which tier this endpoint sits on and how many share it', v); }
+  await p.evaluate(() => { window.clearPath(); window.showTab('security'); window.showVariant('security', 'band'); }); await p.waitForTimeout(340);
+  if (C7.hasKey) { const k = P.rows.find(r => r.key === 'repeat:key'), h = await hov7('#panel .sfact:nth-of-type(3)');
+    ok(h.includes(k.n + ' of ' + k.of) && /IN THE OTHER APPS/i.test(h), 'the idempotency fact says how rare a repeat key is — here and elsewhere', h.slice(-240)); }
+  await p.evaluate(() => { window.clearPath(); window.showTab('data'); }); await p.waitForTimeout(240);
+  ok(errs.length === errs0, 'how common raises no page error', errs.slice(errs0, errs0 + 3).join(' | ')); }
+
 // ══ LEFTOVERS piece 6 · INSIDE THE CALLS — a call opens · the helpers in the order they are resolved · what each function does here ══
 { const errs0 = errs.length;
   const I6 = await p.evaluate(() => { const L = window.LABEP, f = L.forms, I = f.inside || {}, fns = I.functions || [], exitIds = f.exits.map(e => e.id);

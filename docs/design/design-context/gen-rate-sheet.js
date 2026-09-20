@@ -97,8 +97,11 @@ const EX = {
     return (two ? `${two.name} · ${two.does.join(" and ")} · ` : "") + `${D.two_or_more} of ${D.of} functions hold two or more · ${D.none} show none`; },
   "what-the-case-asserts-on-this-condition": () => { const r = (L.tests.roster || []).find((x) => x.role === "act" && x.asserts && x.asserts.detail); return r ? `${r.cid} asserts ` + Object.keys(r.asserts).map((k) => `${k} ${[].concat(r.asserts[k]).join(" | ")}`).join(" · ") : null; },
   "case-role-on-this-endpoint": () => (L.tests.roles ? Object.keys(L.tests.roles).map((k) => `${L.tests.roles[k]} ${k}`).join(" · ") : null),
-  "how-common-this-piece-is": () => Object.keys(L.feedwide.deps).slice(0, 3).map((d) => `${d} on ${L.feedwide.deps[d]} of ${L.feedwide.endpoints}`).join(" · "),
-  "where-this-endpoint-sits-in-the-app": () => null,
+  "how-common-this-piece-is": () => { const P = L.feedwide.pieces; if (!P) return Object.keys(L.feedwide.deps).slice(0, 3).map((d) => `${d} on ${L.feedwide.deps[d]} of ${L.feedwide.endpoints}`).join(" · ");
+    const r = P.rows.find((x) => x.key === "repeat:key") || P.rows[0], n = P.rows[P.rows.length - 1];
+    return `${r.words} · ${r.n} of ${r.of} here (${r.word})` + r.elsewhere.filter((e) => e.state === "present").map((e) => ` · ${e.n} of ${e.of} in ${e.app}`).join("") + ` · ${n.words} · ${n.n} of ${n.of} (${n.word})`; },
+  "where-this-endpoint-sits-in-the-app": () => { const R = L.context.risk, Q = L.feedwide.proof; if (!R || !R.rank) return null;
+    return `${R.rank} of ${R.of} by functions behind · the middle endpoint has ${R.behind_median} · the biggest ${R.behind_max}` + (Q ? ` · a test names ${Q.tested} of its ${Q.produced} endings, place ${Q.rank}${Q.rank_to > Q.rank ? "–" + Q.rank_to : ""} of ${Q.of}` : ""); },
   "why-this-slot-is-empty": () => `readings that ran here: ${f.source.arms_on.join(", ")}`,
   "expected-slots-at-this-stage": () => {               /* the norms are authored in the lab's panels file; read the registry, never retype a line */
     const src = fs.readFileSync(path.join(HERE, "../workflow-panel/_lab-ep-panels.js"), "utf8"), a = src.indexOf("var STAGE_EXPECT = window.STAGE_EXPECT = "), b = src.indexOf("} };", a);
@@ -137,7 +140,7 @@ const EX = {
     const allF = f.findings.concat(Object.values(f.arm_findings).flat());
     return `${plural(allF.length, "finding")} · ` + allF.map((x) => (FIND[x.id] || rawF)(x)).join(" · "); },
 };
-const LANDS = { "in-flight-values": 11, "field-rules-of-the-request-body": 8, "where-this-endpoint-sits-in-the-app": 7, "what-the-screen-does-on-this-ending": 10 };
+const LANDS = { "in-flight-values": 11, "field-rules-of-the-request-body": 8, "what-the-screen-does-on-this-ending": 10 };
 const NONE = Object.assign(Object.fromEntries(Object.entries(LANDS).map(([k, n]) => [k, `nothing to quote yet · piece ${n} of the work brings it`])), { "little-helpers-with-a-type": "none to show · helper functions carry no type in the feed yet", "events-published": "none on this endpoint", "tasks-dispatched": "none on this endpoint", "outside-services-called": "none drawn on this endpoint" });
 for (const r of rows) {
   if (!(r.id in EX)) die("no example rule for row: " + r.id);

@@ -28,6 +28,8 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+from _ep_pieces import common_block, proof_rank  # noqa: E402  (leftovers piece 7 — the shared piece tally)
 REPO = HERE.parents[2]
 EX = REPO / "templates" / "center" / "shell" / "example" / "codebase-graph-station"
 OUT = HERE / "_lab-ep.js"
@@ -666,7 +668,12 @@ def main() -> int:
                 "behind_max": max((n.get("behind") or {}).get("fns") or 0 for _, n in nodes.values() if n["kind"] == "endpoint"),
                 "tables_touched_max": max(len((n.get("access") or {}).get("ops") or []) for _, n in nodes.values() if n["kind"] == "endpoint"),
                 "cases_max": max(len((n.get("det") or {}).get("cases") or []) for _, n in nodes.values() if n["kind"] == "endpoint"),
-                "commits_on_feed": len(commits), "entity_counts": ent_stats.get("counts")}
+                "commits_on_feed": len(commits), "entity_counts": ent_stats.get("counts"),
+                "async": {"n": sum(1 for _, n in nodes.values() if n["kind"] == "endpoint" and ((n.get("det") or {}).get("sig") or {}).get("async")), "of": n_endpoints,
+                          "here": bool((det.get("sig") or {}).get("async"))},
+                "screens": {"fetched_by": len(fetch_pieces), "with_none": n_endpoints - len({e.get("to") for e in c4.get("cross_edges", []) if e.get("kind") == "bridge"}), "of": n_endpoints,
+                            "unmatched": (c4.get("stats", {}).get("web") or {}).get("unmatched"), "dynamic": (c4.get("stats", {}).get("web") or {}).get("dynamic"),
+                            "floor": "a floor: a fetch that names no endpoint, or builds its path at run time, is drawn to none"}}
 
     # ── FIELD CONTEXT: what a value MEANS is often "compared to the other 80 doors", so the feed-wide
     #    shape of each field is generated beside it. The bar's hover cards read these (2026-09-11).
@@ -809,7 +816,14 @@ def main() -> int:
                     _s = ((_fj.get("settings") or {}).get("setting:" + _k) or {}).get("tests") or {}
                     _st.append({"setting": _k, "default_runs": _s.get("default_runs"), "values": _s.get("values") or [], "sets": _s.get("sets") or []})
                 forms_block["settings_tests"] = _st
-                inside_the_calls(_fj, ID, forms_block, functions, security, gsig, n_endpoints, insight_rec, insight_state)
+                inside_the_calls(_fj, ID, forms_block, functions, security, gsig, len(_fj.get("endpoints") or {}), insight_rec, insight_state)
+                # leftovers piece 7 — how common each piece is: this app's tally, the committed cross-app digest, and this endpoint's place in the proof
+                _dg = HERE / "pieces-digest.json"
+                _digest = json.loads(_dg.read_text(encoding="utf-8")) if _dg.is_file() else None
+                _app = next((a for a, v in ((_digest or {}).get("apps") or {}).items() if v.get("head") == _fj.get("head")), None)
+                feedwide["pieces"] = dict(common_block(_fj, ID, _digest, _app), app=_app)
+                feedwide["proof"] = proof_rank(_fj.get("endpoints") or {}, ID)
+                feedwide["forms_endpoints"] = len(_fj.get("endpoints") or {})
                 _mw = _fj.get("middleware") or {}
                 for _m in security["asgi"]:
                     _o = (_mw.get(_m.get("id")) or {}).get("order") or {}

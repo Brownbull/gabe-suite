@@ -481,13 +481,20 @@
         return w.children.length ? w : null; } },
     { key: "above", word: "up", note: "the ladder out — cluster · entity · everything, as three icons. It carries the entity and the cluster (their own chips are off by default) and will TRANSPORT to that level in the graph.",
       build: function(){ var w = el("span", { class: "hgrp habove" });
+        function ordinalOf(n){ var s = ["th", "st", "nd", "rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+        function placeRows(){ var R = (F.context || {}).risk || {}, FW = F.feedwide || {}, Q = FW.proof, A = FW.async, out = [];
+          if (R.rank) out.push(["its place", ordinalOf(R.rank) + " of " + R.of + " by functions behind · the middle endpoint has " + R.behind_median + " · the biggest " + R.behind_max + " (" + R.behind_max_of + ")"]);
+          if (Q) out.push(["its proof", "a test names " + Q.tested + " of its " + Q.produced + " endings · " + (Q.rank_to > Q.rank ? ordinalOf(Q.rank) + " to " + ordinalOf(Q.rank_to) : ordinalOf(Q.rank)) + " of " + Q.of + " · " + Q.none + " endpoints name none"]);
+          if (A) out.push(["async", A.n + " of " + A.of + " endpoints are — " + (A.n / A.of >= 0.9 ? "the mark separates nothing in this app" : "a real difference in this app")]);
+          return out; }
         I.above.forEach(function(a){ var isEnt = a.kind === "entity";
           w.append(chip({ key: "above", icon: a.kind === "cluster" ? "layers" : a.kind === "entity" ? "entity" : "globe", col: isEnt ? ec : null,
             cls: "upchip", label: a.kind, value: HEADCFG.mode === "label" ? (a.kind === "everything" ? "everything" : a.label) : null,
             card: hcard({ title: a.kind === "everything" ? "everything" : a.label, value: "one level up",
               icon: a.kind === "cluster" ? "layers" : isEnt ? "entity" : "globe", color: isEnt ? ec : null,
               rows: [["from", "this door"], ["to", a.kind === "everything" ? "the whole universe" : a.label],
-                     ["carries", a.kind === "cluster" ? "the cluster, which has no chip of its own" : isEnt ? "the entity, in its own colour" : "every entity at once"]],
+                     ["carries", a.kind === "cluster" ? "the cluster, which has no chip of its own" : isEnt ? "the entity, in its own colour" : "every entity at once"]]
+                .concat(a.kind === "everything" ? placeRows() : []),
               plainKey: "above" }) })); });
         return w; } }   /* no trailing arrow: the three icons ARE the ladder (operator 2026-09-11) */
   ];

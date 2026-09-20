@@ -398,6 +398,10 @@
      the workflow step before → the route → the screen → the hook that fetches → THE DOOR →
      what the response feeds. Plus usage and the door's place.
      ══════════════════════════════════════════════════════════════════════════════════════ */
+  /* leftovers piece 7 — who fetches it, against the app: the count, how many endpoints no screen fetches, and the floor under both */
+  function screenRows(F){ var W = (F.feedwide || {}).screens; if (!W) return [];
+    return [["fetched by", W.fetched_by + " hook" + (W.fetched_by === 1 ? "" : "s") + " · " + W.with_none + " of " + W.of + " endpoints have none"],
+            ["a floor", ((W.unmatched || []).length) + " fetches matched no endpoint · " + (W.dynamic == null ? "?" : W.dynamic) + " build their path at run time"]]; }
   function renderWidening(box, F, S){
     var W = F.widening, I = F.identity, KC = S.KINDCOL;
     var reach = W.fetched_by.length + W.chain.reduce(function(s, l){ return s + l.length; }, 0);
@@ -412,7 +416,7 @@
         rows: [["usage", (I.usage || {}).api + " api · " + (I.usage || {}).internal + " internal caller(s)"], ["fan-in", I.fanin + " (graph in-degree)"], ["entity", I.entity], ["layer", I.layer]] }) });
     W.fetched_by.forEach(function(p){ rungs.push({ kind: p.kind, name: p.name, sub: (p.hrole || p.kind) + (p.cache ? " · client-cached" : ""), col: S.KINDCOL.hook || "#10b981",
       card: card({ title: p.name, icon: "hook", color: S.KINDCOL.hook, sub: "the hook that fetches this door · home " + p.home,
-        rows: [["role", p.hrole || "—"], ["cache", p.cache ? "yes — a server-cache sink (M, waiting)" : "no"], ["hops to a write", p.fed2w != null ? String(p.fed2w) : "—"], ["file", String(p.id || "").replace(/^fe:/, "")]],
+        rows: [["role", p.hrole || "—"], ["cache", p.cache ? "yes — a server-cache sink (M, waiting)" : "no"], ["hops to a write", p.fed2w != null ? String(p.fed2w) : "—"], ["file", String(p.id || "").replace(/^fe:/, "")]].concat(screenRows(F)),
         body: "the web→API bridge matched its fetch to this endpoint by method + path.", station: p.id }) }); });
     W.chain.forEach(function(level){ level.forEach(function(p){ rungs.push({ kind: p.kind, name: p.name, sub: p.rel + " → " + p.to + (p.feClass ? " · " + p.feClass : ""), col: KC[p.kind] || KC.component || "#2f7de1",
       card: card({ title: p.name, icon: p.kind === "route" ? "nav" : "web", color: KC[p.kind] || KC.component, sub: p.kind + " · home " + p.home,
@@ -515,7 +519,8 @@
       bind(t, card({ title: g.name, icon: isGate ? "key" : "link", color: isGate ? S.OPC.gate : null, sub: g.via + (isGate ? " · a GATE" : " · a dependency"),
         rows: [["runs", "before the handler body"], ["feed-wide", g.feedwide + " of " + FW.endpoints + " endpoints use it (" + pct + "%)"],
                g.fn_rec ? ["function", g.fn_rec.name + " · " + (g.fn_rec.role || "—") + (g.fn_rec.lines ? " · " + g.fn_rec.lines + " lines" : "")] : null,
-               ["decides", isGate ? "yes — it can refuse the request" : "no — it supplies a resource"]].concat(resolvedRows(g.resolved)),
+               ["decides", isGate ? "yes — it can refuse the request" : "no — it supplies a resource"]].concat(resolvedRows(g.resolved))
+                 .concat(isGate ? (((F.forms || {}).auth || {}).schemes || []).reduce(function(a, sc){ return a.concat(commonRows(F, "auth:scheme:" + sc.scheme)); }, []) : []),
         body: isGate ? "the turnstile: an unauthenticated request stops here." : "a resource dependency — a session, settings. It cannot refuse." }));
       grow.append(t); });
     gates.append(grow); body.append(gates);
@@ -537,7 +542,7 @@
     var idRow = E("div", { class: "sfact" + (SEC.idempotent ? "" : " hollow") }, ico("target", 13, SEC.idempotent ? S.OPC.gate : "var(--muted)"), E("b", null, "idempotency"),
       E("span", { class: "sv" }, SEC.idempotent ? "guarded — writes " + SEC.idempotency_table + " (3 unique constraints)" : "none — a retry runs the work again"));
     bind(idRow, card({ title: "idempotency", icon: "target", sub: SEC.idempotent ? "the door claims a key before it works" : "unguarded",
-      rows: [["table", SEC.idempotency_table || "—"], ["M — waiting", "a repeat request waits on the claim rather than doing the work twice"]],
+      rows: [["table", SEC.idempotency_table || "—"], ["M — waiting", "a repeat request waits on the claim rather than doing the work twice"]].concat(commonRows(F, "repeat:key")),
       body: "the walk shows it: <code>claim</code> and <code>complete</code> both commit against this table." }));
     facts.append(idRow);
     var cRow = E("div", { class: "sfact" + (SEC.commits ? "" : " hollow") }, ico("key", 13, SEC.commits ? S.OPC.write : "var(--muted)"), E("b", null, "DB commit"),
@@ -2804,6 +2809,21 @@
   /* ── PROOF YOU CAN OPEN (leftovers piece 5): why a test came to this endpoint, and what it really asked for ── */
   var ROLEWORD = { act: "tests this endpoint", arranged: "calls it to set something else up", "service-raises": "proves an ending from the service side, without calling the endpoint",
                    "helper-arranged": "reaches it only through a shared helper", "named-only": "listed by the map, makes no call here" };
+  /* leftovers piece 7 — how common a piece is: its count in this app and in the other apps read, as two card rows */
+  function commonPiece(F, key){ var P = (F.feedwide || {}).pieces; if (!P) return null; return (P.rows || []).filter(function(r){ return r.key === key; })[0] || null; }
+  function commonRows(F, key){ var r = commonPiece(F, key); if (!r) return [];
+    var out = [["in this app", r.words + " — " + r.n + " of " + r.of + " endpoints · " + r.word]];
+    var el = (r.elsewhere || []).slice().sort(function(a, b){ return (a.state === "present" ? 0 : 1) - (b.state === "present" ? 0 : 1); });   /* the apps that were read first, the one that could not be last */
+    var ew = el.map(function(e){ return e.app + " " + (e.state === "present" ? e.n + " of " + e.of : "not measured"); });
+    if (ew.length) out.push(["in the other apps", ew.join(" · ")]);
+    return out; }
+  function rateRows(F){ var P = (F.feedwide || {}).pieces; if (!P) return []; var mine = (P.rows || []).filter(function(r){ return r.family === "rate"; })[0]; if (!mine) return [];
+    return [["rate tier", mine.words + " · " + mine.n + " of " + mine.of + " endpoints"],
+            ["the other tiers", (P.rate_tiers || []).filter(function(t){ return "rate:" + t.tier !== mine.key; }).map(function(t){ return t.n + (t.tier === "none" ? " with no limit read" : " on " + t.tier.replace(/\+/g, " and ")); }).join(" · ") || "—"]]; }
+  function ordinalSpan(a, b){ return a === b ? ordinal(a) : ordinal(a) + " to " + ordinal(b); }
+  function proofRows(F){ var Q = (F.feedwide || {}).proof; if (!Q) return [];
+    return [["a test names", Q.tested + " of its " + Q.produced + " endings · " + ordinalSpan(Q.rank, Q.rank_to) + " of " + Q.of + (Q.ties > 1 ? " — " + Q.ties + " endpoints tie" : "")],
+            ["in this app", Q.app.tested + " of " + Q.app.produced + " endings · " + Q.none + " endpoints name none · the middle endpoint names " + Q.median_tested]]; }
   /* leftovers piece 6 — inside the calls: the feed's function rows this endpoint reaches, joined to a chain row by `file::fn` */
   function insideAll(F){ var I = (FRM(F) || {}).inside; return I && I.state === "present" ? I : null; }
   function insideCall(F, fn){ var I = insideAll(F); return I ? ((I.calls || {})[fn] || null) : null; }
@@ -2921,7 +2941,7 @@
       cap: function(){ return testN + " cases prove " + (ex ? ex.status : "the exits"); }, act: go("tests", null) });
     L.push({ cmd: "untested", ico: "swords", verb: "Untested exits", state: slotState(F, untested.length, "tests"), arm: "tests", badge: untested.length, col: (S.BADGE_COL.role || {}).accessor,
       card: function(){ return cmdc({ title: "untested exits", value: untested.length + " of " + exits.length, icon: "swords", color: (S.BADGE_COL.role || {}).accessor,
-        rows: untested.map(function(e){ return [String(e.status), e.phase + (e.via ? " · " + e.via : "")]; }),
+        rows: untested.map(function(e){ return [String(e.status), e.phase + (e.via ? " · " + e.via : "")]; }).concat(proofRows(F)),
         plain: "endings no case has ever asserted — nothing proves the client sees what the door sends" }); },
       cap: function(){ return untested.length + " exits no case asserts"; }, act: go("tests", null) });
     L.push({ cmd: "handler", ico: "file", verb: "Open the handler", state: "lit",
@@ -3374,7 +3394,9 @@
         rows: [["step", String(c.i)], ["stage", c.phase || "—"], ["at", c.at || "—"], c.hit != null ? ["fired", c.hit ? "yes — this is the one that ended it" : "no — the request passed it"] : null,
                (c.cond || c.pred) ? ["condition", String(c.cond || c.pred).slice(0, 160)] : null, c.fn ? ["function", String(c.fn)] : null,
                ins && ins.opens.length ? ["inside", insideCount(ins.n) + " over " + nWord(ins.opens.length, "function")] : null,
-               ins ? ["the map read", insightWords(ins.insight)] : null],
+               ins ? ["the map read", insightWords(ins.insight)] : null]
+          .concat(c.kind === "switch" ? commonRows(F, "switch:" + (c.switch_kind || c.label)) : c.kind === "catch" ? commonRows(F, "catch:" + c.catch_kind)
+            : (c.kind === "gate" && c.status === 429) ? rateRows(F) : (c.kind === "gate" || c.kind === "exit") && c.status != null ? commonRows(F, "status:" + c.status) : []),
         plain: c.kind === "gate" ? "a check that can end the request right here" : c.kind === "switch" ? "a setting or a binding that changes what happens next"
           : c.kind === "branch" ? "a fork in the handler — this path took one arm" : c.kind === "catch" ? "where the raise was caught and turned into an answer"
           : c.kind === "exit" ? "the ending itself" : "one step the request runs through" }); });
@@ -3405,7 +3427,7 @@
       var sw = E("div", { class: "ptsw" });
       p.switches.forEach(function(s){ var c = E("span", { class: "ptswc" }, esc(s.kind + " · " + (s.via || s.port || s.fn || "—")));
         bind(c, function(){ return cmdc({ title: s.kind + " switch", value: s.via || s.port || "—", icon: "layers",
-          rows: [["scope", s.scope || "—"], ["expr", s.expr || "—"], ["settings", Object.keys(s.settings || {}).join(" · ") || "—"]],
+          rows: [["scope", s.scope || "—"], ["expr", s.expr || "—"], ["settings", Object.keys(s.settings || {}).join(" · ") || "—"]].concat(commonRows(F, "switch:" + s.kind)),
           plain: "something outside the code decides which way this goes" }); });
         sw.append(c); });
       b.append(sw); }
@@ -3415,7 +3437,8 @@
     var r = e.response || {}, b = E("div", { class: "ptbody ptrec" });
     b.insertAdjacentHTML("beforeend", '<div class="ptttl">' + ico((CMDKIND[e.kind] || {}).ico || "info", 15, kindCol(e.kind, S)) + "<b>" + esc(String(e.status) + (e.detail ? " " + e.detail : "")) + "</b></div>");
     b.insertAdjacentHTML("beforeend", ptRow("stage", e.phase) + ptRow("row", e.row) + ptRow("code", e.code || "—") + ptRow("via", e.via || "—")
-      + ptRow("pred", e.pred || "—") + ptRow("form", (e.form || "—") + " · " + e.state) + ptRow("at", e.at || "—"));
+      + ptRow("pred", e.pred || "—") + ptRow("form", (e.form || "—") + " · " + e.state) + ptRow("at", e.at || "—")
+      + (e.status === 429 ? rateRows(F) : commonRows(F, "status:" + e.status)).map(function(r){ return ptRow(r[0], r[1]); }).join(""));
     b.insertAdjacentHTML("beforeend", ptSec("response"));
     b.insertAdjacentHTML("beforeend", ptRow("media", r.media || "—") + ptRow("model", r.model || "—")
       + ptRow("body", r.body ? Object.keys(r.body).join(" · ") : "—") + ptRow("fields", (r.fields || []).join(" · ") || "—")

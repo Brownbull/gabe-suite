@@ -25589,7 +25589,7 @@ window.LABEP = {
       }
      ],
      "applies_to": 78,
-     "endpoints": 81,
+     "endpoints": 80,
      "in_the_map_list": true,
      "present": true
     }
@@ -25618,7 +25618,7 @@ window.LABEP = {
      "runs_after_the_handler": true,
      "effects": [],
      "applies_to": 79,
-     "endpoints": 81,
+     "endpoints": 80,
      "in_the_map_list": true,
      "present": true
     }
@@ -25646,7 +25646,7 @@ window.LABEP = {
      "runs_after_the_handler": false,
      "effects": [],
      "applies_to": 12,
-     "endpoints": 81,
+     "endpoints": 80,
      "in_the_map_list": true,
      "present": true
     }
@@ -25703,7 +25703,7 @@ window.LABEP = {
       }
      ],
      "applies_to": 78,
-     "endpoints": 81,
+     "endpoints": 80,
      "in_the_map_list": true,
      "present": true
     }
@@ -25834,7 +25834,7 @@ window.LABEP = {
      "runs_after_the_handler": false,
      "effects": [],
      "applies_to": 78,
-     "endpoints": 81,
+     "endpoints": 80,
      "in_the_map_list": false,
      "present": true
     },
@@ -25856,7 +25856,7 @@ window.LABEP = {
      "runs_after_the_handler": true,
      "effects": [],
      "applies_to": 79,
-     "endpoints": 81,
+     "endpoints": 80,
      "in_the_map_list": true,
      "present": true
     },
@@ -25877,7 +25877,7 @@ window.LABEP = {
      "runs_after_the_handler": false,
      "effects": [],
      "applies_to": 79,
-     "endpoints": 81,
+     "endpoints": 80,
      "in_the_map_list": false,
      "present": true
     },
@@ -25924,7 +25924,7 @@ window.LABEP = {
       }
      ],
      "applies_to": 78,
-     "endpoints": 81,
+     "endpoints": 80,
      "in_the_map_list": true,
      "present": true
     },
@@ -25945,7 +25945,7 @@ window.LABEP = {
      "runs_after_the_handler": false,
      "effects": [],
      "applies_to": 12,
-     "endpoints": 81,
+     "endpoints": 80,
      "in_the_map_list": true,
      "present": true
     }
@@ -25987,7 +25987,749 @@ window.LABEP = {
    "lines": 4665,
    "models": 6,
    "schemas": 6
-  }
+  },
+  "async": {
+   "n": 80,
+   "of": 81,
+   "here": true
+  },
+  "screens": {
+   "fetched_by": 1,
+   "with_none": 28,
+   "of": 81,
+   "unmatched": [
+    {
+     "from": "web:apps/web/src/features/cooking/useRecipeFilterModes",
+     "m": "DELETE",
+     "p": "${ENDPOINT}/${id}"
+    },
+    {
+     "from": "web:apps/web/src/features/cooking/useRecipeFilterModes",
+     "m": "PUT",
+     "p": "${ENDPOINT}/${id}"
+    }
+   ],
+   "dynamic": 5,
+   "floor": "a floor: a fetch that names no endpoint, or builds its path at run time, is drawn to none"
+  },
+  "pieces": {
+   "of": 80,
+   "rows": [
+    {
+     "family": "repeat",
+     "key": "repeat:idiom:begin_nested",
+     "words": "claims its key with begin_nested",
+     "n": 4,
+     "of": 80,
+     "share": 5,
+     "word": "rare",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 0,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 0,
+       "of": 499,
+       "why": null
+      }
+     ]
+    },
+    {
+     "family": "catch",
+     "key": "catch:pass-through",
+     "words": "lets a failure pass through a catch",
+     "n": 6,
+     "of": 80,
+     "share": 8,
+     "word": "rare",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 6,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 33,
+       "of": 499,
+       "why": null
+      }
+     ]
+    },
+    {
+     "family": "repeat",
+     "key": "repeat:key",
+     "words": "reads a repeat key",
+     "n": 6,
+     "of": 80,
+     "share": 8,
+     "word": "rare",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 0,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 0,
+       "of": 499,
+       "why": null
+      }
+     ]
+    },
+    {
+     "family": "switch",
+     "key": "switch:value",
+     "words": "picks a value from a setting",
+     "n": 11,
+     "of": 80,
+     "share": 14,
+     "word": "common",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 0,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 0,
+       "of": 499,
+       "why": null
+      }
+     ]
+    },
+    {
+     "family": "rate",
+     "key": "rate:_global+_sensitive",
+     "words": "limited by _global and _sensitive",
+     "n": 23,
+     "of": 80,
+     "share": 29,
+     "word": "common",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 0,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 0,
+       "of": 499,
+       "why": null
+      }
+     ]
+    },
+    {
+     "family": "method",
+     "key": "method:POST",
+     "words": "a POST",
+     "n": 29,
+     "of": 80,
+     "share": 36,
+     "word": "common",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 16,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 152,
+       "of": 499,
+       "why": null
+      }
+     ]
+    },
+    {
+     "family": "body",
+     "key": "body:reads",
+     "words": "reads a request body",
+     "n": 35,
+     "of": 80,
+     "share": 44,
+     "word": "common",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 18,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 194,
+       "of": 499,
+       "why": null
+      }
+     ]
+    },
+    {
+     "family": "status",
+     "key": "status:400",
+     "words": "can answer 400",
+     "n": 52,
+     "of": 80,
+     "share": 65,
+     "word": "common",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 18,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 449,
+       "of": 499,
+       "why": null
+      }
+     ]
+    },
+    {
+     "family": "status",
+     "key": "status:409",
+     "words": "can answer 409",
+     "n": 53,
+     "of": 80,
+     "share": 66,
+     "word": "common",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 16,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 4,
+       "of": 499,
+       "why": null
+      }
+     ]
+    },
+    {
+     "family": "status",
+     "key": "status:422",
+     "words": "can answer 422",
+     "n": 57,
+     "of": 80,
+     "share": 71,
+     "word": "common",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 45,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 489,
+       "of": 499,
+       "why": null
+      }
+     ]
+    },
+    {
+     "family": "status",
+     "key": "status:200",
+     "words": "can answer 200",
+     "n": 59,
+     "of": 80,
+     "share": 74,
+     "word": "common",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 32,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 485,
+       "of": 499,
+       "why": null
+      }
+     ]
+    },
+    {
+     "family": "auth",
+     "key": "auth:scheme:HTTPBearer",
+     "words": "asks for a HTTPBearer login",
+     "n": 78,
+     "of": 80,
+     "share": 98,
+     "word": "the norm",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 0,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 0,
+       "of": 499,
+       "why": null
+      }
+     ]
+    },
+    {
+     "family": "auth",
+     "key": "auth:provisions",
+     "words": "its login check can create a row",
+     "n": 79,
+     "of": 80,
+     "share": 99,
+     "word": "the norm",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 47,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 0,
+       "of": 499,
+       "why": null
+      }
+     ]
+    },
+    {
+     "family": "catch",
+     "key": "catch:translate",
+     "words": "turns a failure into its own answer",
+     "n": 79,
+     "of": 80,
+     "share": 99,
+     "word": "the norm",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 47,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 80,
+       "of": 499,
+       "why": null
+      }
+     ]
+    },
+    {
+     "family": "status",
+     "key": "status:401",
+     "words": "can answer 401",
+     "n": 79,
+     "of": 80,
+     "share": 99,
+     "word": "the norm",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 49,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 13,
+       "of": 499,
+       "why": null
+      }
+     ]
+    },
+    {
+     "family": "switch",
+     "key": "switch:binding",
+     "words": "picks an implementation by a binding",
+     "n": 79,
+     "of": 80,
+     "share": 99,
+     "word": "the norm",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 0,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 9,
+       "of": 499,
+       "why": null
+      }
+     ]
+    },
+    {
+     "family": "switch",
+     "key": "switch:flag",
+     "words": "a setting turns a check on or off",
+     "n": 79,
+     "of": 80,
+     "share": 99,
+     "word": "the norm",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 1,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 0,
+       "of": 499,
+       "why": null
+      }
+     ]
+    },
+    {
+     "family": "media",
+     "key": "media:application/json",
+     "words": "answers as application/json",
+     "n": 80,
+     "of": 80,
+     "share": 100,
+     "word": "the norm",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 49,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 493,
+       "of": 499,
+       "why": null
+      }
+     ]
+    },
+    {
+     "family": "media",
+     "key": "media:text/plain",
+     "words": "answers as text/plain",
+     "n": 80,
+     "of": 80,
+     "share": 100,
+     "word": "the norm",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 49,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 497,
+       "of": 499,
+       "why": null
+      }
+     ]
+    },
+    {
+     "family": "status",
+     "key": "status:429",
+     "words": "can answer 429",
+     "n": 80,
+     "of": 80,
+     "share": 100,
+     "word": "the norm",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 16,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 2,
+       "of": 499,
+       "why": null
+      }
+     ]
+    },
+    {
+     "family": "status",
+     "key": "status:500",
+     "words": "can answer 500",
+     "n": 80,
+     "of": 80,
+     "share": 100,
+     "word": "the norm",
+     "elsewhere": [
+      {
+       "app": "gastify",
+       "state": "present",
+       "n": 49,
+       "of": 49,
+       "why": null
+      },
+      {
+       "app": "keypro",
+       "state": "absent",
+       "n": null,
+       "of": null,
+       "why": "no FastAPI endpoints in the archmap"
+      },
+      {
+       "app": "tier3",
+       "state": "present",
+       "n": 497,
+       "of": 499,
+       "why": null
+      }
+     ]
+    }
+   ],
+   "missing_norms": [],
+   "rate_tiers": [
+    {
+     "tier": "_global",
+     "n": 56
+    },
+    {
+     "tier": "_global+_sensitive",
+     "n": 23
+    },
+    {
+     "tier": "none",
+     "n": 1
+    }
+   ],
+   "by_word": {
+    "only here": 0,
+    "rare": 3,
+    "common": 8,
+    "the norm": 10
+   },
+   "digest": "present",
+   "rule": "the norm = at least 9 endpoints in 10 carry it · rare = at most 1 in 10 · only here = this endpoint alone · common = everything between; a count, never a grade",
+   "app": "gustify"
+  },
+  "proof": {
+   "tested": 4,
+   "produced": 9,
+   "rank": 3,
+   "rank_to": 6,
+   "ties": 4,
+   "of": 80,
+   "median_tested": 1,
+   "most_tested": 19,
+   "none": 28,
+   "app": {
+    "tested": 122,
+    "produced": 577
+   },
+   "rule": "ranked by how many of its produced endings a test names; endpoints that tie share the places from `rank` to `rank_to`"
+  },
+  "forms_endpoints": 80
  },
  "context": {
   "status": {
