@@ -83,8 +83,13 @@ def forms_slice(fj: dict, ID: str, ep: dict) -> dict:
 
     def case_rec(t):
         c = test_cases.get(t.get("case")) or {}
+        # leftovers piece 5 — proof you can open: the call this join rests on (matched by line), what it asserted and what it sent
+        calls = [k for k in (c.get("calls") or []) if k.get("endpoint") == ID]
+        call = next((k for k in calls if k.get("line") == t.get("line")), None)
         return {"case": t.get("case"), "conf": t.get("conf"), "line": t.get("line"),
-                "name": c.get("name"), "file": c.get("file"), "state": c.get("state"), "corpus": c.get("corpus")}
+                "name": c.get("name"), "file": c.get("file"), "state": c.get("state"), "corpus": c.get("corpus"),
+                "role": (call or {}).get("role") or ("service-raises" if "raise" in str(t.get("conf") or "") else None),
+                "asserts": (call or {}).get("asserts"), "sends": (call or {}).get("sends")}
 
     def exit_rec(ref):
         r = rows.get(ref)
@@ -576,6 +581,51 @@ def main() -> int:
                     _rc[_who][_st] = _rc[_who].get(_st, 0) + 1
                 forms_block["counts"]["races"] = _rc
                 forms_block["counts"]["tables_found"] = found_counts
+                # leftovers piece 5 — ONE test roster for this endpoint, each case stamped with WHY it came here
+                _tc = _fj.get("test_cases") or {}
+                _ORDER = ["act", "arranged", "helper-arranged"]
+                _role, _calls = {}, collections.defaultdict(list)
+                for _cid, _c in _tc.items():
+                    for _k in _c.get("calls") or []:
+                        if _k.get("endpoint") != ID:
+                            continue
+                        _r = "act" if _k.get("role") == "act" else ("helper-arranged" if _k.get("helper") else "arranged")
+                        _calls[_cid].append(_k)
+                        if _cid not in _role or _ORDER.index(_r) < _ORDER.index(_role[_cid]):
+                            _role[_cid] = _r
+                _proves = collections.defaultdict(list)
+                for _x in forms_block.get("exits") or []:
+                    for _j in _x.get("tests") or []:
+                        _proves[_j["case"]].append({"exit": _x["id"], "status": _x.get("status"), "conf": _j.get("conf")})
+                _named = {c["cid"] for c in cases}
+                _ids = [c["cid"] for c in cases] + sorted(k for k in _proves if k not in _named)
+                _roster = []
+                for _cid in _ids:
+                    _c = _tc.get(_cid) or {}
+                    _r = _role.get(_cid) or ("service-raises" if any("raise" in str(p.get("conf") or "") for p in _proves.get(_cid, [])) else "named-only")
+                    _as = collections.OrderedDict()
+                    for _k in _calls.get(_cid, []):
+                        if _k.get("role") == "act":
+                            for _ak, _av in (_k.get("asserts") or {}).items():
+                                _as.setdefault(_ak, [])
+                                _as[_ak] += [v for v in (_av if isinstance(_av, list) else [_av]) if v not in _as[_ak]]
+                    _roster.append({"cid": _cid, "name": _c.get("name"), "file": _c.get("file"), "line": _c.get("line"), "state": _c.get("state"), "corpus": _c.get("corpus"),
+                                    "role": _r, "calls_here": len(_calls.get(_cid, [])), "asserts": dict(_as) or None, "proves": _proves.get(_cid) or [],
+                                    "in_map_list": _cid in _named})
+                tests["roster"] = _roster
+                tests["roles"] = dict(collections.Counter(r["role"] for r in _roster)) | {"helper-arranged": sum(1 for v in _role.values() if v == "helper-arranged")}
+                tests["roles_note"] = "act = the test calls this endpoint to test it · arranged = it calls it to set something else up · service-raises = it proves an ending from the service side, without calling the endpoint · helper-arranged = it reaches it only through a shared helper (counted, never listed)"
+                # the values tests give the settings this endpoint's switches read — 'exercised somewhere', never 'this arm proven here'
+                _keys = []
+                for _w in forms_block.get("switches") or []:
+                    _keys += list((_w.get("settings") or [])) if not isinstance(_w.get("settings"), dict) else list(_w["settings"].keys())
+                    for _b in _w.get("branches") or []:      # a binding names its setting inside the condition that picks the implementation
+                        _keys += re.findall(r"settings\.(\w+)", str(_b.get("pred") or ""))
+                _st = []
+                for _k in dict.fromkeys(_keys):
+                    _s = ((_fj.get("settings") or {}).get("setting:" + _k) or {}).get("tests") or {}
+                    _st.append({"setting": _k, "default_runs": _s.get("default_runs"), "values": _s.get("values") or [], "sets": _s.get("sets") or []})
+                forms_block["settings_tests"] = _st
                 _mw = _fj.get("middleware") or {}
                 for _m in security["asgi"]:
                     _o = (_mw.get(_m.get("id")) or {}).get("order") or {}

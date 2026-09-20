@@ -6267,7 +6267,17 @@ window.LABEP = {
        "name": "test_setup_complete_blank_name_422_C1051",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "status": [
+         422
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C1052",
@@ -6276,7 +6286,17 @@ window.LABEP = {
        "name": "test_setup_complete_too_many_allergens_422_C1052",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "status": [
+         422
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       }
      ],
      "response": {
@@ -7022,7 +7042,17 @@ window.LABEP = {
       "name": "test_setup_complete_blank_name_422_C1051",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "status": [
+        422
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1052",
@@ -7031,7 +7061,17 @@ window.LABEP = {
       "name": "test_setup_complete_too_many_allergens_422_C1052",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "status": [
+        422
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      }
     ],
     "partial": null,
@@ -7084,7 +7124,19 @@ window.LABEP = {
        "name": "test_setup_complete_missing_key_400_C1048",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "detail": [
+         "Idempotency-Key"
+        ],
+        "status": [
+         400
+        ]
+       },
+       "sends": [
+        "Authorization"
+       ]
       }
      ],
      "response": {
@@ -7479,7 +7531,19 @@ window.LABEP = {
       "name": "test_setup_complete_missing_key_400_C1048",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "detail": [
+        "Idempotency-Key"
+       ],
+       "status": [
+        400
+       ]
+      },
+      "sends": [
+       "Authorization"
+      ]
      }
     ],
     "partial": null,
@@ -7532,7 +7596,17 @@ window.LABEP = {
        "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "status": [
+         409
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C1061",
@@ -7541,7 +7615,10 @@ window.LABEP = {
        "name": "test_complete_setup_in_progress_raises_C1061",
        "file": "apps/api/tests/test_setup_service.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "service-raises",
+       "asserts": null,
+       "sends": null
       }
      ],
      "response": {
@@ -8196,7 +8273,17 @@ window.LABEP = {
       "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "status": [
+        409
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1061",
@@ -8205,7 +8292,10 @@ window.LABEP = {
       "name": "test_complete_setup_in_progress_raises_C1061",
       "file": "apps/api/tests/test_setup_service.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "service-raises",
+      "asserts": null,
+      "sends": null
      }
     ],
     "partial": null,
@@ -8258,7 +8348,20 @@ window.LABEP = {
        "name": "test_setup_complete_without_consent_409_C1055",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "detail": [
+         "consent"
+        ],
+        "status": [
+         409
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C1057",
@@ -8267,7 +8370,17 @@ window.LABEP = {
        "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "status": [
+         409
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C1065",
@@ -8276,7 +8389,10 @@ window.LABEP = {
        "name": "test_complete_setup_without_consent_raises_C1065",
        "file": "apps/api/tests/test_setup_service.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "service-raises",
+       "asserts": null,
+       "sends": null
       },
       {
        "case": "C1067",
@@ -8285,7 +8401,10 @@ window.LABEP = {
        "name": "test_complete_setup_stale_consent_version_raises_C1067",
        "file": "apps/api/tests/test_setup_service.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "service-raises",
+       "asserts": null,
+       "sends": null
       }
      ],
      "response": {
@@ -9098,7 +9217,20 @@ window.LABEP = {
       "name": "test_setup_complete_without_consent_409_C1055",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "detail": [
+        "consent"
+       ],
+       "status": [
+        409
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1057",
@@ -9107,7 +9239,17 @@ window.LABEP = {
       "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "status": [
+        409
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1065",
@@ -9116,7 +9258,10 @@ window.LABEP = {
       "name": "test_complete_setup_without_consent_raises_C1065",
       "file": "apps/api/tests/test_setup_service.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "service-raises",
+      "asserts": null,
+      "sends": null
      },
      {
       "case": "C1067",
@@ -9125,7 +9270,10 @@ window.LABEP = {
       "name": "test_complete_setup_stale_consent_version_raises_C1067",
       "file": "apps/api/tests/test_setup_service.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "service-raises",
+      "asserts": null,
+      "sends": null
      }
     ],
     "partial": null,
@@ -9178,7 +9326,26 @@ window.LABEP = {
        "name": "test_setup_complete_success_then_me_reads_back_C1049",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "body['setup_required'] is False",
+         "body['household']['name'] == 'Casa Ruta'",
+         "body['membership']['role'] == 'primary_cook'",
+         "body['preferences']['household_format']['default_servings'] == 2",
+         "body['subscription']['tier'] == 'free'",
+         "body['subscription']['credits_allowance'] == 0",
+         "body['subscription']['credits_remaining'] == 0"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C1050",
@@ -9187,7 +9354,20 @@ window.LABEP = {
        "name": "test_setup_complete_replay_identical_count_one_C1050",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "first.json()['household']['id'] == second.json()['household']['id']"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C1050",
@@ -9196,7 +9376,20 @@ window.LABEP = {
        "name": "test_setup_complete_replay_identical_count_one_C1050",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "first.json()['household']['id'] == second.json()['household']['id']"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C1056",
@@ -9205,7 +9398,20 @@ window.LABEP = {
        "name": "test_setup_complete_with_consent_200_C1056",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "resp.json()['setup_required'] is False"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C1057",
@@ -9214,7 +9420,20 @@ window.LABEP = {
        "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "r2.json()['setup_required'] is False"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C389",
@@ -9223,7 +9442,21 @@ window.LABEP = {
        "name": "test_setup_complete_with_exploration_creates_row_C389",
        "file": "apps/api/tests/test_exploration_preferences.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "body['preferences']['exploration']['explore_regions'] == [_REGION]",
+         "body['preferences']['exploration']['curiosity_techniques'] == [_TECHNIQUE]"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C390",
@@ -9232,7 +9465,17 @@ window.LABEP = {
        "name": "test_setup_complete_folds_in_path_a_plus_C390",
        "file": "apps/api/tests/test_exploration_preferences.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C391",
@@ -9241,7 +9484,21 @@ window.LABEP = {
        "name": "test_setup_complete_without_exploration_creates_empty_row_C391",
        "file": "apps/api/tests/test_exploration_preferences.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "body['preferences']['exploration']['explore_regions'] == []",
+         "body['preferences']['exploration']['curiosity_techniques'] == []"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C392",
@@ -9250,7 +9507,20 @@ window.LABEP = {
        "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
        "file": "apps/api/tests/test_exploration_preferences.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "first.json()['preferences']['exploration']['explore_regions'] == [_REGION]"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C392",
@@ -9259,7 +9529,20 @@ window.LABEP = {
        "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
        "file": "apps/api/tests/test_exploration_preferences.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "second.json()['preferences']['exploration']['explore_regions'] == [_REGION]"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       }
      ],
      "response": {
@@ -10111,7 +10394,26 @@ window.LABEP = {
       "name": "test_setup_complete_success_then_me_reads_back_C1049",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "body['setup_required'] is False",
+        "body['household']['name'] == 'Casa Ruta'",
+        "body['membership']['role'] == 'primary_cook'",
+        "body['preferences']['household_format']['default_servings'] == 2",
+        "body['subscription']['tier'] == 'free'",
+        "body['subscription']['credits_allowance'] == 0",
+        "body['subscription']['credits_remaining'] == 0"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1050",
@@ -10120,7 +10422,20 @@ window.LABEP = {
       "name": "test_setup_complete_replay_identical_count_one_C1050",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "first.json()['household']['id'] == second.json()['household']['id']"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1050",
@@ -10129,7 +10444,20 @@ window.LABEP = {
       "name": "test_setup_complete_replay_identical_count_one_C1050",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "first.json()['household']['id'] == second.json()['household']['id']"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1056",
@@ -10138,7 +10466,20 @@ window.LABEP = {
       "name": "test_setup_complete_with_consent_200_C1056",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "resp.json()['setup_required'] is False"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1057",
@@ -10147,7 +10488,20 @@ window.LABEP = {
       "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "r2.json()['setup_required'] is False"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C389",
@@ -10156,7 +10510,21 @@ window.LABEP = {
       "name": "test_setup_complete_with_exploration_creates_row_C389",
       "file": "apps/api/tests/test_exploration_preferences.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "body['preferences']['exploration']['explore_regions'] == [_REGION]",
+        "body['preferences']['exploration']['curiosity_techniques'] == [_TECHNIQUE]"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C390",
@@ -10165,7 +10533,17 @@ window.LABEP = {
       "name": "test_setup_complete_folds_in_path_a_plus_C390",
       "file": "apps/api/tests/test_exploration_preferences.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C391",
@@ -10174,7 +10552,21 @@ window.LABEP = {
       "name": "test_setup_complete_without_exploration_creates_empty_row_C391",
       "file": "apps/api/tests/test_exploration_preferences.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "body['preferences']['exploration']['explore_regions'] == []",
+        "body['preferences']['exploration']['curiosity_techniques'] == []"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C392",
@@ -10183,7 +10575,20 @@ window.LABEP = {
       "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
       "file": "apps/api/tests/test_exploration_preferences.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "first.json()['preferences']['exploration']['explore_regions'] == [_REGION]"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C392",
@@ -10192,7 +10597,20 @@ window.LABEP = {
       "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
       "file": "apps/api/tests/test_exploration_preferences.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "second.json()['preferences']['exploration']['explore_regions'] == [_REGION]"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      }
     ],
     "partial": null,
@@ -10245,7 +10663,26 @@ window.LABEP = {
        "name": "test_setup_complete_success_then_me_reads_back_C1049",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "body['setup_required'] is False",
+         "body['household']['name'] == 'Casa Ruta'",
+         "body['membership']['role'] == 'primary_cook'",
+         "body['preferences']['household_format']['default_servings'] == 2",
+         "body['subscription']['tier'] == 'free'",
+         "body['subscription']['credits_allowance'] == 0",
+         "body['subscription']['credits_remaining'] == 0"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C1050",
@@ -10254,7 +10691,20 @@ window.LABEP = {
        "name": "test_setup_complete_replay_identical_count_one_C1050",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "first.json()['household']['id'] == second.json()['household']['id']"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C1050",
@@ -10263,7 +10713,20 @@ window.LABEP = {
        "name": "test_setup_complete_replay_identical_count_one_C1050",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "first.json()['household']['id'] == second.json()['household']['id']"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C1056",
@@ -10272,7 +10735,20 @@ window.LABEP = {
        "name": "test_setup_complete_with_consent_200_C1056",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "resp.json()['setup_required'] is False"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C1057",
@@ -10281,7 +10757,20 @@ window.LABEP = {
        "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "r2.json()['setup_required'] is False"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C389",
@@ -10290,7 +10779,21 @@ window.LABEP = {
        "name": "test_setup_complete_with_exploration_creates_row_C389",
        "file": "apps/api/tests/test_exploration_preferences.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "body['preferences']['exploration']['explore_regions'] == [_REGION]",
+         "body['preferences']['exploration']['curiosity_techniques'] == [_TECHNIQUE]"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C390",
@@ -10299,7 +10802,17 @@ window.LABEP = {
        "name": "test_setup_complete_folds_in_path_a_plus_C390",
        "file": "apps/api/tests/test_exploration_preferences.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C391",
@@ -10308,7 +10821,21 @@ window.LABEP = {
        "name": "test_setup_complete_without_exploration_creates_empty_row_C391",
        "file": "apps/api/tests/test_exploration_preferences.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "body['preferences']['exploration']['explore_regions'] == []",
+         "body['preferences']['exploration']['curiosity_techniques'] == []"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C392",
@@ -10317,7 +10844,20 @@ window.LABEP = {
        "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
        "file": "apps/api/tests/test_exploration_preferences.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "first.json()['preferences']['exploration']['explore_regions'] == [_REGION]"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C392",
@@ -10326,7 +10866,20 @@ window.LABEP = {
        "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
        "file": "apps/api/tests/test_exploration_preferences.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "second.json()['preferences']['exploration']['explore_regions'] == [_REGION]"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       }
      ],
      "response": {
@@ -11321,7 +11874,26 @@ window.LABEP = {
       "name": "test_setup_complete_success_then_me_reads_back_C1049",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "body['setup_required'] is False",
+        "body['household']['name'] == 'Casa Ruta'",
+        "body['membership']['role'] == 'primary_cook'",
+        "body['preferences']['household_format']['default_servings'] == 2",
+        "body['subscription']['tier'] == 'free'",
+        "body['subscription']['credits_allowance'] == 0",
+        "body['subscription']['credits_remaining'] == 0"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1050",
@@ -11330,7 +11902,20 @@ window.LABEP = {
       "name": "test_setup_complete_replay_identical_count_one_C1050",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "first.json()['household']['id'] == second.json()['household']['id']"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1050",
@@ -11339,7 +11924,20 @@ window.LABEP = {
       "name": "test_setup_complete_replay_identical_count_one_C1050",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "first.json()['household']['id'] == second.json()['household']['id']"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1056",
@@ -11348,7 +11946,20 @@ window.LABEP = {
       "name": "test_setup_complete_with_consent_200_C1056",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "resp.json()['setup_required'] is False"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1057",
@@ -11357,7 +11968,20 @@ window.LABEP = {
       "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "r2.json()['setup_required'] is False"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C389",
@@ -11366,7 +11990,21 @@ window.LABEP = {
       "name": "test_setup_complete_with_exploration_creates_row_C389",
       "file": "apps/api/tests/test_exploration_preferences.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "body['preferences']['exploration']['explore_regions'] == [_REGION]",
+        "body['preferences']['exploration']['curiosity_techniques'] == [_TECHNIQUE]"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C390",
@@ -11375,7 +12013,17 @@ window.LABEP = {
       "name": "test_setup_complete_folds_in_path_a_plus_C390",
       "file": "apps/api/tests/test_exploration_preferences.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C391",
@@ -11384,7 +12032,21 @@ window.LABEP = {
       "name": "test_setup_complete_without_exploration_creates_empty_row_C391",
       "file": "apps/api/tests/test_exploration_preferences.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "body['preferences']['exploration']['explore_regions'] == []",
+        "body['preferences']['exploration']['curiosity_techniques'] == []"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C392",
@@ -11393,7 +12055,20 @@ window.LABEP = {
       "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
       "file": "apps/api/tests/test_exploration_preferences.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "first.json()['preferences']['exploration']['explore_regions'] == [_REGION]"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C392",
@@ -11402,7 +12077,20 @@ window.LABEP = {
       "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
       "file": "apps/api/tests/test_exploration_preferences.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "second.json()['preferences']['exploration']['explore_regions'] == [_REGION]"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      }
     ],
     "partial": null,
@@ -11455,7 +12143,26 @@ window.LABEP = {
        "name": "test_setup_complete_success_then_me_reads_back_C1049",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "body['setup_required'] is False",
+         "body['household']['name'] == 'Casa Ruta'",
+         "body['membership']['role'] == 'primary_cook'",
+         "body['preferences']['household_format']['default_servings'] == 2",
+         "body['subscription']['tier'] == 'free'",
+         "body['subscription']['credits_allowance'] == 0",
+         "body['subscription']['credits_remaining'] == 0"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C1050",
@@ -11464,7 +12171,20 @@ window.LABEP = {
        "name": "test_setup_complete_replay_identical_count_one_C1050",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "first.json()['household']['id'] == second.json()['household']['id']"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C1050",
@@ -11473,7 +12193,20 @@ window.LABEP = {
        "name": "test_setup_complete_replay_identical_count_one_C1050",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "first.json()['household']['id'] == second.json()['household']['id']"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C1056",
@@ -11482,7 +12215,20 @@ window.LABEP = {
        "name": "test_setup_complete_with_consent_200_C1056",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "resp.json()['setup_required'] is False"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C1057",
@@ -11491,7 +12237,20 @@ window.LABEP = {
        "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "r2.json()['setup_required'] is False"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C389",
@@ -11500,7 +12259,21 @@ window.LABEP = {
        "name": "test_setup_complete_with_exploration_creates_row_C389",
        "file": "apps/api/tests/test_exploration_preferences.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "body['preferences']['exploration']['explore_regions'] == [_REGION]",
+         "body['preferences']['exploration']['curiosity_techniques'] == [_TECHNIQUE]"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C390",
@@ -11509,7 +12282,17 @@ window.LABEP = {
        "name": "test_setup_complete_folds_in_path_a_plus_C390",
        "file": "apps/api/tests/test_exploration_preferences.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C391",
@@ -11518,7 +12301,21 @@ window.LABEP = {
        "name": "test_setup_complete_without_exploration_creates_empty_row_C391",
        "file": "apps/api/tests/test_exploration_preferences.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "body['preferences']['exploration']['explore_regions'] == []",
+         "body['preferences']['exploration']['curiosity_techniques'] == []"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C392",
@@ -11527,7 +12324,20 @@ window.LABEP = {
        "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
        "file": "apps/api/tests/test_exploration_preferences.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "first.json()['preferences']['exploration']['explore_regions'] == [_REGION]"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C392",
@@ -11536,7 +12346,20 @@ window.LABEP = {
        "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
        "file": "apps/api/tests/test_exploration_preferences.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "attrs": [
+         "second.json()['preferences']['exploration']['explore_regions'] == [_REGION]"
+        ],
+        "status": [
+         200
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       }
      ],
      "response": {
@@ -13295,7 +14118,26 @@ window.LABEP = {
       "name": "test_setup_complete_success_then_me_reads_back_C1049",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "body['setup_required'] is False",
+        "body['household']['name'] == 'Casa Ruta'",
+        "body['membership']['role'] == 'primary_cook'",
+        "body['preferences']['household_format']['default_servings'] == 2",
+        "body['subscription']['tier'] == 'free'",
+        "body['subscription']['credits_allowance'] == 0",
+        "body['subscription']['credits_remaining'] == 0"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1050",
@@ -13304,7 +14146,20 @@ window.LABEP = {
       "name": "test_setup_complete_replay_identical_count_one_C1050",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "first.json()['household']['id'] == second.json()['household']['id']"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1050",
@@ -13313,7 +14168,20 @@ window.LABEP = {
       "name": "test_setup_complete_replay_identical_count_one_C1050",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "first.json()['household']['id'] == second.json()['household']['id']"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1056",
@@ -13322,7 +14190,20 @@ window.LABEP = {
       "name": "test_setup_complete_with_consent_200_C1056",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "resp.json()['setup_required'] is False"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1057",
@@ -13331,7 +14212,20 @@ window.LABEP = {
       "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "r2.json()['setup_required'] is False"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C389",
@@ -13340,7 +14234,21 @@ window.LABEP = {
       "name": "test_setup_complete_with_exploration_creates_row_C389",
       "file": "apps/api/tests/test_exploration_preferences.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "body['preferences']['exploration']['explore_regions'] == [_REGION]",
+        "body['preferences']['exploration']['curiosity_techniques'] == [_TECHNIQUE]"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C390",
@@ -13349,7 +14257,17 @@ window.LABEP = {
       "name": "test_setup_complete_folds_in_path_a_plus_C390",
       "file": "apps/api/tests/test_exploration_preferences.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C391",
@@ -13358,7 +14276,21 @@ window.LABEP = {
       "name": "test_setup_complete_without_exploration_creates_empty_row_C391",
       "file": "apps/api/tests/test_exploration_preferences.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "body['preferences']['exploration']['explore_regions'] == []",
+        "body['preferences']['exploration']['curiosity_techniques'] == []"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C392",
@@ -13367,7 +14299,20 @@ window.LABEP = {
       "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
       "file": "apps/api/tests/test_exploration_preferences.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "first.json()['preferences']['exploration']['explore_regions'] == [_REGION]"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C392",
@@ -13376,7 +14321,20 @@ window.LABEP = {
       "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
       "file": "apps/api/tests/test_exploration_preferences.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "second.json()['preferences']['exploration']['explore_regions'] == [_REGION]"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      }
     ],
     "partial": null,
@@ -14003,7 +14961,17 @@ window.LABEP = {
       "name": "test_setup_complete_blank_name_422_C1051",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "status": [
+        422
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1052",
@@ -14012,7 +14980,17 @@ window.LABEP = {
       "name": "test_setup_complete_too_many_allergens_422_C1052",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "status": [
+        422
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      }
     ],
     "response": {
@@ -14430,7 +15408,26 @@ window.LABEP = {
       "name": "test_setup_complete_success_then_me_reads_back_C1049",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "body['setup_required'] is False",
+        "body['household']['name'] == 'Casa Ruta'",
+        "body['membership']['role'] == 'primary_cook'",
+        "body['preferences']['household_format']['default_servings'] == 2",
+        "body['subscription']['tier'] == 'free'",
+        "body['subscription']['credits_allowance'] == 0",
+        "body['subscription']['credits_remaining'] == 0"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1050",
@@ -14439,7 +15436,20 @@ window.LABEP = {
       "name": "test_setup_complete_replay_identical_count_one_C1050",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "first.json()['household']['id'] == second.json()['household']['id']"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1050",
@@ -14448,7 +15458,20 @@ window.LABEP = {
       "name": "test_setup_complete_replay_identical_count_one_C1050",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "first.json()['household']['id'] == second.json()['household']['id']"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1056",
@@ -14457,7 +15480,20 @@ window.LABEP = {
       "name": "test_setup_complete_with_consent_200_C1056",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "resp.json()['setup_required'] is False"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1057",
@@ -14466,7 +15502,20 @@ window.LABEP = {
       "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "r2.json()['setup_required'] is False"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C389",
@@ -14475,7 +15524,21 @@ window.LABEP = {
       "name": "test_setup_complete_with_exploration_creates_row_C389",
       "file": "apps/api/tests/test_exploration_preferences.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "body['preferences']['exploration']['explore_regions'] == [_REGION]",
+        "body['preferences']['exploration']['curiosity_techniques'] == [_TECHNIQUE]"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C390",
@@ -14484,7 +15547,17 @@ window.LABEP = {
       "name": "test_setup_complete_folds_in_path_a_plus_C390",
       "file": "apps/api/tests/test_exploration_preferences.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C391",
@@ -14493,7 +15566,21 @@ window.LABEP = {
       "name": "test_setup_complete_without_exploration_creates_empty_row_C391",
       "file": "apps/api/tests/test_exploration_preferences.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "body['preferences']['exploration']['explore_regions'] == []",
+        "body['preferences']['exploration']['curiosity_techniques'] == []"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C392",
@@ -14502,7 +15589,20 @@ window.LABEP = {
       "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
       "file": "apps/api/tests/test_exploration_preferences.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "first.json()['preferences']['exploration']['explore_regions'] == [_REGION]"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C392",
@@ -14511,7 +15611,20 @@ window.LABEP = {
       "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
       "file": "apps/api/tests/test_exploration_preferences.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "attrs": [
+        "second.json()['preferences']['exploration']['explore_regions'] == [_REGION]"
+       ],
+       "status": [
+        200
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      }
     ],
     "response": {
@@ -14558,7 +15671,19 @@ window.LABEP = {
       "name": "test_setup_complete_missing_key_400_C1048",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "detail": [
+        "Idempotency-Key"
+       ],
+       "status": [
+        400
+       ]
+      },
+      "sends": [
+       "Authorization"
+      ]
      }
     ],
     "response": {
@@ -14597,7 +15722,17 @@ window.LABEP = {
       "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "status": [
+        409
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1061",
@@ -14606,7 +15741,10 @@ window.LABEP = {
       "name": "test_complete_setup_in_progress_raises_C1061",
       "file": "apps/api/tests/test_setup_service.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "service-raises",
+      "asserts": null,
+      "sends": null
      }
     ],
     "response": {
@@ -14645,7 +15783,20 @@ window.LABEP = {
       "name": "test_setup_complete_without_consent_409_C1055",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "detail": [
+        "consent"
+       ],
+       "status": [
+        409
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1057",
@@ -14654,7 +15805,17 @@ window.LABEP = {
       "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
       "file": "apps/api/tests/test_setup_routes.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "act",
+      "asserts": {
+       "status": [
+        409
+       ]
+      },
+      "sends": [
+       "Authorization",
+       "Idempotency-Key"
+      ]
      },
      {
       "case": "C1065",
@@ -14663,7 +15824,10 @@ window.LABEP = {
       "name": "test_complete_setup_without_consent_raises_C1065",
       "file": "apps/api/tests/test_setup_service.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "service-raises",
+      "asserts": null,
+      "sends": null
      },
      {
       "case": "C1067",
@@ -14672,7 +15836,10 @@ window.LABEP = {
       "name": "test_complete_setup_stale_consent_version_raises_C1067",
       "file": "apps/api/tests/test_setup_service.py",
       "state": "pass",
-      "corpus": "api"
+      "corpus": "api",
+      "role": "service-raises",
+      "asserts": null,
+      "sends": null
      }
     ],
     "response": {
@@ -14796,7 +15963,19 @@ window.LABEP = {
        "name": "test_setup_complete_missing_key_400_C1048",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "detail": [
+         "Idempotency-Key"
+        ],
+        "status": [
+         400
+        ]
+       },
+       "sends": [
+        "Authorization"
+       ]
       }
      ],
      "response": {
@@ -14844,7 +16023,17 @@ window.LABEP = {
        "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "status": [
+         409
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C1061",
@@ -14853,7 +16042,10 @@ window.LABEP = {
        "name": "test_complete_setup_in_progress_raises_C1061",
        "file": "apps/api/tests/test_setup_service.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "service-raises",
+       "asserts": null,
+       "sends": null
       }
      ],
      "response": {
@@ -14903,7 +16095,20 @@ window.LABEP = {
        "name": "test_setup_complete_without_consent_409_C1055",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "detail": [
+         "consent"
+        ],
+        "status": [
+         409
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C1057",
@@ -14912,7 +16117,17 @@ window.LABEP = {
        "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
        "file": "apps/api/tests/test_setup_routes.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "act",
+       "asserts": {
+        "status": [
+         409
+        ]
+       },
+       "sends": [
+        "Authorization",
+        "Idempotency-Key"
+       ]
       },
       {
        "case": "C1065",
@@ -14921,7 +16136,10 @@ window.LABEP = {
        "name": "test_complete_setup_without_consent_raises_C1065",
        "file": "apps/api/tests/test_setup_service.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "service-raises",
+       "asserts": null,
+       "sends": null
       },
       {
        "case": "C1067",
@@ -14930,7 +16148,10 @@ window.LABEP = {
        "name": "test_complete_setup_stale_consent_version_raises_C1067",
        "file": "apps/api/tests/test_setup_service.py",
        "state": "pass",
-       "corpus": "api"
+       "corpus": "api",
+       "role": "service-raises",
+       "asserts": null,
+       "sends": null
       }
      ],
      "response": {
@@ -16729,7 +17950,295 @@ window.LABEP = {
     "both": 13,
     "route effects": 2
    }
-  }
+  },
+  "settings_tests": [
+   {
+    "setting": "auth_provider",
+    "default_runs": true,
+    "values": [
+     "providermode.real"
+    ],
+    "sets": [
+     {
+      "at": "apps/api/tests/test_account_deletion.py:271",
+      "test": "apps/api/tests/test_account_deletion.py::test_delete_identity_calls_firebase_delete_user_for_real_provider_C17",
+      "value": "ProviderMode.REAL",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_auth_context.py:35",
+      "test": "apps/api/tests/test_auth_context.py::test_get_verifier_selects_firebase_when_real_C128",
+      "value": "ProviderMode.REAL",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_catalog.py:472",
+      "test": "apps/api/tests/test_catalog.py::test_seed_catalogs_on_startup_skips_sqlite_C174",
+      "value": "ProviderMode.REAL",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_client_ip.py:139",
+      "test": "apps/api/tests/test_client_ip.py::test_rate_limit_active_auto_on_in_production_C192",
+      "value": "ProviderMode.REAL",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_client_ip.py:153",
+      "test": "apps/api/tests/test_client_ip.py::test_rate_limit_active_staging_opt_in_C193",
+      "value": "ProviderMode.REAL",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_client_ip.py:156",
+      "test": "apps/api/tests/test_client_ip.py::test_rate_limit_active_staging_opt_in_C193",
+      "value": "ProviderMode.REAL",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_cors.py:63",
+      "test": "apps/api/tests/test_cors.py::test_cors_production_strips_localhost_C291",
+      "value": "ProviderMode.REAL",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_db_security.py:30",
+      "test": "apps/api/tests/test_db_security.py::test_guard_skips_sqlite_even_when_not_local_C295",
+      "value": "ProviderMode.REAL",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_e2e_seed.py:11",
+      "test": "apps/api/tests/test_e2e_seed.py::test_seed_controls_forbidden_in_staging_C299",
+      "value": "ProviderMode.REAL",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_e2e_seed.py:21",
+      "test": "apps/api/tests/test_e2e_seed.py::test_seed_controls_forbidden_in_production_C300",
+      "value": "ProviderMode.REAL",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_e2e_seed.py:48",
+      "test": "apps/api/tests/test_e2e_seed.py::test_recipe_creation_override_forbidden_in_staging_C303",
+      "value": "ProviderMode.REAL",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_e2e_seed.py:57",
+      "test": "apps/api/tests/test_e2e_seed.py::test_recipe_creation_override_forbidden_in_production_C304",
+      "value": "ProviderMode.REAL",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_sandbox_seed.py:173",
+      "test": "apps/api/tests/test_sandbox_seed.py::test_seed_sandbox_on_startup_is_gated_C1000",
+      "value": "ProviderMode.REAL",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_shells.py:48",
+      "test": "apps/api/tests/test_shells.py::test_real_provider_shell_raises_until_wired_C1070",
+      "value": "ProviderMode.REAL",
+      "via": "constructor"
+     }
+    ]
+   },
+   {
+    "setting": "ai_credits_chef",
+    "default_runs": true,
+    "values": [
+     "30.0"
+    ],
+    "sets": [
+     {
+      "at": "apps/api/tests/test_ai_credits.py:83",
+      "test": "apps/api/tests/test_ai_credits.py::test_allowance_per_subscription_tier_C21",
+      "value": 30,
+      "via": "constructor"
+     }
+    ]
+   },
+   {
+    "setting": "ai_credits_free",
+    "default_runs": false,
+    "values": [],
+    "sets": []
+   },
+   {
+    "setting": "environment",
+    "default_runs": true,
+    "values": [
+     "environment.local",
+     "environment.production",
+     "environment.staging",
+     "environment.staging_e2e"
+    ],
+    "sets": [
+     {
+      "at": "apps/api/tests/test_auth_context.py:35",
+      "test": "apps/api/tests/test_auth_context.py::test_get_verifier_selects_firebase_when_real_C128",
+      "value": "Environment.STAGING",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_catalog.py:472",
+      "test": "apps/api/tests/test_catalog.py::test_seed_catalogs_on_startup_skips_sqlite_C174",
+      "value": "Environment.STAGING",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_client_ip.py:139",
+      "test": "apps/api/tests/test_client_ip.py::test_rate_limit_active_auto_on_in_production_C192",
+      "value": "Environment.PRODUCTION",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_client_ip.py:153",
+      "test": "apps/api/tests/test_client_ip.py::test_rate_limit_active_staging_opt_in_C193",
+      "value": "Environment.STAGING",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_client_ip.py:156",
+      "test": "apps/api/tests/test_client_ip.py::test_rate_limit_active_staging_opt_in_C193",
+      "value": "Environment.STAGING",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_cors.py:63",
+      "test": "apps/api/tests/test_cors.py::test_cors_production_strips_localhost_C291",
+      "value": "Environment.PRODUCTION",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_db_security.py:23",
+      "test": "apps/api/tests/test_db_security.py::test_guard_skips_local_lane_C294",
+      "value": "Environment.LOCAL",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_db_security.py:30",
+      "test": "apps/api/tests/test_db_security.py::test_guard_skips_sqlite_even_when_not_local_C295",
+      "value": "Environment.STAGING",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_e2e_seed.py:11",
+      "test": "apps/api/tests/test_e2e_seed.py::test_seed_controls_forbidden_in_staging_C299",
+      "value": "Environment.STAGING",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_e2e_seed.py:21",
+      "test": "apps/api/tests/test_e2e_seed.py::test_seed_controls_forbidden_in_production_C300",
+      "value": "Environment.PRODUCTION",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_e2e_seed.py:35",
+      "test": "apps/api/tests/test_e2e_seed.py::test_seed_controls_allowed_in_local_C301",
+      "value": "Environment.LOCAL",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_e2e_seed.py:40",
+      "test": "apps/api/tests/test_e2e_seed.py::test_seed_controls_allowed_in_staging_e2e_C302",
+      "value": "Environment.STAGING_E2E",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_e2e_seed.py:48",
+      "test": "apps/api/tests/test_e2e_seed.py::test_recipe_creation_override_forbidden_in_staging_C303",
+      "value": "Environment.STAGING",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_e2e_seed.py:57",
+      "test": "apps/api/tests/test_e2e_seed.py::test_recipe_creation_override_forbidden_in_production_C304",
+      "value": "Environment.PRODUCTION",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_e2e_seed.py:71",
+      "test": "apps/api/tests/test_e2e_seed.py::test_recipe_creation_override_allowed_in_staging_e2e_C305",
+      "value": "Environment.STAGING_E2E",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_recipes.py:1006",
+      "test": "apps/api/tests/test_recipes.py::test_recipe_manual_create_settings_override_enables_C970",
+      "value": "Environment.LOCAL",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_sandbox_seed.py:169",
+      "test": "apps/api/tests/test_sandbox_seed.py::test_seed_sandbox_on_startup_is_gated_C1000",
+      "value": "Environment.LOCAL",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_sandbox_seed.py:173",
+      "test": "apps/api/tests/test_sandbox_seed.py::test_seed_sandbox_on_startup_is_gated_C1000",
+      "value": "Environment.STAGING",
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_shells.py:48",
+      "test": "apps/api/tests/test_shells.py::test_real_provider_shell_raises_until_wired_C1070",
+      "value": "Environment.STAGING",
+      "via": "constructor"
+     }
+    ]
+   },
+   {
+    "setting": "rate_limit_enabled",
+    "default_runs": true,
+    "values": [
+     "false",
+     "true"
+    ],
+    "sets": [
+     {
+      "at": "apps/api/tests/test_client_ip.py:156",
+      "test": "apps/api/tests/test_client_ip.py::test_rate_limit_active_staging_opt_in_C193",
+      "value": true,
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_rate_limit.py:101",
+      "test": "apps/api/tests/test_rate_limit.py::test_middleware_exempts_healthz_C778",
+      "value": true,
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_rate_limit.py:110",
+      "test": "apps/api/tests/test_rate_limit.py::test_xff_different_real_ips_get_own_buckets_C779",
+      "value": true,
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_rate_limit.py:128",
+      "test": "apps/api/tests/test_rate_limit.py::test_xff_spoof_does_not_evade_limit_C780",
+      "value": true,
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_rate_limit.py:77",
+      "test": "apps/api/tests/test_rate_limit.py::test_middleware_disabled_never_throttles_C776",
+      "value": false,
+      "via": "constructor"
+     },
+     {
+      "at": "apps/api/tests/test_rate_limit.py:86",
+      "test": "apps/api/tests/test_rate_limit.py::test_middleware_throttles_over_limit_C777",
+      "value": true,
+      "via": "constructor"
+     }
+    ]
+   }
+  ]
  },
  "identity": {
   "id": "endpoint:POST /setup/complete",
@@ -22275,7 +23784,588 @@ window.LABEP = {
      1
     ]
    }
-  ]
+  ],
+  "roster": [
+   {
+    "cid": "C1048",
+    "name": "test_setup_complete_missing_key_400_C1048",
+    "file": "apps/api/tests/test_setup_routes.py",
+    "line": 22,
+    "state": "pass",
+    "corpus": "api",
+    "role": "act",
+    "calls_here": 1,
+    "asserts": {
+     "detail": [
+      "Idempotency-Key"
+     ],
+     "status": [
+      400
+     ]
+    },
+    "proves": [
+     {
+      "exit": "x:13ce9b79e0",
+      "status": 400,
+      "conf": "status+detail"
+     }
+    ],
+    "in_map_list": true
+   },
+   {
+    "cid": "C1049",
+    "name": "test_setup_complete_success_then_me_reads_back_C1049",
+    "file": "apps/api/tests/test_setup_routes.py",
+    "line": 32,
+    "state": "pass",
+    "corpus": "api",
+    "role": "act",
+    "calls_here": 1,
+    "asserts": {
+     "attrs": [
+      "body['setup_required'] is False",
+      "body['household']['name'] == 'Casa Ruta'",
+      "body['membership']['role'] == 'primary_cook'",
+      "body['preferences']['household_format']['default_servings'] == 2",
+      "body['subscription']['tier'] == 'free'",
+      "body['subscription']['credits_allowance'] == 0",
+      "body['subscription']['credits_remaining'] == 0"
+     ],
+     "status": [
+      200
+     ]
+    },
+    "proves": [
+     {
+      "exit": "r:406d313dde",
+      "status": 200,
+      "conf": "status"
+     }
+    ],
+    "in_map_list": true
+   },
+   {
+    "cid": "C1050",
+    "name": "test_setup_complete_replay_identical_count_one_C1050",
+    "file": "apps/api/tests/test_setup_routes.py",
+    "line": 60,
+    "state": "pass",
+    "corpus": "api",
+    "role": "act",
+    "calls_here": 2,
+    "asserts": {
+     "attrs": [
+      "first.json()['household']['id'] == second.json()['household']['id']"
+     ],
+     "status": [
+      200
+     ]
+    },
+    "proves": [
+     {
+      "exit": "r:406d313dde",
+      "status": 200,
+      "conf": "status"
+     },
+     {
+      "exit": "r:406d313dde",
+      "status": 200,
+      "conf": "status"
+     }
+    ],
+    "in_map_list": true
+   },
+   {
+    "cid": "C1051",
+    "name": "test_setup_complete_blank_name_422_C1051",
+    "file": "apps/api/tests/test_setup_routes.py",
+    "line": 73,
+    "state": "pass",
+    "corpus": "api",
+    "role": "act",
+    "calls_here": 1,
+    "asserts": {
+     "status": [
+      422
+     ]
+    },
+    "proves": [
+     {
+      "exit": "x:1b256011f1",
+      "status": 422,
+      "conf": "status"
+     }
+    ],
+    "in_map_list": true
+   },
+   {
+    "cid": "C1052",
+    "name": "test_setup_complete_too_many_allergens_422_C1052",
+    "file": "apps/api/tests/test_setup_routes.py",
+    "line": 82,
+    "state": "pass",
+    "corpus": "api",
+    "role": "act",
+    "calls_here": 1,
+    "asserts": {
+     "status": [
+      422
+     ]
+    },
+    "proves": [
+     {
+      "exit": "x:1b256011f1",
+      "status": 422,
+      "conf": "status"
+     }
+    ],
+    "in_map_list": true
+   },
+   {
+    "cid": "C1055",
+    "name": "test_setup_complete_without_consent_409_C1055",
+    "file": "apps/api/tests/test_setup_routes.py",
+    "line": 116,
+    "state": "pass",
+    "corpus": "api",
+    "role": "act",
+    "calls_here": 1,
+    "asserts": {
+     "detail": [
+      "consent"
+     ],
+     "status": [
+      409
+     ]
+    },
+    "proves": [
+     {
+      "exit": "x:a086031223",
+      "status": 409,
+      "conf": "status+detail"
+     }
+    ],
+    "in_map_list": true
+   },
+   {
+    "cid": "C1056",
+    "name": "test_setup_complete_with_consent_200_C1056",
+    "file": "apps/api/tests/test_setup_routes.py",
+    "line": 132,
+    "state": "pass",
+    "corpus": "api",
+    "role": "act",
+    "calls_here": 1,
+    "asserts": {
+     "attrs": [
+      "resp.json()['setup_required'] is False"
+     ],
+     "status": [
+      200
+     ]
+    },
+    "proves": [
+     {
+      "exit": "r:406d313dde",
+      "status": 200,
+      "conf": "status"
+     }
+    ],
+    "in_map_list": true
+   },
+   {
+    "cid": "C1057",
+    "name": "test_setup_complete_reject_then_accept_retry_same_key_200_C1057",
+    "file": "apps/api/tests/test_setup_routes.py",
+    "line": 150,
+    "state": "pass",
+    "corpus": "api",
+    "role": "act",
+    "calls_here": 2,
+    "asserts": {
+     "status": [
+      409,
+      200
+     ],
+     "attrs": [
+      "r2.json()['setup_required'] is False"
+     ]
+    },
+    "proves": [
+     {
+      "exit": "r:406d313dde",
+      "status": 200,
+      "conf": "status"
+     },
+     {
+      "exit": "x:f2caf456bd",
+      "status": 409,
+      "conf": "ambiguous of 2"
+     },
+     {
+      "exit": "x:a086031223",
+      "status": 409,
+      "conf": "ambiguous of 2"
+     }
+    ],
+    "in_map_list": true
+   },
+   {
+    "cid": "C1087",
+    "name": "test_cook_route_unlocks_surface_on_profile_C1087",
+    "file": "apps/api/tests/test_skills.py",
+    "line": 215,
+    "state": "pass",
+    "corpus": "api",
+    "role": "arranged",
+    "calls_here": 1,
+    "asserts": null,
+    "proves": [],
+    "in_map_list": true
+   },
+   {
+    "cid": "C218",
+    "name": "test_overview_returns_cookability_fields_C218",
+    "file": "apps/api/tests/test_cookability_summary.py",
+    "line": 191,
+    "state": "pass",
+    "corpus": "api",
+    "role": "arranged",
+    "calls_here": 1,
+    "asserts": null,
+    "proves": [],
+    "in_map_list": true
+   },
+   {
+    "cid": "C250",
+    "name": "test_cook_complete_history_pantry_loop_C250",
+    "file": "apps/api/tests/test_cooking_loop_route.py",
+    "line": 17,
+    "state": "pass",
+    "corpus": "api",
+    "role": "arranged",
+    "calls_here": 1,
+    "asserts": null,
+    "proves": [],
+    "in_map_list": true
+   },
+   {
+    "cid": "C251",
+    "name": "test_complete_rejects_stored_over_total_C251",
+    "file": "apps/api/tests/test_cooking_loop_route.py",
+    "line": 93,
+    "state": "pass",
+    "corpus": "api",
+    "role": "arranged",
+    "calls_here": 1,
+    "asserts": null,
+    "proves": [],
+    "in_map_list": true
+   },
+   {
+    "cid": "C389",
+    "name": "test_setup_complete_with_exploration_creates_row_C389",
+    "file": "apps/api/tests/test_exploration_preferences.py",
+    "line": 753,
+    "state": "pass",
+    "corpus": "api",
+    "role": "act",
+    "calls_here": 1,
+    "asserts": {
+     "attrs": [
+      "body['preferences']['exploration']['explore_regions'] == [_REGION]",
+      "body['preferences']['exploration']['curiosity_techniques'] == [_TECHNIQUE]"
+     ],
+     "status": [
+      200
+     ]
+    },
+    "proves": [
+     {
+      "exit": "r:406d313dde",
+      "status": 200,
+      "conf": "status"
+     }
+    ],
+    "in_map_list": true
+   },
+   {
+    "cid": "C390",
+    "name": "test_setup_complete_folds_in_path_a_plus_C390",
+    "file": "apps/api/tests/test_exploration_preferences.py",
+    "line": 774,
+    "state": "pass",
+    "corpus": "api",
+    "role": "act",
+    "calls_here": 1,
+    "asserts": {
+     "status": [
+      200
+     ]
+    },
+    "proves": [
+     {
+      "exit": "r:406d313dde",
+      "status": 200,
+      "conf": "status"
+     }
+    ],
+    "in_map_list": true
+   },
+   {
+    "cid": "C391",
+    "name": "test_setup_complete_without_exploration_creates_empty_row_C391",
+    "file": "apps/api/tests/test_exploration_preferences.py",
+    "line": 798,
+    "state": "pass",
+    "corpus": "api",
+    "role": "act",
+    "calls_here": 1,
+    "asserts": {
+     "attrs": [
+      "body['preferences']['exploration']['explore_regions'] == []",
+      "body['preferences']['exploration']['curiosity_techniques'] == []"
+     ],
+     "status": [
+      200
+     ]
+    },
+    "proves": [
+     {
+      "exit": "r:406d313dde",
+      "status": 200,
+      "conf": "status"
+     }
+    ],
+    "in_map_list": true
+   },
+   {
+    "cid": "C392",
+    "name": "test_setup_complete_replay_is_idempotent_no_duplicate_C392",
+    "file": "apps/api/tests/test_exploration_preferences.py",
+    "line": 816,
+    "state": "pass",
+    "corpus": "api",
+    "role": "act",
+    "calls_here": 2,
+    "asserts": {
+     "attrs": [
+      "first.json()['preferences']['exploration']['explore_regions'] == [_REGION]",
+      "second.json()['preferences']['exploration']['explore_regions'] == [_REGION]"
+     ],
+     "status": [
+      200
+     ]
+    },
+    "proves": [
+     {
+      "exit": "r:406d313dde",
+      "status": 200,
+      "conf": "status"
+     },
+     {
+      "exit": "r:406d313dde",
+      "status": 200,
+      "conf": "status"
+     }
+    ],
+    "in_map_list": true
+   },
+   {
+    "cid": "C555",
+    "name": "test_advance_and_due_routes_C555",
+    "file": "apps/api/tests/test_long_prep.py",
+    "line": 240,
+    "state": "pass",
+    "corpus": "api",
+    "role": "arranged",
+    "calls_here": 1,
+    "asserts": null,
+    "proves": [],
+    "in_map_list": true
+   },
+   {
+    "cid": "C556",
+    "name": "test_manual_create_with_stages_roundtrip_C556",
+    "file": "apps/api/tests/test_long_prep.py",
+    "line": 285,
+    "state": "pass",
+    "corpus": "api",
+    "role": "arranged",
+    "calls_here": 1,
+    "asserts": null,
+    "proves": [],
+    "in_map_list": true
+   },
+   {
+    "cid": "C557",
+    "name": "test_manual_create_stage_validation_C557",
+    "file": "apps/api/tests/test_long_prep.py",
+    "line": 321,
+    "state": "pass",
+    "corpus": "api",
+    "role": "arranged",
+    "calls_here": 1,
+    "asserts": null,
+    "proves": [],
+    "in_map_list": true
+   },
+   {
+    "cid": "C603",
+    "name": "test_generate_and_current_routes_C603",
+    "file": "apps/api/tests/test_meal_plan.py",
+    "line": 519,
+    "state": "pass",
+    "corpus": "api",
+    "role": "arranged",
+    "calls_here": 1,
+    "asserts": null,
+    "proves": [],
+    "in_map_list": true
+   },
+   {
+    "cid": "C605",
+    "name": "test_current_404_when_none_C605",
+    "file": "apps/api/tests/test_meal_plan.py",
+    "line": 557,
+    "state": "pass",
+    "corpus": "api",
+    "role": "arranged",
+    "calls_here": 1,
+    "asserts": null,
+    "proves": [],
+    "in_map_list": true
+   },
+   {
+    "cid": "C664",
+    "name": "test_explore_route_cold_start_and_validation_C664",
+    "file": "apps/api/tests/test_novelty.py",
+    "line": 462,
+    "state": "pass",
+    "corpus": "api",
+    "role": "arranged",
+    "calls_here": 1,
+    "asserts": null,
+    "proves": [],
+    "in_map_list": true
+   },
+   {
+    "cid": "C705",
+    "name": "test_delete_item_cross_household_404_C705",
+    "file": "apps/api/tests/test_p53.py",
+    "line": 268,
+    "state": "pass",
+    "corpus": "api",
+    "role": "arranged",
+    "calls_here": 2,
+    "asserts": null,
+    "proves": [],
+    "in_map_list": true
+   },
+   {
+    "cid": "C785",
+    "name": "test_recipes_availability_end_to_end_C785",
+    "file": "apps/api/tests/test_recipe_availability.py",
+    "line": 102,
+    "state": "pass",
+    "corpus": "api",
+    "role": "arranged",
+    "calls_here": 1,
+    "asserts": null,
+    "proves": [],
+    "in_map_list": true
+   },
+   {
+    "cid": "C958",
+    "name": "test_list_recipe_time_effort_and_ingredient_counts_C958",
+    "file": "apps/api/tests/test_recipes.py",
+    "line": 571,
+    "state": "pass",
+    "corpus": "api",
+    "role": "arranged",
+    "calls_here": 1,
+    "asserts": null,
+    "proves": [],
+    "in_map_list": true
+   },
+   {
+    "cid": "C959",
+    "name": "test_list_recipe_exposes_predominant_techniques_C959",
+    "file": "apps/api/tests/test_recipes.py",
+    "line": 636,
+    "state": "pass",
+    "corpus": "api",
+    "role": "arranged",
+    "calls_here": 1,
+    "asserts": null,
+    "proves": [],
+    "in_map_list": true
+   },
+   {
+    "cid": "C1061",
+    "name": "test_complete_setup_in_progress_raises_C1061",
+    "file": "apps/api/tests/test_setup_service.py",
+    "line": 115,
+    "state": "pass",
+    "corpus": "api",
+    "role": "service-raises",
+    "calls_here": 0,
+    "asserts": null,
+    "proves": [
+     {
+      "exit": "x:f2caf456bd",
+      "status": 409,
+      "conf": "service raises"
+     }
+    ],
+    "in_map_list": false
+   },
+   {
+    "cid": "C1065",
+    "name": "test_complete_setup_without_consent_raises_C1065",
+    "file": "apps/api/tests/test_setup_service.py",
+    "line": 209,
+    "state": "pass",
+    "corpus": "api",
+    "role": "service-raises",
+    "calls_here": 0,
+    "asserts": null,
+    "proves": [
+     {
+      "exit": "x:a086031223",
+      "status": 409,
+      "conf": "service raises"
+     }
+    ],
+    "in_map_list": false
+   },
+   {
+    "cid": "C1067",
+    "name": "test_complete_setup_stale_consent_version_raises_C1067",
+    "file": "apps/api/tests/test_setup_service.py",
+    "line": 237,
+    "state": "pass",
+    "corpus": "api",
+    "role": "service-raises",
+    "calls_here": 0,
+    "asserts": null,
+    "proves": [
+     {
+      "exit": "x:a086031223",
+      "status": 409,
+      "conf": "service raises"
+     }
+    ],
+    "in_map_list": false
+   }
+  ],
+  "roles": {
+   "act": 12,
+   "arranged": 14,
+   "service-raises": 3,
+   "helper-arranged": 134
+  },
+  "roles_note": "act = the test calls this endpoint to test it · arranged = it calls it to set something else up · service-raises = it proves an ending from the service side, without calling the endpoint · helper-arranged = it reaches it only through a shared helper (counted, never listed)"
  },
  "widening": {
   "usage": {

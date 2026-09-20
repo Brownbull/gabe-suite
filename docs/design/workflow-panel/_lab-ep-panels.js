@@ -131,7 +131,8 @@
       var er = E("div", { class: "kv ev" }, ico("role", 13), E("span", { class: "k" }, "evidence"), E("span", { class: "v" }, "home " + I.entity + " by its file claim · users say " + (u || "abstain") + " · data says " + (d || "abstain") + " → " + String(ev.verdict).toUpperCase()));
       bind(er, card({ title: "membership evidence", icon: "role", sub: "file · users · data — the three witnesses",
         rows: [["home by", String(ev.by)], ["users", u || "abstain"], ["data", d || "abstain"], ["verdict", String(ev.verdict).toUpperCase()]],
-        body: "the FILE wins here — evidence only, nothing is re-homed. The data witness leans <b>settings</b> because 5 of the 13 tables this door writes belong to settings." }));
+        body: (function(){ var de = ev.data || {}, ks = Object.keys(de).sort(function(a, b){ return de[b] - de[a]; }), tot = ks.reduce(function(n, k){ return n + de[k]; }, 0);
+          return "the FILE wins here — evidence only, nothing is re-homed." + (ks.length ? " The data witness leans <b>" + esc(ks[0]) + "</b>: " + de[ks[0]] + " of the " + tot + " table touches it counted belong to " + esc(ks[0]) + "." : ""); })() }));
       foot.append(er); COV.mark("EVIDENCE", "data"); }
     var mh = I.models_home || {}; var mrow = E("div", { class: "kv mdl" }, ico("link", 13), E("span", { class: "k" }, "model"), E("span", { class: "v" }, "claim " + I.entity + (mh.seeded || mh.derived || mh.proposed ? " · a view re-homes it" : " · every entity model keeps it here (no delta)")));
     bind(mrow, card({ title: "entity model", icon: "link", sub: "claim is the join key; seeded · derived · proposed are views",
@@ -342,7 +343,8 @@
         var chip = E("span", { class: "pchip st-" + (c.state || "unknown") }, ico(c.state === "pass" ? "test" : c.state === "fail" ? "alert" : "info", 11), esc(cid));
         chip.dataset["case"] = cid;
         bind(chip, card({ title: cid, icon: "test", color: c.state === "pass" ? "var(--ok)" : "var(--muted)", sub: (c.corpus || "api") + " · " + (c.state === "pass" ? "passing" : c.state),
-          rows: [["name", c.name || "—"], ["asserts", isCode ? "HTTP " + k : "no status in the name"], ["corpus", c.corpus || "api"]] }));
+          rows: [["name", c.name || "—"], ["role", (function(){ var r = rosterOf(F, cid); return r ? ROLEWORD[r.role] || r.role : null; })()],
+                 ["asserts", assertWords((rosterOf(F, cid) || {}).asserts) || (isCode ? "HTTP " + k + " — read off the test's name" : "no status in the name")], ["corpus", c.corpus || "api"]].filter(function(r){ return r[1] != null; }) }));
         stack.append(chip); });
       if (cids.length > 10) { var m = E("span", { class: "more" }, "+" + (cids.length - 10));
         bind(m, card({ title: k + " · the rest", fields: cids.slice(10) })); stack.append(m); }
@@ -2757,6 +2759,13 @@
     return state === "hatched" ? (armsOn(F) ? "the " + arm + " reading did not run on this feed — a zero here would be a guess" : "this feed carries no form for the endpoint — nothing was read")
       : state === "hollow" ? "the reading ran and found none — a measured zero" : state === "blank" ? "this kind of element has no such slot" : null; }
   window.slotState = slotState; window.slotWhy = slotWhy;
+  /* ── PROOF YOU CAN OPEN (leftovers piece 5): why a test came to this endpoint, and what it really asked for ── */
+  var ROLEWORD = { act: "tests this endpoint", arranged: "calls it to set something else up", "service-raises": "proves an ending from the service side, without calling the endpoint",
+                   "helper-arranged": "reaches it only through a shared helper", "named-only": "listed by the map, makes no call here" };
+  function rosterOf(F, cid){ return ((F.tests || {}).roster || []).filter(function(r){ return r.cid === cid; })[0] || null; }
+  function assertWords(a){ if (!a) return null; var out = [];
+    Object.keys(a).forEach(function(k){ var v = a[k]; out.push(k + " " + (Array.isArray(v) ? v.join(" · ") : String(v))); }); return out.join(" · ") || null; }
+  window.rosterOf = rosterOf;
 
   /* ── the 15 VERBS of the kind card (path-map-status.md §6, the entity command card) ── */
   function cmdVerbs(F, S){
@@ -3352,6 +3361,9 @@
     b.insertAdjacentHTML("beforeend", '<div class="ptttl">' + ico("test", 15, testCol()) + "<b>" + esc(cid) + "</b></div>");
     b.insertAdjacentHTML("beforeend", ptRow("name", (t && t.name) || (lab && lab.name) || "—") + ptRow("file", t ? t.file + ":" + t.line : "—")
       + ptRow("corpus", (t && t.corpus) || (lab && lab.corpus) || "—") + ptRow("state", (t && t.state) || (lab && lab.state) || "—"));
+    var ro = rosterOf(F, cid);
+    if (ro) b.insertAdjacentHTML("beforeend", ptRow("role", ROLEWORD[ro.role] || ro.role) + ptRow("asserts", assertWords(ro.asserts) || (ro.role === "act" ? "— nothing the reading could name" : "— it asserts nothing about this endpoint"))
+      + (t && t.sends && t.sends.length ? ptRow("sends", t.sends.join(" · ")) : ""));
     b.insertAdjacentHTML("beforeend", ptSec("proves · " + refs.length + " exit(s)"));
     var l = E("div", { class: "pttbl" });
     refs.forEach(function(r){ var c = E("button", { class: "ptpath" }, esc(r.exit.status + " " + (r.exit.detail || r.exit.kind) + " · " + r.t.conf));
@@ -3394,7 +3406,7 @@
       portraits: [ { key: "record", label: "Record", icon: "doc", hint: "everything the feed knows about the table, in rows — the densest honest reading", render: dataPortrait },
                    { key: "shape", label: "Shape", icon: "model", hint: "the drum as the graph draws it, with every field a cell beneath it", render: dataShape },
                    { key: "wheel", label: "Wheel", icon: "target", hint: "the fields laid in a ring, so what the table is MADE OF reads at a glance", render: dataWheel },
-                   { key: "keys", label: "Keys", icon: "key", hint: "what this table points at, and what points back", render: dataKeys } ], hint: "every table this door reads or writes — 13 of them on 5 entity grounds, one DB commit; each tile a stack whose height is its column count",
+                   { key: "keys", label: "Keys", icon: "key", hint: "what this table points at, and what points back", render: dataKeys } ], hint: "every table this door reads or writes, on the grounds of the entities that own them, one DB commit; each tile a stack whose height is its column count",
       count: function(F){ return F.data.tables.length; },
       variants: [ { key: "grounds", label: "Grounds", hint: "tables tiled on entity-coloured grounds; the shape stacks stand vertically. Reads by entity first.", render: renderData },
                   { key: "flow", label: "Flow", hint: "ONE left-to-right axis — request → the whole table field (writes first, entity by dot) → response. Uses the width.", render: renderDataFlow },

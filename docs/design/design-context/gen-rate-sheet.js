@@ -93,8 +93,8 @@ const EX = {
   "response-headers-per-ending": () => { const h = f.exits.filter((e) => e.response && e.response.headers && Object.keys(e.response.headers).length).map((e) => `${e.status} sends ${Object.keys(e.response.headers).join(", ")}`); return h.length ? [...new Set(h)].join(" · ") : null; },
   "field-rules-of-the-request-body": () => null,
   "roles-per-function": () => null,
-  "what-the-case-asserts-on-this-condition": () => null,
-  "case-role-on-this-endpoint": () => null,
+  "what-the-case-asserts-on-this-condition": () => { const r = (L.tests.roster || []).find((x) => x.role === "act" && x.asserts && x.asserts.detail); return r ? `${r.cid} asserts ` + Object.keys(r.asserts).map((k) => `${k} ${[].concat(r.asserts[k]).join(" | ")}`).join(" · ") : null; },
+  "case-role-on-this-endpoint": () => (L.tests.roles ? Object.keys(L.tests.roles).map((k) => `${L.tests.roles[k]} ${k}`).join(" · ") : null),
   "how-common-this-piece-is": () => Object.keys(L.feedwide.deps).slice(0, 3).map((d) => `${d} on ${L.feedwide.deps[d]} of ${L.feedwide.endpoints}`).join(" · "),
   "where-this-endpoint-sits-in-the-app": () => null,
   "why-this-slot-is-empty": () => `readings that ran here: ${f.source.arms_on.join(", ")}`,
@@ -133,7 +133,7 @@ const EX = {
     const allF = f.findings.concat(Object.values(f.arm_findings).flat());
     return `${plural(allF.length, "finding")} · ` + allF.map((x) => (FIND[x.id] || rawF)(x)).join(" · "); },
 };
-const LANDS = { "in-flight-values": 11, "field-rules-of-the-request-body": 8, "roles-per-function": 6, "what-the-case-asserts-on-this-condition": 5, "case-role-on-this-endpoint": 5, "where-this-endpoint-sits-in-the-app": 7, "what-the-screen-does-on-this-ending": 10 };
+const LANDS = { "in-flight-values": 11, "field-rules-of-the-request-body": 8, "roles-per-function": 6, "where-this-endpoint-sits-in-the-app": 7, "what-the-screen-does-on-this-ending": 10 };
 const NONE = Object.assign(Object.fromEntries(Object.entries(LANDS).map(([k, n]) => [k, `nothing to quote yet · piece ${n} of the work brings it`])), { "little-helpers-with-a-type": "none to show · helper functions carry no type in the feed yet", "events-published": "none on this endpoint", "tasks-dispatched": "none on this endpoint", "outside-services-called": "none drawn on this endpoint" });
 for (const r of rows) {
   if (!(r.id in EX)) die("no example rule for row: " + r.id);

@@ -2684,6 +2684,35 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
   ok(errs.length === errsBefore, 'the stages picture raises no page error anywhere in this section', errs.slice(errsBefore, errsBefore + 3).join(' | '));
 }
 
+// ══ LEFTOVERS piece 5 · PROOF YOU CAN OPEN — why a test came here, what it really asked for, the values tests give a setting ══
+{ const errs0 = errs.length;
+  const T5 = await p.evaluate(() => { const L = window.LABEP, T = L.tests, f = L.forms, R = T.roster || [], by = {};
+    R.forEach(r => { by[r.role] = (by[r.role] || 0) + 1; });
+    const joins = f.exits.flatMap(e => (e.tests || []).map(j => ({ status: e.status, role: j.role, a: j.asserts, conf: j.conf, cid: j.case })));
+    const swKeys = new Set(); f.switches.forEach(w => { const st = w.settings; (Array.isArray(st) ? st : Object.keys(st || {})).forEach(k => swKeys.add(k)); });
+    return { n: R.length, by, roles: T.roles, mapList: T.cases.map(c => c.cid), rosterIds: R.map(r => r.cid), acts: R.filter(r => r.role === 'act'), svc: R.filter(r => r.role === 'service-raises'),
+      joins, st: f.settings_tests || [], swKeys: [...swKeys], sample: R.find(r => r.role === 'act' && r.asserts && r.asserts.detail) }; });
+  ok(T5.n > 0 && T5.mapList.every(c => T5.rosterIds.indexOf(c) >= 0), 'ONE roster: every case the map lists is in it', `${T5.n} in the roster · ${T5.mapList.length} in the map's list`);
+  ok(Object.keys(T5.by).every(k => T5.roles[k] === T5.by[k]) && T5.roles['helper-arranged'] > T5.n, 'every case is stamped with why it came here, the role counts are their own recount, and the helper pass-throughs are counted, never listed', JSON.stringify(T5.roles));
+  ok(T5.acts.length > 0 && T5.acts.every(r => r.asserts && r.asserts.status && r.calls_here >= 1), 'a case that tests this endpoint carries what it asserted — at least the status', T5.acts.filter(r => !(r.asserts && r.asserts.status)).map(r => r.cid).join(','));
+  ok(T5.svc.every(r => r.calls_here === 0 && r.proves.length >= 1 && !r.in_map_list), 'a case that proves an ending from the service side makes no call here, and the map\'s list never had it', T5.svc.map(r => r.cid).join(','));
+  { const act = T5.joins.filter(j => j.role === 'act');
+    ok(act.length > 0 && act.every(j => j.a && (j.a.status || []).indexOf(j.status) >= 0), 'every join that rests on an act call asserted the status of the ending it proves', act.filter(j => !(j.a && (j.a.status || []).indexOf(j.status) >= 0)).map(j => j.cid + '→' + j.status).join(',')); }
+  ok(T5.swKeys.every(k => T5.st.some(x => x.setting === k)) && T5.st.every(x => Array.isArray(x.values) && typeof x.default_runs === 'boolean'), 'every setting a switch reads says which values tests give it', T5.st.map(x => x.setting + ':' + x.values.length).join(' '));
+  if (T5.sample) { const cid = T5.sample.cid, want = 'detail ' + T5.sample.asserts.detail.join(' · ');
+    await p.evaluate(() => { window.clearPath(); window.showTab('tests'); }); await p.waitForTimeout(320);
+    const sel = `#panel .pchip[data-case="${cid}"]`;
+    if ((await p.$$(sel)).length) { await p.$eval(sel, e => e.scrollIntoView({ block: 'center' })); await p.hover(sel); await p.waitForTimeout(220); }
+    const h = (await p.$eval('#hover', e => e.hidden ? '' : e.innerText)).replace(/\s+/g, ' '); await p.mouse.move(5, 1030); await p.evaluate(() => window.hoverHide());
+    ok(/ROLE/i.test(h) && /tests this endpoint/.test(h) && h.includes(want), 'a case chip\'s card says why the test came here and what it really asserted, not a guess from its name', h.slice(0, 220));
+    await p.evaluate(c => window.selectCase(c), cid); await p.waitForTimeout(300);
+    const rows = await p.$$eval('#portbody .ptrow', els => els.map(e => [e.querySelector('.k').textContent, e.querySelector('.v').textContent]));
+    const get = k => (rows.find(r => r[0] === k) || [])[1] || '';
+    ok(get('role') === 'tests this endpoint' && get('asserts').includes(want), 'the case record carries the same two facts', JSON.stringify(rows.filter(r => r[0] === 'role' || r[0] === 'asserts')));
+    await p.evaluate(() => { window.clearPath(); window.showTab('data'); }); await p.waitForTimeout(240); }
+  else ok(false, 'the roster holds an act case that asserts a detail (the probe needs one to read the card)');
+  ok(errs.length === errs0, 'the test roster raises no page error', errs.slice(errs0, errs0 + 3).join(' | ')); }
+
 // ══ LEFTOVERS piece 4 · WHOSE WRITE IT IS — the endpoint's own writes apart from the gate's · one table set · the provision said once ══
 { const errs0 = errs.length;
   const R = await p.evaluate(() => { const f = window.LABEP.forms, seen = new Map();
