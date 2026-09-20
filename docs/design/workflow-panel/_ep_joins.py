@@ -95,7 +95,8 @@ def inside_the_calls(fj: dict, ID: str, forms_block: dict, functions: dict, secu
                 return g["fn"]
             ks = named.get(g.get("name")) or []
             return ks[0] if len(ks) == 1 else None
-        top = sorted(security.get("guards") or [], key=lambda g: (gsig.find(g["name"] + ")") if (g["name"] + ")") in gsig else len(gsig), 0))
+        in_sig = lambda name: (name + ")") in gsig
+        top = sorted(security.get("guards") or [], key=lambda g: (gsig.find(g["name"] + ")") if in_sig(g["name"]) else len(gsig), 0))
         order, asked = [], collections.defaultdict(list)
 
         def resolve(k, by):
@@ -117,10 +118,13 @@ def inside_the_calls(fj: dict, ID: str, forms_block: dict, functions: dict, secu
             rows.append({"key": k, "name": short(k), "at": d.get("at"), "kind": d.get("kind"), "order": i + 1, "of": len(order), "asked_by": asked[k],
                          "exits": ex, "inherited_exits": inh, "can_end_the_request": bool(ex or inh), "subdeps": [short(x) for x in (d.get("subdeps") or [])],
                          "runs_after_the_handler": bool(d.get("teardown")), "effects": d.get("effects") or [], "applies_to": d.get("applies_to"), "endpoints": n_endpoints,
-                         "in_the_map_list": any(key_of(g) == k for g in top), "present": k in DEP})
+                         "in_the_map_list": any(key_of(g) == k for g in top), "present": k in DEP,
+                         # the handler's OWN helpers are placed by its signature; a helper's helpers come in the feed's own order; a name the clipped signature does not show is a guess
+                         "placed_by": ("the feed's order" if "the handler" not in asked[k] else "the signature" if in_sig(short(k)) else "a guess")})
         security["resolution"] = {"state": "present", "why": None, "rows": rows, "unresolved": unresolved,
                                   "rule": "the order the handler's signature asks for them, each one's own helpers first; a helper asked for twice keeps its first place",
-                                  "counts": {"rows": len(rows), "can_end": sum(1 for r in rows if r["can_end_the_request"]), "end_nothing": sum(1 for r in rows if not r["can_end_the_request"]),
+                                  "signature_clipped": str(gsig).rstrip().endswith("…"),
+                                  "counts": {"rows": len(rows), "guessed": sum(1 for r in rows if r["placed_by"] == "a guess"), "can_end": sum(1 for r in rows if r["can_end_the_request"]), "end_nothing": sum(1 for r in rows if not r["can_end_the_request"]),
                                              "after_the_handler": sum(1 for r in rows if r["runs_after_the_handler"]), "beyond_the_map_list": sum(1 for r in rows if not r["in_the_map_list"])}}
         by_name = {r["name"]: r for r in rows}
         for g in security.get("guards") or []:

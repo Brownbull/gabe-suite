@@ -79,7 +79,7 @@ ok(await p.evaluate(() => window.COPYTXT.data()) ===
 const CMDBOOT = 'command · layout card · verbs g2 · grouping request · names drawn · success shown'
   + ' · sub-paths split · wrong-question blank · hotkeys QWERT grid'
   + ' · cells 64px valley · tooltip lab hover card'
-  + ' · card side right of portrait · ladder in the region · walking one-clock replay · rate-limit chip shown'
+  + ' · card side right of portrait · ladder in the region · walking one-clock replay · rate-limit chip shown · inside a call open'
   + ' · colour by kind · matrix per-path · region 360px, gap 12px · drawn chip strip region title caption · nothing hidden';
 ok(await p.evaluate(() => window.COPYTXT.command()) === CMDBOOT,
    'the command panel boots on its default line, word for word — only what reaches the command region',
@@ -247,7 +247,7 @@ ok(scroll.w === 'thin', 'scrollbars are the station\'s narrow themed ones', JSON
   ok(c.notes === 3, 'each factor carries a quiet NOTE on how it is calculated', String(c.notes));
   ok(!e0(c.quietInk), 'a rule that did not fire is still legible — not faded into the border colour', c.quietInk.join(' '));
   // 3 · the feed-wide comparison is GONE from this card (it is not about this door)
-  ok(!/rank \d+ of \d+/.test(c.txt) && !/BOOT lifespan/.test(c.txt) && !/median \d/.test(c.txt) && !/the other \d+ doors/.test(c.txt),
+  ok(!/rank \d+ of \d+/.test(c.txt) && !/BOOT lifespan/.test(c.txt) && !/median \d/.test(c.txt) && !/the other \d+ (doors|endpoints)/.test(c.txt),
      'no feed-wide comparison on this card — it is not about this door', c.txt.slice(0, 90));
   ok(/impact/i.test(c.txt) && new RegExp('touches ' + F.functions.behind.fns + ' functions').test(c.txt), 'the card states the IMPACT in this door\'s own terms', c.txt.slice(0, 120));
   ok(!/BFS/.test(c.txt), 'the call-mass note dropped the BFS aside');
@@ -272,7 +272,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
 { const dup = []; for (const h of await p.$$('#headstrip .hel')) { await h.hover(); await p.waitForTimeout(60);
     const d = await p.$eval('#hover', e => { const pl = e.querySelector('.cpplain'); if (!pl) return null;
       const rest = [...e.children].filter(x => !x.classList.contains('cpend')).map(x => x.innerText).join(' ');
-      const words = pl.textContent.toLowerCase().split(/[^a-z]+/).filter(w => w.length > 5);
+      const words = pl.textContent.toLowerCase().split(/[^a-z]+/).filter(w => w.length > 5 && !/^endpoints?$/.test(w));   /* the kind's own name is on every card — it proves no repetition (the sweep of door → endpoint, D-018) */
       const hit = words.filter(w => rest.toLowerCase().includes(w));
       return hit.length > words.length * 0.6 ? pl.textContent : null; });
     if (d) dup.push(d); }
@@ -506,7 +506,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
     ok(c.factors.every(f => (f.name === 'written only' ? TB0.filter(t => t.rw === 'w') : f.name === 'read only' ? TB0.filter(t => t.rw === 'r') : TB0.filter(t => t.rw === 'rw')).length + ' table' === f.value.replace(/s$/, '').replace(/s ·.*$/, '')),
        'each channel factor states its own measured count', JSON.stringify(c.factors));
     ok(c.factors.filter(f => /written only/.test(f.name)).every(f => f.state === 'quiet'), 'a measured-zero channel is a hollow dot, not a filled one');
-    ok(/cpend/.test(c.last) && /tables this door reads or writes/.test(c.plain), 'and the plain line comes LAST, said once', c.last); }
+    ok(/cpend/.test(c.last) && /tables this endpoint reads or writes/.test(c.plain), 'and the plain line comes LAST, said once', c.last); }
   { const c = await cardOf('#panel .sechd .dcp[data-pill="fields"]');
     ok(c.title === 'fields' && c.value === String(cols0), 'the FIELDS pill opens its own card', JSON.stringify({ t: c.title, v: c.value }));
     ok(c.factors.length >= 4 && c.factors.every(f => /field/.test(f.value)), 'its factors are what the fields are made of — the kinds', JSON.stringify(c.factors.map(f => f.name)));
@@ -1441,7 +1441,7 @@ await p.waitForTimeout(320);
     const cnt = await readCnt();
     ok(cnt === TB.length + ' tables · ' + allCols + ' fields', 'the title counts tables AND fields', cnt);
     await p.hover('#panel .sechd .dcn[data-count="tables"]'); await p.waitForTimeout(200);
-    ok(/tables this door reads or writes/i.test(await p.evaluate(() => document.getElementById('hover').innerText)),
+    ok(/tables this endpoint reads or writes/i.test(await p.evaluate(() => document.getElementById('hover').innerText)),
        'and a count in the shared pill carries its OWN card');
     // the counts MOVE with the channel — they count what is shown, not what exists
     await p.click('#panel .chbar .chb[data-chan="rw"]'); await p.waitForTimeout(300);
@@ -2843,6 +2843,16 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
     ok(rows.length === I6.want && rows.length > 0, 'and it opens: one row per failure, save and savepoint inside it, set one step in', rows.length + ' drawn · ' + I6.want + ' in the facts');
     const prev = await p.$$eval('#portbody .ptchain > .ptcr', (els, step) => { const i = els.findIndex(e => e.dataset.step === step); let n = 0; for (let j = i + 1; j < els.length && els[j].classList.contains('k-inside'); j++) n++; return n; }, String(I6.callStep));
     ok(prev === I6.want, 'the rows sit right under the call they belong to', String(prev)); }
+  /* what sits inside a call is a RAIL PICK with three states (ruled an option 2026-09-20): always open · closed until clicked · closed */
+  { const redraw = async mode => { await p.evaluate(m => { window.CMD.inside = m; window.selectPath(window.LABEP.forms.through.id); }, mode); await p.waitForTimeout(380); };
+    const vis = () => p.$$eval('#portbody .ptcr.k-inside', els => els.filter(e => !e.hidden && e.offsetParent !== null).length);
+    await redraw('click'); const tag = await p.$eval(callSel + ' .ptcin', e => e.textContent).catch(() => '');
+    ok((await vis()) === 0 && /failure/.test(tag) && (await p.$eval(callSel, e => e.getAttribute('aria-expanded'))) === 'false', 'closed until clicked: the rows are folded, and the call still says what it holds', tag);
+    await p.click(callSel); await p.waitForTimeout(160);
+    ok((await vis()) === I6.want && (await p.$eval(callSel, e => e.getAttribute('aria-expanded'))) === 'true', 'one click on the call opens every row inside it', String(await vis()));
+    await redraw('closed'); ok((await p.$$('#portbody .ptcr.k-inside')).length === 0 && /failure/.test(await p.$eval(callSel + ' .ptcin', e => e.textContent).catch(() => '')), 'closed: the chain keeps to its steps, and the call still says what it holds');
+    await redraw('open'); ok((await vis()) === I6.want, 'always open is the default until he has seen all three', String(await vis()));
+    ok((await p.$$('#cmdcfg [data-cmdinside]')).length === 3 || await p.evaluate(() => /inside a call/.test(document.getElementById('cmdcfg').textContent)), 'the pick sits in the rail with its three states'); }
   const hov6 = async sel => { if (!(await p.$$(sel)).length) return ''; await p.$eval(sel, e => e.scrollIntoView({ block: 'center' })); await p.hover(sel); await p.waitForTimeout(220);
     const t = (await p.$eval('#hover', e => e.hidden ? '' : e.innerText)).replace(/\s+/g, ' '); await p.mouse.move(5, 1030); await p.evaluate(() => window.hoverHide()); return t; };
   { const deep = I6.raises.find(x => x.translation === 'beyond one level');
@@ -3077,7 +3087,7 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
     ok(lost.join(',') === RAILCTL_REMOVED.join(','),
       `of the ${RAILCTL_9b163fc.length} controls the rail carried before the regroup, the only one gone is the entity card's scope pick — deleted by ruling, not mislaid`, lost.join(','));
     // and the controls ADDED on purpose since that recording, each named with what it belongs to
-    const RAILCTL_ADDED = ['data-dstgempty', 'data-dstgplace'];   /* the stage blocks' placement and empty-stage dials (2026-09-17) */
+    const RAILCTL_ADDED = ['data-cmdinside', 'data-dstgempty', 'data-dstgplace'];   /* the stage blocks' placement and empty-stage dials (2026-09-17) · what sits inside a call (2026-09-20, D-018) */
     const STRUCTURE = ['data-frame', 'data-region', 'data-rg'];   /* not controls: the block's region, the frame-dial wrapper, each label's region tag */
     ok(added.join(',') === RAILCTL_ADDED.concat(STRUCTURE).sort().join(','),
       'and everything added is either a named new control or a structure tag — nothing arrived unaccounted for', added.join(',')); }
@@ -3306,7 +3316,7 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
     await p.hover(`#panel .sbgrp[data-stage="${st}"] .sbhd`); await p.waitForTimeout(170);
     const h = (await p.$eval('#hover', e => e.innerText)).replace(/\s+/g, ' ');
     ok(h.indexOf(EXPECT[st]) >= 0, `the ${st} card carries its expectation line, verbatim`, h.slice(0, 110));
-    ok(/ON THIS DOOR/i.test(h), 'and ONE measured row beside it — what is here, never a grade', h.slice(0, 90));
+    ok(/ON THIS ENDPOINT/i.test(h), 'and ONE measured row beside it — what is here, never a grade', h.slice(0, 90));
     await p.mouse.move(5, 1030); }
   { const words = await p.evaluate(() => Object.keys(window.STAGE_EXPECT.data).join(','));
     ok(words === 'EDGE,GATE,INPUT,HANDLER,EFFECTS,ANSWER', 'the six lines live in one registry the next topics add beside', words); }

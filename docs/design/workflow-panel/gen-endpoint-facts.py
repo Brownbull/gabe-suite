@@ -214,9 +214,13 @@ def forms_slice(fj: dict, ID: str, ep: dict) -> dict:
     frontend = {"hook": hook, "reason_sites": reason_sites, "findings": fe_findings, "guard": None, "guards": [], "screens": {},
                 "client": fe.get("client"), "present": bool(fe)}
     _succ = sorted((p for p in paths if p["kind"] == "success"), key=lambda p: (-p["n"]["passed"], p["id"]))
-    through = ({"id": _succ[0]["id"], "name": _succ[0]["names"]["drawn"], "passed": _succ[0]["n"]["passed"], "checks": _succ[0]["n"]["gates"],
-                "others": [{"id": p["id"], "name": p["names"]["drawn"], "passed": p["n"]["passed"]} for p in _succ[1:]],
-                "rule": "the success ending that passes the most checks; how often a route is really taken cannot be read from code"} if _succ else None)
+    _tie = [p for p in _succ if p["n"]["passed"] == _succ[0]["n"]["passed"]] if _succ else []
+    _rule = "the success ending that passes the most checks, and none when two tie; how often a route is really taken cannot be read from code"
+    through = (None if not _succ else
+               {"id": None, "name": None, "tie": [{"id": p["id"], "name": p["names"]["drawn"], "passed": p["n"]["passed"]} for p in _tie], "passed": _succ[0]["n"]["passed"], "checks": _succ[0]["n"]["gates"],
+                "others": [{"id": p["id"], "name": p["names"]["drawn"], "passed": p["n"]["passed"]} for p in _succ if p not in _tie], "rule": _rule} if len(_tie) > 1 else
+               {"id": _succ[0]["id"], "name": _succ[0]["names"]["drawn"], "tie": [], "passed": _succ[0]["n"]["passed"], "checks": _succ[0]["n"]["gates"],
+                "others": [{"id": p["id"], "name": p["names"]["drawn"], "passed": p["n"]["passed"]} for p in _succ[1:]], "rule": _rule})
     return {"through": through, "paths": paths, "exits": exits, "stages": [{"phase": ph, "exits": stage_of.get(ph, [])} for ph in PHASES],
             "preconditions": [dict(g, exit_rec=exit_rec(g.get("exit"))) for g in (ep.get("preconditions") or [])],
             "branches": list(branches.values()), "switches": [switch_rec(i) for i in switches],
@@ -472,7 +476,9 @@ def main() -> int:
         if n["kind"] == "endpoint":
             for m in n.get("middleware") or []:
                 dep_count[m["name"]] += 1
-    n_endpoints = sum(1 for _, n in nodes.values() if n["kind"] == "endpoint")
+    _is_http = lambda n: n["kind"] == "endpoint" and bool(re.match(r"^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS) ", str(n.get("label") or "")))   # BOOT lifespan · TASK roots are trace roots drawn as endpoint nodes — not endpoints
+    n_endpoints = sum(1 for _, n in nodes.values() if _is_http(n))
+    n_roots = sum(1 for _, n in nodes.values() if n["kind"] == "endpoint") - n_endpoints
     guards = [dict(m, feedwide=dep_count.get(m["name"], 0), fn_rec=(fn_rec(m["fn"]) if m.get("fn") in FN else None)) for m in node.get("middleware") or []]
     asgi = sorted([dict(n.get("det") or {}, name=n["label"], id=n["id"]) for _, n in nodes.values() if n["kind"] == "middleware"], key=lambda x: x.get("order", 0))
     walls = [dict(w, flag=n["label"], flag_id=n["id"], default=(n.get("det") or {}).get("default"), src=(n.get("det") or {}).get("src"))
@@ -508,7 +514,8 @@ def main() -> int:
                 "tables_touched_max": max(len((n.get("access") or {}).get("ops") or []) for _, n in nodes.values() if n["kind"] == "endpoint"),
                 "cases_max": max(len((n.get("det") or {}).get("cases") or []) for _, n in nodes.values() if n["kind"] == "endpoint"),
                 "commits_on_feed": len(commits), "entity_counts": ent_stats.get("counts"),
-                "async": {"n": sum(1 for _, n in nodes.values() if n["kind"] == "endpoint" and ((n.get("det") or {}).get("sig") or {}).get("async")), "of": n_endpoints,
+                "roots_not_counted": n_roots,
+                "async": {"n": sum(1 for _, n in nodes.values() if _is_http(n) and ((n.get("det") or {}).get("sig") or {}).get("async")), "of": n_endpoints,
                           "here": bool((det.get("sig") or {}).get("async"))},
                 "screens": {"fetched_by": len(fetch_pieces), "with_none": n_endpoints - len({e.get("to") for e in c4.get("cross_edges", []) if e.get("kind") == "bridge"}), "of": n_endpoints,
                             "unmatched": (c4.get("stats", {}).get("web") or {}).get("unmatched"), "dynamic": (c4.get("stats", {}).get("web") or {}).get("dynamic"),
@@ -519,7 +526,7 @@ def main() -> int:
     _st_all, _st_by_m, _named = collections.Counter(), collections.defaultdict(collections.Counter), 0
     _behind, _nocase, _mismatch = [], 0, 0
     for _s, _n in nodes.values():
-        if _n["kind"] != "endpoint":
+        if not _is_http(_n):
             continue
         _d = _n.get("det") or {}
         _code = _d.get("status") or "none"

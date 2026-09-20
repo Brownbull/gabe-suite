@@ -1,0 +1,15 @@
+{
+ "_about": "The operator's ruling on review-leftovers.html, as pasted into the chat on 2026-09-20, plus his follow-up. While this file exists the page is a RECORD: gen-review.js will not regenerate it (the lab has moved on since — the words were swept, the counts corrected — and a regenerated page would no longer be the page he ruled on). Delete this file to open a new review.",
+ "date": "2026-09-20",
+ "review": "7aa8b87d",
+ "decision": "D-018",
+ "followup": "about \"The five layout cards\" go with the recommendation",
+ "layout_cards": {
+  "fn-rows": "keep",
+  "open-call": "option",
+  "ending-sections": "keep",
+  "rules-on-hover": "keep",
+  "place-card": "everything"
+ },
+ "text": "REVIEW · leftovers · 7aa8b87d · POST /setup/complete @ 05007957\n47 yours · 10 left as my pick\n\nNORM LINES: all 36 ruled — 34 ok · tables · GATE reword · security · EDGE reword (no notes)\n\nRULES I WROTE\nvocab: sweep · thresholds: 9-1 · roles-raise: any-raise · through: tie-none · case-roles: ok   (all his, same as my pick)\n\nLAYOUTS I TOUCHED\nfn-rows: keep · open-call: option · ending-sections: keep · rules-on-hover: keep · place-card: everything   (pasted as \"my pick, not ruled\"; then ruled by his follow-up: go with the recommendation)\n\nPIECE 10 — p10: land (his)\nPIECE 11 — p11: after-10 (his)\n\nLEFT TO MY PICK BY YOUR RULE D-017\nslot-words: ok (his) · dep-order: mark (his) · after-handler: handler (his) · found-by: more-info (his, D-017)\np10-nav: yes · p10-word: beyond one level · p10-toast: yes · p10-i18n: no · p11-name: keep   (my pick, left to me by D-017)\n"
+}

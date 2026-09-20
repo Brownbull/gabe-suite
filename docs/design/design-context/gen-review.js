@@ -13,6 +13,9 @@
 const fs = require("fs"), path = require("path"), crypto = require("crypto");
 const HERE = __dirname, ROOT = path.resolve(HERE, "../../.."), WP = path.join(HERE, "../workflow-panel"), OUT = path.join(HERE, "review-leftovers.html");
 const die = (m) => { console.error("gen-review: " + m); process.exit(2); };
+/* a RULED review is a record: the lab moves on after a ruling, so regenerating would rewrite what he ruled on */
+{ const RULED = path.join(HERE, "review-leftovers.ruled.json"); if (fs.existsSync(RULED)) { const r = JSON.parse(fs.readFileSync(RULED, "utf8"));
+    console.log(`review-leftovers.html is a RULED RECORD (${r.date} · review ${r.review} · ${r.decision}) — not regenerated; delete review-leftovers.ruled.json to open a new review`); process.exit(0); } }
 const rd = (f) => JSON.parse(fs.readFileSync(f, "utf8"));
 const W = rd(path.join(HERE, "review.words.json"));
 global.window = {}; require(path.join(WP, "_lab-ep.js")); const L = global.window.LABEP, f = L.forms;

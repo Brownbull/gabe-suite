@@ -1,7 +1,7 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>Endpoint lab · POST /setup/complete — the six parts, one panel at a time</title>
-<!-- The station's visual system and the door's facts are GENERATED (gen-station-tokens.py · gen-endpoint-facts.py). -->
+<!-- The station's visual system and the endpoint's facts are GENERATED (gen-station-tokens.py · gen-endpoint-facts.py). -->
 <script src="_station.js"></script>
 <script src="_lab-ep.js"></script>
 <style id="stationvars">/* filled at boot from STATION.CSSVARS + STATION.CARDCSS — the station's palette and card chrome, verbatim */</style>
@@ -96,7 +96,7 @@
          LAYOUT is chosen (card · strip · ladder · matrix); every dial lives in the rail's blk-command.
          `order` renumbered for it: rail 1 · cmd-left 2 · bench 3 · port 4 · cmd-right 5, so choice 16
          (card side) is ONE order value. -->
-    <section id="cmd" aria-label="the command panel — every way a request through this door ends"></section>
+    <section id="cmd" aria-label="the command panel — every way a request through this endpoint ends"></section>
   </div>
 </div>
 <div id="hover" class="jdcolpop" hidden></div>
@@ -289,20 +289,20 @@
      that sharpens it, no jargon. The KIND definitions are LIFTED from the station (STATION.LRDEF,
      the operator's own column); the field concepts below are written to the same rule.        ══ */
   var PLAIN = Object.assign({}, S.LRDEF || {}, {
-    status: "the code the door promises when the work goes right — the other codes are the ways it can refuse",
+    status: "the code the endpoint promises when the work goes right — the other codes are the ways it can refuse",
     risk: "a size warning, not a fault — it says changing this will drag a lot of other code with it",
-    source: "the file and line where this door is written — where you go to change it",
-    cluster: "the group of doors inside the entity that share a URL root",
-    above: "one step out of this door — click to stand at the level above it",
+    source: "the file and line where this endpoint is written — where you go to change it",
+    cluster: "the group of endpoints inside the entity that share a URL root",
+    above: "one step out of this endpoint — click to stand at the level above it",
     method: "the verb — what kind of thing the caller is asking for",
-    name: "the URL the frontend calls — the door's address",
+    name: "the URL the frontend calls — the endpoint's address",
     commit: "the moment the writes become permanent — one transaction, all or nothing",
     guard: "a check that runs before the work — it can refuse the request outright",
     journey: "a test that walks through more than one business area",
-    payload: "the fields the door hands back — the size of the answer",
-    behind: "every function the door reaches — how much code one change touches",
-    tests: "the cases that name this door — what proves it works",
-    workflow: "a real user's path, named by a human — the order these doors are called in" });
+    payload: "the fields the endpoint hands back — the size of the answer",
+    behind: "every function the endpoint reaches — how much code one change touches",
+    tests: "the cases that name this endpoint — what proves it works",
+    workflow: "a real user's path, named by a human — the order these endpoints are called in" });
   window.hcard = function(o){ return hcard(o); };
   function hcard(o){
     var h = '<div class="cphd">' + (o.iconHtml || (o.icon ? S.icon(o.icon, 15, o.color) : ""))
@@ -400,7 +400,7 @@
                    ["its colour", S.METHOD[I.method] + " — the same in the graph"],
                    ["painted by", "the station's own badge painter"]],
             plainKey: "method" }) }); } },
-    { key: "name", word: "name", note: "the door's path — the one thing that is always words",
+    { key: "name", word: "name", note: "the endpoint's path — the one thing that is always words",
       build: function(){ var st = window.elStyle("name");
         var c = el("span", { class: "hel hname sh-" + st.shape + " fit-" + st.fit }); c.dataset.el = "name";
         c.style.setProperty("--d", (st.size + 14) + "px");
@@ -411,7 +411,7 @@
                  ["fetched by", F.widening.fetched_by.length + " frontend piece(s)"],
                  ["id", I.id]],
           plainKey: "name", station: I.id })); return c; } },
-    { key: "entity", word: "entity", note: "which entity claims the door — the dot is the entity colour used everywhere in the graph",
+    { key: "entity", word: "entity", note: "which entity claims the endpoint — the dot is the entity colour used everywhere in the graph",
       build: function(){ return chip({ key: "entity", dot: ec, label: "entity", value: I.entity, cls: "entchip",
         card: hcard({ title: I.entity, value: "entity", icon: "entity", color: ec,
           rows: [["endpoints", String((F.feedwide.entity_counts || {}).endpoints || "—")],
@@ -440,11 +440,11 @@
         var factors = codes.map(function(c){ var n = (F.tests.by_status[c] || []).length;
           return { state: c === mine ? "ok" : "quiet", name: c, value: n ? n + " test" + (n === 1 ? "" : "s") : "no test",
                    rule: (c === mine ? "SUCCESS — " : "") + (HTTPM[c] || "—"),
-                   note: c === mine ? "the code this door DECLARES on its decorator; the others are the ways it refuses." : null }; });
+                   note: c === mine ? "the code this endpoint DECLARES on its decorator; the others are the ways it refuses." : null }; });
         return chip({ key: "status", icon: "info", label: "declares", value: I.status + (I.status_name ? " " + I.status_name : ""), col: S.OPC.read, cls: "statchip",
           card: hcard({ title: "declares", value: I.status, icon: "info", color: S.OPC.read,
             factors: factors, factorLabel: "every code its TEST CASES assert · ● is the one it declares",
-            rows: [["a test is", "one case in the project's suite whose name carries this door — " + F.tests.cases.length + " do, all passing"],
+            rows: [["a test is", "one case in the project's suite whose name carries this endpoint — " + F.tests.cases.length + " do, all passing"],
                    ["written as", I.status_name ? "a constant (" + I.status_name + ")" : "a bare number"],
                    ["untyped tests", (F.tests.by_status["no code in name"] || []).length + " of " + F.tests.cases.length + " name no code"]],
             plainKey: "status" }) }); } },
@@ -465,16 +465,16 @@
           var factors = [
             { state: I.risk.large ? "fire" : "quiet", name: "call mass", value: "behind " + I.risk.behind + " · fan-in " + I.risk.fanin,
               rule: "fires at behind ≥ 15 or fan-in ≥ 15",
-              note: "behind = every function reachable from the handler · fan-in = how many elements depend on this door." },
+              note: "behind = every function reachable from the handler · fan-in = how many elements depend on this endpoint." },
             { state: I.risk.god ? "fire" : "quiet", name: "handler size", value: (R.handler_lines != null ? R.handler_lines + " lines" : "not measured"),
               rule: "fires at ≥ " + (R.god_lines || 50) + " lines",
               note: "the handler's own body only — the code behind it is the factor above." },
             { state: I.risk.untested ? "fire" : "quiet", name: "coverage", value: (R.cases || 0) + " test" + ((R.cases || 0) === 1 ? "" : "s"),
               rule: "fires when no test names it",
-              note: "a test counts when its name carries this door; the web corpus reaches it by file and is counted separately." } ];
+              note: "a test counts when its name carries this endpoint; the web corpus reaches it by file and is counted separately." } ];
           return hcard({ title: title, value: value, icon: "burst", color: "var(--red)",
             factors: factors, factorLabel: "the three rules · ● is the one that fired",
-            rows: [["impact", "editing this door touches " + I.risk.behind + " functions"]],
+            rows: [["impact", "editing this endpoint touches " + I.risk.behind + " functions"]],
             plainKey: "risk" }); }
         if (I.risk.large) w.append(chip({ key: "risk", icon: "burst", cls: "flagchip warn", label: "risk", value: I.risk.conflict || "conflict", card: riskCard("large") }));
         if (I.risk.god) w.append(chip({ key: "risk", icon: "alert", cls: "flagchip god", label: "risk", value: "god-object", card: riskCard("god") }));
@@ -493,7 +493,7 @@
             cls: "upchip", label: a.kind, value: HEADCFG.mode === "label" ? (a.kind === "everything" ? "everything" : a.label) : null,
             card: hcard({ title: a.kind === "everything" ? "everything" : a.label, value: "one level up",
               icon: a.kind === "cluster" ? "layers" : isEnt ? "entity" : "globe", color: isEnt ? ec : null,
-              rows: [["from", "this door"], ["to", a.kind === "everything" ? "the whole universe" : a.label],
+              rows: [["from", "this endpoint"], ["to", a.kind === "everything" ? "the whole universe" : a.label],
                      ["carries", a.kind === "cluster" ? "the cluster, which has no chip of its own" : isEnt ? "the entity, in its own colour" : "every entity at once"]]
                 .concat(a.kind === "everything" ? placeRows() : []),
               plainKey: "above" }) })); });
@@ -811,9 +811,9 @@
     { key: "commit", word: "the commit",  icon: "key",    on: ["grounds", "flow", "fields"],
       what: "the DB COMMIT pulse under the tables", lost: "that every write lands in ONE transaction" },
     { key: "ev",     word: "evidence",    icon: "role",   on: ["grounds"],
-      what: "the membership row — file · users · data", lost: "that the three witnesses disagree about this door's home" },
+      what: "the membership row — file · users · data", lost: "that the three witnesses disagree about this endpoint's home" },
     { key: "mdl",    word: "model row",   icon: "link",   on: ["grounds"],
-      what: "the entity-model row — claim · seeded · derived · proposed", lost: "which model would re-home this door" },
+      what: "the entity-model row — claim · seeded · derived · proposed", lost: "which model would re-home this endpoint" },
     { key: "ents",   word: "entities",    icon: "entity", on: ["flow"],
       what: "the entities line under the field", lost: "the roster of grounds the dots stand for" },
     { key: "legend", word: "the legend",  icon: "layers", on: ["grounds", "flow", "ledger", "fields", "blocks", "stages", "stageblocks"],
@@ -999,7 +999,7 @@
             applyData(); window.showTab("data"); drawDataCfg(); }; w.append(b2); });
         box.append(el("div", { class: "cfl" }, label), w); }
       group("stages", "stages", SG.axis + " · " + SG.placement + " · empty " + SG.empty + " · " + SG.fate,
-        "the six stages every API door has — EDGE · GATE · INPUT · HANDLER · EFFECTS · ANSWER — with this door's tables laid across them", function(){
+        "the six stages every API endpoint has — EDGE · GATE · INPUT · HANDLER · EFFECTS · ANSWER — with this endpoint's tables laid across them", function(){
         spick("axis", "dstgaxis", "axis",
           [["rows", "STAGE BLOCKS: one band per stage, top to bottom, the blocks wrapping inside it. The GRID reads it as one row per stage, the table names rotated", "stages as rows"],
            ["cols", "STAGE BLOCKS: six columns left to right, the blocks stacked in each. The GRID reads it as the stages across the top, one row per table", "stages as columns"]],
@@ -1063,7 +1063,7 @@
     group("sort", "sort", DATACFG.sort + (DATACFG.sortRev ? " reversed" : "") + " · " + DATACFG.sortShow + " · " + DATACFG.sortInk + " on " + DATACFG.sortBg + " " + DATACFG.sortAlpha + "%",
       "how the tables are ordered — the same buttons sit in the panel's title row, after the channels", function(){
       pick("by", "sort", [
-        ["channel", "tables the door writes come first, then the ones it only reads — ties by size", "by channel"],
+        ["channel", "tables the endpoint writes come first, then the ones it only reads — ties by size", "by channel"],
         ["size", "the table with the most fields first", "by size"],
         ["name", "alphabetical by table name", "by name"],
         ["entity", "grouped by the entity that claims each table, then by size", "by entity"]],
@@ -1516,7 +1516,7 @@
       "only the Grounds distribution reads these", function(){
     pick("order", "order", [
       ["size", "the ground holding the most tables leads", "by size"],
-      ["home", "the door's own entity leads, whatever its size", "home first"],
+      ["home", "the endpoint's own entity leads, whatever its size", "home first"],
       ["name", "alphabetical — the same order every time, whatever the feed says", "by name"]],
       function(o){ return labIco(o[0] === "size" ? "wwide" : o[0] === "home" ? "posleft" : "normal", 15); }, "grounds");
     pick("width", "width", [
@@ -1799,7 +1799,7 @@
          ["other", "those fields are filed under OTHER, like any type the rule does not name", "other"]],
         function(o){ return S.icon(o[0] === "shape" ? "schema" : "alert", 15); }, "blocks");
       pick("direction colour", "sch-map-col", function(){ return M.dirCol; }, function(v){ M.dirCol = v; },
-        [["rw", "IN takes the read green, OUT the write orange — the door reads the request and writes the response", "read / write"],
+        [["rw", "IN takes the read green, OUT the write orange — the endpoint reads the request and writes the response", "read / write"],
          ["schema", "both directions in the schema colour — the chip's words tell them apart", "schema"],
          ["neutral", "both in a quiet grey — the direction reads from its words alone", "neutral"]],
         function(o){ return o[0] === "rw" ? sw("linear-gradient(90deg," + S.OPC.read + " 50%," + S.OPC.write + " 50%)") : o[0] === "schema" ? sw(S.KINDCOL.schema) : sw("#8794ab"); });
@@ -1845,7 +1845,7 @@
     group("dirs", "directions", ["in", "out"].filter(function(d){ return C.dir[d]; }).join(" + ") || "none",
       "which shapes are drawn — the request's, the response's, or both; none draws the measurement", function(){
       toggles("shown", "sch-dir-sw", [["in", "the request and every shape nested in it — what the caller sends in", S.icon("down", 15, S.OPC.read)],
-                                      ["out", "the response and every shape nested in it — what the door sends back", S.icon("up", 15, S.OPC.write)]],
+                                      ["out", "the response and every shape nested in it — what the endpoint sends back", S.icon("up", 15, S.OPC.write)]],
         function(k){ return !!C.dir[k]; }, function(k, on){ C.dir[k] = on ? 0 : 1; }); });
     group("sort", "sort", C.sort + (C.sortRev ? " reversed" : ""), "how the shapes are laid out — the buttons' look is Data's", function(){
       pick("order", "sch-sort-k", function(){ return C.sort; }, function(v){ C.sort = v; },
@@ -1961,7 +1961,7 @@
       box.append(el("div", { class: "cfl" }, label), w); }
     row("colour", [["focus", "only the OPEN part is coloured; every other button goes mono, so the row points at one thing", "focus"],
                    ["station", "each part keeps its own station colour — model teal, function indigo, tests green, widening purple, security yellow", "station"],
-                   ["entity", "every button takes the door's entity colour — the row reads as one place", "entity"],
+                   ["entity", "every button takes the endpoint's entity colour — the row reads as one place", "entity"],
                    ["accent", "one accent for all five — the row stops competing with the panel", "accent"],
                    ["mono", "no colour at all; only the selected button lifts", "mono"]],
         "palette", function(o){ return '<i class="swz swz-' + o[0] + '"></i>'; });
@@ -2088,7 +2088,7 @@
         + " · wrong-question " + C.wrong
         + " · hotkeys " + W.keys[C.keys] + " · cells " + C.size + "px " + C.face + " · tooltip " + W.tip[C.tip]
         + " · card side " + W.side[C.side]
-        + " · ladder " + W.ladder[C.ladder] + " · walking " + W.walk[C.walk] + " · rate-limit chip " + C.flag
+        + " · ladder " + W.ladder[C.ladder] + " · walking " + W.walk[C.walk] + " · rate-limit chip " + C.flag + " · inside a call " + C.inside
         + " · colour by " + C.colour + " · matrix " + W.matrix[C.matrix]
         + " · region " + FRAME.cmdW + "px, gap " + FRAME.cmdGap + "px"
         + " · drawn " + sec.filter(function(k){ return C.show[k]; }).join(" ")
@@ -2433,6 +2433,7 @@
     ladder: "cmd",         /* 17 · in the region · left of bench · inside the portrait edge */
     walk: "replay",        /* 18 · one-clock replay · static */
     flag: "shown",         /* 19 · the rate-limit chip, with its caveat */
+    inside: "open",        /* 20 · what sits inside a call on a route: always open · closed until clicked · closed (ruled an OPTION 2026-09-20, D-018; default open until he has seen all three) */
     colour: "kind",        /* B13 · kind · status · phase · mono */
     matrix: "path",        /*      the matrix's fill: per-path, or with the hook counted on every path */
     show: { chip: 1, strip: 1, region: 1, title: 1, caption: 1 } };
@@ -2601,6 +2602,11 @@
         [["shown", "the flag chip rides the 429 cells, with its caveat", "shown with the caveat"],
          ["hidden", "no flag chip", "hidden"]],
         function(o){ return labIco(o[0] === "shown" ? "eye" : "eyeoff", 15); });
+      P("inside a call", "cmdinside", "inside",
+        [["open", "a call on a route lists what sits inside it — its failures, saves and savepoints — always", "always open"],
+         ["click", "the rows stay folded until you click the call; the call still says what it holds", "closed until clicked"],
+         ["closed", "the chain keeps to its steps; the call says what it holds and never opens", "closed"]],
+        function(o){ return labIco(o[0] === "open" ? "eye" : o[0] === "click" ? "sh-square" : "eyeoff", 15); });
       box.append(el("div", { class: "cfread" }, "every option here is BUILT — none of them is a ruling. Pick, look, then say which one." )); });
 
     K.group("cells", "cells", CMD.size + "px " + CMD.face + " · " + CMD.keys, "how big a command square is, what its face does, and where its letter goes", function(){

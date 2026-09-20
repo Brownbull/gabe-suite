@@ -5019,6 +5019,7 @@ window.LABEP = {
   "through": {
    "id": "p:0f099873d5",
    "name": "first run",
+   "tie": [],
    "passed": 10,
    "checks": 10,
    "others": [
@@ -5033,7 +5034,7 @@ window.LABEP = {
      "passed": 8
     }
    ],
-   "rule": "the success ending that passes the most checks; how often a route is really taken cannot be read from code"
+   "rule": "the success ending that passes the most checks, and none when two tie; how often a route is really taken cannot be read from code"
   },
   "paths": [
    {
@@ -28569,7 +28570,8 @@ window.LABEP = {
      "applies_to": 78,
      "endpoints": 80,
      "in_the_map_list": true,
-     "present": true
+     "present": true,
+     "placed_by": "the signature"
     }
    },
    {
@@ -28598,7 +28600,8 @@ window.LABEP = {
      "applies_to": 79,
      "endpoints": 80,
      "in_the_map_list": true,
-     "present": true
+     "present": true,
+     "placed_by": "the signature"
     }
    },
    {
@@ -28626,7 +28629,8 @@ window.LABEP = {
      "applies_to": 12,
      "endpoints": 80,
      "in_the_map_list": true,
-     "present": true
+     "present": true,
+     "placed_by": "a guess"
     }
    }
   ],
@@ -28683,7 +28687,8 @@ window.LABEP = {
      "applies_to": 78,
      "endpoints": 80,
      "in_the_map_list": true,
-     "present": true
+     "present": true,
+     "placed_by": "the signature"
     }
    }
   ],
@@ -28814,7 +28819,8 @@ window.LABEP = {
      "applies_to": 78,
      "endpoints": 80,
      "in_the_map_list": false,
-     "present": true
+     "present": true,
+     "placed_by": "the feed's order"
     },
     {
      "key": "apps/api/db.py::get_session",
@@ -28836,7 +28842,8 @@ window.LABEP = {
      "applies_to": 79,
      "endpoints": 80,
      "in_the_map_list": true,
-     "present": true
+     "present": true,
+     "placed_by": "the signature"
     },
     {
      "key": "apps/api/auth/context.py::_resolve_verifier",
@@ -28857,7 +28864,8 @@ window.LABEP = {
      "applies_to": 79,
      "endpoints": 80,
      "in_the_map_list": false,
-     "present": true
+     "present": true,
+     "placed_by": "the feed's order"
     },
     {
      "key": "apps/api/auth/context.py::get_auth_context",
@@ -28904,7 +28912,8 @@ window.LABEP = {
      "applies_to": 78,
      "endpoints": 80,
      "in_the_map_list": true,
-     "present": true
+     "present": true,
+     "placed_by": "the signature"
     },
     {
      "key": "apps/api/config.py::get_settings",
@@ -28925,13 +28934,16 @@ window.LABEP = {
      "applies_to": 12,
      "endpoints": 80,
      "in_the_map_list": true,
-     "present": true
+     "present": true,
+     "placed_by": "a guess"
     }
    ],
    "unresolved": [],
    "rule": "the order the handler's signature asks for them, each one's own helpers first; a helper asked for twice keeps its first place",
+   "signature_clipped": true,
    "counts": {
     "rows": 5,
+    "guessed": 1,
     "can_end": 2,
     "end_nothing": 3,
     "after_the_handler": 1,
@@ -28945,7 +28957,7 @@ window.LABEP = {
   "why": "none of the feed's 30 recent commits touched this door (commits.js)"
  },
  "feedwide": {
-  "endpoints": 81,
+  "endpoints": 80,
   "deps": {
    "get_session": 79,
    "get_auth_context": 78,
@@ -28966,15 +28978,16 @@ window.LABEP = {
    "models": 6,
    "schemas": 6
   },
+  "roots_not_counted": 1,
   "async": {
    "n": 80,
-   "of": 81,
+   "of": 80,
    "here": true
   },
   "screens": {
    "fetched_by": 1,
-   "with_none": 28,
-   "of": 81,
+   "with_none": 27,
+   "of": 80,
    "unmatched": [
     {
      "from": "web:apps/web/src/features/cooking/useRecipeFilterModes",
@@ -29715,13 +29728,9 @@ window.LABEP = {
     "200": 59,
     "201": 13,
     "204": 7,
-    "boot": 1,
     "202": 1
    },
    "by_method": {
-    "BOOT": {
-     "boot": 1
-    },
     "DELETE": {
      "204": 7,
      "200": 1
@@ -29742,9 +29751,9 @@ window.LABEP = {
     }
    },
    "as_constant": 21,
-   "of": 81,
+   "of": 80,
    "cases_never_assert_declared": 26,
-   "no_cases": 22,
+   "no_cases": 21,
    "peers": [],
    "same_method": {
     "200": 15,
@@ -29759,24 +29768,20 @@ window.LABEP = {
    "handler_lines": 21,
    "cases": 26,
    "god_count": 9,
-   "large_count": 14,
-   "of": 81,
+   "large_count": 13,
+   "of": 80,
    "behind_bins": {
-    "40+": 6,
+    "40+": 5,
     "15-39": 8,
     "5-14": 23,
     "1-4": 41,
     "0": 3
    },
-   "behind_max": 135,
-   "behind_max_of": "BOOT lifespan",
+   "behind_max": 48,
+   "behind_max_of": "GET /recipes",
    "behind_median": 4,
-   "rank": 11,
+   "rank": 10,
    "heaviest": [
-    {
-     "label": "BOOT lifespan",
-     "behind": 135
-    },
     {
      "label": "GET /recipes",
      "behind": 48
@@ -29792,9 +29797,13 @@ window.LABEP = {
     {
      "label": "POST /recipe-creation/{request_id}/relief-accept",
      "behind": 42
+    },
+    {
+     "label": "POST /meal-plan/generate",
+     "behind": 42
     }
    ],
-   "no_cases": 22
+   "no_cases": 21
   }
  }
 };

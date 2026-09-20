@@ -1488,6 +1488,8 @@ html, body{ height:100%; }
 .ptcr.k-inside{ margin-left:18px; border-left:2px solid var(--line); border-radius:0 4px 4px 0; }
 .ptcr.k-inside .ptci{ width:auto; min-width:14px; }
 .ptcr.k-inside b, .ptcr[data-opens] b{ flex:none; }
+.ptcr.k-inside[hidden]{ display:none; }
+.ptcr.opens{ cursor:pointer; } .ptcr.opens .ptcin::after{ content:" ▸"; color:var(--accent); } .ptcr.opens[aria-expanded="true"] .ptcin::after{ content:" ▾"; }
 .bhd .bnote.bres{ cursor:help; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .rcrow .rctwo{ font-style:normal; margin-left:6px; color:var(--muted); font:600 12px/1.5 var(--font-mono); }
 .ptbk{ display:flex; flex-wrap:wrap; gap:4px; margin:4px 0; }
