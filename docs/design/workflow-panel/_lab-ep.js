@@ -16715,7 +16715,20 @@ window.LABEP = {
     "string_too_long": 1,
     "value_error": 31
    },
-   "exits_with_headers": 3
+   "exits_with_headers": 3,
+   "races": {
+    "own": {
+     "handled": 1,
+     "uncaught": 10
+    },
+    "gate": {
+     "uncaught": 1
+    }
+   },
+   "tables_found": {
+    "both": 13,
+    "route effects": 2
+   }
   }
  },
  "identity": {
@@ -18333,7 +18346,8 @@ window.LABEP = {
     "uqs": [],
     "cols_more": 0,
     "file": "apps/api/models/consent.py",
-    "id": "model:ConsentRecord"
+    "id": "model:ConsentRecord",
+    "found": "both"
    },
    {
     "table": "households",
@@ -18362,7 +18376,8 @@ window.LABEP = {
     "uqs": [],
     "cols_more": 0,
     "file": "apps/api/models/household.py",
-    "id": "model:Household"
+    "id": "model:Household",
+    "found": "both"
    },
    {
     "table": "household_format_preferences",
@@ -18428,7 +18443,8 @@ window.LABEP = {
     ],
     "cols_more": 0,
     "file": "apps/api/models/preferences.py",
-    "id": "model:HouseholdFormatPreferences"
+    "id": "model:HouseholdFormatPreferences",
+    "found": "both"
    },
    {
     "table": "idempotency_keys",
@@ -18486,7 +18502,8 @@ window.LABEP = {
     ],
     "cols_more": 0,
     "file": "apps/api/models/idempotency.py",
-    "id": "model:IdempotencyKey"
+    "id": "model:IdempotencyKey",
+    "found": "both"
    },
    {
     "table": "locations",
@@ -18555,7 +18572,8 @@ window.LABEP = {
     "uqs": [],
     "cols_more": 0,
     "file": "apps/api/models/location.py",
-    "id": "model:Location"
+    "id": "model:Location",
+    "found": "both"
    },
    {
     "table": "memberships",
@@ -18606,7 +18624,8 @@ window.LABEP = {
     ],
     "cols_more": 0,
     "file": "apps/api/models/household.py",
-    "id": "model:Membership"
+    "id": "model:Membership",
+    "found": "both"
    },
    {
     "table": "setup_completion_state",
@@ -18657,7 +18676,8 @@ window.LABEP = {
     ],
     "cols_more": 0,
     "file": "apps/api/models/setup.py",
-    "id": "model:SetupCompletionState"
+    "id": "model:SetupCompletionState",
+    "found": "both"
    },
    {
     "table": "subscription_entitlement",
@@ -18703,7 +18723,8 @@ window.LABEP = {
     ],
     "cols_more": 0,
     "file": "apps/api/models/subscription.py",
-    "id": "model:SubscriptionEntitlement"
+    "id": "model:SubscriptionEntitlement",
+    "found": "both"
    },
    {
     "table": "user_dietary_profile",
@@ -18754,7 +18775,8 @@ window.LABEP = {
     ],
     "cols_more": 0,
     "file": "apps/api/models/preferences.py",
-    "id": "model:UserDietaryProfile"
+    "id": "model:UserDietaryProfile",
+    "found": "both"
    },
    {
     "table": "user_exploration_preferences",
@@ -18825,7 +18847,8 @@ window.LABEP = {
     ],
     "cols_more": 2,
     "file": "apps/api/models/preferences.py",
-    "id": "model:UserExplorationPreferences"
+    "id": "model:UserExplorationPreferences",
+    "found": "both"
    },
    {
     "table": "user_format_preferences",
@@ -18871,7 +18894,8 @@ window.LABEP = {
     ],
     "cols_more": 0,
     "file": "apps/api/models/preferences.py",
-    "id": "model:UserFormatPreferences"
+    "id": "model:UserFormatPreferences",
+    "found": "both"
    },
    {
     "table": "user_notification_preferences",
@@ -18927,7 +18951,8 @@ window.LABEP = {
     ],
     "cols_more": 0,
     "file": "apps/api/models/preferences.py",
-    "id": "model:UserNotificationPreferences"
+    "id": "model:UserNotificationPreferences",
+    "found": "both"
    },
    {
     "table": "user_privacy_permissions",
@@ -18983,7 +19008,113 @@ window.LABEP = {
     ],
     "cols_more": 0,
     "file": "apps/api/models/preferences.py",
-    "id": "model:UserPrivacyPermissions"
+    "id": "model:UserPrivacyPermissions",
+    "found": "both"
+   },
+   {
+    "table": "users",
+    "model": "User",
+    "rw": "rw",
+    "entity": "auth",
+    "entity_color": "#5a53a8",
+    "cols": [
+     [
+      "id",
+      "uuid.UUID",
+      ""
+     ],
+     [
+      "auth_provider",
+      "str",
+      ""
+     ],
+     [
+      "auth_provider_id",
+      "str",
+      ""
+     ],
+     [
+      "email",
+      "str | None",
+      ""
+     ],
+     [
+      "display_name",
+      "str | None",
+      ""
+     ],
+     [
+      "created_at",
+      "datetime",
+      ""
+     ]
+    ],
+    "fks": [],
+    "uqs": [
+     "auth_provider",
+     "auth_provider_id"
+    ],
+    "cols_more": 0,
+    "file": "apps/api/models/identity.py",
+    "id": "model:User",
+    "found": "route effects",
+    "found_why": "only the login check touches it, before the handler runs — the map's access edge starts at the handler"
+   },
+   {
+    "table": "ai_spend_log",
+    "model": "AiSpendLog",
+    "rw": "r",
+    "entity": "recipe",
+    "entity_color": "#3f6d4c",
+    "cols": [
+     [
+      "id",
+      "uuid.UUID",
+      ""
+     ],
+     [
+      "occurred_at",
+      "datetime",
+      ""
+     ],
+     [
+      "cost_usd",
+      "float",
+      ""
+     ],
+     [
+      "user_id",
+      "uuid.UUID | None",
+      ""
+     ],
+     [
+      "mode",
+      "str",
+      ""
+     ],
+     [
+      "total_tokens",
+      "int",
+      ""
+     ],
+     [
+      "credits_charged",
+      "int",
+      ""
+     ],
+     [
+      "model_tier",
+      "str",
+      ""
+     ]
+    ],
+    "fks": [],
+    "uqs": [],
+    "cols_more": 0,
+    "file": "apps/api/models/ai_spend.py",
+    "id": "model:AiSpendLog",
+    "found": "route effects",
+    "found_why": "a step of a route touches it; the map's access edge does not carry it"
    }
   ],
   "both": [

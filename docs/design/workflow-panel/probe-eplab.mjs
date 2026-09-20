@@ -809,7 +809,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
       rows: [...b.querySelectorAll('.rcrow')].map(r => ({ k: r.dataset.row, label: (r.querySelector('.k') || {}).textContent, icon: !!r.querySelector('.rci svg'), v: (r.querySelector('.v') || {}).textContent, info: !!r.querySelector('.rcinfo svg') })),
       heads: [...b.querySelectorAll('.rctab .rcth > span')].map(s => s.firstChild ? s.firstChild.textContent.trim() : ''), fp: (b.querySelector('.rctab .rcth .rcfp') || {}).textContent }; }, pk.table);
   ok(rec && rec.name === pk.table && rec.glyph && rec.glyph === rec.cardGlyph, 'the record opens like the block card — the table glyph in the same colour, then its name', JSON.stringify(rec && { n: rec.name, g: rec.glyph, c: rec.cardGlyph }));
-  ok(rec && rec.rows.map(r => r.k).join(',') === 'entity,model,file,channel' && rec.rows.every(r => r.icon && r.label === r.k), 'then one row per fact, each led by its icon and its label — entity · model · file · channel', JSON.stringify(rec && rec.rows));
+  ok(rec && rec.rows.map(r => r.k).join(',') === 'entity,model,file,channel,found by' && rec.rows.every(r => r.icon && r.label === r.k), 'then one row per fact, each led by its icon and its label — entity · model · file · channel · found by (leftovers piece 4 added the fifth fact, on the record\'s own law)', JSON.stringify(rec && rec.rows));
   { const m = rec && rec.rows.find(r => r.k === 'model');
     ok(m && m.v === pk.model && m.info && !/python class/i.test(rec.text), 'the model row is just the class — the explanation waits on an info icon at its end', JSON.stringify(m)); }
   ok(rec && !/\binside\b/i.test(rec.text) && !/foreign keys\s*\n?\s*\w+\s*→/i.test(rec.text.split('FIELDS')[0] || ''), 'no INSIDE row and no FOREIGN KEYS row above the fields — the table carries both', JSON.stringify(rec && rec.rows.map(r => r.k)));
@@ -2024,11 +2024,12 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
     ok(chips.indexOf('idempotency_keys=maybe ×' + N.consentN.maybe_committed) >= 0,
       'the same table also wears its maybe-committed write — one chip per bucket, never one per table', chips.join(' '));
     const drawnT = await p.$$eval('#panel [data-table]', els => els.map(e => e.dataset.table));
-    ok(chips.filter(c => /committed ×/.test(c) && !/maybe/.test(c)).length === 0 && drawnT.indexOf('users') < 0,
-      'the one committed write is the auth dependency\'s, on `users` — a table this panel never draws, so no chip claims it', chips.join(' '));
+    const committed = chips.filter(c => /committed ×/.test(c) && !/maybe/.test(c));
+    ok(committed.length === 1 && /^users=committed ×/.test(committed[0]) && drawnT.indexOf('users') >= 0,
+      'the one committed write is the login check\'s, on `users` — leftovers piece 4 draws that table, so its own block claims the chip', chips.join(' '));
     await p.evaluate(() => { window.showPortraitVar('cmd-path'); });await p.waitForTimeout(160);
     ok((await p.$$eval('#portbody .pttbl i', els => els.map(e => e.textContent))).indexOf('users') >= 0,
-      'the path record names it instead — the write is never lost, only undrawable here');
+      'and the path record names it too');
     const col = await p.$eval('#panel .bchip.bk-rolled_back', e => getComputedStyle(e).color);
     const want = await p.evaluate(() => { const S = window.STATION; const d = document.createElement('i'); d.style.color = S.BADGE_COL.role.accessor; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; });
     ok(col === want, 'and it is drawn in the station\'s own red — read, never pasted', col + ' vs ' + want);
@@ -2537,15 +2538,14 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
     ok(heads.join(' → ') === 'EDGE → GATE → INPUT → HANDLER → EFFECTS → ANSWER',
       'the six drawn stages are the standard spine, in request order', heads.join(' → ')); }
   { const rows = await p.$$eval('#panel .dsl[data-table]', els => els.map(e => e.dataset.table));
-    ok(rows.length === G.rows && rows.length === G.panel + G.extra.length,
-      `one row per table: the ${G.panel} the panel draws plus the ${G.extra.length} only the effects arm knows`, rows.length + ' vs ' + G.rows);
+    const FOUND = await p.evaluate(() => { const T = window.LABEP.data.tables, c = {}; T.forEach(t => { c[t.found] = (c[t.found] || 0) + 1; });
+      return { counts: c, fact: window.LABEP.forms.counts.tables_found, routeOnly: T.filter(t => t.found === 'route effects').map(t => t.table).sort(), allHave: T.every(t => !!t.found) }; });
+    ok(G.extra.length === 0 && rows.length === G.rows && rows.length === G.panel,
+      `ONE table set for every layout (leftovers piece 4): all ${G.panel} tables are the panel's own, none known to the routes alone`, rows.length + ' vs ' + G.rows + ' · extra ' + G.extra.join(','));
     const hollow = await p.$$eval('#panel .dsl.hollow', els => els.map(e => e.dataset.table).sort());
-    ok(hollow.join(',') === G.extra.slice().sort().join(','),
-      'and those two are drawn HOLLOW — measured to be written, never drawn by the panel', hollow.join(',') + ' vs ' + G.extra.join(','));
-    await p.hover('#panel .dsl.hollow'); await p.waitForTimeout(150);
-    ok(/not in the data panel/i.test(await p.$eval('#hover', e => e.innerText)), 'the hover says why',
-      (await p.$eval('#hover', e => e.innerText)).replace(/\s+/g, ' ').slice(0, 90));
-    await p.mouse.move(5, 1030); }
+    ok(hollow.length === 0, 'so no row is drawn hollow for being missing from the panel', hollow.join(','));
+    ok(FOUND.allHave && JSON.stringify(FOUND.counts) === JSON.stringify(FOUND.fact) && FOUND.routeOnly.length > 0, 'every table says how it was found, and the counts are their own recount', JSON.stringify(FOUND.counts));
+    ok(FOUND.routeOnly.every(t => rows.indexOf(t) >= 0), 'the tables only a route\'s steps know are drawn like any other', FOUND.routeOnly.join(',')); }
   { const cells = await p.$$eval('#panel .dsc[data-stage]', els => els.length);
     ok(cells === (G.rows + 1) * 6, `the grid is ${G.rows} tables + the transaction rail × 6 stages`, String(cells));
     const none = await p.$$eval('#panel .dsc.none', els => [...new Set(els.map(e => e.dataset.stage))].sort());
@@ -2683,6 +2683,34 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
   await p.waitForTimeout(260);
   ok(errs.length === errsBefore, 'the stages picture raises no page error anywhere in this section', errs.slice(errsBefore, errsBefore + 3).join(' | '));
 }
+
+// ══ LEFTOVERS piece 4 · WHOSE WRITE IT IS — the endpoint's own writes apart from the gate's · one table set · the provision said once ══
+{ const errs0 = errs.length;
+  const R = await p.evaluate(() => { const f = window.LABEP.forms, seen = new Map();
+    f.paths.forEach(x => ((x.effects || {}).steps || []).forEach(s => { if (s.race) seen.set(s.table + '|' + JSON.stringify(s.race.keys), [s.dependency ? 'gate' : 'own', s.race.state]); }));
+    const c = { own: {}, gate: {} }; [...seen.values()].forEach(([w, st]) => { c[w][st] = (c[w][st] || 0) + 1; });
+    const flat = o => ['own', 'gate'].map(w => Object.keys(o[w] || {}).sort().map(k => w + '.' + k + '=' + o[w][k]).join(',')).join('|');
+    return { mine: flat(c), fact: flat(f.counts.races), total: seen.size, gate: Object.values(c.gate).reduce((a, b) => a + b, 0), prov: (f.auth.provisions || []).map(v => v.table),
+      routeOnly: window.LABEP.data.tables.filter(t => t.found === 'route effects').map(t => t.table) }; });
+  ok(R.mine === R.fact && R.total > 0, 'the races are counted by WHO owns the insert — this endpoint\'s own steps apart from the gate\'s — and the counts are their own recount', R.fact);
+  ok(R.gate >= 1, 'the gate\'s insert is counted apart, never as this endpoint\'s own', String(R.gate));
+  await p.evaluate(() => { window.clearPath(); window.showTab('data'); window.showVariant('data', 'stageblocks'); }); await p.waitForTimeout(320);
+  const hov = async sel => { await p.$eval(sel, e => e.scrollIntoView({ block: 'center' })); await p.hover(sel); await p.waitForTimeout(200); const t = (await p.$eval('#hover', e => e.innerText)).replace(/\s+/g, ' '); await p.mouse.move(5, 1030); await p.evaluate(() => window.hoverHide()); return t; };
+  { const g = await hov('#panel .sbgrp[data-stage="GATE"] .sbhd'), e = await hov('#panel .sbgrp[data-stage="EDGE"] .sbhd');
+    ok(R.prov.length > 0 && /PROVISIONED HERE/i.test(g) && R.prov.every(t => g.includes(t)) && /whatever the ending/.test(g), 'the GATE stage says its provision once — the row the check creates before the handler runs', g.slice(0, 200));
+    ok(!/PROVISIONED HERE/i.test(e), 'and no other stage repeats it', e.slice(0, 100)); }
+  await p.evaluate(() => { window.showVariant('data', 'blocks'); }); await p.waitForTimeout(320);
+  ok(R.routeOnly.length > 0 && (await p.$$eval('#panel .blk', els => els.map(e => e.dataset.table))).filter(t => R.routeOnly.indexOf(t) >= 0).length === R.routeOnly.length, 'the Blocks layout draws the route-only tables too — one table set for every layout', R.routeOnly.join(','));
+  const foundRow = async tbl => { await p.evaluate(t => window.selectIn('data', t), tbl); await p.waitForTimeout(300);
+    return p.$eval('#portbody .rcrow[data-row="found by"] .v', e => e.textContent).catch(() => null); };
+  ok((await foundRow(R.routeOnly[0])) === "a route's steps only", 'a table\'s portrait record says how it was found — here by a route\'s steps only', String(await foundRow(R.routeOnly[0])));
+  { let t = '';
+    if ((await p.$$('#portbody .rcrow[data-row="found by"] .rcinfo')).length) { await p.hover('#portbody .rcrow[data-row="found by"] .rcinfo'); await p.waitForTimeout(220);
+      t = (await p.$eval('#hover', e => e.innerText)).replace(/\s+/g, ' '); await p.mouse.move(5, 1030); await p.evaluate(() => window.hoverHide()); }
+    ok(/does not carry this table/.test(t) && /WHY/i.test(t), 'and its info card says which source lacks it, and why', t.slice(0, 220)); }
+  ok((await foundRow('households')) === "the map's edge and a route's steps", 'a table both sources know says so', String(await foundRow('households')));
+  await p.evaluate(() => { window.showVariant('data', window.PANELS.data.defaultVariant); }); await p.waitForTimeout(240);
+  ok(errs.length === errs0, 'the owner facts raise no page error', errs.slice(errs0, errs0 + 3).join(' | ')); }
 
 // ══ LEFTOVERS piece 3 · WHAT EACH ENDING CARRIES — the rules behind the validation ending · the headers an ending sends back ══
 { const errs0 = errs.length;

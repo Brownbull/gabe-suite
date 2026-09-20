@@ -1043,7 +1043,8 @@
       rows: [["stage", stgOf(s)], ["fate", fa ? fa.word : "a read leaves nothing behind"],
              ["in", String(s.fn || "—").split("::").pop()], ["at", String(s.at || "—")],
              s.cond ? ["conditional", "this step only runs on one arm"] : null,
-             s.race ? ["race", "a second request can insert the same key first — " + (s.race.state || "")] : null],
+             ["whose", s.dependency ? "the gate's — a check that runs before the handler" : "this endpoint's own code"],
+             s.race ? ["race", "a second request can insert the same key first — " + (s.race.state || "") + (s.dependency ? " · the gate's insert, the same on almost every endpoint" : " · this endpoint's own insert")] : null],
       plain: s.table ? "one thing the door did to a table, at the point it did it" : "one transaction move — the writes before it are what it decides on" }); });
     return d; }
   function stgCount(n, cls, card2){ var i = E("i", { class: "dsn" + (cls ? " " + cls : "") }, esc(String(n)));
@@ -1284,8 +1285,9 @@
     (place.at[s.key] || []).forEach(function(c){ nT++; nP += typeof c.n === "number" ? c.n : 0; });
     var fact = !nT ? "none — and none is expected"
       : (place.path ? nT + " table(s) on " + pathWord(place.path) : nT + " table(s), " + nP + " touch(es) across every ending");
+    var prov = s.key === "GATE" ? (((FRM(F) || {}).auth || {}).provisions || []) : [];
     tipBind(h, function(){ return cmdc({ title: s.key, value: "data", icon: "journey", color: S.KINDCOL.model,
-      rows: [["on this door", fact]],
+      rows: [["on this door", fact]].concat(prov.map(function(v){ return ["provisioned here", "a " + v.table + " row is " + (v.op === "add" ? "added" : v.op) + " by this check before the handler runs — " + v.state + " whatever the ending"]; })),
       plain: (STAGE_EXPECT.data || {})[s.key] }); }, function(){ return esc(s.key + " · " + fact); });
     return h; }
   function stgTickNode(keys, S){ var t = E("span", { class: "sbtick" });
@@ -1386,6 +1388,13 @@
     row("file", ico("file", 14, "var(--muted)"), E("span", { class: "v" }, esc(t.file || "—")));
     row("channel", ico("role", 14, S.OPC.call),
       E("span", { class: "v" }, E("i", { class: "rcchip", style: chipLook(t.rw, S) }, t.rw === "rw" ? "reads + writes" : t.rw === "w" ? "writes" : "reads")));
+    /* leftovers piece 4 — how this table was found: the map's access edge, the steps of a route, or both */
+    if (t.found) row("found by", ico("link", 14, "var(--muted)"),
+      E("span", { class: "v" }, esc(t.found === "both" ? "the map's edge and a route's steps" : t.found === "map edge" ? "the map's edge only" : "a route's steps only")),
+      card({ title: "found by", icon: "link", sub: t.found,
+        rows: [["the map's access edge", t.found === "route effects" ? "does not carry this table" : "carries it"], ["the steps of a route", t.found === "map edge" ? "none touches it" : "touch it"]]
+          .concat(t.found_why ? [["why", t.found_why]] : []),
+        plain: "the source that says this endpoint touches the table" }));
     var list = E("div", { class: "flds rctab", style: "--ec:" + ec });
     list.append(E("div", { class: "rcth" },
       E("span", { class: "c-f" }, "fields", E("i", { class: "rcfp", style: pillLook("fields", S) }, String(t.cols.length))),

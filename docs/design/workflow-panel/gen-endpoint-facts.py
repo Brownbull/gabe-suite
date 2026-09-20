@@ -545,6 +545,37 @@ def main() -> int:
                                           "note": "an arms-on build of the same twin (scripts/forms-dryrun.sh writes one to ~/.cache/gabe-map-baselines/.check/<target>/forms.json)" if forms_path else "the example feed as committed (arms off by default)"}}
                 if _fe:
                     forms_block.update(forms_slice(_fj, ID, _fe))
+                # leftovers piece 4 — ONE table set for every layout: the map's access edges and the routes' own steps, with how each table was found
+                _eff = collections.OrderedDict()
+                for _p in forms_block.get("paths") or []:
+                    for _s in ((_p.get("effects") or {}).get("steps") or []):
+                        if _s.get("table"):
+                            _e = _eff.setdefault(_s["table"], {"ops": set(), "model": _s.get("model"), "gate_only": True})
+                            _e["ops"].add(_s.get("op")); _e["gate_only"] = _e["gate_only"] and bool(_s.get("dependency"))
+                for _t in tables_by_name:
+                    _t["found"] = "both" if _t["table"] in _eff else "map edge"
+                for _tb, _e in _eff.items():
+                    if any(_t["table"] == _tb for _t in tables_by_name):
+                        continue
+                    _m = models.get(_e["model"]); _md = (_m[1].get("det") if _m else None) or {}
+                    _w = bool(_e["ops"] - {"read"}); _r = "read" in _e["ops"]
+                    tables_by_name.append({"table": _tb, "model": _e["model"], "rw": "rw" if (_w and _r) else ("w" if _w else "r"), "entity": _m[0] if _m else None,
+                                           "entity_color": colors.get(_m[0]) if _m else None, "cols": _md.get("cols") or [], "fks": _md.get("fks") or [], "uqs": _md.get("uqs") or [],
+                                           "cols_more": _md.get("cols_more") or 0, "file": _md.get("file"), "id": _m[1]["id"] if _m else None,
+                                           "found": "route effects", "found_why": ("only the login check touches it, before the handler runs — the map's access edge starts at the handler" if _e["gate_only"]
+                                                                                 else "a step of a route touches it; the map's access edge does not carry it")})
+                found_counts = dict(collections.Counter(_t["found"] for _t in tables_by_name))
+                # the races, by WHO owns the insert: the endpoint's own steps, or the gate's (the login check runs on almost every endpoint)
+                _races = {}
+                for _p in forms_block.get("paths") or []:
+                    for _s in ((_p.get("effects") or {}).get("steps") or []):
+                        if _s.get("race"):
+                            _races[(_s.get("table"), json.dumps(_s["race"].get("keys")))] = ("gate" if _s.get("dependency") else "own", _s["race"].get("state"))
+                _rc = {"own": {}, "gate": {}}
+                for _who, _st in _races.values():
+                    _rc[_who][_st] = _rc[_who].get(_st, 0) + 1
+                forms_block["counts"]["races"] = _rc
+                forms_block["counts"]["tables_found"] = found_counts
                 _mw = _fj.get("middleware") or {}
                 for _m in security["asgi"]:
                     _o = (_mw.get(_m.get("id")) or {}).get("order") or {}
