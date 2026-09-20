@@ -466,6 +466,12 @@
      (H, posture), the door's own deps (the gate turnstile), flag walls (none — hollow),
      the status contract, idempotency and the commit.
      ══════════════════════════════════════════════════════════════════════════════════════ */
+  /* leftovers piece 6 — what the feed read of one helper: its place in the order, who asks for it, whether it can end a request, what runs after the handler */
+  function resolvedRows(r){ if (!r) return [];
+    return [["resolved", ordinal(r.order) + " of " + r.of + " — asked for by " + r.asked_by.join(" and ")],
+            ["can end the request", r.can_end_the_request ? "yes — " + r.exits.concat(r.inherited_exits).map(function(e){ return e.status + " " + (e.detail || ""); }).join(" · ") : "no — the feed reads no ending in it"],
+            r.subdeps.length ? ["asks for", r.subdeps.join(" · ")] : null,
+            r.runs_after_the_handler ? ["after the handler", "it yields — its closing code runs once the handler is done"] : null].filter(Boolean); }
   function renderSecurity(box, F, S){
     var SEC = F.security, FW = F.feedwide;
     head(box, "key", "Security", SEC.guards.length + " deps · " + SEC.asgi.length + " app",
@@ -487,19 +493,29 @@
 
     /* the door's own deps — the turnstile */
     var gates = E("div", { class: "gates" });
-    gates.append(E("div", { class: "bhd" }, sechd("key", "This door's deps", SEC.guards.length, false), E("span", { class: "bnote" }, SEC.gates.length + " of " + SEC.guards.length + " decide whether the work proceeds")));
+    var ghd = E("div", { class: "bhd" }, sechd("key", "This door's deps", SEC.guards.length, false), E("span", { class: "bnote" }, SEC.gates.length + " of " + SEC.guards.length + " decide whether the work proceeds"));
+    var RES = SEC.resolution;
+    if (RES) { var rOn = RES.state === "present" && RES.rows.length;
+      var resNote = E("span", { class: "bnote bres" }, rOn ? "· resolved " + RES.rows.map(function(r){ return r.name; }).join(" → ") : "· resolution order not read");
+      resNote.dataset.fact = "resolution"; resNote.dataset.state = rOn ? "lit" : "hatched";
+      bind(resNote, card({ title: "resolved in order", icon: "layers", sub: rOn ? RES.counts.end_nothing + " of " + RES.counts.rows + " can end no request" : "not read",
+        rows: rOn ? RES.rows.map(function(r){ return [r.order + " · " + r.name, (r.can_end_the_request ? "can end the request — " + r.exits.concat(r.inherited_exits).map(function(e){ return e.status; }).join(" · ") : "can end no request")
+          + (r.runs_after_the_handler ? " · runs its closing code after the handler" : "") + " · " + r.applies_to + " of " + r.endpoints + " endpoints"]; }) : [["why", RES.why || "—"]],
+        body: esc(RES.rule || "") }));
+      ghd.append(resNote); }
+    gates.append(ghd);
     var grow = E("div", { class: "grow" });
     SEC.guards.forEach(function(g){
       var isGate = !!g.gate, pct = Math.round(100 * g.feedwide / FW.endpoints);
       var t = E("div", { class: "turn" + (isGate ? " gate" : "") },
         ico(isGate ? "key" : "link", 14, isGate ? S.OPC.gate : "var(--muted)"),
-        E("div", { class: "tt" }, E("b", null, esc(g.name)), E("span", { class: "ts" }, g.via + (isGate ? " · gate" : ""))),
+        E("div", { class: "tt" }, E("b", null, esc(g.name)), E("span", { class: "ts" }, g.via + (isGate ? " · gate" : "") + (g.resolved ? " · resolved " + ordinal(g.resolved.order) + " of " + g.resolved.of : ""))),
         E("span", { class: "tw" }, pct + "%"));
       t.dataset.dep = g.name;
       bind(t, card({ title: g.name, icon: isGate ? "key" : "link", color: isGate ? S.OPC.gate : null, sub: g.via + (isGate ? " · a GATE" : " · a dependency"),
         rows: [["runs", "before the handler body"], ["feed-wide", g.feedwide + " of " + FW.endpoints + " endpoints use it (" + pct + "%)"],
                g.fn_rec ? ["function", g.fn_rec.name + " · " + (g.fn_rec.role || "—") + (g.fn_rec.lines ? " · " + g.fn_rec.lines + " lines" : "")] : null,
-               ["decides", isGate ? "yes — it can refuse the request" : "no — it supplies a resource"]],
+               ["decides", isGate ? "yes — it can refuse the request" : "no — it supplies a resource"]].concat(resolvedRows(g.resolved)),
         body: isGate ? "the turnstile: an unauthenticated request stops here." : "a resource dependency — a session, settings. It cannot refuse." }));
       grow.append(t); });
     gates.append(grow); body.append(gates);
@@ -1902,7 +1918,7 @@
       card: card({ title: m.name, icon: "shield", color: S.OPC.gate, sub: "ASGI middleware · scope " + m.scope,
         rows: [["runs", runsWord(m)], ["gates", m.gates + " of " + FW.endpoints + " endpoints"], ["file", m.file + ":" + m.line], ["tie to this door", "— measured at APP scope only"]] }) });
       lane.append(E("i", { class: "sarr", html: ico("drill", 13, "var(--muted)") })); });
-    SEC.guards.forEach(function(g){ stop({ dep: g.name, icon: g.gate ? "key" : "link", title: g.name, sub: g.via + (g.gate ? " · GATE" : " · resource") + " · " + Math.round(100 * g.feedwide / FW.endpoints) + "% of doors", col: g.gate ? S.OPC.gate : "var(--muted)", cls: g.gate ? "gate" : "",
+    SEC.guards.forEach(function(g){ stop({ dep: g.name, icon: g.gate ? "key" : "link", title: g.name, sub: g.via + (g.gate ? " · GATE" : " · resource") + " · " + Math.round(100 * g.feedwide / FW.endpoints) + "% of doors" + (g.resolved ? " · resolved " + ordinal(g.resolved.order) + " of " + g.resolved.of : ""), col: g.gate ? S.OPC.gate : "var(--muted)", cls: g.gate ? "gate" : "",
       card: card({ title: g.name, icon: g.gate ? "key" : "link", color: g.gate ? S.OPC.gate : null, sub: g.via,
         rows: [["decides", g.gate ? "yes — it can refuse" : "no — it supplies"], ["feed-wide", g.feedwide + " of " + FW.endpoints], g.fn_rec ? ["function", g.fn_rec.name + " · " + (g.fn_rec.role || "—")] : null] }) });
       lane.append(E("i", { class: "sarr", html: ico("drill", 13, "var(--muted)") })); });
@@ -2307,7 +2323,8 @@
   function fnAll(F){ if (FNS) return FNS; var FN = F.functions, out = [], seq = 0;
     function rec(f, lv, handler){ return { id: f.id, name: f.name, file: f.file, role: f.role || "pure", entity: f.entity || "—", entity_color: entColOf(F, f.entity),
       level: lv, via: handler ? null : f.via, seq: seq++, handler: handler, lines: f.lines, async: !!f.async, returns: f.returns || "—", god: !!f.god,
-      commits: !!f.commits, conf: handler ? "extracted" : (f.conf || "extracted"), ops: f.ops || [], calls: [] }; }
+      commits: !!f.commits, conf: handler ? "extracted" : (f.conf || "extracted"), ops: f.ops || [], calls: [],
+      key: String(f.id || "").replace("#", "::"), insight: f.insight || null }; }
     out.push(rec(FN.handler, 0, true));
     FN.walk.forEach(function(level, i){ level.forEach(function(f){ out.push(rec(f, i + 1, false)); }); });
     out.forEach(function(x){ x.calls = out.filter(function(y){ return !y.handler && y.via === x.name; }); });
@@ -2449,6 +2466,8 @@
     h += '<div class="bcln" data-ln="size"><span class="bci">' + ico("info", 14, "var(--muted)") + '</span><span class="bcmodel">' + (x.lines == null ? "?" : x.lines) + " lines" + (x.async ? " · async" : "") + " · → " + camelWbr(x.returns) + "</span></div>";
     if (x.handler) h += '<div class="bcln" data-ln="signature"><span class="bci">' + ico("doc", 14, "var(--muted)") + '</span><span class="bcfile">' + esc(String(I.gsig || "—").slice(0, 70)) + "…</span></div>"
       + '<div class="bcln" data-ln="doc"><span class="bci">' + ico("doc", 14, "var(--muted)") + '</span><span class="bcmodel">' + (I.doc ? esc(I.doc.slice(0, 70)) : "no docstring in the feed") + "</span></div>";
+    var dz = doesOf(F, x.key);
+    if (dz) h += '<div class="bcln" data-ln="does"><span class="bci">' + ico("target", 14, "var(--muted)") + '</span><span class="bcmodel">' + esc(dz.does.length ? dz.does.join(" · ") : "none of the four shows in its own code") + "</span></div>";
     h += '<div class="bcsep"></div>';
     h += '<div class="bcrow" data-row="role"><span class="bci">' + ico(ROLEICO[x.role], 14, roleCol(x.role, S)) + '</span><i class="bcchip" style="' + chipLookOf(roleCol(x.role, S)) + '">' + x.role + "</i></div>";
     if (fnMap().pieces !== "calls") h += mixRow("tables", "model", ops);
@@ -2527,6 +2546,29 @@
     row("size", ico("info", 14, "var(--muted)"), E("span", { class: "v" }, (x.lines == null ? "?" : x.lines) + " lines" + (x.async ? " · async" : "") + " · → " + camelWbr(x.returns)),
       x.god ? card({ title: "over the size flag", icon: "alert", sub: "god-object", body: "its body runs past 50 lines — the station's size flag." }) : null);
     if (x.commits) row("commits", ico("key", 14, S.OPC.write), E("span", { class: "v" }, "ends a DB transaction"));
+    /* leftovers piece 6 — what its own code shows it doing here, what sits inside it, and what the map read of it */
+    var dz = doesOf(F, x.key), DZ = FN.does;
+    if (dz) { var dv = E("span", { class: "v" });
+      if (dz.does.length) dz.does.forEach(function(w){ dv.append(E("i", { class: "rcchip", style: chipLookOf("#8794ab") }, w)); }); else dv.textContent = "— none of the four shows in its own code";
+      if (dz.does.length >= 2) dv.append(E("i", { class: "rctwo" }, "holds " + dz.does.length));
+      row("does", ico("target", 14, "var(--muted)"), dv, card({ title: "what it does here", icon: "target", sub: dz.does.length ? dz.does.join(" · ") : "none of the four",
+        rows: dz.does.map(function(w){ return [w, (dz.why[w] || []).join(" · ")]; }).concat([["on this endpoint", DZ.two_or_more + " of " + DZ.of + " hold two or more · " + DZ.none + " show none"]]),
+        body: esc(DZ.rule) })); }
+    var inf = insideFn(F, x.key);
+    if (inf) { var n6 = { raises: inf.raises.length, refusals: inf.refusals.length, commits: inf.commits.length, savepoints: inf.savepoints.length, swallows: inf.swallows.length };
+      row("inside", ico("alert", 14, "var(--muted)"), E("span", { class: "v" }, esc(insideCount(n6) || "— nothing that can end or save")),
+        card({ title: "inside " + x.name, icon: "alert", sub: inf.depth ? nWord(inf.depth, "call") + " below the handler" : "the handler itself",
+          rows: inf.raises.map(function(r){ return [r.cls || "raise", (r.pred ? "when " + r.pred + " · " : "") + shortAt(r.at) + " → " + becomesWords(r)]; })
+            .concat(inf.refusals.map(function(r){ return [String(r.status), (r.pred ? "when " + r.pred + " · " : "") + shortAt(r.at)]; }))
+            .concat(inf.commits.map(function(k){ return [k.op || "commit", shortAt(k.at)]; }))
+            .concat(inf.savepoints.map(function(a){ return ["savepoint", shortAt(a)]; }))
+            .concat(inf.also_reached_by ? [["also reached from", nWord(inf.also_reached_by, "other endpoint")]] : []),
+          body: esc((insideAll(F) || {}).reading || "") })); }
+    if (!x.handler) { var g6 = x.insight;
+      row("map facts", ico("doc", 14, "var(--muted)"), E("span", { class: "v" }, esc(g6 ? (g6.calls_nothing_else ? "calls no other project function" : "calls other project functions") + " · " + (g6.tables ? "touches " + nWord(g6.tables, "table") : "touches no table itself") : "— no facts for this function")),
+        g6 ? card({ title: x.name, icon: "doc", sub: "what the map read of it",
+          rows: [["lines", String(g6.lines == null ? "?" : g6.lines)], ["returns", g6.returns || "—"], ["used by", nWord(g6.used_by_api_files || 0, "route file") + " · " + nWord(g6.used_by_other_files || 0, "other file")],
+                 ["its own words", g6.doc || "— it has no description in the code"]] }) : null); }
     if (x.handler) {
       row("signature", ico("doc", 14, "var(--muted)"), E("span", { class: "v" }, esc(String(I.gsig || "—").replace(/^async def /, "").slice(0, 34)) + "…"),
         card({ title: "signature", icon: "doc", sub: (I.sig || {}).async ? "async" : "sync", body: "<code>" + esc(I.gsig || "") + "</code>" }));
@@ -2762,6 +2804,29 @@
   /* ── PROOF YOU CAN OPEN (leftovers piece 5): why a test came to this endpoint, and what it really asked for ── */
   var ROLEWORD = { act: "tests this endpoint", arranged: "calls it to set something else up", "service-raises": "proves an ending from the service side, without calling the endpoint",
                    "helper-arranged": "reaches it only through a shared helper", "named-only": "listed by the map, makes no call here" };
+  /* leftovers piece 6 — inside the calls: the feed's function rows this endpoint reaches, joined to a chain row by `file::fn` */
+  function insideAll(F){ var I = (FRM(F) || {}).inside; return I && I.state === "present" ? I : null; }
+  function insideCall(F, fn){ var I = insideAll(F); return I ? ((I.calls || {})[fn] || null) : null; }
+  function insideFn(F, key){ var I = insideAll(F); if (!I) return null; return (I.functions || []).filter(function(r){ return r.fn === key; })[0] || null; }
+  function shortAt(at){ return String(at || "—").split("/").slice(-2).join("/"); }
+  function nWord(n, one, many){ return n + " " + (n === 1 ? one : (many || one + "s")); }
+  function insideCount(n){ var out = [];
+    if (n.raises) out.push(nWord(n.raises, "failure")); if (n.refusals) out.push(nWord(n.refusals, "refusal"));
+    if (n.commits) out.push(nWord(n.commits, "save")); if (n.savepoints) out.push(nWord(n.savepoints, "savepoint")); if (n.swallows) out.push(nWord(n.swallows, "swallowed failure"));
+    return out.join(" · "); }
+  function insightWords(g){ if (!g) return "the map read no facts for it";
+    return (g.lines == null ? "?" : g.lines) + " lines · → " + (g.returns || "—") + " · " + (g.calls_nothing_else ? "calls no other project function" : "calls other project functions")
+      + " · " + (g.tables ? "touches " + nWord(g.tables, "table") : "touches no table itself"); }
+  function becomesWords(x){ return x.here.length ? "the " + x.here.map(function(h){ return h.status + " at " + shortAt(h.at); }).join(" · ")
+    : x.uncaught_here.length ? "nothing here catches it — it leaves as the " + x.uncaught_here.map(function(h){ return h.status; }).join(" · ")
+    : x.here_word === "beyond one level" ? "not read — the reading stops one call down"
+    : x.here_word === "not joined" ? "not joined — the reading found no ending of this endpoint that carries it"
+    : x.here_word === "after the response line" ? "no status can carry it — the answer had already started"
+    : String(x.here_word || "unknown"); }
+  function lineOf(at){ var m = /:(\d+)$/.exec(String(at || "")); return m ? ":" + m[1] : "—"; }
+  function becomesShort(x){ return x.here.length ? x.here.map(function(h){ return h.status; }).join(" · ") : x.uncaught_here.length ? "uncaught " + x.uncaught_here.map(function(h){ return h.status; }).join(" · ")
+    : x.here_word === "beyond one level" ? "not read" : String(x.here_word || "unknown"); }
+  function doesOf(F, key){ var D = (F.functions || {}).does; if (!D) return null; return (D.rows || []).filter(function(r){ return r.fn === key; })[0] || null; }
   function rosterOf(F, cid){ return ((F.tests || {}).roster || []).filter(function(r){ return r.cid === cid; })[0] || null; }
   function assertWords(a){ if (!a) return null; var out = [];
     Object.keys(a).forEach(function(k){ var v = a[k]; out.push(k + " " + (Array.isArray(v) ? v.join(" · ") : String(v))); }); return out.join(" · ") || null; }
@@ -3251,6 +3316,37 @@
   function runsWord(m){ return m.runs == null ? "run order not read (the kinds reading is off)" : "runs " + ordinal(m.runs + 1) + " of " + m.of; }
   function ptRow(k, v, col){ return '<div class="ptrow"><span class="k">' + esc(k) + '</span><span class="v"' + (col ? ' style="color:' + col + '"' : "") + ">" + esc(v) + "</span></div>"; }
   function ptSec(t){ return '<div class="ptsec">' + esc(t) + "</div>"; }
+  /* what sits inside one call of the chain: every failure, save and savepoint of the functions it opens, each a chain row set one step in */
+  function insideRows(F, S, p, c, ins){ var out = [];
+    function stepOf(exitId){ var hit = (p.chain || []).filter(function(k){ return k.ref === exitId; })[0]; return hit ? hit.i : null; }
+    function add(kind, icon, fnRec, label, sub, cardFn){
+      var r = E("div", { class: "ptcr k-inside" }); r.dataset.inside = kind; r.dataset.fn = fnRec.name; r.dataset.depth = String(fnRec.depth);
+      r.insertAdjacentHTML("beforeend", '<span class="ptci">' + (fnRec.depth > 1 ? "↳↳" : "↳") + "</span>");
+      r.insertAdjacentHTML("beforeend", '<span class="ptcg">' + ico(icon, 12, "var(--muted)") + "</span>");
+      r.append(E("b", null, esc(label))); r.append(E("span", { class: "ptcs" }, esc(sub)));
+      bind(r, cardFn); out.push(r); }
+    ins.opens.forEach(function(key){ var f = insideFn(F, key); if (!f) return;
+      var where = f.fn === c.fn ? "" : "in " + f.name + " ";
+      f.raises.forEach(function(x){ var st = x.here.length ? stepOf(x.here[0].exit) : null;
+        add("raise", "alert", f, x.cls || "raise", where + lineOf(x.at) + " → " + becomesShort(x), function(){ return cmdc({ title: x.cls || "raise", value: x.here_word, icon: "alert",
+          rows: [["raised in", f.name + (f.depth > 1 ? " · " + f.depth + " calls down" : " · one call down")], ["raised when", x.pred || "—"], x.msg ? ["message", x.msg] : null, ["at", x.at || "—"],
+                 ["becomes", becomesWords(x)], st != null ? ["on this route", "step " + st + " — the check that raises it"] : null,
+                 x.through.length ? ["passes through", x.through.map(function(t){ return (t.op || "a catch") + " at " + shortAt(t.at); }).join(" · ")] : null,
+                 x.on_other_endpoints ? ["elsewhere", nWord(x.on_other_endpoints, "other endpoint") + " reach the same failure"] : null],
+          plain: x.here.length ? "a failure raised inside the call — this endpoint catches it and answers with its own status"
+            : x.uncaught_here.length ? "a failure raised inside the call that nothing here catches — it leaves as a server error"
+            : x.here_word === "beyond one level" ? "a failure raised deeper than the reading follows — which answer it becomes is not known"
+            : "a failure raised inside the call — the reading could not tie it to an ending here" }); }); });
+      f.refusals.forEach(function(x){ if (f.fn === c.fn && (p.chain || []).some(function(k){ return k.ref === x.exit; })) return;   /* already a check of this route */
+        add("refusal", "shield", f, String(x.status), where + lineOf(x.at), function(){ return cmdc({ title: String(x.status), value: f.name, icon: "shield",
+          rows: [["refused in", f.name], ["refused when", x.pred || "—"], ["at", x.at || "—"]], plain: "a refusal written inside the call — the request ends there with this status" }); }); });
+      f.commits.forEach(function(k){ add("commit", "key", f, k.op || "commit", where + lineOf(k.at), function(){ return cmdc({ title: k.op || "commit", value: f.name, icon: "key",
+        rows: [["in", f.name], ["at", k.at || "—"], ["step", k.step]], plain: "where the work so far is saved for good — a DB transaction ends here" }); }); });
+      f.savepoints.forEach(function(at){ add("savepoint", "layers", f, "savepoint", where + lineOf(at), function(){ return cmdc({ title: "savepoint", value: f.name, icon: "layers",
+        rows: [["in", f.name], ["at", at]], plain: "a mark inside the transaction — a failure after it undoes only what came after the mark" }); }); });
+      f.swallows.forEach(function(w){ var at = typeof w === "string" ? w : (w.at || "—"); add("swallow", "skip", f, "swallowed failure", where + lineOf(at), function(){ return cmdc({ title: "swallowed failure", value: f.name, icon: "skip",
+        rows: [["in", f.name], ["at", at]], plain: "a broad catch that lets the request go on as if nothing failed" }); }); }); });
+    return out; }
   function pathPortrait(box, F, S){ var p = selPath(F);
     if (!p) { box.append(E("div", { class: "ptidle" }, E("b", null, "no path in force"), E("span", null, "pick a cell in the command panel and this becomes its record."))); return; }
     var K = CMDKIND[p.kind] || {}, col = pathCol(p, F, S), b = E("div", { class: "ptbody ptrec" });
@@ -3272,13 +3368,18 @@
       r.append(E("b", null, esc(String(c.label || c.kind))));
       r.append(E("span", { class: "ptcs" }, esc(String(c.sub || ""))));
       if (c.hit === true) r.append(E("i", { class: "ptcf" }, "fired"));
+      var ins = (c.kind === "call" || c.kind === "collapsed") ? insideCall(F, c.fn) : null;
+      if (ins) { r.dataset.opens = String(ins.opens.length); r.append(E("i", { class: "ptcin" }, esc(ins.opens.length ? insideCount(ins.n) : insightWords(ins.insight)))); }
       bind(r, function(){ return cmdc({ title: String(c.label || c.kind), value: c.kind, icon: ci,
         rows: [["step", String(c.i)], ["stage", c.phase || "—"], ["at", c.at || "—"], c.hit != null ? ["fired", c.hit ? "yes — this is the one that ended it" : "no — the request passed it"] : null,
-               (c.cond || c.pred) ? ["condition", String(c.cond || c.pred).slice(0, 160)] : null, c.fn ? ["function", String(c.fn)] : null],
+               (c.cond || c.pred) ? ["condition", String(c.cond || c.pred).slice(0, 160)] : null, c.fn ? ["function", String(c.fn)] : null,
+               ins && ins.opens.length ? ["inside", insideCount(ins.n) + " over " + nWord(ins.opens.length, "function")] : null,
+               ins ? ["the map read", insightWords(ins.insight)] : null],
         plain: c.kind === "gate" ? "a check that can end the request right here" : c.kind === "switch" ? "a setting or a binding that changes what happens next"
           : c.kind === "branch" ? "a fork in the handler — this path took one arm" : c.kind === "catch" ? "where the raise was caught and turned into an answer"
           : c.kind === "exit" ? "the ending itself" : "one step the request runs through" }); });
-      tb.append(r); });
+      tb.append(r);
+      if (ins && ins.opens.length) insideRows(F, S, p, c, ins).forEach(function(n){ tb.append(n); }); });
     b.append(tb);
     var eff = p.effects, n = eff.n;
     b.insertAdjacentHTML("beforeend", ptSec("effects · " + (eff.tables || []).length + " tables"));

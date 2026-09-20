@@ -41,7 +41,7 @@ tooltip · portrait. The channel column stays empty until M3 (the channel budget
 | the ordered chain per ending (the eight kinds of step, in request order) | order (relation list) | 4 · 14 · 22 | **3** (proposed) | the chain IS the flow, and every later fact attaches to one of its steps; already in the lab's facts (piece 1) | with code | own | near |
 | the checks met, in run order (passed · fired) | order (relation list) | 0 · 6 · 10 on an endpoint's longest route (0 · 4 · 10 over all 743 routes) | 2 (proposed) | order and the passed marks give context to the check that fired | with code | own | mid |
 | the route that passes every check (and the check each other route fires) | relation | 1 per endpoint | **3** (proposed) | the through-route the exceptions are exceptions to; how often a route is really taken cannot be read from code | with code | own | mid |
-| the predicate per decision point (with the deeper raises the route does not translate) | text + relation | to measure when piece 6 lands | **3** (proposed) | what determines the path, in the author's words | with code | relation | near |
+| the predicate per decision point (with the deeper raises the route does not translate) | text + relation | failures inside the calls 0 · 0 · 4 per endpoint (29 of 80 have one; 59 in all): 26 answered here · 7 nothing here catches (6 endpoints) · 21 raised deeper than the reading follows (14 endpoints) · 5 the feed could not join | **3** (proposed) | what determines the path, in the author's words | with code | relation | near |
 | status code per ending | category + text | 2 · 7 · 11 distinct | 2 | specific — the middle's filter, never the command | with code | own | mid |
 | own guards (preconditions) | relation | 0 · 1 · 16 (18 doors none) | **3** | they change the path | with code | own | mid; predicate near |
 | deciding branches (callee arms that change the exit) | relation | 0 · 0 · 8 (65 doors none) | **3** when present — an alert | they change the path one call down; they are forks ON an ending's route, never a fifth list (see the notes) | with code | relation | mid |
@@ -88,10 +88,10 @@ tooltip · portrait. The channel column stays empty until M3 (the channel budget
 | attribute | data type | cardinality | imp. | why | volatile | own / relation | first visible at |
 |---|---|---|---|---|---|---|---|
 | the handler (API-facing) | relation | 1 | **3** | the function facing the API | with code | own | far / mid |
-| decision-point functions (their raise or refusal becomes an ending) | relation | app-wide 30 raise · 50 refuse | **3** | where the 401 / 402 / 200 is decided | with code | relation | mid — derivable today; named when piece 6 lands |
-| roles per function (faces the API · decides an ending · touches the data · gives context) | category list | to measure when piece 6 lands | **3** (proposed) | a function wears its highest role; a mark when one function holds two | with code | relation | mid |
+| decision-point functions (their raise or refusal becomes an ending) | relation | 1 · 4 · 12 per endpoint (app-wide 30 raise · 50 refuse) | **3** | where the 401 / 402 / 200 is decided | with code | relation | mid — named per endpoint since piece 6 |
+| roles per function (faces the API · decides an ending · touches the data · gives context) | category list | functions per endpoint 1 · 14 · 35; holding two or more roles 1 · 3 · 7; showing none of the four 0 · 2 · 6 | **3** (proposed) | a function wears its highest role; a mark when one function holds two | with code | relation | mid |
 | data-touching functions (commit · read · write) | relation | app-wide 51 commit | **3** | they change the data | with code | relation | mid |
-| context-giving functions (authentication · session · settings) | relation | 0 · 1 · 2 gates + deps | 2 | they give context to the rest | with code | relation | mid (GATE) |
+| context-giving functions (authentication · session · settings) | relation | 0 · 4 · 5 in resolution order; 0 · 2 · 3 of them can end no request; one runs its closing code after the handler on 79 of 80 endpoints; 2 of them are in no map list (0 · 1 · 2 gates + deps on the map) | 2 | they give context to the rest | with code | relation | mid (GATE) |
 | little helpers, with a TYPE (format · cap · validate…) | relation | many | 1 | mentioned, never drilled | with code | relation | tooltip — **the type is not classified today** |
 | functions behind · walk levels | quantity | 1 | 1 | reach | yes | relation | tooltip |
 

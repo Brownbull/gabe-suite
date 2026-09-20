@@ -87,12 +87,14 @@ const EX = {
   "the-ordered-chain-per-ending": () => { const p = f.paths.slice().sort((a, b) => b.chain.length - a.chain.length)[0], k = {}; p.chain.forEach((c) => { k[c.kind] = (k[c.kind] || 0) + 1; }); return `${p.chain.length} steps on ${q(p.names.drawn)} · ` + Object.keys(k).map((x) => `${k[x]} ${x}`).join(" · "); },
   "the-checks-met-in-run-order": () => { const passed = (x) => x.chain.filter((c) => c.kind === "gate" && !c.hit).length, p = f.paths.filter((x) => x.chain.some((c) => c.kind === "gate" && c.hit)).sort((a, b) => passed(b) - passed(a))[0], g = p.chain.filter((c) => c.kind === "gate"); return `on ${q(p.names.drawn)} · ${g.filter((c) => !c.hit).length} passed, then ${g.filter((c) => c.hit).map((c) => q(c.label)).join(", ")} stopped it`; },
   "the-route-that-passes-every-check": () => { const s = f.paths.filter((p) => p.kind === "success").map((p) => ({ n: p.names.drawn, g: p.chain.filter((c) => c.kind === "gate" && !c.hit).length })).sort((a, b) => b.g - a.g); return s.map((x) => `${q(x.n)} passes ${x.g}`).join(" · "); },
-  "the-predicate-per-decision-point": () => `${q(f.preconditions[0].pred)} on a guard · ${q(f.branches[0].pred)} on a fork`,
+  "the-predicate-per-decision-point": () => { const deep = ((f.inside || {}).functions || []).flatMap((r) => r.raises.filter((x) => x.translation === "beyond one level").map((x) => ({ r, x })))[0];
+    return `${q(f.preconditions[0].pred)} on a guard · ${q(f.branches[0].pred)} on a fork` + (deep ? ` · ${q(deep.x.pred)} ${deep.r.depth} calls down, its answer not read` : ""); },
   "how-this-table-was-found": () => { const drawn = new Set(L.data.tables.map((t) => t.table)), only = Object.keys(tables).filter((t) => !drawn.has(t)); return only.length ? `${only.join(", ")} · known to the route effects only` : null; },
   "in-flight-values": () => null,
   "response-headers-per-ending": () => { const h = f.exits.filter((e) => e.response && e.response.headers && Object.keys(e.response.headers).length).map((e) => `${e.status} sends ${Object.keys(e.response.headers).join(", ")}`); return h.length ? [...new Set(h)].join(" · ") : null; },
   "field-rules-of-the-request-body": () => null,
-  "roles-per-function": () => null,
+  "roles-per-function": () => { const D = L.functions.does; if (!D) return null; const two = D.rows.find((r) => r.does.length >= 2 && !r.does.includes("faces the web"));
+    return (two ? `${two.name} · ${two.does.join(" and ")} · ` : "") + `${D.two_or_more} of ${D.of} functions hold two or more · ${D.none} show none`; },
   "what-the-case-asserts-on-this-condition": () => { const r = (L.tests.roster || []).find((x) => x.role === "act" && x.asserts && x.asserts.detail); return r ? `${r.cid} asserts ` + Object.keys(r.asserts).map((k) => `${k} ${[].concat(r.asserts[k]).join(" | ")}`).join(" · ") : null; },
   "case-role-on-this-endpoint": () => (L.tests.roles ? Object.keys(L.tests.roles).map((k) => `${L.tests.roles[k]} ${k}`).join(" · ") : null),
   "how-common-this-piece-is": () => Object.keys(L.feedwide.deps).slice(0, 3).map((d) => `${d} on ${L.feedwide.deps[d]} of ${L.feedwide.endpoints}`).join(" · "),
@@ -113,9 +115,11 @@ const EX = {
     return `${plural(e.cases.length, "rule")} · ${Object.keys(by).map((k) => by[k] + " " + k).join(" · ")} · e.g. ${e.cases[1].loc} ${e.cases[1].type}`; },
 
   "the-handler": () => `${L.functions.handler.name} · ${L.functions.handler.async ? "async" : "sync"}, ${L.functions.handler.lines} lines, returns ${L.functions.handler.returns}`,
-  "decision-point-functions": () => `${f.branches[0].call} · ${f.branches.length} of its branches change the ending (${f.branches.map((b) => b.token).join(" · ")})`,
+  "decision-point-functions": () => { const D = L.functions.does, names = D ? D.rows.filter((r) => r.does.includes("decides an ending")).map((r) => r.name) : [];
+    return `${f.branches[0].call} · ${f.branches.length} of its branches change the ending (${f.branches.map((b) => b.token).join(" · ")})` + (names.length ? ` · ${plural(names.length, "function")} decide here: ${list(names, 4)}` : ""); },
   "data-touching-functions": () => `${dbFns.length} functions touch the database · among them ${list(dbFns, 3)}`,
-  "context-giving-functions": () => `${f.auth.gates.map((g) => g.name).join(", ")} · runs at the gate, before the handler`,
+  "context-giving-functions": () => { const R = L.security.resolution;
+    return R && R.state === "present" ? `resolved in order ${R.rows.map((r) => r.name).join(" → ")} · ${R.counts.end_nothing} of ${R.counts.rows} can end no request` : `${f.auth.gates.map((g) => g.name).join(", ")} · runs at the gate, before the handler`; },
   "little-helpers-with-a-type": () => null,
   "functions-behind-walk-levels": () => `${L.functions.handler.behind.fns} functions behind the handler · the call walk reaches ${L.functions.walk_total}, ${L.functions.walk_levels.length} levels deep (${L.functions.walk_levels.join(" · ")})`,
 
@@ -133,7 +137,7 @@ const EX = {
     const allF = f.findings.concat(Object.values(f.arm_findings).flat());
     return `${plural(allF.length, "finding")} · ` + allF.map((x) => (FIND[x.id] || rawF)(x)).join(" · "); },
 };
-const LANDS = { "in-flight-values": 11, "field-rules-of-the-request-body": 8, "roles-per-function": 6, "where-this-endpoint-sits-in-the-app": 7, "what-the-screen-does-on-this-ending": 10 };
+const LANDS = { "in-flight-values": 11, "field-rules-of-the-request-body": 8, "where-this-endpoint-sits-in-the-app": 7, "what-the-screen-does-on-this-ending": 10 };
 const NONE = Object.assign(Object.fromEntries(Object.entries(LANDS).map(([k, n]) => [k, `nothing to quote yet · piece ${n} of the work brings it`])), { "little-helpers-with-a-type": "none to show · helper functions carry no type in the feed yet", "events-published": "none on this endpoint", "tasks-dispatched": "none on this endpoint", "outside-services-called": "none drawn on this endpoint" });
 for (const r of rows) {
   if (!(r.id in EX)) die("no example rule for row: " + r.id);

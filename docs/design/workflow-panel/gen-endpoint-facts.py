@@ -9,6 +9,9 @@ lacks is written as null with a `why` so the page can say so in the feed's own w
 
     python3 docs/design/workflow-panel/gen-endpoint-facts.py                       # POST /setup/complete
     python3 docs/design/workflow-panel/gen-endpoint-facts.py "GET /recipes/{recipe_id}"
+    python3 docs/design/workflow-panel/gen-endpoint-facts.py --forms <arms-on forms.json> [--archmap <archmap.json>] [--out <file>]
+        --forms    an arms-on build of the same twin (its sibling archmap.json is read for the map's per-function facts)
+        --out      write the facts somewhere else — a measuring loop over every endpoint must never touch the lab's own file
 
 Feeds (templates/center/shell/example/codebase-graph-station/): c4-graph.js (window.GABE_C4) ·
 levels.json · workflows.js · commits.js. The station's own derivations are re-done here where the
@@ -241,16 +244,195 @@ def forms_slice(fj: dict, ID: str, ep: dict) -> dict:
                        "exits_with_headers": sum(1 for x in exits if ((x.get("response") or {}).get("headers")))}}
 
 
+def inside_the_calls(fj: dict, ID: str, forms_block: dict, functions: dict, security: dict, gsig: str, n_endpoints: int, insight_rec, insight_state: dict) -> None:
+    """Leftovers piece 6 — a call that opens. Three carries, nothing invented:
+    `forms.inside` = the feed's functions{} rows this endpoint reaches (raises with their condition and the answer each becomes HERE ·
+    refusals · saves · savepoints · swallows), joined to the chain's call / collapsed rows by `file::fn`;
+    `security.resolution` = this endpoint's dependencies{} rows in the order they are resolved (can it end a request · does it run code after the handler);
+    `functions.does` = what each function's own code shows it doing here (faces the web · decides an ending · reads or writes data · gives context)."""
+    FN, steps = fj.get("functions"), fj.get("steps") or {}
+    short = lambda k: str(k or "").split("::")[-1]
+    # ── inside ────────────────────────────────────────────────────────────────────────────────
+    if FN is None:
+        forms_block["inside"] = {"state": "absent", "why": "the feed carries no functions{} — the kinds reading is off", "functions": [], "calls": {}, "counts": {}}
+    else:
+        recs = []
+        for key, f in FN.items():
+            reach = next((r for r in (f.get("reached_by") or []) if r.get("root") == ID), None)
+            if not reach:
+                continue
+            raises = []
+            for r in f.get("raises") or []:
+                here = [{"exit": t.get("exit"), "status": t.get("status"), "at": t.get("at")} for t in (r.get("translated_by") or []) if t.get("endpoint") == ID]
+                lost = [{"exit": t.get("exit"), "status": t.get("status")} for t in (r.get("untranslated_at") or []) if t.get("endpoint") == ID]
+                other = sum(1 for t in (r.get("translated_by") or []) + (r.get("untranslated_at") or []) if t.get("endpoint") != ID)
+                raises.append({"cls": r.get("cls"), "msg": r.get("msg"), "pred": r.get("pred"), "at": r.get("at"), "through": r.get("through") or [],
+                               "translation": r.get("translation"), "here": here, "uncaught_here": lost, "on_other_endpoints": other,
+                               # the feed's word is app-wide; on THIS endpoint a failure is answered, left uncaught, or neither — it never borrows another endpoint's answer
+                               "here_word": "translated" if here else ("uncaught" if lost else
+                                            ("answered on another endpoint only" if r.get("translation") in ("translated", "mixed", "untranslated") else (r.get("translation") or "unknown")))})
+            refusals = [{"at": r.get("at"), "pred": r.get("pred"), "status": r.get("status"),
+                         "exit": next((t.get("exit") for t in (r.get("surfaces_on") or []) if t.get("endpoint") == ID), None)} for r in (f.get("refusals") or [])]
+            recs.append({"fn": key, "name": short(key), "file": key.split("::")[0], "at": f.get("at"), "depth": reach.get("depth"), "via": reach.get("via"), "site": reach.get("site"),
+                         "paths": reach.get("paths") or [], "raises": raises, "refusals": refusals,
+                         "commits": [{"step": c, "op": (steps.get(c) or {}).get("op"), "at": (steps.get(c) or {}).get("at")} for c in (f.get("commits") or [])],
+                         "savepoints": list(f.get("savepoints") or []), "swallows": list(f.get("swallows") or []),
+                         "also_reached_by": sum(1 for r in (f.get("reached_by") or []) if r.get("root") != ID)})
+        _line = lambda at: int(str(at or ":0").rsplit(":", 1)[-1]) if str(at or "").rsplit(":", 1)[-1].isdigit() else 0
+        recs.sort(key=lambda r: (r["depth"] or 0, _line(r["site"]), r["fn"]))
+        by_fn = {r["fn"]: r for r in recs}
+
+        def under(key, seen=()):
+            out = []
+            for r in recs:
+                if r["via"] == key and r["fn"] not in seen and r["fn"] != key:
+                    out += [r["fn"]] + under(r["fn"], seen + (key,))
+            return out
+        calls = {}
+        for p in forms_block.get("paths") or []:
+            for c in p.get("chain") or []:
+                if c.get("kind") in ("call", "collapsed") and c.get("fn") and c["fn"] not in calls:
+                    opens = ([c["fn"]] if c["fn"] in by_fn else []) + under(c["fn"])
+                    calls[c["fn"]] = {"opens": opens, "insight": insight_rec(c["fn"]),
+                                      "n": {"raises": sum(len(by_fn[k]["raises"]) for k in opens), "refusals": sum(len(by_fn[k]["refusals"]) for k in opens),
+                                            "commits": sum(len(by_fn[k]["commits"]) for k in opens), "savepoints": sum(len(by_fn[k]["savepoints"]) for k in opens),
+                                            "swallows": sum(len(by_fn[k]["swallows"]) for k in opens)}}
+        allr = [x for r in recs for x in r["raises"]]
+        forms_block["inside"] = {"state": "present", "why": None, "functions": recs, "calls": calls, "insight": insight_state,
+                                 "counts": {"functions": len(recs), "raises": len(allr), "raises_by_word": dict(collections.Counter(x["here_word"] for x in allr)),
+                                            "refusals": sum(len(r["refusals"]) for r in recs), "commits": sum(len(r["commits"]) for r in recs),
+                                            "savepoints": sum(len(r["savepoints"]) for r in recs), "swallows": sum(len(r["swallows"]) for r in recs),
+                                            "deepest": max((r["depth"] or 0 for r in recs), default=0), "calls_on_chain": len(calls),
+                                            "calls_that_open": sum(1 for v in calls.values() if v["opens"]), "calls_with_map_facts": sum(1 for v in calls.values() if v["insight"])},
+                                 "reading": "the feed follows a failure ONE call down; a failure raised deeper says 'beyond one level' — the answer it becomes is not read"}
+    # ── the helpers, in the order they are resolved ──────────────────────────────────────────
+    DEP = fj.get("dependencies")
+    if DEP is None:
+        security["resolution"] = {"state": "absent", "why": "the feed carries no dependencies{} — the kinds reading is off", "rows": []}
+    else:
+        named = collections.defaultdict(list)
+        for k in DEP:
+            named[short(k)].append(k)
+
+        def key_of(g):
+            if g.get("fn") in DEP:
+                return g["fn"]
+            ks = named.get(g.get("name")) or []
+            return ks[0] if len(ks) == 1 else None
+        top = sorted(security.get("guards") or [], key=lambda g: (gsig.find(g["name"] + ")") if (g["name"] + ")") in gsig else len(gsig), 0))
+        order, asked = [], collections.defaultdict(list)
+
+        def resolve(k, by):
+            asked[k].append(by)
+            if k in order:
+                return
+            for sub in (DEP.get(k) or {}).get("subdeps") or []:
+                resolve(sub, short(k))
+            order.append(k)
+        unresolved = []
+        for g in top:
+            k = key_of(g)
+            (resolve(k, "the handler") if k else unresolved.append(g.get("name")))
+        rows = []
+        for i, k in enumerate(order):
+            d = DEP.get(k) or {}
+            ex = [{"id": x.get("id"), "status": x.get("status"), "detail": _short_detail(x.get("detail")), "at": x.get("at"), "pred": x.get("pred"), "via": x.get("via")} for x in (d.get("exits") or [])]
+            inh = [{"id": x.get("id"), "status": x.get("status"), "detail": _short_detail(x.get("detail")), "via": x.get("via")} for x in (d.get("inherited_exits") or [])]
+            rows.append({"key": k, "name": short(k), "at": d.get("at"), "kind": d.get("kind"), "order": i + 1, "of": len(order), "asked_by": asked[k],
+                         "exits": ex, "inherited_exits": inh, "can_end_the_request": bool(ex or inh), "subdeps": [short(x) for x in (d.get("subdeps") or [])],
+                         "runs_after_the_handler": bool(d.get("teardown")), "effects": d.get("effects") or [], "applies_to": d.get("applies_to"), "endpoints": n_endpoints,
+                         "in_the_map_list": any(key_of(g) == k for g in top), "present": k in DEP})
+        security["resolution"] = {"state": "present", "why": None, "rows": rows, "unresolved": unresolved,
+                                  "rule": "the order the handler's signature asks for them, each one's own helpers first; a helper asked for twice keeps its first place",
+                                  "counts": {"rows": len(rows), "can_end": sum(1 for r in rows if r["can_end_the_request"]), "end_nothing": sum(1 for r in rows if not r["can_end_the_request"]),
+                                             "after_the_handler": sum(1 for r in rows if r["runs_after_the_handler"]), "beyond_the_map_list": sum(1 for r in rows if not r["in_the_map_list"])}}
+        by_name = {r["name"]: r for r in rows}
+        for g in security.get("guards") or []:
+            g["resolved"] = by_name.get(g["name"])
+    # ── what each function does here ──────────────────────────────────────────────────────────
+    walk = [functions["handler"]] + [x for lvl in functions.get("walk") or [] for x in lvl] if functions.get("handler", {}).get("loaded") else []
+    keys = {str(x["id"]).replace("#", "::"): x for x in walk}
+    decides = collections.defaultdict(set)
+    for b in forms_block.get("branches") or []:
+        decides[b.get("fn")].add("a fork that picks the ending")
+    for c in ((forms_block.get("failure") or {}).get("catches") or []):
+        decides[c.get("fn")].add("catches a failure")
+    for r in forms_block.get("returns") or []:
+        if r.get("status") is not None:
+            decides[r.get("fn")].add("returns the answer")
+    for r in (forms_block.get("inside") or {}).get("functions") or []:
+        if r["raises"] or r["refusals"]:
+            decides[r["fn"]].add("raises or refuses")
+    for r in (security.get("resolution") or {}).get("rows") or []:
+        if r["exits"]:
+            decides[r["key"]].add("can end the request")
+    data = collections.defaultdict(set)
+    for p in forms_block.get("paths") or []:
+        for st in ((p.get("effects") or {}).get("steps") or []):
+            if st.get("fn"):   # a step with no table is the transaction itself: a flush, a commit, a rollback, a savepoint
+                data[st["fn"]].add(("writes" if st.get("op") != "read" else "reads") if st.get("table") else "ends or holds a transaction")
+    for k, x in keys.items():
+        for o in x.get("ops") or []:
+            data[k].add("writes" if o.get("rw") == "w" else "reads")
+    context = {r["key"] for r in (security.get("resolution") or {}).get("rows") or []}
+    every = list(dict.fromkeys(list(keys) + [k for k in list(decides) + list(data) + sorted(context) if k]))
+    does = []
+    for k in every:
+        d = collections.OrderedDict()
+        if keys.get(k, {}).get("handler") or (functions.get("handler") or {}).get("id", "").replace("#", "::") == k:
+            d["faces the web"] = ["the route names it"]
+        if decides.get(k):
+            d["decides an ending"] = sorted(decides[k])
+        if data.get(k):
+            d["reads or writes data"] = sorted(data[k])
+        if k in context:
+            d["gives context"] = ["the handler is handed what it returns"]
+        does.append({"fn": k, "name": short(k), "does": list(d), "why": d, "on_the_walk": k in keys})
+    functions["does"] = {"rows": does, "two_or_more": sum(1 for r in does if len(r["does"]) >= 2), "none": sum(1 for r in does if not r["does"]), "of": len(does),
+                         "by_role": dict(collections.Counter(w for r in does for w in r["does"])),
+                         "rule": "a role is lit only when the function's own code shows it: the route names it · a fork, a catch, a raise or the answer is in it · a step of a route touches a table in it · the handler is handed what it returns"}
+    functions["insight"] = insight_state
+
+
 def main() -> int:
     argv = list(sys.argv[1:]); forms_path = None
     if "--forms" in argv:
         i = argv.index("--forms"); forms_path = Path(argv[i + 1]).expanduser(); del argv[i:i + 2]
+    out_path = OUT
+    if "--out" in argv:      # a measuring loop writes each endpoint's facts beside the lab's own file, never over it
+        i = argv.index("--out"); out_path = Path(argv[i + 1]).expanduser(); del argv[i:i + 2]
+    archmap_path = None
+    if "--archmap" in argv:
+        i = argv.index("--archmap"); archmap_path = Path(argv[i + 1]).expanduser(); del argv[i:i + 2]
     target = argv[0] if argv else "POST /setup/complete"
     ID = "endpoint:" + target
     c4 = parse_js(EX / "c4-graph.js")
     lv = json.loads((EX / "levels.json").read_text(encoding="utf-8"))
     commits = parse_js(EX / "commits.js", "[")
     workflows = load_workflows()
+
+    # leftovers piece 6 — the map's own facts per function (lines · returns · calls nothing else · doc) live in archmap.json, beside the forms feed
+    _ap = archmap_path or ((forms_path.parent / "archmap.json") if forms_path else (EX / "archmap.json"))
+    insight, insight_state = {}, {"state": "not_emitted", "why": "no archmap.json beside the feed — the map's per-function facts were not read"}
+    if _ap.is_file():
+        try:
+            _am = json.loads(_ap.read_text(encoding="utf-8"))
+            if _am.get("head") == c4.get("head"):
+                insight = _am.get("function_insight") or {}
+                insight_state = {"state": "present" if insight else "absent", "why": None if insight else "archmap.json carries no function_insight", "rows": len(insight)}
+            else:
+                insight_state = {"state": "stale", "why": f"archmap.json is at {_am.get('head')}, the feed at {c4.get('head')} — not joined"}
+        except Exception as _exc:  # noqa: BLE001
+            insight_state = {"state": "unreadable", "why": f"archmap.json unreadable ({_exc.__class__.__name__})"}
+
+    def insight_rec(key):
+        """`file::fn` → what the map read of that function; None when the map holds no row for it."""
+        r = insight.get(key)
+        if not r:
+            return None
+        ops = (r.get("access") or {}).get("ops") or []
+        return {"lines": r.get("lines"), "returns": r.get("returns"), "async": r.get("async"), "calls_nothing_else": bool(r.get("base")),
+                "doc": None if r.get("doc") in (None, "", "—") else r.get("doc"), "tables": len(ops), "used_by_api_files": r.get("api"), "used_by_other_files": r.get("internal")}
 
     nodes = {n["id"]: (slug, n) for slug, g in c4["l2"].items() for n in g["nodes"]}
     if ID not in nodes:
@@ -354,7 +536,8 @@ def main() -> int:
                 "role": f.get("role"), "layer": f.get("layer"), "entity": f.get("slug"), "handler": bool(f.get("handler")),
                 "lines": d.get("flines"), "async": (d.get("sig") or {}).get("async"), "returns": (d.get("sig") or {}).get("returns"),
                 "god": bool((f.get("hub") or {}).get("god")), "usage": (f.get("hub") or {}).get("usage"), "d2w": f.get("d2w"),
-                "commits": bool(acc.get("commits")), "ops": acc.get("ops") or [], "behind": f.get("behind")}
+                "commits": bool(acc.get("commits")), "ops": acc.get("ops") or [], "behind": f.get("behind"),
+                "insight": insight_rec(fid.replace("#", "::"))}
 
     out_edges = collections.defaultdict(list)
     for e in lv.get("fn_edges", []):
@@ -626,6 +809,7 @@ def main() -> int:
                     _s = ((_fj.get("settings") or {}).get("setting:" + _k) or {}).get("tests") or {}
                     _st.append({"setting": _k, "default_runs": _s.get("default_runs"), "values": _s.get("values") or [], "sets": _s.get("sets") or []})
                 forms_block["settings_tests"] = _st
+                inside_the_calls(_fj, ID, forms_block, functions, security, gsig, n_endpoints, insight_rec, insight_state)
                 _mw = _fj.get("middleware") or {}
                 for _m in security["asgi"]:
                     _o = (_mw.get(_m.get("id")) or {}).get("order") or {}
@@ -649,9 +833,9 @@ def main() -> int:
              "functions": functions, "tests": tests, "widening": widening, "security": security,
              "git_touches": {"commits": touches, "why": None if touches else f"none of the feed's {len(commits)} recent commits touched this door (commits.js)"},
              "feedwide": feedwide, "context": context}
-    OUT.write_text("/* GENERATED by gen-endpoint-facts.py from the frozen example feed (head " + str(head) + ") — never edit; re-run the generator. */\n"
+    out_path.write_text("/* GENERATED by gen-endpoint-facts.py from the frozen example feed (head " + str(head) + ") — never edit; re-run the generator. */\n"
                    "window.LABEP = " + json.dumps(facts, ensure_ascii=False, indent=1) + ";\n", encoding="utf-8")
-    print(f"wrote {OUT.relative_to(REPO)} for {target} @ {head}: ops {len(tables)} over {len(tables_by_name)} tables (r {len(facts['data']['reads'])} · w {len(facts['data']['writes'])} · both {len(both)}) · "
+    print(f"wrote {out_path.relative_to(REPO) if out_path.is_relative_to(REPO) else out_path} for {target} @ {head}: ops {len(tables)} over {len(tables_by_name)} tables (r {len(facts['data']['reads'])} · w {len(facts['data']['writes'])} · both {len(both)}) · "
           f"schemas req {schemas_out['request'].get('name')} ({len(schemas_out['request'].get('cols', []))} cols, {len(schemas_out['request'].get('nested', []))} nested) "
           f"resp {schemas_out['response'].get('name')} ({len(schemas_out['response'].get('cols', []))} cols, {len(schemas_out['response'].get('nested', []))} nested) · "
           f"walk {functions['walk_levels']} vs behind {behind.get('fns')} · cases {len(cases)} by status {dict((k, len(v)) for k, v in by_status.items())} · "

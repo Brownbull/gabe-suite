@@ -18238,7 +18238,305 @@ window.LABEP = {
      }
     ]
    }
-  ]
+  ],
+  "inside": {
+   "state": "present",
+   "why": null,
+   "functions": [
+    {
+     "fn": "apps/api/api/setup.py::setup_complete",
+     "name": "setup_complete",
+     "file": "apps/api/api/setup.py",
+     "at": "apps/api/api/setup.py:184",
+     "depth": 0,
+     "via": null,
+     "site": null,
+     "paths": [],
+     "raises": [],
+     "refusals": [
+      {
+       "at": "apps/api/api/setup.py:193",
+       "pred": "key is None",
+       "status": 400,
+       "exit": "x:13ce9b79e0"
+      },
+      {
+       "at": "apps/api/api/setup.py:200",
+       "pred": null,
+       "status": 409,
+       "exit": "x:f2caf456bd"
+      },
+      {
+       "at": "apps/api/api/setup.py:202",
+       "pred": null,
+       "status": 409,
+       "exit": "x:a086031223"
+      }
+     ],
+     "commits": [],
+     "savepoints": [],
+     "swallows": [],
+     "also_reached_by": 0
+    },
+    {
+     "fn": "apps/api/services/setup.py::complete_setup",
+     "name": "complete_setup",
+     "file": "apps/api/services/setup.py",
+     "at": "apps/api/services/setup.py:337",
+     "depth": 1,
+     "via": "apps/api/api/setup.py::setup_complete",
+     "site": "apps/api/api/setup.py:196",
+     "paths": [
+      "p:0f099873d5",
+      "p:1ac75d260a",
+      "p:2adb89467d",
+      "p:5c8ba607f9",
+      "p:bba821f362"
+     ],
+     "raises": [
+      {
+       "cls": "SetupInProgressError",
+       "msg": null,
+       "pred": "claimed.outcome is ClaimOutcome.IN_PROGRESS",
+       "at": "apps/api/services/setup.py:348",
+       "through": [],
+       "translation": "translated",
+       "here": [
+        {
+         "exit": "x:f2caf456bd",
+         "status": 409,
+         "at": "apps/api/api/setup.py:200"
+        }
+       ],
+       "uncaught_here": [],
+       "on_other_endpoints": 1,
+       "here_word": "translated"
+      },
+      {
+       "cls": "ConsentRequiredError",
+       "msg": null,
+       "pred": "latest is None or latest.policy_version != CONSENT_POLICY_VERSION",
+       "at": "apps/api/services/setup.py:374",
+       "through": [
+        {
+         "at": "apps/api/services/setup.py:403",
+         "op": "pass-through",
+         "types": [
+          "Exception"
+         ]
+        }
+       ],
+       "translation": "mixed",
+       "here": [
+        {
+         "exit": "x:a086031223",
+         "status": 409,
+         "at": "apps/api/api/setup.py:202"
+        }
+       ],
+       "uncaught_here": [],
+       "on_other_endpoints": 1,
+       "here_word": "translated"
+      }
+     ],
+     "refusals": [],
+     "commits": [
+      {
+       "step": "st:07fb369254",
+       "op": "commit",
+       "at": "apps/api/services/setup.py:361"
+      },
+      {
+       "step": "st:b87d2e4c3a",
+       "op": "commit",
+       "at": "apps/api/services/setup.py:388"
+      }
+     ],
+     "savepoints": [],
+     "swallows": [],
+     "also_reached_by": 1
+    },
+    {
+     "fn": "apps/api/services/idempotency.py::claim",
+     "name": "claim",
+     "file": "apps/api/services/idempotency.py",
+     "at": "apps/api/services/idempotency.py:114",
+     "depth": 2,
+     "via": "apps/api/services/setup.py::complete_setup",
+     "site": "apps/api/services/setup.py:342",
+     "paths": [
+      "p:0f099873d5",
+      "p:1ac75d260a",
+      "p:2adb89467d",
+      "p:5c8ba607f9",
+      "p:bba821f362"
+     ],
+     "raises": [],
+     "refusals": [],
+     "commits": [],
+     "savepoints": [
+      "apps/api/services/idempotency.py:138"
+     ],
+     "swallows": [],
+     "also_reached_by": 1
+    },
+    {
+     "fn": "apps/api/services/setup.py::_load_setup_result",
+     "name": "_load_setup_result",
+     "file": "apps/api/services/setup.py",
+     "at": "apps/api/services/setup.py:230",
+     "depth": 2,
+     "via": "apps/api/services/setup.py::complete_setup",
+     "site": "apps/api/services/setup.py:346",
+     "paths": [
+      "p:0f099873d5",
+      "p:1ac75d260a",
+      "p:2adb89467d",
+      "p:5c8ba607f9",
+      "p:bba821f362"
+     ],
+     "raises": [
+      {
+       "cls": "RuntimeError",
+       "msg": "cannot load setup graph for a user without a household",
+       "pred": "loaded is None",
+       "at": "apps/api/services/setup.py:240",
+       "through": [],
+       "translation": "beyond one level",
+       "here": [],
+       "uncaught_here": [],
+       "on_other_endpoints": 0,
+       "here_word": "beyond one level"
+      },
+      {
+       "cls": "RuntimeError",
+       "msg": "set-up household is missing its principal Despensa",
+       "pred": "principal is None",
+       "at": "apps/api/services/setup.py:243",
+       "through": [],
+       "translation": "beyond one level",
+       "here": [],
+       "uncaught_here": [],
+       "on_other_endpoints": 0,
+       "here_word": "beyond one level"
+      }
+     ],
+     "refusals": [],
+     "commits": [],
+     "savepoints": [],
+     "swallows": [],
+     "also_reached_by": 1
+    },
+    {
+     "fn": "apps/api/services/setup.py::_discard_claim",
+     "name": "_discard_claim",
+     "file": "apps/api/services/setup.py",
+     "at": "apps/api/services/setup.py:312",
+     "depth": 2,
+     "via": "apps/api/services/setup.py::complete_setup",
+     "site": "apps/api/services/setup.py:406",
+     "paths": [
+      "p:0f099873d5",
+      "p:1ac75d260a",
+      "p:2adb89467d",
+      "p:5c8ba607f9",
+      "p:bba821f362"
+     ],
+     "raises": [],
+     "refusals": [],
+     "commits": [
+      {
+       "step": "st:13847a504a",
+       "op": "commit",
+       "at": "apps/api/services/setup.py:334"
+      }
+     ],
+     "savepoints": [],
+     "swallows": [],
+     "also_reached_by": 1
+    }
+   ],
+   "calls": {
+    "apps/api/middleware/idempotency.py::get_idempotency_key": {
+     "opens": [],
+     "insight": null,
+     "n": {
+      "raises": 0,
+      "refusals": 0,
+      "commits": 0,
+      "savepoints": 0,
+      "swallows": 0
+     }
+    },
+    "apps/api/services/setup.py::complete_setup": {
+     "opens": [
+      "apps/api/services/setup.py::complete_setup",
+      "apps/api/services/idempotency.py::claim",
+      "apps/api/services/setup.py::_load_setup_result",
+      "apps/api/services/setup.py::_discard_claim"
+     ],
+     "insight": {
+      "lines": 71,
+      "returns": "SetupResult",
+      "async": true,
+      "calls_nothing_else": false,
+      "doc": "Idempotently complete setup for ``user``; the service owns commit/rollback.",
+      "tables": 1,
+      "used_by_api_files": 2,
+      "used_by_other_files": 5
+     },
+     "n": {
+      "raises": 4,
+      "refusals": 0,
+      "commits": 3,
+      "savepoints": 1,
+      "swallows": 0
+     }
+    },
+    "apps/api/api/setup.py::_me_response_from_result": {
+     "opens": [],
+     "insight": {
+      "lines": 20,
+      "returns": "MeResponse",
+      "async": true,
+      "calls_nothing_else": false,
+      "doc": null,
+      "tables": 0,
+      "used_by_api_files": 0,
+      "used_by_other_files": 1
+     },
+     "n": {
+      "raises": 0,
+      "refusals": 0,
+      "commits": 0,
+      "savepoints": 0,
+      "swallows": 0
+     }
+    }
+   },
+   "insight": {
+    "state": "present",
+    "why": null,
+    "rows": 522
+   },
+   "counts": {
+    "functions": 5,
+    "raises": 4,
+    "raises_by_word": {
+     "translated": 2,
+     "beyond one level": 2
+    },
+    "refusals": 3,
+    "commits": 3,
+    "savepoints": 1,
+    "swallows": 0,
+    "deepest": 2,
+    "calls_on_chain": 3,
+    "calls_that_open": 1,
+    "calls_with_map_facts": 2
+   },
+   "reading": "the feed follows a failure ONE call down; a failure raised deeper says 'beyond one level' — the answer it becomes is not read"
+  }
  },
  "identity": {
   "id": "endpoint:POST /setup/complete",
@@ -22498,6 +22796,16 @@ window.LABEP = {
      "_upsert_notifications"
     ],
     "names_more": 17
+   },
+   "insight": {
+    "lines": 21,
+    "returns": "MeResponse",
+    "async": true,
+    "calls_nothing_else": false,
+    "doc": null,
+    "tables": 0,
+    "used_by_api_files": 1,
+    "used_by_other_files": 0
    }
   },
   "behind": {
@@ -22551,6 +22859,16 @@ window.LABEP = {
        "month_start"
       ]
      },
+     "insight": {
+      "lines": 20,
+      "returns": "MeResponse",
+      "async": true,
+      "calls_nothing_else": false,
+      "doc": null,
+      "tables": 0,
+      "used_by_api_files": 0,
+      "used_by_other_files": 1
+     },
      "rel": "calls",
      "via": "setup_complete"
     },
@@ -22587,6 +22905,16 @@ window.LABEP = {
        "load_household_context",
        "resolve_or_create_user"
       ]
+     },
+     "insight": {
+      "lines": 10,
+      "returns": "AuthContext",
+      "async": true,
+      "calls_nothing_else": false,
+      "doc": "Verify the bearer token, persist the identity, and load the household read-only.",
+      "tables": 0,
+      "used_by_api_files": 23,
+      "used_by_other_files": 4
      },
      "rel": "depends",
      "via": "setup_complete"
@@ -22634,6 +22962,16 @@ window.LABEP = {
       ],
       "names_more": 9
      },
+     "insight": {
+      "lines": 71,
+      "returns": "SetupResult",
+      "async": true,
+      "calls_nothing_else": false,
+      "doc": "Idempotently complete setup for ``user``; the service owns commit/rollback.",
+      "tables": 1,
+      "used_by_api_files": 2,
+      "used_by_other_files": 5
+     },
      "rel": "calls",
      "via": "setup_complete"
     }
@@ -22672,6 +23010,16 @@ window.LABEP = {
        "resolve_or_create_user"
       ]
      },
+     "insight": {
+      "lines": 24,
+      "returns": "AuthContext",
+      "async": true,
+      "calls_nothing_else": false,
+      "doc": "Verify a raw token, persist the identity, and load the household read-only.",
+      "tables": 0,
+      "used_by_api_files": 1,
+      "used_by_other_files": 1
+     },
      "rel": "calls",
      "via": "get_auth_context"
     },
@@ -22709,6 +23057,16 @@ window.LABEP = {
        "is_claim_abandoned"
       ]
      },
+     "insight": {
+      "lines": 33,
+      "returns": "Claim",
+      "async": true,
+      "calls_nothing_else": false,
+      "doc": "Reserve the key for this operation/owner, or report an existing outcome.",
+      "tables": 1,
+      "used_by_api_files": 0,
+      "used_by_other_files": 6
+     },
      "rel": "calls",
      "via": "complete_setup"
     },
@@ -22737,6 +23095,16 @@ window.LABEP = {
       }
      ],
      "behind": null,
+     "insight": {
+      "lines": 9,
+      "returns": "IdempotencyKey",
+      "async": true,
+      "calls_nothing_else": true,
+      "doc": "Mark a claimed operation completed with a reference to its stored result.",
+      "tables": 1,
+      "used_by_api_files": 4,
+      "used_by_other_files": 20
+     },
      "rel": "calls",
      "via": "complete_setup"
     },
@@ -22786,6 +23154,16 @@ window.LABEP = {
        "get_principal_location"
       ]
      },
+     "insight": {
+      "lines": 45,
+      "returns": "tuple[Household, Membership, Location]",
+      "async": true,
+      "calls_nothing_else": false,
+      "doc": "Ensure the user belongs to a household with a principal Despensa.",
+      "tables": 4,
+      "used_by_api_files": 0,
+      "used_by_other_files": 2
+     },
      "rel": "calls",
      "via": "complete_setup"
     },
@@ -22825,6 +23203,16 @@ window.LABEP = {
        "get_principal_location"
       ]
      },
+     "insight": {
+      "lines": 19,
+      "returns": "tuple[Household, Membership, Location | None] | None",
+      "async": true,
+      "calls_nothing_else": false,
+      "doc": "Read-only: the user's household + membership + principal, or None if unset.",
+      "tables": 2,
+      "used_by_api_files": 0,
+      "used_by_other_files": 2
+     },
      "rel": "calls",
      "via": "complete_setup"
     },
@@ -22853,6 +23241,16 @@ window.LABEP = {
       }
      ],
      "behind": null,
+     "insight": {
+      "lines": 23,
+      "returns": "None",
+      "async": true,
+      "calls_nothing_else": false,
+      "doc": "Remove any surviving claim row after a failed attempt so the key retries clean.",
+      "tables": 1,
+      "used_by_api_files": 0,
+      "used_by_other_files": 1
+     },
      "rel": "calls",
      "via": "complete_setup"
     },
@@ -22923,6 +23321,16 @@ window.LABEP = {
        "load_household_context"
       ]
      },
+     "insight": {
+      "lines": 80,
+      "returns": "SetupResult",
+      "async": true,
+      "calls_nothing_else": false,
+      "doc": "Read-only re-derivation of a completed setup graph (REPLAY / already-set-up).",
+      "tables": 8,
+      "used_by_api_files": 0,
+      "used_by_other_files": 1
+     },
      "rel": "calls",
      "via": "complete_setup"
     },
@@ -22956,6 +23364,16 @@ window.LABEP = {
       }
      ],
      "behind": null,
+     "insight": {
+      "lines": 15,
+      "returns": "SetupCompletionState",
+      "async": true,
+      "calls_nothing_else": true,
+      "doc": null,
+      "tables": 2,
+      "used_by_api_files": 0,
+      "used_by_other_files": 1
+     },
      "rel": "calls",
      "via": "complete_setup"
     },
@@ -22989,6 +23407,16 @@ window.LABEP = {
       }
      ],
      "behind": null,
+     "insight": {
+      "lines": 18,
+      "returns": "UserDietaryProfile",
+      "async": true,
+      "calls_nothing_else": true,
+      "doc": null,
+      "tables": 2,
+      "used_by_api_files": 0,
+      "used_by_other_files": 2
+     },
      "rel": "calls",
      "via": "complete_setup"
     },
@@ -23016,6 +23444,16 @@ window.LABEP = {
       "names": [
        "upsert_exploration_preferences"
       ]
+     },
+     "insight": {
+      "lines": 10,
+      "returns": "UserExplorationPreferences",
+      "async": true,
+      "calls_nothing_else": false,
+      "doc": "D109: thin wrapper over the exploration service's get-or-create upsert.",
+      "tables": 0,
+      "used_by_api_files": 0,
+      "used_by_other_files": 1
      },
      "rel": "calls",
      "via": "complete_setup"
@@ -23050,6 +23488,16 @@ window.LABEP = {
       }
      ],
      "behind": null,
+     "insight": {
+      "lines": 19,
+      "returns": "HouseholdFormatPreferences",
+      "async": true,
+      "calls_nothing_else": true,
+      "doc": null,
+      "tables": 2,
+      "used_by_api_files": 0,
+      "used_by_other_files": 1
+     },
      "rel": "calls",
      "via": "complete_setup"
     },
@@ -23083,6 +23531,16 @@ window.LABEP = {
       }
      ],
      "behind": null,
+     "insight": {
+      "lines": 18,
+      "returns": "UserNotificationPreferences",
+      "async": true,
+      "calls_nothing_else": true,
+      "doc": null,
+      "tables": 2,
+      "used_by_api_files": 0,
+      "used_by_other_files": 1
+     },
      "rel": "calls",
      "via": "complete_setup"
     },
@@ -23116,6 +23574,16 @@ window.LABEP = {
       }
      ],
      "behind": null,
+     "insight": {
+      "lines": 16,
+      "returns": "UserPrivacyPermissions",
+      "async": true,
+      "calls_nothing_else": true,
+      "doc": null,
+      "tables": 2,
+      "used_by_api_files": 0,
+      "used_by_other_files": 1
+     },
      "rel": "calls",
      "via": "complete_setup"
     },
@@ -23149,6 +23617,16 @@ window.LABEP = {
       }
      ],
      "behind": null,
+     "insight": {
+      "lines": 13,
+      "returns": "SubscriptionEntitlement",
+      "async": true,
+      "calls_nothing_else": true,
+      "doc": null,
+      "tables": 2,
+      "used_by_api_files": 0,
+      "used_by_other_files": 1
+     },
      "rel": "calls",
      "via": "complete_setup"
     },
@@ -23182,6 +23660,16 @@ window.LABEP = {
       }
      ],
      "behind": null,
+     "insight": {
+      "lines": 14,
+      "returns": "UserFormatPreferences",
+      "async": true,
+      "calls_nothing_else": true,
+      "doc": null,
+      "tables": 2,
+      "used_by_api_files": 0,
+      "used_by_other_files": 1
+     },
      "rel": "calls",
      "via": "complete_setup"
     },
@@ -23210,6 +23698,16 @@ window.LABEP = {
       }
      ],
      "behind": null,
+     "insight": {
+      "lines": 9,
+      "returns": "ConsentRecord | None",
+      "async": true,
+      "calls_nothing_else": true,
+      "doc": "The user's most recent consent record, or None if they never accepted.",
+      "tables": 1,
+      "used_by_api_files": 1,
+      "used_by_other_files": 2
+     },
      "rel": "calls",
      "via": "complete_setup"
     }
@@ -23242,6 +23740,16 @@ window.LABEP = {
        "identity_from_firebase_claims"
       ]
      },
+     "insight": {
+      "lines": 18,
+      "returns": "VerifiedIdentity",
+      "async": true,
+      "calls_nothing_else": false,
+      "doc": null,
+      "tables": 0,
+      "used_by_api_files": 0,
+      "used_by_other_files": 1
+     },
      "rel": "binds",
      "via": "build_auth_context"
     },
@@ -23264,6 +23772,16 @@ window.LABEP = {
      "commits": false,
      "ops": [],
      "behind": null,
+     "insight": {
+      "lines": 9,
+      "returns": "VerifiedIdentity",
+      "async": true,
+      "calls_nothing_else": true,
+      "doc": null,
+      "tables": 0,
+      "used_by_api_files": 0,
+      "used_by_other_files": 1
+     },
      "rel": "binds",
      "via": "build_auth_context"
     },
@@ -23297,6 +23815,16 @@ window.LABEP = {
       }
      ],
      "behind": null,
+     "insight": {
+      "lines": 22,
+      "returns": "User",
+      "async": true,
+      "calls_nothing_else": true,
+      "doc": "Return the existing user for this identity, or create one.",
+      "tables": 2,
+      "used_by_api_files": 0,
+      "used_by_other_files": 1
+     },
      "rel": "calls",
      "via": "build_auth_context"
     },
@@ -23325,6 +23853,16 @@ window.LABEP = {
       }
      ],
      "behind": null,
+     "insight": {
+      "lines": 12,
+      "returns": "IdempotencyKey | None",
+      "async": true,
+      "calls_nothing_else": true,
+      "doc": null,
+      "tables": 1,
+      "used_by_api_files": 0,
+      "used_by_other_files": 1
+     },
      "rel": "calls",
      "via": "claim"
     },
@@ -23354,6 +23892,16 @@ window.LABEP = {
        "is_claim_abandoned"
       ]
      },
+     "insight": {
+      "lines": 9,
+      "returns": "Claim",
+      "async": true,
+      "calls_nothing_else": false,
+      "doc": null,
+      "tables": 0,
+      "used_by_api_files": 0,
+      "used_by_other_files": 1
+     },
      "rel": "calls",
      "via": "claim"
     },
@@ -23382,6 +23930,16 @@ window.LABEP = {
       }
      ],
      "behind": null,
+     "insight": {
+      "lines": 12,
+      "returns": "Location | None",
+      "async": true,
+      "calls_nothing_else": true,
+      "doc": "Return the household's protected principal `Despensa`, if it exists.",
+      "tables": 1,
+      "used_by_api_files": 0,
+      "used_by_other_files": 1
+     },
      "rel": "calls",
      "via": "ensure_principal_household"
     },
@@ -23415,6 +23973,16 @@ window.LABEP = {
       }
      ],
      "behind": null,
+     "insight": {
+      "lines": 32,
+      "returns": "UserExplorationPreferences",
+      "async": true,
+      "calls_nothing_else": false,
+      "doc": "Get-or-create the user's exploration row and set every bias field (flush, no commit).",
+      "tables": 2,
+      "used_by_api_files": 1,
+      "used_by_other_files": 2
+     },
      "rel": "calls",
      "via": "_upsert_exploration"
     }
@@ -23445,6 +24013,16 @@ window.LABEP = {
       }
      ],
      "behind": null,
+     "insight": {
+      "lines": 7,
+      "returns": "None",
+      "async": false,
+      "calls_nothing_else": false,
+      "doc": "Re-stamp an abandoned claim as a fresh PENDING attempt, in place, so a successful complete() overwrites the stale claim instead of colliding with it.",
+      "tables": 1,
+      "used_by_api_files": 0,
+      "used_by_other_files": 2
+     },
      "rel": "calls",
      "via": "_outcome_for"
     }
@@ -23457,7 +24035,486 @@ window.LABEP = {
    1
   ],
   "walk_total": 27,
-  "walk_note": "the levels calls-walk (fn_edges, conf per hop) vs c4 behind.fns (graft-only hops the walk cannot see)"
+  "walk_note": "the levels calls-walk (fn_edges, conf per hop) vs c4 behind.fns (graft-only hops the walk cannot see)",
+  "does": {
+   "rows": [
+    {
+     "fn": "apps/api/api/setup.py::setup_complete",
+     "name": "setup_complete",
+     "does": [
+      "faces the web",
+      "decides an ending"
+     ],
+     "why": {
+      "faces the web": [
+       "the route names it"
+      ],
+      "decides an ending": [
+       "catches a failure",
+       "raises or refuses",
+       "returns the answer"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/api/setup.py::_me_response_from_result",
+     "name": "_me_response_from_result",
+     "does": [],
+     "why": {},
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/auth/context.py::get_auth_context",
+     "name": "get_auth_context",
+     "does": [
+      "decides an ending",
+      "gives context"
+     ],
+     "why": {
+      "decides an ending": [
+       "can end the request",
+       "catches a failure"
+      ],
+      "gives context": [
+       "the handler is handed what it returns"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/setup.py::complete_setup",
+     "name": "complete_setup",
+     "does": [
+      "decides an ending",
+      "reads or writes data"
+     ],
+     "why": {
+      "decides an ending": [
+       "a fork that picks the ending",
+       "catches a failure",
+       "raises or refuses"
+      ],
+      "reads or writes data": [
+       "ends or holds a transaction",
+       "reads",
+       "writes"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/auth/context.py::build_auth_context",
+     "name": "build_auth_context",
+     "does": [
+      "reads or writes data"
+     ],
+     "why": {
+      "reads or writes data": [
+       "ends or holds a transaction"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/idempotency.py::claim",
+     "name": "claim",
+     "does": [
+      "decides an ending",
+      "reads or writes data"
+     ],
+     "why": {
+      "decides an ending": [
+       "catches a failure"
+      ],
+      "reads or writes data": [
+       "ends or holds a transaction",
+       "writes"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/idempotency.py::complete",
+     "name": "complete",
+     "does": [
+      "reads or writes data"
+     ],
+     "why": {
+      "reads or writes data": [
+       "ends or holds a transaction",
+       "writes"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/ownership.py::ensure_principal_household",
+     "name": "ensure_principal_household",
+     "does": [
+      "reads or writes data"
+     ],
+     "why": {
+      "reads or writes data": [
+       "ends or holds a transaction",
+       "reads",
+       "writes"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/ownership.py::load_household_context",
+     "name": "load_household_context",
+     "does": [
+      "reads or writes data"
+     ],
+     "why": {
+      "reads or writes data": [
+       "reads"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/setup.py::_discard_claim",
+     "name": "_discard_claim",
+     "does": [
+      "reads or writes data"
+     ],
+     "why": {
+      "reads or writes data": [
+       "ends or holds a transaction",
+       "reads",
+       "writes"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/setup.py::_load_setup_result",
+     "name": "_load_setup_result",
+     "does": [
+      "decides an ending",
+      "reads or writes data"
+     ],
+     "why": {
+      "decides an ending": [
+       "raises or refuses"
+      ],
+      "reads or writes data": [
+       "reads"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/setup.py::_stamp_completion",
+     "name": "_stamp_completion",
+     "does": [
+      "reads or writes data"
+     ],
+     "why": {
+      "reads or writes data": [
+       "ends or holds a transaction",
+       "reads",
+       "writes"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/setup.py::_upsert_dietary",
+     "name": "_upsert_dietary",
+     "does": [
+      "reads or writes data"
+     ],
+     "why": {
+      "reads or writes data": [
+       "ends or holds a transaction",
+       "reads",
+       "writes"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/setup.py::_upsert_exploration",
+     "name": "_upsert_exploration",
+     "does": [],
+     "why": {},
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/setup.py::_upsert_format_prefs",
+     "name": "_upsert_format_prefs",
+     "does": [
+      "reads or writes data"
+     ],
+     "why": {
+      "reads or writes data": [
+       "ends or holds a transaction",
+       "reads",
+       "writes"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/setup.py::_upsert_notifications",
+     "name": "_upsert_notifications",
+     "does": [
+      "reads or writes data"
+     ],
+     "why": {
+      "reads or writes data": [
+       "ends or holds a transaction",
+       "reads",
+       "writes"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/setup.py::_upsert_privacy",
+     "name": "_upsert_privacy",
+     "does": [
+      "reads or writes data"
+     ],
+     "why": {
+      "reads or writes data": [
+       "ends or holds a transaction",
+       "reads",
+       "writes"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/setup.py::_upsert_subscription",
+     "name": "_upsert_subscription",
+     "does": [
+      "reads or writes data"
+     ],
+     "why": {
+      "reads or writes data": [
+       "ends or holds a transaction",
+       "reads",
+       "writes"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/setup.py::_upsert_user_format",
+     "name": "_upsert_user_format",
+     "does": [
+      "reads or writes data"
+     ],
+     "why": {
+      "reads or writes data": [
+       "ends or holds a transaction",
+       "reads",
+       "writes"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/consent.py::latest_consent",
+     "name": "latest_consent",
+     "does": [
+      "reads or writes data"
+     ],
+     "why": {
+      "reads or writes data": [
+       "reads"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/auth/verifier.py::FirebaseTokenVerifier.verify",
+     "name": "FirebaseTokenVerifier.verify",
+     "does": [],
+     "why": {},
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/auth/verifier.py::MockTokenVerifier.verify",
+     "name": "MockTokenVerifier.verify",
+     "does": [],
+     "why": {},
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/ownership.py::resolve_or_create_user",
+     "name": "resolve_or_create_user",
+     "does": [
+      "reads or writes data"
+     ],
+     "why": {
+      "reads or writes data": [
+       "ends or holds a transaction",
+       "reads",
+       "writes"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/idempotency.py::_lookup",
+     "name": "_lookup",
+     "does": [
+      "reads or writes data"
+     ],
+     "why": {
+      "reads or writes data": [
+       "reads"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/idempotency.py::_outcome_for",
+     "name": "_outcome_for",
+     "does": [
+      "reads or writes data"
+     ],
+     "why": {
+      "reads or writes data": [
+       "ends or holds a transaction"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/ownership.py::get_principal_location",
+     "name": "get_principal_location",
+     "does": [
+      "reads or writes data"
+     ],
+     "why": {
+      "reads or writes data": [
+       "reads"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/exploration.py::upsert_exploration_preferences",
+     "name": "upsert_exploration_preferences",
+     "does": [
+      "reads or writes data"
+     ],
+     "why": {
+      "reads or writes data": [
+       "ends or holds a transaction",
+       "reads",
+       "writes"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/services/idempotency.py::_reclaim",
+     "name": "_reclaim",
+     "does": [
+      "reads or writes data"
+     ],
+     "why": {
+      "reads or writes data": [
+       "writes"
+      ]
+     },
+     "on_the_walk": true
+    },
+    {
+     "fn": "apps/api/auth/context.py::bearer_scheme",
+     "name": "bearer_scheme",
+     "does": [
+      "decides an ending",
+      "gives context"
+     ],
+     "why": {
+      "decides an ending": [
+       "can end the request"
+      ],
+      "gives context": [
+       "the handler is handed what it returns"
+      ]
+     },
+     "on_the_walk": false
+    },
+    {
+     "fn": "apps/api/services/ai_credits.py::credits_used_this_month",
+     "name": "credits_used_this_month",
+     "does": [
+      "reads or writes data"
+     ],
+     "why": {
+      "reads or writes data": [
+       "reads"
+      ]
+     },
+     "on_the_walk": false
+    },
+    {
+     "fn": "apps/api/auth/context.py::_resolve_verifier",
+     "name": "_resolve_verifier",
+     "does": [
+      "gives context"
+     ],
+     "why": {
+      "gives context": [
+       "the handler is handed what it returns"
+      ]
+     },
+     "on_the_walk": false
+    },
+    {
+     "fn": "apps/api/config.py::get_settings",
+     "name": "get_settings",
+     "does": [
+      "gives context"
+     ],
+     "why": {
+      "gives context": [
+       "the handler is handed what it returns"
+      ]
+     },
+     "on_the_walk": false
+    },
+    {
+     "fn": "apps/api/db.py::get_session",
+     "name": "get_session",
+     "does": [
+      "gives context"
+     ],
+     "why": {
+      "gives context": [
+       "the handler is handed what it returns"
+      ]
+     },
+     "on_the_walk": false
+    }
+   ],
+   "two_or_more": 6,
+   "none": 4,
+   "of": 33,
+   "by_role": {
+    "faces the web": 1,
+    "decides an ending": 6,
+    "gives context": 5,
+    "reads or writes data": 23
+   },
+   "rule": "a role is lit only when the function's own code shows it: the route names it · a fork, a catch, a raise or the answer is in it · a step of a route touches a table in it · the handler is handed what it returns"
+  },
+  "insight": {
+   "state": "present",
+   "why": null,
+   "rows": 522
+  }
  },
  "tests": {
   "cases": [
@@ -24488,21 +25545,111 @@ window.LABEP = {
     "name": "get_auth_context",
     "via": "param-dep",
     "feedwide": 78,
-    "fn_rec": null
+    "fn_rec": null,
+    "resolved": {
+     "key": "apps/api/auth/context.py::get_auth_context",
+     "name": "get_auth_context",
+     "at": "apps/api/auth/context.py:90",
+     "kind": "function",
+     "order": 4,
+     "of": 5,
+     "asked_by": [
+      "the handler"
+     ],
+     "exits": [
+      {
+       "id": "x:18e726cdeb",
+       "status": 401,
+       "detail": "invalid token",
+       "at": "apps/api/auth/context.py:99",
+       "pred": null,
+       "via": "except InvalidTokenError"
+      }
+     ],
+     "inherited_exits": [
+      {
+       "id": "x:9fd81887a2",
+       "status": 401,
+       "detail": "Not authenticated",
+       "via": "HTTPBearer bearer_scheme"
+      }
+     ],
+     "can_end_the_request": true,
+     "subdeps": [
+      "bearer_scheme",
+      "get_session",
+      "_resolve_verifier"
+     ],
+     "runs_after_the_handler": false,
+     "effects": [
+      {
+       "at": "apps/api/auth/context.py:79",
+       "op": "commit",
+       "via": "build_auth_context @ apps/api/auth/context.py:97"
+      }
+     ],
+     "applies_to": 78,
+     "endpoints": 81,
+     "in_the_map_list": true,
+     "present": true
+    }
    },
    {
     "gate": false,
     "name": "get_session",
     "via": "param-dep",
     "feedwide": 79,
-    "fn_rec": null
+    "fn_rec": null,
+    "resolved": {
+     "key": "apps/api/db.py::get_session",
+     "name": "get_session",
+     "at": "apps/api/db.py:51",
+     "kind": "function",
+     "order": 2,
+     "of": 5,
+     "asked_by": [
+      "get_auth_context",
+      "the handler"
+     ],
+     "exits": [],
+     "inherited_exits": [],
+     "can_end_the_request": false,
+     "subdeps": [],
+     "runs_after_the_handler": true,
+     "effects": [],
+     "applies_to": 79,
+     "endpoints": 81,
+     "in_the_map_list": true,
+     "present": true
+    }
    },
    {
     "gate": false,
     "name": "get_settings",
     "via": "param-dep",
     "feedwide": 12,
-    "fn_rec": null
+    "fn_rec": null,
+    "resolved": {
+     "key": "apps/api/config.py::get_settings",
+     "name": "get_settings",
+     "at": "apps/api/config.py:388",
+     "kind": "function",
+     "order": 5,
+     "of": 5,
+     "asked_by": [
+      "the handler"
+     ],
+     "exits": [],
+     "inherited_exits": [],
+     "can_end_the_request": false,
+     "subdeps": [],
+     "runs_after_the_handler": false,
+     "effects": [],
+     "applies_to": 12,
+     "endpoints": 81,
+     "in_the_map_list": true,
+     "present": true
+    }
    }
   ],
   "gates": [
@@ -24512,7 +25659,54 @@ window.LABEP = {
     "name": "get_auth_context",
     "via": "param-dep",
     "feedwide": 78,
-    "fn_rec": null
+    "fn_rec": null,
+    "resolved": {
+     "key": "apps/api/auth/context.py::get_auth_context",
+     "name": "get_auth_context",
+     "at": "apps/api/auth/context.py:90",
+     "kind": "function",
+     "order": 4,
+     "of": 5,
+     "asked_by": [
+      "the handler"
+     ],
+     "exits": [
+      {
+       "id": "x:18e726cdeb",
+       "status": 401,
+       "detail": "invalid token",
+       "at": "apps/api/auth/context.py:99",
+       "pred": null,
+       "via": "except InvalidTokenError"
+      }
+     ],
+     "inherited_exits": [
+      {
+       "id": "x:9fd81887a2",
+       "status": 401,
+       "detail": "Not authenticated",
+       "via": "HTTPBearer bearer_scheme"
+      }
+     ],
+     "can_end_the_request": true,
+     "subdeps": [
+      "bearer_scheme",
+      "get_session",
+      "_resolve_verifier"
+     ],
+     "runs_after_the_handler": false,
+     "effects": [
+      {
+       "at": "apps/api/auth/context.py:79",
+       "op": "commit",
+       "via": "build_auth_context @ apps/api/auth/context.py:97"
+      }
+     ],
+     "applies_to": 78,
+     "endpoints": 81,
+     "in_the_map_list": true,
+     "present": true
+    }
    }
   ],
   "asgi": [
@@ -24610,6 +25804,162 @@ window.LABEP = {
   "commits": true,
   "stream": false,
   "exported": true,
+  "resolution": {
+   "state": "present",
+   "why": null,
+   "rows": [
+    {
+     "key": "apps/api/auth/context.py::bearer_scheme",
+     "name": "bearer_scheme",
+     "at": "apps/api/auth/context.py:23",
+     "kind": "security",
+     "order": 1,
+     "of": 5,
+     "asked_by": [
+      "get_auth_context"
+     ],
+     "exits": [
+      {
+       "id": "x:9fd81887a2",
+       "status": 401,
+       "detail": "Not authenticated",
+       "at": "apps/api/auth/context.py:23",
+       "pred": null,
+       "via": "HTTPBearer bearer_scheme"
+      }
+     ],
+     "inherited_exits": [],
+     "can_end_the_request": true,
+     "subdeps": [],
+     "runs_after_the_handler": false,
+     "effects": [],
+     "applies_to": 78,
+     "endpoints": 81,
+     "in_the_map_list": false,
+     "present": true
+    },
+    {
+     "key": "apps/api/db.py::get_session",
+     "name": "get_session",
+     "at": "apps/api/db.py:51",
+     "kind": "function",
+     "order": 2,
+     "of": 5,
+     "asked_by": [
+      "get_auth_context",
+      "the handler"
+     ],
+     "exits": [],
+     "inherited_exits": [],
+     "can_end_the_request": false,
+     "subdeps": [],
+     "runs_after_the_handler": true,
+     "effects": [],
+     "applies_to": 79,
+     "endpoints": 81,
+     "in_the_map_list": true,
+     "present": true
+    },
+    {
+     "key": "apps/api/auth/context.py::_resolve_verifier",
+     "name": "_resolve_verifier",
+     "at": "apps/api/auth/context.py:59",
+     "kind": "function",
+     "order": 3,
+     "of": 5,
+     "asked_by": [
+      "get_auth_context"
+     ],
+     "exits": [],
+     "inherited_exits": [],
+     "can_end_the_request": false,
+     "subdeps": [],
+     "runs_after_the_handler": false,
+     "effects": [],
+     "applies_to": 79,
+     "endpoints": 81,
+     "in_the_map_list": false,
+     "present": true
+    },
+    {
+     "key": "apps/api/auth/context.py::get_auth_context",
+     "name": "get_auth_context",
+     "at": "apps/api/auth/context.py:90",
+     "kind": "function",
+     "order": 4,
+     "of": 5,
+     "asked_by": [
+      "the handler"
+     ],
+     "exits": [
+      {
+       "id": "x:18e726cdeb",
+       "status": 401,
+       "detail": "invalid token",
+       "at": "apps/api/auth/context.py:99",
+       "pred": null,
+       "via": "except InvalidTokenError"
+      }
+     ],
+     "inherited_exits": [
+      {
+       "id": "x:9fd81887a2",
+       "status": 401,
+       "detail": "Not authenticated",
+       "via": "HTTPBearer bearer_scheme"
+      }
+     ],
+     "can_end_the_request": true,
+     "subdeps": [
+      "bearer_scheme",
+      "get_session",
+      "_resolve_verifier"
+     ],
+     "runs_after_the_handler": false,
+     "effects": [
+      {
+       "at": "apps/api/auth/context.py:79",
+       "op": "commit",
+       "via": "build_auth_context @ apps/api/auth/context.py:97"
+      }
+     ],
+     "applies_to": 78,
+     "endpoints": 81,
+     "in_the_map_list": true,
+     "present": true
+    },
+    {
+     "key": "apps/api/config.py::get_settings",
+     "name": "get_settings",
+     "at": "apps/api/config.py:388",
+     "kind": "function",
+     "order": 5,
+     "of": 5,
+     "asked_by": [
+      "the handler"
+     ],
+     "exits": [],
+     "inherited_exits": [],
+     "can_end_the_request": false,
+     "subdeps": [],
+     "runs_after_the_handler": false,
+     "effects": [],
+     "applies_to": 12,
+     "endpoints": 81,
+     "in_the_map_list": true,
+     "present": true
+    }
+   ],
+   "unresolved": [],
+   "rule": "the order the handler's signature asks for them, each one's own helpers first; a helper asked for twice keeps its first place",
+   "counts": {
+    "rows": 5,
+    "can_end": 2,
+    "end_nothing": 3,
+    "after_the_handler": 1,
+    "beyond_the_map_list": 2
+   }
+  },
   "asgi_order": "runs"
  },
  "git_touches": {

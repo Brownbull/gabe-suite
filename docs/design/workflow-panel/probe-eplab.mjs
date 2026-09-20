@@ -1957,7 +1957,8 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
   { const pv = await p.$$eval('#portvars .ptv', els => els.map(e => e.dataset.pvar));
     ok(pv[0] === 'cmd-path' && pv[1] === 'cmd-exit', 'the portrait is LENT the Path and Exit records, and the path record leads', pv.join(','));
     ok(await p.$eval('#portt', e => e.textContent) === 'first run', 'the portrait names the path as its subject');
-    ok((await p.$$('#portbody .ptchain .ptcr')).length === N.frSteps, `the path record draws all ${N.frSteps} chain steps, in order`); }
+    { const steps = await p.$$eval('#portbody .ptchain .ptcr:not(.k-inside)', els => els.map(e => Number(e.dataset.step)));   /* leftovers piece 6: the rows INSIDE a call sit between the steps and are not steps */
+      ok(steps.length === N.frSteps && steps.every((s, i) => s === i), `the path record draws all ${N.frSteps} chain steps, in order`, steps.join(',')); } }
 
   // ── LEFTOVERS piece 1 · THE ROUTE, IN ORDER: checks passed and fired per route · the through-route · the condition on a PASSED check ·
   //    the app band in the order it RUNS (it was drawn in registration order, the reverse) ──
@@ -2683,6 +2684,87 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
   await p.waitForTimeout(260);
   ok(errs.length === errsBefore, 'the stages picture raises no page error anywhere in this section', errs.slice(errsBefore, errsBefore + 3).join(' | '));
 }
+
+// ══ LEFTOVERS piece 6 · INSIDE THE CALLS — a call opens · the helpers in the order they are resolved · what each function does here ══
+{ const errs0 = errs.length;
+  const I6 = await p.evaluate(() => { const L = window.LABEP, f = L.forms, I = f.inside || {}, fns = I.functions || [], exitIds = f.exits.map(e => e.id);
+    const raises = fns.flatMap(r => r.raises.map(x => Object.assign({ depth: r.depth, fn: r.name }, x))), byWord = {};
+    raises.forEach(x => { byWord[x.here_word] = (byWord[x.here_word] || 0) + 1; });
+    const chainCalls = [...new Set(f.paths.flatMap(x => x.chain.filter(c => c.kind === 'call' || c.kind === 'collapsed').map(c => c.fn)))];
+    const thr = f.paths.find(x => x.id === f.through.id), call = thr.chain.find(c => c.kind === 'call' && (I.calls || {})[c.fn] && I.calls[c.fn].opens.length);
+    const opened = call ? I.calls[call.fn].opens.map(k => fns.find(r => r.fn === k)) : [];
+    const onChain = r => r.fn === (call || {}).fn ? r.refusals.filter(x => !thr.chain.some(k => k.ref === x.exit)).length : r.refusals.length;
+    const D = L.functions.does || { rows: [] }, RES = L.security.resolution || { rows: [] };
+    return { state: I.state, counts: I.counts, n: fns.length, raises, byWord, exitIds, chainCalls, calls: I.calls || {}, thr: thr.id, callFn: call && call.fn, callName: call && call.label, callStep: call && call.i,
+      want: opened.reduce((n, r) => n + r.raises.length + onChain(r) + r.commits.length + r.savepoints.length + r.swallows.length, 0),
+      commits: fns.reduce((n, r) => n + r.commits.length, 0), savepoints: fns.reduce((n, r) => n + r.savepoints.length, 0),
+      stepOf: Object.fromEntries(thr.chain.filter(c => c.ref).map(c => [c.ref, c.i])),
+      does: D, two: D.rows.filter(r => r.does.length >= 2).map(r => r.name), none: D.rows.filter(r => !r.does.length).map(r => r.name),
+      res: RES, guards: L.security.guards.map(g => ({ name: g.name, gate: !!g.gate, r: g.resolved || null })) }; });
+  ok(I6.state === 'present' && I6.n > 0 && I6.counts.functions === I6.n && I6.counts.raises === I6.raises.length && I6.counts.commits === I6.commits && I6.counts.savepoints === I6.savepoints
+    && JSON.stringify(Object.keys(I6.byWord).sort().map(k => k + I6.byWord[k])) === JSON.stringify(Object.keys(I6.counts.raises_by_word).sort().map(k => k + I6.counts.raises_by_word[k])),
+    'inside the calls: the functions this endpoint reaches are carried, and every count is its own recount', JSON.stringify(I6.counts));
+  { const tr = I6.raises.filter(x => x.here_word === 'translated');
+    ok(tr.length > 0 && tr.every(x => x.here.length && x.here.every(h => I6.exitIds.indexOf(h.exit) >= 0)), 'a failure this endpoint answers names the ending it becomes — an ending this endpoint really has', tr.map(x => x.cls + '→' + x.here.map(h => h.status)).join(' ')); }
+  { const deep = I6.raises.filter(x => x.translation === 'beyond one level');
+    ok(deep.every(x => x.depth >= 2 && !x.here.length && !x.uncaught_here.length && x.here_word === 'beyond one level'), 'a failure raised deeper than the reading follows keeps the feed\'s own word — no answer is invented for it', deep.map(x => x.fn + ':' + x.here_word).join(' ')); }
+  ok(I6.chainCalls.length > 0 && I6.chainCalls.every(k => I6.calls[k]), 'every call on a route has its entry, one that opens nothing included', I6.chainCalls.filter(k => !I6.calls[k]).join(','));
+  await p.evaluate(id => { window.showTab('data'); window.selectPath(id); }, I6.thr); await p.waitForTimeout(420);
+  const callSel = `#portbody .ptcr[data-step="${I6.callStep}"]`;
+  { const opens = await p.$eval(callSel, e => ({ n: e.dataset.opens, t: (e.querySelector('.ptcin') || {}).textContent || '' })).catch(() => null);
+    ok(!!opens && Number(opens.n) === I6.calls[I6.callFn].opens.length && /failure/.test(opens.t), `the call that opens says what it holds — ${I6.callName}`, JSON.stringify(opens));
+    const rows = await p.$$eval('#portbody .ptcr.k-inside', els => els.map(e => ({ k: e.dataset.inside, fn: e.dataset.fn, d: e.dataset.depth, t: e.textContent })));
+    ok(rows.length === I6.want && rows.length > 0, 'and it opens: one row per failure, save and savepoint inside it, set one step in', rows.length + ' drawn · ' + I6.want + ' in the facts');
+    const prev = await p.$$eval('#portbody .ptchain > .ptcr', (els, step) => { const i = els.findIndex(e => e.dataset.step === step); let n = 0; for (let j = i + 1; j < els.length && els[j].classList.contains('k-inside'); j++) n++; return n; }, String(I6.callStep));
+    ok(prev === I6.want, 'the rows sit right under the call they belong to', String(prev)); }
+  const hov6 = async sel => { if (!(await p.$$(sel)).length) return ''; await p.$eval(sel, e => e.scrollIntoView({ block: 'center' })); await p.hover(sel); await p.waitForTimeout(220);
+    const t = (await p.$eval('#hover', e => e.hidden ? '' : e.innerText)).replace(/\s+/g, ' '); await p.mouse.move(5, 1030); await p.evaluate(() => window.hoverHide()); return t; };
+  { const deep = I6.raises.find(x => x.translation === 'beyond one level');
+    if (deep) { const h = await hov6('#portbody .ptcr.k-inside[data-inside="raise"][data-depth="2"]');
+      ok(/RAISED WHEN/i.test(h) && h.includes(deep.pred) && /not read/.test(h) && /is not known\s*$/.test(h), 'a failure two calls down shows its condition, says the answer was not read, and ends on its plain line', h.slice(0, 260)); }
+    else ok(false, 'the endpoint holds a failure deeper than one call (the probe needs one to read the card)');
+    const tr = I6.raises.find(x => x.here_word === 'translated');
+    if (tr) { const h = await hov6('#portbody .ptcr.k-inside[data-inside="raise"][data-depth="1"]'), st = I6.stepOf[tr.here[0].exit];
+      ok(/BECOMES/i.test(h) && h.includes('the ' + tr.here[0].status + ' at') && (st == null || h.includes('step ' + st)), 'a failure one call down names the answer it becomes here and the step of this route that raises it', h.slice(0, 260)); }
+    else ok(false, 'the endpoint holds a failure it answers (the probe needs one to read the card)'); }
+  { const quiet = await p.$$eval('#portbody .ptcr[data-opens="0"]', els => els.map(e => (e.querySelector('.ptcin') || {}).textContent || ''));
+    const withFacts = I6.chainCalls.filter(k => !I6.calls[k].opens.length && I6.calls[k].insight).length, without = I6.chainCalls.filter(k => !I6.calls[k].opens.length && !I6.calls[k].insight).length;
+    ok(quiet.filter(t => /lines · →/.test(t)).length >= Math.min(1, withFacts) && quiet.filter(t => /the map read no facts/.test(t)).length >= Math.min(1, without),
+      'a call that opens nothing says what the map read of it — or that the map read nothing', quiet.join(' | ').slice(0, 220)); }
+  // what each function does here
+  ok(I6.does.rows.length > 0 && I6.does.two_or_more === I6.two.length && I6.does.none === I6.none.length && I6.does.rows.every(r => r.does.every(w => (r.why[w] || []).length)),
+    'what each function does here: every lit role carries its reason, and the two counts are their own recount', `${I6.does.of} functions · ${I6.two.length} hold two or more · ${I6.none.length} show none`);
+  await p.evaluate(() => { window.clearPath(); window.showTab('functions'); }); await p.waitForTimeout(320);
+  const recRow = async (fn, key) => { await p.evaluate(n => window.selectIn('functions', n), fn); await p.waitForTimeout(300);
+    return p.$eval(`#portbody .rcrow[data-row="${key}"] .v`, e => e.textContent).catch(() => null); };
+  if (I6.two.length && I6.callName) { const d = I6.does.rows.find(r => r.name === I6.callName), v = await recRow(I6.callName, 'does');
+    ok(!!v && d.does.every(w => v.includes(w)) && v.includes('holds ' + d.does.length), 'a function record says what its own code shows it doing, with a mark when it holds two', String(v));
+    const ins = await p.$eval('#portbody .rcrow[data-row="inside"] .v', e => e.textContent).catch(() => null);
+    ok(!!ins && /failure/.test(ins), 'and what sits inside it', String(ins));
+    const mf = await p.$eval('#portbody .rcrow[data-row="map facts"] .v', e => e.textContent).catch(() => null);
+    ok(!!mf && /project function/.test(mf), 'and what the map read of it', String(mf)); }
+  else ok(false, 'a function holds two roles (the probe needs one to read the record)');
+  if (I6.none.length) { const onWalk = I6.does.rows.find(r => !r.does.length && r.on_the_walk), v = onWalk ? await recRow(onWalk.name, 'does') : null;
+    ok(!!v && /none of the four/.test(v), 'a function that shows none of the four says so', String(v)); }
+  await p.evaluate(() => window.selectIn('functions', null)); await p.waitForTimeout(200);
+  // the helpers, in the order they are resolved
+  { const R = I6.res, rows = R.rows || [], pos = Object.fromEntries(rows.map(r => [r.name, r.order]));
+    ok(R.state === 'present' && rows.length >= I6.guards.length && rows.every((r, i) => r.order === i + 1) && rows.every(r => r.subdeps.every(s => pos[s] != null && pos[s] < r.order)),
+      'the helpers are in the order they are resolved: each one\'s own helpers come before it', rows.map(r => r.order + ' ' + r.name).join(' · '));
+    ok(R.counts.end_nothing === rows.filter(r => !r.can_end_the_request).length && rows.filter(r => !r.can_end_the_request).every(r => !r.exits.length && !r.inherited_exits.length),
+      'a helper said to end no request has no ending in the feed', JSON.stringify(R.counts));
+    await p.evaluate(() => { window.showTab('security'); window.showVariant('security', 'band'); }); await p.waitForTimeout(340);
+    const note = await p.$eval('#panel .bnote.bres', e => e.textContent).catch(() => '');
+    ok(rows.length > 0 && rows.map(r => r.name).join(' → ') === note.replace(/^· resolved /, ''), 'the Security part says the order once, on the deps header', note);
+    const subs = await p.$$eval('#panel .turn', els => els.map(e => [e.dataset.dep, e.querySelector('.ts').textContent]));
+    ok(subs.length === I6.guards.length && I6.guards.every(g => { const s = (subs.find(x => x[0] === g.name) || [])[1] || ''; return g.r && s.includes('of ' + g.r.of) && s.includes(String(g.r.order)); }),
+      'and every dep says its place in it', subs.map(x => x[1]).join(' | '));
+    const quiet = I6.guards.find(g => g.r && !g.r.can_end_the_request && g.r.runs_after_the_handler);
+    if (quiet) { const h = await hov6(`#panel .turn[data-dep="${quiet.name}"]`);
+      ok(/CAN END THE REQUEST\s*no/i.test(h) && /AFTER THE HANDLER/i.test(h) && /RESOLVED/i.test(h), 'a helper that refuses nothing says so, and says its closing code runs after the handler', h.slice(0, 300)); }
+    else ok(false, 'a dep ends nothing and runs code after the handler (the probe needs one to read the card)'); }
+  await p.evaluate(() => { window.clearPath(); window.showTab('data'); }); await p.waitForTimeout(240);
+  ok(errs.length === errs0, 'inside the calls raises no page error', errs.slice(errs0, errs0 + 3).join(' | ')); }
 
 // ══ LEFTOVERS piece 5 · PROOF YOU CAN OPEN — why a test came here, what it really asked for, the values tests give a setting ══
 { const errs0 = errs.length;
