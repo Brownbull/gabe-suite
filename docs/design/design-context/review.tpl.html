@@ -73,6 +73,15 @@
   .where { margin: 0; padding: 0; list-style: none; counter-reset: w; display: flex; flex-direction: column; gap: 3px; font-size: var(--fs-sm); color: var(--ink); }
   .where li { counter-increment: w; display: flex; gap: 8px; align-items: baseline; overflow-wrap: anywhere; }
   .where li::before { content: counter(w); flex: 0 0 auto; width: 1.5em; height: 1.5em; line-height: 1.5em; text-align: center; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-size: var(--fs-min); font-variant-numeric: tabular-nums; }
+  /* ── what each option sets in motion ── */
+  .impacts { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
+  .imp { display: grid; grid-template-columns: minmax(0, 11.5em) minmax(0, 1fr); gap: 2px 12px; padding: 6px 9px; border: 1px solid var(--rule); border-radius: 8px; background: var(--card); font-size: var(--fs-sm); color: var(--ink-soft); }
+  .imp[data-on="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
+  .imp .io { color: var(--ink); font-weight: 650; overflow-wrap: anywhere; }
+  .imp .sz { display: inline-block; margin-top: 3px; font-size: var(--fs-min); letter-spacing: .03em; font-weight: 400; color: var(--muted); border: 1px solid var(--rule); border-radius: 999px; padding: 0 7px; cursor: help; }
+  .imp .sz[data-size="generator"] { color: var(--ground); background: var(--strong); border-color: var(--strong); }
+  .imp .sz[data-size="lab"], .imp .sz[data-size="facts"] { color: var(--accent); border-color: var(--accent); }
+  @media (max-width: 700px) { .imp { grid-template-columns: minmax(0, 1fr); } }
   .shot { display: block; max-width: 100%; height: auto; border: 1px solid var(--rule); border-radius: 8px; background: #0b1020; }
   .facts { border: 1px solid var(--rule); border-radius: 8px; background: var(--raised); padding: 9px 11px; display: flex; flex-direction: column; gap: 6px; font-size: var(--fs-sm); color: var(--ink-soft); }
   .facts b { color: var(--ink); font-weight: 650; }
@@ -108,6 +117,7 @@
 
   <section class="sec" data-sec="8" id="sec-map">
     <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>Where things are in the lab</h2><span class="n" id="map-n"></span></div>
+    <p class="cap" id="impactnote"></p>
     <p class="cap" id="livenote"></p>
     <p class="cap" id="labnote"></p>
     <div class="panel"><div class="labmap" id="labmap"></div></div>
@@ -116,7 +126,7 @@
   <section class="sec" data-sec="1" id="sec-1">
     <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg><span id="s1"></span></h2><span class="n" id="s1-n"></span></div>
     <p class="cap" id="s1note"></p>
-    <div class="panel"><p class="cap" id="normsHow"></p><div class="norms" id="norms"></div></div>
+    <div class="panel"><p class="cap" id="normsHow"></p><ul class="impacts" id="norm-impacts"></ul><div class="norms" id="norms"></div></div>
     <div class="cards" id="cards-1"></div>
   </section>
 
@@ -166,7 +176,7 @@
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   ["eyebrow", "title", "lede", "order", "s1", "s1note", "s2", "s2note", "s3", "s3note", "s4", "s4note", "s5", "s5note", "copynote", "normsHow", "skip", "checked"].forEach(function (k) { $(k).textContent = D.ui[k]; });
-  $("copy-t").textContent = D.ui.copy; $("labnote").textContent = D.ui.lab; $("livenote").textContent = D.ui.livenote; $("map-n").textContent = D.ui.mapcap;
+  $("copy-t").textContent = D.ui.copy; $("labnote").textContent = D.ui.lab; $("livenote").textContent = D.ui.livenote; $("impactnote").textContent = D.ui.impactnote; $("map-n").textContent = D.ui.mapcap;
   D.checked.forEach(function (s) { $("checked-list").appendChild(el("li", null, s)); });
 
   /* ── state: one verdict + one note per id; nothing is saved at boot ── */
@@ -176,7 +186,7 @@
   var state = (function () { try { var s = JSON.parse(window.localStorage.getItem(KEY) || "null"); if (s && s.v) { Object.keys(s.v).forEach(function (k) { if (!VALID[k] || (s.v[k].v && VALID[k].indexOf(s.v[k].v) < 0)) delete s.v[k]; }); return s; } } catch (e) {} return { v: {} }; })();
   function save() { try { window.localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
   var painters = [];
-  function verdict(host, holder, id, mine, opts, small, placeholder) {
+  function verdict(host, holder, id, mine, opts, small, placeholder, onForce) {
     var v = el("div", "verdict"), st = el("span", "state");
     var btns = opts.map(function (o) { var b = el("button", "btn" + (small ? " sm" : ""), o[1]); b.type = "button"; b.setAttribute("aria-pressed", "false"); b.setAttribute("data-v", o[0]);
       b.addEventListener("click", function () { var s = state.v[id] || (state.v[id] = { v: null, n: "" }); s.v = s.v === o[0] ? null : o[0]; if (!s.v && !s.n) delete state.v[id]; save(); paint(); paintOut(); }); v.appendChild(b); return b; });
@@ -185,7 +195,7 @@
     nb.addEventListener("click", function () { note.hidden = !note.hidden; nb.setAttribute("aria-expanded", String(!note.hidden)); if (!note.hidden) note.focus(); });
     note.addEventListener("input", function () { var s = state.v[id] || (state.v[id] = { v: null, n: "" }); s.n = note.value; if (!s.v && !s.n) delete state.v[id]; save(); nb.setAttribute("data-has", String(!!note.value)); paintOut(); });
     function paint() { var s = state.v[id] || {}; btns.forEach(function (b, i) { b.setAttribute("aria-pressed", String(s.v === opts[i][0])); b.setAttribute("data-mine", String(!s.v && opts[i][0] === mine)); });
-      holder.setAttribute("data-state", s.v ? "yours" : "mine"); holder.setAttribute("data-v", s.v || mine); st.textContent = s.v ? (s.v === mine ? "yours · same as my pick" : "yours") : "my pick";
+      holder.setAttribute("data-state", s.v ? "yours" : "mine"); holder.setAttribute("data-v", s.v || mine); if (onForce) onForce(s.v || mine); st.textContent = s.v ? (s.v === mine ? "yours · same as my pick" : "yours") : "my pick";
       note.value = s.n || ""; nb.setAttribute("data-has", String(!!s.n)); if (s.n) { note.hidden = false; nb.setAttribute("aria-expanded", "true"); } }
     painters.push(paint); host.appendChild(v); return { note: note, paint: paint };
   }
@@ -196,6 +206,8 @@
     Object.keys(D.map.regions).forEach(function (k) { var r = D.map.regions[k]; if (!r) return; var b = el("div", "rg"); b.setAttribute("data-r", k);
       b.style.left = (r[0] * 100) + "%"; b.style.top = (r[1] * 100) + "%"; b.style.width = (r[2] * 100) + "%"; b.style.height = (r[3] * 100) + "%"; b.appendChild(el("b", null, NAMES[k] || k)); m.appendChild(b); }); })();
 
+  (function () { var host = $("norm-impacts"); ["ok", "strike", "reword"].forEach(function (k) { var im = D.normImpacts[k], r = el("li", "imp"), left = el("div"); left.appendChild(el("div", "io", k));
+      var sz = el("span", "sz", D.sizes[im.size].word); sz.setAttribute("data-size", im.size); sz.title = D.sizes[im.size].plain; left.appendChild(sz); r.appendChild(left); r.appendChild(el("div", null, im.does)); host.appendChild(r); }); })();
   /* ── the 36 lines, by topic ── */
   (function () { var host = $("norms"), by = {}; D.norms.forEach(function (n) { (by[n.topic] = by[n.topic] || []).push(n); });
     Object.keys(by).forEach(function (t) { var g = el("div", "ngroup"), first = by[t][0], h = el("h3", null, first.partWord.toLowerCase() === first.topicWord ? first.partWord : first.partWord + " — " + first.topicWord); h.appendChild(el("span", null, by[t].length + " stages")); g.appendChild(h);
@@ -254,7 +266,13 @@
     var L = el("div", "dl"), R = el("div", "dr"); L.appendChild(el("h3", null, d.title)); var lv = el("span", "live", D.liveWords[d.live]); lv.setAttribute("data-live", d.live); L.appendChild(lv); L.appendChild(el("p", "what", d.what));
     L.appendChild(el("p", "lab", d.live === "none" ? "where to read it" : d.live === "worth" ? "see it live — the exact clicks" : "to see it live, if you want — the exact clicks")); var w = el("ol", "where"); d.where.forEach(function (s) { w.appendChild(el("li", null, s)); }); L.appendChild(w);
     L.appendChild(el("p", "lab", "my pick, and why")); L.appendChild(el("p", "why", d.why));
-    var x = verdict(L, card, d.id, d.mine, d.options, false, "a note for me"); L.appendChild(x.note);
+    L.appendChild(el("p", "lab", "what each option sets in motion")); var il = el("ul", "impacts"), irows = {};
+    d.options.forEach(function (o) { var im = d.impacts[o[0]], r = el("li", "imp"); r.setAttribute("data-v", o[0]); var left = el("div"); left.appendChild(el("div", "io", o[1]));
+      var sz = el("span", "sz", D.sizes[im.size].word); sz.setAttribute("data-size", im.size); left.appendChild(sz); r.appendChild(left); r.appendChild(el("div", null, im.does)); irows[o[0]] = r; il.appendChild(r);
+      sz.addEventListener("mousemove", function (e) { var b = card.getBoundingClientRect(); tip.textContent = D.sizes[im.size].plain; tip.setAttribute("data-show", "true"); tip.style.left = Math.max(8, Math.min(e.clientX - b.left + 12, b.width - 320)) + "px"; tip.style.top = (e.clientY - b.top + 14) + "px"; });
+      sz.addEventListener("mouseleave", function () { tip.setAttribute("data-show", "false"); }); });
+    L.appendChild(il);
+    var x = verdict(L, card, d.id, d.mine, d.options, false, "a note for me", function (v) { Object.keys(irows).forEach(function (k) { irows[k].setAttribute("data-on", String(k === v)); }); }); L.appendChild(x.note);
     if (d.shot) { var im = el("img", "shot"); im.src = d.shot; im.alt = d.title; im.loading = "lazy"; R.appendChild(im); }
     if (d.shot2) { var im2 = el("img", "shot"); im2.src = d.shot2; im2.alt = d.title + ", the other card"; im2.loading = "lazy"; R.appendChild(im2); }
     if (d.facts) R.appendChild(factsNode(d.facts, card, tip));

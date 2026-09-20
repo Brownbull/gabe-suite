@@ -43,6 +43,15 @@ ok((await p.$$('.labmap .rg b')).length === 5, 'the lab map names its five regio
     if (!EXPECT[d.id]) { bad.push(d.id + ' names a line and the probe holds no expectation for it'); continue; }
     const lines = fs.readFileSync(path.join(REPO, f[1]), 'utf8').split('\n'), n = Number(ln[1]); if (!lines.slice(Math.max(0, n - 4), n + 3).join('\n').includes(EXPECT[d.id])) bad.push(d.id + ' → ' + f[1] + ':' + n + ' does not show "' + EXPECT[d.id] + '"'); }
   ok(bad.length === 0 && seen.size >= 6, 'every line number a card prints lands on the thing it talks about', bad.join(' · ') + ' · ' + seen.size + ' cards name a line'); }
+{ const bad = await p.evaluate(() => window.REVIEW_DATA.decisions.filter(d => { const c = document.querySelector('.dec[data-dec="' + d.id + '"]'); if (!c) return true;
+    const rows = [...c.querySelectorAll('.impacts .imp')], on = rows.filter(r => r.dataset.on === 'true');
+    return rows.map(r => r.dataset.v).join('|') !== d.options.map(o => o[0]).join('|') || rows.some(r => (r.lastElementChild.textContent || '').length < 20 || !r.querySelector('.sz')) || on.length !== 1 || on[0].dataset.v !== d.mine; }).map(d => d.id));
+  ok(bad.length === 0, 'every option of every decision says what it sets in motion and how big it is, and untouched the lit one is my pick', bad.join(','));
+  const d = D.decisions.find(x => x.options.length >= 2), other = d.options.find(o => o[0] !== d.mine)[0], sel = `.dec[data-dec="${d.id}"]`;
+  await p.click(`${sel} .verdict .btn[data-v="${other}"]`); await p.waitForTimeout(80);
+  ok(await p.$eval(`${sel} .imp[data-v="${other}"]`, e => e.dataset.on) === 'true' && await p.$eval(`${sel} .imp[data-v="${d.mine}"]`, e => e.dataset.on) === 'false', 'ruling a card lights the impact of the option you chose');
+  await p.click(`${sel} .verdict .btn[data-v="${other}"]`); await p.waitForTimeout(80);
+  ok((await p.$$('#norm-impacts .imp')).length === 3, 'the three verdicts on a norm line say what each sets in motion, once'); }
 const text = () => p.$eval('#out', e => e.value);
 { const t = await text(); ok(t.startsWith('REVIEW · leftovers · ' + D.hash) && /\n0 yours · /.test(t) && D.decisions.every(d => t.includes('\n' + d.id + ': ' + d.mine + ' (my pick, not ruled)')), 'untouched, the text lists every decision as my pick', t.split('\n')[1]); }
 { const d = D.decisions.find(x => x.options.length >= 2), other = d.options.find(o => o[0] !== d.mine)[0], sel = `.dec[data-dec="${d.id}"]`;

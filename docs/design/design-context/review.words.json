@@ -66,6 +66,9 @@
   },
   "livenote": {
    "text": "You can rule almost everything from this page. {liveWorth} cards are worth seeing live in the lab, because the choice is about how something feels when you use it. On {liveOptional} more the lab is optional, since the picture or the numbers are already on the card. The other {liveNone} have nothing to see in the lab."
+  },
+  "impactnote": {
+   "text": "Under every decision, each option says what it sets in motion: what I would change, what you would then see, and what it costs. The small tag is the size of the work. The option in force, yours or my pick, is the highlighted one."
   }
  },
  "facts_checked": [
@@ -195,7 +198,21 @@
    ],
    "mine": "sweep",
    "why": "One word per thing. The evaluation page says endpoint and the lab's newer rows do too. Its older strings still say door, so only a sweep gets to one word.",
-   "live": "none"
+   "live": "none",
+   "impacts": {
+    "sweep": {
+     "size": "words",
+     "does": "I replace the old words in all {doorTotal} drawn strings of the lab's two files, and in the probe asserts that quote them. After it the lab says endpoint and login check everywhere, as the evaluation page does."
+    },
+    "replace": {
+     "size": "words",
+     "does": "I change these {oldWords} lines only. The stage hovers then say endpoint while {doorElsewhere} strings around them still say door."
+    },
+    "keep": {
+     "size": "none",
+     "does": "The lab keeps two words for one thing, and keeps disagreeing with the evaluation page."
+    }
+   }
   },
   {
    "id": "slot-words",
@@ -218,7 +235,17 @@
    ],
    "mine": "ok",
    "why": "They say whether a zero was measured or never read, which decides whether every other empty row can be believed.",
-   "live": "none"
+   "live": "none",
+   "impacts": {
+    "ok": {
+     "size": "none",
+     "does": "The sentences stay. They show on the hover of every command that counts nothing."
+    },
+    "reword": {
+     "size": "words",
+     "does": "I change the sentences in one function of the lab. Every command that counts nothing then says your words."
+    }
+   }
   },
   {
    "id": "thresholds",
@@ -248,7 +275,21 @@
    ],
    "mine": "9-1",
    "why": "A strict norm keeps the word rare, so the later mark for something unusual stays meaningful.",
-   "live": "optional"
+   "live": "optional",
+   "impacts": {
+    "9-1": {
+     "size": "none",
+     "does": "The words stay as they are on every card."
+    },
+    "8-2": {
+     "size": "facts",
+     "does": "{movedWords}, listed beside this card. {appWordsShift}, so a later mark for something unusual would fire more often."
+    },
+    "other": {
+     "size": "facts",
+     "does": "I apply the cut-offs in your note and show you this same table again before anything else reads the words."
+    }
+   }
   },
   {
    "id": "roles-raise",
@@ -276,7 +317,21 @@
    ],
    "mine": "any-raise",
    "why": "A raise changes the path whatever answer it becomes. Your depth rule puts detail where the path can change.",
-   "live": "optional"
+   "live": "optional",
+   "impacts": {
+    "any-raise": {
+     "size": "none",
+     "does": "{twoNow} functions here keep reading as holding two roles or more."
+    },
+    "answered": {
+     "size": "facts",
+     "does": "A function marked only by a raise nobody answers loses the mark. Here that is {onlyRaise}, and {twoAnswered} functions then hold two roles."
+    },
+    "never": {
+     "size": "facts",
+     "does": "A raise never lights the role. {neverHere} On an endpoint that answers a raise, the raising function loses the mark unless it also holds a fork, a catch or the answer."
+    }
+   }
   },
   {
    "id": "through",
@@ -304,7 +359,21 @@
    ],
    "mine": "tie-none",
    "why": "The other endings read as exceptions to it, so naming it helps. On a tie, naming nothing is more honest than a hidden pick.",
-   "live": "optional"
+   "live": "optional",
+   "impacts": {
+    "tie-none": {
+     "size": "facts",
+     "does": "One rule changes in the script that generates the lab's facts: when two success routes tie, no route is named and the card says they tie. Nothing moves on this endpoint, which has no tie. How many endpoints tie is not measured yet, and I would measure it with the change."
+    },
+    "most-checks": {
+     "size": "none",
+     "does": "The ROUTE row stays as it is. On a tie, the route named is picked by an internal id nobody sees."
+    },
+    "none": {
+     "size": "lab",
+     "does": "The ROUTE row and the mark on the through-route leave every route's record. Every ending then reads as equal, with no route to measure the others against."
+    }
+   }
   },
   {
    "id": "dep-order",
@@ -328,7 +397,17 @@
    ],
    "mine": "mark",
    "why": "An order that guesses without saying so is the kind of claim you asked me not to make.",
-   "live": "optional"
+   "live": "optional",
+   "impacts": {
+    "mark": {
+     "size": "facts",
+     "does": "A helper placed without proof is marked as a guess on the Security part, here {guessed}. The order itself does not change. Getting the full signature from the map is a separate, later change to the map."
+    },
+    "keep": {
+     "size": "none",
+     "does": "{guessed} keeps reading as resolved last, as if that had been read."
+    }
+   }
   },
   {
    "id": "case-roles",
@@ -351,7 +430,17 @@
    ],
    "mine": "ok",
    "why": "The words come from how the test really calls the endpoint, not from its name.",
-   "live": "optional"
+   "live": "optional",
+   "impacts": {
+    "ok": {
+     "size": "none",
+     "does": "The words stay on every case chip and case record."
+    },
+    "reword": {
+     "size": "words",
+     "does": "I change the words in one table of the lab. Every case chip and every case record then say your words."
+    }
+   }
   },
   {
    "id": "after-handler",
@@ -374,7 +463,17 @@
    ],
    "mine": "handler",
    "why": "Whether it runs before or after the answer leaves is a rule of the framework version, and the map does not read it.",
-   "live": "optional"
+   "live": "optional",
+   "impacts": {
+    "handler": {
+     "size": "none",
+     "does": "The lab keeps the map's own words."
+    },
+    "answer": {
+     "size": "generator",
+     "does": "The lab would claim more than the map reads. To say it truthfully the map must first read the framework's rule for when a helper's closing code runs, which is new generator work."
+    }
+   }
   },
   {
    "id": "found-by",
@@ -408,7 +507,25 @@
    ],
    "mine": "keep",
    "why": "{routeOnly} of this endpoint's {tables} tables ({routeOnlyNames}) are known to a route's steps only, so the row changes whether you trust the list.",
-   "live": "optional"
+   "live": "optional",
+   "impacts": {
+    "keep": {
+     "size": "none",
+     "does": "The table record keeps five rows, and the probe keeps pinning five."
+    },
+    "move": {
+     "size": "lab",
+     "does": "The row leaves the record, which goes back to your four rows. The same fact then shows on the info card of the model row. One probe assert is rewritten."
+    },
+    "option": {
+     "size": "lab",
+     "does": "I add a switch to the rail, row shown or hidden, so you can see both before ruling. The default stays shown until you rule."
+    },
+    "off": {
+     "size": "lab",
+     "does": "The row leaves the record. The fact stays in the lab's facts, but the table list then mixes two sources without saying which found what."
+    }
+   }
   },
   {
    "id": "fn-rows",
@@ -441,7 +558,25 @@
    ],
    "mine": "keep",
    "why": "They answer three of your questions about functions in the one place a function is opened.",
-   "live": "optional"
+   "live": "optional",
+   "impacts": {
+    "keep": {
+     "size": "none",
+     "does": "The function record keeps the three rows."
+    },
+    "move": {
+     "size": "lab",
+     "does": "The three rows leave the record and their content moves to the hover card of the function block. The record goes back to what you ruled."
+    },
+    "option": {
+     "size": "lab",
+     "does": "I add a switch to the rail for each of the three rows, so you can see the record with and without them."
+    },
+    "off": {
+     "size": "lab",
+     "does": "The three rows leave the record. The facts stay in the lab's facts and show nowhere, so three of your questions about functions lose their answer on the card."
+    }
+   }
   },
   {
    "id": "open-call",
@@ -469,7 +604,21 @@
    ],
    "mine": "option",
    "why": "This is a display choice, and those are yours to make by seeing both.",
-   "live": "worth"
+   "live": "worth",
+   "impacts": {
+    "option": {
+     "size": "lab",
+     "does": "I add a rail pick with three states: always open, closed until clicked, and closed. The default stays open until you have seen all three."
+    },
+    "keep": {
+     "size": "none",
+     "does": "Every route's record stays {insideRows} rows longer on this endpoint."
+    },
+    "closed": {
+     "size": "lab",
+     "does": "The rows hide until you click the call. The call row still says what it holds, so nothing is lost, and the chain goes back to its steps alone."
+    }
+   }
   },
   {
    "id": "ending-sections",
@@ -502,7 +651,25 @@
    ],
    "mine": "keep",
    "why": "They are the only place the client and the rest of the app show up on an ending.",
-   "live": "optional"
+   "live": "optional",
+   "impacts": {
+    "keep": {
+     "size": "none",
+     "does": "An ending's record keeps the two rows and the section."
+    },
+    "move": {
+     "size": "lab",
+     "does": "The rows and the section leave the record, and their content moves to the hover card of the ending."
+    },
+    "option": {
+     "size": "lab",
+     "does": "I add two switches to the rail, one for the counts and one for the client section."
+    },
+    "off": {
+     "size": "lab",
+     "does": "Both leave the record. The facts stay generated, and no card then shows the client or the rest of the app on an ending."
+    }
+   }
   },
   {
    "id": "rules-on-hover",
@@ -535,13 +702,31 @@
    ],
    "mine": "keep",
    "why": "A hover costs no room, and your record keeps its shape.",
-   "live": "worth"
+   "live": "worth",
+   "impacts": {
+    "keep": {
+     "size": "none",
+     "does": "The rules stay on hover cards, and the records keep their shape."
+    },
+    "rows": {
+     "size": "lab",
+     "does": "The record's table gains the rule beside each field. That changes a layout you ruled, so I would build it as a picture for you to see before it replaces anything."
+    },
+    "option": {
+     "size": "lab",
+     "does": "I add a rail pick, rules on hover or rules in the table, so you can see both."
+    },
+    "off": {
+     "size": "lab",
+     "does": "The rules leave the hover cards. The facts stay generated and show nowhere, so a shape goes back to being a list of names."
+    }
+   }
   },
   {
    "id": "place-card",
    "step": 2,
    "title": "Where this endpoint's place in the app is shown",
-   "what": "The place reads {place} of {placeOf} by functions behind, which counts how many functions each one reaches, heaviest first. The {placeOf} are the app's {appEndpoints} endpoints plus {placeTop}, the app's startup, which the map draws as an endpoint and which is the heaviest. Among the endpoints alone this one is {placeEp} of {appEndpoints}. The evaluation's plan for piece 7 asked for the place on the risk card. An older ruling of yours, pinned in the probe (probe-eplab.mjs line 251), says the risk card carries no comparison with the rest of the app, so I put it on the header's card for the whole app.",
+   "what": "The place reads {place} of {placeOf} by functions behind, which counts how many functions each one reaches, heaviest first. The {placeOf} are the app's {appEndpoints} endpoints plus {placeTop}, the app's startup, which the map draws as an endpoint and which is the heaviest. Among the endpoints alone this one is {placeEp} of {appEndpoints}. The evaluation's plan for piece 7 asked for the place on the risk card. An older ruling of yours, pinned in the probe (probe-eplab.mjs line 251), says the risk card carries no comparison with the rest of the app, so I put it on the header's card for the whole app. Whatever you rule, I correct the count so it reads of {appEndpoints} endpoints, since the startup is not one.",
    "shot": "place-everything",
    "shot2": "place-risk",
    "where": [
@@ -565,7 +750,21 @@
    ],
    "mine": "everything",
    "why": "Your older ruling was clear, and the whole-app card is about the app.",
-   "live": "optional"
+   "live": "optional",
+   "impacts": {
+    "everything": {
+     "size": "none",
+     "does": "The place stays on the whole-app card, and your older ruling on the risk card stands."
+    },
+    "risk": {
+     "size": "lab",
+     "does": "I move the three rows to the risk card and retire the probe assert that pins your older ruling, since this ruling replaces it."
+    },
+    "both": {
+     "size": "lab",
+     "does": "The rows show on both cards. Your older ruling is retired here too, and the same three lines are then said twice in the header."
+    }
+   }
   },
   {
    "id": "p10",
@@ -588,7 +787,17 @@
    ],
    "mine": "land",
    "why": "The lab half already shows where each branch is. The row for what the branch does is not drawn at all until this lands. The cost beyond the build: nothing downstream reads this block, so only its own battery would catch a regression. If that row would not change how you read an ending, hold it.",
-   "live": "none"
+   "live": "none",
+   "impacts": {
+    "land": {
+     "size": "generator",
+     "does": "I build the part: {p10files} generator files change, the frontend battery gains a fixture and new cases, then come the dry runs on the four study apps, the doctor, and both app twins, whose centres regenerate. After it the ON THE CLIENT section gains the row for what the branch does, on the {feReaders} endpoints whose client reads failures."
+    },
+    "hold": {
+     "size": "design",
+     "does": "Nothing is built. The design stays a draft in the repo, and the lab keeps saying where a branch is and not what it does. Picking it up later costs the same work, plus a re-read of the plan."
+    }
+   }
   },
   {
    "id": "p10-nav",
@@ -610,7 +819,17 @@
    ],
    "mine": "yes",
    "why": "Without it every navigation in a branch reads as an unknown call.",
-   "live": "none"
+   "live": "none",
+   "impacts": {
+    "yes": {
+     "size": "design",
+     "does": "The design keeps the roster. Once built, a navigation inside a client branch is classed as a move to another screen."
+    },
+    "no": {
+     "size": "design",
+     "does": "The roster leaves the design. Once built, every navigation in a branch reads as a call no idiom matches, still visible by its name."
+    }
+   }
   },
   {
    "id": "p10-word",
@@ -632,7 +851,17 @@
    ],
    "mine": "beyond one level",
    "why": "The map already uses that phrase for the same limit on the backend.",
-   "live": "none"
+   "live": "none",
+   "impacts": {
+    "beyond one level": {
+     "size": "design",
+     "does": "One word changes in the design before anything is built, which costs nothing. After the part lands, a rename means changing the battery and the recorded examples too."
+    },
+    "returned": {
+     "size": "design",
+     "does": "The design keeps its own word. The map then has two words for one limit, one on the backend and one on the client."
+    }
+   }
   },
   {
    "id": "p10-toast",
@@ -654,7 +883,17 @@
    ],
    "mine": "yes",
    "why": "The row says where the name came from, so a project's own toast still reads as the project's.",
-   "live": "none"
+   "live": "none",
+   "impacts": {
+    "yes": {
+     "size": "design",
+     "does": "The design keeps toast. Once built, a toast call is classed as shown to the user, and the row says whether the name came from a library or from the project."
+    },
+    "no": {
+     "size": "design",
+     "does": "toast leaves the design. Once built, every toast reads as a call no idiom matches, still visible by its name."
+    }
+   }
   },
   {
    "id": "p10-i18n",
@@ -676,7 +915,17 @@
    ],
    "mine": "no",
    "why": "A roster entry nobody can check is a guess.",
-   "live": "none"
+   "live": "none",
+   "impacts": {
+    "no": {
+     "size": "design",
+     "does": "One entry leaves the design. A message looked up through that library reads as a plain call until an app that uses it is read."
+    },
+    "yes": {
+     "size": "design",
+     "does": "The entry stays, cited to the library's public documentation only, with no app to check it against."
+    }
+   }
   },
   {
    "id": "p11",
@@ -707,7 +956,25 @@
    ],
    "mine": "after-10",
    "why": "It is the largest and the least urgent. Seeing piece 10's row in the lab first costs nothing.",
-   "live": "none"
+   "live": "none",
+   "impacts": {
+    "after-10": {
+     "size": "design",
+     "does": "Nothing is built now. Piece 11 starts once piece 10 has landed and you have seen its row in the lab."
+    },
+    "now": {
+     "size": "generator",
+     "does": "I start it before piece 10: first a lift out of one existing arm that must leave its output byte for byte the same, then a new module, a battery, the dry runs, the doctor and both twins. About four days, during which piece 10 waits."
+    },
+    "small": {
+     "size": "generator",
+     "does": "The same build without the rows for values a helper hands to the handler. The design does not say how much that saves, so I would measure it first and tell you."
+    },
+    "drop": {
+     "size": "design",
+     "does": "Nothing is built and D-016 is reopened. The In-flight state view keeps one value found by a name search, and the rest of what is alive during a request stays unread."
+    }
+   }
   },
   {
    "id": "p11-name",
@@ -733,7 +1000,21 @@
    ],
    "mine": "keep",
    "why": "The prism you kept in D-015 is called In-flight state, and the part's files sit under the forms prefix, apart from the board's write-inflight.py.",
-   "live": "none"
+   "live": "none",
+   "impacts": {
+    "keep": {
+     "size": "design",
+     "does": "The name stays. Two things in the suite are then called inflight, told apart by their file prefix."
+    },
+    "alive": {
+     "size": "design",
+     "does": "The design is renamed now, which costs nothing. After its third landing step a rename also means the registry, the battery and the docs."
+    },
+    "rename": {
+     "size": "design",
+     "does": "I rename the design to the word in your note, at the same zero cost, as long as it happens before the third landing step."
+    }
+   }
   }
  ],
  "parts": {
@@ -748,5 +1029,45 @@
   "worth": "worth seeing live in the lab",
   "optional": "you can rule it from here · the lab is optional",
   "none": "nothing to see in the lab"
+ },
+ "sizes": {
+  "none": {
+   "word": "nothing changes",
+   "plain": "a choice that leaves the lab and the map exactly as they are"
+  },
+  "words": {
+   "word": "words only",
+   "plain": "a change to sentences the lab draws — no layout moves, one probe run of about five minutes"
+  },
+  "lab": {
+   "word": "a lab change",
+   "plain": "a change to the endpoint lab's code and its probe — nothing outside docs/design moves"
+  },
+  "facts": {
+   "word": "a lab facts change",
+   "plain": "a change to the script that generates the lab's facts — the numbers on cards can move, nothing outside docs/design does"
+  },
+  "design": {
+   "word": "the design only",
+   "plain": "a change to a design document — nothing is built"
+  },
+  "generator": {
+   "word": "the map's generators",
+   "plain": "a change to the suite's generators — a battery, dry runs on the four study apps, the doctor, then both app twins regenerate"
+  }
+ },
+ "norm_impacts": {
+  "ok": {
+   "size": "none",
+   "does": "The line stays as it is. It keeps showing on the hover of that stage, in that topic."
+  },
+  "strike": {
+   "size": "words",
+   "does": "I remove the line. That stage then shows no expectation for that topic, and says so, never a blank."
+  },
+  "reword": {
+   "size": "words",
+   "does": "I replace the line with the words in your note. With no note I propose a rewording and show it to you before it lands."
+  }
  }
 }
