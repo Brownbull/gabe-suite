@@ -1,0 +1,451 @@
+{
+ "viewport": [
+  2560,
+  1100
+ ],
+ "log": [
+  [
+   "regions",
+   [
+    [
+     "#tabs",
+     513,
+     138,
+     1098,
+     52
+    ],
+    [
+     "#panel",
+     513,
+     190,
+     1098,
+     420
+    ],
+    [
+     "#cmd",
+     2108,
+     92,
+     360,
+     560
+    ],
+    [
+     "#port",
+     1640,
+     92,
+     440,
+     560
+    ]
+   ]
+  ],
+  [
+   "part buttons",
+   [
+    "data=15Data",
+    "schemas=13Schemas",
+    "functions=29Functions",
+    "tests=27Tests",
+    "widening=5Widening",
+    "security=6Security"
+   ]
+  ],
+  [
+   "command at load",
+   [
+    {
+     "cmd": "grp-paths",
+     "key": null,
+     "t": "Q14PATHS",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "grp-data",
+     "key": null,
+     "t": "W15DATA",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "grp-schemas",
+     "key": null,
+     "t": "E13SCHEMAS",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "grp-functions",
+     "key": null,
+     "t": "R29FUNCTIONS",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "grp-tests",
+     "key": null,
+     "t": "T27TESTS",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "grp-widening",
+     "key": null,
+     "t": "A5WIDENING",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "grp-security",
+     "key": null,
+     "t": "S6SECURITY",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "clear",
+     "key": null,
+     "t": "B",
+     "title": null,
+     "path": null
+    }
+   ]
+  ],
+  [
+   "step 1 · part-data",
+   {
+    "click": "15Data",
+    "where": "#tabs .tab[data-tab=\"data\"]",
+    "at": [
+     525,
+     142
+    ],
+    "size": [
+     175,
+     43
+    ],
+    "note": "the part button on the left"
+   }
+  ],
+  [
+   "command after Data",
+   [
+    {
+     "cmd": "grp-paths",
+     "key": null,
+     "t": "Q14PATHS",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "grp-data",
+     "key": null,
+     "t": "W15DATA",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "grp-schemas",
+     "key": null,
+     "t": "E13SCHEMAS",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "grp-functions",
+     "key": null,
+     "t": "R29FUNCTIONS",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "grp-tests",
+     "key": null,
+     "t": "T27TESTS",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "grp-widening",
+     "key": null,
+     "t": "A5WIDENING",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "grp-security",
+     "key": null,
+     "t": "S6SECURITY",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "clear",
+     "key": null,
+     "t": "B",
+     "title": null,
+     "path": null
+    }
+   ]
+  ],
+  [
+   "command title",
+   null
+  ],
+  [
+   "step 2 · command-paths-group",
+   {
+    "click": "Q14PATHS",
+    "where": "#cmd [data-cmd=\"grp-paths\"]",
+    "at": [
+     2119,
+     141
+    ],
+    "size": [
+     64,
+     64
+    ],
+    "note": "the paths group"
+   }
+  ],
+  [
+   "command in paths group",
+   [
+    {
+     "cmd": "walk",
+     "key": null,
+     "t": "Q14",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "refusals",
+     "key": null,
+     "t": "W7",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "success",
+     "key": null,
+     "t": "E3",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "prev",
+     "key": null,
+     "t": "R",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "next",
+     "key": null,
+     "t": "T",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "back",
+     "key": null,
+     "t": "B",
+     "title": null,
+     "path": null
+    }
+   ]
+  ],
+  [
+   "step 3 · command-walk",
+   {
+    "click": "Q14",
+    "where": "#cmd [data-cmd=\"walk\"]",
+    "at": [
+     2119,
+     141
+    ],
+    "size": [
+     64,
+     64
+    ],
+    "note": "walk one path"
+   }
+  ],
+  [
+   "command walk grid",
+   [
+    {
+     "cmd": "back",
+     "key": null,
+     "t": "B",
+     "title": null,
+     "path": null
+    }
+   ]
+  ],
+  [
+   "after the click on walk, the resting mouse opens a hover card that covers",
+   {
+    "card": true,
+    "covers": [
+     "A422json_invalid (framework)",
+     "S422validation",
+     "D400Idempotency-Key required",
+     "F409setup in progress",
+     "G200replay",
+     "Z200already done",
+     "X409consent required",
+     "C200first run",
+     "V500uncaught"
+    ]
+   }
+  ],
+  [
+   "step 5 · pick-the-ending",
+   {
+    "click": "F409setup in progress",
+    "where": "#cmd [data-path=\"p:2adb89467d\"]",
+    "at": [
+     2329,
+     211
+    ],
+    "size": [
+     64,
+     64
+    ],
+    "note": "the 409 \"setup in progress\" ending"
+   }
+  ],
+  [
+   "portrait tabs",
+   [
+    {
+     "pvar": "cmd-path",
+     "t": "",
+     "on": true
+    },
+    {
+     "pvar": "cmd-exit",
+     "t": "",
+     "on": false
+    },
+    {
+     "pvar": "record",
+     "t": "",
+     "on": false
+    },
+    {
+     "pvar": "shape",
+     "t": "",
+     "on": false
+    },
+    {
+     "pvar": "wheel",
+     "t": "",
+     "on": false
+    },
+    {
+     "pvar": "keys",
+     "t": "",
+     "on": false
+    }
+   ]
+  ],
+  [
+   "portrait sections before the tab",
+   [
+    "the chain · 18 steps",
+    "effects · 5 tables",
+    "tests · 2",
+    "switches · 2"
+   ]
+  ],
+  [
+   "the second icon, on hover",
+   "Exita way of drawing itthe row an ending lands on — its response, the paths that reach it, its cases"
+  ],
+  [
+   "step 7 · portrait-ending-tab",
+   {
+    "click": "",
+    "where": "#portvars .ptv[data-pvar=\"cmd-exit\"]",
+    "at": [
+     1927,
+     99
+    ],
+    "size": [
+     26,
+     24
+    ],
+    "note": "switch the portrait from the path to the ending"
+   }
+  ],
+  [
+   "portrait sections after the tab",
+   [
+    "response",
+    "on the client",
+    "paths that end here · 1",
+    "tests · 2"
+   ]
+  ],
+  [
+   "the row before any scroll",
+   {
+    "found": true,
+    "text": "hands back what t(“auth.setup.error.in_progress”) gives",
+    "top": 635,
+    "bottom": 676,
+    "portTop": 131,
+    "portBottom": 651,
+    "viewport": 1100,
+    "inView": false,
+    "fontPx": 12,
+    "clipped": false,
+    "colour": "rgb(231, 235, 243)",
+    "width": 414
+   }
+  ],
+  [
+   "the row after scrolling the portrait by wheel",
+   {
+    "wheel": 120,
+    "found": true,
+    "text": "hands back what t(“auth.setup.error.in_progress”) gives",
+    "top": 515,
+    "bottom": 556,
+    "portTop": 131,
+    "portBottom": 651,
+    "viewport": 1100,
+    "inView": true,
+    "fontPx": 12,
+    "clipped": false,
+    "colour": "rgb(231, 235, 243)",
+    "width": 414
+   }
+  ],
+  [
+   "client rows",
+   [
+    [
+     "its branch",
+     "its own, at auth/SetupScreen.tsx:43 — it reads the status only, so 2 endings share it"
+    ],
+    [
+     "what it does",
+     "hands back what t(“auth.setup.error.in_progress”) gives"
+    ],
+    [
+     "tried again",
+     "never — retry is off for this kind of call"
+    ]
+   ]
+  ],
+  [
+   "keys B · Q · Q · F open",
+   "setup in progressPath"
+  ],
+  [
+   "page errors",
+   []
+  ]
+ ]
+}
