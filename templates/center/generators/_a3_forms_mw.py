@@ -16,6 +16,7 @@ import json
 from pathlib import Path
 
 import _a3_forms_fn as FN  # the functions part (Slice 8)
+import _a3_forms_inflight as IF  # the inflight part (Slice 12)
 import _a3_forms_task as TK  # the tasks and handlers parts (Slice 8)
 import _a3_code as C
 import _a3_forms as F
@@ -24,7 +25,7 @@ import _a3_forms_reach as R
 import _a3_forms_settings as S
 import _a3_paths as P
 
-PARTS = ("middleware", "dependencies", "functions", "tasks", "handlers")
+PARTS = ("middleware", "dependencies", "inflight", "functions", "tasks", "handlers")
 _ROW_KEYS = ("phase", "status", "state", "form", "detail", "code", "at", "site", "scope", "pred", "when", "via", "source",
              "dep", "reason")
 _APPS = frozenset({"FastAPI", "Starlette"})
@@ -484,11 +485,12 @@ def dependency_forms(repo: Path, forms: dict) -> tuple[dict, list]:
 
 
 def run(forms: dict, ctx: dict) -> dict:
-    """The kinds arm: ``middleware`` and ``dependencies`` (Slice 3), ``functions`` · ``tasks`` · ``handlers`` (Slice 8) — the
-    orchestrator passes the parts to run."""
+    """The kinds arm: ``middleware`` and ``dependencies`` (Slice 3), ``inflight`` (Slice 12), ``functions`` · ``tasks`` ·
+    ``handlers`` (Slice 8) — the orchestrator passes the parts to run."""
     repo, parts = Path(ctx["repo"]), ctx["parts"]
     stats: dict = {"findings": {}}
     found: list = []
+    absent: dict = {}
     if "middleware" in parts:
         forms["middleware"], got, unscanned = middleware_forms(repo, forms, ctx["amap"])
         found += got
@@ -501,16 +503,20 @@ def run(forms: dict, ctx: dict) -> dict:
         found += got
         stats["dependencies"] = len(forms["dependencies"])
         stats["dependency_endpoint_pairs"] = sum(d.get("applies_to", 0) for d in forms["dependencies"].values())
-    for part, builder in (("functions", FN.functions_part), ("tasks", TK.tasks_part), ("handlers", TK.handlers_part)):
+    for part, builder in (("inflight", IF.inflight_part), ("functions", FN.functions_part), ("tasks", TK.tasks_part), ("handlers", TK.handlers_part)):
         if part in parts:
-            forms[part], got, st = builder(repo, forms, ctx["amap"])
+            try:
+                forms[part], got, st = builder(repo, forms, ctx["amap"])
+            except IF.Refused as why:                          # refused before a byte is written: the part is absent, its stage stands
+                absent[part] = str(why)
+                continue
             found += got
             stats[part] = st
     if found:
         forms["arm_findings"].setdefault("kinds", []).extend(found)
     for f in found:
         stats["findings"][f["id"]] = stats["findings"].get(f["id"], 0) + 1
-    return {"version": 1, "stats": stats}
+    return {"version": 1, "stats": stats, "options": {k: F.OPTIONS[k] for k in IF.OPTION_KEYS if "inflight" in parts}, **({"absent": absent} if absent else {})}
 
 
 run.parts = PARTS

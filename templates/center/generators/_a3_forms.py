@@ -42,10 +42,13 @@ KINDS: dict[str, dict[str, dict]] = {
         "K2": {"name": "Auth scope", "question": "schemes, carriers, gates and what their commits provision", "block": "auth{}", "arm": "contract"},
         "K3": {"name": "Rate limit", "question": "each limiter, its key, its switch and the paths it exempts", "block": "rate{}", "arm": "contract"},
         "K4": {"name": "Response per exit", "question": "each exit's media type, body and headers", "block": "responses{}", "arm": "contract"},
+        "U15": {"name": "In-flight state", "question": "what is alive while this request runs — where it is set, where it is read, whether it goes with the answer",
+                "block": "inflight[]", "arm": "kinds"},
     },
     # the kinds the arms wrote (§A4 V32): slot ids are scoped per kind and name the block as built
     "middleware": {"stack": {"name": "Stack order", "block": "middleware{}.runs"}, "exits": {"name": "Exits", "block": "middleware{}.exits"},
-                   "applies": {"name": "Applies to", "block": "middleware{}.applies_to · exempt"}},
+                   "applies": {"name": "Applies to", "block": "middleware{}.applies_to · exempt"},
+                   "memory": {"name": "Kept in memory", "block": "inflight.process"}},
     "dependency": {"exits": {"name": "Own and inherited exits", "block": "dependencies{}.exits · inherited_exits"},
                    "commits": {"name": "Commits", "block": "dependencies{}.effects"}, "teardown": {"name": "Teardown", "block": "dependencies{}.teardown"}},
     "service": {"raises": {"name": "Raises and where they surface", "block": "functions{}.raises"}, "refusals": {"name": "Refusals", "block": "functions{}.refusals"},
@@ -80,6 +83,10 @@ OPTIONS = {
     # the effects arm's four named widenings (EFFECTS["widenings"]) — off, its (model, rw) pairs and commit flag per
     # function are `_a3_code._orm_access`'s
     "effects_widenings": True,
+    # the inflight part (Slice 12): how far it reads — "one-level" is the only form built, the part refuses any other value rather
+    # than claim it; and whether what a dependency hands the handler is a row (the operator's ruling R3: in — the first thing cut)
+    "inflight_scope": "one-level",
+    "inflight_dep_values": True,
     # which reached functions get a form (Slice 8): "facts" (a commit, raise, refusal, swallow or savepoint) · "all"
     "function_scope": "facts",
     # how far a raise is joined to the endpoint that translates it: "one-level" (the endpoint pass reads one call level;
@@ -296,12 +303,71 @@ BUS_PUBLISH = frozenset({"publish", "emit"})
 BUS_REGISTER = frozenset({"register", "register_once", "subscribe", "add_handler"})   # `_a3_code._DISPATCH_REG` minus `on`
 CONCURRENT_CALLS = frozenset({"gather", "create_task", "TaskGroup", "start_soon"})
 
+# ── the KINDS arm's inflight part (amendment 1 §A2 Slice 12 · U15) — what is alive while a request runs ─────────
+# Cites read on this machine 2026-09-20: fastapi 0.136.3 · starlette 1.3.1 · uvicorn 0.48.0 · slowapi 0.1.9 · structlog 25.5.0 ·
+# CPython 3.12 functools. A rule marked `gate` opens only at `_a3_forms_short.FRAMEWORK_MIN`; the starlette lines ride FastAPI's
+# gate (no starlette floor of their own exists). `dies` is the CARRIER's lifetime — the slot that holds the value — never the
+# object behind it (D31, the operator's ruling); only a rule here may say it.
+_GONE, _STAYS, _UNK = "with the answer", "with the server process", "unknown"
+INFLIGHT = {
+    "request_types": ("Request", "HTTPConnection", "WebSocket"),       # starlette/requests.py:189-195 — `.state` is a State over scope["state"]
+    "app_receivers": ("app",),                                         # starlette/applications.py:51 — one State per application
+    "contextvar_ctors": ("ContextVar",), "contextvar_ops": ("set", "reset", "get"),          # PEP 567
+    "contextvar_binders": {"bind_contextvars": "set", "bound_contextvars": "scoped", "clear_contextvars": "clear",
+                           "unbind_contextvars": "reset"},             # structlog/contextvars.py:96 · :112 · :170
+    "cache_decorators": {"lru_cache": 128, "cache": None},             # Lib/functools.py — the cache lives on the wrapper; cached_property is instance-scoped, absent
+    "background_types": ("BackgroundTasks",), "background_calls": ("add_task",), "background_kw": ("background",),   # starlette/background.py:26-34
+    "lock_methods": ("with_for_update",),                              # SELECT … FOR UPDATE, held to the end of the transaction
+    "lock_sql": r"(?i)\bpg_(try_)?advisory_(xact_)?lock(_shared)?\b",   # PostgreSQL 9.28.10 — xact locks end with the transaction
+    "lock_not_receivers": r"(?i)(^|_)(pool|engine)$",                  # `pool.acquire()` is a connection checkout, not a lock
+    "release_calls": ("release", "unlock"),
+    "containers": ("dict", "list", "set", "deque", "defaultdict", "OrderedDict", "Counter", "TTLCache", "LRUCache", "Lock", "RLock", "Semaphore"),
+    "read_cap": 8,
+    "unplaced_cap": 8,                                                 # how many unwalked `@<x>.middleware("http")` functions — and unresolved dependencies — are NAMED beside the count
+    "test_files": r"(^|/)tests?/|(^|/)conftest\.py$|(^|/)test_[^/]*\.py$|_test\.py$",
+    "rules": {
+        "request-state": {"scope": "request", "dies": _GONE, "gate": True, "source": "starlette/requests.py:189-195",
+                          "says": "a value kept on the request itself — it is gone once the answer has been sent"},
+        "app-state": {"scope": "process", "dies": _STAYS, "gate": True, "source": "starlette/applications.py:51",
+                      "says": "a value kept on the application — one copy for every request, alive as long as the server runs"},
+        "no-write-found": {"scope": "request", "dies": _UNK, "source": "uvicorn/protocols/http/h11_impl.py:217 · starlette/routing.py:638-642",
+                           "says": "read here, and nothing in this endpoint's scope writes it — it is set beyond one call, by a registration that is not read, or copied in from startup state"},
+        "receiver-unproven": {"scope": "unknown", "dies": _UNK, "says": "something called `state` is touched here, and the code does not show that it is the request's"},
+        "cv-reset": {"scope": "request", "dies": _GONE, "source": "PEP 567", "says": "a context variable set for this request and put back before the answer leaves"},
+        "cv-scoped": {"scope": "request", "dies": _GONE, "source": "structlog/contextvars.py:170", "says": "context values bound for the length of a `with` block"},
+        "cv-no-reset": {"scope": "request", "dies": _UNK, "says": "a context variable set here and never put back in this function — the code does not say how long it lasts"},
+        "cv-get-only": {"scope": "unknown", "dies": _UNK, "says": "a context variable read here; nothing in this endpoint's scope sets it"},
+        "dep-unresolved": {"scope": "request", "dies": _UNK, "says": "read here; one of this endpoint's dependencies could not be resolved, so a write may sit behind it"},
+        "cv-dep-unresolved": {"scope": "unknown", "dies": _UNK, "says": "a context variable read here; one of this endpoint's dependencies could not be resolved, so a set may sit behind it"},
+        "dep-solved": {"scope": "request", "dies": _GONE, "gate": True, "source": "fastapi/dependencies/utils.py:598-684",
+                       "says": "a value FastAPI builds for this request and hands to the handler"},
+        "dep-teardown": {"scope": "request", "dies": _GONE, "gate": True, "source": "fastapi/dependencies/utils.py:578-591 · :667-672",
+                         "says": "a value opened for this request and closed when the request ends"},
+        "dep-cached": {"scope": "process", "dies": _STAYS, "source": "Lib/functools.py lru_cache · cache",
+                       "says": "the function that builds it is cached, so every request is handed the same object"},
+        "dep-module-object": {"scope": "process", "dies": _STAYS, "says": "the dependency hands back an object built once, when its module loads"},
+        "after-the-answer": {"scope": "request", "dies": _UNK, "gate": True, "source": "starlette/responses.py:170 · fastapi/routing.py:680-681",
+                             "says": "work queued to run after the answer is sent — when it ends cannot be read from the code"},
+        "lock-with-block": {"scope": "request", "dies": _GONE, "says": "a lock held for the length of a `with` block"},
+        "lock-released": {"scope": "request", "dies": _GONE, "says": "a lock released in a `finally` of the same function"},
+        "lock-transaction": {"scope": "request", "dies": _UNK, "says": "a database lock — it is released when its transaction ends"},
+        "lock-open": {"scope": "request", "dies": _UNK, "says": "a lock taken here; no release is seen in this function"},
+        "functools-cache": {"scope": "process", "dies": _STAYS, "source": "Lib/functools.py lru_cache · cache",
+                            "says": "a cached function — its results are kept on the function for as long as the server runs"},
+        "middleware-init": {"scope": "process", "dies": _STAYS, "gate": True, "source": "starlette/applications.py:57-89",
+                            "says": "built once when the middleware is created, then shared by every request"},
+        "setting-at-init": {"scope": "process", "dies": _STAYS, "gate": True, "source": "starlette/applications.py:57-89",
+                            "says": "a setting read once when the middleware is created — a change to it needs a restart"},
+        "framework-gate-closed": {"scope": None, "dies": _UNK, "says": "the rule is read for FastAPI 0.136.1 and later; this app pins an older one"},
+    },
+}
+
 # ── the GENERATION ARMS (amendment 1, docs/design/element-forms/amendment-1.md) ────────────────────────
 # Each arm is one switch — center.config.json `forms_arms: {"paths": true, …}` or GABE_FORMS_ARMS=paths,effects|all|none —
 # and every arm defaults OFF. The ids (Slice 2) are no switch: they are written whenever any arm is on.
 ARMS = {
-    "kinds": {"slice": 3, "parts": ("middleware", "dependencies", "functions", "tasks", "handlers"),
-              "part_slices": {}},
+    "kinds": {"slice": 3, "parts": ("middleware", "dependencies", "inflight", "functions", "tasks", "handlers"),
+              "part_slices": {"inflight": 12}},
     "short": {"slice": 4, "parts": ("schema", "model", "migration", "setting", "mirror"),
               "part_slices": {}},
     "switches": {"slice": 5, "parts": ()},
@@ -316,7 +382,8 @@ ARM_ORDER = ("kinds", "short", "switches", "paths", "effects", "contract", "test
 # dependency forms, framework exits read the schema form, paths read the switches, kinds.functions and short.model read
 # the effects; the frontend arm runs later, beside the fe structure arm (`extend_frontend`)
 ARM_STAGES = (
-    ("kinds", ("middleware", "dependencies")), ("paths", ("returns", "conditions")), ("short", ("schema",)),
+    ("kinds", ("middleware", "dependencies")), ("kinds", ("inflight",)),   # its OWN stage (D32): a raise in it never takes middleware{} · dependencies{} down
+    ("paths", ("returns", "conditions")), ("short", ("schema",)),
     ("paths", ("framework",)), ("switches", ()), ("paths", ("paths",)), ("effects", ()), ("contract", ()),
     ("kinds", ("functions", "tasks", "handlers")), ("tests", ()), ("short", ("model", "migration", "setting", "mirror")),
 )
@@ -324,6 +391,7 @@ ARM_STAGES = (
 ARM_NEEDS = {                                   # paths walks the middleware stack only in its `paths` part (Slice 5)
     "paths.paths": ("kinds.middleware",), "effects": ("paths",), "contract": ("effects",), "tests": ("paths",),
     "kinds.functions": ("effects",), "kinds.handlers": ("effects",), "short.model": ("effects",),
+    "kinds.inflight": ("kinds.middleware", "kinds.dependencies"),
 }
 # soft needs — used only when the other arm is also selected
 ARM_SOFT = {"paths": ("switches", "short.schema")}

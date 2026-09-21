@@ -783,7 +783,7 @@ PY
 
 py "K12 · FIRE: the registry the spec promised — every kind and slot as built, external a state; head on a feed that is not present" <<'PY'
 import _a3_forms as F, _a3_forms_build as B
-assert set(F.KINDS["endpoint"]) == {"U3", "U7", "K1", "U6", "U8", "U9", "U11", "U12", "U14", "K2", "K3", "K4"}, sorted(F.KINDS["endpoint"])   # V32
+assert set(F.KINDS["endpoint"]) == {"U3", "U7", "K1", "U6", "U8", "U9", "U11", "U12", "U14", "K2", "K3", "K4", "U15"}, sorted(F.KINDS["endpoint"])   # V32 · U15 in-flight state (Slice 12)
 assert {"middleware", "dependency", "service", "task", "handler", "schema", "model", "migration", "setting", "mirror", "guard", "hook", "component", "store_action"} <= set(F.KINDS), sorted(F.KINDS)
 assert all("block" in v for k in F.KINDS if k != "endpoint" for v in F.KINDS[k].values()), "every kind's slot names the block that is it"
 assert "external" in F.STATES, F.STATES

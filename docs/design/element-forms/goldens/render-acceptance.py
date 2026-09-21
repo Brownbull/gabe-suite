@@ -8,7 +8,7 @@ rev = Path(sys.argv[4]) if len(sys.argv) > 4 else None
 E = json.loads(exp.read_text()); F = json.loads(feed.read_text())
 ARM = {"1": "core", "2": "ids", "3a": "kinds", "3b": "paths", "4": "short · schema", "5a": "switches", "5b": "paths · walk", "6": "effects", "7": "contract",
        "8": "kinds · fn/task/handler", "9": "tests", "10a": "short · model+migration", "10b": "short · setting", "10c": "short · mirror",
-       "11a": "frontend · guards", "11b": "frontend · hooks/client", "11c": "frontend · reason", "11d": "frontend · controls/stores", "11e": "frontend · what a reason branch does"}
+       "11a": "frontend · guards", "11b": "frontend · hooks/client", "11c": "frontend · reason", "11d": "frontend · controls/stores", "11e": "frontend · what a reason branch does", "12": "kinds · in-flight state"}
 MARK = {"V": "verified in source", "R": "read", "P": "projected", "U": "unknown until measured"}
 import importlib.util
 _spec = importlib.util.spec_from_file_location("chk", exp.parent / "check-goldens.py"); chk = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(chk)
