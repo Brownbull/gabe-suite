@@ -1,0 +1,414 @@
+{
+ "viewport": [
+  2560,
+  1400
+ ],
+ "log": [
+  [
+   "regions",
+   [
+    [
+     "#tabs",
+     513,
+     138,
+     1098,
+     52
+    ],
+    [
+     "#panel",
+     513,
+     190,
+     1098,
+     420
+    ],
+    [
+     "#cmd",
+     2108,
+     92,
+     360,
+     560
+    ],
+    [
+     "#port",
+     1640,
+     92,
+     440,
+     560
+    ]
+   ]
+  ],
+  [
+   "part buttons",
+   [
+    "data=15Data",
+    "schemas=13Schemas",
+    "functions=29Functions",
+    "tests=27Tests",
+    "widening=5Widening",
+    "security=6Security"
+   ]
+  ],
+  [
+   "command at load",
+   [
+    {
+     "cmd": "grp-paths",
+     "key": null,
+     "t": "Q14PATHS",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "grp-data",
+     "key": null,
+     "t": "W15DATA",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "grp-schemas",
+     "key": null,
+     "t": "E13SCHEMAS",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "grp-functions",
+     "key": null,
+     "t": "R29FUNCTIONS",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "grp-tests",
+     "key": null,
+     "t": "T27TESTS",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "grp-widening",
+     "key": null,
+     "t": "A5WIDENING",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "grp-security",
+     "key": null,
+     "t": "S6SECURITY",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "clear",
+     "key": null,
+     "t": "B",
+     "title": null,
+     "path": null
+    }
+   ]
+  ],
+  [
+   "step 1 · command-paths-group",
+   {
+    "click": "Q14PATHS",
+    "where": "#cmd [data-cmd=\"grp-paths\"]",
+    "at": [
+     2119,
+     141
+    ],
+    "size": [
+     64,
+     64
+    ],
+    "note": "the paths group — the FIRST cell of COMMAND, key Q"
+   }
+  ],
+  [
+   "command in paths group",
+   [
+    {
+     "cmd": "walk",
+     "key": null,
+     "t": "Q14",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "refusals",
+     "key": null,
+     "t": "W7",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "success",
+     "key": null,
+     "t": "E3",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "prev",
+     "key": null,
+     "t": "R",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "next",
+     "key": null,
+     "t": "T",
+     "title": null,
+     "path": null
+    },
+    {
+     "cmd": "back",
+     "key": null,
+     "t": "B",
+     "title": null,
+     "path": null
+    }
+   ]
+  ],
+  [
+   "step 2 · command-walk",
+   {
+    "click": "Q14",
+    "where": "#cmd [data-cmd=\"walk\"]",
+    "at": [
+     2119,
+     141
+    ],
+    "size": [
+     64,
+     64
+    ],
+    "note": "walk one path"
+   }
+  ],
+  [
+   "command walk grid",
+   [
+    {
+     "cmd": "back",
+     "key": null,
+     "t": "B",
+     "title": null,
+     "path": null
+    }
+   ]
+  ],
+  [
+   "after the click on walk, the resting mouse opens a hover card that covers",
+   {
+    "card": true,
+    "covers": [
+     "A422json_invalid (framework)",
+     "S422validation",
+     "D400Idempotency-Key required",
+     "F409setup in progress",
+     "G200replay",
+     "Z200already done",
+     "X409consent required",
+     "C200first run",
+     "V500uncaught"
+    ]
+   }
+  ],
+  [
+   "step 4 · pick-the-route",
+   {
+    "click": "C200first run",
+    "where": "#cmd [data-path=\"p:0f099873d5\"]",
+    "at": [
+     2259,
+     281
+    ],
+    "size": [
+     64,
+     64
+    ],
+    "note": "the route that gets through, \"first run\" (key C)"
+   }
+  ],
+  [
+   "portrait tabs",
+   [
+    {
+     "pvar": "cmd-path",
+     "t": "",
+     "on": true
+    },
+    {
+     "pvar": "cmd-exit",
+     "t": "",
+     "on": false
+    },
+    {
+     "pvar": "record",
+     "t": "",
+     "on": false
+    },
+    {
+     "pvar": "shape",
+     "t": "",
+     "on": false
+    },
+    {
+     "pvar": "wheel",
+     "t": "",
+     "on": false
+    },
+    {
+     "pvar": "keys",
+     "t": "",
+     "on": false
+    }
+   ]
+  ],
+  [
+   "portrait sections before the tab",
+   [
+    "the chain · 22 steps",
+    "effects · 15 tables",
+    "tests · 8",
+    "switches · 3",
+    "alive during the request · 11"
+   ]
+  ],
+  [
+   "portrait sections",
+   [
+    "the chain · 22 steps",
+    "effects · 15 tables",
+    "tests · 8",
+    "switches · 3",
+    "alive during the request · 11"
+   ]
+  ],
+  [
+   "the row before any scroll",
+   {
+    "found": true,
+    "text": "alive during the request · 11",
+    "rows": 11,
+    "top": 1467,
+    "bottom": 1765,
+    "portTop": 131,
+    "portBottom": 651,
+    "viewport": 1400,
+    "inView": false,
+    "fontPx": 12,
+    "clipped": false,
+    "words": [
+     [
+      "rate_limit_active",
+      "with the server"
+     ],
+     [
+      "trusted_proxy_hops",
+      "with the server"
+     ],
+     [
+      "_sensitive",
+      "with the server"
+     ]
+    ]
+   }
+  ],
+  [
+   "the row after scrolling the portrait by wheel",
+   {
+    "wheel": 1200,
+    "found": true,
+    "text": "alive during the request · 11",
+    "rows": 11,
+    "top": 344,
+    "bottom": 642,
+    "portTop": 131,
+    "portBottom": 651,
+    "viewport": 1400,
+    "inView": true,
+    "fontPx": 12,
+    "clipped": false,
+    "words": [
+     [
+      "rate_limit_active",
+      "with the server"
+     ],
+     [
+      "trusted_proxy_hops",
+      "with the server"
+     ],
+     [
+      "_sensitive",
+      "with the server"
+     ]
+    ]
+   }
+  ],
+  [
+   "the rows it draws",
+   [
+    [
+     "rate_limit_active",
+     "with the server"
+    ],
+    [
+     "trusted_proxy_hops",
+     "with the server"
+    ],
+    [
+     "_sensitive",
+     "with the server"
+    ],
+    [
+     "rate_limit_sensitive_per_minute",
+     "with the server"
+    ],
+    [
+     "rate_limit_window_seconds",
+     "with the server"
+    ],
+    [
+     "_global",
+     "with the server"
+    ],
+    [
+     "rate_limit_per_minute",
+     "with the server"
+    ],
+    [
+     "idempotency_key",
+     "with the answer"
+    ],
+    [
+     "session",
+     "with the answer"
+    ],
+    [
+     "ctx",
+     "with the answer"
+    ],
+    [
+     "get_settings",
+     "with the server"
+    ]
+   ]
+  ],
+  [
+   "its card says",
+   "idempotency_keykept on the requestwhat it iskept on the requestwhere it is setmiddleware/idempotency.py:25 · IdempotencyMiddlewarewhere it is readmiddleware/idempotency.py:31 · through api/setup.py:191how long it lastswith the answerits value comes fromthe Ide"
+  ],
+  [
+   "keys B · Q · Q · C open",
+   "first runPath"
+  ],
+  [
+   "page errors",
+   []
+  ]
+ ]
+}

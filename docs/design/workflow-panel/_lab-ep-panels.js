@@ -3557,7 +3557,7 @@
       w.style.color = S.OPC[ALIVETONE[r.dies] || "none"] || "var(--muted)";      // the lifetime IS the row's colour — the one thing he asked to see
       c.append(w);
       bind(c, function(){ return cmdc({ title: r.name, value: ALIVEW[r.kind] || r.kind, icon: "layers",
-        rows: [["what it is", ALIVEW[r.kind] || r.kind], ["where it is set", aliveWhere(r)], ["where it is read", aliveRead(r)],
+        rows: [["where it is set", aliveWhere(r)], ["where it is read", aliveRead(r)],
                ["how long it lasts", r.dies || "unknown"]]
           .concat(r.from ? [["its value comes from", (r.from.kind === "header" ? "the " + r.from.name + " header" : "the request's " + r.from.name) + (r.from.cond ? ", when the condition holds" : "")]] : [])
           .concat(r.ref ? [["shared with", (r.applies_to || 1) + " endpoint(s)"]] : [])
