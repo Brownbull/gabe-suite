@@ -1,6 +1,6 @@
 # The `inflight` part of the kinds arm (leftovers piece 11)
 
-> **DRAFT — not landed.** Written 2026-09-20 by a read-only planning run (4 readers + 1 designer). Nothing in `templates/center/generators/` has changed.
+> **DRAFT — not landed; its spec block is now in `amendment-1.md` (Slice 12, PROPOSED 2026-09-21; the decisions it calls D29–D31 are D30–D32 there — D29 went to Slice 11e).** Written 2026-09-20 by a read-only planning run (4 readers + 1 designer). Nothing in `templates/center/generators/` has changed.
 > The amendment's own process applies (amendment-1.md: *the operator rules on the decisions, then says "land it"*). Raw findings: `kinds-inflight.plan.json`.
 
 ## What is written

@@ -1256,6 +1256,51 @@ Also `tests/frontend`: the extractor without the flag emits no `flow` key. `test
 
 ---
 
+### Slice 12 · In-flight state — what is alive while the request runs (leftovers piece 11)
+
+> **PROPOSED 2026-09-21 — no code until the operator rules on the three rulings below and says "land it".** He ruled the piece "do" (design-context D-016) and "after piece 10, name `inflight` kept" (D-018); piece 10 landed `b1a1e2c` · lab carry `61f53ce`, and he has seen its row. The full design — detectors, rosters with their package cites, the fixture, every battery case — is `plans/kinds-inflight.plan.md` (a read-only planning run, 4 readers + 1 designer); this block is the contract it is built against.
+
+**Generates:** the kinds arm's new part `inflight`. Per endpoint `inflight[]` — one row per thing that is alive while this request runs, in REQUEST ORDER (middleware by run order, then dependencies in FastAPI's resolution order, then the handler; a site one call down sorts under the station that called it). Top level `inflight{process, rules}` — `process` holds what is built ONCE for the whole server and met by many endpoints (a row an endpoint meets is a short `ref` row carrying its own `read_at`); `rules` holds only the rules some row used, each with its `scope`, `dies`, `says` and package `source`. No finding: an analysis, never a grade. `[]` means the part ran and found nothing; an absent key means the part is off.
+- **Eight kinds of row:** `state` (`request.state.<x>` · `app.state.<x>`) · `contextvar` · `dependency-value` (what a dependency hands the handler) · `background` (a task queued to run after the answer) · `lock` · `cache` (`lru_cache` · `cache`) · `built-once` (an object a middleware builds in `__init__`) · `setting-once` (a setting read once in `__init__`).
+- **Every row says:** `name` · `scope` (request · process · unknown) · `set_at` + `set_by` + `set_in` (the middleware, the dependency, the handler, or `__init__` — or `unknown`) · `read_at[]` (capped at 8, `reads_more`) · `reads` (found · none in scope — never "never read") · `dies` (**with the answer · with the server process · unknown**, nothing else) · `rule` (an id into `rules`, never free text). A state row whose value came from a header carries `from`; a write one call down carries `set_fn` + `set_via`; a write under a condition `set_cond`.
+- **Worked example, `POST /setup/complete` (read in source 2026-09-20):** the repeat key is set at `middleware/idempotency.py:25` from the `Idempotency-Key` header, read at `:31` through `api/setup.py:191`, and goes with the answer · `ctx` from `get_auth_context` and `session` from `get_session` (a generator: torn down with the request) go with the answer · `settings` is a cached callee, so it lives with the server process · the sensitive limiter `_sensitive` is built once at `middleware/rate_limit.py:103`, holds `_hits`, counts by `f'{ip}:sensitive'` on 4 path prefixes and is met by 23 of 80 endpoints · its cap `rate_limit_sensitive_per_minute` (20, `state: default` — the environment can override) is read once at `:104` and handed to it.
+
+**Modules:** NEW `_a3_forms_inflight.py` (~430) and NEW leaf `_a3_forms_carrier.py` (~45 — the four shapes of a request carrier, ONE definition for the contract arm and this part; no walker moves, because walk order is what makes `repeat{}`'s bytes). `_a3_forms_contract.py` three edits (525 → ~515) · `_a3_forms_mw.py` +3 · `_a3_forms.py` +~55 (the `INFLIGHT` roster with cites read on this machine: fastapi 0.136.3 · starlette 1.3.1 · uvicorn 0.48.0 · slowapi 0.1.9 · structlog 25.5.0 · CPython 3.12 functools; two OPTIONS; the slot; the part in `ARMS` · `ARM_STAGES` · `ARM_NEEDS`) · `_a3_forms_build.py` +1.
+
+**Algorithm (the plan's detectors D1–D8, condensed):**
+1. **Stations, not a grep.** The part looks only where the request really goes: each project middleware's `dispatch`, each dependency FastAPI solves (a called `Depends(factory(...))` walks the nested def the factory RETURNS, never the factory body — that runs at import), then the handler; each read in its own body plus ONE call level. A test conftest, a startup seed or an unreached helper is never a station.
+2. **State** — writes and reads of `<x>.state.<attr>` with RECEIVER PROOF: a parameter typed `Request`/`HTTPConnection`/`WebSocket`, or a dispatch's first parameter, is the request; `app` is the application (process scope); anything else is kept as `receiver: unproven` with scope and dies `unknown`. A read with no write in scope says `set_at: unknown`, rule `no-write-found`.
+3. **Contextvar** — only a receiver that RESOLVES to a module-level `ContextVar(...)`; never matched by the method name alone (`dict.get` is not a read). A `reset(token)` in a `finally` of the same function, or a scoped binder used as `with`, goes with the answer; a set with no reset says `unknown` — nothing in the source says it leaks.
+4. **Dependency-value** — a handler parameter whose `Depends` resolves: a cached callee or a module-level object is process-scoped; a generator dependency is torn down with the request; else solved per request.
+5. **Background** — `tasks.add_task(f, …)`: the task, its arguments, `after_answer: true`, `dies: unknown` (when it ends cannot be read from source). A `BackgroundTasks` parameter with no `add_task` in scope says `queues: none in scope`, or `beyond one level` when it is visibly handed on.
+6. **Lock** — a `with` lock goes with the answer; `with_for_update` and transaction advisory locks say `unknown` + "when its transaction ends"; a pool checkout (`pool.acquire()`) is not a lock; a startup lock is never counted.
+7. **Built-once · setting-once** — a middleware's `__init__`: every `self.x = <Call>` that is not a settings read, with the containers its class builds (`holds`) and the path prefixes each read sits under; every settings attribute read there, with its default, env name and declaring line.
+8. **Cache** — a function a station meets whose decorator is `lru_cache`/`cache`; deeper reach is COUNTED (`caches_deeper`), never listed.
+9. **Framework gate** — a rule citing FastAPI/Starlette opens only at the pinned `FRAMEWORK_MIN` (0.136.1); below it the row says `dies: unknown`, `rule: framework-gate-closed`, `would_be`.
+
+**The three rulings that are the operator's** (each changes what the card will SAY; the rest below is framework and is the author's by D-017):
+- **R1 · the slot's number.** `U15` "In-flight state — what is alive while this request runs: where it is set, where it is read, whether it goes with the answer". U1–U14 are his scorecard; U15 is the next free number. A different number costs one registry line.
+- **R2 · what `dies` describes.** PROPOSED: the CARRIER — the `request.state` slot, the solved parameter, the `with` block — not the object behind it; a process object handed in is caught in two shapes (a cached callee · a module-level object) and says so. ALTERNATIVE: `unknown` whenever the object behind the slot is not proven per-request — more cautious, fewer rows that say something. One roster line either way.
+- **R3 · dependency-value rows in or out.** PROPOSED: IN — on this endpoint they are three of the five rows of his own after-rows (the login context, the database session, the settings object). They were not in the brief's list of detectors, so they sit behind `OPTIONS.inflight_dep_values` and are the first thing cut if the scope must shrink.
+
+**The author's, stated (D-017 — choices inside the framework):** the part gets its OWN stage so a raise in it never takes `middleware{}`/`dependencies{}` down with it (D32) · rows carry no id letter, they are addressed by their site (D30, the §A4 V33 precedent) · 12b — route-wrapper callables (slowapi `key_func`), `@app.middleware("http")` function stations, module-level and `global`-built objects — is DEFERRED; trigger: gastify's `state:user_id` reads `read_on: 0`, or tier3's `cv-get-only` + `no-write-found` rows outnumber its proven rows at the dry run.
+
+**The law:** arms only add. The one existing value that moves when kinds is on is `arms.kinds.bytes` (the arm's own size accounting, as at Slice 8). `repeat{}` keeps its bytes across the lift — forms-contract E7 pins `repeat.key` by dict equality, and a before/after dry run on gustify must be byte-identical BEFORE any new code lands. Fallback if it is not: drop the lift, keep a private copy of the four shapes.
+
+**Coverage floor, said and never hidden:** v1 does not read gastify's state READ inside a slowapi `key_func`, tier3's ContextVar SETS inside `@app.middleware("http")` closures, module-level and lazy `global` singletons, tier3's hand-rolled TTL cache, instance-dependency state, or anything in a nested def other than a factory's returned closure. Those rows say `none in scope` / `no-write-found` / `unknown`; `stats.inflight.unplaced_middleware` and `factories_unread` count what was not walked.
+
+**Goldens (slice `12`, 13 on gustify):** the repeat key's `set_at :25` · its header · its read `:31` via `setup.py:191` · `dies: with the answer` · `ctx` → `get_auth_context` · `session` → `dep-teardown` · `settings` → process · `_sensitive` built at `:103` holding `_hits` · the cap read once with value 20 · and the state-name census. gastify, tier3 and keypro are dry-run NUMBERS in the commit, not goldens.
+
+**Battery:** `tests/forms-kinds` C30–C39 on a third fixture copy (the existing cases keep their counts): one case per kind, each with FIRE · SILENT · an in-test mutation; C38 off · honest-empty · determinism · the whole-feed only-adds proof; C39 isolation (the own stage). Generator mutants through `GEN_OVERRIDE`, at least the plan's three (the reset test forced true · the factory walked instead of its closure · the lifted carrier shape lying — which must also turn forms-contract E7 red), plus one per defect a pre-commit review finds.
+
+**Landing order (piece 10's, with its lessons):** the lift alone, proven byte-identical on gustify → registry → the module → battery + mutants → **a review of the REAL feeds before the commit** (precision on real rows · the rule ladder · the law · can the battery fail; each finding tried by a skeptic) → `install.sh` → dry run on the four targets, one at a time, OLD from a clean worktree, every NEW feed saved before the next step → goldens → docs → suite-doctor ALONE → commit by explicit path → twins → the lab carry in its own commit, its feed built at the lab's own head (`05007957`) → a real-click walk to the new rows, with pictures, before any click path is handed over.
+
+**Dry run — record:** per target `stats.inflight` (rows · by_kind · by_dies · by_rule · process · caches_deeper · unplaced_middleware · factories_unread · framework_gate) · `arms.kinds.bytes` before and after · `seconds` (the part adds a second reach walk — watch tier3).
+
+**Effort:** L (the plan sizes it at days).
+
+---
+
 ## §A3 · Module map
 
 All paths are in `GEN/`. Every module is stdlib-only at top level and uses column-0 imports.
@@ -1452,6 +1497,21 @@ DECISION D29: what a reason branch does (Slice 11e)
 CHOSE: keys inside the reason part · rows addressed by `at` and order, no id letter (V33) · no finding · `branch` and every prior key untouched · the estate's phrase `beyond one level` for a comparison the caller decides · a `useNavigate` roster that classes a row and builds no guard · `toast` as a library idiom with its provenance on the row · no react-i18next entry until a target installs it
 ASSUMED: a then-arm row carries the comparison's own guards plus the condition (`_a3_fe_extract.mjs`, the if · ternary · `&&` walkers) · no target needs react-intl, SWR revalidation or an assignment row to be read usefully
 BREAKS IF: `no-rows` or `beyond one level` dominate a dry run — then the extractor needs a branch ordinal and assignment rows, which forces a re-freeze; or the operator wants `branch` recomputed from the narrowed rows, which moves `reason-collapsed` counts and gets its own commit
+
+DECISION D30 (PROPOSED, Slice 12): in-flight rows carry no id
+CHOSE: rows addressed by (kind · carrier · name · set_at) and process rows by their map key, over minting an id letter
+ASSUMED: no consumer needs to point at one in-flight row from another block before the lab carry
+BREAKS IF: a second block must reference a row — then an `i:` id is minted in the ids leaf, in its own commit
+
+DECISION D31 (PROPOSED, Slice 12 — the operator's ruling R2): `dies` is the CARRIER's lifetime, and only a roster rule may say it
+CHOSE: the slot that carries the value (request.state · the solved parameter · the with block) over the object behind it; a process object handed in is caught in two shapes and says so
+ASSUMED: the brief's ruling for request.state extends to dependency values and with-block locks
+BREAKS IF: the operator reads "with the answer" on a row whose object outlives the request and finds it misleading — then the rule says `unknown` there (one roster line)
+
+DECISION D32 (PROPOSED, Slice 12): the part runs in its OWN stage of the kinds arm
+CHOSE: a stage of its own right after middleware · dependencies, over sharing their stage
+ASSUMED: it reads nothing the effects or contract arms write
+BREAKS IF: a later part needs in-flight rows inside the first kinds stage — a hard need inside one stage is impossible, so the stages are re-cut then
 
 ---
 
