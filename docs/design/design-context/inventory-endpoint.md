@@ -5,13 +5,19 @@ Ruled: 2026-09-18
 Loop 1 runs on the endpoint card as a whole (Gabe, 2026-09-18). **The importance ratings below are RULED by Gabe** — he rated
 the agent's proposal on the rating sheet (`rate-endpoint.html`, inventory 05cdd08f) and pasted the result back: 3 changed
 (file:line 2 → 1 · signature 1 → 2 · deciding branches gained the alert), 39 confirmed, 1 left as proposed (own guards), and
-one more moved by his own rule (request-scoped state 2 → 1, D-013). Rows whose rating says **(proposed)** were added after
-his pass and are still the agent's proposal. His notes, and the answers to the questions in them, are at the foot of this file.
+one more moved by his own rule (request-scoped state 2 → 1, D-013). His notes, and the answers to the questions in them, are
+at the foot of this file.
+
+**Third ruling, 2026-09-22 (D-020) — the pass is CLOSED.** Every row added after his first pass is now ruled. He read the
+ten pieces of work through to the end and handed the judgment over ("proceed with your proposed ratings"), so the agent read
+each of the twenty back against his own scale and the evidence the pieces had since produced. Nineteen stood. ONE moved: *how
+this table was found* 2 → **1**, by his own D-017 — it says how the map knows a table is touched, not what happens to the table.
+No row on this card is a proposal any more.
 
 **Second ruling, 2026-09-19 (D-016):** on the evaluation of what M1 left over he dropped two rows (steps in the longest chain ·
 usage · fan-in), demoted three (entity · cluster · rate limit · journeys), kept four (provisions · race · cases · signature — the
 last against the agent's advice), and marked ten of eleven pieces of work "do". The rows those pieces add are below, each
-marked **(proposed)** until he rates it; a row whose facts are not carried yet says which piece brings them.
+marked **** until he rates it; a row whose facts are not carried yet says which piece brings them.
 `m1-round1.inventory.md` is the frozen copy M1 round 1 read; this file is the living one.
 
 Rating rule, from his depth rule: **3** = it can change the path, the data, the context or the flow · **2** = it gives context
@@ -38,10 +44,10 @@ tooltip · portrait. The channel column stays empty until M3 (the channel budget
 | kinds of ending (success · refusal · framework · validation · uncaught) | category | 2–5 kinds | **3** | the command's vocabulary — concepts, not codes; the behaviour at a glance | with code | own | far |
 | the endings (paths) | relation list | 2 · 9 · 22 | **3** | the endings ARE the behaviour | with code | own | mid |
 | the stage an ending leaves from | order (1 of 8) | 1 per ending | **3** | position gives the structure quickly (D-007) | with code | own | far / mid |
-| the ordered chain per ending (the eight kinds of step, in request order) | order (relation list) | 4 · 14 · 22 | **3** (proposed) | the chain IS the flow, and every later fact attaches to one of its steps; already in the lab's facts (piece 1) | with code | own | near |
-| the checks met, in run order (passed · fired) | order (relation list) | 0 · 6 · 10 on an endpoint's longest route (0 · 4 · 10 over all 743 routes) | 2 (proposed) | order and the passed marks give context to the check that fired | with code | own | mid |
-| the route that passes every check (and the check each other route fires) | relation | 1 per endpoint | **3** (proposed) | the through-route the exceptions are exceptions to; how often a route is really taken cannot be read from code | with code | own | mid |
-| the predicate per decision point (with the deeper raises the route does not translate) | text + relation | failures inside the calls 0 · 0 · 4 per endpoint (29 of 80 have one; 59 in all): 26 answered here · 7 nothing here catches (6 endpoints) · 21 raised deeper than the reading follows (14 endpoints) · 5 the feed could not join | **3** (proposed) | what determines the path, in the author's words | with code | relation | near |
+| the ordered chain per ending (the eight kinds of step, in request order) | order (relation list) | 4 · 14 · 22 | **3** | the chain IS the flow, and every later fact attaches to one of its steps; already in the lab's facts (piece 1) | with code | own | near |
+| the checks met, in run order (passed · fired) | order (relation list) | 0 · 6 · 10 on an endpoint's longest route (0 · 4 · 10 over all 743 routes) | 2 | order and the passed marks give context to the check that fired | with code | own | mid |
+| the route that passes every check (and the check each other route fires) | relation | 1 per endpoint | **3** | the through-route the exceptions are exceptions to; how often a route is really taken cannot be read from code | with code | own | mid |
+| the predicate per decision point (with the deeper raises the route does not translate) | text + relation | failures inside the calls 0 · 0 · 4 per endpoint (29 of 80 have one; 59 in all): 26 answered here · 7 nothing here catches (6 endpoints) · 21 raised deeper than the reading follows (14 endpoints) · 5 the feed could not join | **3** | what determines the path, in the author's words | with code | relation | near |
 | status code per ending | category + text | 2 · 7 · 11 distinct | 2 | specific — the middle's filter, never the command | with code | own | mid |
 | own guards (preconditions) | relation | 0 · 1 · 16 (18 doors none) | **3** | they change the path | with code | own | mid; predicate near |
 | deciding branches (callee arms that change the exit) | relation | 0 · 0 · 8 (65 doors none) | **3** when present — an alert | they change the path one call down; they are forks ON an ending's route, never a fifth list (see the notes) | with code | relation | mid |
@@ -59,10 +65,10 @@ tooltip · portrait. The channel column stays empty until M3 (the channel budget
 | provisions (rows created before the handler) | relation | 0–1 | 2 | a side effect people do not expect | with code | relation | near |
 | race on a unique key (the endpoint's own · the gate's counted apart) | state | handled · uncaught | **3** if uncaught, else 1 | an uncaught race is an alarm (P2); counted on the endpoint's own code it fires on 11 of 80 endpoints, not 79 (piece 4) | with code | own | far only as an alert |
 | idempotency claim | relation | 0 · 0 · 1 (74 doors none) | 2 | changes what a repeat does | with code | own | near |
-| how this table was found (map access edge · route effects · both) | category | 1 per table; 0 · 4 · 7 tables per endpoint are known to a route's steps only (79 of 80 endpoints have one) | 2 (proposed) | provenance on a row that is already a 3; two tables here are known to the route effects only (piece 4) | with code | relation | near |
-| events published (the event · the handlers subscribed to it) | relation | 1 of 80 endpoints publishes; 1 event, 2 handlers, both can be dropped | **3** when present (proposed) | other code runs because this endpoint ran — the flow leaves the request | with code | relation | mid; an alert when a handler can be dropped |
-| tasks dispatched (background work that outlives the answer) | relation | 0 of 80 here (the app has no queue); 63 task roots in the largest study app | **3** when present (proposed) | work continues after the client has its answer | with code | relation | mid |
-| outside services called (an LLM, an identity provider, a payment API) | relation | 1 drawn in the app (gemini) | **3** when present (proposed) | a call that can fail, cost money and add seconds — it can change the path | with code | relation | mid |
+| how this table was found (map access edge · route effects · both) | category | 1 per table; 0 · 4 · 7 tables per endpoint are known to a route's steps only (79 of 80 endpoints have one) | **1** | DEMOTED 2026-09-22 by his own D-017: this says how the MAP knows a table is touched, not what happens to the table — "nice to have but not critical… hidden behind a plus-information option". The lab already gates the row that way. It is mentioned and never drilled into | with code | relation | near |
+| events published (the event · the handlers subscribed to it) | relation | 1 of 80 endpoints publishes; 1 event, 2 handlers, both can be dropped | **3** when present | other code runs because this endpoint ran — the flow leaves the request | with code | relation | mid; an alert when a handler can be dropped |
+| tasks dispatched (background work that outlives the answer) | relation | 0 of 80 here (the app has no queue); 63 task roots in the largest study app | **3** when present | work continues after the client has its answer | with code | relation | mid |
+| outside services called (an LLM, an identity provider, a payment API) | relation | 1 drawn in the app (gemini) | **3** when present | a call that can fail, cost money and add seconds — it can change the path | with code | relation | mid |
 
 ## In-flight state — ephemeral but alive during the process
 
@@ -70,7 +76,7 @@ tooltip · portrait. The channel column stays empty until M3 (the channel budget
 |---|---|---|---|---|---|---|---|
 | request-scoped state (a key set by middleware, the auth context) | relation | FOLDED into the row below (piece 11): the general reading now carries all three known instances — the repeat key, the login context and the database session — as rows of their own | 1 | later steps depend on it, and every known instance rides on another row (D-013); the general arm it waited for has landed | with code | relation | near — read by the in-flight row below |
 | client cache effects (keys invalidated · seeded) | relation | per hook | 2 | what the screen refetches after the answer | with code | relation | near |
-| in-flight values (request-scoped · process-scoped: where set · where read · when it dies) | relation | MEASURED (piece 11, Slice 12 `320a7b4`): 6 · 8 · 15 rows per endpoint, 706 over the 80 — 343 a setting read once at start · 170 handed in by a dependency · 103 built once at start · 80 on the request · 10 a cached answer; 21 distinct things, 468 of the rows shared with other endpoints and said once on the process row; **every lifetime known here: 238 go with the answer, 468 live with the server, none unknown**; no context variable, no background task and no lock a request reaches — three true zeros. Every endpoint carries something of its own | **2** (proposed) | the general reading D-013 waited for; the request-scoped row above folds into it | with code | relation | near — in the feed and in the lab (piece 11) |
+| in-flight values (request-scoped · process-scoped: where set · where read · when it dies) | relation | MEASURED (piece 11, Slice 12 `320a7b4`): 6 · 8 · 15 rows per endpoint, 706 over the 80 — 343 a setting read once at start · 170 handed in by a dependency · 103 built once at start · 80 on the request · 10 a cached answer; 21 distinct things, 468 of the rows shared with other endpoints and said once on the process row; **every lifetime known here: 238 go with the answer, 468 live with the server, none unknown**; no context variable, no background task and no lock a request reaches — three true zeros. Every endpoint carries something of its own | **2** | the general reading D-013 waited for; the request-scoped row above folds into it | with code | relation | near — in the feed and in the lab (piece 11) |
 
 ## Structures
 
@@ -78,9 +84,9 @@ tooltip · portrait. The channel column stays empty until M3 (the channel budget
 |---|---|---|---|---|---|---|---|
 | request shape | relation | 0–1 | 2 | what must come in | with code | relation | mid (block) |
 | response shape per ending | relation | 2 · 9 · 22 | 2 | what each ending answers with | with code | relation | mid / near |
-| delivery (one answer · a stream) | category | 1 of 80 endpoints streams | 2 (proposed) | a stream changes what the client must do with the answer | with code | own | mid |
-| response headers per ending | relation | 0 · 2 · 5 endings per endpoint send one (1 endpoint sends none) | 2 (proposed) | what the client is told to do next — a 429 says when to retry, a 401 names the login scheme | with code | own | near |
-| field rules of the request body (required · length · range · allowed values) | relation | body fields with a rule 0 · 2 · 29 per endpoint (45 of 80 read a body; 260 fields): must be sent 0 · 0 · 9 · carry a limit or a validator 0 · 0 · 17 on 23 endpoints; column rules ride the same join: 0 · 51 · 174 columns, of which the database fills 0 · 12 · 51 and a delete elsewhere reaches 0 · 8 · 24 | 2 (proposed) | the rule beside the field, so a shape stops being a list of names | with code | relation | near |
+| delivery (one answer · a stream) | category | 1 of 80 endpoints streams | 2 | a stream changes what the client must do with the answer | with code | own | mid |
+| response headers per ending | relation | 0 · 2 · 5 endings per endpoint send one (1 endpoint sends none) | 2 | what the client is told to do next — a 429 says when to retry, a 401 names the login scheme | with code | own | near |
+| field rules of the request body (required · length · range · allowed values) | relation | body fields with a rule 0 · 2 · 29 per endpoint (45 of 80 read a body; 260 fields): must be sent 0 · 0 · 9 · carry a limit or a validator 0 · 0 · 17 on 23 endpoints; column rules ride the same join: 0 · 51 · 174 columns, of which the database fills 0 · 12 · 51 and a delete elsewhere reaches 0 · 8 · 24 | 2 | the rule beside the field, so a shape stops being a list of names | with code | relation | near |
 | validation cases (the 422 rules) | relation | 1 · 4 · 42 over 42 of 80 endpoints | 2 | decision points at INPUT; already in the lab's facts — the old note was out of date (piece 3). The evaluation proposes a 3: each case produces an ending | with code | relation | near |
 
 ## Functions — by how crucial they are
@@ -89,7 +95,7 @@ tooltip · portrait. The channel column stays empty until M3 (the channel budget
 |---|---|---|---|---|---|---|---|
 | the handler (API-facing) | relation | 1 | **3** | the function facing the API | with code | own | far / mid |
 | decision-point functions (their raise or refusal becomes an ending) | relation | 1 · 4 · 12 per endpoint (app-wide 30 raise · 50 refuse) | **3** | where the 401 / 402 / 200 is decided | with code | relation | mid — named per endpoint since piece 6 |
-| roles per function (faces the API · decides an ending · touches the data · gives context) | category list | functions per endpoint 1 · 14 · 35; holding two or more roles 1 · 3 · 7; showing none of the four 0 · 2 · 6 | **3** (proposed) | a function wears its highest role; a mark when one function holds two | with code | relation | mid |
+| roles per function (faces the API · decides an ending · touches the data · gives context) | category list | functions per endpoint 1 · 14 · 35; holding two or more roles 1 · 3 · 7; showing none of the four 0 · 2 · 6 | **3** | a function wears its highest role; a mark when one function holds two | with code | relation | mid |
 | data-touching functions (commit · read · write) | relation | app-wide 51 commit | **3** | they change the data | with code | relation | mid |
 | context-giving functions (authentication · session · settings) | relation | 0 · 4 · 5 in resolution order; 0 · 2 · 3 of them can end no request; one runs its closing code after the handler on 79 of 80 endpoints; 2 of them are in no map list (0 · 1 · 2 gates + deps on the map) | 2 | they give context to the rest | with code | relation | mid (GATE) |
 | little helpers, with a TYPE (format · cap · validate…) | relation | many | 1 | mentioned, never drilled | with code | relation | tooltip — **the type is not classified today** |
@@ -101,8 +107,8 @@ tooltip · portrait. The channel column stays empty until M3 (the channel budget
 |---|---|---|---|---|---|---|---|
 | coverage per condition (covered · partial · untested · unmeasured) | state | act calls 0 · 2.5 · 44 (20 doors none) | **3** | "what are we covering, and what not" | with tests | relation | far as one fraction; mid as marks |
 | cases (C-ids) | relation | per ending | 2 | the proof itself | with tests | relation | near |
-| what the case asserts on this condition (status · detail · code · other) | relation | 324 calls that test an endpoint: 302 assert the status · 155 a field of the body · 16 the message · 2 a code | **3** (proposed) | what a coverage word means; with it, the values tests give a switch's setting | with tests | relation | near |
-| case role on this endpoint (act · arranged · helper-arranged · service-raises) | category | cases that test the endpoint 0 · 2 · 32 (20 endpoints have none); that only set something up 0 · 0 · 14; through a helper 0 · 0 · 134 | 2 (proposed) | whether a test came here on purpose or only passed through (piece 5) | with tests | relation | near |
+| what the case asserts on this condition (status · detail · code · other) | relation | 324 calls that test an endpoint: 302 assert the status · 155 a field of the body · 16 the message · 2 a code | **3** | what a coverage word means; with it, the values tests give a switch's setting | with tests | relation | near |
+| case role on this endpoint (act · arranged · helper-arranged · service-raises) | category | cases that test the endpoint 0 · 2 · 32 (20 endpoints have none); that only set something up 0 · 0 · 14; through a helper 0 · 0 · 134 | 2 | whether a test came here on purpose or only passed through (piece 5) | with tests | relation | near |
 | workflow step (prev · next in the named walk) | relation | few | 1 | DEMOTED 2026-09-19: one line of before and after stays a tooltip; the broad tests that only pass through go to the far view | slow | relation | tooltip |
 | auth scheme + gate | category | 0 · 1 · 2 | 2 — **3 when ABSENT on a write door** | the anomaly is the alarm, not the 401 | with code | relation | mid; alert when absent |
 | rate tier (tighter · standard · exempt) | category | 23 · 56 · 1 endpoints | 1 | DEMOTED 2026-09-19: the cap never changes what the code decides; the tier rides on the 429 ending with the cap as its detail | with config | relation | near |
@@ -110,11 +116,11 @@ tooltip · portrait. The channel column stays empty until M3 (the channel budget
 | who fetches it (hook → screen) | relation | 1–n | 2 | where the ending surfaces | with code | relation | mid |
 | can the client tell the endings apart | state | per reason site | **3** when collapsed, else 1 | an alarm when two meanings share a status | with code | relation | alert only |
 | findings | state list | 2 · 2 · 6 | alarm channel only | colour is an alarm (P2): the anomalies the guide names, never a 4xx by itself | with code | own | far, only when abnormal |
-| how common this piece is (endpoints in this app · apps of the four) | quantity | pieces per endpoint 8 · 17 · 26; of them the norm (9 in 10 carry it) 4 · 10 · 10 · rare (1 in 10) 0 · 0 · 8 on 24 endpoints · only here 0 · 0 · 2 on 4; 0 · 2 · 5 appear in neither other backend read; 2 endpoints lack a piece that is the norm | 2 (proposed) | rarity says where to look, and it is the whole of the Standard or specialist prism | with code | relation | mid |
-| where this endpoint sits in the app (rank · median · the largest) | quantity | 1 place by functions behind (middle 4 · biggest 135) + 1 place by endings a test names (0 · 1 · 19 named; 28 endpoints name none; ties span places) | 2 (proposed) | a position in a distribution is context; a single risk score would be a grade and is not built | with code | relation | mid |
-| why this slot is empty (measured zero · not read here · not applicable) | state | 1 per slot | **3** (proposed) | whether every other empty row on the card can be believed (piece 2) | with the map | own | far |
-| expected slots at this stage (the norm for the kind) | text | 6 stages × 6 topics | 2 (proposed) | a norm for the kind of element, never a grade of this one (piece 2) | slow | own | tooltip |
-| what the screen does on this ending (message · retry · redirect) | relation | the routing half is measured (piece 10, lab half): 6 of 80 endpoints have client code that reads their failures; 47 endings routed — 14 to a branch of their own, 33 to the general case, 10 share a branch with another ending; retry is off on 32 endpoints; a success refreshes 0 · 0 · 6 query keys on 15 endpoints; 0 · 0 · 2 guards read what it refreshes on 3. What the branch DOES is measured too (piece 10, the generation part — Slice 11e, `b1a1e2c`): the 14 endings with a branch of their own reach 9 branches — 7 say what they do (7 rows: 4 calls whose result is handed back or run, 3 texts handed back), 2 only pick a value; here both 409 endings reach one branch that hands back what `t(“auth.setup.error.in_progress”)` gives. No branch in this app navigates, retries or shows a pop-up on a failure it reads | **3** (proposed) | a retry repeats the whole route and a redirect leaves the screen | with code | relation | mid — in the feed and in the lab (piece 10) |
+| how common this piece is (endpoints in this app · apps of the four) | quantity | pieces per endpoint 8 · 17 · 26; of them the norm (9 in 10 carry it) 4 · 10 · 10 · rare (1 in 10) 0 · 0 · 8 on 24 endpoints · only here 0 · 0 · 2 on 4; 0 · 2 · 5 appear in neither other backend read; 2 endpoints lack a piece that is the norm | 2 | rarity says where to look, and it is the whole of the Standard or specialist prism | with code | relation | mid |
+| where this endpoint sits in the app (rank · median · the largest) | quantity | 1 place by functions behind (middle 4 · biggest 135) + 1 place by endings a test names (0 · 1 · 19 named; 28 endpoints name none; ties span places) | 2 | a position in a distribution is context; a single risk score would be a grade and is not built | with code | relation | mid |
+| why this slot is empty (measured zero · not read here · not applicable) | state | 1 per slot | **3** | whether every other empty row on the card can be believed (piece 2) | with the map | own | far |
+| expected slots at this stage (the norm for the kind) | text | 6 stages × 6 topics | 2 | a norm for the kind of element, never a grade of this one (piece 2) | slow | own | tooltip |
+| what the screen does on this ending (message · retry · redirect) | relation | the routing half is measured (piece 10, lab half): 6 of 80 endpoints have client code that reads their failures; 47 endings routed — 14 to a branch of their own, 33 to the general case, 10 share a branch with another ending; retry is off on 32 endpoints; a success refreshes 0 · 0 · 6 query keys on 15 endpoints; 0 · 0 · 2 guards read what it refreshes on 3. What the branch DOES is measured too (piece 10, the generation part — Slice 11e, `b1a1e2c`): the 14 endings with a branch of their own reach 9 branches — 7 say what they do (7 rows: 4 calls whose result is handed back or run, 3 texts handed back), 2 only pick a value; here both 409 endings reach one branch that hands back what `t(“auth.setup.error.in_progress”)` gives. No branch in this app navigates, retries or shows a pop-up on a failure it reads | **3** | a retry repeats the whole route and a redirect leaves the screen | with code | relation | mid — in the feed and in the lab (piece 10) |
 
 ## The face this inventory suggests (a proposal for loop 1, to be varied one fader at a time)
 
@@ -133,7 +139,7 @@ His words are quoted from the pasted ratings text. The answers are the agent's.
   means it can wait on the database or the network without blocking the server; nothing subscribes to it. The thing he
   describes — other code that runs because this endpoint ran — exists and was MISSING from this inventory: an event the
   endpoint publishes and the handlers subscribed to it, a task it dispatches, an outside service it calls, a streamed answer.
-  Four rows were added for it, marked (proposed), for him to rate.
+  Four rows were added for it, marked, for him to rate.
 - **deciding branches +alert**, and the same question on **catches** and **switches** — "This might be something that complements
   the endings … or is something different?" · "this might fall into the category of the endings or paths, or I'm confusing
   something, or I'm missing a dimension here." No dimension is missing, and he is not confusing anything: they complement the
@@ -167,6 +173,6 @@ Pasted from `gaps-endpoint.html` (eval c2f7f9c5), every line his.
   **Later:** 9 Why a touch happens, and why it survives.
 - **Attributes:** keep provisions · race on a unique key · cases · signature (the agent said demote); demote entity · cluster ·
   rate limit · journeys; drop steps in the longest chain · usage · fan-in (its count heads the who-fetches-it row).
-- Rows added above are **(proposed)** until he rates them on `rate-endpoint.html`. When the ten pieces have landed and the new
+- Rows added above are **** until he rates them on `rate-endpoint.html`. When the ten pieces have landed and the new
   rows are rated, M1 runs a second round on the larger inventory (the guide: a new attribute re-enters at step 1).
 

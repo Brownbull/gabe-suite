@@ -68,6 +68,9 @@ if (RULED) {
   const fresh = ALL.find(r => r.fresh), old1 = ALL.find(r => !r.fresh);
   ok(await row(old1.id).locator('.state').textContent() === 'on record', 'a ruled row at rest reads "on record"', await row(old1.id).locator('.state').textContent());
   if (fresh) ok(await row(fresh.id).locator('.state').textContent() === 'still mine', 'a row added since the ruling still reads "still mine"', await row(fresh.id).locator('.state').textContent());
+  // D-020 closed the pass: no row is a proposal any more, so BOTH halves are asserted — no chip is drawn, and no row is left saying it
+  else { const mine = await p.locator('.row .state', { hasText: 'still mine' }).count();
+    ok(MDFRESH === 0 && mine === 0 && ALL.length > 0, 'the pass is closed: the inventory marks no row a proposal, the page draws no new chip, and no row reads "still mine"', `md ${MDFRESH} · state ${mine} · rows ${ALL.length}`); }
 }
 { // the race example is the page's one alarm-bearing fact: it must say what the steps say, never the one handled claim alone
   globalThis.window = {}; require(path.join(HERE, '../workflow-panel/_lab-ep.js'));
