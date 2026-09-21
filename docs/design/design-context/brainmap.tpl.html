@@ -44,6 +44,9 @@
   .stage { position: relative; display: grid; gap: 14px; }
   .stage[data-tray="below"] { grid-template-columns: minmax(0, 1fr); }
   .stage[data-tray="beside"] { grid-template-columns: minmax(0, 1fr) clamp(320px, 26vw, 34rem); }   /* the tray on the RIGHT, wide enough to read a panel */
+  /* an indented list is a LIST: it needs a column, not half the screen, and the panels take what it does not use */
+  .stage[data-tray="beside"][data-lay="E"] { grid-template-columns: clamp(300px, 24vw, 30rem) minmax(0, 1fr); }
+  .stage[data-lay="E"] .canvas { height: auto; min-height: 420px; max-height: clamp(520px, 74vh, 1000px); }
   @media (max-width: 900px) { .stage[data-tray="beside"] { grid-template-columns: minmax(0, 1fr); } }
 
   .canvas { position: relative; overflow: auto; height: clamp(520px, 74vh, 1000px); background: var(--card);
@@ -99,6 +102,21 @@
           display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; }
   .stage[data-tray="beside"] .tray { flex-direction: column; flex-wrap: nowrap; overflow: auto; max-height: clamp(520px, 74vh, 1000px); }   /* the tray matches the map, so the two scroll as one surface */
   .tray .empty { font-size: var(--fs-sm); color: var(--muted); }
+  /* what a click does — a PROPOSAL, marked as one: the move, what it puts in front of you, and which region answers */
+  .moves { margin-top: 10px; padding-top: 9px; border-top: 1px dashed var(--rule); display: flex; flex-direction: column; gap: 5px; }
+  .mvh { font-size: var(--fs-min); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .mv { display: flex; align-items: flex-start; gap: 8px; padding: 4px 6px; border-radius: 7px; background: var(--raised); cursor: help; }
+  .mv .mvi { flex: none; display: inline-flex; color: var(--accent); }
+  .mv .mvi svg { width: 15px; height: 15px; display: block; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .mv .mvb { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .mv .mvb b { font-size: var(--fs-xs); color: var(--ink); }
+  .mv .mvw { font-size: var(--fs-min); color: var(--ink-soft); }
+  .mv .mvr { flex: none; font-style: normal; font-size: var(--fs-min); color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 0 7px; line-height: 1.5; white-space: nowrap; }
+  .mvn { font-size: var(--fs-min); color: var(--muted); margin: 2px 0 0; }
+  /* the mark a node carries when the moves are shown: how many, so the map says a node is a place you can act from */
+  .node .acts { display: inline-flex; gap: 3px; margin-left: 6px; vertical-align: 1px; }
+  .node .acts i { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); opacity: .62; font-style: normal; }
+  .sweep path.off { stroke-dasharray: 3 4; opacity: .55; }
   .pan { flex: 1 1 250px; min-width: 0; max-width: 100%; background: var(--card); border: 1px solid var(--rule); border-left: var(--rail) solid var(--accent);
          border-radius: var(--radius, 10px); padding: 11px 13px; display: flex; flex-direction: column; gap: 7px; }
   .stage[data-tray="beside"] .pan { flex: 0 0 auto; }
@@ -236,8 +254,8 @@
   function plural(n, w) { return n + " " + w + (n === 1 ? "" : "s"); }
 
   /* ── state ─────────────────────────────────────────────────────────── */
-  var LAYS = ["A", "B", "C", "D", "E"], GRPS = ["flat", "standpoint", "section"], SPN = ["nodes", "band"], TRY = ["below", "beside"];
-  var S = { lay: "A", grp: "flat", spine: "nodes", tray: "beside", open: [], pick: null };   /* the tray starts on the RIGHT (his ruling 2026-09-22) */
+  var LAYS = ["A", "B", "C", "D", "E"], GRPS = ["flat", "standpoint", "section"], SPN = ["nodes", "band"], TRY = ["below", "beside"], ACT = ["on", "off"];
+  var S = { lay: "A", grp: "flat", spine: "nodes", tray: "beside", acts: "on", open: [], pick: null };   /* the tray starts on the RIGHT, and a node says what a click on it would do (his asks 2026-09-22) */
   function save() { try { window.localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 
   /* ── the subjects a panel can be about ─────────────────────────────── */
@@ -260,7 +278,7 @@
   /* the saved state is read here, and not a line earlier: dropping a panel whose subject is gone needs SUBJ */
   try { var raw = window.localStorage.getItem(KEY); if (raw) { var o = JSON.parse(raw);
     if (LAYS.indexOf(o.lay) >= 0) S.lay = o.lay; if (GRPS.indexOf(o.grp) >= 0) S.grp = o.grp;
-    if (SPN.indexOf(o.spine) >= 0) S.spine = o.spine; if (TRY.indexOf(o.tray) >= 0) S.tray = o.tray;
+    if (SPN.indexOf(o.spine) >= 0) S.spine = o.spine; if (TRY.indexOf(o.tray) >= 0) S.tray = o.tray; if (ACT.indexOf(o.acts) >= 0) S.acts = o.acts;
     if (LAYS.indexOf(o.pick) >= 0) S.pick = o.pick;
     if (Array.isArray(o.open)) S.open = o.open.filter(function (k) { return !!SUBJ(k); }); } } catch (e) {}
 
@@ -425,6 +443,7 @@
     CUR = { T: T, L: L, lit: lit };
     canvas.setAttribute("data-lay", S.lay);
     stage.setAttribute("data-tray", S.tray);
+    stage.setAttribute("data-lay", S.lay);
     plane.querySelectorAll(".node").forEach(function (n) { n.remove(); });
     var ind = plane.querySelector(".ind"); if (ind) ind.remove();
     NODES = [];
@@ -483,6 +502,10 @@
     nm.appendChild(document.createTextNode(n.name));
     b.appendChild(nm);
     if (n.sub) b.appendChild(el("span", "sub", n.sub));
+    if (S.acts === "on") {                                 // one dot per move this node offers — the map says where you can act
+      var av = (D.acts.byNode || {})[n.kind] || [];
+      if (av.length) { var mk = el("span", "acts"); mk.setAttribute("aria-hidden", "true");
+        av.forEach(function () { mk.appendChild(el("i")); }); nm.appendChild(mk); } }
     b.addEventListener("click", function () { toggle(n.pkey); });
     b.addEventListener("keydown", function (e) { navKey(e, n); });
     hover(b, n);
@@ -528,16 +551,34 @@
     if (!S.open.length) return;
     var last = S.open[S.open.length - 1], hit = null;
     for (var i = 0; i < NODES.length; i++) if (NODES[i].n.pkey === last) { hit = NODES[i].el; break; }
-    var from = hit ? hit.getBoundingClientRect() : canvas.getBoundingClientRect();
+    /* the line joins the NODE to ITS PANEL. It used to swing out past the tray's right edge and land on the tray's top-left
+       corner, which read as a loop around the page — his "the arrow is weird". Now both ends are real things and the control
+       points sit BETWEEN them, so it is one short hop whatever the placement. */
+    var pan = tray.querySelector('.pan[data-pkey="' + (window.CSS && CSS.escape ? CSS.escape(last) : last) + '"]');
     var cr = canvas.getBoundingClientRect();
-    var fx = Math.min(Math.max(from.left + from.width / 2, cr.left), cr.right) - sr.left;
-    var fy = Math.min(Math.max(from.top + from.height / 2, cr.top), cr.bottom) - sr.top;
-    var rightEdge = Math.max(bx + bw, cr.right - sr.left) + 16;
-    var tx = S.tray === "beside" ? bx : bx + bw - 26, ty = S.tray === "beside" ? by + 18 : by;
-    var d = "M" + fx + " " + fy + " C" + rightEdge + " " + fy + "," + rightEdge + " " + ty + "," + tx + " " + ty;
+    if (!hit || !pan) return;
+    var from = hit.getBoundingClientRect(), to = pan.getBoundingClientRect();
+    var visible = from.right > cr.left && from.left < cr.right && from.bottom > cr.top && from.top < cr.bottom;
+    var fx = Math.min(Math.max(from.right, cr.left + 2), cr.right - 2) - sr.left;
+    var fy = Math.min(Math.max(from.top + from.height / 2, cr.top + 2), cr.bottom - 2) - sr.top;
+    var side = S.tray === "beside";
+    var tx = (side ? to.left : to.left + Math.min(28, to.width / 2)) - sr.left;
+    var ty = (side ? to.top + Math.min(22, to.height / 2) : to.top) - sr.top;
+    var mid = side ? (fx + tx) / 2 : fx;
+    var d = side ? "M" + fx + " " + fy + " C" + mid + " " + fy + "," + mid + " " + ty + "," + tx + " " + ty
+                 : "M" + fx + " " + fy + " C" + fx + " " + ((fy + ty) / 2) + "," + tx + " " + ((fy + ty) / 2) + "," + tx + " " + ty;
     var p = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    p.setAttribute("d", d); sweep.appendChild(p);
+    p.setAttribute("d", d); if (!visible) p.setAttribute("class", "off"); sweep.appendChild(p);
   }
+
+  /* the four move marks, inlined — an icon font would fall back to nothing without saying so */
+  var ICOS = {
+    layers: '<path d="M12 2 2 7l10 5 10-5-10-5Z"></path><path d="m2 17 10 5 10-5"></path><path d="m2 12 10 5 10-5"></path>',
+    target: '<circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="5"></circle><circle cx="12" cy="12" r="1"></circle>',
+    doc: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v6h6"></path><path d="M8 13h8"></path><path d="M8 17h5"></path>',
+    route: '<circle cx="6" cy="19" r="3"></circle><circle cx="18" cy="5" r="3"></circle><path d="M9 19h5a4 4 0 0 0 0-8H10a4 4 0 0 1 0-8h5"></path>'
+  };
+  function ICO(n) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + (ICOS[n] || ICOS.layers) + "</svg>"; }
 
   /* ── opening ───────────────────────────────────────────────────────── */
   function toggle(pkey) {
@@ -546,7 +587,14 @@
     save(); draw();
     /* the redraw builds new buttons, so the keyboard would land back on the body: put the focus where it was */
     if (was) { var f = NODES.filter(function (x) { return x.n.pkey === was; })[0]; if (f) f.el.focus({ preventScroll: true }); }
-    if (i < 0) { var t = NODES.filter(function (x) { return x.n.pkey === pkey; })[0]; if (t && t.el.scrollIntoView) t.el.scrollIntoView({ block: "nearest", inline: "nearest" }); }
+    if (i < 0) {
+      var t = NODES.filter(function (x) { return x.n.pkey === pkey; })[0];
+      if (t && t.el.scrollIntoView) t.el.scrollIntoView({ block: "nearest", inline: "nearest" });
+      /* and bring its PANEL into the tray's view — otherwise the line runs to something the screen does not show, which is
+         what made it read as a stray arrow across the map */
+      var pn = tray.querySelector('.pan[data-pkey="' + (window.CSS && CSS.escape ? CSS.escape(pkey) : pkey) + '"]');
+      if (pn && pn.scrollIntoView) { pn.scrollIntoView({ block: "nearest", inline: "nearest" }); requestAnimationFrame(drawSweep); }
+    }
   }
   document.addEventListener("keydown", function (e) {            /* Escape closes the last one from anywhere on the page */
     if (e.key !== "Escape" || !S.open.length) return;
@@ -635,7 +683,31 @@
       D.added.forEach(function (id) { ua.appendChild(el("li", null, A[id].label + " · rated " + A[id].r)); });
       p.appendChild(ua);
     }
+    if (S.acts === "on") p.appendChild(moves(s.kind));
     return p;
+  }
+
+  /* ── what a click DOES, and which region answers (his ask, 2026-09-22) ─────────────────────────────
+     A PROPOSAL and said to be one: the map is the COMMAND region, so a node names a concept and the move says where the
+     answer lands — the middle, the portrait, the map itself, or this tray. Nothing here reaches the feed yet. */
+  function moves(kind) {
+    var rows = (D.acts.byNode || {})[kind] || [], box = el("div", "moves");
+    box.appendChild(el("div", "mvh", D.acts.head));
+    if (!rows.length) { box.appendChild(el("p", "pl", D.acts.note)); return box; }
+    rows.forEach(function (r) {
+      var k = D.acts.kinds[r.act] || {}, w = D.acts.where[r.where] || {};
+      var row = el("div", "mv");
+      row.insertAdjacentHTML("beforeend", '<span class="mvi">' + ICO(k.icon) + "</span>");
+      var b = el("div", "mvb");
+      b.appendChild(el("b", null, k.name));
+      b.appendChild(el("span", "mvw", r.what));
+      row.appendChild(b);
+      row.appendChild(el("i", "mvr", w.name));
+      hover(row, { element: (k.plain || "") + " " + (w.plain || ""), name: k.name + " · " + w.name });
+      box.appendChild(row);
+    });
+    box.appendChild(el("p", "mvn", D.acts.note));
+    return box;
   }
   function paintTray() {
     tray.querySelectorAll(".pan").forEach(function (n) { n.remove(); });
@@ -671,6 +743,9 @@
     host.appendChild(rgrp(D.rails.spine.label, D.rails.spine.plain, SPN.map(function (k) {
       return { id: k, rail: "spine", label: D.spineModes[k].name, note: D.spineModes[k].note, plain: D.spineModes[k].plain };
     }), S.spine, function (v) { S.spine = v; save(); draw(true, true); }));
+    host.appendChild(rgrp(D.rails.acts.label, D.rails.acts.plain, ACT.map(function (k) {
+      return { id: k, rail: "acts", label: D.actModes[k].name, plain: D.actModes[k].plain };
+    }), S.acts, function (v) { S.acts = v; save(); draw(true, false); }));
     host.appendChild(rgrp(D.rails.tray.label, D.rails.tray.plain, TRY.map(function (k) {
       return { id: k, rail: "tray", label: D.trayModes[k].name, plain: D.trayModes[k].plain };
     }), S.tray, function (v) { S.tray = v; save(); draw(true, true); }));
@@ -744,6 +819,8 @@
   var tip = el("div", "tip"); tip.setAttribute("data-show", "false"); document.body.appendChild(tip);
   function tipHtml(n) {
     if (n.control) return '<span class="ln"><b>' + esc(n.name) + "</b></span>" + '<span class="pl">' + esc(n.control) + "</span>";
+    /* his rule: a CONTROL's card is very short, an ELEMENT's is richer — a move is an element, so it says what it changes */
+    if (n.element) return '<span class="ln"><b>' + esc(n.name) + "</b></span>" + '<span class="pl">' + esc(n.element) + "</span>";
     var s = SUBJ(n.pkey), lines = [], plainTxt = "";
     if (!s) return "";
     if (s.kind === "attr") { var a = s.a;

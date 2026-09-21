@@ -1,179 +1,373 @@
 {
-  "_about": "Authored prose ONLY for the brain map of the endpoint card's panels. Every number on the page is a {token} the generator fills from inventory-endpoint.md · m1-endpoint.json · prisms-endpoint.json; a digit typed in here is a bug. Plain lines follow gabe-lens plain mode. The block names, plain lines and standpoints are NOT repeated here — they live in prisms-endpoint.json and are read from it.",
-
-  "m1Renames": {
-    "_why": "M1 was rated on the frozen inventory (m1-round1.inventory.md). The second ruling (D-016, 2026-09-19) DEMOTED and renamed two rows in the living inventory. The join is a rename, never a re-home: the generator refuses to run unless each key is an M1 attribute with no living row of its own and each value is a living row no M1 attribute claims.",
-    "rate-limit": "rate-tier",
-    "journeys-workflow-step": "workflow-step"
+ "_about": "Authored prose ONLY for the brain map of the endpoint card's panels. Every number on the page is a {token} the generator fills from inventory-endpoint.md · m1-endpoint.json · prisms-endpoint.json; a digit typed in here is a bug. Plain lines follow gabe-lens plain mode. The block names, plain lines and standpoints are NOT repeated here — they live in prisms-endpoint.json and are read from it.",
+ "m1Renames": {
+  "_why": "M1 was rated on the frozen inventory (m1-round1.inventory.md). The second ruling (D-016, 2026-09-19) DEMOTED and renamed two rows in the living inventory. The join is a rename, never a re-home: the generator refuses to run unless each key is an M1 attribute with no living row of its own and each value is a living row no M1 attribute claims.",
+  "rate-limit": "rate-tier",
+  "journeys-workflow-step": "workflow-step"
+ },
+ "m1Dropped": {
+  "_why": "Dropped outright by the same ruling. They keep an M1 home that no longer has a row, so the map cannot draw them — stated, never silently discarded.",
+  "ids": [
+   "usage-fan-in",
+   "steps-in-the-longest-chain"
+  ]
+ },
+ "head": {
+  "eyebrow": "design context · loop 1 · the navigator",
+  "title": "A brain map for the endpoint's panels",
+  "lede": "The inventory's {nAttrs} attributes, sorted by M1 into the {nBlocks} blocks you ruled, drawn as a tree you walk. Click a node to open its panel in the tray; click it again to close it. {nSpine} attributes belong to {spineLow} or more blocks at once, so they are drawn as shared and never as one branch's property.",
+  "keys": "In the map: <kbd>Tab</kbd> reaches the tree · <kbd>←</kbd> <kbd>→</kbd> move along a level · <kbd>↑</kbd> <kbd>↓</kbd> move between levels · <kbd>Enter</kbd> or <kbd>Space</kbd> opens and closes a node · <kbd>Esc</kbd> closes the last one opened.",
+  "sketchNote": "The sketch you drew has the root at the top right and every edge running down and to the left. Option C keeps it exactly. Option A is the same tree turned {rotDeg}°, which is the turn you asked for: the diagonal becomes one straight axis."
+ },
+ "layouts": {
+  "A": {
+   "name": "Upright",
+   "line1": "Your sketch turned {rotDeg}°, so the tree hangs straight down: root at the top, the branches fanning out below it, the tray across the bottom.",
+   "line2": "Depth reads downward and breadth reads across, so a wide level runs off to the side and the pane scrolls sideways.",
+   "plain": "The tree hangs down from the root, and the panels sit under it."
   },
-  "m1Dropped": {
-    "_why": "Dropped outright by the same ruling. They keep an M1 home that no longer has a row, so the map cannot draw them — stated, never silently discarded.",
-    "ids": ["usage-fan-in", "steps-in-the-longest-chain"]
+  "B": {
+   "name": "Sideways",
+   "line1": "The same tree turned the other way, reading left to right: the root on the left, depth growing rightward, the panels in a column on the right.",
+   "line2": "Breadth now runs down the page, which is the direction a long list already reads — the test of whether left-to-right beats top-to-bottom for you.",
+   "plain": "The tree grows to the right, and the panels stand beside it."
   },
-
-  "head": {
-    "eyebrow": "design context · loop 1 · the navigator",
-    "title": "A brain map for the endpoint's panels",
-    "lede": "The inventory's {nAttrs} attributes, sorted by M1 into the {nBlocks} blocks you ruled, drawn as a tree you walk. Click a node to open its panel in the tray; click it again to close it. {nSpine} attributes belong to {spineLow} or more blocks at once, so they are drawn as shared and never as one branch's property.",
-    "keys": "In the map: <kbd>Tab</kbd> reaches the tree · <kbd>←</kbd> <kbd>→</kbd> move along a level · <kbd>↑</kbd> <kbd>↓</kbd> move between levels · <kbd>Enter</kbd> or <kbd>Space</kbd> opens and closes a node · <kbd>Esc</kbd> closes the last one opened.",
-    "sketchNote": "The sketch you drew has the root at the top right and every edge running down and to the left. Option C keeps it exactly. Option A is the same tree turned {rotDeg}°, which is the turn you asked for: the diagonal becomes one straight axis."
+  "C": {
+   "name": "As sketched",
+   "line1": "The diagonal exactly as you drew it: root at the top right, every edge running down and to the left at {rotDeg}°.",
+   "line2": "It is kept honestly so the turn is visible — the same node positions as Upright, rotated, and nothing else changed.",
+   "plain": "The tree runs across the corner of the page, the way you drew it."
   },
-
-  "layouts": {
-    "A": {
-      "name": "Upright",
-      "line1": "Your sketch turned {rotDeg}°, so the tree hangs straight down: root at the top, the branches fanning out below it, the tray across the bottom.",
-      "line2": "Depth reads downward and breadth reads across, so a wide level runs off to the side and the pane scrolls sideways.",
-      "plain": "The tree hangs down from the root, and the panels sit under it."
-    },
-    "B": {
-      "name": "Sideways",
-      "line1": "The same tree turned the other way, reading left to right: the root on the left, depth growing rightward, the panels in a column on the right.",
-      "line2": "Breadth now runs down the page, which is the direction a long list already reads — the test of whether left-to-right beats top-to-bottom for you.",
-      "plain": "The tree grows to the right, and the panels stand beside it."
-    },
-    "C": {
-      "name": "As sketched",
-      "line1": "The diagonal exactly as you drew it: root at the top right, every edge running down and to the left at {rotDeg}°.",
-      "line2": "It is kept honestly so the turn is visible — the same node positions as Upright, rotated, and nothing else changed.",
-      "plain": "The tree runs across the corner of the page, the way you drew it."
-    },
-    "D": {
-      "name": "Radial",
-      "line1": "The root in the middle, the branches around it, depth growing outward in rings; the tray sits below the circle.",
-      "line2": "Every branch is the same distance from the root, so none of them looks more important than another — which also means order stops carrying meaning.",
-      "plain": "The root sits in the middle and the branches circle it."
-    },
-    "E": {
-      "name": "Indented",
-      "line1": "No drawing at all: a nested list, one line per node, indented by depth.",
-      "line2": "The control that says whether the tree earns its space — if this reads as well, the picture is decoration.",
-      "plain": "A plain indented list, with no picture."
-    }
+  "D": {
+   "name": "Radial",
+   "line1": "The root in the middle, the branches around it, depth growing outward in rings; the tray sits below the circle.",
+   "line2": "Every branch is the same distance from the root, so none of them looks more important than another — which also means order stops carrying meaning.",
+   "plain": "The root sits in the middle and the branches circle it."
   },
-
-  "rails": {
-    "layout": { "label": "Placement", "plain": "Where the same nodes are put. Nothing else changes." },
-    "group": { "label": "Grouping", "plain": "What the first level under the root is." },
-    "spine": { "label": "Shared attributes", "plain": "How an attribute that belongs to several blocks is drawn." },
-    "tray": { "label": "Panel tray", "plain": "Where the opened panels sit." }
+  "E": {
+   "name": "Indented",
+   "line1": "No drawing at all: a nested list, one line per node, indented by depth.",
+   "line2": "The control that says whether the tree earns its space — if this reads as well, the picture is decoration.",
+   "plain": "A plain indented list, with no picture."
+  }
+ },
+ "rails": {
+  "layout": {
+   "label": "Placement",
+   "plain": "Where the same nodes are put. Nothing else changes."
   },
-  "groupings": {
-    "flat": { "name": "Flat", "note": "all {nBranches} at one level", "plain": "Every block sits directly under the root, with its attributes below it." },
-    "standpoint": { "name": "By standpoint", "note": "{nGroups} groups", "plain": "The blocks gather under the standpoint each one names, in your words." },
-    "section": { "name": "By section", "note": "{nSections} groups", "plain": "The inventory's own seven groups, with each attribute under the one it was written in." }
+  "group": {
+   "label": "Grouping",
+   "plain": "What the first level under the root is."
   },
-  "spineModes": {
-    "nodes": { "name": "Shared nodes", "note": "drawn in every block that needs it", "plain": "A shared attribute appears under each block that needs it, marked as shared." },
-    "band": { "name": "One band", "note": "drawn once, near the root", "plain": "Every shared attribute is lifted out into one band under the root, with a faint wire to each block that needs it." }
+  "spine": {
+   "label": "Shared attributes",
+   "plain": "How an attribute that belongs to several blocks is drawn."
   },
-  "trayModes": {
-    "below": { "name": "Below", "plain": "The panels sit in a tray across the bottom, with the sweep coming down to them." },
-    "beside": { "name": "Beside", "plain": "The panels stand in a column at the right, with the sweep coming across to them." }
+  "tray": {
+   "label": "Panel tray",
+   "plain": "Where the opened panels sit."
   },
-
-  "ui": {
-    "node": { "plain": "A place in the map. The number beside the name is how many attributes it holds." },
-    "shared": { "plain": "An attribute several blocks need, so no single block owns it." },
-    "added": { "plain": "A row written into the inventory after M1 was rated, so nothing has placed it in a block yet." },
-    "open": { "plain": "An opened node: its panel is in the tray and its branch is lit." },
-    "sweep": { "plain": "The line that says which part of the map the panels below belong to." },
-    "replay": { "plain": "Runs the opening move again from the start." },
-    "more": { "plain": "How the map knows what it draws — kept off the face on purpose." },
-    "copy": { "plain": "Your picks as text, placed on the clipboard for pasting into the chat." },
-    "reset": { "plain": "A clean slate — every pick and every opened panel is cleared." },
-    "pick": { "plain": "The placement you want kept. One only." }
+  "acts": {
+   "label": "Actions",
+   "plain": "Whether each node shows what a click on it would do."
+  }
+ },
+ "groupings": {
+  "flat": {
+   "name": "Flat",
+   "note": "all {nBranches} at one level",
+   "plain": "Every block sits directly under the root, with its attributes below it."
   },
-
-  "sections": {
-    "map": { "title": "The map", "n": "click a node to open its panel" },
-    "reads": { "title": "What it draws", "n": "every count measured from the inventory" },
-    "options": { "title": "The five placements", "n": "same nodes, different placement" },
-    "open": { "title": "What I had to choose", "n": "not yet ruled" },
-    "more": { "title": "More information", "n": "how the map knows this" },
-    "pick": { "title": "Your pick", "n": "paste this back to me" }
+  "standpoint": {
+   "name": "By standpoint",
+   "note": "{nGroups} groups",
+   "plain": "The blocks gather under the standpoint each one names, in your words."
   },
-
-  "strings": {
-    "rootName": "The endpoint card",
-    "rootSub": "{nAttrs} attributes · {nBlocks} blocks",
-    "rootPlain": "Everything one endpoint's card could show, gathered in one place.",
-    "addedName": "Not placed yet",
-    "addedPlain": "Rows written into the inventory after M1 was rated. No block claims them, and nothing here guesses one.",
-    "trayEmpty": "Nothing is open. Click a node in the map and its panel appears here.",
-    "noNeedRated": "No question was recorded as needing this one on its own.",
-    "noNeedUnrated": "M1 never saw this row, so no question is recorded against it yet.",
-    "moreShow": "Show how the map knows this",
-    "moreHide": "Hide how the map knows this",
-    "resetIdle": "Clear everything",
-    "resetArm": "Press again to clear",
-    "deepNote": "{n} attributes sit one level below the {nLevels} this map draws. They are not drawn: they open in the block's panel instead.",
-    "openWhy": "Every place the agent chose something you have not ruled. Named here rather than buried in a commit message.",
-    "foot": "Inventory {invHash} · M1 cells {cellsHash} · {nAttrs} attributes · {nBlocks} blocks · {nSpine} shared · {nAdded} not placed."
+  "section": {
+   "name": "By section",
+   "note": "{nSections} groups",
+   "plain": "The inventory's own seven groups, with each attribute under the one it was written in."
+  }
+ },
+ "spineModes": {
+  "nodes": {
+   "name": "Shared nodes",
+   "note": "drawn in every block that needs it",
+   "plain": "A shared attribute appears under each block that needs it, marked as shared."
   },
-
-  "reads": {
-    "depthRule": "The map draws {nLevels} levels and no more, which is your ruling on the command card. A grouping that would put attributes on a fourth level does not draw them: they open in the block's panel instead, and the line under the map says how many are waiting there.",
-    "spine": "An attribute the map calls shared is needed by {spineLow} or more of the {nBlocks} blocks. {nSpine} attributes qualify; “{topSpine}” is the extreme, needed by {topSpineIn}.",
-    "added": "{nAdded} of the {nAttrs} rows are claimed by no block: no question in the matrix uses them. They hang off the root in a branch of their own rather than being guessed into one.",
-    "addedNone": "Every one of the {nAttrs} rows is claimed: {nPlacedOwn} sit in a block of their own and {nSpine} are shared. Nothing hangs loose, so the map draws no branch for the unplaced.",
-    "dropped": "{nDropped} attributes M1 placed no longer have a row in the inventory, so they are drawn nowhere: {droppedNames}."
+  "band": {
+   "name": "One band",
+   "note": "drawn once, near the root",
+   "plain": "Every shared attribute is lifted out into one band under the root, with a faint wire to each block that needs it."
+  }
+ },
+ "trayModes": {
+  "below": {
+   "name": "Below",
+   "plain": "The panels sit in a tray across the bottom, with the sweep coming down to them."
   },
-
-  "takes": {
-    "map": [
-      "A branch's number is the attributes it holds, so a fat branch is a panel with a lot in it before you open anything.",
-      "The tray keeps what you opened in the order you opened it, so the last thing you looked at is the last panel.",
-      "{nSpine} attributes are drawn shared. Under one grouping they sit in several branches at once; under the other they sit once, in a band. Both are the same fact drawn two ways."
-    ],
-    "options": [
-      "Each placement draws the same {nNodesFlat} nodes when nothing is open. Only where they sit changes.",
-      "The widest placement needs {widest} across; the tallest needs {tallest} down. The pane scrolls rather than shrinking the type below the floor.",
-      "Indented is the control. If it answers as fast as the pictures, the pictures are spending space for nothing."
-    ]
+  "beside": {
+   "name": "Beside",
+   "plain": "The panels stand in a column at the right, with the sweep coming across to them."
+  }
+ },
+ "ui": {
+  "node": {
+   "plain": "A place in the map. The number beside the name is how many attributes it holds."
   },
-
+  "shared": {
+   "plain": "An attribute several blocks need, so no single block owns it."
+  },
+  "added": {
+   "plain": "A row written into the inventory after M1 was rated, so nothing has placed it in a block yet."
+  },
   "open": {
-    "_why": "Every place the agent chose something you have not ruled. Named here rather than buried in a commit message.",
-    "items": [
-      {
-        "q": "The grouping you asked for was “your six stages”. Nothing in the data maps a block to a stage.",
-        "did": "Built the grouping from the inventory's own {nSections} sections instead, and labelled it that way. A block's section is the one most of its attributes were written in, ties broken by the inventory's order.",
-        "ask": "Either rule a stage for each of the {nBlocks} blocks, or keep the sections."
-      },
-      {
-        "q": "You said “the four standpoints the blocks name”. The blocks name {nGroups}.",
-        "did": "Grouped by all {nGroups}, each one read off the block's own standpoint sentence. Two pairs of blocks share a standpoint, and {nUnnamed} blocks say none of your standpoints names them.",
-        "ask": "Tell me which four, or accept {nGroups}."
-      },
-      {
-        "q": "Which node the sweep starts from when more than one is open.",
-        "did": "The sweep starts at the node opened last, so it follows where you are rather than where you were.",
-        "ask": "Say if it should stay on the first one instead."
-      },
-      {
-        "q": "What the root node opens.",
-        "did": "A panel for the card as a whole: the counts, and the blocks in order of how many attributes they hold.",
-        "ask": "Say if the root should open nothing at all."
-      },
-      {
-        "q": "Whether opening a second branch closes the first.",
-        "did": "It does not. The tray grows, and a node closes only when you click it again or press Escape.",
-        "ask": "Say if one open branch at a time reads better."
-      }
-    ]
+   "plain": "An opened node: its panel is in the tray and its branch is lit."
   },
-
+  "sweep": {
+   "plain": "The line that says which part of the map the panels below belong to."
+  },
+  "replay": {
+   "plain": "Runs the opening move again from the start."
+  },
   "more": {
-    "_why": "D-017: a fact about how the MAP knows something never sits on the face. Everything in this section is that kind of fact.",
-    "lines": [
-      "The blocks are M1's: {nQuestions} questions clustered by which attributes they need, cut at the widest drop in the ladder. The cells are {cellsHash}, the inventory {invHash}.",
-      "An attribute's block is the one M1 measured, never one chosen here. {nPlacedOwn} attributes have a block of their own, {nSpine} are shared across {spineLow} or more, and {nAdded} have none because they were written after the rating.",
-      "Two attributes are joined to M1 across a rename from the second ruling: {renames}. The generator stops if either side of a rename stops being true.",
-      "The standpoint groups are read off each block's own standpoint sentence in prisms-endpoint.json, by phrase, not by a list kept here.",
-      "Option C is option A's node positions turned {rotDeg}°, computed, not drawn by hand. Turning C back by {rotDeg}° gives A to the pixel."
-    ]
+   "plain": "How the map knows what it draws — kept off the face on purpose."
   },
-
-  "pickIntro": "Pick the placement you want, set the three switches the way you want them kept, and copy the text."
+  "copy": {
+   "plain": "Your picks as text, placed on the clipboard for pasting into the chat."
+  },
+  "reset": {
+   "plain": "A clean slate — every pick and every opened panel is cleared."
+  },
+  "pick": {
+   "plain": "The placement you want kept. One only."
+  }
+ },
+ "sections": {
+  "map": {
+   "title": "The map",
+   "n": "click a node to open its panel"
+  },
+  "reads": {
+   "title": "What it draws",
+   "n": "every count measured from the inventory"
+  },
+  "options": {
+   "title": "The five placements",
+   "n": "same nodes, different placement"
+  },
+  "open": {
+   "title": "What I had to choose",
+   "n": "not yet ruled"
+  },
+  "more": {
+   "title": "More information",
+   "n": "how the map knows this"
+  },
+  "pick": {
+   "title": "Your pick",
+   "n": "paste this back to me"
+  }
+ },
+ "strings": {
+  "rootName": "The endpoint card",
+  "rootSub": "{nAttrs} attributes · {nBlocks} blocks",
+  "rootPlain": "Everything one endpoint's card could show, gathered in one place.",
+  "addedName": "Not placed yet",
+  "addedPlain": "Rows written into the inventory after M1 was rated. No block claims them, and nothing here guesses one.",
+  "trayEmpty": "Nothing is open. Click a node in the map and its panel appears here.",
+  "noNeedRated": "No question was recorded as needing this one on its own.",
+  "noNeedUnrated": "M1 never saw this row, so no question is recorded against it yet.",
+  "moreShow": "Show how the map knows this",
+  "moreHide": "Hide how the map knows this",
+  "resetIdle": "Clear everything",
+  "resetArm": "Press again to clear",
+  "deepNote": "{n} attributes sit one level below the {nLevels} this map draws. They are not drawn: they open in the block's panel instead.",
+  "openWhy": "Every place the agent chose something you have not ruled. Named here rather than buried in a commit message.",
+  "foot": "Inventory {invHash} · M1 cells {cellsHash} · {nAttrs} attributes · {nBlocks} blocks · {nSpine} shared · {nAdded} not placed."
+ },
+ "reads": {
+  "depthRule": "The map draws {nLevels} levels and no more, which is your ruling on the command card. A grouping that would put attributes on a fourth level does not draw them: they open in the block's panel instead, and the line under the map says how many are waiting there.",
+  "spine": "An attribute the map calls shared is needed by {spineLow} or more of the {nBlocks} blocks. {nSpine} attributes qualify; “{topSpine}” is the extreme, needed by {topSpineIn}.",
+  "added": "{nAdded} of the {nAttrs} rows are claimed by no block: no question in the matrix uses them. They hang off the root in a branch of their own rather than being guessed into one.",
+  "addedNone": "Every one of the {nAttrs} rows is claimed: {nPlacedOwn} sit in a block of their own and {nSpine} are shared. Nothing hangs loose, so the map draws no branch for the unplaced.",
+  "dropped": "{nDropped} attributes M1 placed no longer have a row in the inventory, so they are drawn nowhere: {droppedNames}."
+ },
+ "takes": {
+  "map": [
+   "A branch's number is the attributes it holds, so a fat branch is a panel with a lot in it before you open anything.",
+   "The tray keeps what you opened in the order you opened it, so the last thing you looked at is the last panel.",
+   "{nSpine} attributes are drawn shared. Under one grouping they sit in several branches at once; under the other they sit once, in a band. Both are the same fact drawn two ways."
+  ],
+  "options": [
+   "Each placement draws the same {nNodesFlat} nodes when nothing is open. Only where they sit changes.",
+   "The widest placement needs {widest} across; the tallest needs {tallest} down. The pane scrolls rather than shrinking the type below the floor.",
+   "Indented is the control. If it answers as fast as the pictures, the pictures are spending space for nothing."
+  ]
+ },
+ "open": {
+  "_why": "Every place the agent chose something you have not ruled. Named here rather than buried in a commit message.",
+  "items": [
+   {
+    "q": "The grouping you asked for was “your six stages”. Nothing in the data maps a block to a stage.",
+    "did": "Built the grouping from the inventory's own {nSections} sections instead, and labelled it that way. A block's section is the one most of its attributes were written in, ties broken by the inventory's order.",
+    "ask": "Either rule a stage for each of the {nBlocks} blocks, or keep the sections."
+   },
+   {
+    "q": "You said “the four standpoints the blocks name”. The blocks name {nGroups}.",
+    "did": "Grouped by all {nGroups}, each one read off the block's own standpoint sentence. Two pairs of blocks share a standpoint, and {nUnnamed} blocks say none of your standpoints names them.",
+    "ask": "Tell me which four, or accept {nGroups}."
+   },
+   {
+    "q": "Which node the sweep starts from when more than one is open.",
+    "did": "The sweep starts at the node opened last, so it follows where you are rather than where you were.",
+    "ask": "Say if it should stay on the first one instead."
+   },
+   {
+    "q": "What the root node opens.",
+    "did": "A panel for the card as a whole: the counts, and the blocks in order of how many attributes they hold.",
+    "ask": "Say if the root should open nothing at all."
+   },
+   {
+    "q": "Whether opening a second branch closes the first.",
+    "did": "It does not. The tray grows, and a node closes only when you click it again or press Escape.",
+    "ask": "Say if one open branch at a time reads better."
+   }
+  ]
+ },
+ "more": {
+  "_why": "D-017: a fact about how the MAP knows something never sits on the face. Everything in this section is that kind of fact.",
+  "lines": [
+   "The blocks are M1's: {nQuestions} questions clustered by which attributes they need, cut at the widest drop in the ladder. The cells are {cellsHash}, the inventory {invHash}.",
+   "An attribute's block is the one M1 measured, never one chosen here. {nPlacedOwn} attributes have a block of their own, {nSpine} are shared across {spineLow} or more, and {nAdded} have none because they were written after the rating.",
+   "Two attributes are joined to M1 across a rename from the second ruling: {renames}. The generator stops if either side of a rename stops being true.",
+   "The standpoint groups are read off each block's own standpoint sentence in prisms-endpoint.json, by phrase, not by a list kept here.",
+   "Option C is option A's node positions turned {rotDeg}°, computed, not drawn by hand. Turning C back by {rotDeg}° gives A to the pixel."
+  ]
+ },
+ "pickIntro": "Pick the placement you want, set the three switches the way you want them kept, and copy the text.",
+ "acts": {
+  "_why": "What a click on a node DOES, and WHERE the result lands — his ask of 2026-09-22: 'the navigation of the actions in the right-side panel… if this is a filter, or whether they select new data or show new data (maybe in the middle section or in the portrait)'. These are a PROPOSAL, not a measurement: the console's three regions are his (COMMAND names concepts · the MIDDLE shows the result · the PORTRAIT shows one thing in detail), and each action says which region answers. Nothing here is read from the feed; the nodes and counts around them are.",
+  "where": {
+   "middle": {
+    "name": "the middle",
+    "plain": "The panel under the map changes to show this — the result, in the dimension you picked."
+   },
+   "portrait": {
+    "name": "the portrait",
+    "plain": "One thing, in full, in the panel on the right. It replaces nothing else."
+   },
+   "map": {
+    "name": "the map itself",
+    "plain": "The map redraws: what is kept stays, what is not goes quiet. Nothing new is fetched."
+   },
+   "here": {
+    "name": "here",
+    "plain": "It opens in this tray, beside what you already opened."
+   }
+  },
+  "kinds": {
+   "select": {
+    "name": "Show",
+    "icon": "layers",
+    "plain": "Puts this thing's own rows in front of you. It replaces what the region was showing, and nothing is hidden elsewhere."
+   },
+   "filter": {
+    "name": "Keep only",
+    "icon": "target",
+    "plain": "Narrows what every other region shows to the things that carry this. A filter is sticky: it stays until you drop it, and the page says it is on."
+   },
+   "open": {
+    "name": "Open",
+    "icon": "doc",
+    "plain": "Opens the one record — every field of it, with where it came from. It is a detail view, not a change of subject."
+   },
+   "trace": {
+    "name": "Follow",
+    "icon": "route",
+    "plain": "Walks from this thing to what it reaches, one step at a time. It changes the subject to the step you land on."
+   }
+  },
+  "byNode": {
+   "root": [
+    {
+     "act": "select",
+     "where": "middle",
+     "what": "every block of the card, ordered by how much each holds"
+    }
+   ],
+   "block": [
+    {
+     "act": "select",
+     "where": "middle",
+     "what": "this block's attributes, as the card would show them"
+    },
+    {
+     "act": "filter",
+     "where": "map",
+     "what": "only the attributes this block needs"
+    },
+    {
+     "act": "open",
+     "where": "portrait",
+     "what": "the block itself: its questions, its standpoint, what it holds"
+    }
+   ],
+   "attr": [
+    {
+     "act": "open",
+     "where": "portrait",
+     "what": "this attribute's record: its type, how many there are, where it first shows"
+    },
+    {
+     "act": "filter",
+     "where": "map",
+     "what": "only the blocks that need this attribute"
+    },
+    {
+     "act": "trace",
+     "where": "middle",
+     "what": "the questions this attribute answers, and what else answers them"
+    }
+   ],
+   "group": [
+    {
+     "act": "select",
+     "where": "middle",
+     "what": "the blocks in this group, side by side"
+    },
+    {
+     "act": "filter",
+     "where": "map",
+     "what": "only this group"
+    }
+   ],
+   "sec": [
+    {
+     "act": "select",
+     "where": "middle",
+     "what": "the attributes this section of the inventory holds"
+    },
+    {
+     "act": "filter",
+     "where": "map",
+     "what": "only the blocks that draw on this section"
+    }
+   ]
+  },
+  "head": "What a click does",
+  "lead": "Each of these is a move, not a link: it says what changes and which part of the console answers.",
+  "note": "PROPOSED, not built. The map is the COMMAND region — it names concepts and never a code. Nothing here reaches the feed yet; what it would show is named so you can rule on it by looking."
+ },
+ "actModes": {
+  "on": {
+   "name": "Shown",
+   "plain": "Every node carries the marks of the moves it offers, and its panel lists them."
+  },
+  "off": {
+   "name": "Hidden",
+   "plain": "The map draws names only, the way it did before the moves were proposed."
+  }
+ }
 }

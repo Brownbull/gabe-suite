@@ -97,10 +97,29 @@ ok(await p.getAttribute(sel('block:' + bk.key), 'data-lit') === 'true' && await 
   'the whole path from the root to it is lit');
 ok(await p.evaluate(() => [...document.querySelectorAll('#wires .wire[data-lit="true"]')].length) >= 1, 'and the wire along that path is lit too');
 ok(await p.locator('#sweep path').count() === 2, 'the sweep draws the bracket round the tray and one curve into it', await p.locator('#sweep path').count());
-{ const sw = await p.evaluate(() => { const ps = [...document.querySelectorAll('#sweep path')].filter(x => !x.classList.contains('brk'));
-    if (!ps.length) return null; const r = ps[0].getBoundingClientRect(); const n = document.querySelector('#tray .pan').getBoundingClientRect();
-    return { swRight: r.right, trayLeft: n.left, swW: r.width }; });
-  ok(sw && sw.swW > 40, 'the curve really spans the distance, it is not a stub', sw && Math.round(sw.swW)); }
+{ /* the curve JOINS the node to ITS panel — it used to swing past the tray's right edge and land on the tray's corner,
+     which read as a loop around the page. What matters is not that it is long but that both of its ends are real things. */
+  const sw = await p.evaluate(() => { const ps = [...document.querySelectorAll('#sweep path')].filter(x => !x.classList.contains('brk'));
+    if (!ps.length) return null; const r = ps[0].getBoundingClientRect();
+    const lit = document.querySelector('.node[data-lit="true"][aria-pressed="true"]') || document.querySelector('.node[aria-pressed="true"]');
+    const pan = document.querySelector('#tray .pan'), stage = document.querySelector('.stage').getBoundingClientRect();
+    if (!lit || !pan) return null; const nb = lit.getBoundingClientRect(), pb = pan.getBoundingClientRect();
+    return { w: r.width, startsAtNode: Math.abs(r.left - nb.right) <= 3, endsAtPanel: Math.abs(r.right - pb.left) <= 3,
+             withinStage: r.left >= stage.left - 2 && r.right <= stage.right + 2, tall: r.height }; });
+  ok(sw && sw.startsAtNode, 'the curve starts at the node that was opened', JSON.stringify(sw));
+  ok(sw && sw.endsAtPanel, 'and ends at ITS panel, not at the tray\'s corner', JSON.stringify(sw));
+  ok(sw && sw.withinStage, 'and never leaves the stage on the way — no loop around the page', JSON.stringify(sw)); }
+{ /* what a click DOES: his ask of 2026-09-22 — the move, what it puts in front of you, and which region answers */
+  const mv = await p.evaluate(() => { const D = window.BM_DATA, rows = [...document.querySelectorAll('#tray .pan .mv')];
+    const kinds = Object.keys(D.acts.kinds), wheres = Object.values(D.acts.where).map((w) => w.name);
+    return { n: rows.length, want: (D.acts.byNode.block || []).length,
+      named: rows.every((r) => r.querySelector('b') && kinds.some((k) => D.acts.kinds[k].name === r.querySelector('b').textContent)),
+      where: rows.every((r) => r.querySelector('.mvr') && wheres.indexOf(r.querySelector('.mvr').textContent) >= 0),
+      icons: rows.every((r) => !!r.querySelector('.mvi svg')), said: !!document.querySelector('#tray .pan .mvn') }; });
+  ok(mv.n === mv.want && mv.n > 0, 'an opened block says every move it offers', `${mv.n} vs ${mv.want}`);
+  ok(mv.named && mv.icons, 'each move carries its own mark and its own verb', JSON.stringify(mv));
+  ok(mv.where, 'and names WHICH REGION answers it — the middle, the portrait, the map itself or here', JSON.stringify(mv));
+  ok(mv.said, 'and the panel says out loud that these are proposed, not built', String(mv.said)); }
 await shot(p, 'b-02-open');
 { const n2 = D.blocks.filter(x => x.key !== bk.key)[0];
   await p.click(sel('block:' + n2.key)); await p.waitForTimeout(700);

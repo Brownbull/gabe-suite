@@ -203,7 +203,7 @@ const data = {
   kind: KIND, rotDeg: ROT_DEG, maxDepth: MAX_DEPTH,
   inv: { file: "inventory-endpoint.md", hash: tok.invHash }, cellsHash: tok.cellsHash, ruled: INV.ruled,
   head: Wf.head, secWords: Wf.sections, rails: Wf.rails, layouts: Wf.layouts, groupings: Wf.groupings,
-  spineModes: Wf.spineModes, trayModes: Wf.trayModes,
+  spineModes: Wf.spineModes, trayModes: Wf.trayModes, actModes: Wf.actModes, acts: Wf.acts,
   ui: Object.fromEntries(Object.entries(Wf.ui).map(([k, v]) => [k, v.plain])),
   takes: Wf.takes, open: { why: Wf.strings.openWhy, items: Wf.open.items }, more: { lines: Wf.more.lines },
   pickIntro: Wf.pickIntro, facts,
