@@ -28,7 +28,16 @@ const ctx = await b.newContext({ viewport: { width: 1920, height: 1080 } });
 await ctx.grantPermissions(['clipboard-read', 'clipboard-write']).catch(() => {});
 const p = await ctx.newPage(), errs = [];
 p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
-const open = async () => { await p.goto('file://' + PAGE); await p.waitForFunction('!!window.__bm', { timeout: 15000 }); await p.waitForTimeout(200); };
+const open = async (fresh) => { await p.goto('file://' + PAGE); await p.waitForFunction('!!window.__bm', { timeout: 15000 });
+  /* the page REMEMBERS its rails in localStorage, so a probe that does not clear them tests whatever the last case left —
+     every reading below is of the page as it ARRIVES, unless a case deliberately sets a rail first */
+  if (fresh !== false) { await p.evaluate(() => { try { for (const k of Object.keys(localStorage)) if (/^gabe/.test(k) || /brainmap/i.test(k)) localStorage.removeItem(k); } catch (e) {} });
+    await p.reload(); await p.waitForFunction('!!window.__bm', { timeout: 15000 }); }
+  /* wait for the LAYOUT and for the page to SETTLE, never for a guessed number of milliseconds: the map ships "still" so it
+     cannot animate on arrival, and releases that two frames later — reading in between catches a page mid-boot */
+  await p.waitForFunction(() => { const n = document.querySelector('#plane .node'), pl = document.getElementById('plane');
+    return !!n && !!n.style.left && (!window.MOTION || !window.MOTION.on || !pl.classList.contains('still')); }, { timeout: 15000 });
+  await p.waitForTimeout(160); };
 await open(); await p.evaluate(() => { try { localStorage.clear(); } catch (e) {} }); await open();
 const D = await p.evaluate(() => window.__bm.data);
 
@@ -274,8 +283,19 @@ for (const w of [1920, 1280, 390]) { await p.setViewportSize({ width: w, height:
   const o = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   ok(o <= 1, `no horizontal page scroll at ${w}px`, o); }
 await shot(p, 'b-09-phone'); await p.setViewportSize({ width: 1920, height: 1080 }); await p.waitForTimeout(400);
-{ const col = await p.evaluate(() => { const r = document.querySelector('.artifact-page').getBoundingClientRect(); return { left: r.left, right: innerWidth - r.right }; });
-  ok(Math.abs(col.left - col.right) < 20 && col.left > 100, 'the column is centred on a wide screen', JSON.stringify(col)); }
+{ const col = await p.evaluate(() => { const r = document.querySelector('.artifact-page').getBoundingClientRect(); return { left: r.left, right: innerWidth - r.right, w: r.width }; });
+  ok(Math.abs(col.left - col.right) < 20, 'the column is centred on a wide screen', JSON.stringify(col));
+  // his ruling 2026-09-22: the working surface uses the SCREEN — a map read in a 74rem column on a 2,500px display is the squeeze
+  ok(col.w / 1920 > 0.9, 'and it is wide: the page uses the screen it is given, not a reading column', `${Math.round(col.w)} of 1920`);
+  const rd = await p.evaluate(() => [...document.querySelectorAll('.lede, .keys, .cap')].map((e) => Math.round(e.getBoundingClientRect().width)));
+  ok(rd.length > 0 && rd.every((w) => w <= 900), 'while every block of prose keeps its own reading width', JSON.stringify(rd)); }
+await open();   // as it arrives, with nothing a previous case chose
+{ const g = await p.evaluate(() => { const s = document.querySelector('.stage'), c = document.querySelector('.canvas'), t = document.querySelector('.tray');
+    return { tray: s.getAttribute('data-tray'), canvas: c.getBoundingClientRect(), t: t.getBoundingClientRect(), lede: document.querySelector('.lede').getBoundingClientRect().left }; });
+  ok(g.tray === 'beside', 'the tray starts beside the map, not under it (his ruling 2026-09-22)', g.tray);
+  ok(g.t.left > g.canvas.right - 2, 'and it sits on the RIGHT of the map', `tray ${Math.round(g.t.left)} vs map right ${Math.round(g.canvas.right)}`);
+  ok(Math.abs(g.canvas.left - g.lede) < 2, 'the map shares the prose\'s own left edge — column and surface line up', `${Math.round(g.canvas.left)} vs ${Math.round(g.lede)}`);
+  ok(g.canvas.height > 700, 'and the map is as tall as the screen allows', `${Math.round(g.canvas.height)}px`); }
 { const lightBg = await p.evaluate(() => getComputedStyle(document.body).backgroundColor); await p.emulateMedia({ colorScheme: 'dark' });
   ok(await p.evaluate(() => getComputedStyle(document.body).backgroundColor) !== lightBg, 'dark paints a different ground');
   await shot(p, 'b-10-dark'); await p.emulateMedia({ colorScheme: 'light' }); }
@@ -285,10 +305,10 @@ await p.locator('[data-pick="B"]').click(); await p.waitForTimeout(200);
 await p.click(sel('block:' + bk.key)); await p.waitForTimeout(600);
 const txt = await p.evaluate(() => window.__bm.text());
 ok(txt.indexOf('pick: B') >= 0 && txt.indexOf(bk.name) >= 0 && txt.indexOf(D.inv.hash) >= 0, 'the text carries the pick, what is open and the inventory it was read from', txt.split('\n')[1]);
-await open();
+await open(false);   // THIS case is about memory, so it must NOT clear what the page remembers
 ok(await p.evaluate(() => window.__bm.text()) === txt, 'a reload keeps the pick, the switches and the open panels');
 await p.evaluate(() => { const s = JSON.parse(localStorage.getItem('gabe:brainmap:endpoint-card')); s.open.push('block:cZZ'); localStorage.setItem('gabe:brainmap:endpoint-card', JSON.stringify(s)); });
-await open();
+await open(false);   // the case seeds what the page remembers, so the reload must keep it
 ok(await p.evaluate(() => window.__bm.text()) === txt, 'a saved panel for a block that no longer exists is dropped, never drawn');
 await p.click('#reset'); ok(await p.getAttribute('#reset', 'data-armed') === 'true' && (await p.evaluate(() => window.__bm.text())).indexOf('pick: B') >= 0, 'the first press on Clear only arms it');
 await p.click('#reset'); await p.waitForTimeout(500);

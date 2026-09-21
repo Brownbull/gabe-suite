@@ -285,7 +285,9 @@
 </style>
 <style>
   /* ══ the page's own rules — the kit block above is pasted verbatim by gen-brainmap.js ══ */
-  .artifact-page { margin: 0 auto; }            /* operator rule: an artifact's column is centred */
+  /* The column is centred (his rule) but WIDE, because this page's subject is a map and a map read at 74rem on a 2,500px
+     screen is the squeeze he saw. Every block of prose keeps its own reading width below, so nothing sets a long line. */
+  .artifact-page { margin: 0 auto; max-width: min(2100px, 95vw); }
 
   :root { --alert:#a3470a; --alert-soft:#fbeadb; --lit:var(--accent); }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --alert:#f0a35a; --alert-soft:#3b2914; } }
@@ -318,13 +320,15 @@
   .opt .k { font-weight: 700; }
   .opt .sp { font-size: var(--fs-min); opacity: .78; }
 
-  /* ── the stage: map + tray ────────────────────────────────────────── */
+  /* ── the stage: map + tray ──────────────────────────────────────────
+     The PROSE keeps the centred column (his rule); the WORKING SURFACE breaks out of it and uses the screen — a map read at
+     1,180px on a 2,500px display is the squeeze he saw. The breakout is symmetric, so the stage stays centred on the page. */
   .stage { position: relative; display: grid; gap: 14px; }
   .stage[data-tray="below"] { grid-template-columns: minmax(0, 1fr); }
-  .stage[data-tray="beside"] { grid-template-columns: minmax(0, 1fr) minmax(250px, 23rem); }
-  @media (max-width: 720px) { .stage[data-tray="beside"] { grid-template-columns: minmax(0, 1fr); } }
+  .stage[data-tray="beside"] { grid-template-columns: minmax(0, 1fr) clamp(320px, 26vw, 34rem); }   /* the tray on the RIGHT, wide enough to read a panel */
+  @media (max-width: 900px) { .stage[data-tray="beside"] { grid-template-columns: minmax(0, 1fr); } }
 
-  .canvas { position: relative; overflow: auto; height: 560px; background: var(--card);
+  .canvas { position: relative; overflow: auto; height: clamp(520px, 74vh, 1000px); background: var(--card);
             border: 1px solid var(--rule); border-left: var(--rail) solid var(--accent); border-radius: var(--radius, 10px); }
   .canvas[data-lay="E"] { overflow: auto; }
   .plane { position: relative; }
@@ -375,7 +379,7 @@
   /* the tray */
   .tray { position: relative; min-height: 96px; border: 1px dashed var(--rule); border-radius: var(--radius, 10px); padding: 12px; background: var(--rule-soft);
           display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; }
-  .stage[data-tray="beside"] .tray { flex-direction: column; flex-wrap: nowrap; overflow: auto; max-height: 560px; }
+  .stage[data-tray="beside"] .tray { flex-direction: column; flex-wrap: nowrap; overflow: auto; max-height: clamp(520px, 74vh, 1000px); }   /* the tray matches the map, so the two scroll as one surface */
   .tray .empty { font-size: var(--fs-sm); color: var(--muted); }
   .pan { flex: 1 1 250px; min-width: 0; max-width: 100%; background: var(--card); border: 1px solid var(--rule); border-left: var(--rail) solid var(--accent);
          border-radius: var(--radius, 10px); padding: 11px 13px; display: flex; flex-direction: column; gap: 7px; }
@@ -629,7 +633,7 @@ var MOTION = { on: true };   /* animations read this before scheduling work */
 
   /* ── state ─────────────────────────────────────────────────────────── */
   var LAYS = ["A", "B", "C", "D", "E"], GRPS = ["flat", "standpoint", "section"], SPN = ["nodes", "band"], TRY = ["below", "beside"];
-  var S = { lay: "A", grp: "flat", spine: "nodes", tray: "below", open: [], pick: null };
+  var S = { lay: "A", grp: "flat", spine: "nodes", tray: "beside", open: [], pick: null };   /* the tray starts on the RIGHT (his ruling 2026-09-22) */
   function save() { try { window.localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 
   /* ── the subjects a panel can be about ─────────────────────────────── */
