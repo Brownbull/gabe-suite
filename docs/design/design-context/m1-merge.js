@@ -5,7 +5,9 @@
    WRITES  m1-endpoint.json — per filled cell: the three votes, the value, and the judge's reason where one ruled
    RULES   a question label is its leading Qn, whatever text follows (the first merge dropped a whole rater on this);
            needed = 2 · helps = 1 · absent = 0; value = the MEDIAN of the three votes; a HARD SPLIT is a 0 against a 2,
-           and only there a judge's verdict replaces the median. An id the input does not carry is dropped and NAMED. */
+           and only there a judge's verdict replaces the median. An id the input does not carry is dropped and NAMED.
+           EVERY `judge_pass_<n>` is read, in numeric order, a later pass winning — round 2 added a third and a hardcoded
+           two-pass list had silently left its 26 verdicts out. */
 "use strict";
 const fs = require("fs"), path = require("path"), HERE = __dirname;
 const raw = JSON.parse(fs.readFileSync(path.join(HERE, "m1-endpoint.raw.json"), "utf8")), inp = JSON.parse(fs.readFileSync(path.join(HERE, "m1-input.json"), "utf8"));
@@ -22,7 +24,8 @@ for (const k of KEYS) for (const row of raw.raters[k]) {
   }
 }
 const verdict = new Map();
-for (const pass of ["judge_pass_1", "judge_pass_2"]) for (const c of (raw[pass] || {}).cells || []) if (qset.has(c.q) && aset.has(c.a)) verdict.set(c.q + "|" + c.a, c);   /* a later pass wins */
+const PASSES = Object.keys(raw).filter((k) => /^judge_pass_\d+$/.test(k)).sort((a, b) => Number(a.slice(11)) - Number(b.slice(11)));   /* every pass, in order — a round that adds one must not be ignored because the list was hardcoded */
+for (const pass of PASSES) for (const c of (raw[pass] || {}).cells || []) if (qset.has(c.q) && aset.has(c.a)) verdict.set(c.q + "|" + c.a, c);   /* a later pass wins */
 const cells = [], unjudged = [];
 for (const q of QS) for (const a of ATTR) {
   const m = vote.get(q + "|" + a); if (!m) continue;

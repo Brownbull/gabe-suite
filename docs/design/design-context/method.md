@@ -75,5 +75,21 @@ questions earn, and M2 by rule (D-014). His ruling on the blocks (Keep · Merge 
 **Status 2026-09-19:** the eleven prisms are ruled (D-015). What M1 left over was evaluated and ruled (D-016): ten pieces of work are being
 landed in the order of `program-leftovers.md`; the inventory grew to 61 rows, 20 of them proposed. M1 round 2 and step 3 (M3) wait on the pieces.
 
+**Status 2026-09-22:** the ten pieces are landed (the last, piece 11, is Slice 12 of the element forms), so every row of the
+inventory now carries a real example generated from the feed. The rating pass is CLOSED (D-020): 61 rows ruled, 26 at 3 · 25 at
+2 · 9 at 1, nothing left as a proposal. **M1 round 2 has started** — the 18 attributes added since round 1 are being scored
+against the same 20 questions by the same three standpoints (operator · engineer · minimalist, median of three, a judge only on
+a hard split), after which `m1-merge.js` remakes the matrix and `m1-cluster.js` re-cuts the blocks; the question round 2 answers
+is whether the eleven blocks survive the new rows, and what the new rows pull apart or pull together.
+
+**A second requirement arrived with it (Gabe, 2026-09-22, with a sketch): a BRAIN MAP for navigating the resulting panels.** A
+small node-link map of the card's blocks — the sketch has a root, three branches, a grandchild, and a bracketed tray of panels
+with one long sweep tying the lit branch to the tray; he asked for it rotated 45° so the tree reads along an axis rather than
+across the page's corner. It is a NAVIGATOR, not a diagram: clicking a node opens its panel into the tray. Built as a lab with
+FIVE switchable layouts (upright · sideways · as sketched · radial · indented-list as the control), because display is decided
+by seeing built options, never from text. Files: `gen-brainmap.js` + `brainmap.tpl.html` + `brainmap.words.json` →
+`brainmap-endpoint.html`, probe `probe-brainmap.mjs`. It sits between step 2 and step 4 of the loop: M1 round 2 says what the
+blocks ARE, the brain map says how he moves between them, and the gallery (step 4) shows the card at true size.
+
 Two known conflicts with the rules are queued for the loop, not patched ahead of it: PATHS ▸ listing codes in the command
 panel (D-008) and the long hovers on headers, command cells and rail controls (D-009).

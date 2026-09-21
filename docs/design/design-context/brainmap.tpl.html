@@ -1,0 +1,848 @@
+<title>Endpoint Brain Map</title>
+
+<!--__KIT1__-->
+<style>
+  /* ══ the page's own rules — the kit block above is pasted verbatim by gen-brainmap.js ══ */
+  .artifact-page { margin: 0 auto; }            /* operator rule: an artifact's column is centred */
+
+  :root { --alert:#a3470a; --alert-soft:#fbeadb; --lit:var(--accent); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --alert:#f0a35a; --alert-soft:#3b2914; } }
+  :root[data-theme="dark"] { --alert:#f0a35a; --alert-soft:#3b2914; }
+
+  .eyebrow { font-size: var(--fs-min); letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0; }
+  h1 { font-size: 2em; line-height: 1.15; margin: 8px 0 0; text-wrap: balance; }
+  .lede { color: var(--ink-soft); max-width: 70ch; margin: 12px 0 0; }
+  .keys { font-size: var(--fs-xs); color: var(--muted); margin: 10px 0 0; max-width: 78ch; }
+  .cap { font-size: var(--fs-sm); color: var(--ink-soft); margin: 0; max-width: 76ch; }
+  kbd { font-family: inherit; font-size: var(--fs-min); border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 5px; padding: 0 5px; background: var(--raised); color: var(--ink-soft); }
+
+  .btn { font: inherit; font-size: var(--fs-sm); letter-spacing: inherit; cursor: pointer; border-radius: 8px; padding: 6px 12px; border: 1px solid var(--rule); background: var(--raised); color: var(--ink); }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.pri { background: var(--accent); border-color: var(--accent); color: var(--ground); }
+  .btn.pri:hover { filter: brightness(1.08); color: var(--ground); }
+  .btn.quiet { background: transparent; color: var(--ink-soft); font-size: var(--fs-xs); padding: 4px 10px; }
+  .btn[data-armed="true"] { border-color: var(--alert); color: var(--alert); background: var(--alert-soft); }
+  .said { font-size: var(--fs-xs); color: var(--accent); }
+
+  /* ── the rail ─────────────────────────────────────────────────────── */
+  .rail { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: flex-start; }
+  .rgrp { display: flex; flex-direction: column; gap: 5px; }
+  .rgrp > .rl { font-size: var(--fs-min); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .opts { display: flex; flex-wrap: wrap; gap: 5px; }
+  .opt { font: inherit; font-size: var(--fs-xs); letter-spacing: inherit; cursor: pointer; border-radius: 8px; padding: 4px 10px;
+         border: 1px solid var(--rule); background: var(--raised); color: var(--ink-soft); display: flex; align-items: baseline; gap: 6px; }
+  .opt:hover { border-color: var(--accent); color: var(--accent); }
+  .opt[aria-checked="true"] { border-color: var(--accent); background: var(--accent); color: var(--ground); }
+  .opt .k { font-weight: 700; }
+  .opt .sp { font-size: var(--fs-min); opacity: .78; }
+
+  /* ── the stage: map + tray ────────────────────────────────────────── */
+  .stage { position: relative; display: grid; gap: 14px; }
+  .stage[data-tray="below"] { grid-template-columns: minmax(0, 1fr); }
+  .stage[data-tray="beside"] { grid-template-columns: minmax(0, 1fr) minmax(250px, 23rem); }
+  @media (max-width: 720px) { .stage[data-tray="beside"] { grid-template-columns: minmax(0, 1fr); } }
+
+  .canvas { position: relative; overflow: auto; height: 560px; background: var(--card);
+            border: 1px solid var(--rule); border-left: var(--rail) solid var(--accent); border-radius: var(--radius, 10px); }
+  .canvas[data-lay="E"] { overflow: auto; }
+  .plane { position: relative; }
+  .wires { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+  .wire { fill: none; stroke: var(--rule); stroke-width: 1.6; transition: stroke .35s ease, stroke-width .35s ease, d .55s cubic-bezier(.22,.61,.36,1); }
+  .wire[data-lit="true"] { stroke: var(--lit); stroke-width: 2.4; }
+  .wire[data-kind="share"] { stroke-dasharray: 3 4; stroke: color-mix(in srgb, var(--accent) 40%, var(--rule)); }
+
+  .node { position: absolute; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 2px;
+          padding: 5px 9px; text-align: left; font: inherit; letter-spacing: inherit; cursor: pointer;
+          background: var(--raised); color: var(--ink); border: 1px solid var(--rule); border-radius: 9px;
+          transition: left .55s cubic-bezier(.22,.61,.36,1), top .55s cubic-bezier(.22,.61,.36,1), opacity .35s ease, border-color .3s ease, background .3s ease; }
+  .plane.still .node, .plane.still .wire { transition: none !important; }
+  .node:hover { border-color: var(--accent); }
+  .node .nm { font-size: var(--fs-xs); font-weight: 650; line-height: 1.22; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .node .sub { font-size: var(--fs-min); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .node[data-kind="root"] { background: var(--strong); color: var(--sec-ink, var(--ground)); border-color: var(--strong); }
+  .node[data-kind="root"] .sub { color: var(--sec-ink, var(--ground)); opacity: .8; }
+  .node[data-kind="attr"] { background: var(--card); }
+  .node[data-shared="true"] { border-style: dashed; border-color: color-mix(in srgb, var(--accent) 55%, var(--rule)); }
+  .node[data-kind="added"], .node[data-unplaced="true"] { background: repeating-linear-gradient(135deg, transparent 0 6px, var(--rule-soft) 6px 10px); }
+  .node[data-lit="true"] { border-color: var(--lit); }
+  .node[data-open="true"] { background: var(--accent); border-color: var(--accent); color: var(--ground); }
+  .node[data-open="true"] .sub { color: var(--ground); opacity: .82; }
+  .node .r3, .node .r2, .node .r1 { display: inline-block; width: 7px; height: 7px; border-radius: 2px; margin-right: 5px; vertical-align: 0; }
+  .node .r3 { background: var(--accent); } .node .r2 { background: color-mix(in srgb, var(--accent) 52%, var(--card)); } .node .r1 { background: color-mix(in srgb, var(--accent) 22%, var(--card)); }
+  .node[data-open="true"] .r3, .node[data-open="true"] .r2, .node[data-open="true"] .r1 { background: var(--ground); }
+  .node:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* the indented control — no drawing */
+  .ind { padding: 14px 16px; }
+  .ind ul { list-style: none; margin: 0; padding: 0 0 0 0; }
+  .ind li { margin: 0; }
+  .ind .row { display: flex; align-items: baseline; gap: 8px; }
+  .ind .tw { color: var(--muted); font-size: var(--fs-min); white-space: pre; }
+  .ind .nb { font: inherit; font-size: var(--fs-xs); letter-spacing: inherit; background: none; border: 0; padding: 2px 6px; border-radius: 6px; cursor: pointer; color: var(--ink); text-align: left; }
+  .ind .nb:hover { color: var(--accent); }
+  .ind .nb[data-open="true"] { background: var(--accent); color: var(--ground); }
+  .ind .nb[data-lit="true"] { box-shadow: inset 2px 0 0 var(--lit); }
+  .ind .ct { color: var(--muted); font-size: var(--fs-min); font-variant-numeric: tabular-nums; }
+  .ind ul ul { padding-left: 18px; border-left: 1px solid var(--rule-soft); margin-left: 6px; }
+
+  /* the sweep — one curve from the lit node to the tray */
+  .sweep { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; z-index: 3; }
+  .sweep path { fill: none; stroke: var(--lit); stroke-width: 2; stroke-linecap: round; opacity: .9; }
+  .sweep path.brk { stroke-width: 1.6; opacity: .55; }
+
+  /* the tray */
+  .tray { position: relative; min-height: 96px; border: 1px dashed var(--rule); border-radius: var(--radius, 10px); padding: 12px; background: var(--rule-soft);
+          display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; }
+  .stage[data-tray="beside"] .tray { flex-direction: column; flex-wrap: nowrap; overflow: auto; max-height: 560px; }
+  .tray .empty { font-size: var(--fs-sm); color: var(--muted); }
+  .pan { flex: 1 1 250px; min-width: 0; max-width: 100%; background: var(--card); border: 1px solid var(--rule); border-left: var(--rail) solid var(--accent);
+         border-radius: var(--radius, 10px); padding: 11px 13px; display: flex; flex-direction: column; gap: 7px; }
+  .stage[data-tray="beside"] .pan { flex: 0 0 auto; }
+  .pan .ph { display: flex; align-items: baseline; gap: 8px; }
+  .pan .ph h3 { margin: 0; font-size: var(--fs-sm); font-weight: 700; }
+  .pan .ph .x { margin-left: auto; }
+  .pan .kind { font-size: var(--fs-min); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .pan .pl { font-size: var(--fs-sm); color: var(--ink-soft); }
+  .pan .fl { display: flex; flex-wrap: wrap; gap: 4px 8px; }
+  .pan ul { margin: 0; padding-left: 16px; font-size: var(--fs-xs); color: var(--ink-soft); display: flex; flex-direction: column; gap: 3px; }
+  .pan .std { font-size: var(--fs-xs); color: var(--muted); }
+  .chip { font-size: var(--fs-min); color: var(--muted); border: 1px solid var(--rule); border-radius: 999px; padding: 0 8px; line-height: 1.55; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .chip.on { border-color: var(--accent); color: var(--accent); }
+  .chip.al { border-color: var(--alert); color: var(--alert); }
+  .chip.hz { border-style: dashed; }
+  .xb { font: inherit; font-size: var(--fs-min); letter-spacing: inherit; cursor: pointer; border: 1px solid var(--rule); background: var(--raised); color: var(--ink-soft); border-radius: 6px; padding: 0 7px; line-height: 1.5; }
+  .xb:hover { border-color: var(--alert); color: var(--alert); }
+
+  .status { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: var(--fs-xs); color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .status b { color: var(--ink); font-weight: 650; }
+  .deep { font-size: var(--fs-xs); color: var(--alert); }
+  .deep[hidden] { display: none; }
+
+  /* ── what it draws ── */
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+  .facts .panel p { font-size: var(--fs-sm); color: var(--ink-soft); }
+  .facts .big { font-size: 1.7em; font-weight: 700; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+  /* ── the five cards ── */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 12px; }
+  .card { background: var(--card); border: 1px solid var(--rule); border-left: var(--rail) solid var(--accent); border-radius: var(--radius, 10px); padding: 12px 14px; display: flex; flex-direction: column; gap: 7px; }
+  .card[data-cur="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent-soft) 40%, var(--card)); }
+  .card h3 { margin: 0; font-size: var(--fs-sm); display: flex; align-items: baseline; gap: 8px; }
+  .card h3 .k { font-family: var(--af-title); font-size: 1.25em; color: var(--accent); }
+  .card p { font-size: var(--fs-xs); color: var(--ink-soft); }
+  .card .meas { font-size: var(--fs-min); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .card .acts { display: flex; gap: 6px; margin-top: auto; padding-top: 4px; }
+
+  .take { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; font-size: var(--fs-xs); color: var(--ink-soft); }
+  .take li { padding-left: 14px; position: relative; }
+  .take li::before { content: ""; position: absolute; left: 0; top: .52em; width: 6px; height: 6px; border-radius: 2px; background: var(--accent); }
+
+  /* ── open questions ── */
+  .qs { display: flex; flex-direction: column; gap: 10px; }
+  .qq { background: var(--card); border: 1px solid var(--rule); border-left: var(--rail) solid var(--alert); border-radius: var(--radius, 10px); padding: 11px 13px; display: flex; flex-direction: column; gap: 5px; }
+  .qq .h { font-size: var(--fs-sm); font-weight: 650; }
+  .qq .d, .qq .a { font-size: var(--fs-xs); color: var(--ink-soft); }
+  .qq .a { color: var(--accent); }
+
+  /* ── more information (D-017) ── */
+  #more-body[hidden] { display: none; }
+  #more-body { display: flex; flex-direction: column; gap: 7px; }
+  #more-body p { font-size: var(--fs-xs); color: var(--ink-soft); }
+
+  .out { width: 100%; box-sizing: border-box; min-height: 8.5em; resize: vertical; font: inherit; font-size: var(--fs-xs); letter-spacing: inherit;
+         background: var(--raised); color: var(--ink); border: 1px solid var(--rule); border-radius: 8px; padding: 9px 11px; }
+  .acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+  /* ── one tooltip, short on a control and richer on an element ── */
+  .tip { position: absolute; z-index: 60; max-width: 30rem; background: var(--strong); color: var(--sec-ink, var(--ground));
+         border-radius: 8px; padding: 7px 10px; font-size: var(--fs-min); line-height: 1.45; box-shadow: var(--shadow); pointer-events: none; opacity: 0; transition: opacity .12s ease; }
+  .tip[data-show="true"] { opacity: 1; }
+  .tip b { font-weight: 700; }
+  .tip .ln { display: block; }
+  .tip .pl { display: block; margin-top: 4px; opacity: .86; }
+</style>
+
+<div class="artifact-page">
+  <header>
+    <p class="eyebrow" id="eyebrow">—</p>
+    <h1 id="h1">—</h1>
+    <p class="lede" id="lede">—</p>
+    <p class="keys" id="keys">—</p>
+  </header>
+
+  <section class="sec" data-sec="1" id="sec-map">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="3"></circle><circle cx="5" cy="19" r="3"></circle><circle cx="19" cy="19" r="3"></circle><path d="M12 8v3"></path><path d="M12 11 6.5 16.3"></path><path d="m12 11 5.5 5.3"></path></svg><span id="t-map">—</span></h2><span class="n" id="n-map">—</span></div>
+    <div class="rail" id="rail"></div>
+    <p class="cap" id="sketch">—</p>
+    <div class="stage" id="stage" data-tray="below">
+      <div class="canvas" id="canvas" data-lay="A"><div class="plane still" id="plane"><svg class="wires" id="wires" aria-hidden="true"></svg></div></div>
+      <div class="tray" id="tray" role="region" aria-label="Open panels"><p class="empty" id="tray-empty">—</p></div>
+      <svg class="sweep" id="sweep" aria-hidden="true"></svg>
+    </div>
+    <div class="status" id="status"></div>
+    <p class="deep" id="deep" hidden>—</p>
+    <div class="acts"><button class="btn quiet" type="button" id="replay">Replay</button><button class="btn quiet" type="button" id="closeall">Close all panels</button></div>
+    <ul class="take" id="take-map"></ul>
+  </section>
+
+  <section class="sec" data-sec="2" id="sec-reads">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg><span id="t-reads">—</span></h2><span class="n" id="n-reads">—</span></div>
+    <div class="facts" id="facts"></div>
+  </section>
+
+  <section class="sec" data-sec="3" id="sec-options">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg><span id="t-options">—</span></h2><span class="n" id="n-options">—</span></div>
+    <div class="cards" id="cards"></div>
+    <ul class="take" id="take-options"></ul>
+  </section>
+
+  <section class="sec" data-sec="6" id="sec-open">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg><span id="t-open">—</span></h2><span class="n" id="n-open">—</span></div>
+    <p class="cap" id="open-why">—</p>
+    <div class="qs" id="qs"></div>
+  </section>
+
+  <section class="sec" data-sec="8" id="sec-more">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg><span id="t-more">—</span></h2><span class="n" id="n-more">—</span></div>
+    <div class="acts"><button class="btn quiet" type="button" id="more-btn" aria-expanded="false" aria-controls="more-body">Show how the map knows this</button></div>
+    <div class="panel" id="more-body" hidden></div>
+  </section>
+
+  <section class="sec" data-sec="9" id="sec-pick">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="m9 14 2 2 4-4"></path></svg><span id="t-pick">—</span></h2><span class="n" id="n-pick">—</span></div>
+    <div class="panel">
+      <p class="cap" id="pick-intro">—</p>
+      <textarea class="out" id="out" readonly spellcheck="false" aria-label="Your pick as text"></textarea>
+      <div class="acts"><button class="btn pri" type="button" id="copy">Copy my pick</button><button class="btn" type="button" id="reset">Clear everything</button><span class="said" id="said" aria-live="polite"></span></div>
+    </div>
+    <p class="cap" id="foot">—</p>
+  </section>
+</div>
+
+<!--__KIT2__-->
+<!--__KIT3__-->
+<script>window.BM_DATA = /*__DATA__*/null;</script>
+<script>
+(function () {
+  "use strict";
+  var D = window.BM_DATA, KEY = "gabe:brainmap:" + D.kind, AKEY = "gabe:brainmap:anim";
+  var $ = function (id) { return document.getElementById(id); };
+  function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function plural(n, w) { return n + " " + w + (n === 1 ? "" : "s"); }
+
+  /* ── state ─────────────────────────────────────────────────────────── */
+  var LAYS = ["A", "B", "C", "D", "E"], GRPS = ["flat", "standpoint", "section"], SPN = ["nodes", "band"], TRY = ["below", "beside"];
+  var S = { lay: "A", grp: "flat", spine: "nodes", tray: "below", open: [], pick: null };
+  function save() { try { window.localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+  /* ── the subjects a panel can be about ─────────────────────────────── */
+  var A = {}, B = {}, G = {}, SEC = {};
+  D.attrs.forEach(function (a) { A[a.id] = a; });
+  D.blocks.forEach(function (b) { B[b.key] = b; });
+  D.groups.forEach(function (g) { G[g.key] = g; });
+  D.sections.forEach(function (s) { SEC[s.key] = s; });
+  function SUBJ(k) {
+    if (k === "root") return { kind: "root" };
+    var i = k.indexOf(":"), t = k.slice(0, i), v = k.slice(i + 1);
+    if (t === "attr") return A[v] ? { kind: "attr", a: A[v] } : null;
+    if (t === "block") return B[v] ? { kind: "block", b: B[v] } : null;
+    if (t === "group") return G[v] ? { kind: "group", g: G[v] } : null;
+    if (t === "sec") return SEC[v] ? { kind: "sec", s: SEC[v] } : null;
+    if (t === "added") return { kind: "added" };
+    return null;
+  }
+  function isOpen(k) { return S.open.indexOf(k) >= 0; }
+  /* the saved state is read here, and not a line earlier: dropping a panel whose subject is gone needs SUBJ */
+  try { var raw = window.localStorage.getItem(KEY); if (raw) { var o = JSON.parse(raw);
+    if (LAYS.indexOf(o.lay) >= 0) S.lay = o.lay; if (GRPS.indexOf(o.grp) >= 0) S.grp = o.grp;
+    if (SPN.indexOf(o.spine) >= 0) S.spine = o.spine; if (TRY.indexOf(o.tray) >= 0) S.tray = o.tray;
+    if (LAYS.indexOf(o.pick) >= 0) S.pick = o.pick;
+    if (Array.isArray(o.open)) S.open = o.open.filter(function (k) { return !!SUBJ(k); }); } } catch (e) {}
+
+  /* ── the tree, rebuilt from the data for the current grouping ──────── */
+  var SIZE = { root: [214, 62], group: [190, 70], block: [178, 66], added: [178, 66], sec: [190, 70], attr: [156, 64], band: [156, 64] };
+  function mk(kind, pkey, name, sub, extra) {
+    var n = { kind: kind, pkey: pkey, name: name, sub: sub || "", kids: [], depth: 0 };
+    if (extra) for (var k in extra) n[k] = extra[k];
+    return n;
+  }
+  function attrNode(a, shared) {
+    return mk("attr", "attr:" + a.id, a.label, "rated " + a.r + (a.alarm ? " · alert" : ""), { r: a.r, shared: !!shared, unplaced: !a.home && !a.spine, aid: a.id });
+  }
+  function buildTree() {
+    var band = S.spine === "band", root = mk("root", "root", D.root.name, D.root.sub), deferred = 0;
+    var inBand = {}; if (band) D.spine.forEach(function (id) { inBand[id] = true; });
+    function blockNode(b) {
+      var own = b.attrs.filter(function (id) { return !inBand[id]; });
+      var sh = band ? [] : b.spine;
+      var n = mk("block", "block:" + b.key, b.name, plural(b.attrs.length + b.spine.length, "attribute"), { bkey: b.key });
+      n.load = function () { return own.map(function (id) { return attrNode(A[id], false); }).concat(sh.map(function (id) { return attrNode(A[id], true); })); };
+      n.nkids = own.length + sh.length;
+      return n;
+    }
+    function addedNode() {
+      var ids = D.added.filter(function (id) { return !inBand[id]; });
+      var n = mk("added", "added:x", D.addedName, plural(D.added.length, "attribute"), {});
+      n.load = function () { return ids.map(function (id) { return attrNode(A[id], false); }); };
+      n.nkids = ids.length; return n;
+    }
+    if (S.grp === "flat") {
+      root.kids = D.blocks.map(blockNode); if (D.added.length) root.kids.push(addedNode());
+    } else if (S.grp === "standpoint") {
+      root.kids = D.groups.map(function (g) {
+        var n = mk("group", "group:" + g.key, g.name, plural(g.n, "attribute"), { gkey: g.key });
+        n.load = function () { return g.blocks.map(function (bk) { return blockNode(B[bk]); }); };
+        n.nkids = g.blocks.length; return n;
+      });
+      if (D.added.length) root.kids.push(addedNode());
+    } else {
+      root.kids = D.sections.map(function (s) {
+        var ids = s.attrs.filter(function (id) { return !inBand[id]; });
+        var n = mk("sec", "sec:" + s.key, s.short, plural(s.attrs.length, "attribute"), { skey: s.key });
+        n.load = function () { return ids.map(function (id) { return attrNode(A[id], false); }); };
+        n.nkids = ids.length; return n;
+      });
+    }
+    /* expand what is open, and stop at the level cap — the deeper ones open in the panel instead */
+    function expand(n, depth) {
+      n.depth = depth;
+      if (!n.load || !isOpen(n.pkey)) return;
+      if (depth + 1 > D.maxDepth) { deferred += n.nkids; n.deep = n.nkids; return; }
+      n.kids = n.load();
+      n.kids.forEach(function (k) { expand(k, depth + 1); });
+    }
+    root.kids.forEach(function (k) { expand(k, 1); });
+    var bandNodes = band ? D.spine.map(function (id) { return mk("band", "attr:" + id, A[id].label, "shared by " + A[id].spineIn, { r: A[id].r, shared: true, aid: id }); }) : [];
+    return { root: root, band: bandNodes, deferred: deferred };
+  }
+
+  /* ── packing: every leaf gets its own slot, a parent sits over its children ── */
+  function packAxis(root, band, axis) {
+    var idx = axis === "x" ? 0 : 1, GAP = axis === "x" ? 18 : 12, K = axis === "x" ? "sx" : "sy";
+    var size = function (n) { return SIZE[n.kind][idx]; };
+    function shift(n, d) { n[K] += d; n.kids.forEach(function (k) { shift(k, d); }); }
+    function pack(n, cur) {
+      if (!n.kids.length) { n[K] = cur + size(n) / 2; return cur + size(n) + GAP; }
+      var start = cur, c = cur;
+      n.kids.forEach(function (k) { c = pack(k, c); });
+      var end = c - GAP, span = end - start, own = size(n);
+      if (own > span) { var d = (own - span) / 2; n.kids.forEach(function (k) { shift(k, d); }); end += 2 * d; }
+      n[K] = (start + end) / 2;
+      return end + GAP;
+    }
+    var total = pack(root, 0) - GAP;
+    if (band.length) {                                  /* the band is packed on its own and centred under the root */
+      var c = 0; band.forEach(function (n) { n[K] = c + size(n) / 2; c += size(n) + GAP; });
+      var w = c - GAP, off = root[K] - w / 2;
+      band.forEach(function (n) { n[K] += off; });
+      var lo = Math.min(0, off), hi = Math.max(total, off + w);
+      if (lo < 0) { var sh = function (n) { n[K] -= lo; n.kids.forEach(sh); }; sh(root); band.forEach(function (n) { n[K] -= lo; }); hi -= lo; }
+      total = hi;
+    }
+    return total;
+  }
+
+  var BAND_D = 0.5, PAD = 26, ROT = D.rotDeg * Math.PI / 180;
+  /* the DEPTH axis is laid out from the sizes actually on each level, so two levels can never touch along it */
+  function depthAxis(all, idx, gap) {
+    var mx = {}; all.forEach(function (n) { mx[n.depth] = Math.max(mx[n.depth] || 0, SIZE[n.kind][idx]); });
+    var ds = Object.keys(mx).map(Number).sort(function (a, b) { return a - b; }), pos = {}, c = 0;
+    ds.forEach(function (d, i) { if (i === 0) { c = mx[d] / 2; } else { c += mx[ds[i - 1]] / 2 + gap + mx[d] / 2; } pos[d] = c; });
+    return { pos: pos, ds: ds, mx: mx, step: function (d) { var i = ds.indexOf(d); return i <= 0 ? 0 : pos[d] - pos[ds[i - 1]]; } };
+  }
+  function place(T) {
+    var all = [];
+    (function walk(n) { all.push(n); n.kids.forEach(walk); })(T.root);
+    T.band.forEach(function (n) { n.depth = BAND_D; all.push(n); });
+    var TW = packAxis(T.root, T.band, "x"), TH = packAxis(T.root, T.band, "y");
+    var maxD = 0; all.forEach(function (n) { if (n.depth > maxD) maxD = n.depth; });
+    var scale = 1;
+    if (S.lay === "A" || S.lay === "C") {
+      var DA = depthAxis(all, 1, 78);
+      all.forEach(function (n) { n.cx = n.sx; n.cy = DA.pos[n.depth]; });
+    } else if (S.lay === "B") {
+      var DB = depthAxis(all, 0, 70);
+      all.forEach(function (n) { n.cx = DB.pos[n.depth]; n.cy = n.sy; });
+    } else if (S.lay === "D") {
+      /* every ring is wide enough that no two nodes on it can touch, and far enough from the ring inside it — computed */
+      var DD = depthAxis(all, 0, 40), byD = {};
+      all.forEach(function (n) { (byD[n.depth] = byD[n.depth] || []).push(n); });
+      var depths = DD.ds, R = {}, prev = 0;
+      depths.forEach(function (d, i) {
+        if (i === 0) { R[d] = 0; prev = SIZE[byD[d][0].kind][0] / 2; return; }
+        var g = byD[d].slice().sort(function (a, b) { return a.sx - b.sx; }), minGap = Infinity, wMax = 0;
+        g.forEach(function (n, j) { wMax = Math.max(wMax, SIZE[n.kind][0]); if (j) minGap = Math.min(minGap, g[j].sx - g[j - 1].sx); });
+        /* the ring closes: the last node on it sits next to the first, so that gap counts too */
+        if (g.length > 1) minGap = Math.min(minGap, TW - (g[g.length - 1].sx - g[0].sx));
+        var need = minGap === Infinity ? 170 : TW * (wMax + 16) / (2 * Math.PI * minGap);
+        R[d] = Math.max(need, prev + DD.step(d), 170); prev = R[d];
+      });
+      all.forEach(function (n) { var a = (n.sx / TW) * 2 * Math.PI - Math.PI / 2, r = R[n.depth]; n.cx = r * Math.cos(a); n.cy = r * Math.sin(a); });
+    }
+    if (S.lay === "C") {
+      /* C is A turned and spread by ONE factor, the smallest that still clears every pair of boxes.
+         One factor for every pair keeps it a similarity of A: turn C back and the tree is A again, to scale. */
+      var cs = Math.cos(ROT), sn = Math.sin(ROT);
+      for (var i = 0; i < all.length; i++) for (var j = i + 1; j < all.length; j++) {
+        var a = all[i], b = all[j], dx = a.cx - b.cx, dy = a.cy - b.cy;
+        var rx = Math.abs(dx * cs - dy * sn), ry = Math.abs(dx * sn + dy * cs);
+        var hw = (SIZE[a.kind][0] + SIZE[b.kind][0]) / 2 + 8, hh = (SIZE[a.kind][1] + SIZE[b.kind][1]) / 2 + 8;
+        var k = Math.min(rx > 0.001 ? hw / rx : Infinity, ry > 0.001 ? hh / ry : Infinity);
+        if (k > scale) scale = k;
+      }
+      all.forEach(function (n) { var x = n.cx * scale, y = n.cy * scale; n.cx = x * cs - y * sn; n.cy = x * sn + y * cs; });
+    }
+    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    all.forEach(function (n) { var w = SIZE[n.kind][0], h = SIZE[n.kind][1];
+      minX = Math.min(minX, n.cx - w / 2); maxX = Math.max(maxX, n.cx + w / 2);
+      minY = Math.min(minY, n.cy - h / 2); maxY = Math.max(maxY, n.cy + h / 2); });
+    all.forEach(function (n) { n.cx += PAD - minX; n.cy += PAD - minY; });
+    return { all: all, w: Math.round(maxX - minX + 2 * PAD), h: Math.round(maxY - minY + 2 * PAD), maxD: maxD, TW: TW, TH: TH, scale: scale };
+  }
+
+  /* ── drawing ───────────────────────────────────────────────────────── */
+  var plane = $("plane"), wires = $("wires"), canvas = $("canvas"), stage = $("stage"), tray = $("tray"), sweep = $("sweep");
+  var CUR = null, NODES = [];
+  function litSet(T) {
+    var lit = {};
+    (function walk(n, chain) {
+      var c = chain.concat([n.pkey]);
+      if (isOpen(n.pkey)) c.forEach(function (k) { lit[k] = true; });
+      n.kids.forEach(function (k) { walk(k, c); });
+    })(T.root, []);
+    T.band.forEach(function (n) { if (isOpen(n.pkey)) lit[n.pkey] = true; });
+    return lit;
+  }
+  var wantCenter = true;
+  function draw(anim, center) {
+    if (center) wantCenter = true;
+    var T = buildTree(), L = place(T), lit = litSet(T);
+    CUR = { T: T, L: L, lit: lit };
+    canvas.setAttribute("data-lay", S.lay);
+    stage.setAttribute("data-tray", S.tray);
+    plane.querySelectorAll(".node").forEach(function (n) { n.remove(); });
+    var ind = plane.querySelector(".ind"); if (ind) ind.remove();
+    NODES = [];
+    if (S.lay === "E") { drawIndented(T, lit); }
+    else {
+      plane.style.width = L.w + "px"; plane.style.height = L.h + "px";
+      wires.setAttribute("width", L.w); wires.setAttribute("height", L.h); wires.setAttribute("viewBox", "0 0 " + L.w + " " + L.h);
+      wires.innerHTML = "";
+      var rootN = T.root;
+      (function edges(n) {
+        n.kids.forEach(function (k) { wires.appendChild(wire(n, k, lit[n.pkey] && lit[k.pkey], "tree")); edges(k); });
+      })(rootN);
+      T.band.forEach(function (n) {
+        wires.appendChild(wire(rootN, n, lit[n.pkey], "tree"));
+        (A[n.aid].spineBlocks || []).forEach(function (bk) {
+          var t = find(T.root, "block:" + bk); if (t) wires.appendChild(wire(n, t, false, "share"));
+        });
+      });
+      L.all.forEach(function (n) { plane.appendChild(nodeEl(n, lit)); });
+    }
+    paintRail(); paintStatus(T, L); paintTray(); paintCards(L);
+    if (wantCenter && S.lay !== "E") {                 /* centre on the root, clamped — every placement arrives readable */
+      var r0 = L.all[0], mx = canvas.scrollWidth - canvas.clientWidth, my = canvas.scrollHeight - canvas.clientHeight;
+      canvas.scrollLeft = Math.max(0, Math.min(mx, r0.cx - canvas.clientWidth / 2));
+      canvas.scrollTop = Math.max(0, Math.min(my, r0.cy - canvas.clientHeight / 2));
+    }
+    wantCenter = false;
+    if (anim !== false) settle();
+    requestAnimationFrame(drawSweep);
+  }
+  function find(root, pkey) { var hit = null; (function w(n) { if (hit) return; if (n.pkey === pkey) { hit = n; return; } n.kids.forEach(w); })(root); return hit; }
+  function wire(a, b, isLit, kind) {
+    var p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    var d;
+    if (S.lay === "B") d = "M" + a.cx + " " + a.cy + " C" + ((a.cx + b.cx) / 2) + " " + a.cy + "," + ((a.cx + b.cx) / 2) + " " + b.cy + "," + b.cx + " " + b.cy;
+    else if (S.lay === "D") d = "M" + a.cx + " " + a.cy + " L" + b.cx + " " + b.cy;
+    else d = "M" + a.cx + " " + a.cy + " C" + a.cx + " " + ((a.cy + b.cy) / 2) + "," + b.cx + " " + ((a.cy + b.cy) / 2) + "," + b.cx + " " + b.cy;
+    p.setAttribute("d", d); p.setAttribute("class", "wire"); p.setAttribute("data-kind", kind);
+    p.setAttribute("data-lit", String(!!isLit));
+    return p;
+  }
+  var RDOT = { 3: "r3", 2: "r2", 1: "r1" };
+  function nodeEl(n, lit) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "node";
+    b.setAttribute("data-kind", n.kind === "band" ? "attr" : n.kind);
+    b.setAttribute("data-pkey", n.pkey); b.setAttribute("data-depth", String(n.depth));
+    b.setAttribute("data-open", String(isOpen(n.pkey))); b.setAttribute("data-lit", String(!!lit[n.pkey]));
+    if (n.shared) b.setAttribute("data-shared", "true");
+    if (n.unplaced) b.setAttribute("data-unplaced", "true");
+    b.setAttribute("aria-pressed", String(isOpen(n.pkey)));
+    b.style.width = SIZE[n.kind][0] + "px"; b.style.height = SIZE[n.kind][1] + "px";
+    b.style.left = (n.cx - SIZE[n.kind][0] / 2) + "px"; b.style.top = (n.cy - SIZE[n.kind][1] / 2) + "px";
+    var nm = el("span", "nm");
+    if (n.r) { var i = el("i", RDOT[n.r]); nm.appendChild(i); }
+    nm.appendChild(document.createTextNode(n.name));
+    b.appendChild(nm);
+    if (n.sub) b.appendChild(el("span", "sub", n.sub));
+    b.addEventListener("click", function () { toggle(n.pkey); });
+    b.addEventListener("keydown", function (e) { navKey(e, n); });
+    hover(b, n);
+    NODES.push({ n: n, el: b });
+    return b;
+  }
+  function drawIndented(T, lit) {
+    plane.style.width = "100%"; plane.style.height = "auto";
+    wires.setAttribute("width", 0); wires.setAttribute("height", 0); wires.innerHTML = "";
+    var host = el("div", "ind"); var ul = document.createElement("ul"); host.appendChild(ul);
+    function row(n, into, depth) {
+      var li = document.createElement("li"), r = el("div", "row");
+      var tw = el("span", "tw", depth ? new Array(depth + 1).join("│  ") + "├─ " : "");
+      var nb = el("button", "nb"); nb.type = "button"; nb.setAttribute("data-pkey", n.pkey); nb.setAttribute("data-depth", String(n.depth));
+      nb.setAttribute("data-open", String(isOpen(n.pkey))); nb.setAttribute("data-lit", String(!!lit[n.pkey])); nb.setAttribute("aria-pressed", String(isOpen(n.pkey)));
+      if (n.shared) nb.setAttribute("data-shared", "true");
+      if (n.unplaced) nb.setAttribute("data-unplaced", "true");
+      nb.textContent = n.name;
+      nb.addEventListener("click", function () { toggle(n.pkey); });
+      nb.addEventListener("keydown", function (e) { navKey(e, n); });
+      hover(nb, n);
+      NODES.push({ n: n, el: nb });
+      r.appendChild(tw); r.appendChild(nb); if (n.sub) r.appendChild(el("span", "ct", n.sub));
+      li.appendChild(r); into.appendChild(li);
+      if (n.kids.length) { var sub = document.createElement("ul"); li.appendChild(sub); n.kids.forEach(function (k) { row(k, sub, depth + 1); }); }
+    }
+    row(T.root, ul, 0);
+    if (T.band.length) { var sub = document.createElement("ul"); ul.firstChild.appendChild(sub); T.band.forEach(function (n) { row(n, sub, 1); }); }
+    plane.appendChild(host);
+  }
+
+  /* ── the sweep: from the node opened last, round to the tray ───────── */
+  function drawSweep() {
+    sweep.innerHTML = "";
+    var sr = stage.getBoundingClientRect();
+    sweep.setAttribute("viewBox", "0 0 " + sr.width + " " + sr.height);
+    var tr = tray.getBoundingClientRect();
+    var bx = tr.left - sr.left, by = tr.top - sr.top, bw = tr.width, bh = tr.height;
+    var brk = "M" + (bx + 14) + " " + by + " L" + (bx + 4) + " " + by + " Q" + bx + " " + by + " " + bx + " " + (by + 12) +
+              " L" + bx + " " + (by + bh - 12) + " Q" + bx + " " + (by + bh) + " " + (bx + 4) + " " + (by + bh) + " L" + (bx + 14) + " " + (by + bh);
+    var pb = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    pb.setAttribute("d", brk); pb.setAttribute("class", "brk"); sweep.appendChild(pb);
+    if (!S.open.length) return;
+    var last = S.open[S.open.length - 1], hit = null;
+    for (var i = 0; i < NODES.length; i++) if (NODES[i].n.pkey === last) { hit = NODES[i].el; break; }
+    var from = hit ? hit.getBoundingClientRect() : canvas.getBoundingClientRect();
+    var cr = canvas.getBoundingClientRect();
+    var fx = Math.min(Math.max(from.left + from.width / 2, cr.left), cr.right) - sr.left;
+    var fy = Math.min(Math.max(from.top + from.height / 2, cr.top), cr.bottom) - sr.top;
+    var rightEdge = Math.max(bx + bw, cr.right - sr.left) + 16;
+    var tx = S.tray === "beside" ? bx : bx + bw - 26, ty = S.tray === "beside" ? by + 18 : by;
+    var d = "M" + fx + " " + fy + " C" + rightEdge + " " + fy + "," + rightEdge + " " + ty + "," + tx + " " + ty;
+    var p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    p.setAttribute("d", d); sweep.appendChild(p);
+  }
+
+  /* ── opening ───────────────────────────────────────────────────────── */
+  function toggle(pkey) {
+    var i = S.open.indexOf(pkey), had = document.activeElement, was = had && had.getAttribute ? had.getAttribute("data-pkey") : null;
+    if (i >= 0) S.open.splice(i, 1); else S.open.push(pkey);
+    save(); draw();
+    /* the redraw builds new buttons, so the keyboard would land back on the body: put the focus where it was */
+    if (was) { var f = NODES.filter(function (x) { return x.n.pkey === was; })[0]; if (f) f.el.focus({ preventScroll: true }); }
+    if (i < 0) { var t = NODES.filter(function (x) { return x.n.pkey === pkey; })[0]; if (t && t.el.scrollIntoView) t.el.scrollIntoView({ block: "nearest", inline: "nearest" }); }
+  }
+  document.addEventListener("keydown", function (e) {            /* Escape closes the last one from anywhere on the page */
+    if (e.key !== "Escape" || !S.open.length) return;
+    if (/INPUT|TEXTAREA/.test((e.target.tagName || "")) ) return;
+    e.preventDefault(); toggle(S.open[S.open.length - 1]);
+  });
+  function navKey(e, n) {
+    var k = e.key;
+    if (k === "Enter" || k === " ") { e.preventDefault(); toggle(n.pkey); return; }
+    if (k === "Escape") { if (S.open.length) { e.preventDefault(); toggle(S.open[S.open.length - 1]); } return; }
+    var dir = { ArrowLeft: -1, ArrowRight: 1 }[k], step = { ArrowUp: -1, ArrowDown: 1 }[k];
+    if (dir === undefined && step === undefined) return;
+    e.preventDefault();
+    var same = NODES.filter(function (x) { return x.n.depth === n.depth; }).sort(function (a, b) { return a.n.sx - b.n.sx; });
+    if (dir !== undefined) {
+      var at = same.map(function (x) { return x.n.pkey; }).indexOf(n.pkey), nx = same[at + dir];
+      if (nx) nx.el.focus();
+      return;
+    }
+    var want = n.depth + step, lvl = NODES.filter(function (x) { return x.n.depth === want; });
+    if (!lvl.length) return;
+    lvl.sort(function (a, b) { return Math.abs(a.n.sx - n.sx) - Math.abs(b.n.sx - n.sx); });
+    lvl[0].el.focus();
+  }
+
+  /* ── the panels ────────────────────────────────────────────────────── */
+  function chip(t, cls) { return el("span", "chip" + (cls ? " " + cls : ""), t); }
+  function panelFor(pkey) {
+    var s = SUBJ(pkey); if (!s) return null;
+    var p = el("div", "pan"); p.setAttribute("data-pkey", pkey);
+    var h = el("div", "ph"), t = el("h3"), kindTxt = { root: "the card", attr: "attribute", block: "block", group: "standpoint", sec: "section", added: "not placed" }[s.kind];
+    t.textContent = s.kind === "root" ? D.root.name : s.kind === "attr" ? s.a.label : s.kind === "block" ? s.b.name : s.kind === "group" ? s.g.name : s.kind === "sec" ? s.s.short : D.addedName;
+    var kd = el("span", "kind", kindTxt);
+    var x = el("button", "xb x", "close"); x.type = "button"; x.setAttribute("aria-label", "Close " + t.textContent);
+    x.addEventListener("click", function () { toggle(pkey); });
+    h.appendChild(t); h.appendChild(kd); h.appendChild(x); p.appendChild(h);
+    var fl = el("div", "fl");
+    if (s.kind === "root") {
+      p.appendChild(el("p", "pl", D.root.plain));
+      [plural(D.attrs.length, "attribute"), plural(D.blocks.length, "block"), D.spine.length + " shared", D.added.length + " not placed"].forEach(function (c) { fl.appendChild(chip(c)); });
+      p.appendChild(fl);
+      var ul = document.createElement("ul");
+      D.blocks.slice().sort(function (a, b) { return (b.attrs.length + b.spine.length) - (a.attrs.length + a.spine.length) || a.n - b.n; })
+        .forEach(function (b) { ul.appendChild(el("li", null, b.name + " · " + plural(b.attrs.length + b.spine.length, "attribute"))); });
+      p.appendChild(ul);
+    } else if (s.kind === "attr") {
+      var a = s.a;
+      p.appendChild(el("p", "pl", a.plain));
+      fl.appendChild(chip("rated " + a.r, "on")); if (a.alarm) fl.appendChild(chip("alert", "al"));
+      fl.appendChild(chip(a.type)); fl.appendChild(chip("first at " + a.first));
+      if (a.card) fl.appendChild(chip(a.card, "hz"));
+      fl.appendChild(chip(a.spine ? "shared by " + a.spineIn + " blocks" : a.home ? B[a.home].name : D.addedName, a.home || a.spine ? "" : "hz"));
+      p.appendChild(fl);
+      if (a.needs.length) {
+        var uq = document.createElement("ul");
+        a.needs.forEach(function (q) { uq.appendChild(el("li", null, q + " · " + D.qtext[q])); });
+        p.appendChild(el("p", "std", "Questions that cannot be answered without it")); p.appendChild(uq);
+      } else p.appendChild(el("p", "std", a.needNote));
+    } else if (s.kind === "block") {
+      var b = s.b;
+      p.appendChild(el("p", "pl", b.plain));
+      fl.appendChild(chip(b.attrs.length + " of its own")); fl.appendChild(chip(b.spine.length + " shared"));
+      fl.appendChild(chip(b.questions.join(" · ")));
+      p.appendChild(fl);
+      var ub = document.createElement("ul");
+      b.attrs.concat(b.spine).forEach(function (id) { ub.appendChild(el("li", null, A[id].label + " · rated " + A[id].r + (b.spine.indexOf(id) >= 0 ? " · shared" : ""))); });
+      p.appendChild(ub);
+      p.appendChild(el("p", "std", b.standpoint));
+    } else if (s.kind === "group") {
+      p.appendChild(el("p", "pl", s.g.plain));
+      fl.appendChild(chip(plural(s.g.blocks.length, "block"))); fl.appendChild(chip(plural(s.g.n, "attribute")));
+      p.appendChild(fl);
+      var ug = document.createElement("ul");
+      s.g.blocks.forEach(function (bk) { ug.appendChild(el("li", null, B[bk].name + " · " + plural(B[bk].attrs.length + B[bk].spine.length, "attribute"))); });
+      p.appendChild(ug);
+    } else if (s.kind === "sec") {
+      p.appendChild(el("p", "pl", s.s.plain));
+      fl.appendChild(chip(plural(s.s.attrs.length, "attribute"))); p.appendChild(fl);
+      var us = document.createElement("ul");
+      s.s.attrs.forEach(function (id) { us.appendChild(el("li", null, A[id].label + " · " + (A[id].spine ? "shared" : A[id].home ? B[A[id].home].name : D.addedName))); });
+      p.appendChild(us);
+    } else {
+      p.appendChild(el("p", "pl", D.addedPlain));
+      fl.appendChild(chip(plural(D.added.length, "attribute"))); p.appendChild(fl);
+      var ua = document.createElement("ul");
+      D.added.forEach(function (id) { ua.appendChild(el("li", null, A[id].label + " · rated " + A[id].r)); });
+      p.appendChild(ua);
+    }
+    return p;
+  }
+  function paintTray() {
+    tray.querySelectorAll(".pan").forEach(function (n) { n.remove(); });
+    $("tray-empty").hidden = S.open.length > 0;
+    S.open.forEach(function (k) { var p = panelFor(k); if (p) tray.appendChild(p); });
+  }
+
+  /* ── the rail ──────────────────────────────────────────────────────── */
+  function rgrp(label, plainTxt, opts, cur, onPick) {
+    var g = el("div", "rgrp"), l = el("span", "rl", label), box = el("div", "opts");
+    box.setAttribute("role", "radiogroup"); box.setAttribute("aria-label", label);
+    hover(l, { control: plainTxt, name: label });
+    opts.forEach(function (o) {
+      var b = el("button", "opt"); b.type = "button"; b.setAttribute("role", "radio");
+      b.setAttribute("data-id", o.id); b.setAttribute("aria-checked", String(o.id === cur));
+      if (o.rail) b.setAttribute("data-" + o.rail, o.id);
+      var k = el("span", "k", o.label); b.appendChild(k);
+      if (o.note) b.appendChild(el("span", "sp", o.note));
+      b.addEventListener("click", function () { onPick(o.id); });
+      hover(b, { control: o.plain, name: o.label });
+      box.appendChild(b);
+    });
+    g.appendChild(l); g.appendChild(box); return g;
+  }
+  function paintRail() {
+    var host = $("rail"); host.innerHTML = "";
+    host.appendChild(rgrp(D.rails.layout.label, D.rails.layout.plain, LAYS.map(function (k) {
+      return { id: k, rail: "lay", label: k + " · " + D.layouts[k].name, plain: D.layouts[k].plain };
+    }), S.lay, function (v) { S.lay = v; save(); draw(true, true); }));
+    host.appendChild(rgrp(D.rails.group.label, D.rails.group.plain, GRPS.map(function (k) {
+      return { id: k, rail: "grp", label: D.groupings[k].name, note: D.groupings[k].note, plain: D.groupings[k].plain };
+    }), S.grp, function (v) { S.grp = v; save(); draw(true, true); }));
+    host.appendChild(rgrp(D.rails.spine.label, D.rails.spine.plain, SPN.map(function (k) {
+      return { id: k, rail: "spine", label: D.spineModes[k].name, note: D.spineModes[k].note, plain: D.spineModes[k].plain };
+    }), S.spine, function (v) { S.spine = v; save(); draw(true, true); }));
+    host.appendChild(rgrp(D.rails.tray.label, D.rails.tray.plain, TRY.map(function (k) {
+      return { id: k, rail: "tray", label: D.trayModes[k].name, plain: D.trayModes[k].plain };
+    }), S.tray, function (v) { S.tray = v; save(); draw(true, true); }));
+  }
+  function paintStatus(T, L) {
+    var st = $("status"); st.innerHTML = "";
+    var drawn = L.all.length;
+    [["nodes drawn", drawn], ["levels drawn", L.maxD === BAND_D ? 1 : Math.floor(L.maxD) + 1], ["panels open", S.open.length],
+     ["map is", L.w + " x " + L.h + " px"]].forEach(function (r) {
+      var s = el("span"); s.appendChild(document.createTextNode(r[0] + " ")); s.appendChild(el("b", null, String(r[1]))); st.appendChild(s);
+    });
+    var dp = $("deep");
+    if (T.deferred > 0) { dp.hidden = false; dp.textContent = D.deepNote.replace("{n}", String(T.deferred)); } else dp.hidden = true;
+    buildText();
+  }
+  function paintCards(L) {
+    var host = $("cards"); host.innerHTML = "";
+    LAYS.forEach(function (k) {
+      var c = el("div", "card"); c.setAttribute("data-lay", k); c.setAttribute("data-cur", String(k === S.lay));
+      var h = el("h3"); h.appendChild(el("span", "k", k)); h.appendChild(document.createTextNode(D.layouts[k].name));
+      if (S.pick === k) h.appendChild(chip("your pick", "on"));
+      c.appendChild(h);
+      c.appendChild(el("p", null, D.layouts[k].line1));
+      c.appendChild(el("p", null, D.layouts[k].line2));
+      var m = el("div", "meas"); m.setAttribute("data-meas", k); c.appendChild(m);
+      var acts = el("div", "acts");
+      var show = el("button", "btn quiet", "Show it"); show.type = "button"; show.addEventListener("click", function () { S.lay = k; save(); draw(); $("sec-map").scrollIntoView({ block: "start" }); });
+      var pick = el("button", "btn quiet", S.pick === k ? "Picked" : "Pick this"); pick.type = "button"; pick.setAttribute("data-pick", k);
+      pick.addEventListener("click", function () { S.pick = S.pick === k ? null : k; save(); paintCards(L); buildText(); });
+      acts.appendChild(show); acts.appendChild(pick); c.appendChild(acts);
+      host.appendChild(c);
+    });
+    measureAll();
+  }
+  /* every card's measured line comes from running the layout, never from a typed number */
+  function measureAll() {
+    var keep = S.lay, ext = {};
+    LAYS.forEach(function (k) { S.lay = k; var T = buildTree(), L = place(T); ext[k] = { w: L.w, h: L.h, n: L.all.length }; });
+    S.lay = keep;
+    LAYS.forEach(function (k) {
+      var m = document.querySelector('[data-meas="' + k + '"]'); if (!m) return;
+      m.textContent = k === "E" ? ext[k].n + " nodes · no drawing, so it takes the width it is given"
+        : ext[k].n + " nodes · " + ext[k].w + " x " + ext[k].h + " px as drawn now";
+    });
+    window.__bmExtents = ext;
+    var wide = LAYS.filter(function (k) { return k !== "E"; }).sort(function (a, b) { return ext[b].w - ext[a].w; })[0];
+    var tall = LAYS.filter(function (k) { return k !== "E"; }).sort(function (a, b) { return ext[b].h - ext[a].h; })[0];
+    var t = $("take-options"); t.innerHTML = "";
+    D.takes.options.forEach(function (s) {
+      t.appendChild(el("li", null, s.replace("{widest}", D.layouts[wide].name + " at " + ext[wide].w + " px").replace("{tallest}", D.layouts[tall].name + " at " + ext[tall].h + " px")));
+    });
+  }
+
+  /* ── motion: the page opens on the finished picture ─────────────────── */
+  var ANIM = "finished";
+  try { var av = window.localStorage.getItem(AKEY); if (av === "open" || av === "finished") ANIM = av; } catch (e) {}
+  function settle() { plane.classList.add("still"); requestAnimationFrame(function () { requestAnimationFrame(function () { plane.classList.remove("still"); }); }); }
+  function replay() {
+    if (!window.MOTION || !window.MOTION.on) { draw(false); plane.classList.add("still"); requestAnimationFrame(drawSweep); return; }
+    var T = CUR && CUR.T, L = CUR && CUR.L; if (!L) return;
+    var r = L.all[0];
+    plane.classList.add("still");
+    NODES.forEach(function (x) { if (x.el.style.left !== undefined && S.lay !== "E") { x.el.style.left = (r.cx - SIZE[x.n.kind][0] / 2) + "px"; x.el.style.top = (r.cy - SIZE[x.n.kind][1] / 2) + "px"; x.el.style.opacity = "0"; } });
+    requestAnimationFrame(function () { requestAnimationFrame(function () {
+      plane.classList.remove("still");
+      NODES.forEach(function (x) { x.el.style.left = (x.n.cx - SIZE[x.n.kind][0] / 2) + "px"; x.el.style.top = (x.n.cy - SIZE[x.n.kind][1] / 2) + "px"; x.el.style.opacity = "1"; });
+    }); });
+  }
+
+  /* ── one tooltip: short on a control, richer on an element ─────────── */
+  var tip = el("div", "tip"); tip.setAttribute("data-show", "false"); document.body.appendChild(tip);
+  function tipHtml(n) {
+    if (n.control) return '<span class="ln"><b>' + esc(n.name) + "</b></span>" + '<span class="pl">' + esc(n.control) + "</span>";
+    var s = SUBJ(n.pkey), lines = [], plainTxt = "";
+    if (!s) return "";
+    if (s.kind === "attr") { var a = s.a;
+      lines.push("<b>" + esc(a.label) + "</b>");
+      lines.push(esc("rated " + a.r + (a.alarm ? " · alert" : "") + " · " + a.type));
+      lines.push(esc("first shown at " + a.first + " · needed by " + plural(a.needs.length, "question")));
+      lines.push(esc(a.spine ? "shared by " + a.spineIn + " blocks" : a.home ? "in " + B[a.home].name : D.addedName));
+      plainTxt = a.plain;
+    } else if (s.kind === "block") { lines.push("<b>" + esc(s.b.name) + "</b>");
+      lines.push(esc(s.b.questions.join(" · ") + " · " + s.b.attrs.length + " of its own · " + s.b.spine.length + " shared"));
+      plainTxt = s.b.plain;
+    } else if (s.kind === "group") { lines.push("<b>" + esc(s.g.name) + "</b>"); lines.push(esc(plural(s.g.blocks.length, "block") + " · " + plural(s.g.n, "attribute"))); plainTxt = s.g.plain;
+    } else if (s.kind === "sec") { lines.push("<b>" + esc(s.s.short) + "</b>"); lines.push(esc(plural(s.s.attrs.length, "attribute"))); plainTxt = s.s.plain;
+    } else if (s.kind === "root") { lines.push("<b>" + esc(D.root.name) + "</b>"); lines.push(esc(D.root.sub)); plainTxt = D.root.plain;
+    } else { lines.push("<b>" + esc(D.addedName) + "</b>"); lines.push(esc(plural(D.added.length, "attribute"))); plainTxt = D.addedPlain; }
+    return lines.map(function (l) { return '<span class="ln">' + l + "</span>"; }).join("") + '<span class="pl">' + esc(plainTxt) + "</span>";
+  }
+  function hover(node, n) {
+    node.addEventListener("mouseenter", function () { show(node, n); });
+    node.addEventListener("mouseleave", function () { tip.setAttribute("data-show", "false"); });
+    node.addEventListener("focus", function () { show(node, n); });
+    node.addEventListener("blur", function () { tip.setAttribute("data-show", "false"); });
+  }
+  function show(node, n) {
+    var html = tipHtml(n); if (!html) return;
+    tip.innerHTML = html; tip.setAttribute("data-show", "true");
+    var r = node.getBoundingClientRect(), tr = tip.getBoundingClientRect();
+    var x = r.left + window.scrollX, y = r.top + window.scrollY - tr.height - 9;
+    if (y < window.scrollY + 4) y = r.bottom + window.scrollY + 9;             /* never under the pointer */
+    x = Math.max(6, Math.min(x, window.scrollX + document.documentElement.clientWidth - tr.width - 6));
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+  }
+
+  /* ── the words ─────────────────────────────────────────────────────── */
+  $("eyebrow").textContent = D.head.eyebrow; $("h1").textContent = D.head.title;
+  $("lede").textContent = D.head.lede; $("keys").innerHTML = D.head.keys;
+  ["map", "reads", "options", "open", "more", "pick"].forEach(function (k) { $("t-" + k).textContent = D.secWords[k].title; $("n-" + k).textContent = D.secWords[k].n; });
+  $("tray-empty").textContent = D.trayEmpty; $("sketch").textContent = D.head.sketchNote;
+  $("open-why").textContent = D.open.why;
+  $("pick-intro").textContent = D.pickIntro;
+  $("foot").textContent = D.foot;
+  (function () { var t = $("take-map"); D.takes.map.forEach(function (s) { t.appendChild(el("li", null, s)); }); })();
+  (function () { var h = $("facts"); D.facts.forEach(function (f) {
+    var p = el("div", "panel"); p.appendChild(el("div", "big", f.big)); p.appendChild(el("p", null, f.text)); h.appendChild(p); }); })();
+  (function () { var h = $("qs"); D.open.items.forEach(function (q) {
+    var b = el("div", "qq"); b.appendChild(el("div", "h", q.q)); b.appendChild(el("div", "d", q.did)); b.appendChild(el("div", "a", q.ask)); h.appendChild(b); }); })();
+  (function () { var h = $("more-body"); D.more.lines.forEach(function (s) { h.appendChild(el("p", null, s)); }); })();
+  (function () { var b = $("more-btn"), body = $("more-body");
+    b.addEventListener("click", function () { var on = b.getAttribute("aria-expanded") === "true"; b.setAttribute("aria-expanded", String(!on)); body.hidden = on; b.textContent = on ? D.moreShow : D.moreHide; });
+    b.textContent = D.moreShow; hover(b, { control: D.ui.more, name: D.moreShow }); })();
+
+  /* ── the pick, as text ─────────────────────────────────────────────── */
+  function buildText() {
+    var L = ["BRAIN MAP — " + D.root.name];
+    L.push("pick: " + (S.pick ? S.pick + " · " + D.layouts[S.pick].name : "none yet"));
+    L.push("showing: " + S.lay + " · " + D.layouts[S.lay].name + " | grouping " + D.groupings[S.grp].name + " | shared " + D.spineModes[S.spine].name + " | tray " + D.trayModes[S.tray].name);
+    L.push("open panels (" + S.open.length + "): " + (S.open.map(function (k) { var s = SUBJ(k); return !s ? k : s.kind === "attr" ? s.a.label : s.kind === "block" ? s.b.name : s.kind === "group" ? s.g.name : s.kind === "sec" ? s.s.short : s.kind === "root" ? D.root.name : D.addedName; }).join(" · ") || "none"));
+    L.push("map: " + D.inv.hash + " · cells " + D.cellsHash);
+    $("out").value = L.join("\n");
+  }
+  $("copy").addEventListener("click", function () {
+    var t = $("out").value;
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function () { $("said").textContent = "Copied."; }, function () { $("said").textContent = "Select the text and copy it."; });
+    else { $("out").select(); $("said").textContent = "Select the text and copy it."; }
+  });
+  var reset = $("reset");
+  reset.addEventListener("click", function () {
+    if (reset.getAttribute("data-armed") !== "true") { reset.setAttribute("data-armed", "true"); reset.textContent = D.resetArm; return; }
+    reset.setAttribute("data-armed", "false"); reset.textContent = D.resetIdle;
+    S.open = []; S.pick = null; save(); draw();
+  });
+  reset.textContent = D.resetIdle;
+  $("closeall").addEventListener("click", function () { S.open = []; save(); draw(); });
+  $("replay").addEventListener("click", replay);
+  hover($("replay"), { control: D.ui.replay, name: "Replay" });
+  hover($("copy"), { control: D.ui.copy, name: "Copy my pick" });
+  hover(reset, { control: D.ui.reset, name: D.resetIdle });
+
+  /* ── cog: animations start finished (his standing rule) ────────────── */
+  (function () {
+    var host = $("af-anim"); if (!host) return;
+    var OPTS = [{ id: "finished", label: "Start finished", note: "default" }, { id: "open", label: "Play on open", note: "runs it" }];
+    function apply(id, first) {
+      ANIM = id; try { window.localStorage.setItem(AKEY, id); } catch (e) {}
+      host.querySelectorAll(".af-opt").forEach(function (o) { o.setAttribute("aria-checked", String(o.getAttribute("data-id") === id)); });
+      if (!first && id === "open") replay();
+    }
+    OPTS.forEach(function (o) {
+      var b = el("button", "af-opt"); b.type = "button"; b.setAttribute("role", "radio"); b.setAttribute("data-id", o.id); b.setAttribute("aria-checked", "false");
+      b.appendChild(el("span", "af-name", o.label)); b.appendChild(el("span", "af-spec", o.note));
+      b.addEventListener("click", function () { apply(o.id); }); host.appendChild(b);
+    });
+    apply(ANIM, true);
+  })();
+
+  canvas.addEventListener("scroll", drawSweep);
+  window.addEventListener("resize", drawSweep);
+  draw(false);
+  plane.classList.add("still");
+  requestAnimationFrame(function () { requestAnimationFrame(function () {
+    if (ANIM === "open" && window.MOTION && window.MOTION.on) replay(); else plane.classList.remove("still");
+    drawSweep();
+  }); });
+  window.__bm = { data: D, state: function () { return S; }, cur: function () { return CUR; }, nodes: function () { return NODES; }, draw: draw, text: function () { return $("out").value; }, extents: function () { return window.__bmExtents; } };
+})();
+</script>

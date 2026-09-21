@@ -1,5 +1,5 @@
 {
- "_about": "The raw returns behind M1 (attribute x question) for the endpoint card, 2026-09-18. Three raters filled the whole matrix independently from three standpoints; a judge settled the hard splits. Never edited by hand: m1-merge.js turns this file into m1-endpoint.json. · ROUND 2 (2026-09-22): the 18 attributes added since round 1, scored by the same three standpoints and folded into each rater's own rows; round 1's raw is frozen at m1-round1.raw.json.",
+ "_about": "The raw returns behind M1 (attribute x question) for the endpoint card, 2026-09-18. Three raters filled the whole matrix independently from three standpoints; a judge settled the hard splits. Never edited by hand: m1-merge.js turns this file into m1-endpoint.json.",
  "input": "m1-input.json",
  "input_sha1": "d5e186f8",
  "standpoints": {
@@ -16,20 +16,16 @@
      "the-moment-a-table-is-touched",
      "operation-per-table",
      "own-guards",
-     "deciding-branches",
-     "the-ordered-chain-per-ending",
-     "the-predicate-per-decision-point"
+     "deciding-branches"
     ],
     "helps": [
      "data-touching-functions",
      "provisions",
      "switches",
      "catches",
-     "the-endings",
-     "the-checks-met-in-run-order",
-     "roles-per-function"
+     "the-endings"
     ],
-    "note": "The question has two halves — the table and its moment give the WHEN (a touch with no read/write kind is half a fact), and the forks that gate that step, the handler's own guards and the branch one call down, are the \"depends on\". · R2: These two close the join I had to make myself in round 1: the chain puts the touch at a numbered step, the predicate says in the author's words what had to be true to reach it. How the map found the table changes nothing about the moment.",
+    "note": "The question has two halves — the table and its moment give the WHEN (a touch with no read/write kind is half a fact), and the forks that gate that step, the handler's own guards and the branch one call down, are the \"depends on\".",
     "missing": "Nothing attaches a condition to one individual table touch — the decision points are listed per ending and the touches per stage, so the operator joins the two himself."
    },
    {
@@ -48,12 +44,9 @@
      "race-on-a-unique-key",
      "data-touching-functions",
      "the-stage-an-ending-leaves-from",
-     "idempotency-claim",
-     "the-ordered-chain-per-ending",
-     "in-flight-values",
-     "why-this-slot-is-empty"
+     "idempotency-claim"
     ],
-    "note": "He must first pick THIS ending from the list, then read which tables that route wrote and the committed / rolled-back / uncommitted label on each — the fate row is the whole second half of the question. · R2: The fate label already answers survival; the chain only shows where the commit sat and the session row how long the write had to survive in. None of the 18 is indispensable here.",
+    "note": "He must first pick THIS ending from the list, then read which tables that route wrote and the committed / rolled-back / uncommitted label on each — the fate row is the whole second half of the question.",
     "missing": ""
    },
    {
@@ -62,8 +55,7 @@
      "the-endings",
      "kinds-of-ending",
      "the-stage-an-ending-leaves-from",
-     "status-code-per-ending",
-     "why-this-slot-is-empty"
+     "status-code-per-ending"
     ],
     "helps": [
      "declared-status",
@@ -71,13 +63,9 @@
      "catches",
      "deciding-branches",
      "response-shape-per-ending",
-     "findings",
-     "the-ordered-chain-per-ending",
-     "the-route-that-passes-every-check",
-     "response-headers-per-ending",
-     "expected-slots-at-this-stage"
+     "findings"
     ],
-    "note": "The endings are the answer's body, the kinds are its vocabulary, the stage is the \"where does each leave\" half, and the status is how he names one out loud. · R2: \"CAN produce\" is a completeness claim: a hollow kind is unreadable until the card says the zero was measured rather than unread — the distinction D-012 asked for.",
+    "note": "The endings are the answer's body, the kinds are its vocabulary, the stage is the \"where does each leave\" half, and the status is how he names one out loud.",
     "missing": ""
    },
    {
@@ -86,9 +74,7 @@
      "coverage-per-condition",
      "the-endings",
      "own-guards",
-     "cases",
-     "what-the-case-asserts-on-this-condition",
-     "why-this-slot-is-empty"
+     "cases"
     ],
     "helps": [
      "deciding-branches",
@@ -99,13 +85,9 @@
      "race-on-a-unique-key",
      "fate-of-the-writes-per-ending",
      "findings",
-     "kinds-of-ending",
-     "case-role-on-this-endpoint",
-     "the-checks-met-in-run-order",
-     "the-predicate-per-decision-point",
-     "the-route-that-passes-every-check"
+     "kinds-of-ending"
     ],
-    "note": "\"Conditions\" here are the endings and the guards, so he needs both lists plus the covered / partial / untested mark on each and the C-ids that are the proof. · R2: A covered mark I cannot act on is worse than none — the assert is what \"proved\" means, and the empty-reason is the whole \"which does nothing reach\" half I named as missing.",
+    "note": "\"Conditions\" here are the endings and the guards, so he needs both lists plus the covered / partial / untested mark on each and the C-ids that are the proof.",
     "missing": "Nothing says WHY an untested condition is untestable — an effect, a switch arm, a provision or a race that no test can assert reads the same as one nobody wrote a test for, beyond the single word \"unmeasured\"."
    },
    {
@@ -120,10 +102,7 @@
      "own-guards",
      "the-handler",
      "the-moment-a-table-is-touched",
-     "response-shape-per-ending",
-     "expected-slots-at-this-stage",
-     "why-this-slot-is-empty",
-     "the-ordered-chain-per-ending"
+     "response-shape-per-ending"
     ],
     "helps": [
      "rate-limit",
@@ -136,15 +115,9 @@
      "delivery",
      "the-endings",
      "client-cache-effects",
-     "data-touching-functions",
-     "field-rules-of-the-request-body",
-     "in-flight-values",
-     "response-headers-per-ending",
-     "roles-per-function",
-     "rate-tier",
-     "how-common-this-piece-is"
+     "data-touching-functions"
     ],
-    "note": "This is the frame question, not a content one: the stage spine plus the one attribute that occupies each stage per topic — EDGE the middleware band, GATE the scheme and the context-giving functions, INPUT the request shape and its 422 rules, HANDLER the handler and its guards, EFFECTS the moment of each touch, ANSWER the response shape. · R2: The norm plus the empty-reason turn the frame question from \"what is here\" into \"what should be\", which is exactly what round 1 could not do; the chain is what occupies the stage being asked about.",
+    "note": "This is the frame question, not a content one: the stage spine plus the one attribute that occupies each stage per topic — EDGE the middleware band, GATE the scheme and the context-giving functions, INPUT the request shape and its 422 rules, HANDLER the handler and its guards, EFFECTS the moment of each touch, ANSWER the response shape.",
     "missing": "Nothing states what SHOULD be at a stage — the expected slot per stage per topic is a norm no attribute carries, so today the answer can only be what IS there, which is exactly the diagnosis he ruled out."
    },
    {
@@ -155,8 +128,7 @@
      "auth-scheme-gate",
      "own-guards",
      "context-giving-functions",
-     "rate-limit",
-     "the-checks-met-in-run-order"
+     "rate-limit"
     ],
     "helps": [
      "app-band",
@@ -166,14 +138,9 @@
      "deciding-branches",
      "catches",
      "request-scoped-state",
-     "kinds-of-ending",
-     "the-predicate-per-decision-point",
-     "the-route-that-passes-every-check",
-     "rate-tier",
-     "in-flight-values",
-     "the-ordered-chain-per-ending"
+     "kinds-of-ending"
     ],
-    "note": "A gate is either the auth check, a limiter or a handler precondition, so all three must be on screen beside the ending that fired and the stage it left from, which is what orders \"passed first\" against \"stopped here\". · R2: Run order with a passed mark on each is the \"which ones did it pass first\" half verbatim — round 1 could answer it only at stage granularity.",
+    "note": "A gate is either the auth check, a limiter or a handler precondition, so all three must be on screen beside the ending that fired and the stage it left from, which is what orders \"passed first\" against \"stopped here\".",
     "missing": "Nothing records the order of the gates among themselves — which dependency resolves before which — so \"which ones did it pass first\" is answerable only at stage granularity."
    },
    {
@@ -184,8 +151,7 @@
      "the-moment-a-table-is-touched",
      "the-handler",
      "context-giving-functions",
-     "data-touching-functions",
-     "the-ordered-chain-per-ending"
+     "data-touching-functions"
     ],
     "helps": [
      "own-guards",
@@ -199,14 +165,9 @@
      "events-published",
      "tasks-dispatched",
      "outside-services-called",
-     "validation-cases",
-     "the-checks-met-in-run-order",
-     "roles-per-function",
-     "in-flight-values",
-     "the-predicate-per-decision-point",
-     "the-route-that-passes-every-check"
+     "validation-cases"
     ],
-    "note": "Sequence is read off one route: the ending picks the route, the stage order carries the coarse \"after what\", and the named functions plus the stage·step of each table touch are the only things that place a step inside a stage. · R2: One row closes the hole I named: counts and stage positions were never a sequence. Everything else here only labels the steps it already orders.",
+    "note": "Sequence is read off one route: the ending picks the route, the stage order carries the coarse \"after what\", and the named functions plus the stage·step of each table touch are the only things that place a step inside a stage.",
     "missing": "There is no ordered step list as an attribute — only counts (steps in the longest chain, walk levels) and stage positions — so \"what executes after what\" inside a single stage cannot be read off the card."
    },
    {
@@ -216,28 +177,23 @@
      "status-code-per-ending",
      "response-shape-per-ending",
      "can-the-client-tell-the-endings-apart",
-     "who-fetches-it",
-     "what-the-screen-does-on-this-ending"
+     "who-fetches-it"
     ],
     "helps": [
      "client-cache-effects",
      "findings",
      "kinds-of-ending",
      "delivery",
-     "journeys-workflow-step",
-     "response-headers-per-ending",
-     "what-the-case-asserts-on-this-condition",
-     "workflow-step"
+     "journeys-workflow-step"
     ],
-    "note": "Two 409s are told apart only by what differs in the answer and by what the screen reads, so he needs the endings with their codes, the body each one sends, the hook and screen that receive it, and the verdict row that says whether they land on one branch. · R2: \"Can it tell them apart\" was answerable; \"what does it do\" was not — a retry repeats the route and a redirect leaves the screen, and that is the half that changes my next move.",
+    "note": "Two 409s are told apart only by what differs in the answer and by what the screen reads, so he needs the endings with their codes, the body each one sends, the hook and screen that receive it, and the verdict row that says whether they land on one branch.",
     "missing": "Nothing shows what the screen DOES on each branch — the message, the retry, the redirect — only whether it can distinguish the endings at all."
    },
    {
     "q": "Q9",
     "needed": [
      "tables-touched",
-     "operation-per-table",
-     "how-this-table-was-found"
+     "operation-per-table"
     ],
     "helps": [
      "the-moment-a-table-is-touched",
@@ -245,11 +201,9 @@
      "provisions",
      "fate-of-the-writes-per-ending",
      "the-endings",
-     "entity-cluster",
-     "why-this-slot-is-empty",
-     "the-ordered-chain-per-ending"
+     "entity-cluster"
     ],
-    "note": "Only the endpoint's own touched set and the kind of each touch are on the card; the whole question is that set minus the panel's, and the read-only touches are the ones that go missing. · R2: The one question where provenance IS the answer: a table known only to a route's steps is precisely one the panel's access edges never drew. On every other question I would keep that row behind the plus-information toggle.",
+    "note": "Only the endpoint's own touched set and the kind of each touch are on the card; the whole question is that set minus the panel's, and the read-only touches are the ones that go missing.",
     "missing": "Nothing names the DRAWN set — which tables the Data panel actually renders — so the difference can be counted (15 touched, 13 drawn) but the two missing tables cannot be listed from the card."
    },
    {
@@ -257,18 +211,16 @@
     "needed": [
      "request-shape",
      "response-shape-per-ending",
-     "tables-touched",
-     "field-rules-of-the-request-body"
+     "tables-touched"
     ],
     "helps": [
      "operation-per-table",
      "entity-cluster",
      "validation-cases",
      "the-moment-a-table-is-touched",
-     "data-touching-functions",
-     "why-this-slot-is-empty"
+     "data-touching-functions"
     ],
-    "note": "From an endpoint card the only carriers of an entity's fields are the request shape, the per-ending response shape and the tables the door touches — everything else is about behaviour, not structure. · R2: The first rows on this card that carry fields instead of shape names — required, length, range, and the column rule behind each. The hierarchy the question asks for still belongs to the model card.",
+    "note": "From an endpoint card the only carriers of an entity's fields are the request shape, the per-ending response shape and the tables the door touches — everything else is about behaviour, not structure.",
     "missing": "The fields themselves — a table's columns with type, nullability and the joins between them, and the hierarchy the question asks for — are not endpoint attributes; this question belongs to the model or schema card and only the shapes' names reach here."
    },
    {
@@ -278,8 +230,7 @@
      "kinds-of-ending",
      "status-code-per-ending",
      "declared-status",
-     "the-stage-an-ending-leaves-from",
-     "the-route-that-passes-every-check"
+     "the-stage-an-ending-leaves-from"
     ],
     "helps": [
      "steps-in-the-longest-chain",
@@ -290,13 +241,9 @@
      "deciding-branches",
      "catches",
      "response-shape-per-ending",
-     "fate-of-the-writes-per-ending",
-     "the-checks-met-in-run-order",
-     "the-predicate-per-decision-point",
-     "the-ordered-chain-per-ending",
-     "workflow-step"
+     "fate-of-the-writes-per-ending"
     ],
-    "note": "Expected versus exception is read as success-kind against refusal-kind: the ending list split by kind, each one's code against the declared promise, and how early it leaves — an ending that leaves at EDGE is never the golden route. · R2: This is the attribute I said was missing: the through-route named outright, with the check each other route fires as the reason it is an exception — no longer inferred from the success kind.",
+    "note": "Expected versus exception is read as success-kind against refusal-kind: the ending list split by kind, each one's code against the declared promise, and how early it leaves — an ending that leaves at EDGE is never the golden route.",
     "missing": "Nothing marks a route as the EXPECTED one — there is no frequency, traffic or declared happy-path attribute — so \"expected\" is inferred from the success kind and the longest chain rather than read."
    },
    {
@@ -310,8 +257,7 @@
      "idempotency-claim",
      "delivery",
      "outside-services-called",
-     "risk-flag",
-     "how-common-this-piece-is"
+     "risk-flag"
     ],
     "helps": [
      "tasks-dispatched",
@@ -323,13 +269,9 @@
      "rate-limit",
      "request-shape",
      "method-path",
-     "signature",
-     "where-this-endpoint-sits-in-the-app",
-     "expected-slots-at-this-stage",
-     "rate-tier",
-     "why-this-slot-is-empty"
+     "signature"
     ],
-    "note": "He judges standard-versus-specialist by the pieces the door is assembled from — the middleware band, the scheme, the context functions every door has — against the rare marks that only a few carry: an idempotency key, a stream, an outside service, extra switches or guards, and the size alert. · R2: Standard stops being a judgement the moment the card says how many doors of this app and of the four carry each piece; a rare zero only counts if it is a measured zero.",
+    "note": "He judges standard-versus-specialist by the pieces the door is assembled from — the middleware band, the scheme, the context functions every door has — against the rare marks that only a few carry: an idempotency key, a stream, an outside service, extra switches or guards, and the size alert.",
     "missing": "The comparison base is absent: nothing on the card says how many of the estate's doors carry each piece (the common-vs-rare census, backlog B14), so \"standard\" stays a judgement rather than a reading."
    },
    {
@@ -338,20 +280,16 @@
      "request-shape",
      "response-shape-per-ending",
      "the-endings",
-     "status-code-per-ending",
-     "field-rules-of-the-request-body",
-     "response-headers-per-ending"
+     "status-code-per-ending"
     ],
     "helps": [
      "validation-cases",
      "delivery",
      "declared-status",
      "kinds-of-ending",
-     "the-stage-an-ending-leaves-from",
-     "what-the-case-asserts-on-this-condition",
-     "why-this-slot-is-empty"
+     "the-stage-an-ending-leaves-from"
     ],
-    "note": "In and out is one pair per ending, so the ending and its code are needed just to select the right response shape beside the single request shape. · R2: What comes back is body AND headers — the 429's retry-after is the part I act on — and the field rules make the in-side more than a name with a count.",
+    "note": "In and out is one pair per ending, so the ending and its code are needed just to select the right response shape beside the single request shape.",
     "missing": "The shapes are named and counted, not shown field by field — the same field-level gap as Q10, so \"what shape\" is answered by a name plus a count."
    },
    {
@@ -363,8 +301,7 @@
      "findings",
      "the-endings",
      "tables-touched",
-     "functions-behind-walk-levels",
-     "where-this-endpoint-sits-in-the-app"
+     "functions-behind-walk-levels"
     ],
     "helps": [
      "steps-in-the-longest-chain",
@@ -376,14 +313,9 @@
      "entity-cluster",
      "fate-of-the-writes-per-ending",
      "kinds-of-ending",
-     "operation-per-table",
-     "how-common-this-piece-is",
-     "case-role-on-this-endpoint",
-     "what-the-case-asserts-on-this-condition",
-     "the-ordered-chain-per-ending",
-     "why-this-slot-is-empty"
+     "operation-per-table"
     ],
-    "note": "Three superlatives, three readings: density is the ending count, the tables and the functions behind; risk is the alert flag and the findings; least tested is the coverage fraction — and the door's name is what he says back. · R2: A place in the distribution is the only one of the 18 that reaches past this card, which is what this question always needed; a door whose cases only passed through is the real \"least tested\".",
+    "note": "Three superlatives, three readings: density is the ending count, the tables and the functions behind; risk is the alert flag and the findings; least tested is the coverage fraction — and the door's name is what he says back.",
     "missing": "The other doors — this is the only question that cannot be answered from one card; it needs the same attributes ranked across the estate (the far view), and no attribute carries a door's rank or the estate's distribution."
    },
    {
@@ -399,19 +331,16 @@
      "decision-point-functions",
      "data-touching-functions",
      "context-giving-functions",
-     "little-helpers-with-a-type",
-     "the-ordered-chain-per-ending",
-     "roles-per-function"
+     "little-helpers-with-a-type"
     ],
-    "note": "Opening it takes exactly the anchor and the function it anchors, with the door's name as confirmation that it is the right one. · R2: None of the 18 hands me an anchor — the chain and the roles only say which function to open first. The per-block line was closed by the file:line row's own growth, not by anything scored here.",
+    "note": "Opening it takes exactly the anchor and the function it anchors, with the door's name as confirmation that it is the right one.",
     "missing": "file:line exists for the handler only — the guards, branches, catches, tables and screens listed elsewhere on the card carry no anchor of their own, so \"open it\" works for one thing and stops there."
    },
    {
     "q": "Q16",
     "needed": [
      "request-scoped-state",
-     "client-cache-effects",
-     "in-flight-values"
+     "client-cache-effects"
     ],
     "helps": [
      "idempotency-claim",
@@ -420,11 +349,9 @@
      "fate-of-the-writes-per-ending",
      "app-band",
      "who-fetches-it",
-     "data-touching-functions",
-     "the-ordered-chain-per-ending",
-     "why-this-slot-is-empty"
+     "data-touching-functions"
     ],
-    "note": "Two attributes are the question by definition — what lived on the request and what the screen's cache kept or dropped — and everything else is one of the three known instances of that state riding on another row. · R2: The row IS the question — where set, where read, when it dies — and the three true zeros (no lock, no context variable, no background task) are why I can believe a short list instead of assembling it from three other rows.",
+    "note": "Two attributes are the question by definition — what lived on the request and what the screen's cache kept or dropped — and everything else is one of the three known instances of that state riding on another row.",
     "missing": "In-process ephemera has no attribute at all — a lock, an in-memory cache, the life of the database session — and request-scoped state itself is read by no general arm, so the answer is assembled from the auth context, the idempotency key and the session instead of listed."
    },
    {
@@ -435,9 +362,7 @@
      "catches",
      "switches",
      "the-endings",
-     "status-code-per-ending",
-     "the-predicate-per-decision-point",
-     "the-route-that-passes-every-check"
+     "status-code-per-ending"
     ],
     "helps": [
      "auth-scheme-gate",
@@ -450,14 +375,9 @@
      "request-shape",
      "app-band",
      "context-giving-functions",
-     "request-scoped-state",
-     "the-checks-met-in-run-order",
-     "the-ordered-chain-per-ending",
-     "field-rules-of-the-request-body",
-     "in-flight-values",
-     "rate-tier"
+     "request-scoped-state"
     ],
-    "note": "The four decision-point kinds are the four places a fork can sit — own code, one call down, a failure only, configuration — and they are only an answer when read against the ending and status they produce. · R2: The condition in the author's words is what determines the path; the raises the route does not translate are where I stop trusting the list, and the through-route is what each refusal is an exception to.",
+    "note": "The four decision-point kinds are the four places a fork can sit — own code, one call down, a failure only, configuration — and they are only an answer when read against the ending and status they produce.",
     "missing": "The predicate is carried for own guards but not for the other three kinds — a deciding branch or a catch names its exit, not the condition in the caller's words — and calls past one level are collapsed with a reason."
    },
    {
@@ -466,8 +386,7 @@
      "the-handler",
      "decision-point-functions",
      "data-touching-functions",
-     "context-giving-functions",
-     "roles-per-function"
+     "context-giving-functions"
     ],
     "helps": [
      "little-helpers-with-a-type",
@@ -478,12 +397,9 @@
      "catches",
      "tables-touched",
      "auth-scheme-gate",
-     "operation-per-table",
-     "the-predicate-per-decision-point",
-     "the-ordered-chain-per-ending",
-     "why-this-slot-is-empty"
+     "operation-per-table"
     ],
-    "note": "His four roles map one-to-one onto four attributes, so the needed set is simply those four — the rest is the fifth, uncrucial tier and the anchors for opening them. · R2: The four roles as one row per function, with the double-role mark I said was missing and the \"none of the four\" count that bounds the uncrucial tier.",
+    "note": "His four roles map one-to-one onto four attributes, so the needed set is simply those four — the rest is the fifth, uncrucial tier and the anchors for opening them.",
     "missing": "Nothing says a function holds two roles at once — a function that both decides an ending and commits appears on two lists with no mark that it is the same one."
    },
    {
@@ -498,12 +414,9 @@
      "steps-in-the-longest-chain",
      "validation-cases",
      "file-line",
-     "decision-point-functions",
-     "roles-per-function",
-     "the-ordered-chain-per-ending",
-     "why-this-slot-is-empty"
+     "decision-point-functions"
     ],
-    "note": "One attribute is the question verbatim — the small functions with their format / cap / validate type — and the rest only bounds where they sit in the walk. · R2: The TYPE is still unclassified, so nothing here is needed — \"none of the four\" names the helper set and the empty-reason says \"not read here\" instead of \"none\", which is all I can act on today.",
+    "note": "One attribute is the question verbatim — the small functions with their format / cap / validate type — and the rest only bounds where they sit in the walk.",
     "missing": "Nothing marks which helpers sit inside a loop or how often they run — the walk gives depth, not repetition — and the TYPE the question asks for is a classification no arm produces today."
    },
    {
@@ -519,9 +432,7 @@
      "events-published",
      "tasks-dispatched",
      "outside-services-called",
-     "who-fetches-it",
-     "why-this-slot-is-empty",
-     "in-flight-values"
+     "who-fetches-it"
     ],
     "helps": [
      "entity-cluster",
@@ -538,17 +449,9 @@
      "response-shape-per-ending",
      "the-stage-an-ending-leaves-from",
      "declared-status",
-     "steps-in-the-longest-chain",
-     "the-ordered-chain-per-ending",
-     "the-route-that-passes-every-check",
-     "roles-per-function",
-     "what-the-screen-does-on-this-ending",
-     "how-common-this-piece-is",
-     "where-this-endpoint-sits-in-the-app",
-     "expected-slots-at-this-stage",
-     "workflow-step"
+     "steps-in-the-longest-chain"
     ],
-    "note": "This is the table of contents, so the needed set is one head per topic and nothing below it: behaviour (the kinds and the endings), effects (the tables), impact beyond the request (events, tasks, outside services), reach (who fetches it), coverage, and the two alarms. · R2: One head per topic, and in-flight is a topic of its own now that a general reading carries it; the empty-reason is the row that finally says where this card is blind — \"what is there to explore\" was unanswerable without it.",
+    "note": "This is the table of contents, so the needed set is one head per topic and nothing below it: behaviour (the kinds and the endings), effects (the tables), impact beyond the request (events, tasks, outside services), reach (who fetches it), coverage, and the two alarms.",
     "missing": "Nothing distinguishes a topic that is empty because the app has none from one that is empty because no arm reads it, so \"what is there to explore\" cannot say where this card is blind — the distinction D-012 asks for on the empty kinds."
    }
   ],
@@ -560,10 +463,7 @@
      "the-moment-a-table-is-touched",
      "the-endings",
      "own-guards",
-     "deciding-branches",
-     "the-ordered-chain-per-ending",
-     "the-predicate-per-decision-point",
-     "how-this-table-was-found"
+     "deciding-branches"
     ],
     "helps": [
      "operation-per-table",
@@ -573,14 +473,9 @@
      "provisions",
      "the-stage-an-ending-leaves-from",
      "fate-of-the-writes-per-ending",
-     "steps-in-the-longest-chain",
-     "the-checks-met-in-run-order",
-     "the-route-that-passes-every-check",
-     "roles-per-function",
-     "in-flight-values",
-     "why-this-slot-is-empty"
+     "steps-in-the-longest-chain"
     ],
-    "note": "The answer is one join — the table set keyed to its stage-and-step stamp — and the second half (\"on what does that depend\") is computed from the forks that stand above that step on the route, so the ending list plus the guards and callee arms that select it are the WHERE clause; operation, switches and catches only label or qualify the touch. · R2: The ordered chain is the column round 1 said was missing here — it turns a stage-and-step stamp into a sequence between two touches; the predicate is the whole \"on what does that depend\" half, in the author's words rather than inferred; and how-this-table-was-found decides whether a moment exists at all, since a table known only by an access edge ",
+    "note": "The answer is one join — the table set keyed to its stage-and-step stamp — and the second half (\"on what does that depend\") is computed from the forks that stand above that step on the route, so the ending list plus the guards and callee arms that select it are the WHERE clause; operation, switches and catches only label or qualify the touch.",
     "missing": "No column carries the ordered step chain per ending — the-moment gives a stage and a step stamp, never the sequence between two touches — and a touch inside a loop has no iteration or cardinality column."
    },
    {
@@ -589,9 +484,7 @@
      "the-endings",
      "tables-touched",
      "operation-per-table",
-     "fate-of-the-writes-per-ending",
-     "the-ordered-chain-per-ending",
-     "how-this-table-was-found"
+     "fate-of-the-writes-per-ending"
     ],
     "helps": [
      "the-moment-a-table-is-touched",
@@ -600,14 +493,9 @@
      "data-touching-functions",
      "status-code-per-ending",
      "race-on-a-unique-key",
-     "idempotency-claim",
-     "why-this-slot-is-empty",
-     "in-flight-values",
-     "what-the-case-asserts-on-this-condition",
-     "the-predicate-per-decision-point",
-     "roles-per-function"
+     "idempotency-claim"
     ],
-    "note": "One ending is the row selector, operation filters the touches down to writes, and fate is the answer column itself — the other three of the four cannot be dropped because \"which tables were written\" is a filter over the touch set, not a fact stored anywhere else. · R2: Round 1's gap was the statement that put each write in its bucket; the chain carries the commit, rollback and savepoint steps in request order, so the fate column becomes explainable instead of asserted. Provenance stays needed because a write attributed to this ending must be known FROM this ending's steps — an access edge cannot be filtered by ending.",
+    "note": "One ending is the row selector, operation filters the touches down to writes, and fate is the answer column itself — the other three of the four cannot be dropped because \"which tables were written\" is a filter over the touch set, not a fact stored anywhere else.",
     "missing": "Nothing for the verdict; what is absent is the reason a given write ended in its bucket (which commit or rollback statement decided it) — catches names the failure translation but not the commit boundary that owned the write."
    },
    {
@@ -623,13 +511,9 @@
      "response-shape-per-ending",
      "findings",
      "own-guards",
-     "catches",
-     "the-ordered-chain-per-ending",
-     "the-route-that-passes-every-check",
-     "response-headers-per-ending",
-     "why-this-slot-is-empty"
+     "catches"
     ],
-    "note": "The result set is the ending list crossed with its stage stamp, and because the task is summarize the answer is grouped by family — kinds is the GROUP BY, while the status code is the per-row label the console rules push to the middle as a filter. · R2: This is still the one question the inventory answers completely — ending list crossed with stage stamp, grouped by family — so none of the 18 is load-bearing; the empty-reason column only keeps a hollow D-012 slot from reading as a generation gap.",
+    "note": "The result set is the ending list crossed with its stage stamp, and because the task is summarize the answer is grouped by family — kinds is the GROUP BY, while the status code is the per-row label the console rules push to the middle as a filter.",
     "missing": "Nothing — this is the one question the inventory answers completely; the only softness is that an ending's identity (a status plus a reason) is split across two columns rather than keyed as one."
    },
    {
@@ -641,13 +525,9 @@
      "deciding-branches",
      "catches",
      "switches",
-     "validation-cases",
-     "what-the-case-asserts-on-this-condition",
-     "case-role-on-this-endpoint",
-     "why-this-slot-is-empty",
-     "the-predicate-per-decision-point"
+     "validation-cases"
     ],
-    "note": "Coverage is the verdict column but it is meaningless without the denominator, and the denominator is the full condition estate — every ending plus every fork (guard, callee arm, catch, switch arm, 422 rule) — so each of those lists is an input to the count, not a decoration on it. · R2: Both halves of round 1's gap are now columns: the assertion names WHICH claim inside a case proves the condition, and the case role separates a test that came here on purpose (act) from one that only passed through a helper — without it the coverage fraction counts 134 pass-through calls as proof. The empty-reason column is the \"which does nothing reach\" half: unmeasurable-by-construction must not read as unt",
+    "note": "Coverage is the verdict column but it is meaningless without the denominator, and the denominator is the full condition estate — every ending plus every fork (guard, callee arm, catch, switch arm, 422 rule) — so each of those lists is an input to the count, not a decoration on it.",
     "helps": [
      "cases",
      "kinds-of-ending",
@@ -656,12 +536,7 @@
      "race-on-a-unique-key",
      "provisions",
      "findings",
-     "the-stage-an-ending-leaves-from",
-     "the-checks-met-in-run-order",
-     "the-ordered-chain-per-ending",
-     "the-route-that-passes-every-check",
-     "expected-slots-at-this-stage",
-     "where-this-endpoint-sits-in-the-app"
+     "the-stage-an-ending-leaves-from"
     ],
     "missing": "No column distinguishes \"a test could assert this and none does\" from \"no test could ever assert this\" per condition (effects, switch arms, provisions and races are unmeasurable by construction), and no column names WHICH assertion inside a case proves the condition."
    },
@@ -678,13 +553,7 @@
      "the-handler",
      "tables-touched",
      "response-shape-per-ending",
-     "own-guards",
-     "expected-slots-at-this-stage",
-     "why-this-slot-is-empty",
-     "the-ordered-chain-per-ending",
-     "the-checks-met-in-run-order",
-     "field-rules-of-the-request-body",
-     "response-headers-per-ending"
+     "own-guards"
     ],
     "helps": [
      "operation-per-table",
@@ -695,16 +564,9 @@
      "data-touching-functions",
      "kinds-of-ending",
      "delivery",
-     "idempotency-claim",
-     "in-flight-values",
-     "roles-per-function",
-     "rate-tier",
-     "how-this-table-was-found",
-     "the-route-that-passes-every-check",
-     "what-the-screen-does-on-this-ending",
-     "how-common-this-piece-is"
+     "idempotency-claim"
     ],
-    "note": "This is the spine query — stage is the partition key, so every column that carries a stage stamp or belongs to exactly one station (EDGE band, GATE scheme and dependencies, INPUT shape and rules, HANDLER, EFFECTS touches, ANSWER shape) is an input, and each stage would come out empty without its own. · R2: Round 1 called the expected-slot roster \"the one thing the card cannot compute\"; with it plus the empty-reason the question becomes a real expected-vs-present diff instead of a reader's inference. The other four are the stations' own contents in order — GATE checks in run order, INPUT field rules, the chain that occupies each stage, ANSWER headers — and each stage would come out empty with",
+    "note": "This is the spine query — stage is the partition key, so every column that carries a stage stamp or belongs to exactly one station (EDGE band, GATE scheme and dependencies, INPUT shape and rules, HANDLER, EFFECTS touches, ANSWER shape) is an input, and each stage would come out empty without its own.",
     "missing": "The expected-slot roster: no column says what a stage MUST hold, only what it does hold, so \"should\" is inferred by the reader — an expected-vs-present column per stage and topic is the one thing the card cannot compute."
    },
    {
@@ -715,10 +577,7 @@
      "app-band",
      "auth-scheme-gate",
      "context-giving-functions",
-     "own-guards",
-     "the-checks-met-in-run-order",
-     "the-ordered-chain-per-ending",
-     "the-predicate-per-decision-point"
+     "own-guards"
     ],
     "helps": [
      "rate-limit",
@@ -727,14 +586,9 @@
      "switches",
      "provisions",
      "deciding-branches",
-     "validation-cases",
-     "the-route-that-passes-every-check",
-     "rate-tier",
-     "in-flight-values",
-     "roles-per-function",
-     "why-this-slot-is-empty"
+     "validation-cases"
     ],
-    "note": "The stop is computed from the ending joined to the fork that produced it, and the passed-first half is computed from the ordered roster of checks ahead of that fork — the middleware band, the auth scheme and its checking function, then the handler's own guards. · R2: This question is the run-order column almost verbatim — checks marked passed plus the one that fired — and it closes round 1's complaint that two dependencies at the GATE could not be told apart by which ran first. The predicate is what makes the stop reproducible: a named gate without its condition tells me nothing I can falsify in a test.",
+    "note": "The stop is computed from the ending joined to the fork that produced it, and the passed-first half is computed from the ordered roster of checks ahead of that fork — the middleware band, the auth scheme and its checking function, then the handler's own guards.",
     "missing": "Order INSIDE a stage: the columns rank checks only by station, so two dependencies at the GATE cannot be told apart by which ran first — the per-ending ordered chain the prisms doc claims the feed carries has no column here."
    },
    {
@@ -748,10 +602,7 @@
      "data-touching-functions",
      "own-guards",
      "deciding-branches",
-     "catches",
-     "the-ordered-chain-per-ending",
-     "the-checks-met-in-run-order",
-     "the-route-that-passes-every-check"
+     "catches"
     ],
     "helps": [
      "functions-behind-walk-levels",
@@ -762,13 +613,9 @@
      "app-band",
      "auth-scheme-gate",
      "tasks-dispatched",
-     "events-published",
-     "the-predicate-per-decision-point",
-     "roles-per-function",
-     "in-flight-values",
-     "why-this-slot-is-empty"
+     "events-published"
     ],
-    "note": "Sequence is the whole answer, and the only order-bearing columns are the stage stamps, the step stamp on a data touch and the chain length — so the ordering has to be reconstructed by joining those stamps to the functions and forks that sit at each station. · R2: The chain IS the answer round 1 had to reconstruct from stamps; the through-route is needed with it because \"after what\" is undefined until a route is picked, and the passed-check order supplies the segment the chain used to collapse into one station. Calls deeper than one level are still collapsed with a reason — that part of the gap stands.",
+    "note": "Sequence is the whole answer, and the only order-bearing columns are the stage stamps, the step stamp on a data touch and the chain length — so the ordering has to be reconstructed by joining those stamps to the functions and forks that sit at each station.",
     "missing": "The chain itself: there is a COUNT of steps on the longest route but no ordered step list per route, no call-site order between two functions at the same stage, and calls deeper than one level are collapsed with a reason rather than sequenced."
    },
    {
@@ -779,10 +626,7 @@
      "response-shape-per-ending",
      "can-the-client-tell-the-endings-apart",
      "who-fetches-it",
-     "client-cache-effects",
-     "what-the-screen-does-on-this-ending",
-     "response-headers-per-ending",
-     "why-this-slot-is-empty"
+     "client-cache-effects"
     ],
     "helps": [
      "findings",
@@ -790,12 +634,9 @@
      "declared-status",
      "delivery",
      "cases",
-     "auth-scheme-gate",
-     "what-the-case-asserts-on-this-condition",
-     "the-predicate-per-decision-point",
-     "in-flight-values"
+     "auth-scheme-gate"
     ],
-    "note": "The collision is computed by grouping endings on their status and asking whether the body carries anything that separates them, then joined across the bridge to the hook and screen that receives it — the verdict column plus the cache effects is what the client actually DOES with each. · R2: Round 1's named gap was the rendered message and the retry policy behind the branch — that is exactly this column, down to the two 409s reaching one branch. Headers are needed beside it: a Retry-After or a WWW-Authenticate is what the client is actually told to do, and a header can separate two endings a body does not. The empty-reason is needed because 74 of 80 doors have no client code reading their fai",
+    "note": "The collision is computed by grouping endings on their status and asking whether the body carries anything that separates them, then joined across the bridge to the hook and screen that receives it — the verdict column plus the cache effects is what the client actually DOES with each.",
     "missing": "What the screen shows the user per ending, and whether it retries: the columns reach the branch and the cache keys, never the rendered message, the toast or the retry policy behind the branch."
    },
    {
@@ -803,20 +644,16 @@
     "needed": [
      "tables-touched",
      "operation-per-table",
-     "the-moment-a-table-is-touched",
-     "how-this-table-was-found"
+     "the-moment-a-table-is-touched"
     ],
     "helps": [
      "provisions",
      "entity-cluster",
      "data-touching-functions",
      "the-endings",
-     "fate-of-the-writes-per-ending",
-     "the-ordered-chain-per-ending",
-     "roles-per-function",
-     "why-this-slot-is-empty"
+     "fate-of-the-writes-per-ending"
     ],
-    "note": "This is a set difference and only the minuend is a column here — the touched set plus the kind and the station of each touch, which is what explains the undrawn ones (a read-only table, or a row provisioned at the gate before the handler). · R2: The subtrahend is still not on the card, but this column supplies the mechanism: a table known only to a route's steps (0 · 4 · 7 per endpoint, on 79 of 80) is precisely the one an access-edge drawing misses, so the difference stops being guesswork about the panel and becomes a provenance filter.",
+    "note": "This is a set difference and only the minuend is a column here — the touched set plus the kind and the station of each touch, which is what explains the undrawn ones (a read-only table, or a row provisioned at the gate before the handler).",
     "missing": "The subtrahend: the set of tables the Data panel draws (the entity's declared or mapped model roster) is not an attribute of the endpoint, so the difference cannot be computed from this list alone."
    },
    {
@@ -824,20 +661,16 @@
     "needed": [
      "request-shape",
      "response-shape-per-ending",
-     "tables-touched",
-     "field-rules-of-the-request-body"
+     "tables-touched"
     ],
     "helps": [
      "validation-cases",
      "operation-per-table",
      "entity-cluster",
      "data-touching-functions",
-     "the-endings",
-     "what-the-case-asserts-on-this-condition",
-     "how-this-table-was-found",
-     "why-this-slot-is-empty"
+     "the-endings"
     ],
-    "note": "From an endpoint card the only field-bearing columns are the two schemas, and the table list is the only thing that names the entity's storage — everything else here counts fields rather than listing them. · R2: Round 1 had no column for the fields themselves; this row carries the rule beside the field AND the column rules behind it — required, length, range, allowed values, what the database fills, what a delete elsewhere reaches — which is most of the \"how they hang together\" half. Foreign keys between tables are still absent.",
+    "note": "From an endpoint card the only field-bearing columns are the two schemas, and the table list is the only thing that names the entity's storage — everything else here counts fields rather than listing them.",
     "missing": "The model's own columns with their types, nullability and defaults, and the foreign keys between tables — the \"how they hang together\" half has no column at all; the endpoint card carries schema field COUNTS, not a field tree or a join key."
    },
    {
@@ -846,10 +679,7 @@
      "the-endings",
      "kinds-of-ending",
      "declared-status",
-     "the-stage-an-ending-leaves-from",
-     "the-route-that-passes-every-check",
-     "the-ordered-chain-per-ending",
-     "the-checks-met-in-run-order"
+     "the-stage-an-ending-leaves-from"
     ],
     "helps": [
      "status-code-per-ending",
@@ -859,13 +689,9 @@
      "journeys-workflow-step",
      "findings",
      "fate-of-the-writes-per-ending",
-     "own-guards",
-     "the-predicate-per-decision-point",
-     "what-the-case-asserts-on-this-condition",
-     "case-role-on-this-endpoint",
-     "workflow-step"
+     "own-guards"
     ],
-    "note": "The split is computed by partitioning the endings on their family and testing each against the declared promise — the success that matches the decorator and runs to the ANSWER stage is the expected route, everything that leaves earlier is an exception. · R2: The through-route column answers the question structurally — the route that gets past every check, and the check that stops each other one — which is the comparison itself, not context for it. Frequency is still unmeasured, and the column says so in its own line: how often a route is really taken cannot be read from code.",
+    "note": "The split is computed by partitioning the endings on their family and testing each against the declared promise — the success that matches the decorator and runs to the ANSWER stage is the expected route, everything that leaves earlier is an exception.",
     "missing": "Frequency: nothing observes how often each ending actually happens, so \"expected\" is a structural claim (the declared success, the longest chain) and not a measured one — a route that is nominally golden but fires once a month reads identically."
    },
    {
@@ -879,11 +705,7 @@
      "delivery",
      "events-published",
      "tasks-dispatched",
-     "outside-services-called",
-     "how-common-this-piece-is",
-     "where-this-endpoint-sits-in-the-app",
-     "expected-slots-at-this-stage",
-     "rate-tier"
+     "outside-services-called"
     ],
     "helps": [
      "own-guards",
@@ -896,13 +718,9 @@
      "the-stage-an-ending-leaves-from",
      "signature",
      "entity-cluster",
-     "race-on-a-unique-key",
-     "why-this-slot-is-empty",
-     "the-checks-met-in-run-order",
-     "in-flight-values",
-     "roles-per-function"
+     "race-on-a-unique-key"
     ],
-    "note": "The verdict is computed from a wiring fingerprint: the saturated columns say what every door has (band, scheme, limiter) and the rare-when-present columns say where this one departs (an idempotency key on 6 of 80, a stream on 1, an event, a task, an outside call) — those are the columns the comparison is actually made of. · R2: This closes round 1's population-baseline gap twice over: the piece census gives rarity per piece across this app and the four study apps, the distribution place gives the door's rank, and the stage norm gives what the kind is supposed to hold. Rate tier keeps its round-1 rating here — as a saturated column it is one of the fingerprints that says which doors departed ",
+    "note": "The verdict is computed from a wiring fingerprint: the saturated columns say what every door has (band, scheme, limiter) and the rare-when-present columns say where this one departs (an idempotency key on 6 of 80, a stream on 1, an event, a task, an outside call) — those are the columns the comparison is actually made of.",
     "missing": "The population baseline: \"standard\" needs the distribution of each value across the other doors and across the other apps, and that census is not a column on the card — one row cannot tell common from rare."
    },
    {
@@ -911,21 +729,16 @@
      "the-endings",
      "request-shape",
      "response-shape-per-ending",
-     "delivery",
-     "field-rules-of-the-request-body",
-     "response-headers-per-ending"
+     "delivery"
     ],
     "helps": [
      "validation-cases",
      "status-code-per-ending",
      "declared-status",
      "kinds-of-ending",
-     "cases",
-     "what-the-case-asserts-on-this-condition",
-     "in-flight-values",
-     "why-this-slot-is-empty"
+     "cases"
     ],
-    "note": "One ending selects the row, the two schema columns are the answer, and delivery belongs with them because on a streaming ending the shape that comes back is a sequence and the response shape alone would say it wrong. · R2: Both halves of round 1's gap, verbatim: the field list with its rules instead of a count and a type name, and the headers an ending sets, which no column carried. An assertion on a field of the body (155 such calls) is the evidence that the declared shape is the shape that actually comes back.",
+    "note": "One ending selects the row, the two schema columns are the answer, and delivery belongs with them because on a streaming ending the shape that comes back is a sequence and the response shape alone would say it wrong.",
     "missing": "The fields themselves: the schema columns carry counts and a type name, not the field list with types and rules, and no column carries the response HEADERS an ending sets."
    },
    {
@@ -937,11 +750,7 @@
      "functions-behind-walk-levels",
      "the-endings",
      "tables-touched",
-     "findings",
-     "where-this-endpoint-sits-in-the-app",
-     "the-ordered-chain-per-ending",
-     "case-role-on-this-endpoint",
-     "what-the-case-asserts-on-this-condition"
+     "findings"
     ],
     "helps": [
      "method-path",
@@ -954,13 +763,9 @@
      "can-the-client-tell-the-endings-apart",
      "auth-scheme-gate",
      "cases",
-     "fate-of-the-writes-per-ending",
-     "how-common-this-piece-is",
-     "roles-per-function",
-     "in-flight-values",
-     "why-this-slot-is-empty"
+     "fate-of-the-writes-per-ending"
     ],
-    "note": "Three rankings over one table: density is computed from the size columns (chain length, functions behind, endings, tables), riskiest from the risk verdict and the findings, least tested from the coverage fraction — method and entity only label and group the ordering. · R2: The place in the distribution is the cross-door column this question always lacked — a rank by functions behind and by endings a test names, which is \"densest\" and \"least tested\" as measurements rather than as a single invented score. The chain now carries the step count that the dropped longest-chain row used to give (4 · 14 · 22). Both test columns are needed because \"least tested\" is wrong if pass-through calls count an",
+    "note": "Three rankings over one table: density is computed from the size columns (chain length, functions behind, endings, tables), riskiest from the risk verdict and the findings, least tested from the coverage fraction — method and entity only label and group the ordering.",
     "missing": "The other rows: this is the only cross-door question and a card holds one door, so it needs the same columns for all 80 at once; and \"riskiest\" has no agreed formula — the risk flag is derived from size alone, with no traffic, no blast radius and no failure history feeding it."
    },
    {
@@ -976,26 +781,16 @@
      "decision-point-functions",
      "context-giving-functions",
      "little-helpers-with-a-type",
-     "entity-cluster",
-     "the-ordered-chain-per-ending",
-     "the-checks-met-in-run-order",
-     "the-predicate-per-decision-point",
-     "field-rules-of-the-request-body",
-     "roles-per-function",
-     "what-the-case-asserts-on-this-condition",
-     "case-role-on-this-endpoint",
-     "what-the-screen-does-on-this-ending"
+     "entity-cluster"
     ],
-    "note": "An openable location is computed from exactly one column, the file and line, and the handler name is what turns that anchor into a thing the operator recognises when it opens. · R2: None of the 18 is needed — the anchor itself is the file:line row, which now carries a line per step, field, column, check, catch and fork, closing round 1's \"anchors for everything else\". These eight decide WHICH anchor is worth opening; they are the label on the door, not the key.",
+    "note": "An openable location is computed from exactly one column, the file and line, and the handler name is what turns that anchor into a thing the operator recognises when it opens.",
     "missing": "Anchors for everything else: file:line exists once, for the handler, so a guard, a catch, a branch, a helper, a table's model class or a frontend hook has no location column — \"can I open it\" is answerable only for the door itself."
    },
    {
     "q": "Q16: What did the door save temporarily — cache, or something ephemeral that was alive and important during the process?",
     "needed": [
      "request-scoped-state",
-     "client-cache-effects",
-     "in-flight-values",
-     "why-this-slot-is-empty"
+     "client-cache-effects"
     ],
     "helps": [
      "context-giving-functions",
@@ -1003,14 +798,9 @@
      "fate-of-the-writes-per-ending",
      "the-moment-a-table-is-touched",
      "auth-scheme-gate",
-     "provisions",
-     "the-ordered-chain-per-ending",
-     "the-checks-met-in-run-order",
-     "roles-per-function",
-     "how-common-this-piece-is",
-     "what-the-screen-does-on-this-ending"
+     "provisions"
     ],
-    "note": "Only two columns hold anything ephemeral — the values set early and read later in the request, and the client-side cache keys the answer seeds or drops — and every other column here is durable state by definition. · R2: Round 1 answered this question with two partial columns and called most of the answer invisible; the in-flight row is the general reading that was owed — where set, where read, when it dies, with every lifetime known (238 go with the answer, 468 live with the server). The empty-reason is needed beside it precisely because three of the zeros are true zeros: no context variable, no background task, no lock. An unread slot and a measured absence must not look alike here.",
+    "note": "Only two columns hold anything ephemeral — the values set early and read later in the request, and the client-side cache keys the answer seeds or drops — and every other column here is durable state by definition.",
     "missing": "Most of the answer: no column reads server-side cache or locks, session objects, in-memory values, temporary files, or anything held across the request that is not a database row — and the one column that exists is partial in the feed, so the ephemera the operator means are largely invisible."
    },
    {
@@ -1024,13 +814,7 @@
      "switches",
      "auth-scheme-gate",
      "rate-limit",
-     "validation-cases",
-     "the-predicate-per-decision-point",
-     "the-checks-met-in-run-order",
-     "the-route-that-passes-every-check",
-     "the-ordered-chain-per-ending",
-     "field-rules-of-the-request-body",
-     "rate-tier"
+     "validation-cases"
     ],
     "helps": [
      "decision-point-functions",
@@ -1042,13 +826,9 @@
      "app-band",
      "request-scoped-state",
      "declared-status",
-     "findings",
-     "in-flight-values",
-     "roles-per-function",
-     "what-the-case-asserts-on-this-condition",
-     "why-this-slot-is-empty"
+     "findings"
     ],
-    "note": "Each status has to be traced to the fork that produced it, and the forks live in different columns by where they sit — the handler's own guards, an arm one call down, a catch on failure, a switch set before the request, plus the gate that makes the 401, the limiter that makes the 429 and the validation rules that make the 422. · R2: The predicate is the column round 1 asked for by name — the condition in the author's words, plus the raises the route does not translate, so a status decided deeper is attributed to a reason and not to a collapsed call. The run order says which fork fired, the through-route says what makes it a 200, the field rules make the 422 and the tier the 429. What a reque",
+    "note": "Each status has to be traced to the fork that produced it, and the forks live in different columns by where they sit — the handler's own guards, an arm one call down, a catch on failure, a switch set before the request, plus the gate that makes the 401, the limiter that makes the 429 and the validation rules that make the 422.",
     "missing": "The predicate's inputs: a guard's condition is named but not what a request must carry to falsify it, and forks more than one call deep are collapsed with a reason — so a status decided three levels down is attributed to the collapsed call, not to the condition."
    },
    {
@@ -1057,8 +837,7 @@
      "the-handler",
      "decision-point-functions",
      "data-touching-functions",
-     "context-giving-functions",
-     "roles-per-function"
+     "context-giving-functions"
     ],
     "helps": [
      "little-helpers-with-a-type",
@@ -1071,14 +850,9 @@
      "operation-per-table",
      "signature",
      "auth-scheme-gate",
-     "the-endings",
-     "the-predicate-per-decision-point",
-     "the-ordered-chain-per-ending",
-     "the-checks-met-in-run-order",
-     "where-this-endpoint-sits-in-the-app",
-     "why-this-slot-is-empty"
+     "the-endings"
     ],
-    "note": "The question names its own four buckets and each is one column — the answer is the union of those four rosters, with everything else serving as the evidence that put a function in its bucket. · R2: One column answers the whole of round 1's overlap gap: a function wears its highest role, a mark says when one holds two (1 · 3 · 7 per endpoint), and the none-of-the-four count (0 · 2 · 6) is finally stated instead of being invisible.",
+    "note": "The question names its own four buckets and each is one column — the answer is the union of those four rosters, with everything else serving as the evidence that put a function in its bucket.",
     "missing": "A rule for overlap: a function that both decides an ending and commits sits in two buckets, and no column ranks which role is its principal one — nor is there a count of how many functions fall in none of the four."
    },
    {
@@ -1093,13 +867,9 @@
      "the-handler",
      "steps-in-the-longest-chain",
      "file-line",
-     "validation-cases",
-     "roles-per-function",
-     "the-ordered-chain-per-ending",
-     "how-common-this-piece-is",
-     "why-this-slot-is-empty"
+     "validation-cases"
     ],
-    "note": "One column is the whole query — the helper roster with its type — and every other column can only bound the population the helpers are drawn from. · R2: Neither half is answered by the 18. Roles bound the population — the functions showing none of the four are where the helpers are — and the chain places a call in request order, but nothing classifies format · cap · validate, and \"inside the loop\" is still a containment relation no column carries. This stays the one question of the twenty whose own column does not exist.",
+    "note": "One column is the whole query — the helper roster with its type — and every other column can only bound the population the helpers are drawn from.",
     "missing": "Both halves in practice: the TYPE is not classified anywhere, and \"inside the loop\" is a containment relation (which function calls the helper, at which step) that no column carries — so the helpers cannot even be located relative to the chain, let alone typed."
    },
    {
@@ -1114,11 +884,7 @@
      "tasks-dispatched",
      "outside-services-called",
      "who-fetches-it",
-     "findings",
-     "why-this-slot-is-empty",
-     "expected-slots-at-this-stage",
-     "in-flight-values",
-     "what-the-screen-does-on-this-ending"
+     "findings"
     ],
     "helps": [
      "operation-per-table",
@@ -1135,21 +901,9 @@
      "delivery",
      "the-handler",
      "cases",
-     "usage-fan-in",
-     "the-ordered-chain-per-ending",
-     "how-common-this-piece-is",
-     "where-this-endpoint-sits-in-the-app",
-     "roles-per-function",
-     "response-headers-per-ending",
-     "field-rules-of-the-request-body",
-     "what-the-case-asserts-on-this-condition",
-     "case-role-on-this-endpoint",
-     "the-checks-met-in-run-order",
-     "the-predicate-per-decision-point",
-     "the-route-that-passes-every-check",
-     "workflow-step"
+     "usage-fan-in"
     ],
-    "note": "This is the index query: one count per topic, so the needed set is the presence column of each topic the console offers — the endings and their families, the effects on the database, the impact that leaves the request (events, tasks, outside calls, the screens that fetch it), the coverage fraction and the anomalies. · R2: Round 1's gap was an empty-versus-unknown state per topic and nothing ranking which topic to open first; the empty-reason gives the first, the stage norm and the piece census give the second. In-flight and the client branch each became a topic of the index in their own right, so the presence count of each is needed the way events and tasks already were. If a navigation map ",
+    "note": "This is the index query: one count per topic, so the needed set is the presence column of each topic the console offers — the endings and their families, the effects on the database, the impact that leaves the request (events, tasks, outside calls, the screens that fetch it), the coverage fraction and the anomalies.",
     "missing": "An empty-versus-unknown state per topic: D-012 gives it to the kinds of ending only, so for every other section a zero cannot be told from a generation gap, and nothing ranks which topic is worth opening first on this particular door."
    }
   ],
@@ -1165,11 +919,9 @@
      "operation-per-table",
      "own-guards",
      "deciding-branches",
-     "data-touching-functions",
-     "the-ordered-chain-per-ending",
-     "the-predicate-per-decision-point"
+     "data-touching-functions"
     ],
-    "note": "The question is two-part — WHICH table and WHEN comes from the touch roster plus the stage/step on each touch, and the \"depends on\" half is only answerable against the routes a touch belongs to, so the endings roster is the third irreducible row. · R2: The chain and the predicate narrow the \"depends on\" half that round 1 could only read backwards from the endings, but the moment itself is still carried by the touch's own stage and step, so neither is irreducible here.",
+    "note": "The question is two-part — WHICH table and WHEN comes from the touch roster plus the stage/step on each touch, and the \"depends on\" half is only answerable against the routes a touch belongs to, so the endings roster is the third irreducible row.",
     "missing": "Nothing states the condition ON a touch directly: the dependency has to be read backwards from which endings' routes contain it, and a touch inside a loop or a branch that may not run is not told apart from one that always runs."
    },
    {
@@ -1183,10 +935,9 @@
      "the-endings",
      "catches",
      "provisions",
-     "status-code-per-ending",
-     "the-ordered-chain-per-ending"
+     "status-code-per-ending"
     ],
-    "note": "\"Which tables\" needs the roster, \"written\" needs the operation that separates a read from a write, and \"did it survive\" needs the per-ending fate — the ending itself is the selection the card is already scoped to, so it only helps. · R2: The fate row already answers survival per ending; the chain only puts the write and its commit in order.",
+    "note": "\"Which tables\" needs the roster, \"written\" needs the operation that separates a read from a write, and \"did it survive\" needs the per-ending fate — the ending itself is the selection the card is already scoped to, so it only helps.",
     "missing": ""
    },
    {
@@ -1199,7 +950,7 @@
      "kinds-of-ending",
      "status-code-per-ending"
     ],
-    "note": "The two halves of the question are exactly two rows — the list of endings and the stage each one leaves from; the kinds and the codes label that list without adding a member to it. · R2: Two rows still answer it exactly — the endings and the stage each leaves from; nothing in the eighteen adds an ending or a stage.",
+    "note": "The two halves of the question are exactly two rows — the list of endings and the stage each one leaves from; the kinds and the codes label that list without adding a member to it.",
     "missing": ""
    },
    {
@@ -1210,11 +961,9 @@
     ],
     "helps": [
      "own-guards",
-     "cases",
-     "what-the-case-asserts-on-this-condition",
-     "case-role-on-this-endpoint"
+     "cases"
     ],
-    "note": "Coverage is the verdict and the endings are the roster it is a verdict over — without the roster the untested side of the answer has no names, and the C-ids only sharpen the proved side. · R2: What a case asserts, and whether it came here on purpose, decide how much a \"covered\" is worth, but the covered-versus-untested split stands without either; the coverage row already carries an unmeasured state, so the empty-reason row is not wanted here.",
+    "note": "Coverage is the verdict and the endings are the roster it is a verdict over — without the roster the untested side of the answer has no names, and the C-ids only sharpen the proved side.",
     "missing": ""
    },
    {
@@ -1222,17 +971,15 @@
     "needed": [
      "the-stage-an-ending-leaves-from",
      "the-moment-a-table-is-touched",
-     "context-giving-functions",
-     "expected-slots-at-this-stage"
+     "context-giving-functions"
     ],
     "helps": [
      "own-guards",
      "auth-scheme-gate",
      "validation-cases",
-     "app-band",
-     "why-this-slot-is-empty"
+     "app-band"
     ],
-    "note": "Only three rows carry a stage position for their topic — endings leave from a stage, a table is touched at a stage, and the context functions run at the GATE — so the stage axis of every other topic is inherited from these. · R2: The norm row is the literal answer to the one question that asks what SHOULD be there; the empty-reason row says whether a gap against that norm is real, which sharpens the answer without being it.",
+    "note": "Only three rows carry a stage position for their topic — endings leave from a stage, a table is touched at a stage, and the context functions run at the GATE — so the stage axis of every other topic is inherited from these.",
     "missing": "No attribute says what SHOULD be at a stage: every row reports what IS there, so the expected slots per stage-and-topic are a template the inventory does not carry, and an empty stage cannot be told from a stage nothing measured."
    },
    {
@@ -1240,18 +987,15 @@
     "needed": [
      "own-guards",
      "auth-scheme-gate",
-     "the-endings",
-     "the-checks-met-in-run-order"
+     "the-endings"
     ],
     "helps": [
      "context-giving-functions",
      "the-stage-an-ending-leaves-from",
      "rate-limit",
-     "deciding-branches",
-     "the-ordered-chain-per-ending",
-     "the-predicate-per-decision-point"
+     "deciding-branches"
     ],
-    "note": "A gate that stops a request is either the auth gate or a precondition in the handler's own code, and \"stopped\" is only meaningful against the ending it produced — the rest of the band tells you what was passed, not what fired. · R2: Round 1 could answer \"which ones did it pass first\" only by elimination; the run-order roster with its passed marks IS that half. rate-tier is the already-scored rate-limit row renamed and earns nothing new.",
+    "note": "A gate that stops a request is either the auth gate or a precondition in the handler's own code, and \"stopped\" is only meaningful against the ending it produced — the rest of the band tells you what was passed, not what fired.",
     "missing": "The ORDER of the gates is not carried — which ran before which has to be inferred from the stage — and a gate that PASSED leaves no row of its own, so \"which ones did it pass first\" is answered only by elimination."
    },
    {
@@ -1259,8 +1003,7 @@
     "needed": [
      "the-handler",
      "context-giving-functions",
-     "the-moment-a-table-is-touched",
-     "the-ordered-chain-per-ending"
+     "the-moment-a-table-is-touched"
     ],
     "helps": [
      "data-touching-functions",
@@ -1268,7 +1011,7 @@
      "the-stage-an-ending-leaves-from",
      "outside-services-called"
     ],
-    "note": "Execution order has to be reassembled: the handler is the entry, the context functions are what provably runs before it, and the step ordinal on a table touch is the only row that carries a position INSIDE the run. · R2: This is the row round 1 recorded as absent — the chain is the answer, and the checks in run order are a slice of the same chain, so they add nothing beside it.",
+    "note": "Execution order has to be reassembled: the handler is the entry, the context functions are what provably runs before it, and the step ordinal on a table touch is the only row that carries a position INSIDE the run.",
     "missing": "No attribute is the ordered chain itself — the call order between two functions that touch no table and raise nothing is not carried, so stretches of the run have no sequence at all."
    },
    {
@@ -1276,31 +1019,28 @@
     "needed": [
      "the-endings",
      "can-the-client-tell-the-endings-apart",
-     "who-fetches-it",
-     "what-the-screen-does-on-this-ending"
+     "who-fetches-it"
     ],
     "helps": [
      "status-code-per-ending",
      "response-shape-per-ending",
      "client-cache-effects",
-     "findings",
-     "response-headers-per-ending"
+     "findings"
     ],
-    "note": "The tell-apart verdict already prices the collapsed 409s, but it is a verdict about a set and a screen — the endings give the set and the hook-to-screen row gives the client doing the telling. · R2: The tell-apart verdict says the two 409s collapse; only the screen's branch says what it then does, which is the first half of the question.",
+    "note": "The tell-apart verdict already prices the collapsed 409s, but it is a verdict about a set and a screen — the endings give the set and the hook-to-screen row gives the client doing the telling.",
     "missing": "What the screen DOES on an ending beyond distinguishing it — the message it shows, the redirect or retry it takes — is not carried by any row; only the cache effects of the success path are."
    },
    {
     "q": "Q9",
     "needed": [
-     "tables-touched",
-     "how-this-table-was-found"
+     "tables-touched"
     ],
     "helps": [
      "operation-per-table",
      "the-moment-a-table-is-touched",
      "provisions"
     ],
-    "note": "One row answers it: the full touch roster is the only thing that can exceed what a panel drew, and the rest merely explains why the extra tables are invisible (touched at the gate, touched by a provision). · R2: The one question whose subject is the map rather than the code: a table known only from a route's steps is exactly the one an access-edge panel never drew, so this provenance row earns a place here and nowhere else on the card.",
+    "note": "One row answers it: the full touch roster is the only thing that can exceed what a panel drew, and the rest merely explains why the extra tables are invisible (touched at the gate, touched by a provision).",
     "missing": "Which tables the Data panel actually draws is a property of the panel, not of the endpoint — no attribute records the drawn set, so the comparison needs the panel's own roster beside this one."
    },
    {
@@ -1312,28 +1052,25 @@
     "helps": [
      "tables-touched",
      "entity-cluster",
-     "validation-cases",
-     "field-rules-of-the-request-body"
+     "validation-cases"
     ],
-    "note": "On an endpoint card the only rows that carry FIELDS are the two schemas, so they are the whole of the answerable part; the tables and the entity name only say which entity is being asked about. · R2: The rules make the two schemas read as fields with constraints, but \"how they hang together\" is a model's keys and is still not on this card.",
+    "note": "On an endpoint card the only rows that carry FIELDS are the two schemas, so they are the whole of the answerable part; the tables and the entity name only say which entity is being asked about.",
     "missing": "The entity's own field tree is absent from this list — a model's columns, their types, nullability and the foreign keys that make them hang together are not endpoint-card attributes, so \"how they hang together\" cannot be answered here at all."
    },
    {
     "q": "Q11",
     "needed": [
      "kinds-of-ending",
-     "the-endings",
-     "the-route-that-passes-every-check"
+     "the-endings"
     ],
     "helps": [
      "declared-status",
      "coverage-per-condition",
      "status-code-per-ending",
      "steps-in-the-longest-chain",
-     "journeys-workflow-step",
-     "the-predicate-per-decision-point"
+     "journeys-workflow-step"
     ],
-    "note": "Expected-versus-exception is read as success-versus-refusal over the ending list, so the kinds give the split and the endings give the members; everything else is corroboration (the declared promise, the tested route, the long chain). · R2: Expected-versus-exception is exactly this row — the through-route plus the check that stops each other one. workflow-step is the already-scored journeys row under a new id and adds nothing.",
+    "note": "Expected-versus-exception is read as success-versus-refusal over the ending list, so the kinds give the split and the endings give the members; everything else is corroboration (the declared promise, the tested route, the long chain).",
     "missing": "Nothing records which route is actually TAKEN most often — there is no frequency or observed-run attribute — so \"expected\" is inferred from the kind and the declared status, never from traffic."
    },
    {
@@ -1341,17 +1078,15 @@
     "needed": [
      "context-giving-functions",
      "app-band",
-     "auth-scheme-gate",
-     "how-common-this-piece-is"
+     "auth-scheme-gate"
     ],
     "helps": [
      "little-helpers-with-a-type",
      "switches",
      "idempotency-claim",
-     "delivery",
-     "where-this-endpoint-sits-in-the-app"
+     "delivery"
     ],
-    "note": "\"Standard pieces\" means the shared band a door is assembled from — the middleware every door passes, the shared auth gate, the shared context dependencies — and a door that skips them or carries the rare rows instead is the specialist one. · R2: Round 1 had to import the norm from outside the card; this row is the norm, and the whole of the standard-or-specialist reading.",
+    "note": "\"Standard pieces\" means the shared band a door is assembled from — the middleware every door passes, the shared auth gate, the shared context dependencies — and a door that skips them or carries the rare rows instead is the specialist one.",
     "missing": "The norm itself is outside the card: no attribute says how many other doors carry a row or reuse a named function, so common-versus-rare has to be brought in from a corpus census rather than read off the door."
    },
    {
@@ -1364,11 +1099,9 @@
      "the-endings",
      "status-code-per-ending",
      "validation-cases",
-     "delivery",
-     "response-headers-per-ending",
-     "field-rules-of-the-request-body"
+     "delivery"
     ],
-    "note": "In and out are literally the two schema rows, and the response row is already keyed per ending, so the ending is the selection rather than a second thing to show. · R2: The question asks for the two shapes; headers and field rules dress them.",
+    "note": "In and out are literally the two schema rows, and the response row is already keyed per ending, so the ending is the selection rather than a second thing to show.",
     "missing": "The request shape is one schema for the whole door — no row says which of its fields a PARTICULAR ending actually read, so only the outbound half is truly per-ending."
    },
    {
@@ -1377,18 +1110,16 @@
      "method-path",
      "risk-flag",
      "coverage-per-condition",
-     "findings",
-     "where-this-endpoint-sits-in-the-app"
+     "findings"
     ],
     "helps": [
      "functions-behind-walk-levels",
      "steps-in-the-longest-chain",
      "tables-touched",
      "race-on-a-unique-key",
-     "usage-fan-in",
-     "how-common-this-piece-is"
+     "usage-fan-in"
     ],
-    "note": "The answer is a door's NAME three times over, so identity is needed beside the three verdicts that already compress density (the risk flag), testedness (the coverage fraction) and risk (the findings) — the size counts only break ties. · R2: A superlative needs a distribution, and this is the only one of the eighteen that carries the door's place in one; rarity is a different axis from density, risk and testedness.",
+    "note": "The answer is a door's NAME three times over, so identity is needed beside the three verdicts that already compress density (the risk flag), testedness (the coverage fraction) and risk (the findings) — the size counts only break ties.",
     "missing": "Every row here is one door's value; nothing carries the app-wide distribution, so a superlative requires the same rows read across all 80 doors and ranked outside the card."
    },
    {
@@ -1400,22 +1131,21 @@
      "the-handler",
      "method-path"
     ],
-    "note": "Only one attribute can be opened in an editor — the file and line — while the handler name and the path merely say what will be found there. · R2: The locations round 1 said were missing arrived inside the existing file:line row, not as a new attribute.",
+    "note": "Only one attribute can be opened in an editor — the file and line — while the handler name and the path merely say what will be found there.",
     "missing": "file:line is carried for the handler alone: no location exists for a guard, a catch, a called function, a schema or the screen, so \"open THIS one\" works for the door and for nothing inside it."
    },
    {
     "q": "Q16",
     "needed": [
      "request-scoped-state",
-     "client-cache-effects",
-     "in-flight-values"
+     "client-cache-effects"
     ],
     "helps": [
      "idempotency-claim",
      "context-giving-functions",
      "fate-of-the-writes-per-ending"
     ],
-    "note": "The question names the two ephemera exactly — what lived on the request while it ran, and what the client's cache did afterwards — and every other row is a permanent effect wearing a temporary face. · R2: The general in-flight reading D-013 waited for, and it folds the request-scoped row into itself — the answer is now this row plus the cache effects already scored.",
+    "note": "The question names the two ephemera exactly — what lived on the request while it ran, and what the client's cache did afterwards — and every other row is a permanent effect wearing a temporary face.",
     "missing": "There is no general in-flight row (D-013): locks, in-process caches, a session's scratch values and anything else alive only during the request are not carried, so the answer is limited to the three instances that ride other attributes."
    },
    {
@@ -1430,11 +1160,9 @@
      "switches",
      "status-code-per-ending",
      "decision-point-functions",
-     "validation-cases",
-     "the-predicate-per-decision-point",
-     "the-checks-met-in-run-order"
+     "validation-cases"
     ],
-    "note": "Per the operator's own ruling the forks differ only by WHERE they sit — the handler's code, one call down, a failure path — so dropping any of the three loses a whole class of determinant, and the endings are what the forks choose between. · R2: The four fork rows already name every determinant and round 1 left this question with nothing missing; the predicate gives the condition in words and the run order says which fired — exactness, not answerability.",
+    "note": "Per the operator's own ruling the forks differ only by WHERE they sit — the handler's code, one call down, a failure path — so dropping any of the three loses a whole class of determinant, and the endings are what the forks choose between.",
     "missing": ""
    },
    {
@@ -1448,10 +1176,9 @@
     "helps": [
      "little-helpers-with-a-type",
      "functions-behind-walk-levels",
-     "signature",
-     "roles-per-function"
+     "signature"
     ],
-    "note": "The question enumerates four classes and each is a separate row with no overlap — the API-facing one, the ones whose raise becomes an ending, the ones that touch data, the ones that build context — so four is already the minimum. · R2: The four classes the question enumerates are already four rows; the roles row re-labels the same functions, and only its mark for a function holding two roles is new.",
+    "note": "The question enumerates four classes and each is a separate row with no overlap — the API-facing one, the ones whose raise becomes an ending, the ones that touch data, the ones that build context — so four is already the minimum.",
     "missing": ""
    },
    {
@@ -1461,10 +1188,9 @@
     ],
     "helps": [
      "functions-behind-walk-levels",
-     "data-touching-functions",
-     "roles-per-function"
+     "data-touching-functions"
     ],
-    "note": "One row is the whole question — the small helpers carried with their type — and the walk counts only say how many of them there could be. · R2: \"None of the four\" bounds the set the little helpers live in, but names no type and says nothing about a loop, so the question stays where round 1 left it.",
+    "note": "One row is the whole question — the small helpers carried with their type — and the walk counts only say how many of them there could be.",
     "missing": "\"Inside the loop\" has no attribute: no row says which helpers sit on a repeated or hot path, so the helper list cannot be narrowed to the loop even once the type is classified."
    },
    {
@@ -1473,18 +1199,16 @@
      "method-path",
      "kinds-of-ending",
      "tables-touched",
-     "coverage-per-condition",
-     "why-this-slot-is-empty"
+     "coverage-per-condition"
     ],
     "helps": [
      "findings",
      "risk-flag",
      "who-fetches-it",
      "tasks-dispatched",
-     "events-published",
-     "expected-slots-at-this-stage"
+     "events-published"
     ],
-    "note": "This is the face itself: a name, the behaviour as concepts, the effects, and one coverage fraction is the smallest set that says what there is to explore without naming a single code. · R2: This is D-012: an absence with a reason is the only way the face can show a dimension this door has nothing in — the one place a row whose content is a claim about absence earns its keep.",
+    "note": "This is the face itself: a name, the behaviour as concepts, the effects, and one coverage fraction is the smallest set that says what there is to explore without naming a single code.",
     "missing": "Nothing marks what is EMPTY — an absent stream, event or task is carried as absence rather than as a hollow slot — so the operator cannot see the dimensions this door has nothing in, which is precisely what D-012 asks for."
    }
   ]
@@ -2192,195 +1916,6 @@
     "a": "rate-limit",
     "value": 1,
     "reason": "What makes a 429 is already said by the ending's name, the limiter in the app band and the flag that switches it on; the cap only adds the number (more than 20 in 60 s)."
-   }
-  ]
- },
- "round2": {
-  "rated": [
-   "case-role-on-this-endpoint",
-   "expected-slots-at-this-stage",
-   "field-rules-of-the-request-body",
-   "how-common-this-piece-is",
-   "how-this-table-was-found",
-   "in-flight-values",
-   "rate-tier",
-   "response-headers-per-ending",
-   "roles-per-function",
-   "the-checks-met-in-run-order",
-   "the-ordered-chain-per-ending",
-   "the-predicate-per-decision-point",
-   "the-route-that-passes-every-check",
-   "what-the-case-asserts-on-this-condition",
-   "what-the-screen-does-on-this-ending",
-   "where-this-endpoint-sits-in-the-app",
-   "why-this-slot-is-empty",
-   "workflow-step"
-  ],
-  "standpoint_checks": {
-   "engineer": "Where the operator will push the provenance and absence rows behind D-017's plus-information and the minimalist will score them absent as bookkeeping, I make how-this-table-was-found, why-this-slot-is-empty, case-role-on-this-endpoint and what-the-case-asserts-on-this-condition NEEDED on the questions they touch — because a touch I cannot attribute to a step, a zero I cannot tell from an unread slot, and a coverage fraction that counts 134 pass-through calls as proof are not facts I can change this endpoint on.",
-   "operator": "I expect the engineer to mark how-this-table-was-found needed wherever a table appears (it is the join's own evidence) and the minimalist to cut why-this-slot-is-empty entirely as a meta-row that answers no question on its own — I score the mirror image of both: provenance earns needed on Q9 alone, where the panel's drawn set IS the question, while the empty-reason is needed on every question whose answer is a claim about absence (Q3, Q4, Q5, Q20), because an empty row I cannot believe stops my next move where a missing listing merely slows it; and where they will likely spread the needed marks across the four new decision-point rows, I put the predicate and the through-route above the complete listings of checks and chains, which I leave as helps.",
-   "minimalist": "I cut roles-per-function to a help on Q18 because it re-labels the four function rows already scored, the-predicate-per-decision-point to a help everywhere including Q17 where round 1 recorded nothing missing, and what-the-case-asserts plus case-role to helps on Q4 — the engineer will mark all four needed for exactness — and I allowed why-this-slot-is-empty as needed only on Q20, where the operator will want it beside every empty row on the card."
-  }
- },
- "judge_pass_3": {
-  "note": "Round 2 (2026-09-22): the 26 hard splits left by the 18 new attributes. 25 of them are the ENGINEER at needed against the MINIMALIST at absent; the operator sat with the minimalist on most. Ruled one cell at a time, on service to THAT question, with the operator's D-017 (a fact about the map is not shown on the face, but Q9 IS the question about what the map drew) and D-012 (an empty slot with a stated reason is what makes every other empty row believable) applied rather than re-opened.",
-  "pattern": "Twenty-five of the twenty-six are the engineer at NEEDED against the minimalist at ABSENT, with the operator sitting at \"helps\" in between on eighteen of them: the engineer scores every new row that is an input to computing an answer, the minimalist scores only rows without which the answer disappears — and almost all eighteen new attributes are SECOND OCCUPANTS of a slot an already-scored row holds (the predicate under a fork, the run order under a gate, the assert and the role under a case, the tier under the limiter, headers and field rules under the shapes) or a claim about the map rather than the code (provenance, the empty reason). On those the card follows the minimalist and the operator: they belong at near and portrait under the row they refine, not as a second needed row in the block, and D-017 puts the map-facing pair behind the plus-information toggle everywhere except Q9, where all three already agreed. The engineer wins only where the new row is the sole carrier of a class the question names — the ordered chain as what occupies a stage (Q5), the through-route as the cause of the 200 (Q17), the empty reason as the \"which does nothing reach\" half (Q4), and in-flight as a chapter of the index (Q20) — four of twenty-six, so round 2's rows thicken the eleven blocks rather than re-cut them.",
-  "cells": [
-   {
-    "q": "Q1",
-    "a": "how-this-table-was-found",
-    "value": 1,
-    "reason": "The moment is carried by the touch's own stage and step; provenance only says whether a table has a moment at all or arrived on an access edge, which is a fact about how the map read the code, not about when the code touches the table — D-017 keeps it behind the plus-information toggle on every question but Q9."
-   },
-   {
-    "q": "Q2",
-    "a": "how-this-table-was-found",
-    "value": 1,
-    "reason": "The per-ending fate row is built from this ending's own steps, so a table known only by an access edge never enters the answer; the provenance row tells him the touched roster and the written-on-this-ending set are two different populations, which is trust in the answer rather than the answer."
-   },
-   {
-    "q": "Q3",
-    "a": "why-this-slot-is-empty",
-    "value": 1,
-    "reason": "The endings and the stage each leaves from are the two halves of the question verbatim, and this row adds no ending and no stage; it keeps a hollow D-012 family slot from reading as an unread one, which makes the completeness claim believable without producing it."
-   },
-   {
-    "q": "Q4",
-    "a": "the-predicate-per-decision-point",
-    "value": 1,
-    "reason": "Round 1 priced every fork row a help here because each fork already names the ending its proof mark sits on; the predicate is a finer reading of that same fork — it says what a missing test would have to falsify, not which conditions are proved."
-   },
-   {
-    "q": "Q4",
-    "a": "why-this-slot-is-empty",
-    "value": 2,
-    "reason": "\"Which does nothing reach\" is answered wrongly when a condition no test COULD assert — an effect, a switch arm, a provision, a race — reads exactly like one nobody wrote a test for; the coverage row's single word \"unmeasured\" carries no reason, so the second half of the question has no answer without this row."
-   },
-   {
-    "q": "Q5",
-    "a": "the-ordered-chain-per-ending",
-    "value": 2,
-    "reason": "The expected-slot row states the norm, but the present side it is read against needs an occupant, and the chain is the only row that places the steps no other row places — those that touch no table and raise nothing — at a station; without it several stages come out empty against a norm that says they should not be."
-   },
-   {
-    "q": "Q5",
-    "a": "the-checks-met-in-run-order",
-    "value": 1,
-    "reason": "GATE is already anchored for security by the auth scheme and for functions by the context-giving functions, so the run order is a second occupant of one station — exactly what round 1 ruled the 422 rules to be at INPUT."
-   },
-   {
-    "q": "Q5",
-    "a": "response-headers-per-ending",
-    "value": 1,
-    "reason": "The response shape is the row that says what belongs at ANSWER for structures; the headers are a second occupant of that same stage, valuable to see there but inferable as belonging there from the row already needed."
-   },
-   {
-    "q": "Q5",
-    "a": "field-rules-of-the-request-body",
-    "value": 1,
-    "reason": "The request shape anchors INPUT and the 422 rules were already ruled a second occupant of it; the field rules are a third, finer reading of the same station — they fill it rather than place it."
-   },
-   {
-    "q": "Q7",
-    "a": "the-checks-met-in-run-order",
-    "value": 1,
-    "reason": "The ordered chain is already on screen for this question and the gate steps are a slice of it; the passed-and-fired marks answer which check stopped the request, which is Q6's question and not \"what executes after what\"."
-   },
-   {
-    "q": "Q7",
-    "a": "the-route-that-passes-every-check",
-    "value": 1,
-    "reason": "Round 1 ruled the ending — the row that picks one run — a help here because the order of the steps holds for the door as a whole; the through-route is one more route selector, making the sequence concrete without carrying it."
-   },
-   {
-    "q": "Q8",
-    "a": "why-this-slot-is-empty",
-    "value": 1,
-    "reason": "The two rows that answer this question — the tell-apart verdict and what the branch does — carry their own measured state per ending, including the doors whose failures no client code reads; the slot reason restates in general terms something the answering rows already say."
-   },
-   {
-    "q": "Q11",
-    "a": "the-ordered-chain-per-ending",
-    "value": 1,
-    "reason": "The through-route row names the expected route and the check each other route fires, which is the comparison itself; the chain shows where an exception peels off, the same service round 1 priced as a help on the stage row."
-   },
-   {
-    "q": "Q11",
-    "a": "the-checks-met-in-run-order",
-    "value": 1,
-    "reason": "An exception's cause is already on the through-route row as the check that stopped it; the run order adds the checks it passed before that, which is what Q6 asks and not what separates expected from exception."
-   },
-   {
-    "q": "Q12",
-    "a": "rate-tier",
-    "value": 1,
-    "reason": "Judge pass 2 ruled the limiter a help here because nearly every door wears it; the tier re-cuts that row into three values and is one more interchangeable sign of a departure, while the rarity \"standard\" is actually read from now sits on the piece census."
-   },
-   {
-    "q": "Q12",
-    "a": "expected-slots-at-this-stage",
-    "value": 1,
-    "reason": "It is an authored norm for the kind, identical on every door, so beside the measured piece census — which is needed here — it corroborates the baseline rather than supplying it; nothing in the standard-versus-specialist verdict turns on it."
-   },
-   {
-    "q": "Q14",
-    "a": "the-ordered-chain-per-ending",
-    "value": 1,
-    "reason": "Its length is a third measure of density beside the functions behind and the tables, and round 1 ruled those secondary sizes tie-breakers; an ordered list of one door's steps is not a ranking across eighty."
-   },
-   {
-    "q": "Q14",
-    "a": "what-the-case-asserts-on-this-condition",
-    "value": 1,
-    "reason": "\"The least tested\" is the coverage fraction compared across doors; what a case asserts says what a covered mark is worth, which sharpens the ranking without being the number it is ranked on."
-   },
-   {
-    "q": "Q14",
-    "a": "case-role-on-this-endpoint",
-    "value": 1,
-    "reason": "The coverage fraction is already computed over act calls, so the pass-through calls the engineer fears are not inside the number it ranks on; the role split explains the fraction rather than reordering the doors."
-   },
-   {
-    "q": "Q16",
-    "a": "why-this-slot-is-empty",
-    "value": 1,
-    "reason": "The in-flight row now carries its own honesty — every lifetime known, and no lock, no context variable, no background task as measured zeros — so on this question the absences are already stated by the row that answers it."
-   },
-   {
-    "q": "Q17",
-    "a": "the-ordered-chain-per-ending",
-    "value": 1,
-    "reason": "What determines a status is the fork, not its position; the chain places each fork on the route and makes the cause quicker to find, which is help, not the determinant."
-   },
-   {
-    "q": "Q17",
-    "a": "the-route-that-passes-every-check",
-    "value": 2,
-    "reason": "The question's third example is the 200, and no fork row carries it — each names only its own refusal — so the route on which every check passes is the one row that says what makes a request succeed, the same reason round 1 ruled the auth scheme needed for the 401."
-   },
-   {
-    "q": "Q17",
-    "a": "field-rules-of-the-request-body",
-    "value": 1,
-    "reason": "The 422 is one ending and the validation rules behind it were already priced a help here; the field rules go a level finer, naming which rule refused rather than what makes the path a 422."
-   },
-   {
-    "q": "Q17",
-    "a": "rate-tier",
-    "value": 1,
-    "reason": "Judge pass 2 already ruled the cap a help here — the 429's cause is the limiter in the band and the flag that switches it on; the tier only says how tight the cap is, which is a number on a cause already named."
-   },
-   {
-    "q": "Q20",
-    "a": "in-flight-values",
-    "value": 2,
-    "reason": "This is the index, one head per topic, and in-flight state is a chapter of this card with no other head now that the request-scoped row folds into it and every door carries rows of its own; a table of contents that omits a filled chapter is wrong, exactly as round 1 ruled for events and tasks."
-   },
-   {
-    "q": "Q20",
-    "a": "what-the-screen-does-on-this-ending",
-    "value": 1,
-    "reason": "The client chapter already has its head — who fetches it, the only row that reaches the screen; what the branch then does is the detail under that head, and an index lists chapters, not their contents."
    }
   ]
  }
