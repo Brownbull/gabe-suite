@@ -1258,7 +1258,7 @@ Also `tests/frontend`: the extractor without the flag emits no `flow` key. `test
 
 ### Slice 12 · In-flight state — what is alive while the request runs (leftovers piece 11)
 
-> **PROPOSED 2026-09-21 — no code until the operator rules on the three rulings below and says "land it".** He ruled the piece "do" (design-context D-016) and "after piece 10, name `inflight` kept" (D-018); piece 10 landed `b1a1e2c` · lab carry `61f53ce`, and he has seen its row. The full design — detectors, rosters with their package cites, the fixture, every battery case — is `plans/kinds-inflight.plan.md` (a read-only planning run, 4 readers + 1 designer); this block is the contract it is built against.
+> **AUTHORIZED 2026-09-21 (design-context D-019): R1 `U15` · R2 the carrier · R3 in · "land it".** Proposed the same day, no code before the ruling. He ruled the piece "do" (design-context D-016) and "after piece 10, name `inflight` kept" (D-018); piece 10 landed `b1a1e2c` · lab carry `61f53ce`, and he has seen its row. The full design — detectors, rosters with their package cites, the fixture, every battery case — is `plans/kinds-inflight.plan.md` (a read-only planning run, 4 readers + 1 designer); this block is the contract it is built against.
 
 **Generates:** the kinds arm's new part `inflight`. Per endpoint `inflight[]` — one row per thing that is alive while this request runs, in REQUEST ORDER (middleware by run order, then dependencies in FastAPI's resolution order, then the handler; a site one call down sorts under the station that called it). Top level `inflight{process, rules}` — `process` holds what is built ONCE for the whole server and met by many endpoints (a row an endpoint meets is a short `ref` row carrying its own `read_at`); `rules` holds only the rules some row used, each with its `scope`, `dies`, `says` and package `source`. No finding: an analysis, never a grade. `[]` means the part ran and found nothing; an absent key means the part is off.
 - **Eight kinds of row:** `state` (`request.state.<x>` · `app.state.<x>`) · `contextvar` · `dependency-value` (what a dependency hands the handler) · `background` (a task queued to run after the answer) · `lock` · `cache` (`lru_cache` · `cache`) · `built-once` (an object a middleware builds in `__init__`) · `setting-once` (a setting read once in `__init__`).
@@ -1278,7 +1278,7 @@ Also `tests/frontend`: the extractor without the flag emits no `flow` key. `test
 8. **Cache** — a function a station meets whose decorator is `lru_cache`/`cache`; deeper reach is COUNTED (`caches_deeper`), never listed.
 9. **Framework gate** — a rule citing FastAPI/Starlette opens only at the pinned `FRAMEWORK_MIN` (0.136.1); below it the row says `dies: unknown`, `rule: framework-gate-closed`, `would_be`.
 
-**The three rulings that are the operator's** (each changes what the card will SAY; the rest below is framework and is the author's by D-017):
+**The three rulings that are the operator's — RULED 2026-09-21: U15 · the carrier · in** (each changes what the card will SAY; the rest below is framework and is the author's by D-017):
 - **R1 · the slot's number.** `U15` "In-flight state — what is alive while this request runs: where it is set, where it is read, whether it goes with the answer". U1–U14 are his scorecard; U15 is the next free number. A different number costs one registry line.
 - **R2 · what `dies` describes.** PROPOSED: the CARRIER — the `request.state` slot, the solved parameter, the `with` block — not the object behind it; a process object handed in is caught in two shapes (a cached callee · a module-level object) and says so. ALTERNATIVE: `unknown` whenever the object behind the slot is not proven per-request — more cautious, fewer rows that say something. One roster line either way.
 - **R3 · dependency-value rows in or out.** PROPOSED: IN — on this endpoint they are three of the five rows of his own after-rows (the login context, the database session, the settings object). They were not in the brief's list of detectors, so they sit behind `OPTIONS.inflight_dep_values` and are the first thing cut if the scope must shrink.
@@ -1498,17 +1498,17 @@ CHOSE: keys inside the reason part · rows addressed by `at` and order, no id le
 ASSUMED: a then-arm row carries the comparison's own guards plus the condition (`_a3_fe_extract.mjs`, the if · ternary · `&&` walkers) · no target needs react-intl, SWR revalidation or an assignment row to be read usefully
 BREAKS IF: `no-rows` or `beyond one level` dominate a dry run — then the extractor needs a branch ordinal and assignment rows, which forces a re-freeze; or the operator wants `branch` recomputed from the narrowed rows, which moves `reason-collapsed` counts and gets its own commit
 
-DECISION D30 (PROPOSED, Slice 12): in-flight rows carry no id
+DECISION D30 (Slice 12): in-flight rows carry no id
 CHOSE: rows addressed by (kind · carrier · name · set_at) and process rows by their map key, over minting an id letter
 ASSUMED: no consumer needs to point at one in-flight row from another block before the lab carry
 BREAKS IF: a second block must reference a row — then an `i:` id is minted in the ids leaf, in its own commit
 
-DECISION D31 (PROPOSED, Slice 12 — the operator's ruling R2): `dies` is the CARRIER's lifetime, and only a roster rule may say it
+DECISION D31 (RULED by the operator 2026-09-21, Slice 12 — the operator's ruling R2): `dies` is the CARRIER's lifetime, and only a roster rule may say it
 CHOSE: the slot that carries the value (request.state · the solved parameter · the with block) over the object behind it; a process object handed in is caught in two shapes and says so
 ASSUMED: the brief's ruling for request.state extends to dependency values and with-block locks
 BREAKS IF: the operator reads "with the answer" on a row whose object outlives the request and finds it misleading — then the rule says `unknown` there (one roster line)
 
-DECISION D32 (PROPOSED, Slice 12): the part runs in its OWN stage of the kinds arm
+DECISION D32 (Slice 12): the part runs in its OWN stage of the kinds arm
 CHOSE: a stage of its own right after middleware · dependencies, over sharing their stage
 ASSUMED: it reads nothing the effects or contract arms write
 BREAKS IF: a later part needs in-flight rows inside the first kinds stage — a hard need inside one stage is impossible, so the stages are re-cut then

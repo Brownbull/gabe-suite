@@ -650,7 +650,7 @@ def main() -> int:
                                     "in_map_list": _cid in _named})
                 tests["roster"] = _roster
                 tests["roles"] = dict(collections.Counter(r["role"] for r in _roster)) | {"helper-arranged": sum(1 for v in _role.values() if v == "helper-arranged")}
-                tests["roles_note"] = "act = the test calls this endpoint to test it · arranged = it calls it to set something else up · service-raises = it proves an ending from the service side, without calling the endpoint · helper-arranged = it reaches it only through a shared helper (counted, never listed)"
+                tests["roles_note"] = "act = the test calls this endpoint to test it · arranged = it calls it to set something else up · service-raises = it proves an ending from the service side, without calling the endpoint · helper-arranged = it reaches it only through a shared helper (counted, never listed) · named-only = the map lists it for this endpoint, and it makes no call here"
                 # the values tests give the settings this endpoint's switches read — 'exercised somewhere', never 'this arm proven here'
                 _keys = []
                 for _w in forms_block.get("switches") or []:

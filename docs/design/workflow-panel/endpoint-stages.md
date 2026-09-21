@@ -60,7 +60,7 @@ should be there in that stage for that specific topic." One plain line per stage
 | stage | data |
 |---|---|
 | EDGE | no table — the app band checks the request before any data is touched |
-| GATE | the rows the lock reads or creates to know who is knocking — here the user row, provisioned before the body is read |
+| GATE | the rows the login check reads or creates to know who is calling |
 | INPUT | no table — the body is read and checked against its shape, not against the database |
 | HANDLER | the reads and writes the door's own code makes — every table it touches, in the order it touches them |
 | EFFECTS | the fate of each write, committed, still open or rolled back — decided by the ending |

@@ -1237,7 +1237,7 @@
      EXPECTATION for this topic, and one measured row beside it; it never grades what it found.        ══ */
   var STAGE_EXPECT = window.STAGE_EXPECT = { data: {
     EDGE:    "no table — the app band checks the request before any data is touched",
-    GATE:    "the rows the login check reads or creates to know who is knocking — here the user row, provisioned before the body is read",
+    GATE:    "the rows the login check reads or creates to know who is calling",
     INPUT:   "no table — the body is read and checked against its shape, not against the database",
     HANDLER: "the reads and writes the endpoint's own code makes — every table it touches, in the order it touches them",
     EFFECTS: "the fate of each write, committed, still open or rolled back — decided by the ending",
@@ -1273,7 +1273,7 @@
     EFFECTS: "the cached answers the screen drops or refills once the writes are done",
     ANSWER:  "the branch of the screen each ending reaches — the message, the redirect, the retry" },
   security: {
-    EDGE:    "the app-wide checks — the rate limit, the origin rules, the repeat key",
+    EDGE:    "the app-wide checks — the rate limit and the origin rules; a repeat key where the app reads one",
     GATE:    "the login scheme and the function that checks it — with the rows it may create on the way in",
     INPUT:   "the rules a body has to pass — sizes, ranges, allowed values",
     HANDLER: "the guards the endpoint's own code adds — whose row this is, whether this caller may do this",

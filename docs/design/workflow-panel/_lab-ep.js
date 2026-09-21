@@ -28479,7 +28479,7 @@ window.LABEP = {
    "service-raises": 3,
    "helper-arranged": 134
   },
-  "roles_note": "act = the test calls this endpoint to test it · arranged = it calls it to set something else up · service-raises = it proves an ending from the service side, without calling the endpoint · helper-arranged = it reaches it only through a shared helper (counted, never listed)"
+  "roles_note": "act = the test calls this endpoint to test it · arranged = it calls it to set something else up · service-raises = it proves an ending from the service side, without calling the endpoint · helper-arranged = it reaches it only through a shared helper (counted, never listed) · named-only = the map lists it for this endpoint, and it makes no call here"
  },
  "widening": {
   "usage": {
