@@ -18,6 +18,7 @@ import re
 from pathlib import Path
 
 import _a3_forms as F
+import _a3_forms_carrier as CR
 import _a3_forms_reach as R
 import _a3_forms_settings as S
 import _a3_paths as P
@@ -55,14 +56,7 @@ def _qual(m, node) -> str:
     return next((q for q, n in m.defs.items() if n is node), node.name)
 
 
-def _text(repo: Path, m, node) -> str | None:
-    """A string argument: a literal, or a module constant through one import."""
-    if isinstance(node, ast.Constant) and isinstance(node.value, str):
-        return node.value
-    if isinstance(node, ast.Name):
-        val = S.resolve_const(repo, m, node.id)
-        return val if isinstance(val, str) else None
-    return None
+_text = CR.text                                         # a string argument: a literal, or a module constant through one import
 
 
 def _exit_kind(stmts) -> str | None:
@@ -125,19 +119,10 @@ def uniques(repo: Path, amap: dict) -> tuple[dict, dict]:
 def _read(repo: Path, m, node) -> dict:
     """A key read inside ``node``: ``request.headers.get(X)`` / ``request.headers[X]`` → header; ``request.state.<attr>`` /
     ``getattr(request.state, "attr", …)`` → state."""
-    for n in ast.walk(node):
-        if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr == "get" and P._leaf(n.func.value) == "headers" and n.args:
-            name = _text(repo, m, n.args[0])
-            if name:
-                return {"header": name}
-        if isinstance(n, ast.Subscript) and P._leaf(n.value) == "headers" and _text(repo, m, n.slice):
-            return {"header": _text(repo, m, n.slice)}
-        if isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id == "getattr" and len(n.args) >= 2 and P._leaf(n.args[0]) == "state":
-            attr = _text(repo, m, n.args[1])
-            if attr:
-                return {"state": attr}
-        if isinstance(n, ast.Attribute) and isinstance(n.ctx, ast.Load) and isinstance(n.value, ast.Attribute) and n.value.attr == "state":
-            return {"state": n.attr}
+    for n in ast.walk(node):                                # the WALK ORDER is this arm's: the first hit is what repeat{} says
+        got = CR.hit(repo, m, n)
+        if got:
+            return got
     return {}
 
 
@@ -159,8 +144,7 @@ def _state_setter(repo: Path, amap: dict, attr: str) -> dict | None:
                     if isinstance(t, ast.Name) and got.get("header"):
                         held[t.id] = got["header"]
         for n in _own(node):
-            if isinstance(n, ast.Assign) and any(isinstance(t, ast.Attribute) and t.attr == attr and isinstance(t.value, ast.Attribute)
-                                                 and t.value.attr == "state" for t in n.targets):
+            if isinstance(n, ast.Assign) and any(CR.state_target(t) == attr for t in n.targets):
                 header = _read(repo, cm, n.value).get("header") or (held.get(n.value.id) if isinstance(n.value, ast.Name) else None)
                 return {"header": header, "set_at": f"{cm.rel}:{n.lineno}", "via": cls}
     return None

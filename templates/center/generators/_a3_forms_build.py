@@ -20,6 +20,7 @@ import os
 from pathlib import Path
 
 import _a3_forms as F
+import _a3_forms_carrier  # noqa: F401  (a shared leaf: the request-carrier shapes the contract arm and the inflight part both read)
 import _a3_forms_catch  # noqa: F401  (a shared leaf — imported at column 0 so propagate.sh lands it on a twin)
 import _a3_forms_ids as I
 import _a3_forms_reach  # noqa: F401
