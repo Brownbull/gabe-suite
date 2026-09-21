@@ -2822,6 +2822,33 @@
                    "helper-arranged": "reaches it only through a shared helper", "named-only": "listed by the map, makes no call here" };
   /* leftovers piece 10 (the lab half) — what the client does with one ending, from the feed's own routing: its own branch or the general case,
      whether the call is tried again, and — on a success — what is refreshed and which guards read it */
+  /* leftovers piece 10 (the generation's carry, Slice 11e) — what the client's own branch DOES with an ending: one short phrase per row of the
+     feed's does[], in the order the code runs them. What happens in the code is said; where a name came from (`from`, `by`) is about the map and stays out (D-017). */
+  var DOESWORD = {
+    navigate: function(d){ return d.to ? "goes to “" + d.to + "”" : "goes to another page"; },
+    "throw":  function(d){ return "throws " + (d.callee ? "a " + d.callee : "an error") + (d.args && typeof d.args[0] === "string" ? " — “" + d.args[0] + "”" : ""); },
+    render:   function(d){ return "shows a “" + (d.tag || "block") + "” on screen"; },
+    "return": function(d){ return d.bare ? "stops here" : d["null"] ? "hands back nothing" : d.literal != null ? "hands back the text “" + d.literal + "”"
+                : (d.reads || []).length ? "hands back the server’s " + d.reads.join(" and ") : "hands back a value"; },
+    retry:    function(){ return "sends the same request again"; },
+    refresh:  function(d){ var k = d.key ? "“" + [].concat(d.key).join(" · ") + "”" : "the data it had"; return d.how === "write" ? "rewrites its saved copy of " + k : "asks the server again for " + k; },
+    request:  function(d){ return d.method && d.path ? "calls " + d.method + " " + d.path : "makes another request"; },
+    message:  function(d){ return d.key ? "looks up the text “" + d.key + "”" : "looks up a text"; },
+    surface:  function(d){ return "shows a pop-up message" + (d.level ? " (" + d.level + ")" : ""); },
+    state:    function(d){ return d.how === "store" ? "changes the shared store" : d.how === "storage" ? "writes to the browser’s storage" : "changes what the screen remembers"; },
+    log:      function(){ return "writes a line to the console"; },
+    other:    function(d){ var a = d.args && typeof d.args[0] === "string" ? "“" + d.args[0] + "”" : "", c = String(d.callee || "a function").replace(/\s+/g, "");
+                return d.returned ? "hands back what " + c + "(" + a + ") gives" : "calls " + c + "(" + a + ")"; } };
+  var DOESSTATE = { "no-rows": "nothing of its own — the check only picks a value", "beyond one level": "whoever calls this function decides",
+                    empty: "it only sets values — nothing is called, shown or handed back", unread: "not read — the condition is too long to read" };
+  function doesWords(rt){
+    if (!rt || rt.does_state == null) return "not read — this feed does not say what a branch does";
+    var ds = rt.does || [];
+    if (!ds.length) return DOESSTATE[rt.does_state] || String(rt.does_state);
+    var more = ds.length - 3 + (rt.does_more || 0);
+    return ds.slice(0, 3).map(function(d){ return (DOESWORD[d["class"]] || DOESWORD.other)(d); }).join(" · then ")
+      + (more > 0 ? " · and " + more + " more" : "") + (rt.does_state === "mixed" ? " — two checks on one line share these" : ""); }
+  window.doesWords = doesWords;
   function clientRows(F, e){ var FE = ((FRM(F) || {}).frontend) || {}, out = [];
     if (!FE.present) return [["the client", "not read — the frontend reading is off"]];
     var rd = (FE.readers || [])[0], rt = rd ? (rd.routes || []).filter(function(r){ return r.exit === e.id; })[0] : null;
@@ -2834,7 +2861,7 @@
         + ((rd.shared || []).some(function(sh){ return sh.exits.indexOf(e.id) >= 0; }) ? ", so " + (rd.shared.filter(function(sh){ return sh.exits.indexOf(e.id) >= 0; })[0].exits.length) + " endings share it" : "")
       : "none of its own — it falls to the general case, as " + rd.n.general + " of the " + rd.n.routed + " routed endings do"]);
     else out.push(["its branch", rd ? "the client's reading routes no branch to this ending" : "no client code reads this endpoint's failures"]);
-    if (rt && rt.does) out.push(["what it does", String(rt.does)]);
+    if (rt && rt.own_branch) out.push(["what it does", doesWords(rt)]);
     var ry = FE.retry || {};
     if (e.kind !== "success") out.push(["tried again", ry.state === "defined" || ry.state === "default" ? (ry.value === false || ry.value === 0 ? "never — retry is off for this kind of call" : "yes — " + String(ry.value) + " (" + ry.state + ")") : "not read"]);
     return out; }

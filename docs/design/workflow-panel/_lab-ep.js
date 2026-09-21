@@ -17343,6 +17343,20 @@ window.LABEP = {
      "at": "apps/web/src/features/auth/SetupScreen.tsx:43",
      "branch": "none",
      "classified": false,
+     "does": [
+      {
+       "args": [
+        "auth.setup.error.in_progress"
+       ],
+       "at": "apps/web/src/features/auth/SetupScreen.tsx:43",
+       "callee": "t",
+       "class": "other",
+       "from": "param",
+       "k": "call",
+       "returned": true
+      }
+     ],
+     "does_state": "read",
      "endpoints": [
       "endpoint:PATCH /settings/household",
       "endpoint:PATCH /settings/preferences",
@@ -18354,7 +18368,9 @@ window.LABEP = {
        "reads": null,
        "op": null,
        "value": null,
-       "does": null
+       "does": null,
+       "does_state": null,
+       "does_more": null
       },
       {
        "exit": "x:a7992af811",
@@ -18367,7 +18383,9 @@ window.LABEP = {
        "reads": null,
        "op": null,
        "value": null,
-       "does": null
+       "does": null,
+       "does_state": null,
+       "does_more": null
       },
       {
        "exit": "x:9fd81887a2",
@@ -18380,7 +18398,9 @@ window.LABEP = {
        "reads": null,
        "op": null,
        "value": null,
-       "does": null
+       "does": null,
+       "does_state": null,
+       "does_more": null
       },
       {
        "exit": "x:18e726cdeb",
@@ -18393,7 +18413,9 @@ window.LABEP = {
        "reads": null,
        "op": null,
        "value": null,
-       "does": null
+       "does": null,
+       "does_state": null,
+       "does_more": null
       },
       {
        "exit": "x:1b256011f1",
@@ -18406,7 +18428,9 @@ window.LABEP = {
        "reads": null,
        "op": null,
        "value": null,
-       "does": null
+       "does": null,
+       "does_state": null,
+       "does_more": null
       },
       {
        "exit": "x:13ce9b79e0",
@@ -18419,7 +18443,9 @@ window.LABEP = {
        "reads": null,
        "op": null,
        "value": null,
-       "does": null
+       "does": null,
+       "does_state": null,
+       "does_more": null
       },
       {
        "exit": "x:f2caf456bd",
@@ -18432,7 +18458,21 @@ window.LABEP = {
        "reads": "status",
        "op": "===",
        "value": 409,
-       "does": null
+       "does": [
+        {
+         "args": [
+          "auth.setup.error.in_progress"
+         ],
+         "at": "apps/web/src/features/auth/SetupScreen.tsx:43",
+         "callee": "t",
+         "class": "other",
+         "from": "param",
+         "k": "call",
+         "returned": true
+        }
+       ],
+       "does_state": "read",
+       "does_more": null
       },
       {
        "exit": "x:a086031223",
@@ -18445,7 +18485,21 @@ window.LABEP = {
        "reads": "status",
        "op": "===",
        "value": 409,
-       "does": null
+       "does": [
+        {
+         "args": [
+          "auth.setup.error.in_progress"
+         ],
+         "at": "apps/web/src/features/auth/SetupScreen.tsx:43",
+         "callee": "t",
+         "class": "other",
+         "from": "param",
+         "k": "call",
+         "returned": true
+        }
+       ],
+       "does_state": "read",
+       "does_more": null
       },
       {
        "exit": "x:17b6cdc4d4",
@@ -18458,7 +18512,9 @@ window.LABEP = {
        "reads": null,
        "op": null,
        "value": null,
-       "does": null
+       "does": null,
+       "does_state": null,
+       "does_more": null
       }
      ],
      "shared": [
@@ -18482,6 +18538,28 @@ window.LABEP = {
      }
     }
    ],
+   "branches": [
+    {
+     "site": "r-56477c4fb6",
+     "at": "apps/web/src/features/auth/SetupScreen.tsx:43",
+     "does": [
+      {
+       "args": [
+        "auth.setup.error.in_progress"
+       ],
+       "at": "apps/web/src/features/auth/SetupScreen.tsx:43",
+       "callee": "t",
+       "class": "other",
+       "from": "param",
+       "k": "call",
+       "returned": true
+      }
+     ],
+     "does_state": "read",
+     "does_more": null
+    }
+   ],
+   "does_state": "present",
    "readers_state": "present",
    "after_success": [
     {

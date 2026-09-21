@@ -110,8 +110,10 @@ const EX = {
     const src = fs.readFileSync(path.join(HERE, "../workflow-panel/_lab-ep-panels.js"), "utf8"), a = src.indexOf("var STAGE_EXPECT = window.STAGE_EXPECT = "), b = src.indexOf("} };", a);
     if (a < 0 || b < 0) return null; const X = Function("return (" + src.slice(a + "var STAGE_EXPECT = window.STAGE_EXPECT = ".length, b + 3) + ")")();
     return `${Object.keys(X).length} topics × ${Object.keys(X.functions || {}).length} stages · GATE for functions: ${q(X.functions.GATE)}`; },
-  "what-the-screen-does-on-this-ending": () => { const rd = (f.frontend.readers || [])[0]; if (!rd) return null; const sh = rd.shared[0];   /* the routing half is real (piece 10, lab half); what the branch DOES waits for the generation part */
-    return (sh ? `${sh.exits.length} endings (${sh.statuses.join(" · ")}) share one client branch at ${String(sh.at).split("/").slice(-1)[0]} · ` : "") + `${rd.n.general} of ${rd.n.routed} routed endings fall to the general case · what the branch does is not read yet`; },
+  "what-the-screen-does-on-this-ending": () => { const rd = (f.frontend.readers || [])[0]; if (!rd) return null; const sh = rd.shared[0];   /* piece 10: the routing (lab half) and what the branch DOES (the generation part, Slice 11e) */
+    const own = rd.routes.find(r => r.own_branch && (r.does || []).length), d = own ? own.does[0] : null;
+    const does = d ? ` · that branch ${d.returned ? "hands back what" : "calls"} ${d.callee}(${(d.args || []).filter(a => typeof a === "string").map(a => "“" + a + "”").join(", ")})${d.returned ? " gives" : ""}` : (f.frontend.does_state === "present" ? " · its branch only picks a value" : " · what the branch does is not in this feed");
+    return (sh ? `${sh.exits.length} endings (${sh.statuses.join(" · ")}) share one client branch at ${String(sh.at).split("/").slice(-1)[0]}` : "no ending has a branch of its own") + does + ` · ${rd.n.general} of ${rd.n.routed} routed endings fall to the general case`; },
 
   "request-scoped-state": () => (f.repeat.key && f.repeat.key.through ? `${f.repeat.key.through} is set by middleware and read by the handler` : null),
   "client-cache-effects": () => { const c = f.frontend.hook && f.frontend.hook.calls[0]; if (!c) return null; const k = (a) => a.map((x) => q(x.key.join("/"))).join(", "); return `on success · seeds ${k(c.seeds)} · invalidates ${k(c.invalidates)}`; },

@@ -2691,6 +2691,7 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
   const K = await p.evaluate(() => { const f = window.LABEP.forms, FE = f.frontend, rd = (FE.readers || [])[0] || { routes: [], shared: [], n: {} };
     return { present: FE.present, rd, exitIds: f.exits.map(e => e.id), after: FE.after_success || [], retry: FE.retry || {}, guards: (FE.guards || []).map(g => ({ piece: g.piece, via: g.via })), guard: FE.guard && FE.guard.piece,
       rawRetry: (((((FE.client || {}).clients || [])[0] || {}).policy || {})[(FE.retry || {}).side] || {}).retry || null,
+      branches: FE.branches || [], doesState: FE.does_state,
       rule: FE.joins_rule, succ: (f.exits.find(e => e.kind === 'success') || {}).id, sharedExit: ((rd.shared[0] || {}).exits || [])[0], sharedN: ((rd.shared[0] || {}).exits || []).length,
       general: (rd.routes.find(r => !r.own_branch) || {}).exit }; });
   ok(K.rd.routes.length > 0 && K.rd.routes.every(r => K.exitIds.indexOf(r.exit) >= 0 && r.own_branch === (r.site !== 'rest')) && K.rd.n.routed === K.rd.routes.length
@@ -2709,10 +2710,23 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
   if (K.sharedExit) { const rows = await clientRows(K.sharedExit), v = (rows.find(r => r[0] === 'its branch') || [])[1] || '';
     ok(/its own, at /.test(v) && v.includes(K.sharedN + ' endings share it'), 'an ending with its own client branch says where it is, and that another ending shares it', v);
     const ry = (rows.find(r => r[0] === 'tried again') || [])[1] || '';
-    ok((K.retry.value === false) === /^never/.test(ry), 'and whether the call is tried again is the client policy\'s own word', ry + ' · ' + JSON.stringify(K.retry)); }
+    ok((K.retry.value === false) === /^never/.test(ry), 'and whether the call is tried again is the client policy\'s own word', ry + ' · ' + JSON.stringify(K.retry));
+    // leftovers piece 10 (the generation's carry, Slice 11e) — what that branch DOES: the drawn row is rebuilt HERE from the raw branch, never from the panel's own words
+    const rt = K.rd.routes.find(r => r.exit === K.sharedExit), raw = K.branches.find(b => b.at === rt.at) || {}, d0 = (raw.does || [])[0] || {};
+    const wd = (rows.find(r => r[0] === 'what it does') || [])[1] || '', arg = (d0.args || []).find(a => typeof a === 'string');
+    ok((raw.does || []).length > 0 && wd.includes(String(d0.callee)) && (!arg || wd.includes(arg)) && /^hands back what /.test(wd) === (d0.returned === true && d0.class === 'other'),
+      'an ending with its own branch says what that branch does — the call, its text, and that the result is handed back — from the raw branch the lab carries', wd + ' · ' + JSON.stringify(d0)); }
   else ok(false, 'two endings share a client branch (the probe needs a pair to read the record)');
+  ok(K.doesState === 'present' && K.branches.length > 0 && K.rd.routes.filter(r => r.own_branch).every(r => { const b = K.branches.find(x => x.at === r.at);
+      return b && JSON.stringify(b.does) === JSON.stringify(r.does) && b.does_state === r.does_state; }) && K.rd.routes.filter(r => !r.own_branch).every(r => r.does == null && r.does_state == null),
+    'every ending with its own branch carries the rows of THE comparison it routes to, and an ending in the general case claims none — a recount against the raw branches', JSON.stringify(K.rd.routes.map(r => [r.exit, r.at, r.does_state])));
   if (K.general) { const rows = await clientRows(K.general), v = (rows.find(r => r[0] === 'its branch') || [])[1] || '';
-    ok(/none of its own/.test(v) && v.includes(K.rd.n.general + ' of the ' + K.rd.n.routed), 'an ending with no branch of its own says it falls to the general case, and how many do', v); }
+    ok(/none of its own/.test(v) && v.includes(K.rd.n.general + ' of the ' + K.rd.n.routed), 'an ending with no branch of its own says it falls to the general case, and how many do', v);
+    ok(!rows.some(r => r[0] === 'what it does'), 'and it draws no "what it does" row — there is no branch to read', JSON.stringify(rows)); }
+  { const W = await p.evaluate(() => [window.doesWords({ does_state: 'no-rows', does: [] }), window.doesWords({ does_state: 'beyond one level', does: [] }), window.doesWords({}),
+      window.doesWords({ does_state: 'read', does: [{ class: 'navigate', to: '/login' }, { class: 'return', bare: true }, { class: 'surface', level: 'error' }, { class: 'log' }], does_more: 2 })]);
+    ok(/picks a value/.test(W[0]) && /whoever calls/.test(W[1]) && /^not read/.test(W[2]) && W[3] === 'goes to “/login” · then stops here · then shows a pop-up message (error) · and 3 more',
+      'the four ways a branch can read: a value picked, the caller decides, a feed that does not say, and rows in the order the code runs them with the rest counted', JSON.stringify(W)); }
   await p.evaluate(() => { window.clearPath(); window.showTab('data'); }); await p.waitForTimeout(240);
   ok(errs.length === errs0, 'the client facts raise no page error', errs.slice(errs0, errs0 + 3).join(' | ')); }
 

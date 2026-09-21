@@ -279,7 +279,8 @@ def client_joins(fj: dict, ID: str, forms_block: dict, climbed: list) -> None:
             st, x = sites.get(rt.get("site")) or {}, exits.get(rt.get("exit")) or {}
             own = rt.get("site") != "rest"
             routes.append({"exit": rt.get("exit"), "status": rt.get("status"), "detail": x.get("detail"), "kind": x.get("kind"), "site": rt.get("site"), "own_branch": own,
-                           "at": st.get("at"), "reads": st.get("reads"), "op": st.get("op"), "value": st.get("value"), "does": st.get("does")})
+                           "at": st.get("at"), "reads": st.get("reads"), "op": st.get("op"), "value": st.get("value"),
+                           "does": st.get("does"), "does_state": st.get("does_state"), "does_more": st.get("does_more")})
             if own:
                 by_site[rt.get("site")].append(rt.get("exit"))
         shared = [{"site": k, "at": (sites.get(k) or {}).get("at"), "reads": (sites.get(k) or {}).get("reads"), "exits": v,
@@ -287,6 +288,10 @@ def client_joins(fj: dict, ID: str, forms_block: dict, climbed: list) -> None:
         readers.append({"fn": r.get("fn"), "piece": r.get("piece"), "receiver": r.get("receiver"), "routes": routes, "shared": shared,
                         "n": {"routed": len(routes), "own_branch": sum(1 for x in routes if x["own_branch"]), "general": sum(1 for x in routes if not x["own_branch"])}})
     F["readers"] = readers
+    # what each client branch DOES (Slice 11e), carried RAW by the place of its comparison — the probe recounts every route's rows against it
+    F["branches"] = [{"site": k, "at": v.get("at"), "does": v.get("does"), "does_state": v.get("does_state"), "does_more": v.get("does_more")}
+                     for k, v in sorted(sites.items()) if any(rt.get("site") == k for r in readers for rt in r["routes"])]
+    F["does_state"] = ("present" if any(b["does_state"] is not None for b in F["branches"]) else "not_emitted") if F["branches"] else "absent"
     F["readers_state"] = "present" if readers else ("absent" if (fe.get("reasons") or {}).get("readers") is not None else "not_emitted")
     # what the success refreshes, and whether the call is tried again
     hook = F.get("hook") or {}
