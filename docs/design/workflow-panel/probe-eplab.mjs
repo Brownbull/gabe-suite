@@ -3443,6 +3443,51 @@ if (checksFile) {
     else if (c.kind === 'hover') { const el = await p.$(c.arg); ok(el !== null, c.name + ' (anchor exists)', c.arg); if (el) { await el.hover(); await p.waitForTimeout(120); const h = await p.$eval('#hover', e => e.hidden ? '' : e.innerText); ok(h.includes(c.expect), c.name, 'hover card lacks ' + JSON.stringify(c.expect)); } }
   }
 }
+// ══ LEFTOVERS piece 11 (the lab half) · WHAT IS ALIVE WHILE THE REQUEST RUNS — the name, where it is set, where it is read, and how long it lasts ══
+{ const errs0 = errs.length;
+  await p.evaluate(() => { window.clearPath(); window.showTab('data'); }); await p.waitForTimeout(240);
+  const F = await p.evaluate(() => { const f = window.LABEP.forms, I = f.inflight || {};
+    return { state: I.state, why: I.why, n: I.n || {}, rows: I.rows || [],
+             raw: (f.paths || []).length, first: (f.paths.find(x => x.names.drawn === 'first run') || {}).id }; });
+  ok(F.state === 'present' && (F.rows || []).length > 0, 'the lab carries what is alive while the request runs', F.state + ' · ' + F.why);
+  const WORDS = ['with the answer', 'with the server process', 'unknown'];
+  ok(F.rows.every(r => WORDS.indexOf(r.dies) >= 0), 'every row says one of the three lifetimes and nothing else', JSON.stringify([...new Set(F.rows.map(r => r.dies))]));
+  ok(F.rows.every(r => r.rule && r.rule.id && r.rule.says) && F.n.unresolved === 0,
+    'every row carries its rule IN WORDS, and no row points at a process record the feed could not resolve', JSON.stringify(F.rows.filter(r => !(r.rule && r.rule.says)).map(r => r.name)));
+  ok(F.n.rows === F.rows.length && Object.values(F.n.by_kind).reduce((a, b) => a + b, 0) === F.rows.length
+     && Object.values(F.n.by_dies).reduce((a, b) => a + b, 0) === F.rows.length,
+    'the counts are their own recount — every row is counted once by what it is and once by how long it lasts', JSON.stringify(F.n));
+  ok(F.n.shared > 0 && F.rows.filter(r => r.ref).every(r => r.set_at && r.dies && r.applies_to >= 1),
+    'a row the endpoint SHARES with others is merged with the process record that says the rest — where it is set, how long it lasts, how many meet it', JSON.stringify(F.rows.filter(r => r.ref).map(r => [r.name, r.applies_to])));
+  // the repeat key: the ONE row that ties this piece to what the card already said about a repeat
+  const key = F.rows.find(r => r.kind === 'state');
+  ok(key && key.name === 'idempotency_key' && key.set_at.endsWith('middleware/idempotency.py:25') && key.dies === 'with the answer'
+     && key.from && key.from.kind === 'header' && key.from.cond === true && (key.read_at || []).length === 1 && key.read_at[0].via.endsWith('api/setup.py:191'),
+    'the repeat key is read from a header only on a mutating method, put on the request by the middleware, read one call down through the handler, and gone with the answer', JSON.stringify(key));
+  // what is DRAWN, on the path portrait
+  await p.evaluate(x => window.selectPath(x), F.first); await p.waitForTimeout(500);
+  const secs = await p.$$eval('#portbody .ptsec', e => e.map(x => x.textContent.trim()));
+  ok(secs.some(t => t === 'alive during the request · ' + F.n.rows), 'the path portrait draws the section, and its count is the feed\'s own', JSON.stringify(secs));
+  const drawn = await p.$$eval('#portbody .pttbl .ptcr', els => els.filter(e => e.querySelector('.ptcf')).map(e => [e.querySelector('b').textContent, e.querySelector('.ptcf').textContent, !!e.querySelector('.ptcg svg')]));
+  ok(drawn.length === F.rows.length && drawn.every((d, i) => d[0] === F.rows[i].name && d[2]),
+    'one row per thing, in the feed\'s own request order, each led by the mark of what it is', drawn.length + ' vs ' + F.rows.length);
+  ok(drawn.every((d, i) => d[1] === (F.rows[i].dies === 'with the answer' ? 'with the answer' : F.rows[i].dies === 'with the server process' ? 'with the server' : 'how long — unknown')),
+    'and each says how long it lasts, in the feed\'s own verdict', JSON.stringify(drawn.slice(0, 3)));
+  { const host = await (await p.$('#portbody')).boundingBox();
+    const over = await p.$$eval('#portbody .pttbl .ptcr', (els, right) => els.filter(e => e.querySelector('.ptcf')).filter(e => e.querySelector('.ptcf').getBoundingClientRect().right > right + 1).length, host.x + host.width);
+    ok(over === 0, 'no row runs past the panel — the lifetime is always readable', String(over)); }
+  { const rows2 = await p.$$('#portbody .pttbl .ptcr'); let hovered = null;
+    for (const e of rows2) { if (!(await e.$('.ptcf'))) continue;
+      const nm = await e.$eval('b', x => x.textContent).catch(() => null);
+      if (nm === 'idempotency_key') { await e.scrollIntoViewIfNeeded(); await e.hover(); await p.waitForTimeout(600); hovered = nm; break; } }
+    const card = await p.evaluate(() => { const c = [...document.querySelectorAll('#hover, [id*="hover"], [class*="hcard"]')]
+      .find(e => (e.offsetParent !== null || getComputedStyle(e).opacity === '1') && (e.textContent || '').trim());
+      return c ? (c.textContent || '').replace(/\s+/g, ' ') : null; });
+    ok(!!hovered && !!card && /where it is set/.test(card) && /where it is read/.test(card) && /how long it lasts/.test(card) && /Idempotency-Key header/.test(card),
+      'its card answers the four the operator asked for — what it is, where it is set and by what, where it is read, how long it lasts — and names the header its value came from', String(card).slice(0, 190)); }
+  await p.mouse.move(5, 1090); await p.evaluate(() => window.hoverHide && window.hoverHide()); await p.waitForTimeout(200);
+  ok(errs.length === errs0, 'the in-flight facts raise no page error', errs.slice(errs0, errs0 + 3).join(' | ')); }
+
 const cov = await p.evaluate(() => window.COV.state());
 const covered = Object.keys(cov).filter(k => cov[k].length), missing = Object.keys(cov).filter(k => !cov[k].length);
 console.log(`coverage: ${covered.length}/${Object.keys(cov).length} station rows rendered · missing: ${missing.join(', ') || 'none'}`);

@@ -3523,7 +3523,48 @@
           plain: "something outside the code decides which way this goes" }); });
         sw.append(c); });
       b.append(sw); }
+    inflightSec(b, F, S);
     box.append(b); }
+  /* leftovers piece 11 (Slice 12) — what is ALIVE while this request runs, in request order: what it is called, where it is set
+     and by what, where it is read, and whether it goes with the answer. Every word is the feed's own (the rule's `says`);
+     the lifetime is the CHIP, because that is what the operator asked to see. Same components as the sections above. */
+  var ALIVEW = { state: "kept on the request", contextvar: "a context value the code reads without passing it", "dependency-value": "handed to the handler by a dependency",
+                 background: "queued to run after the answer", lock: "a lock this request holds", cache: "an answer kept from an earlier request",
+                 "built-once": "built once when the app starts", "setting-once": "a setting read once when the app starts" };
+  var ALIVEICO = { state: "endpoint", contextvar: "globe", "dependency-value": "link", background: "wave", lock: "key",
+                   cache: "layers", "built-once": "entity", "setting-once": "role" };
+  var ALIVETONE = { "with the answer": "read", "with the server process": "write", "unknown": "none" };
+  function aliveWhere(r){
+    if (!r.set_at || r.set_at === "unknown") return "where it is set — not read here";
+    var by = r.set_by && r.set_by !== "unknown" ? String(r.set_by).split("::").pop().replace(/^middleware:/, "") : null;
+    return shortAt(r.set_at) + (by ? " · " + by : "") + (r.set_fn ? " (one call down)" : "") + (r.set_cond ? " · only under a condition" : ""); }
+  function aliveRead(r){
+    var n = (r.read_at || []).length;
+    if (!n) return r.reads === "found" ? "read, the site not named" : "not read anywhere this endpoint reaches";
+    return shortAt(r.read_at[0].at) + (r.read_at[0].via ? " · through " + shortAt(r.read_at[0].via) : "")
+      + (n > 1 ? " · and " + (n - 1 + (r.reads_more || 0)) + " more" : ""); }
+  function inflightSec(b, F, S){ var f = (FRM(F) || {}).inflight; if (!f) return;
+    if (f.state !== "present") { b.insertAdjacentHTML("beforeend", ptSec("alive during the request"));
+      b.insertAdjacentHTML("beforeend", ptRow("not read", f.why || "this feed carries no in-flight reading")); return; }
+    b.insertAdjacentHTML("beforeend", ptSec("alive during the request · " + f.n.rows));
+    var l = E("div", { class: "pttbl" });
+    (f.rows || []).forEach(function(r){
+      var c = E("div", { class: "ptcr" });
+      c.style.setProperty("--tc", S.OPC[ALIVETONE[r.dies] || "none"] || "var(--muted)");
+      c.insertAdjacentHTML("beforeend", '<span class="ptcg">' + ico(ALIVEICO[r.kind] || "info", 13, "currentColor") + "</span>");
+      c.append(E("b", null, esc(r.name)));
+      var w = E("i", { class: "ptcf" }, esc(r.dies === "with the answer" ? "with the answer" : r.dies === "with the server process" ? "with the server" : "how long — unknown"));
+      w.style.color = S.OPC[ALIVETONE[r.dies] || "none"] || "var(--muted)";      // the lifetime IS the row's colour — the one thing he asked to see
+      c.append(w);
+      bind(c, function(){ return cmdc({ title: r.name, value: ALIVEW[r.kind] || r.kind, icon: "layers",
+        rows: [["what it is", ALIVEW[r.kind] || r.kind], ["where it is set", aliveWhere(r)], ["where it is read", aliveRead(r)],
+               ["how long it lasts", r.dies || "unknown"]]
+          .concat(r.from ? [["its value comes from", (r.from.kind === "header" ? "the " + r.from.name + " header" : "the request's " + r.from.name) + (r.from.cond ? ", when the condition holds" : "")]] : [])
+          .concat(r.ref ? [["shared with", (r.applies_to || 1) + " endpoint(s)"]] : [])
+          .concat(r.would_be ? [["the rule it would take", r.would_be.says || r.would_be.id]] : []),
+        plain: (r.rule && r.rule.says) || "something that lives through the request" }); });
+      l.append(c); });
+    b.append(l); }
   function exitPortrait(box, F, S){ var e = selExit(F);
     if (!e) { box.append(E("div", { class: "ptidle" }, E("b", null, "no exit in force"), E("span", null, "pick a rung's exit, or a path — its exit lands here."))); return; }
     var r = e.response || {}, b = E("div", { class: "ptbody ptrec" });

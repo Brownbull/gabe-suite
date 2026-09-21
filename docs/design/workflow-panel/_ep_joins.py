@@ -328,3 +328,43 @@ def client_joins(fj: dict, ID: str, forms_block: dict, climbed: list) -> None:
     F["screens"] = {pid: pc for pid, pc in P.items() if pid in climbed or pid.split("#")[0] in files}
     F["joins_rule"] = {"guards": "a guard reads a query whose key this endpoint's hook refetches or fills in on success",
                        "screens": "the pieces in the files of the components that reach the fetching hook", "typed_names": 0}
+
+def inflight_rows(fj: dict, ep: dict) -> dict | None:
+    """Leftovers piece 11 — what is ALIVE while the request runs, resolved for a reader (Slice 12).
+
+    The feed says a row's lifetime through a rule id and says a shared thing ONCE, on a top-level ``process`` row the row's
+    ``ref`` names. Here each row carries its own words: ``rule`` becomes ``{id, says, source}``, a ``ref`` row is merged with
+    the process record it points at (the endpoint's own ``read_at`` kept), and the rows are counted by what they are and by
+    how long they last. The part off reads ``None`` with the feed's own reason — never a zero."""
+    rows = ep.get("inflight")
+    if rows is None:
+        why = (((fj.get("arms") or {}).get("kinds") or {}).get("parts") or {}).get("inflight") or {}
+        return {"state": "not_emitted" if not why else "absent", "why": why.get("reason") or "this feed carries no in-flight reading",
+                "rows": [], "n": {}}
+    blk = fj.get("inflight") or {}
+    rules, proc = blk.get("rules") or {}, blk.get("process") or {}
+    out, lost = [], 0
+    for r in rows:
+        row = dict(r)
+        ref = row.get("ref")
+        if ref:                                            # a short row: the process record says scope · lifetime · where it is set
+            rec = proc.get(ref)
+            if rec is None:
+                row["unresolved"] = True
+                lost += 1
+            else:
+                row = dict(rec, **{k: v for k, v in row.items() if k not in ("kind", "name")})
+        rid = row.get("rule")
+        if rid:
+            rec = rules.get(rid) or {}
+            row["rule"] = {"id": rid, "says": rec.get("says"), "source": rec.get("source")}
+        if row.get("would_be"):
+            rec = rules.get(row["would_be"]) or {}
+            row["would_be"] = {"id": row["would_be"], "says": rec.get("says")}
+        out.append(row)
+    import collections
+    return {"state": "present", "why": None, "rows": out,
+            "n": {"rows": len(out), "by_kind": dict(collections.Counter(x["kind"] for x in out)),
+                  "by_dies": dict(collections.Counter(x.get("dies") or "unknown" for x in out)),
+                  "shared": sum(1 for x in out if x.get("ref")), "unresolved": lost,
+                  "read": sum(1 for x in out if (x.get("reads") or "") == "found")}}

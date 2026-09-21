@@ -68,9 +68,9 @@ tooltip · portrait. The channel column stays empty until M3 (the channel budget
 
 | attribute | data type | cardinality | imp. | why | volatile | own / relation | first visible at |
 |---|---|---|---|---|---|---|---|
-| request-scoped state (a key set by middleware, the auth context) | relation | partial in the feed | 1 | later steps depend on it — but today every known instance already rides on another row (D-013) | with code | relation | near — **feed gap: no general arm reads it** |
+| request-scoped state (a key set by middleware, the auth context) | relation | FOLDED into the row below (piece 11): the general reading now carries all three known instances — the repeat key, the login context and the database session — as rows of their own | 1 | later steps depend on it, and every known instance rides on another row (D-013); the general arm it waited for has landed | with code | relation | near — read by the in-flight row below |
 | client cache effects (keys invalidated · seeded) | relation | per hook | 2 | what the screen refetches after the answer | with code | relation | near |
-| in-flight values (request-scoped · process-scoped: where set · where read · when it dies) | relation | to measure when piece 11 lands | 2 (proposed) | the general reading D-013 waits for; the request-scoped row above folds into it | with code | relation | near — **feed gap: needs a new generation part (piece 11)** |
+| in-flight values (request-scoped · process-scoped: where set · where read · when it dies) | relation | MEASURED (piece 11, Slice 12 `320a7b4`): 6 · 8 · 15 rows per endpoint, 706 over the 80 — 343 a setting read once at start · 170 handed in by a dependency · 103 built once at start · 80 on the request · 10 a cached answer; 21 distinct things, 468 of the rows shared with other endpoints and said once on the process row; **every lifetime known here: 238 go with the answer, 468 live with the server, none unknown**; no context variable, no background task and no lock a request reaches — three true zeros. Every endpoint carries something of its own | **2** (proposed) | the general reading D-013 waited for; the request-scoped row above folds into it | with code | relation | near — in the feed and in the lab (piece 11) |
 
 ## Structures
 

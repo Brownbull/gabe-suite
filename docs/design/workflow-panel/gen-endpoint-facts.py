@@ -30,7 +30,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from _ep_pieces import common_block, proof_rank  # noqa: E402  (leftovers piece 7 — the shared piece tally)
-from _ep_joins import _short_detail, client_joins, field_rules, inside_the_calls  # noqa: E402  (pieces 6 and 8 — the joins of feed blocks the lab did not read)
+from _ep_joins import _short_detail, client_joins, field_rules, inflight_rows, inside_the_calls  # noqa: E402  (pieces 6, 8 and 11 — the joins of feed blocks the lab did not read)
 REPO = HERE.parents[2]
 EX = REPO / "templates" / "center" / "shell" / "example" / "codebase-graph-station"
 OUT = HERE / "_lab-ep.js"
@@ -226,6 +226,7 @@ def forms_slice(fj: dict, ID: str, ep: dict) -> dict:
             "branches": list(branches.values()), "switches": [switch_rec(i) for i in switches],
             "collapsed": ep.get("collapsed") or [], "returns": returns,
             "repeat": ep.get("repeat"), "auth": ep.get("auth"), "rate": ep.get("rate"), "responses": responses,
+            "inflight": inflight_rows(fj, ep),
             "failure": ep.get("failure"), "findings": ep.get("findings") or [], "arm_findings": ep.get("arm_findings") or {},
             "declared": ep.get("declared"), "framework_exits": frame, "tests": ep.get("tests"), "slots": ep.get("slots"),
             "frontend": frontend, "phases": list(PHASES),

@@ -492,6 +492,236 @@ window.LABEP = {
    ],
    "full_path": "/api/v1/setup/complete",
    "handler": "apps/api/api/setup.py::setup_complete",
+   "inflight": [
+    {
+     "kind": "setting-once",
+     "name": "rate_limit_active",
+     "read_at": [
+      {
+       "at": "apps/api/middleware/rate_limit.py:108",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      }
+     ],
+     "reads": "found",
+     "ref": "setting-once:apps/api/middleware/rate_limit.py::RateLimitMiddleware.rate_limit_active"
+    },
+    {
+     "kind": "setting-once",
+     "name": "trusted_proxy_hops",
+     "read_at": [
+      {
+       "at": "apps/api/middleware/rate_limit.py:111",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      }
+     ],
+     "reads": "found",
+     "ref": "setting-once:apps/api/middleware/rate_limit.py::RateLimitMiddleware.trusted_proxy_hops"
+    },
+    {
+     "kind": "built-once",
+     "name": "_sensitive",
+     "read_at": [
+      {
+       "at": "apps/api/middleware/rate_limit.py:116",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:117",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      }
+     ],
+     "reads": "found",
+     "ref": "built-once:apps/api/middleware/rate_limit.py::RateLimitMiddleware._sensitive"
+    },
+    {
+     "kind": "setting-once",
+     "name": "rate_limit_sensitive_per_minute",
+     "read_at": [
+      {
+       "at": "apps/api/middleware/rate_limit.py:116",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:117",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      }
+     ],
+     "reads": "found",
+     "ref": "setting-once:apps/api/middleware/rate_limit.py::RateLimitMiddleware.rate_limit_sensitive_per_minute"
+    },
+    {
+     "kind": "setting-once",
+     "name": "rate_limit_window_seconds",
+     "read_at": [
+      {
+       "at": "apps/api/middleware/rate_limit.py:116",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:117",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:120",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:121",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      }
+     ],
+     "reads": "found",
+     "ref": "setting-once:apps/api/middleware/rate_limit.py::RateLimitMiddleware.rate_limit_window_seconds"
+    },
+    {
+     "kind": "built-once",
+     "name": "_global",
+     "read_at": [
+      {
+       "at": "apps/api/middleware/rate_limit.py:120",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:121",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      }
+     ],
+     "reads": "found",
+     "ref": "built-once:apps/api/middleware/rate_limit.py::RateLimitMiddleware._global"
+    },
+    {
+     "kind": "setting-once",
+     "name": "rate_limit_per_minute",
+     "read_at": [
+      {
+       "at": "apps/api/middleware/rate_limit.py:120",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:121",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      }
+     ],
+     "reads": "found",
+     "ref": "setting-once:apps/api/middleware/rate_limit.py::RateLimitMiddleware.rate_limit_per_minute"
+    },
+    {
+     "carrier": "request.state",
+     "dies": "with the answer",
+     "from": {
+      "cond": true,
+      "kind": "header",
+      "name": "Idempotency-Key"
+     },
+     "kind": "state",
+     "name": "idempotency_key",
+     "read_at": [
+      {
+       "at": "apps/api/middleware/idempotency.py:31",
+       "fn": "apps/api/middleware/idempotency.py::get_idempotency_key",
+       "in": "handler",
+       "via": "apps/api/api/setup.py:191"
+      }
+     ],
+     "reads": "found",
+     "rule": "request-state",
+     "scope": "request",
+     "set_at": "apps/api/middleware/idempotency.py:25",
+     "set_by": "middleware:IdempotencyMiddleware",
+     "set_in": "middleware"
+    },
+    {
+     "dependency": "apps/api/db.py::get_session",
+     "dies": "with the answer",
+     "kind": "dependency-value",
+     "name": "session",
+     "param": "session",
+     "read_at": [
+      {
+       "at": "apps/api/api/setup.py:197",
+       "fn": "apps/api/api/setup.py::setup_complete",
+       "in": "handler"
+      },
+      {
+       "at": "apps/api/api/setup.py:204",
+       "fn": "apps/api/api/setup.py::setup_complete",
+       "in": "handler"
+      }
+     ],
+     "reads": "found",
+     "rule": "dep-teardown",
+     "scope": "request",
+     "set_at": "apps/api/db.py:51",
+     "set_by": "apps/api/db.py::get_session",
+     "set_in": "dependency",
+     "teardown": true,
+     "type": "AsyncSession"
+    },
+    {
+     "dependency": "apps/api/auth/context.py::get_auth_context",
+     "dies": "with the answer",
+     "kind": "dependency-value",
+     "name": "ctx",
+     "param": "ctx",
+     "read_at": [
+      {
+       "at": "apps/api/api/setup.py:197",
+       "fn": "apps/api/api/setup.py::setup_complete",
+       "in": "handler"
+      },
+      {
+       "at": "apps/api/api/setup.py:204",
+       "fn": "apps/api/api/setup.py::setup_complete",
+       "in": "handler"
+      }
+     ],
+     "reads": "found",
+     "rule": "dep-solved",
+     "scope": "request",
+     "set_at": "apps/api/auth/context.py:90",
+     "set_by": "apps/api/auth/context.py::get_auth_context",
+     "set_in": "dependency",
+     "teardown": false,
+     "type": "AuthContext"
+    },
+    {
+     "dependency": "apps/api/config.py::get_settings",
+     "dies": "with the server process",
+     "kind": "dependency-value",
+     "name": "settings",
+     "param": "settings",
+     "read_at": [
+      {
+       "at": "apps/api/api/setup.py:204",
+       "fn": "apps/api/api/setup.py::setup_complete",
+       "in": "handler"
+      }
+     ],
+     "reads": "found",
+     "ref": "cache:apps/api/config.py::get_settings",
+     "rule": "dep-cached",
+     "scope": "process",
+     "set_at": "apps/api/config.py:388",
+     "set_by": "apps/api/config.py::get_settings",
+     "set_in": "dependency",
+     "teardown": false,
+     "type": "Settings"
+    }
+   ],
    "levels_id": "apps/api/api/setup.py#setup_complete",
    "line": 183,
    "method": "POST",
@@ -16723,6 +16953,450 @@ window.LABEP = {
     "media": "application/json",
     "source": "fastapi/routing.py:427",
     "status": 422
+   }
+  },
+  "inflight": {
+   "state": "present",
+   "why": null,
+   "rows": [
+    {
+     "applies_to": 80,
+     "dies": "with the server process",
+     "expr": "settings.rate_limit_enabled or settings.is_production",
+     "fields": [
+      "environment",
+      "rate_limit_enabled"
+     ],
+     "hands_to": [
+      {
+       "at": "apps/api/middleware/rate_limit.py:98",
+       "attr": "_enabled"
+      }
+     ],
+     "kind": "setting-once",
+     "name": "rate_limit_active",
+     "read_at": [
+      {
+       "at": "apps/api/middleware/rate_limit.py:108",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      }
+     ],
+     "reads": "found",
+     "rule": {
+      "id": "setting-at-init",
+      "says": "a setting read once when the middleware is created — a change to it needs a restart",
+      "source": "starlette/applications.py:57-89"
+     },
+     "scope": "process",
+     "set_at": "apps/api/middleware/rate_limit.py:98",
+     "set_by": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.__init__",
+     "set_in": "init",
+     "settings_class": "apps/api/config.py::Settings",
+     "state": "default",
+     "ref": "setting-once:apps/api/middleware/rate_limit.py::RateLimitMiddleware.rate_limit_active"
+    },
+    {
+     "applies_to": 79,
+     "declared_at": "apps/api/config.py:148",
+     "dies": "with the server process",
+     "env": "GUSTIFY_TRUSTED_PROXY_HOPS",
+     "hands_to": [
+      {
+       "at": "apps/api/middleware/rate_limit.py:99",
+       "attr": "_hops"
+      }
+     ],
+     "kind": "setting-once",
+     "name": "trusted_proxy_hops",
+     "read_at": [
+      {
+       "at": "apps/api/middleware/rate_limit.py:111",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      }
+     ],
+     "reads": "found",
+     "rule": {
+      "id": "setting-at-init",
+      "says": "a setting read once when the middleware is created — a change to it needs a restart",
+      "source": "starlette/applications.py:57-89"
+     },
+     "scope": "process",
+     "set_at": "apps/api/middleware/rate_limit.py:99",
+     "set_by": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.__init__",
+     "set_in": "init",
+     "setting": "trusted_proxy_hops",
+     "settings_class": "apps/api/config.py::Settings",
+     "state": "default",
+     "value": 1,
+     "ref": "setting-once:apps/api/middleware/rate_limit.py::RateLimitMiddleware.trusted_proxy_hops"
+    },
+    {
+     "applies_to": 23,
+     "attr": "_sensitive",
+     "class": "SlidingWindowLimiter",
+     "class_at": "apps/api/middleware/rate_limit.py:43",
+     "dies": "with the server process",
+     "holds": [
+      {
+       "as": "defaultdict",
+       "at": "apps/api/middleware/rate_limit.py:52",
+       "attr": "_hits"
+      }
+     ],
+     "kind": "built-once",
+     "name": "_sensitive",
+     "owner": "middleware:RateLimitMiddleware",
+     "read_at": [
+      {
+       "at": "apps/api/middleware/rate_limit.py:116",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:117",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      }
+     ],
+     "reads": "found",
+     "rule": {
+      "id": "middleware-init",
+      "says": "built once when the middleware is created, then shared by every request",
+      "source": "starlette/applications.py:57-89"
+     },
+     "scope": "process",
+     "set_at": "apps/api/middleware/rate_limit.py:103",
+     "set_by": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.__init__",
+     "set_in": "init",
+     "ref": "built-once:apps/api/middleware/rate_limit.py::RateLimitMiddleware._sensitive"
+    },
+    {
+     "applies_to": 23,
+     "declared_at": "apps/api/config.py:139",
+     "dies": "with the server process",
+     "env": "GUSTIFY_RATE_LIMIT_SENSITIVE_PER_MINUTE",
+     "hands_to": [
+      {
+       "at": "apps/api/middleware/rate_limit.py:104",
+       "attr": "_sensitive",
+       "param": "limit"
+      }
+     ],
+     "kind": "setting-once",
+     "name": "rate_limit_sensitive_per_minute",
+     "read_at": [
+      {
+       "at": "apps/api/middleware/rate_limit.py:116",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:117",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      }
+     ],
+     "reads": "found",
+     "rule": {
+      "id": "setting-at-init",
+      "says": "a setting read once when the middleware is created — a change to it needs a restart",
+      "source": "starlette/applications.py:57-89"
+     },
+     "scope": "process",
+     "set_at": "apps/api/middleware/rate_limit.py:104",
+     "set_by": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.__init__",
+     "set_in": "init",
+     "setting": "rate_limit_sensitive_per_minute",
+     "settings_class": "apps/api/config.py::Settings",
+     "state": "default",
+     "value": 20,
+     "ref": "setting-once:apps/api/middleware/rate_limit.py::RateLimitMiddleware.rate_limit_sensitive_per_minute"
+    },
+    {
+     "also_set_at": [
+      "apps/api/middleware/rate_limit.py:104"
+     ],
+     "applies_to": 79,
+     "declared_at": "apps/api/config.py:140",
+     "dies": "with the server process",
+     "env": "GUSTIFY_RATE_LIMIT_WINDOW_SECONDS",
+     "hands_to": [
+      {
+       "at": "apps/api/middleware/rate_limit.py:101",
+       "attr": "_global",
+       "param": "window_seconds"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:104",
+       "attr": "_sensitive",
+       "param": "window_seconds"
+      }
+     ],
+     "kind": "setting-once",
+     "name": "rate_limit_window_seconds",
+     "read_at": [
+      {
+       "at": "apps/api/middleware/rate_limit.py:116",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:117",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:120",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:121",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      }
+     ],
+     "reads": "found",
+     "rule": {
+      "id": "setting-at-init",
+      "says": "a setting read once when the middleware is created — a change to it needs a restart",
+      "source": "starlette/applications.py:57-89"
+     },
+     "scope": "process",
+     "set_at": "apps/api/middleware/rate_limit.py:101",
+     "set_by": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.__init__",
+     "set_in": "init",
+     "setting": "rate_limit_window_seconds",
+     "settings_class": "apps/api/config.py::Settings",
+     "state": "default",
+     "value": 60.0,
+     "ref": "setting-once:apps/api/middleware/rate_limit.py::RateLimitMiddleware.rate_limit_window_seconds"
+    },
+    {
+     "applies_to": 79,
+     "attr": "_global",
+     "class": "SlidingWindowLimiter",
+     "class_at": "apps/api/middleware/rate_limit.py:43",
+     "dies": "with the server process",
+     "holds": [
+      {
+       "as": "defaultdict",
+       "at": "apps/api/middleware/rate_limit.py:52",
+       "attr": "_hits"
+      }
+     ],
+     "kind": "built-once",
+     "name": "_global",
+     "owner": "middleware:RateLimitMiddleware",
+     "read_at": [
+      {
+       "at": "apps/api/middleware/rate_limit.py:120",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:121",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      }
+     ],
+     "reads": "found",
+     "rule": {
+      "id": "middleware-init",
+      "says": "built once when the middleware is created, then shared by every request",
+      "source": "starlette/applications.py:57-89"
+     },
+     "scope": "process",
+     "set_at": "apps/api/middleware/rate_limit.py:100",
+     "set_by": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.__init__",
+     "set_in": "init",
+     "ref": "built-once:apps/api/middleware/rate_limit.py::RateLimitMiddleware._global"
+    },
+    {
+     "applies_to": 79,
+     "declared_at": "apps/api/config.py:138",
+     "dies": "with the server process",
+     "env": "GUSTIFY_RATE_LIMIT_PER_MINUTE",
+     "hands_to": [
+      {
+       "at": "apps/api/middleware/rate_limit.py:101",
+       "attr": "_global",
+       "param": "limit"
+      }
+     ],
+     "kind": "setting-once",
+     "name": "rate_limit_per_minute",
+     "read_at": [
+      {
+       "at": "apps/api/middleware/rate_limit.py:120",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      },
+      {
+       "at": "apps/api/middleware/rate_limit.py:121",
+       "fn": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.dispatch",
+       "in": "middleware"
+      }
+     ],
+     "reads": "found",
+     "rule": {
+      "id": "setting-at-init",
+      "says": "a setting read once when the middleware is created — a change to it needs a restart",
+      "source": "starlette/applications.py:57-89"
+     },
+     "scope": "process",
+     "set_at": "apps/api/middleware/rate_limit.py:101",
+     "set_by": "apps/api/middleware/rate_limit.py::RateLimitMiddleware.__init__",
+     "set_in": "init",
+     "setting": "rate_limit_per_minute",
+     "settings_class": "apps/api/config.py::Settings",
+     "state": "default",
+     "value": 120,
+     "ref": "setting-once:apps/api/middleware/rate_limit.py::RateLimitMiddleware.rate_limit_per_minute"
+    },
+    {
+     "carrier": "request.state",
+     "dies": "with the answer",
+     "from": {
+      "cond": true,
+      "kind": "header",
+      "name": "Idempotency-Key"
+     },
+     "kind": "state",
+     "name": "idempotency_key",
+     "read_at": [
+      {
+       "at": "apps/api/middleware/idempotency.py:31",
+       "fn": "apps/api/middleware/idempotency.py::get_idempotency_key",
+       "in": "handler",
+       "via": "apps/api/api/setup.py:191"
+      }
+     ],
+     "reads": "found",
+     "rule": {
+      "id": "request-state",
+      "says": "a value kept on the request itself — it is gone once the answer has been sent",
+      "source": "starlette/requests.py:189-195"
+     },
+     "scope": "request",
+     "set_at": "apps/api/middleware/idempotency.py:25",
+     "set_by": "middleware:IdempotencyMiddleware",
+     "set_in": "middleware"
+    },
+    {
+     "dependency": "apps/api/db.py::get_session",
+     "dies": "with the answer",
+     "kind": "dependency-value",
+     "name": "session",
+     "param": "session",
+     "read_at": [
+      {
+       "at": "apps/api/api/setup.py:197",
+       "fn": "apps/api/api/setup.py::setup_complete",
+       "in": "handler"
+      },
+      {
+       "at": "apps/api/api/setup.py:204",
+       "fn": "apps/api/api/setup.py::setup_complete",
+       "in": "handler"
+      }
+     ],
+     "reads": "found",
+     "rule": {
+      "id": "dep-teardown",
+      "says": "a value opened for this request and closed when the request ends",
+      "source": "fastapi/dependencies/utils.py:578-591 · :667-672"
+     },
+     "scope": "request",
+     "set_at": "apps/api/db.py:51",
+     "set_by": "apps/api/db.py::get_session",
+     "set_in": "dependency",
+     "teardown": true,
+     "type": "AsyncSession"
+    },
+    {
+     "dependency": "apps/api/auth/context.py::get_auth_context",
+     "dies": "with the answer",
+     "kind": "dependency-value",
+     "name": "ctx",
+     "param": "ctx",
+     "read_at": [
+      {
+       "at": "apps/api/api/setup.py:197",
+       "fn": "apps/api/api/setup.py::setup_complete",
+       "in": "handler"
+      },
+      {
+       "at": "apps/api/api/setup.py:204",
+       "fn": "apps/api/api/setup.py::setup_complete",
+       "in": "handler"
+      }
+     ],
+     "reads": "found",
+     "rule": {
+      "id": "dep-solved",
+      "says": "a value FastAPI builds for this request and hands to the handler",
+      "source": "fastapi/dependencies/utils.py:598-684"
+     },
+     "scope": "request",
+     "set_at": "apps/api/auth/context.py:90",
+     "set_by": "apps/api/auth/context.py::get_auth_context",
+     "set_in": "dependency",
+     "teardown": false,
+     "type": "AuthContext"
+    },
+    {
+     "applies_to": 14,
+     "as_dependency": true,
+     "decorator": "lru_cache",
+     "dies": "with the server process",
+     "fn": "apps/api/config.py::get_settings",
+     "kind": "cache",
+     "maxsize": 1,
+     "name": "get_settings",
+     "read_at": [
+      {
+       "at": "apps/api/api/setup.py:204",
+       "fn": "apps/api/api/setup.py::setup_complete",
+       "in": "handler"
+      }
+     ],
+     "reads": "found",
+     "reads_more": 6,
+     "rule": {
+      "id": "dep-cached",
+      "says": "the function that builds it is cached, so every request is handed the same object",
+      "source": "Lib/functools.py lru_cache · cache"
+     },
+     "scope": "process",
+     "set_at": "apps/api/config.py:388",
+     "set_by": "apps/api/config.py::get_settings",
+     "set_in": "dependency",
+     "dependency": "apps/api/config.py::get_settings",
+     "param": "settings",
+     "ref": "cache:apps/api/config.py::get_settings",
+     "teardown": false,
+     "type": "Settings"
+    }
+   ],
+   "n": {
+    "rows": 11,
+    "by_kind": {
+     "setting-once": 5,
+     "built-once": 2,
+     "state": 1,
+     "dependency-value": 2,
+     "cache": 1
+    },
+    "by_dies": {
+     "with the server process": 8,
+     "with the answer": 3
+    },
+    "shared": 8,
+    "unresolved": 0,
+    "read": 11
    }
   },
   "failure": {

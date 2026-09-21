@@ -90,7 +90,10 @@ const EX = {
   "the-predicate-per-decision-point": () => { const deep = ((f.inside || {}).functions || []).flatMap((r) => r.raises.filter((x) => x.translation === "beyond one level").map((x) => ({ r, x })))[0];
     return `${q(f.preconditions[0].pred)} on a guard · ${q(f.branches[0].pred)} on a fork` + (deep ? ` · ${q(deep.x.pred)} ${deep.r.depth} calls down, its answer not read` : ""); },
   "how-this-table-was-found": () => { const drawn = new Set(L.data.tables.map((t) => t.table)), only = Object.keys(tables).filter((t) => !drawn.has(t)); return only.length ? `${only.join(", ")} · known to the route effects only` : null; },
-  "in-flight-values": () => null,
+  "in-flight-values": () => { const I = f.inflight; if (!I || I.state !== "present" || !I.rows.length) return null;   /* piece 11 · Slice 12 */
+    const own = I.rows.filter(r => !r.ref), key = own.find(r => r.kind === "state"), gone = I.n.by_dies["with the answer"] || 0;
+    return `${I.n.rows} things are alive while this request runs · ${gone} go with the answer, ${I.n.rows - gone} live with the server`
+      + (key ? ` · ${key.name} is put on the request at ${String(key.set_at).split("/").slice(-1)[0]} and read ${(key.read_at || []).length} place(s) down` : ""); },
   "response-headers-per-ending": () => { const h = f.exits.filter((e) => e.response && e.response.headers && Object.keys(e.response.headers).length).map((e) => `${e.status} sends ${Object.keys(e.response.headers).join(", ")}`); return h.length ? [...new Set(h)].join(" · ") : null; },
   "field-rules-of-the-request-body": () => { const rq = L.data.schemas.request, R = rq && rq.rules; if (!R) return null;
     const k = Object.keys(R).find((n) => R[n].required && Object.keys(R[n].constraints).length) || Object.keys(R)[0], r = R[k], c = r.constraints;
@@ -146,7 +149,7 @@ const EX = {
     const allF = f.findings.concat(Object.values(f.arm_findings).flat());
     return `${plural(allF.length, "finding")} · ` + allF.map((x) => (FIND[x.id] || rawF)(x)).join(" · "); },
 };
-const LANDS = { "in-flight-values": 11 };
+const LANDS = {};   // every piece that owed an example has landed (piece 11 filled the last one, in-flight values)
 const NONE = Object.assign(Object.fromEntries(Object.entries(LANDS).map(([k, n]) => [k, `nothing to quote yet · piece ${n} of the work brings it`])), { "little-helpers-with-a-type": "none to show · helper functions carry no type in the feed yet", "events-published": "none on this endpoint", "tasks-dispatched": "none on this endpoint", "outside-services-called": "none drawn on this endpoint" });
 for (const r of rows) {
   if (!(r.id in EX)) die("no example rule for row: " + r.id);
