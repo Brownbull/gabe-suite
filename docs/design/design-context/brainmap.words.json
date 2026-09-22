@@ -1,5 +1,5 @@
 {
- "_about": "Authored prose ONLY for the brain map of the endpoint card's panels. Every number on the page is a {token} the generator fills from inventory-endpoint.md · m1-endpoint.json · prisms-endpoint.json; a digit typed in here is a bug. Plain lines follow gabe-lens plain mode. The block names, plain lines and standpoints are NOT repeated here — they live in prisms-endpoint.json and are read from it.",
+ "_about": "Authored prose ONLY for the brain map of the endpoint card's panels. Every number on the page is a {token} the generator fills from inventory-endpoint.md · m1-endpoint.json · prisms-endpoint.json; a digit typed in here is a bug. The generator's number sweep runs over THIS WHOLE FILE (it used to run over `stages` alone, which is how “The five placements” and “Two pairs of blocks share a standpoint” survived), with five exemptions declared in gen-brainmap.js § 6c and nowhere else: a {token}; an id or name that carries a number (D-021 · Q3 · M1 · loop 1) and an HTTP status, which is a label; a line PROVEN verbatim against a source (`cites`, and the stage lines' opening words, checked against endpoint-stages.md — the record's words win over the sweep, never the other way round); a number inside “curly quotes”, which is his word quoted back to him and must be answered by a {token} in the same line; and “one”, which in this file is always the article or pronoun. Plain lines follow gabe-lens plain mode. The block names, plain lines and standpoints are NOT repeated here — they live in prisms-endpoint.json and are read from it.",
  "m1Renames": {
   "_why": "M1 was rated on the frozen inventory (m1-round1.inventory.md). The second ruling (D-016, 2026-09-19) DEMOTED and renamed two rows in the living inventory. The join is a rename, never a re-home: the generator refuses to run unless each key is an M1 attribute with no living row of its own and each value is a living row no M1 attribute claims.",
   "rate-limit": "rate-tier",
@@ -35,7 +35,7 @@
   "C": {
    "name": "As sketched",
    "line1": "The diagonal exactly as you drew it: root at the top right, every edge running down and to the left at {rotDeg}°.",
-   "line2": "It is kept honestly so the turn is visible — the same node positions as Upright, rotated, and nothing else changed.",
+   "line2": "It is kept honestly so the turn is visible: Upright's own node positions, spread — every distance between nodes multiplied by one factor, the smallest that keeps the turned boxes clear of each other — and then turned. With nothing open that factor is {spreadClosed}; as the map stands now it is {spread}. It climbs whenever the turn alone would put boxes on top of each other: a crowded branch open, or the shared attributes drawn as a band.",
    "plain": "The tree runs across the corner of the page, the way you drew it."
   },
   "D": {
@@ -68,6 +68,10 @@
    "label": "Panel tray",
    "plain": "Where the opened panels sit."
   },
+  "keep": {
+   "label": "Filter",
+   "plain": "Keep only, as its own control: never a click on a node."
+  },
   "acts": {
    "label": "Actions",
    "plain": "Whether each node shows what a click on it would do."
@@ -87,8 +91,63 @@
   "section": {
    "name": "By section",
    "note": "{nSections} groups",
-   "plain": "The inventory's own seven groups, with each attribute under the one it was written in."
+   "plain": "The inventory's own groups, with each attribute under the one it was written in."
+  },
+  "stage": {
+   "name": "By stage",
+   "note": "{nSpineRows} rows + across · a proposal",
+   "plain": "Your record's spine, in its order: {nStageRows} stages, then the UNCAUGHT bay that runs beside every stage, then the CLIENT screen after the answer leaves — each holding the blocks proposed for it. A proposal: nothing in the data says which rows a block touches."
   }
+ },
+ "stages": {
+  "_why": "D-021: the grouping rail offers his stage record beside the inventory's sections. The RAIL IS HIS SPINE: `order` is the eight rows of the table 'The spine — the same eight for every door' in docs/design/workflow-panel/endpoint-stages.md, in its order, each carrying the KIND that record gives it — six stages, the UNCAUGHT bay, the CLIENT screen. The generator parses that table and checks BOTH WAYS: every row of the record must be in `order`, every row of `order` must be in the record, with the same kind, and the bay and the screen must carry a `mark` found verbatim in the record. Every row's `plain` must also OPEN with the record's own “what happens there” words, verbatim but for the first letter and the sentence stop — what is proven that way is exempt from the number sweep, so the record can say “one body per ending” and keep it. NOTHING in the data maps a block to a row, so each block's `stages` LIST is AUTHORED — a PROPOSAL for him to correct, keyed by the block's question signature (the key prisms-endpoint.json uses). Topic blocks follow the table 'The topics, read across the stages'; the others are read off the block's own questions. `cites` is a line the generator finds, verbatim, in the file it names — endpoint-stages.md or questions.md — and it stops when the line is not there. An empty list is allowed: the block belongs under no row. The generator stops if a block is missing, named twice, names a row not in `order`, names one twice, gives no reason, or if any authored line in this block types a number instead of a {token}.",
+  "order": ["EDGE", "GATE", "INPUT", "HANDLER", "EFFECTS", "ANSWER", "UNCAUGHT", "CLIENT"],
+  "names": {
+   "EDGE": {"name": "EDGE", "kind": "stage", "plain": "The checks every request meets before it reaches this door — the app band."},
+   "GATE": {"name": "GATE", "kind": "stage", "plain": "The lock on the door — who may knock, and what the gate provisions."},
+   "INPUT": {"name": "INPUT", "kind": "stage", "plain": "The body — can it be read, does it fit the shape."},
+   "HANDLER": {"name": "HANDLER", "kind": "stage", "plain": "The door's own decisions — guards, calls, arms, catches."},
+   "EFFECTS": {"name": "EFFECTS", "kind": "stage", "plain": "The writes the door leaves behind — which survive each ending."},
+   "ANSWER": {"name": "ANSWER", "kind": "stage", "plain": "The reply the caller gets — one body per ending, beside what was promised."},
+   "UNCAUGHT": {"name": "UNCAUGHT", "kind": "bay", "mark": "runs beside every stage", "plain": "Anything nobody caught — possible at any step. It is the BAY of your record, not a step of its own: it runs beside every stage, and what leaves here is the 500 that nothing translated."},
+   "CLIENT": {"name": "CLIENT", "kind": "screen", "mark": "sits after the answer leaves", "plain": "The screen that reads the answer — can it tell the endings apart. It is the SCREEN of your record: it sits after the answer leaves, so it is a row of its own and not a part of ANSWER."}
+  },
+  "across": {"name": "Across the stages", "plainOne": "Blocks that name several rows, or none: D-021's rule puts them here rather than forcing them onto a single row.", "plainEvery": "Blocks that belong under no row of your spine: their lists are empty, so there is nothing to draw them under."},
+  "emptyPlain": "No block sits under this row with the rule you picked. It is drawn anyway, dashed, because a door that has nothing at a stage still HAS the stage.",
+  "note": "The rail draws your spine: {nSpineRows} rows, in your order — {nStageRows} stages, then the UNCAUGHT bay, which runs beside every stage, then the CLIENT screen, which sits after the answer leaves. Across the stages is a branch of this map, not a row of your record. What is a PROPOSAL, not a measurement, is which rows each block touches: the agent chose them from your stage record — the topics table for the topic blocks, the block's own questions for the rest. Open a block to read why; correct any of them.",
+  "rule": {
+   "label": "A block that spans rows goes", "plain": "Where a block that names several rows, or none, is drawn.", "default": "every",
+   "opts": {
+    "one": {"name": "under Across the stages", "note": "the rule as recorded in D-021", "plain": "A block that names a single row sits under it; a block that names several, or none, sits under Across the stages."},
+    "every": {"name": "under every stage it touches", "note": "the agent's pick", "plain": "A block is drawn under every row in its list, so it appears more than once; only a block with an empty list sits under Across."}
+   }
+  },
+  "byBlock": {
+   "_why": "One entry per ruled block. `from` names the file `cites` is found in. Topic blocks cite their row of the topics table; Endings, Stages and order, In-flight state, Standard or specialist, Overview and risk and Proof cite their own question. `fromEndingsColumn` on a block says its list IS the rows the record's 'endings that leave here' column names — the generator reads that column and stops if the two disagree, so the bay can never fall out of it again.",
+   "Q1+Q2+Q9": {"stages": ["GATE", "HANDLER", "EFFECTS", "ANSWER", "UNCAUGHT"], "from": "stages", "cites": "| data | the tables touched at each stage — the WHEN picture (users at GATE, the rest at HANDLER, the fate at ANSWER)", "why": "The data row of the topics table: users at GATE, the rest at HANDLER, the fate at ANSWER — and EFFECTS is the stage of the writes themselves. It also reaches the UNCAUGHT bay: its own question asks whether a write survived THIS ending, and on the failure nobody caught the writes are left neither committed nor rolled back."},
+   "Q3+Q11": {"stages": ["EDGE", "GATE", "INPUT", "HANDLER", "ANSWER", "UNCAUGHT"], "from": "questions", "fromEndingsColumn": true, "cites": "| Q3 | Which endings can this door produce, and at which stage does each one leave?", "why": "Its own question asks at which stage each ending leaves, so its list is exactly the rows whose 'endings that leave here' column is not empty — {nEndingRows} of them, the UNCAUGHT bay among them: the 500 nobody caught is an ending, and the bay is where it leaves."},
+   "Q15+Q18+Q19": {"stages": ["GATE", "HANDLER"], "from": "stages", "cites": "| functions | the dependencies at GATE, the handler and its calls at HANDLER, the catches where they are", "why": "The functions row of the topics table: the dependencies at GATE, the handler and its calls at HANDLER. The catches sit where they are, so they add no row of their own. The bay is NOT in its list: a raise nothing catches is a fact about the ENDING it produces, which the endings block draws there; what the functions row names is where the catches ARE."},
+   "Q16": {"stages": [], "from": "questions", "cites": "| Q16 | What did the door save temporarily", "why": "Its own question is about what was alive DURING the process: a value set at a stage and read at a later stage lives between them, so no single row holds it."},
+   "Q12": {"stages": [], "from": "questions", "cites": "| Q12 | Is this door built from standard pieces, or did it go specialist?", "why": "Its own question sets the whole door against other doors; it is about the endpoint, not about any single stage of it."},
+   "Q5+Q7": {"stages": [], "from": "questions", "cites": "| Q5 | What should be at this stage for this topic?", "why": "Its own questions ARE the stages and their order; drawing it under any of them would make it its own child."},
+   "Q4": {"stages": ["EDGE", "GATE", "INPUT", "HANDLER", "ANSWER", "UNCAUGHT"], "from": "questions", "cites": "| Q4 | Which conditions of this door does a test prove, and which does nothing reach?", "why": "Its own question is about conditions, and a condition ends the request at the stage its ending leaves — the tests row of the topics table says the same: the cases hang at the stage the ending leaves. The UNCAUGHT bay is in the list because its 500 is the condition nothing reaches: no case is written for it, and that absence is the answer the question wants."},
+   "Q6+Q17": {"stages": ["EDGE", "GATE", "HANDLER"], "from": "stages", "cites": "| security | the band at EDGE, the scheme and gates at GATE, the guards at HANDLER — passed or fired", "why": "The security row of the topics table: the band at EDGE, the scheme and gates at GATE, the guards at HANDLER. The bay is NOT in its list: what leaves there is by definition the failure no gate decided."},
+   "Q10+Q13": {"stages": ["INPUT", "ANSWER"], "from": "stages", "cites": "| schemas | the request shape at INPUT, the response shape at ANSWER, the 422 cases at INPUT", "why": "The schemas row of the topics table: the request shape and its 422 cases at INPUT, the response shape at ANSWER. The bay is NOT in its list: the body that leaves there is the framework's, not a shape this door declares."},
+   "Q14+Q20": {"stages": [], "from": "questions", "cites": "| Q14 | Which door is the densest, the riskiest, the least tested?", "why": "Its own questions are about the whole door at a glance, and its risks can sit in any row, so no single row holds it."},
+   "Q8": {"stages": ["CLIENT"], "from": "stages", "cites": "| widening | the screen at CLIENT — the reason site, the guard chain, the hook's moves", "why": "The widening row of the topics table: the screen at CLIENT. The screen sits after the answer leaves, so it is its own row, not ANSWER's. The bay is NOT in its list: the screen must still handle the 500 that nothing translated, but it reads it after the answer leaves — at CLIENT, the row it already sits under."}
+  }
+ },
+ "keep": {
+  "_why": "D-022, option C: a click always SHOWS. Keep only — a filter — is NEVER a click; it is its own control, and it says visibly that it is on until it is removed. Built here so it is SEEN working rather than read about.",
+  "label": "Keep only",
+  "plain": "Takes the node you opened last and quiets every node that does not carry it. It stays on until you remove it.",
+  "btnIdle": "Keep only what carries “{name}”",
+  "btnNone": "Keep only — open a node first",
+  "btnRoot": "Keep only — the root carries everything",
+  "chipOn": "Keep only is ON: the map keeps what carries “{name}” ({kind}); {quiet} other nodes are quiet.",
+  "chipHow": "It stays on through clicks, placements and groupings. Remove it with the button beside this.",
+  "off": "Remove the filter",
+  "offPlain": "Turns Keep only off: every node comes back."
  },
  "spineModes": {
   "nodes": {
@@ -113,21 +172,7 @@
   }
  },
  "ui": {
-  "node": {
-   "plain": "A place in the map. The number beside the name is how many attributes it holds."
-  },
-  "shared": {
-   "plain": "An attribute several blocks need, so no single block owns it."
-  },
-  "added": {
-   "plain": "A row written into the inventory after M1 was rated, so nothing has placed it in a block yet."
-  },
-  "open": {
-   "plain": "An opened node: its panel is in the tray and its branch is lit."
-  },
-  "sweep": {
-   "plain": "The line that says which part of the map the panels below belong to."
-  },
+  "_why": "The plain line of a CONTROL the page paints, one per control, shown on its hover. The generator checks both ways against brainmap.tpl.html (§ 6d): a line here that the template never paints is a line nobody reads, and a control the template hovers with no line here is a hover that says nothing. Six lines (node · shared · added · open · sweep · pick) were removed on 2026-09-22 for the first reason — a node's hover is already built per KIND in tipHtml, and `node` carried the claim “the number beside the name is how many attributes it holds”, which is false under By stage.",
   "replay": {
    "plain": "Runs the opening move again from the start."
   },
@@ -139,9 +184,6 @@
   },
   "reset": {
    "plain": "A clean slate — every pick and every opened panel is cleared."
-  },
-  "pick": {
-   "plain": "The placement you want kept. One only."
   }
  },
  "sections": {
@@ -151,10 +193,10 @@
   },
   "reads": {
    "title": "What it draws",
-   "n": "every count measured from the inventory"
+   "n": "the depth is your ruling · the other counts are measured against the inventory and M1"
   },
   "options": {
-   "title": "The five placements",
+   "title": "The {nLayouts} placements",
    "n": "same nodes, different placement"
   },
   "open": {
@@ -196,9 +238,9 @@
  },
  "takes": {
   "map": [
-   "A branch's number is the attributes it holds, so a fat branch is a panel with a lot in it before you open anything.",
+   "A branch's number is what that branch holds: attributes under Flat, By standpoint and By section — blocks under By stage, where a row holds blocks and a row holding none says so in words instead of a number. Either way a fat branch is a panel with a lot in it before you open anything.",
    "The tray keeps what you opened in the order you opened it, so the last thing you looked at is the last panel.",
-   "{nSpine} attributes are drawn shared. Under one grouping they sit in several branches at once; under the other they sit once, in a band. Both are the same fact drawn two ways."
+   "{nSpine} attributes are drawn shared. Under one setting of the Shared attributes rail they sit in several branches at once; under the other they sit once, in a band. Both are the same fact drawn {nSpineModes} ways."
   ],
   "options": [
    "Each placement draws the same {nNodesFlat} nodes when nothing is open. Only where they sit changes.",
@@ -210,14 +252,19 @@
   "_why": "Every place the agent chose something you have not ruled. Named here rather than buried in a commit message.",
   "items": [
    {
-    "q": "The grouping you asked for was “your six stages”. Nothing in the data maps a block to a stage.",
-    "did": "Built the grouping from the inventory's own {nSections} sections instead, and labelled it that way. A block's section is the one most of its attributes were written in, ties broken by the inventory's order.",
-    "ask": "Either rule a stage for each of the {nBlocks} blocks, or keep the sections."
+    "q": "Which rows of your spine each block touches, and where a block that spans rows is drawn. Nothing in the data maps a block to a row.",
+    "did": "Proposed a list per block (D-021), over all {nSpineRows} rows of your record — the {nStageRows} stages, the UNCAUGHT bay and the CLIENT screen. Blocks naming a single row: {nOneStage} · several: {nMulti} · none: {nNone}. D-021 as recorded puts every block whose list is not a single row under Across the stages ({nAcrossOne} blocks), and the rows it leaves empty are: {emptyStagesOne}. My pick draws each block under every row it touches, so Across holds only the blocks with an empty list ({nAcrossEvery}), and the rows it leaves empty are: {emptyStagesEvery}. A switch under By stage shows both. {nBayBlocks} blocks are drawn under the bay — {bayBlocks} — because the 500 nobody caught is an ending they must be able to show.",
+    "ask": "Move any block you would put elsewhere, and say which rule you keep for a block that spans rows."
    },
    {
     "q": "You said “the four standpoints the blocks name”. The blocks name {nGroups}.",
-    "did": "Grouped by all {nGroups}, each one read off the block's own standpoint sentence. Two pairs of blocks share a standpoint, and {nUnnamed} blocks say none of your standpoints names them.",
-    "ask": "Tell me which four, or accept {nGroups}."
+    "did": "Grouped by all {nGroups}, each one read off the block's own standpoint sentence. Named by more than a single block: {sharedStandpoints}. The blocks your standpoints do not name — {nUnnamed} of them — gather in a bucket of their own, which is not a standpoint they share.",
+    "ask": "Tell me which of them you meant, or accept {nGroups}."
+   },
+   {
+    "q": "Where the Keep-only control sits, and which node it keeps.",
+    "did": "On the rail above the map, as its own group, taking the node opened last. A filter changes the map, and the rail is where the controls that change the map live; in a panel's head it would look like one of the node's moves again, and closing the panel would hide the only way to remove it.",
+    "ask": "Say if it belongs in the panel head instead, or should keep a node you pick some other way."
    },
    {
     "q": "Which node the sweep starts from when more than one is open.",
@@ -241,12 +288,12 @@
   "lines": [
    "The blocks are M1's: {nQuestions} questions clustered by which attributes they need, cut at the widest drop in the ladder. The cells are {cellsHash}, the inventory {invHash}.",
    "An attribute's block is the one M1 measured, never one chosen here. {nPlacedOwn} attributes have a block of their own, {nSpine} are shared across {spineLow} or more, and {nAdded} have none because they were written after the rating.",
-   "Two attributes are joined to M1 across a rename from the second ruling: {renames}. The generator stops if either side of a rename stops being true.",
+   "Renames declared across the second ruling: {nRenamesDecl}, of which {nRenamesLive} still join an attribute to M1 — {renames}. The generator stops if either side of a rename stops being true.",
    "The standpoint groups are read off each block's own standpoint sentence in prisms-endpoint.json, by phrase, not by a list kept here.",
-   "Option C is option A's node positions turned {rotDeg}°, computed, not drawn by hand. Turning C back by {rotDeg}° gives A to the pixel."
+   "Option C is option A's node positions turned {rotDeg}°, computed, not drawn by hand — and spread before the turn, every distance between nodes multiplied by one factor, the smallest that keeps the turned boxes clear of each other. The same factor for every node is what keeps C a copy of A: turning C back by {rotDeg}° gives A again exactly, at that one scale — {spread} as the map stands now, {spreadClosed} with nothing open."
   ]
  },
- "pickIntro": "Pick the placement you want, set the three switches the way you want them kept, and copy the text.",
+ "pickIntro": "Pick the placement you want, set the {nSwitches} switches beside it the way you want them kept, and copy the text — it records the pick and every switch by name, By stage's own extra switch included.",
  "acts": {
   "_why": "What a click on a node DOES, and WHERE the result lands — his ask of 2026-09-22: 'the navigation of the actions in the right-side panel… if this is a filter, or whether they select new data or show new data (maybe in the middle section or in the portrait)'. These are a PROPOSAL, not a measurement: the console's three regions are his (COMMAND names concepts · the MIDDLE shows the result · the PORTRAIT shows one thing in detail), and each action says which region answers. Nothing here is read from the feed; the nodes and counts around them are.",
   "where": {
@@ -290,73 +337,45 @@
    }
   },
   "byNode": {
-   "root": [
-    {
-     "act": "select",
-     "where": "middle",
-     "what": "every block of the card, ordered by how much each holds"
-    }
-   ],
-   "block": [
-    {
-     "act": "select",
-     "where": "middle",
-     "what": "this block's attributes, as the card would show them"
-    },
-    {
-     "act": "filter",
-     "where": "map",
-     "what": "only the attributes this block needs"
-    },
-    {
-     "act": "open",
-     "where": "portrait",
-     "what": "the block itself: its questions, its standpoint, what it holds"
-    }
-   ],
-   "attr": [
-    {
-     "act": "open",
-     "where": "portrait",
-     "what": "this attribute's record: its type, how many there are, where it first shows"
-    },
-    {
-     "act": "filter",
-     "where": "map",
-     "what": "only the blocks that need this attribute"
-    },
-    {
-     "act": "trace",
-     "where": "middle",
-     "what": "the questions this attribute answers, and what else answers them"
-    }
-   ],
-   "group": [
-    {
-     "act": "select",
-     "where": "middle",
-     "what": "the blocks in this group, side by side"
-    },
-    {
-     "act": "filter",
-     "where": "map",
-     "what": "only this group"
-    }
-   ],
-   "sec": [
-    {
-     "act": "select",
-     "where": "middle",
-     "what": "the attributes this section of the inventory holds"
-    },
-    {
-     "act": "filter",
-     "where": "map",
-     "what": "only the blocks that draw on this section"
-    }
-   ]
+   "_why": "Option C (D-022): a click is SHOW, for every kind of node — it always says where it lands. Keep only is not in here: it is its own control. `offers` are the other moves a node offers; they are not what a click does.",
+   "root": {
+    "click": { "act": "select", "where": "middle", "what": "every block of the card, ordered by how much each holds" },
+    "offers": []
+   },
+   "block": {
+    "click": { "act": "select", "where": "middle", "what": "this block's attributes, as the card would show them" },
+    "offers": [
+     { "act": "open", "where": "portrait", "what": "the block itself: its questions, its standpoint, what it holds" }
+    ]
+   },
+   "attr": {
+    "click": { "act": "select", "where": "middle", "what": "this attribute in every block that carries it, side by side" },
+    "offers": [
+     { "act": "open", "where": "portrait", "what": "this attribute's record: its type, how many there are, where it first shows" },
+     { "act": "trace", "where": "middle", "what": "the questions this attribute answers, and what else answers them" }
+    ]
+   },
+   "group": {
+    "click": { "act": "select", "where": "middle", "what": "the blocks in this group, side by side" },
+    "offers": []
+   },
+   "stage": {
+    "click": { "act": "select", "where": "middle", "what": "the blocks drawn under this stage, side by side" },
+    "offers": []
+   },
+   "sec": {
+    "click": { "act": "select", "where": "middle", "what": "the attributes this section of the inventory holds" },
+    "offers": []
+   },
+   "added": {
+    "click": { "act": "select", "where": "middle", "what": "the rows no block claims yet" },
+    "offers": []
+   }
   },
   "head": "What a click does",
+  "offersHead": "Other moves this node offers",
+  "offersNone": "No other move: a click is the only one.",
+  "filterLine": "Filtering is not a click. Keep only is its own control, on the rail above the map, and it says it is on until you remove it.",
   "lead": "Each of these is a move, not a link: it says what changes and which part of the console answers.",
   "note": "PROPOSED, not built. The map is the COMMAND region — it names concepts and never a code. Nothing here reaches the feed yet; what it would show is named so you can rule on it by looking."
  },

@@ -37,6 +37,36 @@
   .opt[aria-checked="true"] { border-color: var(--accent); background: var(--accent); color: var(--ground); }
   .opt .k { font-weight: 700; }
   .opt .sp { font-size: var(--fs-min); opacity: .78; }
+  /* Keep only — its own control (D-022, option C): a click on a node never turns it on, and while it is on a chip says so */
+  .keepbox { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .opt[aria-pressed="true"] { border-color: var(--alert); background: var(--alert-soft); color: var(--alert); }
+  .opt:disabled { cursor: not-allowed; opacity: .6; }
+  .opt:disabled:hover { border-color: var(--rule); color: var(--ink-soft); }
+  .keepchip { display: flex; flex-direction: column; gap: 2px; max-width: 46ch; font-size: var(--fs-xs); color: var(--alert);
+              border: 1px solid var(--alert); background: var(--alert-soft); border-radius: 8px; padding: 4px 10px; }
+  .keepchip[hidden] { display: none; }
+  .keepchip b { font-weight: 700; }
+  .keepchip .how { color: var(--ink-soft); font-size: var(--fs-min); }
+  .grpnote { font-size: var(--fs-xs); color: var(--alert); margin: 0; max-width: 90ch; }
+  .grpnote[hidden] { display: none; }
+  .node[data-quiet="true"], .ind .nb[data-quiet="true"] { opacity: .26; }
+  .node[data-quiet="true"]:hover, .node[data-quiet="true"]:focus-visible { opacity: .6; }
+  .wire[data-quiet="true"] { opacity: .2; }
+  .node[data-kind="stage"] { border-width: 2px; }
+  /* hollow = the canvas's own colour, never transparent: wires run centre to centre, and a see-through box shows its wire */
+  .node[data-kind="stage"][data-empty="true"] { border-style: dashed; background: var(--card); }
+  /* an OPEN empty stage keeps its ink: its background stays hollow, so the open state's light text would vanish on it */
+  .node[data-kind="stage"][data-empty="true"][data-open="true"] { color: var(--ink); border-color: var(--accent); }
+  .node[data-kind="stage"][data-empty="true"][data-open="true"] .sub { color: var(--muted); opacity: 1; }
+  .node[data-kind="stage"][data-across="true"] { border-color: color-mix(in srgb, var(--alert) 55%, var(--rule)); }
+  /* his record's spine is not six rows of one kind: the BAY runs beside every stage and the SCREEN sits after the answer
+     leaves, so each wears its own edge and says, on the node, what the record calls it */
+  .node[data-kind="stage"][data-strk="bay"] { border-style: dashed; border-color: color-mix(in srgb, var(--alert) 70%, var(--rule)); }
+  .node[data-kind="stage"][data-strk="screen"] { border-style: dotted; border-color: color-mix(in srgb, var(--accent) 70%, var(--rule)); }
+  .node .mk { font-size: var(--fs-min); color: var(--accent); line-height: 1.2; overflow: hidden;
+              display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .node[data-open="true"] .mk { color: var(--ground); opacity: .9; }
+  .ind .mkw { font-size: var(--fs-min); color: var(--accent); }
 
   /* ── the stage: map + tray ──────────────────────────────────────────
      The PROSE keeps the centred column (his rule); the WORKING SURFACE breaks out of it and uses the screen — a map read at
@@ -195,6 +225,7 @@
   <section class="sec" data-sec="1" id="sec-map">
     <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="3"></circle><circle cx="5" cy="19" r="3"></circle><circle cx="19" cy="19" r="3"></circle><path d="M12 8v3"></path><path d="M12 11 6.5 16.3"></path><path d="m12 11 5.5 5.3"></path></svg><span id="t-map">—</span></h2><span class="n" id="n-map">—</span></div>
     <div class="rail" id="rail"></div>
+    <p class="grpnote" id="grp-note" hidden>—</p>
     <p class="cap" id="sketch">—</p>
     <div class="stage" id="stage" data-tray="below">
       <div class="canvas" id="canvas" data-lay="A"><div class="plane still" id="plane"><svg class="wires" id="wires" aria-hidden="true"></svg></div></div>
@@ -254,16 +285,18 @@
   function plural(n, w) { return n + " " + w + (n === 1 ? "" : "s"); }
 
   /* ── state ─────────────────────────────────────────────────────────── */
-  var LAYS = ["A", "B", "C", "D", "E"], GRPS = ["flat", "standpoint", "section"], SPN = ["nodes", "band"], TRY = ["below", "beside"], ACT = ["on", "off"];
-  var S = { lay: "A", grp: "flat", spine: "nodes", tray: "beside", acts: "on", open: [], pick: null };   /* the tray starts on the RIGHT, and a node says what a click on it would do (his asks 2026-09-22) */
+  var LAYS = ["A", "B", "C", "D", "E"], GRPS = ["flat", "standpoint", "section", "stage"], SPN = ["nodes", "band"], TRY = ["below", "beside"], ACT = ["on", "off"];
+  var SRULES = D.stageWords.rules;                    /* where a block that spans stages goes, under By stage (D-021) */
+  var S = { lay: "A", grp: "flat", spine: "nodes", tray: "beside", acts: "on", srule: D.stageWords.rule["default"], open: [], pick: null, keep: null };   /* keep: the Keep-only filter, its own control */   /* the tray starts on the RIGHT, and a node says what a click on it would do (his asks 2026-09-22) */
   function save() { try { window.localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 
   /* ── the subjects a panel can be about ─────────────────────────────── */
-  var A = {}, B = {}, G = {}, SEC = {};
+  var A = {}, B = {}, G = {}, SEC = {}, ST = {};
   D.attrs.forEach(function (a) { A[a.id] = a; });
   D.blocks.forEach(function (b) { B[b.key] = b; });
   D.groups.forEach(function (g) { G[g.key] = g; });
   D.sections.forEach(function (s) { SEC[s.key] = s; });
+  D.stages.forEach(function (s) { ST[s.key] = s; });
   function SUBJ(k) {
     if (k === "root") return { kind: "root" };
     var i = k.indexOf(":"), t = k.slice(0, i), v = k.slice(i + 1);
@@ -271,6 +304,7 @@
     if (t === "block") return B[v] ? { kind: "block", b: B[v] } : null;
     if (t === "group") return G[v] ? { kind: "group", g: G[v] } : null;
     if (t === "sec") return SEC[v] ? { kind: "sec", s: SEC[v] } : null;
+    if (t === "stage") return ST[v] ? { kind: "stage", st: ST[v] } : null;
     if (t === "added") return { kind: "added" };
     return null;
   }
@@ -279,11 +313,13 @@
   try { var raw = window.localStorage.getItem(KEY); if (raw) { var o = JSON.parse(raw);
     if (LAYS.indexOf(o.lay) >= 0) S.lay = o.lay; if (GRPS.indexOf(o.grp) >= 0) S.grp = o.grp;
     if (SPN.indexOf(o.spine) >= 0) S.spine = o.spine; if (TRY.indexOf(o.tray) >= 0) S.tray = o.tray; if (ACT.indexOf(o.acts) >= 0) S.acts = o.acts;
+    if (SRULES.indexOf(o.srule) >= 0) S.srule = o.srule;
     if (LAYS.indexOf(o.pick) >= 0) S.pick = o.pick;
-    if (Array.isArray(o.open)) S.open = o.open.filter(function (k) { return !!SUBJ(k); }); } } catch (e) {}
+    if (Array.isArray(o.open)) S.open = o.open.filter(function (k) { return !!SUBJ(k); });
+    if (typeof o.keep === "string" && SUBJ(o.keep) && o.keep !== "root") S.keep = o.keep; } } catch (e) {}
 
   /* ── the tree, rebuilt from the data for the current grouping ──────── */
-  var SIZE = { root: [214, 62], group: [190, 70], block: [178, 66], added: [178, 66], sec: [190, 70], attr: [156, 64], band: [156, 64] };
+  var SIZE = { root: [214, 62], group: [190, 70], block: [178, 66], added: [178, 66], sec: [190, 70], stage: [190, 88], attr: [156, 64], band: [156, 64] };
   function mk(kind, pkey, name, sub, extra) {
     var n = { kind: kind, pkey: pkey, name: name, sub: sub || "", kids: [], depth: 0 };
     if (extra) for (var k in extra) n[k] = extra[k];
@@ -316,6 +352,18 @@
         var n = mk("group", "group:" + g.key, g.name, plural(g.n, "attribute"), { gkey: g.key });
         n.load = function () { return g.blocks.map(function (bk) { return blockNode(B[bk]); }); };
         n.nkids = g.blocks.length; return n;
+      });
+      if (D.added.length) root.kids.push(addedNode());
+    } else if (S.grp === "stage") {
+      /* D-021: HIS SPINE, in his order — the stages, then the UNCAUGHT bay, then the CLIENT screen, then Across.
+         The bay and the screen are drawn as what the record calls them, never as ordinary stages: each carries its KIND
+         and the record's own mark. Under the rule "every" a block that touches several rows is drawn under each of them:
+         the SAME subject (block:<key>) appears more than once, as a shared attribute does under every block that needs it. */
+      root.kids = D.stages.map(function (st) {
+        var bs = stBlocks(st);
+        var n = mk("stage", "stage:" + st.key, st.name, bs.length ? plural(bs.length, "block") : "no block here", { stkey: st.key, empty: !bs.length, across: !!st.across, strk: st.kind, mark: st.mark || null });
+        n.load = function () { return bs.map(function (bk) { return blockNode(B[bk]); }); };
+        n.nkids = bs.length; return n;
       });
       if (D.added.length) root.kids.push(addedNode());
     } else {
@@ -423,6 +471,40 @@
     return { all: all, w: Math.round(maxX - minX + 2 * PAD), h: Math.round(maxY - minY + 2 * PAD), maxD: maxD, TW: TW, TH: TH, scale: scale };
   }
 
+  /* ── Keep only (D-022, option C): what CARRIES the kept subject ────────
+     Read from the subject's own data, whatever the grouping: a block carries its attributes, an attribute is carried by the
+     blocks that hold it, and a branch (standpoint, stage, section) carries what its blocks or attributes carry. Nodes that
+     carry nothing of it go QUIET — dimmed, never removed. Only the control sets S.keep; no click on a node touches it. */
+  function stBlocks(st) { return st.under[S.srule] || []; }
+  function stPlain(st) { return st.across ? D.stageWords.acrossPlain[S.srule] : st.plain; }
+  function stNames(b) { return b.stages.length ? b.stages.map(function (k) { return ST[k].name; }).join(" · ") : "none"; }
+  function holders(id) { return D.blocks.filter(function (b) { return b.attrs.indexOf(id) >= 0 || b.spine.indexOf(id) >= 0; }).map(function (b) { return b.key; }); }
+  function keepSets() {
+    if (!S.keep) return null;
+    var s = SUBJ(S.keep); if (!s || s.kind === "root") return null;
+    var ka = {}, kb = {};
+    function addB(bk) { kb[bk] = true; B[bk].attrs.concat(B[bk].spine).forEach(function (id) { ka[id] = true; }); }
+    if (s.kind === "block") addB(s.b.key);
+    else if (s.kind === "attr") { ka[s.a.id] = true; holders(s.a.id).forEach(function (bk) { kb[bk] = true; }); }
+    else if (s.kind === "group") s.g.blocks.forEach(addB);
+    else if (s.kind === "stage") stBlocks(s.st).forEach(addB);
+    else if (s.kind === "sec") s.s.attrs.forEach(function (id) { ka[id] = true; holders(id).forEach(function (bk) { kb[bk] = true; }); });
+    else if (s.kind === "added") D.added.forEach(function (id) { ka[id] = true; });
+    return { a: ka, b: kb };
+  }
+  function carries(n, K) {
+    if (!K || n.kind === "root") return true;
+    if (n.kind === "attr" || n.kind === "band") return !!K.a[n.aid];
+    if (n.kind === "block") return !!K.b[n.bkey];
+    if (n.kind === "group") return G[n.gkey].blocks.some(function (bk) { return K.b[bk]; });
+    if (n.kind === "stage") return stBlocks(ST[n.stkey]).some(function (bk) { return K.b[bk]; });
+    if (n.kind === "sec") return SEC[n.skey].attrs.some(function (id) { return K.a[id]; });
+    if (n.kind === "added") return D.added.some(function (id) { return K.a[id]; });
+    return true;
+  }
+  function subjName(k) { var s = SUBJ(k); return !s ? k : s.kind === "attr" ? s.a.label : s.kind === "block" ? s.b.name : s.kind === "group" ? s.g.name : s.kind === "sec" ? s.s.short : s.kind === "stage" ? s.st.name : s.kind === "root" ? D.root.name : D.addedName; }
+  var KINDTXT = { root: "the card", attr: "attribute", block: "block", group: "standpoint", sec: "section", stage: "stage", added: "not placed" };
+
   /* ── drawing ───────────────────────────────────────────────────────── */
   var plane = $("plane"), wires = $("wires"), canvas = $("canvas"), stage = $("stage"), tray = $("tray"), sweep = $("sweep");
   var CUR = null, NODES = [];
@@ -439,8 +521,12 @@
   var wantCenter = true;
   function draw(anim, center) {
     if (center) wantCenter = true;
-    var T = buildTree(), L = place(T), lit = litSet(T);
-    CUR = { T: T, L: L, lit: lit };
+    /* a redraw replaces the node the tip was pinned to, and a removed node never fires blur — so the tip goes with it */
+    if (tip) tip.setAttribute("data-show", "false");
+    var T = buildTree(), L = place(T), lit = litSet(T), K = keepSets();
+    (function mark(n, par) { n.quiet = !carries(n, K); n.ppkey = par; n.kids.forEach(function (k) { mark(k, n.pkey); }); })(T.root, "");
+    T.band.forEach(function (n) { n.quiet = !carries(n, K); });
+    CUR = { T: T, L: L, lit: lit, K: K };
     canvas.setAttribute("data-lay", S.lay);
     stage.setAttribute("data-tray", S.tray);
     stage.setAttribute("data-lay", S.lay);
@@ -454,12 +540,12 @@
       wires.innerHTML = "";
       var rootN = T.root;
       (function edges(n) {
-        n.kids.forEach(function (k) { wires.appendChild(wire(n, k, lit[n.pkey] && lit[k.pkey], "tree")); edges(k); });
+        n.kids.forEach(function (k) { wires.appendChild(wire(n, k, lit[n.pkey] && lit[k.pkey], "tree", n.quiet || k.quiet)); edges(k); });
       })(rootN);
       T.band.forEach(function (n) {
-        wires.appendChild(wire(rootN, n, lit[n.pkey], "tree"));
-        (A[n.aid].spineBlocks || []).forEach(function (bk) {
-          var t = find(T.root, "block:" + bk); if (t) wires.appendChild(wire(n, t, false, "share"));
+        wires.appendChild(wire(rootN, n, lit[n.pkey], "tree", n.quiet));
+        (A[n.aid].spineBlocks || []).forEach(function (bk) {       /* to EVERY appearance of the block, not the first one found */
+          findAll(T.root, "block:" + bk).forEach(function (t) { wires.appendChild(wire(n, t, false, "share", n.quiet || t.quiet)); });
         });
       });
       L.all.forEach(function (n) { plane.appendChild(nodeEl(n, lit)); });
@@ -474,8 +560,9 @@
     if (anim !== false) settle();
     requestAnimationFrame(drawSweep);
   }
+  function findAll(root, pkey) { var out = []; (function w(n) { if (n.pkey === pkey) out.push(n); n.kids.forEach(w); })(root); return out; }
   function find(root, pkey) { var hit = null; (function w(n) { if (hit) return; if (n.pkey === pkey) { hit = n; return; } n.kids.forEach(w); })(root); return hit; }
-  function wire(a, b, isLit, kind) {
+  function wire(a, b, isLit, kind, quiet) {
     var p = document.createElementNS("http://www.w3.org/2000/svg", "path");
     var d;
     if (S.lay === "B") d = "M" + a.cx + " " + a.cy + " C" + ((a.cx + b.cx) / 2) + " " + a.cy + "," + ((a.cx + b.cx) / 2) + " " + b.cy + "," + b.cx + " " + b.cy;
@@ -483,6 +570,7 @@
     else d = "M" + a.cx + " " + a.cy + " C" + a.cx + " " + ((a.cy + b.cy) / 2) + "," + b.cx + " " + ((a.cy + b.cy) / 2) + "," + b.cx + " " + b.cy;
     p.setAttribute("d", d); p.setAttribute("class", "wire"); p.setAttribute("data-kind", kind);
     p.setAttribute("data-lit", String(!!isLit));
+    if (quiet) p.setAttribute("data-quiet", "true");
     return p;
   }
   var RDOT = { 3: "r3", 2: "r2", 1: "r1" };
@@ -490,10 +578,12 @@
     var b = document.createElement("button");
     b.type = "button"; b.className = "node";
     b.setAttribute("data-kind", n.kind === "band" ? "attr" : n.kind);
-    b.setAttribute("data-pkey", n.pkey); b.setAttribute("data-depth", String(n.depth));
+    b.setAttribute("data-pkey", n.pkey); b.setAttribute("data-depth", String(n.depth)); if (n.ppkey) b.setAttribute("data-parent", n.ppkey);
     b.setAttribute("data-open", String(isOpen(n.pkey))); b.setAttribute("data-lit", String(!!lit[n.pkey]));
     if (n.shared) b.setAttribute("data-shared", "true");
     if (n.unplaced) b.setAttribute("data-unplaced", "true");
+    if (n.quiet) b.setAttribute("data-quiet", "true");
+    if (n.kind === "stage") { b.setAttribute("data-empty", String(!!n.empty)); b.setAttribute("data-across", String(!!n.across)); b.setAttribute("data-strk", n.strk || "stage"); }
     b.setAttribute("aria-pressed", String(isOpen(n.pkey)));
     b.style.width = SIZE[n.kind][0] + "px"; b.style.height = SIZE[n.kind][1] + "px";
     b.style.left = (n.cx - SIZE[n.kind][0] / 2) + "px"; b.style.top = (n.cy - SIZE[n.kind][1] / 2) + "px";
@@ -502,10 +592,11 @@
     nm.appendChild(document.createTextNode(n.name));
     b.appendChild(nm);
     if (n.sub) b.appendChild(el("span", "sub", n.sub));
-    if (S.acts === "on") {                                 // one dot per move this node offers — the map says where you can act
-      var av = (D.acts.byNode || {})[n.kind] || [];
-      if (av.length) { var mk = el("span", "acts"); mk.setAttribute("aria-hidden", "true");
-        av.forEach(function () { mk.appendChild(el("i")); }); nm.appendChild(mk); } }
+    if (n.mark) b.appendChild(el("span", "mk", n.mark));          // the record's own words for what this row IS
+    if (S.acts === "on") {                                 // one dot per move this node offers — the click, then the others
+      var nmv = movesOf(n.kind === "band" ? "attr" : n.kind), cnt = (nmv.click ? 1 : 0) + nmv.offers.length;
+      if (cnt) { var mk = el("span", "acts"); mk.setAttribute("aria-hidden", "true");
+        for (var q = 0; q < cnt; q++) mk.appendChild(el("i")); nm.appendChild(mk); } }
     b.addEventListener("click", function () { toggle(n.pkey); });
     b.addEventListener("keydown", function (e) { navKey(e, n); });
     hover(b, n);
@@ -519,16 +610,19 @@
     function row(n, into, depth) {
       var li = document.createElement("li"), r = el("div", "row");
       var tw = el("span", "tw", depth ? new Array(depth + 1).join("│  ") + "├─ " : "");
-      var nb = el("button", "nb"); nb.type = "button"; nb.setAttribute("data-pkey", n.pkey); nb.setAttribute("data-depth", String(n.depth));
+      var nb = el("button", "nb"); nb.type = "button"; nb.setAttribute("data-pkey", n.pkey); nb.setAttribute("data-depth", String(n.depth)); if (n.ppkey) nb.setAttribute("data-parent", n.ppkey);
       nb.setAttribute("data-open", String(isOpen(n.pkey))); nb.setAttribute("data-lit", String(!!lit[n.pkey])); nb.setAttribute("aria-pressed", String(isOpen(n.pkey)));
       if (n.shared) nb.setAttribute("data-shared", "true");
       if (n.unplaced) nb.setAttribute("data-unplaced", "true");
+      if (n.quiet) nb.setAttribute("data-quiet", "true");
+      if (n.kind === "stage") nb.setAttribute("data-strk", n.strk || "stage");
       nb.textContent = n.name;
       nb.addEventListener("click", function () { toggle(n.pkey); });
       nb.addEventListener("keydown", function (e) { navKey(e, n); });
       hover(nb, n);
       NODES.push({ n: n, el: nb });
       r.appendChild(tw); r.appendChild(nb); if (n.sub) r.appendChild(el("span", "ct", n.sub));
+      if (n.mark) r.appendChild(el("span", "mkw", n.mark));
       li.appendChild(r); into.appendChild(li);
       if (n.kids.length) { var sub = document.createElement("ul"); li.appendChild(sub); n.kids.forEach(function (k) { row(k, sub, depth + 1); }); }
     }
@@ -549,8 +643,12 @@
     var pb = document.createElementNS("http://www.w3.org/2000/svg", "path");
     pb.setAttribute("d", brk); pb.setAttribute("class", "brk"); sweep.appendChild(pb);
     if (!S.open.length) return;
-    var last = S.open[S.open.length - 1], hit = null;
-    for (var i = 0; i < NODES.length; i++) if (NODES[i].n.pkey === last) { hit = NODES[i].el; break; }
+    var last = S.open[S.open.length - 1], hit = null, cr0 = canvas.getBoundingClientRect();
+    /* a subject drawn more than once (a shared attribute, a block under several stages) starts the line from the first
+       appearance the pane SHOWS, so it never runs to a copy scrolled out of sight while another one is on screen */
+    for (var i = 0; i < NODES.length; i++) if (NODES[i].n.pkey === last) {
+      var rr = NODES[i].el.getBoundingClientRect(), vis = rr.right > cr0.left && rr.left < cr0.right && rr.bottom > cr0.top && rr.top < cr0.bottom;
+      if (!hit) hit = NODES[i].el; if (vis) { hit = NODES[i].el; break; } }
     /* the line joins the NODE to ITS PANEL. It used to swing out past the tray's right edge and land on the tray's top-left
        corner, which read as a loop around the page — his "the arrow is weird". Now both ends are real things and the control
        points sit BETWEEN them, so it is one short hop whatever the placement. */
@@ -625,8 +723,8 @@
   function panelFor(pkey) {
     var s = SUBJ(pkey); if (!s) return null;
     var p = el("div", "pan"); p.setAttribute("data-pkey", pkey);
-    var h = el("div", "ph"), t = el("h3"), kindTxt = { root: "the card", attr: "attribute", block: "block", group: "standpoint", sec: "section", added: "not placed" }[s.kind];
-    t.textContent = s.kind === "root" ? D.root.name : s.kind === "attr" ? s.a.label : s.kind === "block" ? s.b.name : s.kind === "group" ? s.g.name : s.kind === "sec" ? s.s.short : D.addedName;
+    var h = el("div", "ph"), t = el("h3"), kindTxt = KINDTXT[s.kind];
+    t.textContent = subjName(pkey);
     var kd = el("span", "kind", kindTxt);
     var x = el("button", "xb x", "close"); x.type = "button"; x.setAttribute("aria-label", "Close " + t.textContent);
     x.addEventListener("click", function () { toggle(pkey); });
@@ -663,6 +761,24 @@
       b.attrs.concat(b.spine).forEach(function (id) { ub.appendChild(el("li", null, A[id].label + " · rated " + A[id].r + (b.spine.indexOf(id) >= 0 ? " · shared" : ""))); });
       p.appendChild(ub);
       p.appendChild(el("p", "std", b.standpoint));
+      if (S.grp === "stage") {                              /* the stages are a PROPOSAL, and the panel says so and why */
+        var under = D.stages.filter(function (st) { return stBlocks(st).indexOf(b.key) >= 0; }).map(function (st) { return st.name; });
+        var sp = el("p", "std"); sp.setAttribute("data-stagewhy", b.key);
+        sp.textContent = "Proposed stages: " + stNames(b) + " — " + b.stageWhy;
+        p.appendChild(sp);
+        p.appendChild(el("p", "std", "Drawn under: " + under.join(" · ") + " (" + D.stageWords.rule.opts[S.srule].name + ")."));
+      }
+    } else if (s.kind === "stage") {
+      var sbs = stBlocks(s.st);
+      p.appendChild(el("p", "pl", sbs.length ? stPlain(s.st) : stPlain(s.st) + " " + D.stageWords.emptyPlain));
+      fl.appendChild(chip(plural(sbs.length, "block"))); fl.appendChild(chip(plural(s.st.n[S.srule], "attribute")));
+      if (s.st.mark) fl.appendChild(chip(s.st.kind + " · " + s.st.mark, "hz"));   // the record's own word for this row, and what it says about it
+      fl.appendChild(chip("a proposal", "hz"));
+      p.appendChild(fl);
+      var ut = document.createElement("ul");
+      sbs.forEach(function (bk) { ut.appendChild(el("li", null, B[bk].name + " (" + stNames(B[bk]) + ") — " + B[bk].stageWhy)); });
+      p.appendChild(ut);
+      p.appendChild(el("p", "std", D.stageWords.note));
     } else if (s.kind === "group") {
       p.appendChild(el("p", "pl", s.g.plain));
       fl.appendChild(chip(plural(s.g.blocks.length, "block"))); fl.appendChild(chip(plural(s.g.n, "attribute")));
@@ -690,22 +806,29 @@
   /* ── what a click DOES, and which region answers (his ask, 2026-09-22) ─────────────────────────────
      A PROPOSAL and said to be one: the map is the COMMAND region, so a node names a concept and the move says where the
      answer lands — the middle, the portrait, the map itself, or this tray. Nothing here reaches the feed yet. */
+  /* option C (D-022): a click is SHOW, for every kind; the other moves are offers. Keep only is never here. */
+  function movesOf(kind) { var m = (D.acts.byNode || {})[kind]; return m ? { click: m.click || null, offers: m.offers || [] } : { click: null, offers: [] }; }
+  function moveRow(r, role) {
+    var k = D.acts.kinds[r.act] || {}, w = D.acts.where[r.where] || {};
+    var row = el("div", "mv"); row.setAttribute("data-act", r.act); row.setAttribute("data-role", role);
+    row.insertAdjacentHTML("beforeend", '<span class="mvi">' + ICO(k.icon) + "</span>");
+    var b = el("div", "mvb");
+    b.appendChild(el("b", null, k.name));
+    b.appendChild(el("span", "mvw", r.what));
+    row.appendChild(b);
+    row.appendChild(el("i", "mvr", w.name));
+    hover(row, { element: (k.plain || "") + " " + (w.plain || ""), name: k.name + " · " + w.name });
+    return row;
+  }
   function moves(kind) {
-    var rows = (D.acts.byNode || {})[kind] || [], box = el("div", "moves");
+    var m = movesOf(kind), box = el("div", "moves");
     box.appendChild(el("div", "mvh", D.acts.head));
-    if (!rows.length) { box.appendChild(el("p", "pl", D.acts.note)); return box; }
-    rows.forEach(function (r) {
-      var k = D.acts.kinds[r.act] || {}, w = D.acts.where[r.where] || {};
-      var row = el("div", "mv");
-      row.insertAdjacentHTML("beforeend", '<span class="mvi">' + ICO(k.icon) + "</span>");
-      var b = el("div", "mvb");
-      b.appendChild(el("b", null, k.name));
-      b.appendChild(el("span", "mvw", r.what));
-      row.appendChild(b);
-      row.appendChild(el("i", "mvr", w.name));
-      hover(row, { element: (k.plain || "") + " " + (w.plain || ""), name: k.name + " · " + w.name });
-      box.appendChild(row);
-    });
+    if (!m.click) { box.appendChild(el("p", "pl", D.acts.note)); return box; }
+    box.appendChild(moveRow(m.click, "click"));
+    box.appendChild(el("div", "mvh", D.acts.offersHead));
+    if (m.offers.length) m.offers.forEach(function (r) { box.appendChild(moveRow(r, "offer")); });
+    else box.appendChild(el("p", "mvn", D.acts.offersNone));
+    box.appendChild(el("p", "mvn mvf", D.acts.filterLine));
     box.appendChild(el("p", "mvn", D.acts.note));
     return box;
   }
@@ -740,6 +863,12 @@
     host.appendChild(rgrp(D.rails.group.label, D.rails.group.plain, GRPS.map(function (k) {
       return { id: k, rail: "grp", label: D.groupings[k].name, note: D.groupings[k].note, plain: D.groupings[k].plain };
     }), S.grp, function (v) { S.grp = v; save(); draw(true, true); }));
+    if (S.grp === "stage") {                            /* By stage's one sub-option: where a block that spans stages goes */
+      var ru = D.stageWords.rule, sg = rgrp(ru.label, ru.plain, SRULES.map(function (k) {
+        return { id: k, rail: "srule", label: ru.opts[k].name, note: ru.opts[k].note, plain: ru.opts[k].plain };
+      }), S.srule, function (v) { S.srule = v; save(); draw(true, false); });
+      sg.setAttribute("data-rail", "srule"); host.appendChild(sg);
+    }
     host.appendChild(rgrp(D.rails.spine.label, D.rails.spine.plain, SPN.map(function (k) {
       return { id: k, rail: "spine", label: D.spineModes[k].name, note: D.spineModes[k].note, plain: D.spineModes[k].plain };
     }), S.spine, function (v) { S.spine = v; save(); draw(true, true); }));
@@ -749,12 +878,46 @@
     host.appendChild(rgrp(D.rails.tray.label, D.rails.tray.plain, TRY.map(function (k) {
       return { id: k, rail: "tray", label: D.trayModes[k].name, plain: D.trayModes[k].plain };
     }), S.tray, function (v) { S.tray = v; save(); draw(true, true); }));
+    host.appendChild(keepGroup());
+    var gn = $("grp-note"); gn.hidden = S.grp !== "stage"; gn.textContent = D.stageWords.note;
+  }
+  /* Keep only — its own control on the rail (D-022). It keeps the node opened LAST; while on, the chip says what it keeps
+     and how to remove it, and nothing but the remove button (or Clear everything) turns it off. */
+  function keepGroup() {
+    var g = el("div", "rgrp"), l = el("span", "rl", D.rails.keep.label), box = el("div", "keepbox");
+    g.setAttribute("data-rail", "keep"); hover(l, { control: D.rails.keep.plain, name: D.rails.keep.label });
+    var last = S.open.length ? S.open[S.open.length - 1] : null;
+    var btn = el("button", "opt"); btn.type = "button"; btn.id = "keep-btn";
+    if (S.keep) {
+      btn.setAttribute("aria-pressed", "true");
+      btn.appendChild(el("span", "k", D.keep.off));
+      btn.addEventListener("click", function () { S.keep = null; save(); draw(true, false); });
+      hover(btn, { control: D.keep.offPlain, name: D.keep.off });
+    } else {
+      btn.setAttribute("aria-pressed", "false");
+      var txt = !last ? D.keep.btnNone : last === "root" ? D.keep.btnRoot : D.keep.btnIdle.replace("{name}", subjName(last));
+      btn.appendChild(el("span", "k", txt));
+      btn.disabled = !last || last === "root";
+      btn.addEventListener("click", function () { if (!last || last === "root") return; S.keep = last; save(); draw(true, false); });
+      hover(btn, { control: D.keep.plain, name: D.keep.label });
+    }
+    box.appendChild(btn);
+    var chipEl = el("div", "keepchip"); chipEl.id = "keep-chip"; chipEl.setAttribute("role", "status");
+    if (S.keep && CUR) {
+      var quiet = 0;
+      (function w(n) { if (n.quiet) quiet++; n.kids.forEach(w); })(CUR.T.root); CUR.T.band.forEach(function (n) { if (n.quiet) quiet++; });
+      var s0 = SUBJ(S.keep);
+      chipEl.appendChild(el("b", null, D.keep.chipOn.replace("{name}", subjName(S.keep)).replace("{kind}", KINDTXT[s0.kind]).replace("{quiet}", String(quiet))));
+      chipEl.appendChild(el("span", "how", D.keep.chipHow));
+    } else chipEl.hidden = true;
+    box.appendChild(chipEl);
+    g.appendChild(l); g.appendChild(box); return g;
   }
   function paintStatus(T, L) {
     var st = $("status"); st.innerHTML = "";
     var drawn = L.all.length;
     [["nodes drawn", drawn], ["levels drawn", L.maxD === BAND_D ? 1 : Math.floor(L.maxD) + 1], ["panels open", S.open.length],
-     ["map is", L.w + " x " + L.h + " px"]].forEach(function (r) {
+     ["map is", L.w + " x " + L.h + " px"]].concat(T.root && CUR && CUR.K ? [["nodes quiet", L.all.filter(function (n) { return n.quiet; }).length]] : []).forEach(function (r) {
       var s = el("span"); s.appendChild(document.createTextNode(r[0] + " ")); s.appendChild(el("b", null, String(r[1]))); st.appendChild(s);
     });
     var dp = $("deep");
@@ -769,7 +932,7 @@
       if (S.pick === k) h.appendChild(chip("your pick", "on"));
       c.appendChild(h);
       c.appendChild(el("p", null, D.layouts[k].line1));
-      c.appendChild(el("p", null, D.layouts[k].line2));
+      var p2 = el("p", null, D.layouts[k].line2); p2.setAttribute("data-line2", k); c.appendChild(p2);   // its {spread} is filled by measureAll
       var m = el("div", "meas"); m.setAttribute("data-meas", k); c.appendChild(m);
       var acts = el("div", "acts");
       var show = el("button", "btn quiet", "Show it"); show.type = "button"; show.addEventListener("click", function () { S.lay = k; save(); draw(); $("sec-map").scrollIntoView({ block: "start" }); });
@@ -780,16 +943,25 @@
     });
     measureAll();
   }
-  /* every card's measured line comes from running the layout, never from a typed number */
+  /* every card's measured line comes from running the layout, never from a typed number.
+     The SPREAD is measured the same way: As-sketched turns Upright AND multiplies every distance by one factor (place()),
+     so the page says what that factor IS — now, and with nothing open — instead of claiming the turn is the whole move. */
+  function sp(v) { return v.toFixed(2) + "×"; }
   function measureAll() {
     var keep = S.lay, ext = {};
-    LAYS.forEach(function (k) { S.lay = k; var T = buildTree(), L = place(T); ext[k] = { w: L.w, h: L.h, n: L.all.length }; });
+    LAYS.forEach(function (k) { S.lay = k; var T = buildTree(), L = place(T); ext[k] = { w: L.w, h: L.h, n: L.all.length, scale: L.scale }; });
+    /* the same placement with nothing open, so the line that names the closed factor is measured, never remembered */
+    var wasOpen = S.open; S.open = []; S.lay = "C"; ext.C.closedScale = place(buildTree()).scale; S.open = wasOpen;
     S.lay = keep;
     LAYS.forEach(function (k) {
       var m = document.querySelector('[data-meas="' + k + '"]'); if (!m) return;
       m.textContent = k === "E" ? ext[k].n + " nodes · no drawing, so it takes the width it is given"
         : ext[k].n + " nodes · " + ext[k].w + " x " + ext[k].h + " px as drawn now";
     });
+    var fillSpread = function (s) { return String(s).replace(/\{spread\}/g, sp(ext.C.scale)).replace(/\{spreadClosed\}/g, sp(ext.C.closedScale)); };
+    LAYS.forEach(function (k) { var n = document.querySelector('[data-line2="' + k + '"]'); if (n) n.textContent = fillSpread(D.layouts[k].line2); });
+    (function () { var h = $("more-body"); if (!h) return; h.innerHTML = "";
+      D.more.lines.forEach(function (s) { h.appendChild(el("p", null, fillSpread(s))); }); })();
     window.__bmExtents = ext;
     var wide = LAYS.filter(function (k) { return k !== "E"; }).sort(function (a, b) { return ext[b].w - ext[a].w; })[0];
     var tall = LAYS.filter(function (k) { return k !== "E"; }).sort(function (a, b) { return ext[b].h - ext[a].h; })[0];
@@ -833,6 +1005,7 @@
       lines.push(esc(s.b.questions.join(" · ") + " · " + s.b.attrs.length + " of its own · " + s.b.spine.length + " shared"));
       plainTxt = s.b.plain;
     } else if (s.kind === "group") { lines.push("<b>" + esc(s.g.name) + "</b>"); lines.push(esc(plural(s.g.blocks.length, "block") + " · " + plural(s.g.n, "attribute"))); plainTxt = s.g.plain;
+    } else if (s.kind === "stage") { lines.push("<b>" + esc(s.st.name) + (s.st.mark ? " · " + esc(s.st.mark) : "") + "</b>"); lines.push(esc(plural(stBlocks(s.st).length, "block") + " · " + plural(s.st.n[S.srule], "attribute") + " · a proposal")); plainTxt = stPlain(s.st);
     } else if (s.kind === "sec") { lines.push("<b>" + esc(s.s.short) + "</b>"); lines.push(esc(plural(s.s.attrs.length, "attribute"))); plainTxt = s.s.plain;
     } else if (s.kind === "root") { lines.push("<b>" + esc(D.root.name) + "</b>"); lines.push(esc(D.root.sub)); plainTxt = D.root.plain;
     } else { lines.push("<b>" + esc(D.addedName) + "</b>"); lines.push(esc(plural(D.added.length, "attribute"))); plainTxt = D.addedPlain; }
@@ -867,17 +1040,31 @@
     var p = el("div", "panel"); p.appendChild(el("div", "big", f.big)); p.appendChild(el("p", null, f.text)); h.appendChild(p); }); })();
   (function () { var h = $("qs"); D.open.items.forEach(function (q) {
     var b = el("div", "qq"); b.appendChild(el("div", "h", q.q)); b.appendChild(el("div", "d", q.did)); b.appendChild(el("div", "a", q.ask)); h.appendChild(b); }); })();
-  (function () { var h = $("more-body"); D.more.lines.forEach(function (s) { h.appendChild(el("p", null, s)); }); })();
+  /* more-body is filled by measureAll on EVERY draw, because its last line names a factor the layout measures */
   (function () { var b = $("more-btn"), body = $("more-body");
     b.addEventListener("click", function () { var on = b.getAttribute("aria-expanded") === "true"; b.setAttribute("aria-expanded", String(!on)); body.hidden = on; b.textContent = on ? D.moreShow : D.moreHide; });
     b.textContent = D.moreShow; hover(b, { control: D.ui.more, name: D.moreShow }); })();
 
-  /* ── the pick, as text ─────────────────────────────────────────────── */
+  /* ── the pick, as text ───────────────────────────────────────────────
+     Placement is the PICK; every other rail is a SWITCH, and the text records each of them BY ITS OWN RAIL LABEL —
+     written as one value per rail key, so a rail cannot be painted and then left out of the text (Actions was). */
+  var SWITCHVAL = {
+    group: function () { return D.groupings[S.grp].name + (S.grp === "stage" ? " (" + D.stageWords.rule.label + ": " + D.stageWords.rule.opts[S.srule].name + ")" : ""); },
+    spine: function () { return D.spineModes[S.spine].name; },
+    acts: function () { return D.actModes[S.acts].name; },
+    tray: function () { return D.trayModes[S.tray].name; },
+    keep: function () { return S.keep ? subjName(S.keep) + " (" + KINDTXT[SUBJ(S.keep).kind] + ")" : "off"; }
+  };
+  function switchLines() {
+    return Object.keys(D.rails).filter(function (k) { return k !== "layout"; })
+      .map(function (k) { return D.rails[k].label + ": " + (SWITCHVAL[k] ? SWITCHVAL[k]() : "—"); });
+  }
   function buildText() {
     var L = ["BRAIN MAP — " + D.root.name];
     L.push("pick: " + (S.pick ? S.pick + " · " + D.layouts[S.pick].name : "none yet"));
-    L.push("showing: " + S.lay + " · " + D.layouts[S.lay].name + " | grouping " + D.groupings[S.grp].name + " | shared " + D.spineModes[S.spine].name + " | tray " + D.trayModes[S.tray].name);
-    L.push("open panels (" + S.open.length + "): " + (S.open.map(function (k) { var s = SUBJ(k); return !s ? k : s.kind === "attr" ? s.a.label : s.kind === "block" ? s.b.name : s.kind === "group" ? s.g.name : s.kind === "sec" ? s.s.short : s.kind === "root" ? D.root.name : D.addedName; }).join(" · ") || "none"));
+    L.push("showing: " + S.lay + " · " + D.layouts[S.lay].name);
+    switchLines().forEach(function (s) { L.push(s); });
+    L.push("open panels (" + S.open.length + "): " + (S.open.map(subjName).join(" · ") || "none"));
     L.push("map: " + D.inv.hash + " · cells " + D.cellsHash);
     $("out").value = L.join("\n");
   }
@@ -890,7 +1077,7 @@
   reset.addEventListener("click", function () {
     if (reset.getAttribute("data-armed") !== "true") { reset.setAttribute("data-armed", "true"); reset.textContent = D.resetArm; return; }
     reset.setAttribute("data-armed", "false"); reset.textContent = D.resetIdle;
-    S.open = []; S.pick = null; save(); draw();
+    S.open = []; S.pick = null; S.keep = null; save(); draw();
   });
   reset.textContent = D.resetIdle;
   $("closeall").addEventListener("click", function () { S.open = []; save(); draw(); });
