@@ -1,0 +1,581 @@
+<title>All Endpoints</title>
+
+<!--__KIT1__-->
+<style>
+  /* ══ the page's own rules — the kit block above is pasted verbatim by gen-all-endpoints.py ══ */
+  /* centred (his rule, 2026-09-17) and WIDE: the subject is a table of every endpoint, and every column saved is a row seen */
+  .artifact-page { margin: 0 auto; max-width: min(2400px, 97vw); }
+
+  :root { --alert:#a3470a; --alert-soft:#fbeadb;
+          --k-success:#2f855a; --k-refusal:#b7791f; --k-framework:#64748b; --k-validation:#7c3aed; --k-uncaught:#c53030;
+          --f-saved:#2f855a; --f-maybe:#d69e2e; --f-rolled:#718096; --f-unsaved:#c05621; --f-after:#2b6cb0; --f-none:var(--rule);
+          --p-norm:#cbd5e1; --p-common:#94a3b8; --p-rare:var(--accent); --p-only:var(--alert);
+          --m-GET:#2b6cb0; --m-POST:#2f855a; --m-PUT:#b7791f; --m-PATCH:#805ad5; --m-DELETE:#c53030;
+          --bz:color-mix(in srgb, var(--accent) 5%, var(--card)); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --alert:#f0a35a; --alert-soft:#3b2914;
+          --k-success:#5fc28e; --k-refusal:#e5b454; --k-framework:#94a3b8; --k-validation:#a78bfa; --k-uncaught:#f47272;
+          --f-saved:#5fc28e; --f-maybe:#f2c94c; --f-rolled:#94a3b8; --f-unsaved:#f0955a; --f-after:#6fa8e8; --p-norm:#3b4658; --p-common:#64748b;
+          --m-GET:#6fa8e8; --m-POST:#5fc28e; --m-PUT:#e5b454; --m-PATCH:#b69cf0; --m-DELETE:#f47272; } }
+  :root[data-theme="dark"] { --alert:#f0a35a; --alert-soft:#3b2914;
+          --k-success:#5fc28e; --k-refusal:#e5b454; --k-framework:#94a3b8; --k-validation:#a78bfa; --k-uncaught:#f47272;
+          --f-saved:#5fc28e; --f-maybe:#f2c94c; --f-rolled:#94a3b8; --f-unsaved:#f0955a; --f-after:#6fa8e8; --p-norm:#3b4658; --p-common:#64748b;
+          --m-GET:#6fa8e8; --m-POST:#5fc28e; --m-PUT:#e5b454; --m-PATCH:#b69cf0; --m-DELETE:#f47272; }
+  body { background: var(--ground); }
+
+  .eyebrow { font-size: var(--fs-min); letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0; }
+  h1 { font-size: 2em; line-height: 1.15; margin: 8px 0 0; text-wrap: balance; }
+  .lede { color: var(--ink-soft); max-width: 92ch; margin: 12px 0 0; }
+  .prop { font-size: var(--fs-sm); color: var(--alert); background: var(--alert-soft); border: 1px solid var(--alert); border-radius: 8px;
+          padding: 6px 12px; margin: 12px 0 0; max-width: 92ch; }
+  .stamp { font-size: var(--fs-xs); color: var(--muted); margin: 10px 0 0; font-variant-numeric: tabular-nums; }
+  .keys { font-size: var(--fs-xs); color: var(--muted); margin: 6px 0 0; max-width: 92ch; }
+  .cap { font-size: var(--fs-sm); color: var(--ink-soft); margin: 0; max-width: 92ch; }
+  .btn { font: inherit; font-size: var(--fs-sm); letter-spacing: inherit; cursor: pointer; border-radius: 8px; padding: 6px 12px; border: 1px solid var(--rule); background: var(--raised); color: var(--ink); }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.quiet { background: transparent; color: var(--ink-soft); font-size: var(--fs-xs); padding: 4px 10px; }
+  .said { font-size: var(--fs-xs); color: var(--accent); }
+
+  /* ── the rail ── */
+  .rail { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: flex-start; margin: 0 0 10px; }
+  .rgrp { display: flex; flex-direction: column; gap: 5px; }
+  .rgrp[hidden] { display: none; }
+  .rgrp > .rl { font-size: var(--fs-min); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .opts { display: flex; flex-wrap: wrap; gap: 5px; }
+  .opt { font: inherit; font-size: var(--fs-xs); letter-spacing: inherit; cursor: pointer; border-radius: 8px; padding: 4px 10px;
+         border: 1px solid var(--rule); background: var(--raised); color: var(--ink-soft); display: flex; align-items: baseline; gap: 6px; }
+  .opt:hover { border-color: var(--accent); color: var(--accent); }
+  .opt[aria-checked="true"] { border-color: var(--accent); background: var(--accent); color: var(--ground); }
+  .opt .pk { font-size: var(--fs-min); border-bottom: 1px dashed currentColor; opacity: .85; }
+  .status { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; font-size: var(--fs-xs); color: var(--ink-soft); margin: 0 0 8px; }
+  .litchip { display: inline-flex; gap: 8px; align-items: center; color: var(--alert); border: 1px solid var(--alert); background: var(--alert-soft); border-radius: 8px; padding: 2px 8px; }
+  .litchip[hidden] { display: none; }
+  .litchip button, .status button { font: inherit; font-size: var(--fs-min); cursor: pointer; background: none; border: 0; color: inherit; text-decoration: underline; padding: 0; }
+
+  /* ── the board: one scroll surface, header and identity column stick ── */
+  .board { position: relative; overflow: auto; max-height: calc(100vh - 24px); border: 1px solid var(--rule); border-radius: var(--radius, 10px); background: var(--card); }
+  .board.cardsmode { max-height: none; overflow: visible; border: 0; background: transparent; }
+  table.grid { border-collapse: separate; border-spacing: 0; font-size: var(--fs-min); font-variant-numeric: tabular-nums; }
+  table.grid th, table.grid td { padding: 0 1px; height: 21px; white-space: nowrap; border-bottom: 1px solid var(--rule-soft); text-align: center; vertical-align: middle; line-height: 1.2; }
+  table.grid thead th { position: sticky; background: var(--card); z-index: 3; }
+  table.grid thead tr.bh th { top: var(--pagetop, 0px); height: auto; padding: 3px 4px 3px 6px; font-weight: 650; color: var(--ink-soft); border-bottom: 2px solid var(--rule); text-align: left; white-space: normal; line-height: 1.15; vertical-align: bottom; max-width: 1px; }
+  table.grid thead tr.ch th { top: calc(var(--pagetop, 0px) + var(--bh, 24px)); height: auto; padding: 4px 3px 5px; vertical-align: bottom; cursor: pointer; border-bottom: 2px solid var(--rule); }
+  table.grid thead tr.ch th:hover .hd { color: var(--accent); }
+  table.grid th.idh, table.grid td.id { position: sticky; left: 0; z-index: 2; background: var(--card); text-align: left; border-right: 2px solid var(--rule); }
+  table.grid thead th.idh { z-index: 5; }
+  table.grid th.bstart, table.grid td.bstart { border-left: 1px solid var(--rule); }
+  table.grid td.bz, table.grid th.bz { background: var(--bz); }
+  .hd { display: block; font-weight: 650; color: var(--ink); font-size: var(--fs-min); white-space: normal; line-height: 1.1; }
+  .hd .dir { color: var(--accent); }
+  .pips { display: flex; gap: 2px; justify-content: center; margin: 2px 0 3px; }
+  .pips i { width: 5px; height: 5px; border-radius: 1px; background: var(--rule); display: block; }
+  .pips i.on { background: var(--accent); }
+  .pips i.al { background: var(--alert); border-radius: 50%; }
+  th[data-sorted] .hd { color: var(--accent); }
+  .strip { display: flex; height: 10px; border-radius: 3px; overflow: hidden; background: var(--rule-soft); margin: 0 auto; }
+  .strip .sg { height: 100%; min-width: 2px; cursor: pointer; box-shadow: inset -1px 0 0 var(--card); }
+  .strip .sg:hover { filter: brightness(1.15); outline: 1px solid var(--ink); outline-offset: -1px; }
+  .strip .sg[data-lit="true"] { outline: 2px solid var(--alert); outline-offset: -2px; }
+
+  tr.row { cursor: pointer; }
+  tr.row:hover td { background: color-mix(in srgb, var(--accent) 9%, var(--card)); }
+  tr.row[data-sel="true"] td { background: color-mix(in srgb, var(--accent) 18%, var(--card)); }
+  tr.row[data-dim="true"] td > * { opacity: .22; }
+  tr.grow td { background: var(--raised); font-weight: 650; color: var(--ink-soft); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); height: 23px; }
+  tr.grow td.id { background: var(--raised); }
+  tr.grow td.id { white-space: normal; max-width: 226px; line-height: 1.3; padding: 3px 4px; }
+  tr.grow .gn { color: var(--ink); } tr.grow .gc { color: var(--muted); font-weight: 400; margin-left: 8px; }
+  tr.grow td .agg { color: var(--muted); font-weight: 400; }
+  .idc { display: flex; align-items: center; gap: 6px; max-width: 220px; }
+  .mth { font-weight: 700; font-size: var(--fs-min); width: 4.4em; flex: none; letter-spacing: .02em; }
+  .pth { overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
+
+  /* ── cells ── */
+  .z { color: var(--muted); }
+  .ab { color: var(--muted); font-style: italic; }
+  .ab.unk { color: var(--ink-soft); }
+  /* a number is a HEAT cell: its tint is its value against the column's largest, so a column read top to bottom is a picture */
+  .num { display: block; min-width: 20px; padding: 0 3px; border-radius: 3px; line-height: 17px; color: var(--ink); }
+  .num.z { color: var(--muted); }
+  .card .num { display: inline-block; }
+  .slot { display: inline-block; min-width: 18px; height: 16px; line-height: 16px; border-radius: 4px; color: #fff; font-weight: 650; padding: 0 3px; }
+  .slot.e0 { background: transparent !important; color: var(--muted); border: 1px dashed var(--rule); line-height: 14px; font-weight: 400; }
+  .spine { display: inline-flex; gap: 1px; align-items: center; }
+  .spine i { width: 7px; height: 14px; border-radius: 2px; display: block; border: 1px solid var(--rule); box-sizing: border-box; }
+  .spine i.bay { margin-left: 3px; border-style: dashed; }
+  .stack { display: inline-flex; align-items: center; gap: 4px; }
+  .stack .sb { display: flex; width: 34px; height: 10px; border-radius: 3px; overflow: hidden; background: var(--rule-soft); }
+  .stack .sb i { display: block; height: 100%; }
+  .stack .n { min-width: 16px; text-align: right; }
+  .ratio { display: inline-flex; flex-direction: column; align-items: stretch; min-width: 38px; }
+  .ratio .bar { height: 3px; background: var(--rule); border-radius: 2px; overflow: hidden; margin-top: 1px; }
+  .ratio .bar i { display: block; height: 100%; background: var(--k-success); }
+  .dots { display: inline-flex; gap: 1px; align-items: center; }
+  .dots i { width: 6px; height: 6px; border-radius: 50%; border: 1px solid var(--rule); display: block; box-sizing: border-box; }
+  .dots i.on { background: var(--alert); border-color: var(--alert); }
+  /* a category: the column's most common value is drawn quiet, every other value speaks — the odd one out is what a column is for */
+  .cat { display: inline-block; white-space: nowrap; vertical-align: middle; border-radius: 4px; padding: 0 5px; border: 1px solid var(--accent); color: var(--ink); }
+  .cat.norm { border-color: transparent; color: var(--muted); padding: 0; }
+
+  /* ── small multiples ── */
+  .cards { display: grid; gap: 10px; margin-top: 10px; }
+  .cards[data-n="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cards[data-n="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  @media (max-width: 1100px) { .cards[data-n="3"] { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 760px) { .cards[data-n="2"], .cards[data-n="3"] { grid-template-columns: minmax(0, 1fr); } }
+  .ghead { grid-column: 1 / -1; font-weight: 650; color: var(--ink-soft); font-size: var(--fs-sm); padding: 6px 2px 2px; border-bottom: 1px solid var(--rule); }
+  .ghead .gc { color: var(--muted); font-weight: 400; margin-left: 8px; font-size: var(--fs-xs); }
+  .card { background: var(--card); border: 1px solid var(--rule); border-radius: 9px; padding: 6px 8px 7px; cursor: pointer; font-size: var(--fs-min); font-variant-numeric: tabular-nums; min-width: 0; }
+  .card:hover { border-color: var(--accent); }
+  .card[data-sel="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+  .card[data-dim="true"] > * { opacity: .22; }
+  .card .idc { max-width: none; margin-bottom: 4px; }
+  /* a card's blocks FLOW: each block is a short run of cells behind a quiet name, so a card is a few lines, not a column */
+  .cbs { display: flex; flex-wrap: wrap; gap: 3px 0; }
+  .cb { display: inline-flex; flex-wrap: nowrap; align-items: center; gap: 0 7px; padding: 1px 9px 1px 0; margin-right: 8px; border-right: 1px solid var(--rule); white-space: nowrap; }
+  .cb .bn { color: var(--accent); font-size: var(--fs-min); max-width: 6em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cc { display: inline-flex; align-items: center; gap: 4px; }
+  .cc .cl { color: var(--muted); }
+  .keytable { overflow-x: auto; border: 1px solid var(--rule); border-radius: var(--radius, 10px); background: var(--card); }
+
+  /* ── the side panel ── */
+  .side { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 44vw); background: var(--card); border-left: 1px solid var(--rule);
+          box-shadow: var(--shadow); z-index: 40; overflow: auto; padding: 14px 16px 24px; font-size: var(--fs-sm); box-sizing: border-box; }
+  .side[hidden] { display: none; }
+  @media (max-width: 760px) { .side { width: 100vw; } }
+  .side h3 { margin: 0; font-size: 1.15em; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; word-break: break-all; }
+  .side .sub { color: var(--muted); font-size: var(--fs-xs); margin: 4px 0 8px; }
+  .side .pb { border-top: 1px solid var(--rule); padding: 8px 0 4px; }
+  .side .pb h4 { margin: 0 0 4px; font-size: var(--fs-xs); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .side .kv { display: grid; grid-template-columns: 11em 1fr; gap: 2px 10px; font-size: var(--fs-xs); }
+  .side .kv .k { color: var(--muted); }
+  .side table { border-collapse: collapse; font-size: var(--fs-xs); width: 100%; }
+  .side table td, .side table th { text-align: left; padding: 1px 6px 1px 0; vertical-align: top; }
+  .side table th { color: var(--muted); font-weight: 400; }
+  .side ul { margin: 0; padding-left: 18px; font-size: var(--fs-xs); }
+  .side pre { font-size: var(--fs-min); background: var(--raised); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px; white-space: pre-wrap; word-break: break-all; margin: 6px 0; }
+  .side .x { display: block; margin: 0 0 6px auto; margin-right: 44px; }   /* clear of the cog, which sits top-right above everything */
+
+  #more-body[hidden] { display: none; }
+  #more-body p { font-size: var(--fs-xs); color: var(--ink-soft); max-width: 100ch; margin: 6px 0; }
+  #more-body table { border-collapse: collapse; font-size: var(--fs-xs); margin-top: 8px; }
+  #more-body td, #more-body th { text-align: left; padding: 2px 10px 2px 0; border-bottom: 1px solid var(--rule-soft); }
+  #more-body th { color: var(--muted); font-weight: 400; }
+  .out { width: 100%; box-sizing: border-box; min-height: 7em; resize: vertical; font: inherit; font-size: var(--fs-xs); background: var(--raised); color: var(--ink); border: 1px solid var(--rule); border-radius: 8px; padding: 9px 11px; }
+  .acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 6px; }
+
+  /* ── one tooltip: short on a control, richer on an element ── */
+  .tip { position: fixed; z-index: 60; max-width: 30rem; background: var(--strong); color: var(--sec-ink, var(--ground));
+         border-radius: 8px; padding: 7px 10px; font-size: var(--fs-min); line-height: 1.45; box-shadow: var(--shadow); pointer-events: none; opacity: 0; }
+  .tip[data-show="true"] { opacity: 1; }
+  .tip b { font-weight: 700; } .tip .ln { display: block; } .tip .pl { display: block; margin-top: 4px; opacity: .86; }
+</style>
+
+<div class="artifact-page">
+  <header>
+    <p class="eyebrow" id="eyebrow">—</p>
+    <h1 id="h1">—</h1>
+    <p class="lede" id="lede">—</p>
+    <p class="prop" id="prop">—</p>
+    <p class="stamp" id="stamp">—</p>
+    <p class="stamp" id="partial" hidden>—</p>
+    <p class="keys" id="keys">—</p>
+  </header>
+
+  <section class="sec" data-sec="1" id="sec-board">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M3 9h18"></path><path d="M3 15h18"></path><path d="M9 3v18"></path></svg><span id="t-board">—</span></h2><span class="n" id="n-board">—</span></div>
+    <div class="rail" id="rail"></div>
+    <div class="status" id="status"><span id="sortsays">—</span><span class="litchip" id="litchip" hidden><span id="litsays">—</span><button type="button" id="litclear">—</button></span></div>
+    <div class="board" id="board"></div>
+  </section>
+
+  <section class="sec" data-sec="2" id="sec-more">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg><span id="t-more">—</span></h2></div>
+    <div class="acts"><button class="btn quiet" type="button" id="more-btn" aria-expanded="false" aria-controls="more-body">—</button></div>
+    <div id="more-body" hidden></div>
+  </section>
+
+  <section class="sec" data-sec="3" id="sec-copy">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg><span id="t-copy">—</span></h2></div>
+    <p class="cap" id="copy-intro">—</p>
+    <textarea class="out" id="out" readonly spellcheck="false" aria-label="What you are looking at, as text"></textarea>
+    <div class="acts"><button class="btn" type="button" id="copy">—</button><span class="said" id="said" aria-live="polite"></span></div>
+  </section>
+</div>
+
+<aside class="side" id="side" hidden role="dialog" aria-label="Endpoint detail"></aside>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<!--__KIT2__-->
+<!--__KIT3__-->
+<script>window.AE_DATA = /*__DATA__*/null;</script>
+<script>
+(function () {
+  "use strict";
+  var D = window.AE_DATA, W = D.words, T = D.tok, KEY = "gabe:allep:v1";
+  var $ = function (id) { return document.getElementById(id); };
+  function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
+  function nEp(n) { return fill(n === 1 ? W.group.countOne : W.group.count, { n: n }); }
+  function fill(s, x) { return String(s).replace(/\{([a-zA-Z]\w*)\}/g, function (m, k) { return x && x[k] != null ? x[k] : (T[k] != null ? T[k] : m); }); }
+
+  /* ── state: every rail defaults to the words file's pick, and is remembered per viewer ── */
+  var RAILS = ["lay", "grp", "alone", "gord", "shared", "bord", "cols", "heat", "norm"];
+  var S = { sort: null, lit: null, open: null };
+  RAILS.forEach(function (r) { S[r] = W.rail[r].pick; });
+  try { var raw = window.localStorage.getItem(KEY); if (raw) { var o = JSON.parse(raw);
+    RAILS.forEach(function (r) { if (o[r] && W.rail[r].opts[o[r]]) S[r] = o[r]; });
+    if (o.sort && D.cols.some(function (c) { return c.id === o.sort.col; })) S.sort = { col: o.sort.col, dir: o.sort.dir === -1 ? -1 : 1 }; } } catch (e) {}
+  function save() { try { var o = {}; RAILS.forEach(function (r) { o[r] = S[r]; }); o.sort = S.sort; window.localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {} }
+
+  var COL = {}; D.cols.forEach(function (c) { COL[c.id] = c; });
+  var BLK = {}; D.blocks.forEach(function (b) { BLK[b.key] = b; });
+  var ROWS = D.rows, N = ROWS.length;
+  var METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"];
+  function baseOrder(a, b) { return a.p < b.p ? -1 : a.p > b.p ? 1 : METHODS.indexOf(a.m) - METHODS.indexOf(b.m); }
+  var MAX = {}; D.cols.forEach(function (c) { var m = 0; ROWS.forEach(function (r) { var k = r.k[c.id]; if (typeof k === "number" && k > m) m = k; }); MAX[c.id] = m; });
+  var SPINE = D.orders.stageRows.filter(function (s) { return D.orders.kinds[s] !== "screen"; });
+
+  /* ── which columns, under which block, in which order ── */
+  function layout() {
+    var order = D.orders[S.bord], out = [], top = T.rTop;
+    var keep = function (c) { return S.cols === "all" || c.r === top; };
+    var place = {};
+    D.cols.forEach(function (c) {
+      if (!c.shared) place[c.id] = c.home;
+      else if (S.shared === "own") place[c.id] = "_shared";
+      else place[c.id] = order.filter(function (k) { return c.sharedIn.indexOf(k) >= 0; })[0] || "_shared";
+    });
+    var groups = (S.shared === "own" ? ["_shared"] : []).concat(order);
+    groups.forEach(function (g) {
+      var cs = D.cols.filter(function (c) { return place[c.id] === g && keep(c); });
+      if (cs.length) out.push({ key: g, name: g === "_shared" ? W.sharedBlock.name : BLK[g].name, plain: g === "_shared" ? W.sharedBlock.plain : BLK[g].plain, cols: cs });
+    });
+    return out;
+  }
+
+  /* ── the bins of a column: what its header strip counts ── */
+  /* a cell that holds no number: "absent" (the feed did not look) or "unknown" (it looked, the value is not known) — never a 0 */
+  function stateOf(r, c) { var v = r.v[c.id]; return v === "absent" || v === "unknown" ? v : null; }
+  function binsOf(c) {
+    var vals = ROWS.map(function (r) { return r.k[c.id]; }), bins = [];
+    var absent = ROWS.filter(function (r) { return stateOf(r, c) === "absent"; }).length, unk = ROWS.filter(function (r) { return stateOf(r, c) === "unknown"; }).length;
+    if (c.kind === "cat") {
+      var cnt = {}; vals.forEach(function (k) { if (k != null) cnt[k] = (cnt[k] || 0) + 1; });
+      Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a] || (a < b ? -1 : 1); }).forEach(function (k, i) {
+        bins.push({ key: "c:" + k, what: fill(W.binWords.cat, { v: k }), n: cnt[k], test: function (x) { return x === k; }, shade: i }); });
+    } else {
+      var nums = vals.filter(function (k) { return typeof k === "number"; });
+      var distinct = nums.filter(function (v, i, a) { return a.indexOf(v) === i; }).sort(function (a, b) { return a - b; });
+      if (c.kind === "ratio") {
+        var edges = [[0, 0], [0.0001, 0.25], [0.2501, 0.5], [0.5001, 0.75], [0.7501, 0.9999], [1, 1]];
+        edges.forEach(function (e) { bins.push({ lo: e[0], hi: e[1], what: e[0] === e[1] ? fill(W.binWords.range, { v: Math.round(e[0] * 100) + "%" }) : fill(W.binWords.range, { v: Math.round(e[0] * 100) + "–" + Math.round(e[1] * 100) + "%" }) }); });
+      } else if (distinct.length <= 7) {
+        distinct.forEach(function (v) { bins.push({ lo: v, hi: v, what: fill(W.binWords.range, { v: String(v) }) }); });
+      } else {
+        bins.push({ lo: 0, hi: 0, what: fill(W.binWords.range, { v: "0" }) });
+        var lo = 1; while (lo <= (MAX[c.id] || 0)) { var hi = lo * 2 - 1; bins.push({ lo: lo, hi: hi, what: fill(W.binWords.range, { v: lo === hi ? String(lo) : lo + "–" + hi }) }); lo *= 2; }
+      }
+      bins.forEach(function (b, i) { b.key = "r:" + b.lo + ":" + b.hi; b.shade = i; b.test = function (x) { return typeof x === "number" && x >= b.lo && x <= b.hi; };
+        b.n = nums.filter(b.test).length; });
+      bins = bins.filter(function (b) { return b.n > 0; });
+    }
+    if (unk) bins.push({ key: "unknown", what: W.binWords.unknown, n: unk, state: "unknown", shade: -2 });
+    if (absent) bins.push({ key: "absent", what: W.binWords.absent, n: absent, state: "absent", shade: -1 });
+    var nb = bins.filter(function (b) { return b.shade >= 0; }).length;
+    bins.forEach(function (b) { b.col = b.shade === -1 ? "var(--rule)" : b.shade === -2 ? "var(--muted)" : "color-mix(in srgb, var(--accent) " + Math.round(18 + 72 * (nb > 1 ? b.shade / (nb - 1) : 1)) + "%, var(--card))"; });
+    return bins;
+  }
+  var BINS = {}; D.cols.forEach(function (c) { BINS[c.id] = binsOf(c); });
+  var NORM = {}; D.cols.forEach(function (c) { if (c.kind === "cat" && BINS[c.id].length) NORM[c.id] = BINS[c.id][0].key.slice(2); });   /* the most common category */
+
+  /* ── the rows' groups ── */
+  function stageRank(s) { return D.orders.stageRows.indexOf(s); }
+  function groupKey(r) {
+    if (S.grp === "entity") return r.ent || "—";
+    if (S.grp === "seg") return r.seg;
+    if (S.grp === "method") return r.m;
+    if (S.grp === "labels") { var by = {}; r.labels.forEach(function (l) { var q = l.split(":"); (by[q[0]] = by[q[0]] || []).push(q[1]); });   /* one stage, its statuses */
+      return Object.keys(by).sort(function (a, b) { return stageRank(a) - stageRank(b); }).map(function (st) { return st + " " + by[st].sort().join(" "); }).join(" · "); }
+    if (S.grp === "counts") return D.kinds5.map(function (k) { return COL["e_" + k].head + " " + r.v["e_" + k]; }).join(" · ");
+    return "";
+  }
+  function sortRows(rs) {
+    var s = S.sort;
+    return rs.slice().sort(function (a, b) {
+      if (s) { var x = a.k[s.col], y = b.k[s.col];
+        var nx = x === null || x === undefined, ny = y === null || y === undefined;
+        if (nx !== ny) return nx ? 1 : -1;
+        if (!nx && x !== y) return (x < y ? -1 : 1) * s.dir; }
+      return baseOrder(a, b); });
+  }
+  function groups() {
+    if (S.grp === "flat") return [{ key: "", name: W.group.flat, rows: sortRows(ROWS) }];
+    var m = {}, order = [];
+    ROWS.forEach(function (r) { var k = groupKey(r); if (!m[k]) { m[k] = []; order.push(k); } m[k].push(r); });
+    var gs = order.map(function (k) { return { key: k, name: k, rows: m[k] }; });
+    var alone = [];
+    if (S.alone === "gather") { alone = gs.filter(function (g) { return g.rows.length === 1; }); gs = gs.filter(function (g) { return g.rows.length > 1; }); }
+    gs.sort(S.gord === "size" ? function (a, b) { return b.rows.length - a.rows.length || (a.name < b.name ? -1 : 1); } : function (a, b) { return a.name < b.name ? -1 : 1; });
+    if (alone.length) gs.push({ key: "_alone", name: W.group.alone, rows: [].concat.apply([], alone.map(function (g) { return g.rows; })), alone: true });
+    gs.forEach(function (g) { g.rows = sortRows(g.rows); });
+    return gs;
+  }
+
+  /* ── one cell ── */
+  function isAbsent(r, c) { return stateOf(r, c) !== null; }
+  function cell(c, r) {
+    var v = r.v[c.id], k = r.k[c.id], w = el("span"), st = stateOf(r, c);
+    w.setAttribute("data-col", c.id); w.setAttribute("data-v", st || String(k)); w.setAttribute("data-tip", "cell");
+    if (st) { w.className = "ab" + (st === "unknown" ? " unk" : ""); w.textContent = st === "unknown" ? W.unknown : W.absent; return w; }
+    if (c.kind === "slot") { var kd = c.id.slice(2); w.className = "slot" + (v ? "" : " e0"); w.textContent = String(v);
+      if (v) w.style.background = "var(--k-" + kd + ")"; return w; }
+    if (c.kind === "num") { w.className = "num" + (v ? "" : " z"); w.textContent = String(v);
+      if (v && MAX[c.id] && S.heat === "heat") w.style.background = "color-mix(in srgb, var(--accent) " + Math.round(8 + 42 * v / MAX[c.id]) + "%, transparent)"; return w; }
+    if (c.kind === "spine") { w.className = "spine"; var mx = 0; SPINE.forEach(function (s) { mx = Math.max(mx, v[s] || 0); });
+      SPINE.forEach(function (s) { var i = el("i"); var n = v[s] || 0; if (D.orders.kinds[s] === "bay") i.className = "bay";
+        if (n) { i.style.background = "color-mix(in srgb, var(--accent) " + Math.round(35 + 65 * n / Math.max(mx, 1)) + "%, var(--card))"; i.style.borderColor = "transparent"; }
+        i.setAttribute("data-stage", s); i.setAttribute("data-n", String(n)); w.appendChild(i); }); return w; }
+    if (c.kind === "stack") { w.className = "stack"; var sb = el("span", "sb"), keys = c.id === "fate" ? D.fates : D.pieceWords, tot = 0;
+      keys.forEach(function (x) { tot += v[x] || 0; });
+      keys.forEach(function (x) { if (!v[x]) return; var i = el("i"); i.style.width = (100 * v[x] / tot) + "%"; i.setAttribute("data-s", x); i.setAttribute("data-n", String(v[x]));
+        i.style.background = c.id === "fate" ? "var(--f-" + x + ")" : "var(--p-" + ({ "the norm": "norm", "common": "common", "rare": "rare", "only here": "only" })[x] + ")"; sb.appendChild(i); });
+      w.appendChild(sb); w.appendChild(el("span", "n" + (k ? "" : " z"), String(k))); return w; }
+    if (c.kind === "ratio") { w.className = "ratio" + (v[0] ? "" : " z"); w.appendChild(el("span", null, v[0] + "/" + v[1]));
+      var rb = el("span", "bar"), ri = el("i"); ri.style.width = (v[1] ? Math.round(100 * v[0] / v[1]) : 0) + "%"; rb.appendChild(ri); w.appendChild(rb); return w; }
+    if (c.kind === "dots") { w.className = "dots"; D.families.forEach(function (f) { var i = el("i", v.indexOf(f) >= 0 ? "on" : ""); i.setAttribute("data-f", f); w.appendChild(i); }); return w; }
+    if (c.kind === "cat") { var q = S.norm === "quiet" && NORM[c.id] === v; w.className = "cat" + (q ? " norm" : ""); w.textContent = q ? "·" : String(v).replace(/\+/g, " · "); return w; }
+    w.textContent = String(v); return w;
+  }
+  /* a group row: an ending belongs to one endpoint, so endings ADD UP; a table, a function, a process value is one thing
+     several endpoints share, so it is counted ONCE across the group (the generator carries each row's things by identity) */
+  function aggOf(c, rs) {
+    if (!c.agg) return "";
+    var live = rs.filter(function (r) { return !isAbsent(r, c); }); if (!live.length) return "";
+    if (c.agg === "ratio") { var a = 0, b = 0; live.forEach(function (r) { a += r.v[c.id][0]; b += r.v[c.id][1]; }); return a + "/" + b; }
+    if (c.agg === "count") return String(live.filter(function (r) { var v = r.v[c.id]; return v && v !== "none"; }).length);
+    if (c.agg === "union") { var seen = {}, n = 0; live.forEach(function (r) { (r.u[c.id] || []).forEach(function (x) { if (!seen[x]) { seen[x] = 1; n++; } }); }); return String(n); }
+    var s = 0; live.forEach(function (r) { s += r.k[c.id] || 0; }); return String(s);
+  }
+
+  /* ── the header: block band, column heads with rating pips and the distribution strip ── */
+  function headRows(L) {
+    var thead = el("thead"), bh = el("tr", "bh"), ch = el("tr", "ch");
+    var i0 = el("th", "idh"); i0.setAttribute("rowspan", "1"); bh.appendChild(i0);
+    var i1 = el("th", "idh"); i1.appendChild(el("span", "hd", W.sortReset)); i1.setAttribute("data-tip", "sortreset"); i1.addEventListener("click", function () { S.sort = null; save(); render(); }); ch.appendChild(i1);
+    L.forEach(function (g, gi) {
+      var th = el("th", "bstart" + (gi % 2 ? " bz" : ""), g.name); th.colSpan = g.cols.length; th.setAttribute("data-tip", "block"); th.setAttribute("data-block", g.key); bh.appendChild(th);
+      g.cols.forEach(function (c, ci) {
+        var h = el("th", (ci === 0 ? "bstart" : "") + (gi % 2 ? " bz" : "")); h.setAttribute("data-col", c.id); h.setAttribute("data-tip", "head");
+        if (S.sort && S.sort.col === c.id) h.setAttribute("data-sorted", S.sort.dir > 0 ? "up" : "down");
+        var hd = el("span", "hd", c.head); if (S.sort && S.sort.col === c.id) hd.appendChild(el("span", "dir", S.sort.dir > 0 ? " ↑" : " ↓")); h.appendChild(hd);
+        var pp = el("span", "pips"); for (var q = 1; q <= T.rTop; q++) pp.appendChild(el("i", q <= c.r ? "on" : "")); if (c.alarm) pp.appendChild(el("i", "al")); h.appendChild(pp);
+        var st = el("span", "strip"); st.style.width = Math.max(24, c.kind === "spine" ? 50 : c.kind === "stack" ? 48 : c.kind === "dots" ? D.families.length * 7 : 26) + "px";
+        BINS[c.id].forEach(function (b) { var s = el("span", "sg"); s.style.flex = b.n + " 0 0"; s.style.background = b.col;
+          s.setAttribute("data-bin", b.key); s.setAttribute("data-n", String(b.n)); s.setAttribute("data-tip", "bin"); s.setAttribute("data-col", c.id);
+          if (S.lit && S.lit.col === c.id && S.lit.bin === b.key) s.setAttribute("data-lit", "true"); st.appendChild(s); });
+        h.appendChild(st);
+        h.addEventListener("click", function (ev) {
+          var sg = ev.target.closest(".sg");
+          if (sg) { ev.stopPropagation(); var bk = sg.getAttribute("data-bin"); S.lit = S.lit && S.lit.col === c.id && S.lit.bin === bk ? null : { col: c.id, bin: bk }; render(); return; }
+          S.sort = S.sort && S.sort.col === c.id ? { col: c.id, dir: -S.sort.dir } : { col: c.id, dir: 1 }; save(); render(); });
+        ch.appendChild(h); });
+    });
+    thead.appendChild(bh); thead.appendChild(ch); return thead;
+  }
+  function litTest() { if (!S.lit) return null; var c = COL[S.lit.col], b = BINS[S.lit.col].filter(function (x) { return x.key === S.lit.bin; })[0];
+    return b ? function (r) { return b.state ? stateOf(r, c) === b.state : b.test(r.k[S.lit.col]); } : null; }
+  function idCell(r) { var d = el("div", "idc"); var m = el("span", "mth", r.m); m.style.color = "var(--m-" + r.m + ")"; d.appendChild(m);
+    var p = el("span", "pth", r.p); d.appendChild(p); d.setAttribute("data-tip", "id"); d.setAttribute("data-ep", r.id); return d; }
+
+  function renderTable(L, GS, lit) {
+    var t = el("table", "grid"); t.appendChild(headRows(L)); var tb = el("tbody");
+    GS.forEach(function (g) {
+      if (S.grp !== "flat") { var gr = el("tr", "grow"); gr.setAttribute("data-group", g.key);
+        var gi = el("td", "id"); gi.appendChild(el("span", "gn", g.name)); gi.appendChild(el("span", "gc", nEp(g.rows.length))); gr.appendChild(gi);
+        L.forEach(function (bl, bi) { bl.cols.forEach(function (c, ci) { var td = el("td", (ci === 0 ? "bstart" : "") + (bi % 2 ? " bz" : "")); td.appendChild(el("span", "agg", aggOf(c, g.rows))); if (c.agg) td.setAttribute("data-tip", "agg"); td.setAttribute("data-col", c.id); gr.appendChild(td); }); });
+        tb.appendChild(gr); }
+      g.rows.forEach(function (r) {
+        var tr = el("tr", "row"); tr.setAttribute("data-ep", r.id); if (S.open === r.id) tr.setAttribute("data-sel", "true"); if (lit && !lit(r)) tr.setAttribute("data-dim", "true");
+        var td0 = el("td", "id"); td0.appendChild(idCell(r)); tr.appendChild(td0);
+        L.forEach(function (bl, bi) { bl.cols.forEach(function (c, ci) { var td = el("td", (ci === 0 ? "bstart" : "") + (bi % 2 ? " bz" : "")); td.appendChild(cell(c, r)); tr.appendChild(td); }); });
+        tr.addEventListener("click", function () { openSide(r.id); });
+        tb.appendChild(tr); });
+    });
+    t.appendChild(tb); return t;
+  }
+  function renderCards(L, GS, lit, n) {
+    var wrap = el("div"); var kt = el("div", "keytable"); var t = el("table", "grid"); t.appendChild(headRows(L)); kt.appendChild(t); wrap.appendChild(kt);
+    var cs = el("div", "cards"); cs.setAttribute("data-n", String(n));
+    GS.forEach(function (g) {
+      if (S.grp !== "flat") { var gh = el("div", "ghead", g.name); gh.setAttribute("data-group", g.key); gh.appendChild(el("span", "gc", nEp(g.rows.length))); cs.appendChild(gh); }
+      g.rows.forEach(function (r) {
+        var cd = el("div", "card"); cd.setAttribute("data-ep", r.id); if (S.open === r.id) cd.setAttribute("data-sel", "true"); if (lit && !lit(r)) cd.setAttribute("data-dim", "true");
+        cd.appendChild(idCell(r)); var cbs = el("div", "cbs");
+        L.forEach(function (bl) { var b = el("span", "cb"); var bn = el("span", "bn", bl.name); bn.setAttribute("data-tip", "block"); bn.setAttribute("data-block", bl.key); b.appendChild(bn);
+          bl.cols.forEach(function (c) { var cc = el("span", "cc"); cc.appendChild(el("span", "cl", c.head)); cc.appendChild(cell(c, r)); b.appendChild(cc); }); cbs.appendChild(b); });
+        cd.appendChild(cbs);
+        cd.addEventListener("click", function () { openSide(r.id); });
+        cs.appendChild(cd); }); });
+    wrap.appendChild(cs); return wrap;
+  }
+
+  /* ── the rail ── */
+  function renderRail() {
+    var rail = $("rail"); rail.textContent = "";
+    RAILS.forEach(function (r) {
+      var R = W.rail[r], g = el("div", "rgrp"); g.setAttribute("data-rail", r);
+      if ((r === "alone" || r === "gord") && S.grp === "flat") g.hidden = true;
+      g.appendChild(el("span", "rl", R.label)); var o = el("div", "opts"); o.setAttribute("role", "radiogroup"); o.setAttribute("aria-label", R.label);
+      Object.keys(R.opts).forEach(function (k) {
+        var b = el("button", "opt"); b.type = "button"; b.setAttribute("role", "radio"); b.setAttribute("data-rail", r); b.setAttribute("data-v", k);
+        b.setAttribute("aria-checked", S[r] === k ? "true" : "false"); b.setAttribute("data-tip", "opt");
+        b.appendChild(el("span", null, fill(R.opts[k].name, { cards: D.layouts[k] }))); if (R.pick === k) { var pk = el("span", "pk", W.pickMark); pk.setAttribute("data-tip", "pick"); b.appendChild(pk); b.setAttribute("data-pick", "true"); }
+        b.addEventListener("click", function () { S[r] = k; save(); render(); }); o.appendChild(b); });
+      g.appendChild(o); rail.appendChild(g); });
+  }
+
+  function render() {
+    renderRail();
+    var L = layout(), GS = groups(), lit = litTest(), board = $("board"); board.textContent = "";
+    var n = D.layouts[S.lay];
+    board.className = "board" + (n > 1 ? " cardsmode" : "");
+    board.appendChild(n === 1 ? renderTable(L, GS, lit) : renderCards(L, GS, lit, n));
+    var bhr = board.querySelector("tr.bh"); if (bhr) board.style.setProperty("--bh", bhr.getBoundingClientRect().height + "px");
+    pageTop();
+    $("sortsays").textContent = S.sort ? fill(W.sortBy, { col: COL[S.sort.col].head }) + (S.sort.dir > 0 ? " ↑" : " ↓") : W.sortNone;
+    if (S.lit) { var b = BINS[S.lit.col].filter(function (x) { return x.key === S.lit.bin; })[0];
+      $("litsays").textContent = fill(W.litSays, { col: COL[S.lit.col].head, what: b ? b.what : "", n: b ? b.n : 0 }); $("litchip").hidden = false; }
+    else $("litchip").hidden = true;
+    $("n-board").textContent = nEp(N);
+    writeOut(L, GS);
+  }
+
+  /* ── the side panel: everything the row record holds, in words ── */
+  function kv(box, k, v) { box.appendChild(el("span", "k", k)); box.appendChild(el("span", null, v == null || v === "" ? W.panel.none : String(v))); }
+  function pblock(title, key) { var b = el("div", "pb"); if (key) b.setAttribute("data-block", key); b.appendChild(el("h4", null, title)); return b; }
+  function more(b, lst) { if (lst.more) b.appendChild(el("p", "sub", fill(W.panel.more, { more: lst.more }))); }
+  function list(b, items, fmt) { if (!items.length) { b.appendChild(el("p", "sub", W.panel.none)); return; } var u = el("ul"); items.forEach(function (x) { u.appendChild(el("li", null, fmt(x))); }); b.appendChild(u); }
+  function openSide(id) {
+    S.open = id; var r = ROWS.filter(function (x) { return x.id === id; })[0], P = W.panel, d = r.d, sd = $("side"); sd.textContent = "";
+    var x = el("button", "btn quiet x", P.close); x.type = "button"; x.id = "side-close"; x.setAttribute("data-tip", "close"); x.addEventListener("click", closeSide); sd.appendChild(x);
+    var h = el("h3"); var m = el("span", "mth", r.m); m.style.color = "var(--m-" + r.m + ")"; h.appendChild(m); h.appendChild(el("span", null, r.p)); sd.appendChild(h);
+    var sub = el("div", "kv"); kv(sub, P.handler, r.fn + " · " + r.file + ":" + r.line); kv(sub, P.entity, r.ent); kv(sub, P.segment, r.seg); kv(sub, P.declared, r.declared); sd.appendChild(sub);
+    /* every column's value, under its block, with the words the cell's hover carries */
+    layout().forEach(function (g) { var b = pblock(g.name, g.key), box = el("div", "kv");
+      g.cols.forEach(function (c) { kv(box, c.head, cellWords(c, r)); }); b.appendChild(box); sd.appendChild(b); });
+    var b1 = pblock(P.exits); var t = el("table"), th = el("tr"); P.exitCols.forEach(function (c) { th.appendChild(el("th", null, c)); }); t.appendChild(th);
+    d.exits.items.forEach(function (e) { var tr = el("tr"); [W.kinds[e[0]] ? W.kinds[e[0]].name : e[0], e[1], e[2], e[3], e[4]].forEach(function (v) { tr.appendChild(el("td", null, v == null ? "" : String(v))); }); t.appendChild(tr); });
+    b1.appendChild(t); more(b1, d.exits); sd.appendChild(b1);
+    var b2 = pblock(P.tables); list(b2, d.tables.items, function (t2) { return t2[0] + " · " + t2[1]; }); more(b2, d.tables);
+    var gw = el("div", "kv"); kv(gw, P.gateWrites, d.gateWrites.join(", ")); b2.appendChild(gw); sd.appendChild(b2);
+    var b3 = pblock(P.fates); list(b3, d.fates.items, function (f) { return f[0] + " (" + f[1] + ") · " + W.fates[f[2]].name; }); more(b3, d.fates); sd.appendChild(b3);
+    var b4 = pblock(P.guards); list(b4, d.guards.items, function (g) { return g[0] + " · " + g[1]; }); more(b4, d.guards);
+    var gk = el("div", "kv"); kv(gk, P.gates, d.gates.join(", ")); kv(gk, P.limits, d.limits.map(function (l) { return l[0] + " " + fill(P.limitWords, { v: l[1] }) + (l[2] != null ? " / " + l[2] + "s" : ""); }).join(" · ")); b4.appendChild(gk); sd.appendChild(b4);
+    var b5 = pblock(P.request); var sk = el("div", "kv"); kv(sk, P.request, d.request ? d.request[0] + " · " + d.request[1].join(", ") : null); kv(sk, P.response, d.response ? d.response[0] + " · " + d.response[1] : null);
+    kv(sk, P.cases, Object.keys(d.cases).map(function (k) { return k + " " + d.cases[k]; }).join(" · ")); b5.appendChild(sk); sd.appendChild(b5);
+    var b6 = pblock(P.deciders); list(b6, d.deciders.items, function (f) { return f; }); more(b6, d.deciders);
+    var fk = el("div", "kv"); kv(fk, P.switches, d.switches.items.map(function (s) { return s[0] + (s[1] ? " (" + s[1] + ")" : ""); }).join(" · ")); kv(fk, P.behind, d.behind[0] + " · " + d.behind[1]);
+    kv(fk, P.proof, fill(P.proofWords, { n: d.proof.tested + "/" + d.proof.produced, v: d.proof.rank + (d.proof.rank_to !== d.proof.rank ? "–" + d.proof.rank_to : ""), of: d.proof.of })); b6.appendChild(fk); sd.appendChild(b6);
+    var b7 = pblock(P.inflight); list(b7, d.inflight.items, function (f) { return f[0] + " · " + f[1] + " · " + f[2]; }); more(b7, d.inflight); sd.appendChild(b7);
+    var b8 = pblock(P.hook); var ck = el("div", "kv"); kv(ck, P.hook, d.hook); kv(ck, P.screens, d.screens); b8.appendChild(ck); list(b8, d.reasons.items, function (s) { return s[0] + " · " + s[1] + " · " + s[2]; }); sd.appendChild(b8);
+    var b9 = pblock(P.alarms); list(b9, d.alarms, function (a) { return a[0] + (a[1] ? " " + a[1] : "") + (a[2] ? " · " + a[2] : ""); }); sd.appendChild(b9);
+    var b10 = pblock(P.pieces); list(b10, d.pieces.items, function (p) { return p[0] + " · " + p[1] + "/" + p[2] + " · " + W.pieceWords[p[3]].name; }); more(b10, d.pieces);
+    b10.appendChild(el("h4", null, P.lacks)); list(b10, d.lacks, function (p) { return p[0] + " · " + p[1] + "/" + p[2]; }); sd.appendChild(b10);
+    var b11 = pblock(P.lab); b11.appendChild(el("p", "sub", P.labPlain)); var pre = el("pre"); pre.id = "labcmd"; pre.textContent = fill(P.cmd, { ep: r.id }); b11.appendChild(pre);
+    var cb = el("button", "btn quiet", P.copy); cb.type = "button"; cb.setAttribute("data-tip", "copycmd"); var said = el("span", "said");
+    cb.addEventListener("click", function () { copyText(pre.textContent, said, P.copied); }); b11.appendChild(cb); b11.appendChild(said); sd.appendChild(b11);
+    sd.hidden = false; sd.scrollTop = 0; render();
+  }
+  function closeSide() { S.open = null; $("side").hidden = true; render(); }
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && S.open) closeSide(); });
+
+  /* ── words for a value: what the cell's hover and the side panel say ── */
+  function cellWords(c, r) {
+    var v = r.v[c.id], k = r.k[c.id];
+    if (stateOf(r, c) === "unknown") return W.unknown + " — " + r.why[c.id];
+    if (isAbsent(r, c)) return W.absent + " — " + fill(W.absentWhy, { why: r.why[c.id] || c.armWhy || c.arm });
+    var s;
+    if (c.kind === "spine") s = SPINE.map(function (st) { return st + " " + (v[st] || 0); }).join(" · ");
+    else if (c.kind === "stack") s = (c.id === "fate" ? D.fates : D.pieceWords).map(function (x) { return (c.id === "fate" ? W.fates[x].name : W.pieceWords[x].name) + " " + (v[x] || 0); }).join(" · ");
+    else if (c.kind === "ratio") s = v[0] + "/" + v[1] + (v[2] ? " · " + fill(c.amb, { amb: v[2] }) : "");
+    else if (c.kind === "dots") s = v.length ? v.join(" · ") : "0";
+    else s = String(v);
+    if (!k && r.why[c.id] && c.kind !== "cat") s += " — " + fill(W.zeroWhy, { why: r.why[c.id] });
+    if (c.kind === "cat" && r.why[c.id]) s += " — " + r.why[c.id];
+    return s;
+  }
+
+  /* ── one tooltip ── */
+  var tip = $("tip");
+  function tipFor(t) {
+    var kind = t.getAttribute("data-tip"), c = COL[t.getAttribute("data-col")], rowEl = t.closest("[data-ep]"), r = rowEl ? ROWS.filter(function (x) { return x.id === rowEl.getAttribute("data-ep"); })[0] : null;
+    if (kind === "opt") { var R = W.rail[t.getAttribute("data-rail")]; var ck = { cards: D.layouts[t.getAttribute("data-v")] }; return "<b>" + esc(fill(R.opts[t.getAttribute("data-v")].name, ck)) + "</b><span class=pl>" + esc(fill(R.opts[t.getAttribute("data-v")].plain, ck)) + "</span>"; }
+    if (kind === "pick") return esc(W.pickPlain);
+    if (kind === "head") return "<b>" + esc(c.head) + "</b> · " + esc(c.name) + "<span class=pl>" + esc(W.sortHint) + "</span>";
+    if (kind === "sortreset") return esc(W.sortReset);
+    if (kind === "close") return esc(W.panel.closePlain);
+    if (kind === "copycmd") return esc(W.panel.copy);
+    if (kind === "block") { var key = t.getAttribute("data-block"), b = key === "_shared" ? W.sharedBlock : BLK[key]; return "<b>" + esc(b.name) + "</b><span class=pl>" + esc(b.plain) + "</span>"; }
+    if (kind === "bin") { var bn = BINS[c.id].filter(function (x) { return x.key === t.getAttribute("data-bin"); })[0];
+      return "<b>" + esc(c.head) + "</b> · " + esc(fill(W.strip, { n: bn.n, of: N, what: bn.what })) + "<span class=pl>" + esc(W.stripHint) + "</span>"; }
+    if (kind === "agg") return "<b>" + esc(c.head) + "</b> · " + esc(c.name) + "<span class=pl>" + esc(W.group[{ union: "union", count: "has", ratio: "ratio" }[c.agg] || "sum"]) + "</span>";
+    if (kind === "id" && r) return "<b>" + esc(r.m + " " + r.p) + "</b><span class=ln>" + esc(r.fn + " · " + r.file + ":" + r.line) + "</span><span class=ln>" + esc(r.full || "") + "</span>";
+    if (kind === "cell" && r) {
+      var h = "<b>" + esc(c.head) + "</b> · " + esc(c.name) + "<span class=ln>" + esc(r.m + " " + r.p) + "</span><span class=ln>" + esc(cellWords(c, r)) + "</span>";
+      if (c.kind === "spine") { var sub = t.closest("[data-stage]") || null; }
+      h += "<span class=pl>" + esc(c.label) + " — " + esc(c.plain) + " · " + esc(fill(W.rating, { rating: c.r, top: T.rTop })) + (c.alarm ? " · " + esc(W.alarmRating) : "") + "</span>";
+      return h; }
+    return null;
+  }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (ch) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]; }); }
+  document.addEventListener("mouseover", function (e) {
+    var t = e.target.closest("[data-tip]"); if (!t) { tip.setAttribute("data-show", "false"); return; }
+    if (t.getAttribute("data-tip") === "cell" && e.target.closest(".spine i")) { var si = e.target.closest(".spine i"), c = COL[t.getAttribute("data-col")];
+      tip.innerHTML = "<b>" + esc(si.getAttribute("data-stage")) + "</b> · " + esc(fill(W.stageCell, { stage: si.getAttribute("data-stage"), n: si.getAttribute("data-n") })) + "<span class=pl>" + esc(W.stages[si.getAttribute("data-stage")] || "") + "</span>"; }
+    else if (t.getAttribute("data-tip") === "cell" && e.target.closest(".dots i")) { tip.innerHTML = "<b>" + esc(e.target.closest(".dots i").getAttribute("data-f")) + "</b><span class=pl>" + esc(W.families) + "</span>"; }
+    else { var h = tipFor(t); if (!h) { tip.setAttribute("data-show", "false"); return; } tip.innerHTML = h; }
+    var bx = t.getBoundingClientRect(), tw = tip.offsetWidth, thh = tip.offsetHeight;
+    var x = Math.min(window.innerWidth - tw - 8, Math.max(8, bx.left)), y = bx.bottom + 6; if (y + thh > window.innerHeight - 4) y = Math.max(4, bx.top - thh - 6);
+    tip.style.left = x + "px"; tip.style.top = y + "px"; tip.setAttribute("data-show", "true"); });
+  window.hoverHide = function () { tip.setAttribute("data-show", "false"); };
+
+  /* ── copy text ── */
+  function copyText(s, said, word) {
+    var done = function () { said.textContent = word; setTimeout(function () { said.textContent = ""; }, 1600); };
+    try { navigator.clipboard.writeText(s).then(done, function () { fallback(); }); } catch (e) { fallback(); }
+    function fallback() { var ta = el("textarea"); ta.value = s; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); } catch (e2) {} ta.remove(); done(); } }
+  function writeOut(L, GS) {
+    var C = W.copy.lines, lines = [C.page + ": all-endpoints · " + T.app + " @ " + T.head,
+      C.layout + ": " + fill(W.rail.lay.opts[S.lay].name, { cards: D.layouts[S.lay] }), C.group + ": " + W.rail.grp.opts[S.grp].name + (S.grp !== "flat" ? " (" + GS.length + ")" : ""),
+      C.cols + ": " + fill(W.rail.cols.opts[S.cols].name) + " · " + W.rail.shared.opts[S.shared].name + " · " + W.rail.bord.opts[S.bord].name,
+      C.sort + ": " + (S.sort ? COL[S.sort.col].head + (S.sort.dir > 0 ? " ↑" : " ↓") : W.sortNone)];
+    if (S.lit) lines.push(C.lit + ": " + $("litsays").textContent);
+    if (S.open) lines.push(C.open + ": " + S.open);
+    lines.push("", C.your, "");
+    $("out").value = lines.join("\n");
+  }
+
+  /* ── the fixed words ── */
+  $("eyebrow").textContent = fill(W.eyebrow); $("h1").textContent = fill(W.h1); $("lede").textContent = fill(W.lede); $("prop").textContent = fill(W.proposal);
+  $("stamp").textContent = fill(W.stamp); $("keys").textContent = fill(W.keys);
+  if (D.partial) { $("partial").hidden = false; $("partial").textContent = fill(W.partial); }
+  $("t-board").textContent = W.sec.board; $("t-more").textContent = W.sec.more; $("t-copy").textContent = W.sec.copy;
+  $("litclear").textContent = W.litClear; $("litclear").addEventListener("click", function () { S.lit = null; render(); });
+  $("copy-intro").textContent = W.copy.intro; $("copy").textContent = W.copy.button;
+  $("copy").addEventListener("click", function () { copyText($("out").value, $("said"), W.copy.copied); });
+  $("more-btn").textContent = W.more.show;
+  $("more-btn").addEventListener("click", function () { var b = $("more-body"), open = b.hidden; b.hidden = !open; this.setAttribute("aria-expanded", open ? "true" : "false"); this.textContent = open ? W.more.hide : W.more.show; });
+  (function () { var mb = $("more-body"); W.more.lines.forEach(function (l) { mb.appendChild(el("p", null, fill(l))); });
+    var t = el("table"), hr = el("tr"); W.more.colsHead.forEach(function (h) { hr.appendChild(el("th", null, h)); }); t.appendChild(hr);
+    D.cols.forEach(function (c) { var tr = el("tr"); [c.head, c.shared ? W.sharedBlock.name : BLK[c.home].name, c.label, c.r + (c.alarm ? " · " + W.alarmRating : ""), c.arm ? c.arm + (c.armOn ? "" : " · " + W.absent) : W.more.armMap]
+      .forEach(function (v) { tr.appendChild(el("td", null, String(v))); }); t.appendChild(tr); }); mb.appendChild(t); })();
+
+  /* the header stays on top of the SCREEN, not only of the board: the board scrolls its rows under the header, but once the
+     page itself has scrolled past the board's top, the header moves down by that much so its names stay in view */
+  function pageTop() { var board = $("board"); if (!board) return; var y = board.getBoundingClientRect().top;
+    board.style.setProperty("--pagetop", (y < 0 ? Math.min(-y, Math.max(0, board.clientHeight - 60)) : 0) + "px"); }
+  window.addEventListener("scroll", pageTop, { passive: true }); window.addEventListener("resize", pageTop);
+
+  render();
+  window.__allep = { ready: true, data: D, state: S, render: render, bins: BINS, layout: layout, groups: groups, cellWords: cellWords, aggOf: aggOf };
+})();
+</script>

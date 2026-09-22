@@ -1,0 +1,274 @@
+{
+ "viewport": [
+  1920,
+  1080
+ ],
+ "log": [
+  [
+   "rails at load",
+   [
+    "layout: [one per rowmy pick] | 2 per row | 3 per row",
+    "group by: [entitymy pick] | first URL segment | method | ending labels | ending counts | no groups",
+    "a group of a single endpoint: [gathered at the endmy pick] | its own header",
+    "group order: [largest firstmy pick] | by name",
+    "shared attributes: [their own group, firstmy pick] | under the first block",
+    "block order: [stage ordermy pick] | the card's order",
+    "columns: [every columnmy pick] | rated 3 only",
+    "numbers: [tinted by sizemy pick] | plain",
+    "a column's most common value: [drawn quietmy pick] | written out"
+   ]
+  ],
+  [
+   "rows at load",
+   80
+  ],
+  [
+   "board top after wheel",
+   372
+  ],
+  [
+   "header while the board scrolls",
+   {
+    "head": 37,
+    "board": -405,
+    "scrolled": 902,
+    "onScreen": true
+   }
+  ],
+  [
+   "step 4 · sort-by-tables",
+   {
+    "click": "tables",
+    "at": [
+     376,
+     55
+    ],
+    "size": [
+     42,
+     14
+    ],
+    "note": "the column header \"tables\""
+   }
+  ],
+  [
+   "sorted says",
+   "sorted by tables ↑"
+  ],
+  [
+   "step 6 · sort-again-reverses",
+   {
+    "click": "tables ↑",
+    "at": [
+     376,
+     41
+    ],
+    "size": [
+     42,
+     27
+    ],
+    "note": "the same header, again"
+   }
+  ],
+  [
+   "sorted says",
+   "sorted by tables ↓"
+  ],
+  [
+   "step 7 · back-to-path-order",
+   {
+    "click": "back to path order",
+    "at": [
+     36,
+     75
+    ],
+    "size": [
+     216,
+     14
+    ],
+    "note": "the corner of the header row"
+   }
+  ],
+  [
+   "step 8 · light-a-strip-piece",
+   {
+    "click": "",
+    "at": [
+     651,
+     78
+    ],
+    "size": [
+     15,
+     10
+    ],
+    "note": "the biggest piece of the \"refused\" strip"
+   }
+  ],
+  [
+   "lit says",
+   "lit: refused · 4–7 · 54 endpoints"
+  ],
+  [
+   "rows dimmed",
+   26
+  ],
+  [
+   "step 10 · clear-the-light",
+   {
+    "click": "clear",
+    "at": [
+     403,
+     531
+    ],
+    "size": [
+     37,
+     19
+    ],
+    "note": "the clear link on the lit chip"
+   }
+  ],
+  [
+   "step 11 · group-by-ending-labels",
+   {
+    "click": "ending labels",
+    "at": [
+     747,
+     407
+    ],
+    "size": [
+     117,
+     31
+    ],
+    "note": "group by: ending labels"
+   }
+  ],
+  [
+   "groups",
+   [
+    "EDGE 429 · GATE 401 · ANSWER 200 · UNCAUGHT 500 · 8 endpoints",
+    "EDGE 429 · GATE 401 · HANDLER 409 · ANSWER 200 · UNCAUGHT 500 · 8 endpoints",
+    "EDGE 429 · GATE 401 · INPUT 400 422 · HANDLER 400 404 409 · ANSWER 200 · UNCAUGHT 500 · 8 endpoints",
+    "EDGE 429 · GATE 401 · INPUT 400 422 · HANDLER 409 · ANSWER 201 · UNCAUGHT 500 · 7 endpoints",
+    "EDGE 429 · GATE 401 · INPUT 400 422 · ANSWER 200 · UNCAUGHT 500 · 3 endpoints",
+    "EDGE 429 · GATE 401 · INPUT 400 422 · HANDLER 409 · ANSWER 200 · UNCAUGHT 500 · 3 endpoints",
+    "EDGE 429 · GATE 401 · INPUT 422 · HANDLER 400 404 409 · ANSWER 200 · UNCAUGHT 500 · 3 endpoints",
+    "EDGE 429 · GATE 401 · INPUT 422 · HANDLER 409 · ANSWER 200 · UNCAUGHT 500 · 3 endpoints",
+    "EDGE 429 · GATE 401 · INPUT 400 422 · HANDLER 400 403 404 409 · ANSWER 201 · UNCAUGHT 500 · 2 endpoints",
+    "EDGE 429 · GATE 401 · INPUT 400 422 · HANDLER 400 404 · ANSWER 200 · UNCAUGHT 500 · 2 endpoints",
+    "EDGE 429 · GATE 401 · INPUT 400 422 · HANDLER 400 409 · ANSWER 200 · UNCAUGHT 500 · 2 endpoints",
+    "EDGE 429 · GATE 401 · INPUT 400 422 · HANDLER 409 422 · ANSWER 200 · UNCAUGHT 500 · 2 endpoints",
+    "EDGE 429 · GATE 401 · INPUT 422 · HANDLER 400 404 409 · ANSWER 204 · UNCAUGHT 500 · 2 endpoints",
+    "EDGE 429 · GATE 401 · INPUT 422 · HANDLER 400 404 · ANSWER 204 · UNCAUGHT 500 · 2 endpoints",
+    "held by a single endpoint · 25 endpoints"
+   ]
+  ],
+  [
+   "step 13 · three-per-row",
+   {
+    "click": "3 per row",
+    "at": [
+     288,
+     407
+    ],
+    "size": [
+     88,
+     31
+    ],
+    "note": "layout: 3 per row"
+   }
+  ],
+  [
+   "cards drawn",
+   80
+  ],
+  [
+   "step 15 · open-a-card",
+   {
+    "click": "/",
+    "at": [
+     101,
+     709
+    ],
+    "size": [
+     7,
+     19
+    ],
+    "note": "the first card's path"
+   }
+  ],
+  [
+   "side panel",
+   {
+    "title": "GET/",
+    "cmd": "cd docs/design/workflow-panel\npython3 gen-endpoint-facts.py \"GET /\" --forms ~/.cache/gabe-map-baselines/lab-input/forms.json --archmap ~/.cache/gabe-map-baselines/lab-input/archmap.json\n# then open endpoint-lab.html"
+   }
+  ],
+  [
+   "step 17 · close-the-panel",
+   {
+    "click": "close",
+    "at": [
+     1801,
+     14
+    ],
+    "size": [
+     59,
+     30
+    ],
+    "note": "the close button at the top of the panel"
+   }
+  ],
+  [
+   "step 18 · one-per-row",
+   {
+    "click": "one per rowmy pick",
+    "at": [
+     32,
+     407
+    ],
+    "size": [
+     158,
+     31
+    ],
+    "note": "layout: one per row"
+   }
+  ],
+  [
+   "step 19 · group-by-entity",
+   {
+    "click": "entitymy pick",
+    "at": [
+     398,
+     407
+    ],
+    "size": [
+     121,
+     31
+    ],
+    "note": "group by: entity"
+   }
+  ],
+  [
+   "step 20 · more-information",
+   {
+    "click": "Show how the map knows this",
+    "at": [
+     32,
+     736
+    ],
+    "size": [
+     220,
+     30
+    ],
+    "note": "the more information button"
+   }
+  ],
+  [
+   "rows at the end",
+   80
+  ],
+  [
+   "page errors",
+   []
+  ]
+ ]
+}

@@ -1,0 +1,551 @@
+{
+  "_about": "Authored words for all-endpoints.html — the only strings on the page that are not facts. gen-all-endpoints.py refuses to build when a line here types a number (a {token} the generator or the page fills instead) or says a word D-018 took out. Tokens the generator fills are listed in its `tok`; the ones the page fills while it runs are listed in _runtime.",
+  "_runtime": [
+    "cards",
+    "n",
+    "of",
+    "what",
+    "col",
+    "ep",
+    "group",
+    "v",
+    "why",
+    "more",
+    "stage",
+    "rating",
+    "kind",
+    "block",
+    "arm",
+    "top",
+    "cmd",
+    "value",
+    "model",
+    "amb"
+  ],
+  "eyebrow": "every endpoint of one app, side by side",
+  "h1": "All {nRows} endpoints of {app}, one row each",
+  "lede": "Each row is one endpoint. Each column is one attribute of the endpoint card, set under the card's {nBlocks} ruled blocks, so you read a column top to bottom to see a pattern. The small strip under every column header shows how that column's values spread over all {nRows} rows.",
+  "proposal": "This page is a proposal. Which attributes became columns, how each is drawn, and every way of grouping the rows are my picks. Each choice is on the rail below with my pick marked, so you can change it by looking.",
+  "stamp": "{app} at head {head} · {nFeed} endpoints in its feed",
+  "partial": "A fixture page, not the app's page: it draws {nRows} of the feed's {nFeed} endpoints.",
+  "keys": "Click a column header to sort by it, again to reverse it. Click a piece of a header strip to light the rows in it. Click a row for everything it holds.",
+  "sec": {
+    "board": "the endpoints",
+    "more": "more information",
+    "copy": "what I am looking at"
+  },
+  "rail": {
+    "lay": {
+      "label": "layout",
+      "pick": "rows",
+      "opts": {
+        "rows": {
+          "name": "one per row",
+          "plain": "A dense table: one endpoint per line, every column lined up."
+        },
+        "two": {
+          "name": "{cards} per row",
+          "plain": "Small cards, {cards} across, each holding the same cells as a row."
+        },
+        "three": {
+          "name": "{cards} per row",
+          "plain": "Small cards, {cards} across, each holding the same cells as a row."
+        }
+      }
+    },
+    "grp": {
+      "label": "group by",
+      "pick": "entity",
+      "opts": {
+        "entity": {
+          "name": "entity",
+          "plain": "The entity that claims the endpoint, from the claim registry."
+        },
+        "seg": {
+          "name": "first URL segment",
+          "plain": "The first part of the path, the way the URL groups it."
+        },
+        "method": {
+          "name": "method",
+          "plain": "GET, POST, PUT, PATCH and DELETE apart."
+        },
+        "labels": {
+          "name": "ending labels",
+          "plain": "Endpoints whose endings carry the same stage and status labels sit together. A clone shows up as a group."
+        },
+        "counts": {
+          "name": "ending counts",
+          "plain": "Endpoints with the same count in every kind of ending sit together. Coarser than the labels."
+        },
+        "flat": {
+          "name": "no groups",
+          "plain": "One list, sorted by whatever column you pick."
+        }
+      }
+    },
+    "alone": {
+      "label": "a group of a single endpoint",
+      "pick": "gather",
+      "opts": {
+        "gather": {
+          "name": "gathered at the end",
+          "plain": "Every group that holds a single endpoint is drawn together under one header at the bottom."
+        },
+        "own": {
+          "name": "its own header",
+          "plain": "Every group gets its own header, even with a single endpoint in it."
+        }
+      }
+    },
+    "gord": {
+      "label": "group order",
+      "pick": "size",
+      "opts": {
+        "size": {
+          "name": "largest first",
+          "plain": "The group with the most endpoints on top."
+        },
+        "name": {
+          "name": "by name",
+          "plain": "Groups in alphabetical order."
+        }
+      }
+    },
+    "shared": {
+      "label": "shared attributes",
+      "pick": "own",
+      "opts": {
+        "own": {
+          "name": "their own group, first",
+          "plain": "An attribute several blocks need is homed in none of them by the ruled tree, so these columns stand in a group of their own, before the blocks."
+        },
+        "first": {
+          "name": "under the first block",
+          "plain": "A shared attribute is drawn under the first block, in the current block order, that needs it."
+        }
+      }
+    },
+    "bord": {
+      "label": "block order",
+      "pick": "stage",
+      "opts": {
+        "stage": {
+          "name": "stage order",
+          "plain": "Blocks in the brain map's stage order: a block sits by the first stage its list names, from the edge to the answer, and blocks that name no stage come last."
+        },
+        "card": {
+          "name": "the card's order",
+          "plain": "Blocks in the order the ruled tree lists them."
+        }
+      }
+    },
+    "cols": {
+      "label": "columns",
+      "pick": "all",
+      "opts": {
+        "all": {
+          "name": "every column",
+          "plain": "Every column I drew, including the ones the inventory rates below the top, which I kept because a pattern needs them. Their headers say their rating."
+        },
+        "top": {
+          "name": "rated {rTop} only",
+          "plain": "Only attributes the inventory rates {rTop}, the face of the card."
+        }
+      }
+    },
+    "heat": {
+      "label": "numbers",
+      "pick": "heat",
+      "opts": {
+        "heat": {
+          "name": "tinted by size",
+          "plain": "A number's cell is tinted by its value against the largest in its column, so a column reads as a picture."
+        },
+        "plain": {
+          "name": "plain",
+          "plain": "Numbers only, no tint."
+        }
+      }
+    },
+    "norm": {
+      "label": "a column's most common value",
+      "pick": "quiet",
+      "opts": {
+        "quiet": {
+          "name": "drawn quiet",
+          "plain": "In a column of names, the value most endpoints share is a faint dot, and every other value is written out, so the odd one speaks."
+        },
+        "full": {
+          "name": "written out",
+          "plain": "Every value written out, the common one too."
+        }
+      }
+    }
+  },
+  "pickMark": "my pick",
+  "pickPlain": "The option I would choose alone. Yours to change.",
+  "sortBy": "sorted by {col}",
+  "sortNone": "in path order",
+  "sortReset": "back to path order",
+  "sortHint": "Click to sort by this column, again to reverse.",
+  "rating": "rated {rating} of {top} in the card's inventory",
+  "alarmRating": "an alert attribute: drawn only when something is abnormal",
+  "strip": "{n} of {of} endpoints · {what}",
+  "stripHint": "Click to light these rows, again to clear.",
+  "litSays": "lit: {col} · {what} · {n} endpoints",
+  "litClear": "clear",
+  "absent": "absent",
+  "unknown": "unknown",
+  "absentWhy": "The feed carries no reading for this: {why}. This is not a zero.",
+  "zeroWhy": "Zero, because {why}.",
+  "value": "{col}: {value}",
+  "binWords": {
+    "absent": "absent",
+    "range": "{v}",
+    "cat": "{v}",
+    "unknown": "unknown"
+  },
+  "group": {
+    "alone": "held by a single endpoint",
+    "count": "{n} endpoints",
+    "countOne": "{n} endpoint",
+    "sum": "added up over the group's endpoints: each one's own, so nothing is counted twice",
+    "union": "distinct across the group's endpoints: a thing several of them share is counted once",
+    "has": "endpoints in the group that have one",
+    "ratio": "endings proven on their own over all endings, added up over the group's endpoints",
+    "flat": "all endpoints"
+  },
+  "sharedBlock": {
+    "name": "Shared",
+    "plain": "Attributes that several of the card's blocks need. The ruled tree homes them in none of those blocks."
+  },
+  "blockEmpty": "Nothing in this block is rated {top}, so it is hidden while the rail shows only those columns.",
+  "stages": {
+    "EDGE": "the app band, before the endpoint is reached",
+    "GATE": "the login check",
+    "INPUT": "the input is read and checked against its shape",
+    "HANDLER": "the endpoint's own code decides",
+    "EFFECTS": "the writes left behind; no ending leaves from here",
+    "ANSWER": "the reply goes back; every success leaves here",
+    "UNCAUGHT": "anything nobody caught, the bay beside every stage"
+  },
+  "stageCell": "{stage}: {n} endings leave here",
+  "kinds": {
+    "success": {
+      "name": "success",
+      "plain": "An ending the endpoint means to reach."
+    },
+    "refusal": {
+      "name": "refusal",
+      "plain": "An ending where the app's own code says no."
+    },
+    "framework": {
+      "name": "framework",
+      "plain": "An ending the framework produces while it reads the body, before any code of the app runs."
+    },
+    "validation": {
+      "name": "validation",
+      "plain": "The ending where the input, the body, the query, the path or a header, does not fit its declared shape."
+    },
+    "uncaught": {
+      "name": "uncaught",
+      "plain": "The ending nobody translated: the 500."
+    }
+  },
+  "fates": {
+    "saved": {
+      "name": "saved",
+      "plain": "The path commits the endpoint's own writes."
+    },
+    "maybe": {
+      "name": "maybe saved",
+      "plain": "A write is committed on some turns of the path and not on others."
+    },
+    "rolled": {
+      "name": "rolled back",
+      "plain": "The path rolls the endpoint's writes back."
+    },
+    "unsaved": {
+      "name": "left unsaved",
+      "plain": "The path leaves a write that nothing commits."
+    },
+    "after": {
+      "name": "after the answer",
+      "plain": "The path's own writes run after the reply has started, in the code that streams it."
+    },
+    "none": {
+      "name": "no own write",
+      "plain": "The path writes nothing of its own. The login check's writes are the gate's, named apart in the side panel."
+    }
+  },
+  "pieceWords": {
+    "the norm": {
+      "name": "the norm",
+      "plain": "A piece nearly every endpoint of the app carries."
+    },
+    "common": {
+      "name": "common",
+      "plain": "A piece many endpoints carry."
+    },
+    "rare": {
+      "name": "rare",
+      "plain": "A piece few endpoints carry."
+    },
+    "only here": {
+      "name": "only here",
+      "plain": "A piece no other endpoint of the app carries."
+    }
+  },
+  "cols": {
+    "all": {
+      "head": "endings",
+      "name": "every way a request can end",
+      "zero": "the feed lists no ending for it"
+    },
+    "stage": {
+      "head": "stages",
+      "name": "the stages its endings leave from, edge to answer, with the uncaught bay apart",
+      "zero": "no ending leaves from any stage"
+    },
+    "tables": {
+      "head": "tables",
+      "name": "tables it reads or writes",
+      "zero": "it touches no table"
+    },
+    "guards": {
+      "head": "guards",
+      "name": "checks in its own code that refuse the request",
+      "zero": "its own code holds no check that refuses"
+    },
+    "auth": {
+      "head": "login",
+      "name": "the login scheme it asks for",
+      "zero": "it asks for no login"
+    },
+    "response": {
+      "head": "reply",
+      "name": "fields in the body a success answers with",
+      "zero": "it names no reply model",
+      "unknown": "It answers with {model}, and how many fields that has is unknown. This is not a zero."
+    },
+    "e_success": {
+      "head": "ok",
+      "name": "success endings",
+      "zero": "the feed read no success ending"
+    },
+    "e_refusal": {
+      "head": "refused",
+      "name": "refusals",
+      "zero": "its code never refuses"
+    },
+    "e_framework": {
+      "head": "body",
+      "name": "endings the framework produces while it reads the body",
+      "zero": "it reads no body, so the framework cannot refuse one"
+    },
+    "e_validation": {
+      "head": "shape",
+      "name": "the ending where its input does not fit its declared shape: the body, the query, the path or a header",
+      "zero": "nothing validates its input here"
+    },
+    "e_uncaught": {
+      "head": "uncaught",
+      "name": "uncaught endings",
+      "zero": "the feed read no uncaught ending"
+    },
+    "acts": {
+      "head": "tests",
+      "name": "tests that call it to test it",
+      "zero": "no test calls it to test it"
+    },
+    "asserted": {
+      "head": "beyond",
+      "name": "proofs that check more than the status code",
+      "zero": "every proof checks the status code alone, or there is no proof"
+    },
+    "branches": {
+      "head": "forks",
+      "name": "branches in called code that change how it ends",
+      "zero": "no called branch changes the ending"
+    },
+    "catches": {
+      "head": "catches",
+      "name": "try and except blocks on its paths",
+      "zero": "no catch on any path"
+    },
+    "rate": {
+      "head": "rate",
+      "name": "the rate limiters it sits behind",
+      "zero": "no limiter was read"
+    },
+    "written": {
+      "head": "writes",
+      "name": "tables its own code writes; a table only the login check writes is left out",
+      "zero": "its own code writes no table"
+    },
+    "fate": {
+      "head": "fate",
+      "name": "its paths, by what becomes of the endpoint's own writes; the number is the paths that save",
+      "zero": "no path saves a write of its own before the answer"
+    },
+    "deciders": {
+      "head": "deciders",
+      "name": "functions whose refusal or raise becomes one of its endings",
+      "zero": "no function's refusal becomes an ending here"
+    },
+    "datafns": {
+      "head": "data fns",
+      "name": "functions that read or write the database on its own paths",
+      "zero": "none of its own functions touches the database"
+    },
+    "request": {
+      "head": "fields",
+      "name": "fields at the top of the JSON body it reads",
+      "zero": "it reads no body",
+      "unknown": "It reads a JSON body, and how many fields that body has is unknown. This is not a zero."
+    },
+    "fetched": {
+      "head": "screen",
+      "name": "frontend hooks that call it",
+      "zero": "no screen of the app calls it"
+    },
+    "reasons": {
+      "head": "reads",
+      "name": "places in the frontend that read its status, detail or code",
+      "zero": "no screen reads why it refused"
+    },
+    "chain": {
+      "head": "steps",
+      "name": "steps on its longest path",
+      "zero": "no path has steps"
+    },
+    "cases422": {
+      "head": "rules",
+      "name": "rules on its input, body, query, path or headers, that make it fail with a 422",
+      "zero": "no input rule can fail"
+    },
+    "inf_answer": {
+      "head": "request",
+      "name": "values alive only while the request runs, gone with the answer",
+      "zero": "nothing lives only for the request"
+    },
+    "inf_server": {
+      "head": "server",
+      "name": "values the server process keeps between requests",
+      "zero": "nothing is kept by the process"
+    },
+    "proof": {
+      "head": "proven",
+      "name": "endings a test proves on its own, of all its endings; a test whose status fits several endings proves none of them",
+      "zero": "no test proves any of its endings on its own",
+      "amb": "{amb} more endings only by a test whose status fits several"
+    },
+    "alarms": {
+      "head": "alarms",
+      "name": "anomalies the form check found",
+      "zero": "the form check found nothing"
+    },
+    "behind": {
+      "head": "behind",
+      "name": "functions reachable behind its handler",
+      "zero": "the map reaches no function behind it"
+    },
+    "switches": {
+      "head": "switches",
+      "name": "settings or swapped-in parts that change what it does",
+      "zero": "no switch changes it"
+    },
+    "pieces": {
+      "head": "pieces",
+      "name": "its pieces by how common each is in the app; the number is the rare ones plus the ones only it has",
+      "zero": "every piece it has is common or the norm"
+    },
+    "lacks": {
+      "head": "lacks",
+      "name": "pieces nearly every endpoint carries that it does not",
+      "zero": "it carries every piece that is the norm"
+    }
+  },
+  "families": "the form check's findings, one place each, most frequent first",
+  "panel": {
+    "close": "close",
+    "closePlain": "Close this panel.",
+    "handler": "handler",
+    "entity": "entity",
+    "segment": "first URL segment",
+    "declared": "declared success",
+    "exits": "the endings",
+    "exitCols": [
+      "kind",
+      "stage",
+      "status",
+      "what it says",
+      "tests"
+    ],
+    "tables": "the tables",
+    "fates": "each path's fate",
+    "guards": "its own checks",
+    "gates": "login check",
+    "limits": "rate limiters",
+    "limitWords": "{v} per window",
+    "request": "request body",
+    "response": "reply body",
+    "cases": "422 rules by type",
+    "deciders": "deciding functions",
+    "switches": "switches",
+    "behind": "functions behind, and how deep",
+    "proof": "the lab's proof rank",
+    "proofWords": "{n} of its refusals named by a test, a test that fits several counted for each · rank {v} of {of}",
+    "inflight": "in flight",
+    "hook": "the hook that calls it",
+    "screens": "screens above that hook",
+    "reasons": "reason sites",
+    "alarms": "alarms",
+    "pieces": "its rare pieces",
+    "lacks": "norms it lacks",
+    "none": "none",
+    "more": "and {more} more",
+    "lab": "open it in the lab",
+    "labPlain": "The lab is baked to one endpoint today. These commands bake it to this endpoint; they rewrite the lab's own facts file, so run them only when you mean to move the lab here.",
+    "cmd": "cd docs/design/workflow-panel\npython3 gen-endpoint-facts.py \"{ep}\" --forms {formsPath} --archmap {archmapPath}\n# then open endpoint-lab.html",
+    "copy": "copy the commands",
+    "copied": "copied",
+    "gateWrites": "the login check writes"
+  },
+  "more": {
+    "show": "Show how the map knows this",
+    "hide": "Hide it again",
+    "lines": [
+      "Every row comes from the lab's own reader: gen-endpoint-facts.py ran once per endpoint, into a temporary file, never over the lab's facts. This page keeps a small record of each and counts what the facts already say.",
+      "The feed is the forms file of {app} at head {head}, sha {formsSha}, with its map beside it, sha {archmapSha}. Arms on: {arms}. Arms off: {armsOff}.",
+      "A cell that reads absent means the feed did not look. A cell that reads unknown means it looked, and the value is not known. A zero means it looked and found nothing, and its hover says why.",
+      "The stage an ending leaves from follows the robot's lay: the app band's endings at the edge, the login check's at the gate, the body's at the input, the endpoint's own refusals in the handler, every success at the answer, and the uncaught in the bay.",
+      "The writes column and a path's fate read the endpoint's own writes only. The login check can create a user row on almost every endpoint; counting it would paint both columns the same, so the side panel names those writes apart, as the login check's."
+    ],
+    "colsHead": [
+      "column",
+      "block",
+      "attribute",
+      "rating",
+      "arm"
+    ],
+    "armMap": "the map itself"
+  },
+  "copy": {
+    "intro": "What you are looking at, as text, to paste back with your words under it.",
+    "button": "Copy",
+    "copied": "copied",
+    "lines": {
+      "page": "page",
+      "layout": "layout",
+      "group": "grouped by",
+      "sort": "sorted",
+      "lit": "lit",
+      "open": "open",
+      "cols": "columns",
+      "your": "your words:"
+    }
+  },
+  "authNoScheme": "own check",
+  "authNoSchemePlain": "It asks for a login through its own check, with no declared scheme: the check reads the token itself, not from the usual header."
+}
