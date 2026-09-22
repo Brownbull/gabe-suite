@@ -17,7 +17,8 @@ needs is not there) · unreadable (it is there and would not parse). Never a zer
 but `present` the payload carries the reason and NO tree, and the lab says so in the tab.
 
 The JOIN — which lab surface answers which block — is AUTHORED in section-map.words.json and is a PROPOSAL.
-Nothing here measures it; the words say so on the page's face.
+Nothing here measures it; the words say so on the page's face. Each pairing is one of three KINDS (D-022): a page ·
+no page yet · a running header across every part; the three counts are recounted here, never typed.
 """
 from __future__ import annotations
 
@@ -70,10 +71,23 @@ def _fresh(tree: dict) -> tuple[bool, str | None]:
     return True, None
 
 
-def _act(spec: str, sig: str) -> dict:
-    """`part:data` · `part:data/stageblocks` · `exit` · `path` · `none` → the move the lab makes."""
+def _act(spec: str, sig: str, readings: dict | None = None) -> dict:
+    """`part:data` · `part:data/stageblocks` · `exit` · `path` · `none` · `header` → the move the lab makes.
+
+    `header` is the RUNNING HEADER (D-022): the block belongs to every part, so its move never leaves the part
+    you are on. `readings` names, per part, the variant that is that part's stage reading; a part it does not
+    name has none yet, and the lab says so on that part."""
     if spec == "none":
         return {"kind": "none"}
+    if spec == "header":
+        rd = {}
+        for k, v in (readings or {}).items():
+            if k not in PARTS:
+                raise Gap("unreadable", f"the running header {sig} names a stage reading on a part the lab does not have: {k}")
+            if not isinstance(v, str) or not re.fullmatch(r"[a-z]+", v):
+                raise Gap("unreadable", f"the running header {sig} names no variant for {k}: {v!r}")
+            rd[k] = v
+        return {"kind": "header", "readings": rd}
     if spec in ("exit", "path"):
         return {"kind": spec}
     m = re.fullmatch(r"part:([a-z]+)(?:/([a-z]+))?", spec or "")
@@ -125,20 +139,22 @@ def _build() -> dict:
 
     by_id = {a["id"]: a for a in attrs_in}
     surf_w = W.get("surfaces") or {}
-    blocks, with_surface = [], 0
+    blocks, kinds = [], {"page": 0, "none": 0, "header": 0}
     for b in blocks_in:
         j = join_w[b["sig"]]
-        act = _act(j.get("act") or "", b["sig"])
-        key = "none" if act["kind"] == "none" else ("portrait" if act["kind"] == "path" else ("command" if act["kind"] == "exit" else act["part"]))
+        act = _act(j.get("act") or "", b["sig"], j.get("readings"))
+        key = {"none": "none", "header": "header", "path": "portrait", "exit": "command"}.get(act["kind"]) or act["part"]
         if key not in surf_w:
             raise Gap("unreadable", f"no words for the lab surface {key!r}")
-        built = act["kind"] != "none"
-        with_surface += 1 if built else 0
+        # THREE KINDS of pairing (D-022): a page · no page yet · a running header across every part
+        kind = act["kind"] if act["kind"] in ("none", "header") else "page"
+        kinds[kind] += 1
+        built = kind == "page"
         blocks.append({
             "key": b["key"], "n": b["n"], "sig": b["sig"], "name": b["name"], "plain": b["plain"],
             "standpoint": b["standpoint"], "questions": b["questions"], "gkey": b.get("gkey"),
             "own": list(b.get("attrs") or []), "shared": list(b.get("spine") or []),
-            "join": {"surface": surf_w[key], "surface_key": key, "act": act, "built": built,
+            "join": {"surface": surf_w[key], "surface_key": key, "act": act, "kind": kind, "built": built,
                      "says": j.get("says"), "gap": j.get("gap"), "plain": j.get("plain")},
         })
 
@@ -154,9 +170,11 @@ def _build() -> dict:
     n = {"attrs": len(attrs), "blocks": len(blocks), "shared": len(shared), "unplaced": len(unplaced),
          "own": sum(len(b["own"]) for b in blocks), "groups": len(tree.get("groups") or []),
          "sections": len(tree.get("sections") or []),
-         "with_surface": with_surface, "without_surface": len(blocks) - with_surface}
+         "with_surface": kinds["page"], "without_surface": kinds["none"], "header": kinds["header"]}
+    if n["with_surface"] + n["without_surface"] + n["header"] != n["blocks"]:
+        raise Gap("unreadable", "the three kinds of pairing do not add up to the blocks the map draws")
     tok = {"nAttrs": n["attrs"], "nBlocks": n["blocks"], "nShared": n["shared"], "nUnplaced": n["unplaced"],
-           "nOwn": n["own"], "nWithSurface": n["with_surface"], "nWithoutSurface": n["without_surface"],
+           "nOwn": n["own"], "nWithSurface": n["with_surface"], "nWithoutSurface": n["without_surface"], "nHeader": n["header"],
            "nSections": n["sections"], "ruled": tree.get("ruled") or "not said",
            "nQuestions": len({q for b in blocks for q in (b.get("questions") or [])}) or len(str(tree.get("questions") or "")) }
 

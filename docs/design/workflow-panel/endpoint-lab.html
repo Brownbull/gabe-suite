@@ -2779,12 +2779,31 @@
       if (a.kind === "part") { if (cur !== a.part) return;
         if (a.variant && smVarOf(a.part) !== a.variant) return; lit[b.key] = 1; return; }
       if (a.kind === "exit") { if (S0.exit || S0.path) lit[b.key] = 1; return; }
-      if (a.kind === "path") { if (S0.path) lit[b.key] = 1; } });
+      if (a.kind === "path") { if (S0.path) lit[b.key] = 1; return; }
+      /* the RUNNING HEADER (D-022) belongs to every part, but it is LIT — "the bench is on this block" — only where
+         the part draws its stage reading; on every other part its row names the gap instead (smHdr) */
+      if (a.kind === "header") { if (smHdr(b) === "on") lit[b.key] = 1; } });
     return lit; }
+  /* the running header on the part you are ON: on (drawing its stage reading) · off (it has one, drawn another way) ·
+     gap (this part has none yet) */
+  function smHdr(b){ var rv = smReading(b, cur); return !rv ? "gap" : smVarOf(cur) === rv ? "on" : "off"; }
+  /* the stage reading of the part you are ON, or null — the words name it, and the part must really draw it */
+  function smReading(b, p){ var v = ((b.join.act || {}).readings || {})[p], P = window.PANELS[p];
+    return v && P && P.variants.some(function(x){ return x.key === v; }) ? v : null; }
+  function smKind(b){ return b.join.kind || (b.join.built ? "page" : "none"); }
+  function smKindWord(b){ return ((SMS.kindWords || {})[smKind(b)]) || smKind(b); }
+  /* the block a bench move NAMES — a page first, since the running header is lit on every part */
+  function smLead(lit){ var ks = Object.keys(lit), pg = ks.filter(function(k){ var b = smBlock(k); return b && smKind(b) === "page"; });
+    return pg[0] || ks[0] || null; }
   window.smLit = smLit;
   window.smState = function(){ return { state: SM.state, lead: SMLEAD, pick: SMPICK, lit: smLit(), open: SMOPEN }; };
-  /* the MOVE — one block, one act. `none` never moves the bench silently: it says what is missing. */
+  /* the MOVE — one block, one act. `none` never moves the bench silently: it says what is missing. The
+     RUNNING HEADER never leaves the part you are on: it shows that part's stage reading, or (drawn by smDraw)
+     says plainly that this part has none yet. */
   function smGo(b){
+    if (b.join.act.kind === "header") { var rv = smReading(b, cur);
+      SMFROM = true; try { if (rv && smVarOf(cur) !== rv) window.showVariant(cur, rv); } finally { SMFROM = false; }
+      SMLEAD = "map"; SMPICK = b.key; smDraw(); return; }
     if (b.join.act.kind === "none") { SMLEAD = "map"; SMPICK = b.key; smDraw();
       var n = document.querySelector('#smtree .smb[data-sm="' + b.key + '"]');
       if (n) hoverShow(n, hcard({ title: b.name, value: SMS.noSurface || "no surface", icon: "alert", color: "var(--red)",
@@ -2822,28 +2841,34 @@
       sub.textContent = SMS.absent || "The card's ruled tree was not read, so nothing is drawn here.";
       lead.hidden = true; moreb.hidden = true;
       host.append(el("div", { class: "smabs" }, SM.reason || "no reason was recorded")); return; }
-    var lit = smLit(), litKeys = Object.keys(lit);
-    hd.textContent = SM.n.with_surface + " of " + SM.n.blocks + " answered";
+    var lit = smLit(), leadKey = smLead(lit);
+    hd.textContent = SM.n.with_surface + " of " + SM.n.blocks + " with a page";
     sub.textContent = (SM.state === "stale" ? (SMS.staleNote || "") + " " : "")
       + (SMH.sub ? SMH.sub + ". " : "") + (SMH.lede || "") + " " + (SMH.proposal || "");
     lead.hidden = false; lead.dataset.lead = SMLEAD || "idle";
-    var leadName = !SMLEAD ? null : SMLEAD === "map" ? (smBlock(SMPICK) || {}).name : litKeys.length ? (smBlock(litKeys[0]) || {}).name : null;
+    var leadName = !SMLEAD ? null : SMLEAD === "map" ? (smBlock(SMPICK) || {}).name : leadKey ? (smBlock(leadKey) || {}).name : null;
     lead.querySelector("span").textContent = (SMLEAD === "map" ? (SMS.leadYou || "you opened this here")
       : SMLEAD === "lab" ? (SMS.leadLab || "the bench moved and this lit") : (SMS.leadIdle || "nothing open yet"))
       + (leadName ? " · " + leadName : "");
     /* a block with no bench surface, picked: the ask stays on the page rather than in a hover that goes */
     var say = document.getElementById("smsay"), picked = SMLEAD === "map" ? smBlock(SMPICK) : null;
-    if (picked && !picked.join.built) { say.hidden = false; say.innerHTML = "";
-      say.append(el("b", null, picked.name + " · " + (SMS.noSurface || "no surface on the bench")),
+    if (picked && smKind(picked) === "none") { say.hidden = false; say.dataset.kind = "none"; say.innerHTML = "";
+      say.append(el("b", null, picked.name + " · " + (SMS.noSurface || "no page yet")),
                  el("span", null, "to build — " + (picked.join.gap || picked.join.says || ""))); }
-    else say.hidden = true;
+    /* the running header on a part with NO stage reading: the gap is said PER PART, and you stay on it */
+    else if (picked && smKind(picked) === "header" && !smReading(picked, cur)) { say.hidden = false; say.dataset.kind = "header"; say.innerHTML = "";
+      say.dataset.part = cur;
+      say.append(el("b", null, picked.name + " · " + (SMS.headerMark || "across every part")),
+                 el("span", null, ((window.PANELS[cur] || {}).word || cur) + " " + (SMS.headerNone || "has no stage reading yet."))); }
+    else { say.hidden = true; say.dataset.kind = ""; say.dataset.part = ""; }
     var root = el("div", { class: "smroot" });
-    root.dataset.lit = String(litKeys.length > 0);
+    root.dataset.lit = String(Object.keys(lit).length > 0);
     root.append(el("b", null, (SM.root || {}).name || "the card"), el("em", null, SMS.rootSub || ""));
     hoverBind(root, hcard({ title: (SM.root || {}).name || "the card", value: SM.n.attrs + " attributes",
       icon: "endpoint", rows: [["blocks", String(SM.n.blocks)], ["homed in one block", String(SM.n.own)],
         ["shared by three or more", String(SM.n.shared)], ["not placed", String(SM.n.unplaced)],
-        ["answered on this bench", SM.n.with_surface + " of " + SM.n.blocks]],
+        ["with a page", String(SM.n.with_surface)], ["no page yet", String(SM.n.without_surface)],
+        ["a running header", String(SM.n.header || 0)]],
       plain: (SM.root || {}).plain }));
     var ul = el("ul");
     SM.blocks.forEach(function(b, i){
@@ -2851,21 +2876,26 @@
       row.append(el("span", { class: "smtw" }, last ? "└─ " : "├─ "));
       var btn = el("button", { class: "smb", type: "button" });
       btn.dataset.sm = b.key; btn.dataset.open = String(!!SMOPEN[b.key]);
-      btn.dataset.lit = String(!!lit[b.key]); btn.dataset.built = String(!!b.join.built);
+      btn.dataset.lit = String(!!lit[b.key]); btn.dataset.built = String(!!b.join.built); btn.dataset.kind = smKind(b);
       btn.dataset.part = b.join.act.part || ""; btn.dataset.act = b.join.act.kind;
       btn.setAttribute("aria-pressed", String(!!SMOPEN[b.key]));
       btn.append(el("span", { class: "smbn" }, b.name),
                  el("span", { class: "smct" }, b.own.length + "·" + b.shared.length),
-                 el("span", { class: "smsurf" }, (b.join.built ? "→ " : "✕ ") + b.join.surface));
+                 el("span", { class: "smsurf" }, ({ page: "→ ", none: "✕ ", header: "↔ " })[smKind(b)] + b.join.surface
+                   + (smKind(b) !== "header" || smHdr(b) === "on" ? "" : " · " + ((window.PANELS[cur] || {}).word || cur) + " "
+                      + (smHdr(b) === "gap" ? (SMS.headerGapShort || "has none yet") : (SMS.headerOffShort || "is drawn another way")))));
+      if (smKind(b) === "header") btn.dataset.hdr = smHdr(b);
       hoverBind(btn, function(){ var L = smLit();
-        return hcard({ title: b.name, value: "block " + b.n + " of " + SM.n.blocks,
-          icon: b.join.built ? "layers" : "alert", color: b.join.built ? null : "var(--red)",
+        var hk = smKind(b), rv = hk === "header" ? smReading(b, cur) : null;
+        return hcard({ title: b.name, value: "block " + b.n + " of " + SM.n.blocks + " · " + smKindWord(b),
+          icon: hk === "page" ? "layers" : hk === "header" ? "journey" : "alert", color: hk === "none" ? "var(--red)" : null,
           rows: [["the card should hold", b.plain], ["questions", b.questions.join(" · ")],
                  ["standpoint", b.standpoint],
                  ["attributes", b.own.length + " " + (SMS.ownWord || "own") + " · " + b.shared.length + " " + (SMS.sharedWord || "shared")],
                  ["the bench draws", b.join.says],
                  ["the gap", b.join.gap || "nothing the map names is left out here"],
-                 ["right now", L[b.key] ? "the bench is on this block" : "the bench is elsewhere"]],
+                 ["right now", hk === "header" ? (((window.PANELS[cur] || {}).word || cur) + (rv ? " has a stage reading" : " has no stage reading yet"))
+                   : L[b.key] ? "the bench is on this block" : "the bench is elsewhere"]],
           plain: b.join.plain }); });
       btn.onclick = function(ev){ ev.stopPropagation(); SMOPEN[b.key] = !SMOPEN[b.key]; smGo(b); };
       row.append(btn); li.append(row);
@@ -2882,7 +2912,7 @@
      his own words. */
   window.COPYTXT.sectionmap = function(){
     if (!SM.blocks) return (SMF.lede || "section map") + "\n" + SM.state + " · " + (SM.reason || "no reason was recorded");
-    var lit = smLit(), key = SMPICK || Object.keys(lit)[0] || null, b = key ? smBlock(key) : null;
+    var lit = smLit(), key = SMPICK || smLead(lit), b = key ? smBlock(key) : null;
     var S0 = window.SEL || {}, src = SM.source || {}, N = SMF.fields || {};
     /* every id someone would need to act on the note, INCLUDING what the portrait has open — `selectIn` sets SEL[<part>],
        and the map treats that as a bench move, so a note that omits it names a state the reader cannot return to */
@@ -2894,8 +2924,10 @@
       (N.door || "door") + ": " + F.identity.label + " · " + F.identity.entity,
       (N.bench || "bench") + ": " + bench,
       (N.block || "block") + ": " + (b ? b.name + " · " + b.sig + " · " + b.key : "none lit · " + (SMLEAD ? "the bench is on no block" : "nothing opened yet"))];
-    if (b) L.push((N.surface || "the map says") + ": " + b.plain,
-                  (N.draws || "the bench draws") + ": " + (b.join.built ? b.join.surface + " — " + b.join.says : (SMS.noSurface || "no surface") + " — " + b.join.says),
+    if (b) L.push((N.kind || "pairing") + ": " + smKindWord(b)
+                    + (smKind(b) === "header" ? " · on " + cur + (smReading(b, cur) ? " · its stage reading " + smReading(b, cur) : " · no stage reading yet") : ""),
+                  (N.surface || "the map says") + ": " + b.plain,
+                  (N.draws || "the bench draws") + ": " + (smKind(b) === "none" ? (SMS.noSurface || "no page yet") : b.join.surface) + " — " + b.join.says,
                   (N.gap || "gap") + ": " + (b.join.gap || "none"));
     L.push((N.facts || "facts") + ": _lab-ep.js · feed head " + (F.head || "?"),
       (N.tree || "tree") + ": " + (src.map || "?") + " · inventory " + (src.inv_hash || "?") + " · cells " + (src.cells_hash || "?") + " · ruled " + (src.ruled || "?") + " · " + SM.state,

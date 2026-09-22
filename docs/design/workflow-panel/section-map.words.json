@@ -1,21 +1,21 @@
 {
- "_about": "Authored words for the endpoint lab's SECTION MAP tab — the card's eleven ruled blocks (prisms-endpoint.json, D-015) laid beside the lab surface that answers each one. The tree, the attributes and every count are GENERATED (gen-endpoint-facts.py reads the brain map's own committed tree, which is m1-cluster.js's homes, self-proven at its generation). Nothing numeric is typed here: {tokens} are filled by the generator. The JOIN below is a PROPOSAL — authored words, never a measurement — and the page says so on its face. Plain lines follow gabe-lens plain mode and are checked by plain-audit.py.",
+ "_about": "Authored words for the endpoint lab's SECTION MAP tab — the card's eleven ruled blocks (prisms-endpoint.json, D-015) laid beside the lab surface that answers each one. The tree, the attributes and every count are GENERATED (gen-endpoint-facts.py reads the brain map's own committed tree, which is m1-cluster.js's homes, self-proven at its generation). Nothing numeric is typed here: {tokens} are filled by the generator. The JOIN below is a PROPOSAL — authored words, never a measurement — and the page says so on its face. A block's pairing is one of THREE kinds (D-022): a page (a surface on the bench answers it) · no page yet (nothing does, and the gap is what the next piece should build) · a running header (it belongs to every part: it is lit where the part draws its stage reading, and on every other part its row names the gap for that part). Plain lines follow gabe-lens plain mode and are checked by plain-audit.py.",
  "tab": {
   "word": "section map",
-  "note": "the card's {nBlocks} ruled blocks against the lab surface that answers each one. Clicking a block moves the bench; moving the bench lights the block. Lab chrome — none of it ships with the console."
+  "note": "the card's {nBlocks} ruled blocks against the lab surface that answers each one — a page, no page yet, or a running header across every part. Clicking a block moves the bench; moving the bench lights the block. Lab chrome — none of it ships with the console."
  },
  "head": {
   "title": "section map",
-  "sub": "{nBlocks} blocks · {nAttrs} attributes · {nWithSurface} answered here, {nWithoutSurface} not",
+  "sub": "{nBlocks} blocks · {nAttrs} attributes · {nWithSurface} with a page, {nWithoutSurface} with no page yet, {nHeader} a running header",
   "lede": "The ruled shape of the endpoint card, beside what the bench draws for it today.",
-  "proposal": "The pairing of a block to a lab surface is AUTHORED, not measured — it is a proposal, and the gap rows are the ones worth arguing with."
+  "proposal": "The pairing of a block to a lab surface is AUTHORED, not measured — it is a proposal, and the rows with no page yet are the ones the next piece should build."
  },
  "strings": {
   "rootSub": "{nAttrs} attributes · {nBlocks} blocks",
   "ownWord": "own",
   "sharedWord": "shared",
   "sharedNote": "An attribute three or more blocks need belongs to none of them, so it is listed under each as shared.",
-  "noSurface": "no surface on the bench",
+  "noSurface": "no page yet",
   "leadYou": "you opened this here",
   "leadLab": "the bench moved and this lit",
   "leadIdle": "nothing open yet",
@@ -24,7 +24,17 @@
   "moreShow": "more information",
   "moreHide": "hide it again",
   "feedbackWhat": "a note about what you are looking at",
-  "feedbackHint": "the bench's state, the block it answers and the gap between them, ready to paste back with your words under it"
+  "feedbackHint": "the bench's state, the block it answers and the gap between them, ready to paste back with your words under it",
+  "headerMark": "across every part",
+  "headerShows": "shows its stage reading here",
+  "headerNone": "has no stage reading yet, so the stages cannot be read on this part — you are still on it.",
+  "headerGapShort": "has none yet",
+  "headerOffShort": "is drawn another way",
+  "kindWords": {
+   "page": "a page",
+   "none": "no page yet",
+   "header": "a running header"
+  }
  },
  "more": {
   "lines": [
@@ -42,17 +52,19 @@
   "security": "the Security panel",
   "command": "the command panel",
   "portrait": "the portrait, path record",
-  "none": "nothing yet"
+  "none": "nothing yet",
+  "header": "across every part"
  },
  "acts": {
   "part": "opens that part on the bench",
   "variant": "opens that part and switches it to the distribution that draws the block",
   "exit": "picks an ending, so every part is projected onto it",
   "path": "picks a whole route and draws its record in the portrait",
-  "none": "names what would have to be built, because no surface answers it"
+  "none": "moves nothing and names what would have to be built, because no page answers it",
+  "header": "stays on the part you are on and shows its stage reading, or says this part has none yet"
  },
  "join": {
-  "_about": "Keyed by the block's QUESTION SIGNATURE, which is prisms-endpoint.json's own key and survives a reorder. Every signature must appear here or the generator stops. `act` is parsed: part:<k> · part:<k>/<variant> · exit · path · none.",
+  "_about": "Keyed by the block's QUESTION SIGNATURE, which is prisms-endpoint.json's own key and survives a reorder. Every signature must appear here or the generator stops. `act` is parsed: part:<k> · part:<k>/<variant> · exit · path · none · header. A `header` entry carries `readings` — {part: the variant that is that part's stage reading} — and every part it does not name has no stage reading yet.",
   "Q1+Q2+Q9": {
    "act": "part:data",
    "says": "The Data panel draws every table the endpoint touches, the operation on each, and the fate of the writes at the end.",
@@ -66,9 +78,12 @@
    "plain": "Every way the request can end, and the one it is expected to take."
   },
   "Q5+Q7": {
-   "act": "part:data/stageblocks",
-   "says": "Stage blocks lay the same tables under the stage that touches them, which is the request order the block asks for.",
-   "gap": "The stage spine is drawn only under the Data topic, so the other five parts have no stage reading of their own.",
+   "act": "header",
+   "readings": {
+    "data": "stageblocks"
+   },
+   "says": "The stage spine runs across every part — Data draws it as stage blocks today, and the other parts have no stage reading of their own yet.",
+   "gap": "Only Data has a stage reading, so on every other part the header says so instead of jumping to Data.",
    "plain": "Stations a request passes, in the order they run."
   },
   "Q4": {
@@ -96,15 +111,15 @@
    "plain": "Code that runs behind the door, sorted by how much it decides."
   },
   "Q16": {
-   "act": "path",
-   "says": "The path record's last section names everything alive while the request runs, coloured by how long it lasts.",
-   "gap": "A route must be picked first — the in-flight reading has no panel of its own.",
+   "act": "none",
+   "says": "The portrait's path record names everything alive while the request runs, but only once a route is picked.",
+   "gap": "No part gives it a home — the path record carries it only once a route is picked, which is a workaround, not a home.",
    "plain": "Values alive while the request runs, and how long each one lasts."
   },
   "Q12": {
-   "act": "part:security",
-   "says": "The Security panel carries the idempotency claim and the delivery fact as two of its one-line rows.",
-   "gap": "How common a piece is rides hover cards only, and the tasks and events the endpoint sets in motion are drawn nowhere.",
+   "act": "none",
+   "says": "The Security panel carries the idempotency claim and the delivery fact as one-line rows, and hover cards say how common a piece is.",
+   "gap": "It compares this endpoint against the others, and no part does that — nothing lays the shared machinery beside what only this door does.",
    "plain": "Machinery this door shares with the rest of the app, against what only it does."
   },
   "Q14+Q20": {
@@ -131,7 +146,8 @@
    "gap": "gap",
    "selection": "selected",
    "facts": "facts",
-   "tree": "tree"
+   "tree": "tree",
+   "kind": "pairing"
   },
   "tail": "your words:"
  }

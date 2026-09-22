@@ -30577,20 +30577,20 @@ window.LABEP = {
   "words": {
    "tab": {
     "word": "section map",
-    "note": "the card's 11 ruled blocks against the lab surface that answers each one. Clicking a block moves the bench; moving the bench lights the block. Lab chrome — none of it ships with the console."
+    "note": "the card's 11 ruled blocks against the lab surface that answers each one — a page, no page yet, or a running header across every part. Clicking a block moves the bench; moving the bench lights the block. Lab chrome — none of it ships with the console."
    },
    "head": {
     "title": "section map",
-    "sub": "11 blocks · 61 attributes · 10 answered here, 1 not",
+    "sub": "11 blocks · 61 attributes · 7 with a page, 3 with no page yet, 1 a running header",
     "lede": "The ruled shape of the endpoint card, beside what the bench draws for it today.",
-    "proposal": "The pairing of a block to a lab surface is AUTHORED, not measured — it is a proposal, and the gap rows are the ones worth arguing with."
+    "proposal": "The pairing of a block to a lab surface is AUTHORED, not measured — it is a proposal, and the rows with no page yet are the ones the next piece should build."
    },
    "strings": {
     "rootSub": "61 attributes · 11 blocks",
     "ownWord": "own",
     "sharedWord": "shared",
     "sharedNote": "An attribute three or more blocks need belongs to none of them, so it is listed under each as shared.",
-    "noSurface": "no surface on the bench",
+    "noSurface": "no page yet",
     "leadYou": "you opened this here",
     "leadLab": "the bench moved and this lit",
     "leadIdle": "nothing open yet",
@@ -30599,7 +30599,17 @@ window.LABEP = {
     "moreShow": "more information",
     "moreHide": "hide it again",
     "feedbackWhat": "a note about what you are looking at",
-    "feedbackHint": "the bench's state, the block it answers and the gap between them, ready to paste back with your words under it"
+    "feedbackHint": "the bench's state, the block it answers and the gap between them, ready to paste back with your words under it",
+    "headerMark": "across every part",
+    "headerShows": "shows its stage reading here",
+    "headerNone": "has no stage reading yet, so the stages cannot be read on this part — you are still on it.",
+    "headerGapShort": "has none yet",
+    "headerOffShort": "is drawn another way",
+    "kindWords": {
+     "page": "a page",
+     "none": "no page yet",
+     "header": "a running header"
+    }
    },
    "more": {
     "lines": [
@@ -30619,7 +30629,8 @@ window.LABEP = {
      "gap": "gap",
      "selection": "selected",
      "facts": "facts",
-     "tree": "tree"
+     "tree": "tree",
+     "kind": "pairing"
     },
     "tail": "your words:"
    }
@@ -30656,6 +30667,7 @@ window.LABEP = {
       "kind": "part",
       "part": "data"
      },
+     "kind": "page",
      "built": true,
      "says": "The Data panel draws every table the endpoint touches, the operation on each, and the fate of the writes at the end.",
      "gap": "Provisions — what a dependency's own commit leaves behind — is carried in the feed and drawn nowhere.",
@@ -30690,6 +30702,7 @@ window.LABEP = {
      "act": {
       "kind": "exit"
      },
+     "kind": "page",
      "built": true,
      "says": "The command panel holds one cell per way the request ends, and picking one projects every part onto that ending.",
      "gap": null,
@@ -30728,6 +30741,7 @@ window.LABEP = {
       "kind": "part",
       "part": "functions"
      },
+     "kind": "page",
      "built": true,
      "says": "The Functions panel draws the handler and the call tree behind it, each function marked by what it decides and touches.",
      "gap": null,
@@ -30752,14 +30766,15 @@ window.LABEP = {
     ],
     "shared": [],
     "join": {
-     "surface": "the portrait, path record",
-     "surface_key": "portrait",
+     "surface": "nothing yet",
+     "surface_key": "none",
      "act": {
-      "kind": "path"
+      "kind": "none"
      },
-     "built": true,
-     "says": "The path record's last section names everything alive while the request runs, coloured by how long it lasts.",
-     "gap": "A route must be picked first — the in-flight reading has no panel of its own.",
+     "kind": "none",
+     "built": false,
+     "says": "The portrait's path record names everything alive while the request runs, but only once a route is picked.",
+     "gap": "No part gives it a home — the path record carries it only once a route is picked, which is a workaround, not a home.",
      "plain": "Values alive while the request runs, and how long each one lasts."
     }
    },
@@ -30788,15 +30803,15 @@ window.LABEP = {
      "app-band"
     ],
     "join": {
-     "surface": "the Security panel",
-     "surface_key": "security",
+     "surface": "nothing yet",
+     "surface_key": "none",
      "act": {
-      "kind": "part",
-      "part": "security"
+      "kind": "none"
      },
-     "built": true,
-     "says": "The Security panel carries the idempotency claim and the delivery fact as two of its one-line rows.",
-     "gap": "How common a piece is rides hover cards only, and the tasks and events the endpoint sets in motion are drawn nowhere.",
+     "kind": "none",
+     "built": false,
+     "says": "The Security panel carries the idempotency claim and the delivery fact as one-line rows, and hover cards say how common a piece is.",
+     "gap": "It compares this endpoint against the others, and no part does that — nothing lays the shared machinery beside what only this door does.",
      "plain": "Machinery this door shares with the rest of the app, against what only it does."
     }
    },
@@ -30828,16 +30843,18 @@ window.LABEP = {
      "why-this-slot-is-empty"
     ],
     "join": {
-     "surface": "the Data panel",
-     "surface_key": "data",
+     "surface": "across every part",
+     "surface_key": "header",
      "act": {
-      "kind": "part",
-      "part": "data",
-      "variant": "stageblocks"
+      "kind": "header",
+      "readings": {
+       "data": "stageblocks"
+      }
      },
-     "built": true,
-     "says": "Stage blocks lay the same tables under the stage that touches them, which is the request order the block asks for.",
-     "gap": "The stage spine is drawn only under the Data topic, so the other five parts have no stage reading of their own.",
+     "kind": "header",
+     "built": false,
+     "says": "The stage spine runs across every part — Data draws it as stage blocks today, and the other parts have no stage reading of their own yet.",
+     "gap": "Only Data has a stage reading, so on every other part the header says so instead of jumping to Data.",
      "plain": "Stations a request passes, in the order they run."
     }
    },
@@ -30870,6 +30887,7 @@ window.LABEP = {
       "kind": "part",
       "part": "tests"
      },
+     "kind": "page",
      "built": true,
      "says": "The Tests panel stacks the cases by the status they assert and names the conditions nothing reaches.",
      "gap": null,
@@ -30911,6 +30929,7 @@ window.LABEP = {
       "kind": "part",
       "part": "security"
      },
+     "kind": "page",
      "built": true,
      "says": "The Security panel draws the app band, this endpoint's own guards and the gate among them, in run order.",
      "gap": "Deciding branches and catches — the forks one call down — ride the path portrait instead of this panel.",
@@ -30946,6 +30965,7 @@ window.LABEP = {
       "kind": "part",
       "part": "schemas"
      },
+     "kind": "page",
      "built": true,
      "says": "The Schemas panel draws the request body and the response body as blocks, every field a mark of its declared kind.",
      "gap": "Response headers per ending are in the feed and appear on no schema block.",
@@ -30984,6 +31004,7 @@ window.LABEP = {
      "act": {
       "kind": "none"
      },
+     "kind": "none",
      "built": false,
      "says": "The head bar names the door and flies the risk flag, and the command panel counts the findings behind one cell.",
      "gap": "No panel gathers the overview — coverage per condition, the findings themselves, the endpoint's place in the app and the outside services it calls have no surface.",
@@ -31017,6 +31038,7 @@ window.LABEP = {
       "kind": "part",
       "part": "widening"
      },
+     "kind": "page",
      "built": true,
      "says": "The Widening panel draws the screens that fetch this endpoint and the ladder from the door out to the app.",
      "gap": "Whether the client can tell the endings apart is measured in the feed and drawn on no rung.",
@@ -32121,8 +32143,9 @@ window.LABEP = {
    "own": 52,
    "groups": 9,
    "sections": 7,
-   "with_surface": 10,
-   "without_surface": 1
+   "with_surface": 7,
+   "without_surface": 3,
+   "header": 1
   }
  }
 };

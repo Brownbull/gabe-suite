@@ -708,7 +708,7 @@ def main() -> int:
           f"journeys {len(tests['journeys'])}+{tests['journeys_more']} · workflows {len(tests['workflows'])} · fetched by {len(fetch_pieces)} · chain {[len(l) for l in chain]} · "
           f"guards {len(guards)} (gates {len(security['gates'])}) · asgi {len(asgi)} · walls {len(walls)} · git touches {len(touches)} · "
           f"context: status {context['status']['declared']} · {method} peers {context['status']['same_method']} · behind rank {context['risk']['rank']}/{n_endpoints} · "
-          + (f"section map {facts['sectionmap']['state']}: {facts['sectionmap']['n']['blocks']} blocks ({facts['sectionmap']['n']['with_surface']} answered here, {facts['sectionmap']['n']['without_surface']} not) · "
+          + (f"section map {facts['sectionmap']['state']}: {facts['sectionmap']['n']['blocks']} blocks ({facts['sectionmap']['n']['with_surface']} with a page · {facts['sectionmap']['n']['without_surface']} no page yet · {facts['sectionmap']['n']['header']} running header) · "
              f"{facts['sectionmap']['n']['attrs']} attributes ({facts['sectionmap']['n']['own']} homed · {facts['sectionmap']['n']['shared']} shared · {facts['sectionmap']['n']['unplaced']} not placed)"
              if facts["sectionmap"].get("blocks") else f"section map {facts['sectionmap']['state']}: {facts['sectionmap']['reason']}"))
     return 0

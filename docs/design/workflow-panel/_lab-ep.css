@@ -194,6 +194,11 @@ code{ font:600 .95em var(--font-mono); color:var(--ink); }
 #smtree .smb .smct{ font-weight:600; color:var(--muted); font-variant-numeric:tabular-nums; }
 #smtree .smb .smsurf{ grid-column:1 / -1; font-weight:600; color:var(--accent); margin-top:1px; }
 #smtree .smb[data-built="false"] .smsurf{ color:var(--red); }
+/* the RUNNING HEADER (D-022): belongs to every part — its own mark, a dashed rule, never the page colour */
+#smtree .smb[data-kind="header"]{ border-left-style:dashed; }
+#smtree .smb[data-kind="header"] .smsurf{ color:var(--muted); font-style:italic; }
+#notes .smsay[data-kind="header"]{ border-left-color:var(--muted); }
+#notes .smsay[data-kind="header"] b{ color:var(--muted); }
 #smtree .sma{ font:600 12px/1.5 var(--font-mono); color:var(--muted); background:none; border:0;
   padding:1px 5px; border-radius:5px; cursor:help; text-align:left; }
 #smtree .sma:hover{ color:var(--ink); background:var(--chip-bg); }

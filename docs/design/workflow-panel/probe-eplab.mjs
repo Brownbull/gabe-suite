@@ -3505,7 +3505,7 @@ if (checksFile) {
      === 'true,true,false', 'opening it hides the other two rail sections and shows its own');
   ok(await p.$eval('#railtabs .rtb[data-rt="map"]', e => e.classList.contains('on')), 'and the tab reads as the one in play');
   // ONE ROW PER BLOCK, and every count is the feed's own — never a number the page made up
-  const rows = await p.$$eval('#smtree .smb', els => els.map(e => ({ key: e.dataset.sm, built: e.dataset.built, act: e.dataset.act,
+  const rows = await p.$$eval('#smtree .smb', els => els.map(e => ({ key: e.dataset.sm, built: e.dataset.built, act: e.dataset.act, kind: e.dataset.kind,
     part: e.dataset.part, name: e.querySelector('.smbn').textContent, surf: e.querySelector('.smsurf').textContent, ct: e.querySelector('.smct').textContent })));
   ok(rows.length === SM.blocks.length && rows.length === SM.n.blocks,
     'the map draws one row per ruled block, and as many as the feed counts', rows.length + ' vs ' + SM.n.blocks);
@@ -3514,12 +3514,28 @@ if (checksFile) {
   ok(rows.every((r, i) => r.ct === SM.blocks[i].own.length + '·' + SM.blocks[i].shared.length),
     'and its two counts are that block\'s own attributes and its shared ones, recounted from the feed',
     JSON.stringify(rows.map((r, i) => [r.ct, SM.blocks[i].own.length + '·' + SM.blocks[i].shared.length]).filter(x => x[0] !== x[1])));
-  ok(rows.every((r, i) => r.surf === (SM.blocks[i].join.built ? '→ ' : '✕ ') + SM.blocks[i].join.surface),
-    'every row names the bench surface the words pair it with', JSON.stringify(rows.map(r => r.surf)));
-  ok(rows.filter(r => r.built === 'true').length === SM.n.with_surface
-     && rows.filter(r => r.built === 'false').length === SM.n.without_surface && SM.n.without_surface >= 1,
-    'the answered rows and the gap rows add up to the feed\'s own two counts',
-    rows.filter(r => r.built === 'true').length + '/' + SM.n.with_surface + ' · ' + rows.filter(r => r.built === 'false').length + '/' + SM.n.without_surface);
+  const MARK = { page: '→ ', none: '✕ ', header: '↔ ' };
+  // ── D-022: THREE KINDS of pairing. The kind is read HERE from the move each block makes (its act), never from the
+  //    generator's own label — so a generator that mislabels a block, or miscounts, fails these (review 2026-09-22) ──
+  const kindOf = a => a.kind === 'none' ? 'none' : a.kind === 'header' ? 'header' : ['part', 'exit', 'path'].indexOf(a.kind) >= 0 ? 'page' : '?';
+  const want = SM.blocks.map(b => kindOf(b.join.act));
+  ok(rows.every((r, i) => r.kind === want[i] && r.built === String(want[i] === 'page') && r.surf.indexOf(MARK[want[i]] + SM.blocks[i].join.surface) === 0),
+    'every row\'s kind, its built flag and its mark follow the move the block makes, then name the surface the words pair it with',
+    JSON.stringify(rows.map((r, i) => [r.kind, want[i], r.built, r.surf.slice(0, 24)]).filter((x, i) => x[0] !== x[1] || x[2] !== String(x[1] === 'page'))));
+  const cnt = k => want.filter(x => x === k).length;
+  ok(cnt('page') === SM.n.with_surface && cnt('none') === SM.n.without_surface && cnt('header') === SM.n.header
+     && cnt('page') >= 1 && cnt('none') >= 1 && cnt('header') >= 1,
+    'all three kinds are there — a page, no page yet, a running header — and the feed\'s three totals equal a recount of the moves',
+    JSON.stringify([cnt('page'), cnt('none'), cnt('header')]) + ' vs ' + JSON.stringify([SM.n.with_surface, SM.n.without_surface, SM.n.header]));
+  { const hdr = await p.$eval('#smn', e => e.textContent.trim()), sub = await p.$eval('#smsub', e => e.textContent);
+    ok(hdr.indexOf(String(SM.n.with_surface)) === 0 && sub.indexOf(SM.n.with_surface + ' with a page') >= 0
+       && sub.indexOf(SM.n.without_surface + ' with no page yet') >= 0 && sub.indexOf(SM.n.header + ' a running header') >= 0,
+      'the tab states the three totals, filled from the feed\'s recount', hdr + ' | ' + sub.slice(0, 140)); }
+  /* the ruling's four re-pairings, by question signature (D-022) — a pairing drifting back fails here */
+  { const K = Object.fromEntries(SM.blocks.map(b => [b.sig, b.join.kind + (b.join.act.kind === 'exit' ? ':exit' : '')]));
+    ok(K['Q3+Q11'] === 'page:exit' && K['Q16'] === 'none' && K['Q12'] === 'none' && K['Q5+Q7'] === 'header',
+      'Endings keeps the command panel · In-flight state and Standard or specialist have no page yet · Stages and order is the running header',
+      JSON.stringify([K['Q3+Q11'], K['Q16'], K['Q12'], K['Q5+Q7']])); }
   /* recount against a SECOND source: the drawn rows, not the generator's own sum of the same array (which is true by
      construction). Every attribute of the inventory must appear once as a block's own, or be shared, or be said unplaced. */
   const seen = await p.evaluate(() => { const S = window.LABEP.sectionmap, own = new Set(), sh = new Set();
@@ -3541,8 +3557,8 @@ if (checksFile) {
     'opening a block lists its own attributes, then the ones it shares, each marked for which it is', JSON.stringify(kids.map(k => k[0] + ':' + k[1])));
   ok(kids.every(k => /^[123] /.test(k[2])), 'and each attribute leads with the importance it was RULED at', JSON.stringify(kids.map(k => k[2]).slice(0, 3)));
   // ── BOTH WAYS, arm 1: a block click MOVES THE BENCH. Asserted on the bench's own state. ──
-  const byAct = (kind, variant) => SM.blocks.find(b => b.join.act.kind === kind && (variant === undefined || !!b.join.act.variant === variant));
-  const plain = byAct('part', false), withVar = byAct('part', true);
+  const byAct = (kind) => SM.blocks.find(b => b.join.act.kind === kind);
+  const plain = byAct('part'), hdrB = byAct('header'), exitB = byAct('exit');
   await p.evaluate(() => window.showTab('security')); await p.waitForTimeout(250);
   await p.click(`#smtree .smb[data-sm="${plain.key}"]`); await p.waitForTimeout(350);
   ok(await p.$eval('#panel', e => e.dataset.tab) === plain.join.act.part,
@@ -3550,17 +3566,51 @@ if (checksFile) {
   ok(await p.$eval(`#smtree .smb[data-sm="${plain.key}"]`, e => e.dataset.lit) === 'true'
      && await p.$eval('#smlead', e => e.dataset.lead) === 'map',
     'and the map says YOU opened it here', await p.$eval('#smlead', e => e.textContent.trim()));
-  await p.click(`#smtree .smb[data-sm="${withVar.key}"]`); await p.waitForTimeout(350);
-  ok(await p.evaluate(() => [document.getElementById('panel').dataset.tab, document.getElementById('panel').dataset.variant].join('/'))
-     === withVar.join.act.part + '/' + withVar.join.act.variant,
-    'a block whose words name a distribution switches the panel to THAT distribution',
-    await p.evaluate(() => document.getElementById('panel').dataset.tab + '/' + document.getElementById('panel').dataset.variant));
-  const pathB = byAct('path'), exitB = byAct('exit');
-  await p.evaluate(() => window.clearPath()); await p.waitForTimeout(200);
-  await p.click(`#smtree .smb[data-sm="${pathB.key}"]`); await p.waitForTimeout(400);
-  ok(await p.evaluate(() => !!(window.SEL || {}).path) && await p.evaluate(() => window.portraitVar(document.getElementById('panel').dataset.tab)) === 'cmd-path',
-    'the in-flight block picks a whole route and leads the portrait with its record',
-    JSON.stringify(await p.evaluate(() => [(window.SEL || {}).path, window.portraitVar(document.getElementById('panel').dataset.tab)])));
+  // ── THE RUNNING HEADER (D-022): lit on EVERY part, reads the part you are ON, never jumps you away ──
+  { const parts = await p.evaluate(() => Object.keys(window.PANELS));
+    // LIT means "the bench is on this block" — so the header is lit ONLY where the part draws its stage reading; on
+    // every other part its row names the gap for THAT part (review 2026-09-22: green on a part with no reading claimed
+    // an answer the part does not give)
+    const R = hdrB.join.act.readings || {}, wrong = [];
+    for (const k of parts) { await p.evaluate(k => window.showTab(k), k); await p.waitForTimeout(200);
+      const v = await p.evaluate(() => document.getElementById('panel').dataset.variant), word = await p.evaluate(k => window.PANELS[k].word, k);
+      const want = !R[k] ? 'gap' : v === R[k] ? 'on' : 'off';
+      const got = await p.$eval(`#smtree .smb[data-sm="${hdrB.key}"]`, e => ({ hdr: e.dataset.hdr, lit: e.dataset.lit, surf: e.querySelector('.smsurf').textContent }));
+      const inLit = (await p.evaluate(() => Object.keys(window.smLit()))).indexOf(hdrB.key) >= 0;
+      if (got.hdr !== want || got.lit !== String(want === 'on') || inLit !== (want === 'on')
+          || (want === 'gap' && got.surf.indexOf(word + ' has none yet') < 0)) wrong.push(k + ':' + JSON.stringify([want, got, inLit])); }
+    ok(parts.length === 6 && wrong.length === 0 && Object.keys(R).length >= 1,
+      'the running header is lit only where the part draws its stage reading, and on every other part its row says that part has none yet', wrong.join(' ; ').slice(0, 260));
+    ok(await p.$eval('#smlead', e => e.dataset.lead) === 'lab' && (await p.$eval('#smlead span', e => e.textContent)).indexOf(hdrB.name) < 0,
+      'and a bench move names the part\'s page block, never the header that is lit everywhere', await p.$eval('#smlead', e => e.textContent.trim()));
+    const withR = Object.keys(hdrB.join.act.readings || {}), without = parts.filter(k => withR.indexOf(k) < 0);
+    ok(withR.length >= 1 && without.length >= 1, 'the words name at least one part with a stage reading and leave others without', withR.join(',') + ' | ' + without.join(','));
+    // on a part WITH a reading: stays on it and switches to that reading
+    const rp = withR[0], rv = hdrB.join.act.readings[rp];
+    const other = await p.evaluate(a => window.PANELS[a.p].variants.map(v => v.key).filter(k => k !== a.v)[0], { p: rp, v: rv });
+    await p.evaluate(k => window.showTab(k), rp); await p.evaluate(a => window.showVariant(a.p, a.o), { p: rp, o: other }); await p.waitForTimeout(250);
+    await p.evaluate(() => window.hoverHide && window.hoverHide());
+    ok(await p.$eval(`#smtree .smb[data-sm="${hdrB.key}"]`, e => e.dataset.hdr + '/' + e.dataset.lit) === 'off/false',
+      'on a part that HAS a stage reading but draws another distribution, the header is marked, not lit',
+      await p.$eval(`#smtree .smb[data-sm="${hdrB.key}"]`, e => e.dataset.hdr + '/' + e.dataset.lit));
+    await p.click(`#smtree .smb[data-sm="${hdrB.key}"]`); await p.waitForTimeout(350);
+    ok(await p.evaluate(() => [document.getElementById('panel').dataset.tab, document.getElementById('panel').dataset.variant].join('/')) === rp + '/' + rv
+       && await p.$eval('#smsay', e => e.hidden)
+       && await p.$eval(`#smtree .smb[data-sm="${hdrB.key}"]`, e => e.dataset.hdr + '/' + e.dataset.lit) === 'on/true',
+      'clicking it on a part WITH a stage reading stays on that part and shows the reading', await p.evaluate(() => document.getElementById('panel').dataset.tab + '/' + document.getElementById('panel').dataset.variant));
+    // on EVERY part without one: stays, the variant is untouched, and the gap is said for THAT part
+    const bad = [];
+    for (const k of without) { await p.evaluate(k => window.showTab(k), k); await p.waitForTimeout(200);
+      const before = await p.evaluate(() => [document.getElementById('panel').dataset.tab, document.getElementById('panel').dataset.variant, JSON.stringify(window.SEL || {})].join('|'));
+      await p.evaluate(() => window.hoverHide && window.hoverHide());
+      await p.click(`#smtree .smb[data-sm="${hdrB.key}"]`); await p.waitForTimeout(300);
+      const after = await p.evaluate(() => [document.getElementById('panel').dataset.tab, document.getElementById('panel').dataset.variant, JSON.stringify(window.SEL || {})].join('|'));
+      const say = await p.evaluate(() => { const s = document.getElementById('smsay'); return s.hidden ? null : { kind: s.dataset.kind, part: s.dataset.part, t: s.innerText.replace(/\s+/g, ' ') }; });
+      const word = await p.evaluate(k => window.PANELS[k].word, k);
+      if (after !== before || !say || say.kind !== 'header' || say.part !== k || say.t.indexOf(word + ' has no stage reading yet') < 0) bad.push(k + ':' + (after !== before ? 'moved' : JSON.stringify(say))); }
+    ok(without.length >= 1 && bad.length === 0,
+      'clicking it on a part WITHOUT a stage reading leaves you on that part, moves nothing, and says THIS part has none yet', bad.join(' ; ').slice(0, 220));
+    await p.evaluate(() => window.hoverHide && window.hoverHide()); }
   // ── BOTH WAYS, arm 2: the BENCH moves and the right block lights. No polling — the calls are wrapped. ──
   await p.evaluate(() => window.clearPath()); await p.waitForTimeout(200);
   for (const b of SM.blocks.filter(x => x.join.act.kind === 'part' && !x.join.act.variant)) {
@@ -3568,22 +3618,29 @@ if (checksFile) {
     const lit = await p.evaluate(() => Object.keys(window.smLit()));
     ok(lit.indexOf(b.key) >= 0, `opening ${b.join.act.part} on the bench lights ${b.name}`, lit.join(','));
     ok(await p.$eval('#smlead', e => e.dataset.lead) === 'lab', 'and the map says the BENCH moved, not the map', await p.$eval('#smlead', e => e.textContent.trim())); }
-  { await p.evaluate(k => window.showTab(k), withVar.join.act.part); await p.waitForTimeout(200);
-    const other = await p.evaluate(a => (window.PANELS[a.part].variants.map(v => v.key).filter(k => k !== a.variant))[0], withVar.join.act);
-    ok(!!other, 'the part that block names draws more than one distribution, so the dark test can run', String(other));
-    await p.evaluate(a => window.showVariant(a.part, a.other), { part: withVar.join.act.part, other });
-    await p.waitForTimeout(250);
-    ok((await p.evaluate(() => Object.keys(window.smLit()))).indexOf(withVar.key) < 0,
-      'a block that names a distribution goes DARK when the bench draws a different one', JSON.stringify(await p.evaluate(() => Object.keys(window.smLit()))));
-    await p.evaluate(a => window.showVariant(a.part, a.variant), withVar.join.act); await p.waitForTimeout(250);
-    ok((await p.evaluate(() => Object.keys(window.smLit()))).indexOf(withVar.key) >= 0, 'and lights again when it comes back'); }
   { await p.evaluate(() => { const e = ((window.LABEP.forms || {}).exits || [])[0]; if (e) window.selectExit(e.id); }); await p.waitForTimeout(300);
     ok((await p.evaluate(() => Object.keys(window.smLit()))).indexOf(exitB.key) >= 0,
       'picking an ending on the bench lights the Endings block', JSON.stringify(await p.evaluate(() => Object.keys(window.smLit()))));
     await p.evaluate(() => window.clearPath()); await p.waitForTimeout(250);
     ok((await p.evaluate(() => Object.keys(window.smLit()))).indexOf(exitB.key) < 0, 'and clearing it puts the block out again'); }
   // ── A BLOCK WITH NO SURFACE says what would have to be built, and never moves the bench silently ──
-  { const gapB = SM.blocks.find(b => !b.join.built);
+  // every block with NO PAGE YET moves nothing — the two D-022 made (In-flight state, Standard or specialist) by name
+  { const gaps = SM.blocks.filter(b => b.join.kind === 'none'), movedBy = [];
+    ok(['Q16', 'Q12'].every(sg => gaps.some(b => b.sig === sg)), 'the two blocks D-022 took off a page are among the ones with no page yet', gaps.map(b => b.sig).join(','));
+    for (const g of gaps) { await p.evaluate(() => window.showTab('functions')); await p.evaluate(() => window.clearPath()); await p.waitForTimeout(200);
+      const before = await p.evaluate(() => [document.getElementById('panel').dataset.tab, document.getElementById('panel').dataset.variant, JSON.stringify(window.SEL || {}), window.portraitVar('functions')].join('|'));
+      await p.evaluate(() => window.hoverHide && window.hoverHide());
+      await p.click(`#smtree .smb[data-sm="${g.key}"]`); await p.waitForTimeout(300);
+      const after = await p.evaluate(() => [document.getElementById('panel').dataset.tab, document.getElementById('panel').dataset.variant, JSON.stringify(window.SEL || {}), window.portraitVar('functions')].join('|'));
+      const said = await p.evaluate(() => { const s = document.getElementById('smsay'); return s.hidden ? '' : s.innerText.replace(/\s+/g, ' '); });
+      if (after !== before || said.indexOf(g.join.gap.slice(0, 40)) < 0) movedBy.push(g.sig + (after !== before ? ' moved: ' + before + ' → ' + after : ' said: ' + said.slice(0, 60))); }
+    ok(gaps.length === SM.n.without_surface && movedBy.length === 0, 'no block with no page yet moves the bench — each only says its own gap', movedBy.join(' ; ').slice(0, 240));
+    await p.evaluate(() => window.hoverHide && window.hoverHide()); }
+  { const inflight = SM.blocks.find(b => b.sig === 'Q16'), std = SM.blocks.find(b => b.sig === 'Q12');
+    ok(/route is picked/.test(inflight.join.gap) && /workaround, not a home/.test(inflight.join.gap),
+      'the In-flight gap says the path record carries it only once a route is picked, a workaround and not a home', inflight.join.gap);
+    ok(/compares/.test(std.join.gap) && /no part does/.test(std.join.gap), 'the Standard-or-specialist gap says it compares endpoints and no part does that', std.join.gap); }
+  { const gapB = SM.blocks.find(b => !b.join.built && b.join.kind === 'none');
     ok(gapB && gapB.join.gap, 'the feed names at least one block no bench surface answers, and says what is missing', gapB ? gapB.name : 'none');
     await p.evaluate(() => window.showTab('tests')); await p.waitForTimeout(250);
     await p.evaluate(() => window.hoverHide());
@@ -3610,6 +3667,12 @@ if (checksFile) {
       'it says what the card should hold against what the bench draws', note.split('\n').filter(l => /^(the map says|the bench draws)/.test(l)).join(' | ').slice(0, 160));
     ok(note.indexOf(SM.source.inv_hash) >= 0 && note.indexOf(SM.source.cells_hash) >= 0 && note.indexOf(String(F.head)) >= 0,
       'and the head the facts came from with the two hashes the tree was checked against', note.split('\n').filter(l => /^(facts|tree)/.test(l)).join(' | '));
+    ok(note.split('\n').some(l => l === 'pairing: a page'), 'the note names the KIND of pairing — a page here', note.split('\n').find(l => /^pairing/.test(l)));
+    for (const [kd, word] of [['none', 'no page yet'], ['header', 'a running header']]) {
+      await p.evaluate(k => window.smGo(k), SM.blocks.find(b => b.join.kind === kd).key); await p.waitForTimeout(250);
+      const n2 = await p.evaluate(() => window.COPYTXT.sectionmap());
+      ok(n2.split('\n').some(l => l.indexOf('pairing: ' + word) === 0), `and names ${word} when that is the block`, n2.split('\n').find(l => /^pairing/.test(l))); }
+    await p.evaluate(k => window.smGo(k), SM.blocks[0].key); await p.waitForTimeout(250);
     ok(/\n\n[^\n]*\n$/.test(note) && note.split('\n').length <= 14, 'it ends with a blank line and his own prompt, and stays short enough to read', String(note.split('\n').length));
     const btn = await p.$('#smhd .cpb');
     ok(!!btn, 'the feedback copy sits in the tab\'s header, as the same button every other rail block carries');
