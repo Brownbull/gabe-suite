@@ -151,3 +151,20 @@ mapping that nothing in the data supplies; it is AUTHORED as a proposal, and a b
 Revisit if: a built variant shows a merged pair (Proof beside Endings, or Stages beside Gates) reading as one subject on the
 face — then the arithmetic's eight gets a second look, judged by seeing.
 
+## D-022 — Where each block lives in the lab, and what a click does
+Date: 2026-09-22 · Input: his reply after both were explained with options ("agree with your recommendations").
+Decision, his — **the block-to-surface pairings**, on the principle that a block has a page, has no page yet, or is a running
+header across every page: **Endings keeps** the command panel (picking an ending redraws every part) · **In-flight state has
+NO PAGE YET** — the portrait's path record carries it only once a route is picked, which is a workaround, not a home ·
+**Standard or specialist has NO PAGE YET** — it compares endpoints, and no part does that · **Stages and order is a RUNNING
+HEADER** — it belongs to every part, not to Data alone. The other seven pairings stand as proposed.
+Decision, his — **what a click does: option C.** A click always SHOWS. Keep only — a filter — is NEVER a click: it is its own
+control, and it says visibly that it is on until it is removed. Open and Follow remain as moves a node offers.
+Why: forcing two blocks onto the nearest existing part hid two real gaps, and "no page yet" is the more useful answer because
+the gaps are what the next piece should build. And a filter that switches on from an ordinary click is the thing that confuses
+people — clicking a folder opens it; you never want it to silently hide every other folder.
+Consequence: the lab's section map gains a third kind of pairing, the running header, and shows three gaps instead of one
+(Overview and risk · In-flight state · Standard or specialist). The brain map's moves drop Keep only from the click and gain a
+Keep-only CONTROL that shows its state, so option C can be seen working rather than read about.
+Revisit if: a running header reads as noise once every part carries its own stage reading — then it becomes a chapter again.
+

@@ -20,11 +20,11 @@ Updated 2026-09-22 · suite `eae286e` on `graft-adoption`, pushed to both remote
 
 1. ~~Eight blocks or eleven~~ — **RULED: eleven** (D-021).
 2. ~~Stages or sections~~ — **RULED: both, toggleable** (D-021). Owed: the stage grouping, authored as a proposal.
-3. **The eleven block→surface pairings** in the lab's section map — the whole join is the agent's proposal. The four
-   worth arguing with first: Endings → the command panel · In-flight state → the portrait's path record · Standard or
-   specialist → Security · Stages and order → the Data panel's stage blocks. The tab's feedback copy exists for this.
-4. **The moves** each node offers in the brain map (Show · Keep only · Open · Follow, against the middle · the portrait ·
-   the map · here). A proposal, marked as one on the page.
+3. ~~The eleven block→surface pairings~~ — **RULED** (D-022): Endings keeps · In-flight state and Standard or specialist
+   have **no page yet** · Stages and order is a **running header** across every part.
+4. ~~The moves~~ — **RULED: C** (D-022). A click always Shows; Keep only is its own control, never a click.
+
+**Nothing is open.** Every ruling this loop asked for has been given.
 
 ## His to run
 
