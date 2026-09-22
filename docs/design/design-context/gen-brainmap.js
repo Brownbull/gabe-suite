@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /* gen-brainmap.js — the navigator for the endpoint card's panels, as a Gabe Artifact page.
 
-     node docs/design/design-context/gen-brainmap.js            # → brainmap-endpoint.html
-     node docs/design/design-context/gen-brainmap.js --check     # exit 1 when the committed page is stale
+     node docs/design/design-context/gen-brainmap.js            # → brainmap-endpoint.html + brainmap-endpoint.json
+     node docs/design/design-context/gen-brainmap.js --check     # exit 1 when either committed output is stale
      node docs/design/design-context/gen-brainmap.js --table     # the tree it computed, as text
 
    READS   inventory-endpoint.md     the living inventory: every attribute, ruled (via inventory-parse.js)
@@ -14,7 +14,11 @@
            brainmap.words.json       this page's authored prose — and ONLY prose: every number is a {token}
            brainmap.tpl.html         the page's CSS, markup and script
            skills/gabe-artifact/assets/artifact-chrome.html   the kit, pasted verbatim (+ one extra cog group)
-   WRITES  brainmap-endpoint.html
+   WRITES  brainmap-endpoint.html     the page, with the tree embedded as window.BM_DATA
+           brainmap-endpoint.json     the SAME tree as data, for readers that must not depend on the page (the lab's
+                                      section-map tab reads it through workflow-panel/_ep_sectionmap.py): every key
+                                      the page embeds, plus `stagesByBlock` — each block's authored stage list with the
+                                      line it cites and where that line is from, which the page itself never carries
 
    THE TREE IS NOT INVENTED HERE.
    · The BLOCKS are his ruling: the question groups authored in prisms-endpoint.json. They are checked to be a
@@ -37,6 +41,7 @@
 "use strict";
 const fs = require("fs"), path = require("path"), crypto = require("crypto");
 const HERE = __dirname, ROOT = path.resolve(HERE, "../../.."), OUT = path.join(HERE, "brainmap-endpoint.html");
+const OUT_JSON = path.join(HERE, "brainmap-endpoint.json");
 const KIND = "endpoint-card", ROT_DEG = 45, MAX_DEPTH = 2;          /* three drawn levels: root, branch, leaf */
 const die = (m) => { console.error("gen-brainmap: " + m); process.exit(2); };
 const rd = (f) => JSON.parse(fs.readFileSync(path.join(HERE, f), "utf8"));
@@ -390,13 +395,37 @@ for (const [mark, val2] of [["<!--__KIT1__-->", KIT.k1], ["<!--__KIT2__-->", k2.
 { const left = JSON.stringify(data).replace(new RegExp("\\{(" + [...RUNTIME].join("|") + ")\\}", "g"), "").match(/\{[a-z]\w*\}/i);
   if (left) die("an unfilled token survived into the page data: " + left[0]); }
 
+/* ── 9 · the tree as DATA, beside the page ────────────────────────────────
+   The page is a view and is meant to retire; the lab must not lift its tree out of a view. So the object the page
+   embeds is written again as its own file — the same object, key for key, so nothing in it is a second derivation —
+   with `stagesByBlock` added: the authored stage list of every ruled block, its reason, the line it cites and which
+   record that line is from (the cite was proven verbatim in 6b; the page draws the list and the reason, never the cite). */
+const stagesByBlock = {};
+for (const b of blocks) { const e = SW.byBlock[b.sig];
+  stagesByBlock[b.sig] = { block: b.key, stages: e.stages.slice(), keys: b.stages.slice(), why: b.stageWhy,
+    cites: e.cites, from: e.from === "stages" ? "docs/design/workflow-panel/endpoint-stages.md" : "docs/design/design-context/questions.md",
+    fromEndingsColumn: !!e.fromEndingsColumn }; }
+const tree = Object.assign({ about: "The endpoint card's brain-map tree as data, written by gen-brainmap.js beside brainmap-endpoint.html, which embeds the same object as window.BM_DATA. Generated; never edit by hand.",
+  page: "brainmap-endpoint.html" }, data, { stagesByBlock });
+const json = JSON.stringify(tree, null, 1) + "\n";
+{ const back = JSON.parse(json);                      /* the file must hold exactly what the page embeds, key for key */
+  for (const k of Object.keys(data)) if (JSON.stringify(back[k]) !== JSON.stringify(data[k])) die("the JSON tree does not carry the page's " + k + " unchanged");
+  const left = JSON.stringify(stagesByBlock).match(/\{[a-z]\w*\}/i);
+  if (left) die("an unfilled token survived into the stage lists: " + left[0]); }
+
 if (process.argv.includes("--check")) {
-  const same = fs.existsSync(OUT) && fs.readFileSync(OUT, "utf8") === html;
-  console.log(same ? "brainmap-endpoint.html is current" : "brainmap-endpoint.html is STALE — run gen-brainmap.js");
-  process.exit(same ? 0 : 1);
+  let bad = 0;
+  for (const [file, want] of [[OUT, html], [OUT_JSON, json]]) {
+    const same = fs.existsSync(file) && fs.readFileSync(file, "utf8") === want, name = path.basename(file);
+    console.log(same ? name + " is current" : name + " is STALE — run gen-brainmap.js");
+    if (!same) bad++;
+  }
+  process.exit(bad ? 1 : 0);
 }
 fs.writeFileSync(OUT, html);
+fs.writeFileSync(OUT_JSON, json);
 console.log(`brainmap-endpoint.html · ${attrs.length} attributes · ${blocks.length} blocks · ${spineLive.length} shared · ${added.length} not placed · ${groups.length} standpoints · ${sections.length} sections · ${tok.nCells} cells (${unjudged} unsettled) · inventory ${tok.invHash} · cells ${tok.cellsHash} · ${html.length} bytes`);
+console.log(`brainmap-endpoint.json · the same tree + ${Object.keys(stagesByBlock).length} stage lists · ${Buffer.byteLength(json)} bytes`);
 if (process.argv.includes("--table")) {
   console.log(`root  ${data.root.name}`);
   for (const b of blocks) console.log(`  ${String(b.n).padStart(2)} ${b.name.padEnd(24)} ${b.sig.padEnd(15)} own ${String(b.attrs.length).padStart(2)} shared ${String(b.spine.length).padStart(2)}  standpoint: ${b.gkey}`);
