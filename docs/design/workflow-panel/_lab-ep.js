@@ -5233,7 +5233,7 @@ window.LABEP = {
   "head": "05007957",
   "version": 2,
   "source": {
-   "path": "~/.cache/gabe-map-baselines/.check/gustify/forms.json",
+   "path": "~/.cache/gabe-map-baselines/lab-input/forms.json",
    "arms_on": [
     "contract",
     "effects",
@@ -30556,6 +30556,1573 @@ window.LABEP = {
     }
    ],
    "no_cases": 21
+  }
+ },
+ "sectionmap": {
+  "state": "present",
+  "reason": null,
+  "source": {
+   "map": "docs/design/design-context/brainmap-endpoint.html",
+   "inventory": "inventory-endpoint.md",
+   "inv_hash": "11931871",
+   "cells_hash": "1a215eb2",
+   "prisms": "docs/design/design-context/prisms-endpoint.json",
+   "ruled": "2026-09-18"
+  },
+  "root": {
+   "name": "The endpoint card",
+   "sub": "61 attributes · 11 blocks",
+   "plain": "Everything one endpoint's card could show, gathered in one place."
+  },
+  "words": {
+   "tab": {
+    "word": "section map",
+    "note": "the card's 11 ruled blocks against the lab surface that answers each one. Clicking a block moves the bench; moving the bench lights the block. Lab chrome — none of it ships with the console."
+   },
+   "head": {
+    "title": "section map",
+    "sub": "11 blocks · 61 attributes · 10 answered here, 1 not",
+    "lede": "The ruled shape of the endpoint card, beside what the bench draws for it today.",
+    "proposal": "The pairing of a block to a lab surface is AUTHORED, not measured — it is a proposal, and the gap rows are the ones worth arguing with."
+   },
+   "strings": {
+    "rootSub": "61 attributes · 11 blocks",
+    "ownWord": "own",
+    "sharedWord": "shared",
+    "sharedNote": "An attribute three or more blocks need belongs to none of them, so it is listed under each as shared.",
+    "noSurface": "no surface on the bench",
+    "leadYou": "you opened this here",
+    "leadLab": "the bench moved and this lit",
+    "leadIdle": "nothing open yet",
+    "absent": "The card's ruled tree was not read, so nothing is drawn here.",
+    "staleNote": "The brain map's committed tree was built from an older inventory, so the blocks below may not match the ruling.",
+    "moreShow": "more information",
+    "moreHide": "hide it again",
+    "feedbackWhat": "a note about what you are looking at",
+    "feedbackHint": "the bench's state, the block it answers and the gap between them, ready to paste back with your words under it"
+   },
+   "more": {
+    "lines": [
+     "A block is a group of the 20 questions, ruled by hand; the 11 groups are the ruling D-015.",
+     "An attribute's home is the block its use weighs into most, and one that three or more blocks need is shared and homed nowhere.",
+     "The tree is read from the brain map's committed page, whose own generator proves its home rule against m1-cluster.js on every run."
+    ]
+   },
+   "feedback": {
+    "lede": "section map · a note from the bench",
+    "fields": {
+     "door": "door",
+     "bench": "bench",
+     "block": "block",
+     "surface": "the map says",
+     "draws": "the bench draws",
+     "gap": "gap",
+     "selection": "selected",
+     "facts": "facts",
+     "tree": "tree"
+    },
+    "tail": "your words:"
+   }
+  },
+  "blocks": [
+   {
+    "key": "c1",
+    "n": 1,
+    "sig": "Q1+Q2+Q9",
+    "name": "Data effects",
+    "plain": "The rows the endpoint touches, the moment it touches them, and the fate of each change.",
+    "standpoint": "Your first standpoint: what we read, write, modify, create and delete.",
+    "questions": [
+     "Q1",
+     "Q2",
+     "Q9"
+    ],
+    "gkey": "what-we-read-write-modify-create-and-delete",
+    "own": [
+     "operation-per-table",
+     "how-this-table-was-found",
+     "fate-of-the-writes-per-ending",
+     "provisions"
+    ],
+    "shared": [
+     "the-endings",
+     "own-guards",
+     "tables-touched"
+    ],
+    "join": {
+     "surface": "the Data panel",
+     "surface_key": "data",
+     "act": {
+      "kind": "part",
+      "part": "data"
+     },
+     "built": true,
+     "says": "The Data panel draws every table the endpoint touches, the operation on each, and the fate of the writes at the end.",
+     "gap": "Provisions — what a dependency's own commit leaves behind — is carried in the feed and drawn nowhere.",
+     "plain": "Tables the endpoint reads and writes, with the fate of each change."
+    }
+   },
+   {
+    "key": "c2",
+    "n": 2,
+    "sig": "Q3+Q11",
+    "name": "Endings",
+    "plain": "The ways a request can end, and the expected one among them.",
+    "standpoint": "The destinations in your standpoint on what determines the path. The forks that lead to them sit in Gates and decisions.",
+    "questions": [
+     "Q3",
+     "Q11"
+    ],
+    "gkey": "what-determines-the-path",
+    "own": [
+     "kinds-of-ending",
+     "declared-status",
+     "the-route-that-passes-every-check",
+     "workflow-step"
+    ],
+    "shared": [
+     "the-endings",
+     "the-stage-an-ending-leaves-from"
+    ],
+    "join": {
+     "surface": "the command panel",
+     "surface_key": "command",
+     "act": {
+      "kind": "exit"
+     },
+     "built": true,
+     "says": "The command panel holds one cell per way the request ends, and picking one projects every part onto that ending.",
+     "gap": null,
+     "plain": "Every way the request can end, and the one it is expected to take."
+    }
+   },
+   {
+    "key": "c3",
+    "n": 3,
+    "sig": "Q15+Q18+Q19",
+    "name": "Functions",
+    "plain": "The code that runs, sorted by how much it decides.",
+    "standpoint": "Your functions standpoint, from the one facing the API down to the little helpers.",
+    "questions": [
+     "Q15",
+     "Q18",
+     "Q19"
+    ],
+    "gkey": "functions",
+    "own": [
+     "the-handler",
+     "file-line",
+     "decision-point-functions",
+     "roles-per-function",
+     "data-touching-functions",
+     "little-helpers-with-a-type",
+     "signature"
+    ],
+    "shared": [
+     "context-giving-functions"
+    ],
+    "join": {
+     "surface": "the Functions panel",
+     "surface_key": "functions",
+     "act": {
+      "kind": "part",
+      "part": "functions"
+     },
+     "built": true,
+     "says": "The Functions panel draws the handler and the call tree behind it, each function marked by what it decides and touches.",
+     "gap": null,
+     "plain": "Code that runs behind the door, sorted by how much it decides."
+    }
+   },
+   {
+    "key": "c4",
+    "n": 4,
+    "sig": "Q16",
+    "name": "In-flight state",
+    "plain": "The values that stay alive only while the request runs.",
+    "standpoint": "Your standpoint on what is saved temporarily and alive during the process. The map cannot read most of it yet.",
+    "questions": [
+     "Q16"
+    ],
+    "gkey": "what-is-saved-temporarily-and-alive-during-the-process",
+    "own": [
+     "request-scoped-state",
+     "client-cache-effects",
+     "in-flight-values"
+    ],
+    "shared": [],
+    "join": {
+     "surface": "the portrait, path record",
+     "surface_key": "portrait",
+     "act": {
+      "kind": "path"
+     },
+     "built": true,
+     "says": "The path record's last section names everything alive while the request runs, coloured by how long it lasts.",
+     "gap": "A route must be picked first — the in-flight reading has no panel of its own.",
+     "plain": "Values alive while the request runs, and how long each one lasts."
+    }
+   },
+   {
+    "key": "c5",
+    "n": 5,
+    "sig": "Q12",
+    "name": "Standard or specialist",
+    "plain": "The pieces this endpoint is built from, set against the pieces most endpoints share.",
+    "standpoint": "None of your standpoints names it. It is the common versus specialist lens from your forward ideas, and it compares endpoints instead of reading one.",
+    "questions": [
+     "Q12"
+    ],
+    "gkey": "named-by-none",
+    "own": [
+     "switches",
+     "idempotency-claim",
+     "events-published",
+     "tasks-dispatched",
+     "delivery",
+     "how-common-this-piece-is"
+    ],
+    "shared": [
+     "context-giving-functions",
+     "auth-scheme-gate",
+     "app-band"
+    ],
+    "join": {
+     "surface": "the Security panel",
+     "surface_key": "security",
+     "act": {
+      "kind": "part",
+      "part": "security"
+     },
+     "built": true,
+     "says": "The Security panel carries the idempotency claim and the delivery fact as two of its one-line rows.",
+     "gap": "How common a piece is rides hover cards only, and the tasks and events the endpoint sets in motion are drawn nowhere.",
+     "plain": "Machinery this door shares with the rest of the app, against what only it does."
+    }
+   },
+   {
+    "key": "c6",
+    "n": 6,
+    "sig": "Q5+Q7",
+    "name": "Stages and order",
+    "plain": "The stations a request passes, and the order in which things run.",
+    "standpoint": "Your stage spine, read as a sequence. It is the time axis of the console.",
+    "questions": [
+     "Q5",
+     "Q7"
+    ],
+    "gkey": "stage-spine",
+    "own": [
+     "the-ordered-chain-per-ending",
+     "the-moment-a-table-is-touched",
+     "validation-cases",
+     "expected-slots-at-this-stage"
+    ],
+    "shared": [
+     "the-stage-an-ending-leaves-from",
+     "own-guards",
+     "response-shape-per-ending",
+     "context-giving-functions",
+     "auth-scheme-gate",
+     "app-band",
+     "why-this-slot-is-empty"
+    ],
+    "join": {
+     "surface": "the Data panel",
+     "surface_key": "data",
+     "act": {
+      "kind": "part",
+      "part": "data",
+      "variant": "stageblocks"
+     },
+     "built": true,
+     "says": "Stage blocks lay the same tables under the stage that touches them, which is the request order the block asks for.",
+     "gap": "The stage spine is drawn only under the Data topic, so the other five parts have no stage reading of their own.",
+     "plain": "Stations a request passes, in the order they run."
+    }
+   },
+   {
+    "key": "c7",
+    "n": 7,
+    "sig": "Q4",
+    "name": "Proof",
+    "plain": "The conditions a test proves, and the ones nothing reaches.",
+    "standpoint": "Your coverage standpoint, the part the lab calls Tests.",
+    "questions": [
+     "Q4"
+    ],
+    "gkey": "coverage",
+    "own": [
+     "what-the-case-asserts-on-this-condition",
+     "race-on-a-unique-key",
+     "cases",
+     "case-role-on-this-endpoint"
+    ],
+    "shared": [
+     "the-endings",
+     "own-guards",
+     "why-this-slot-is-empty"
+    ],
+    "join": {
+     "surface": "the Tests panel",
+     "surface_key": "tests",
+     "act": {
+      "kind": "part",
+      "part": "tests"
+     },
+     "built": true,
+     "says": "The Tests panel stacks the cases by the status they assert and names the conditions nothing reaches.",
+     "gap": null,
+     "plain": "Conditions a test proves, and the ones nothing reaches."
+    }
+   },
+   {
+    "key": "c8",
+    "n": 8,
+    "sig": "Q6+Q17",
+    "name": "Gates and decisions",
+    "plain": "The checks that stop a request and the forks that decide its ending.",
+    "standpoint": "Your standpoint on what determines the path. The part the lab calls Security lands here, because a gate is one kind of fork.",
+    "questions": [
+     "Q6",
+     "Q17"
+    ],
+    "gkey": "what-determines-the-path",
+    "own": [
+     "the-checks-met-in-run-order",
+     "the-predicate-per-decision-point",
+     "status-code-per-ending",
+     "deciding-branches",
+     "catches",
+     "rate-tier"
+    ],
+    "shared": [
+     "the-endings",
+     "the-stage-an-ending-leaves-from",
+     "own-guards",
+     "context-giving-functions",
+     "auth-scheme-gate",
+     "app-band"
+    ],
+    "join": {
+     "surface": "the Security panel",
+     "surface_key": "security",
+     "act": {
+      "kind": "part",
+      "part": "security"
+     },
+     "built": true,
+     "says": "The Security panel draws the app band, this endpoint's own guards and the gate among them, in run order.",
+     "gap": "Deciding branches and catches — the forks one call down — ride the path portrait instead of this panel.",
+     "plain": "Checks that stop a request, and the forks that decide its ending."
+    }
+   },
+   {
+    "key": "c9",
+    "n": 9,
+    "sig": "Q10+Q13",
+    "name": "Structures",
+    "plain": "The shapes of the body that comes in and the body that goes out.",
+    "standpoint": "Your structures standpoint, the schemas.",
+    "questions": [
+     "Q10",
+     "Q13"
+    ],
+    "gkey": "structures",
+    "own": [
+     "request-shape",
+     "field-rules-of-the-request-body",
+     "response-headers-per-ending"
+    ],
+    "shared": [
+     "the-endings",
+     "tables-touched",
+     "response-shape-per-ending"
+    ],
+    "join": {
+     "surface": "the Schemas panel",
+     "surface_key": "schemas",
+     "act": {
+      "kind": "part",
+      "part": "schemas"
+     },
+     "built": true,
+     "says": "The Schemas panel draws the request body and the response body as blocks, every field a mark of its declared kind.",
+     "gap": "Response headers per ending are in the feed and appear on no schema block.",
+     "plain": "Shape of the body that comes in, and the body that goes out."
+    }
+   },
+   {
+    "key": "c10",
+    "n": 10,
+    "sig": "Q14+Q20",
+    "name": "Overview and risk",
+    "plain": "The whole endpoint at a glance, and the things about it that look wrong.",
+    "standpoint": "None of your standpoints names it. It is what the face and the command panel answer before any view is chosen.",
+    "questions": [
+     "Q14",
+     "Q20"
+    ],
+    "gkey": "named-by-none",
+    "own": [
+     "method-path",
+     "coverage-per-condition",
+     "findings",
+     "risk-flag",
+     "functions-behind-walk-levels",
+     "where-this-endpoint-sits-in-the-app",
+     "entity-cluster",
+     "outside-services-called"
+    ],
+    "shared": [
+     "tables-touched",
+     "why-this-slot-is-empty"
+    ],
+    "join": {
+     "surface": "nothing yet",
+     "surface_key": "none",
+     "act": {
+      "kind": "none"
+     },
+     "built": false,
+     "says": "The head bar names the door and flies the risk flag, and the command panel counts the findings behind one cell.",
+     "gap": "No panel gathers the overview — coverage per condition, the findings themselves, the endpoint's place in the app and the outside services it calls have no surface.",
+     "plain": "Whole-door reading — size, findings, and the place this endpoint sits in the app."
+    }
+   },
+   {
+    "key": "c11",
+    "n": 11,
+    "sig": "Q8",
+    "name": "Client",
+    "plain": "The screen's side of each ending.",
+    "standpoint": "Your reach outward standpoint, the one the lab calls widening.",
+    "questions": [
+     "Q8"
+    ],
+    "gkey": "reach-outward",
+    "own": [
+     "who-fetches-it",
+     "can-the-client-tell-the-endings-apart",
+     "what-the-screen-does-on-this-ending"
+    ],
+    "shared": [
+     "the-endings",
+     "response-shape-per-ending"
+    ],
+    "join": {
+     "surface": "the Widening panel",
+     "surface_key": "widening",
+     "act": {
+      "kind": "part",
+      "part": "widening"
+     },
+     "built": true,
+     "says": "The Widening panel draws the screens that fetch this endpoint and the ladder from the door out to the app.",
+     "gap": "Whether the client can tell the endings apart is measured in the feed and drawn on no rung.",
+     "plain": "Screens that call this door, and what they do with each answer."
+    }
+   }
+  ],
+  "attrs": {
+   "method-path": {
+    "id": "method-path",
+    "label": "Method + path",
+    "plain": "The endpoint's name — the verb and the URL a client calls.",
+    "r": 3,
+    "alarm": false,
+    "type": "category + text",
+    "card": null,
+    "first": "far",
+    "sec": "identity",
+    "home": "c10",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "entity-cluster": {
+    "id": "entity-cluster",
+    "label": "Entity · cluster",
+    "plain": "The feature that owns the endpoint and the URL group it sits in.",
+    "r": 1,
+    "alarm": false,
+    "type": "category",
+    "card": null,
+    "first": "tooltip",
+    "sec": "identity",
+    "home": "c10",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "declared-status": {
+    "id": "declared-status",
+    "label": "Declared status",
+    "plain": "The success code the endpoint promises in its decorator.",
+    "r": 2,
+    "alarm": false,
+    "type": "category",
+    "card": null,
+    "first": "mid",
+    "sec": "identity",
+    "home": "c2",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "file-line": {
+    "id": "file-line",
+    "label": "File:line",
+    "plain": "The file and line where the handler starts.",
+    "r": 1,
+    "alarm": false,
+    "type": "text",
+    "card": "0 · 4 · 8",
+    "first": "tooltip",
+    "sec": "identity",
+    "home": "c3",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "risk-flag": {
+    "id": "risk-flag",
+    "label": "Risk flag",
+    "plain": "A warning that the endpoint is unusually large or heavily used.",
+    "r": 2,
+    "alarm": true,
+    "type": "state",
+    "card": null,
+    "first": "far",
+    "sec": "identity",
+    "home": "c10",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "signature": {
+    "id": "signature",
+    "label": "Signature",
+    "plain": "The handler's outline — async or not, its length, the type it returns.",
+    "r": 2,
+    "alarm": false,
+    "type": "quantity + text",
+    "card": null,
+    "first": "mid",
+    "sec": "identity",
+    "home": "c3",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "kinds-of-ending": {
+    "id": "kinds-of-ending",
+    "label": "Kinds of ending",
+    "plain": "The families a request's ending can belong to — success, refusal, framework, validation, uncaught.",
+    "r": 3,
+    "alarm": false,
+    "type": "category",
+    "card": null,
+    "first": "far",
+    "sec": "endings-and-decision-points",
+    "home": "c2",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "the-endings": {
+    "id": "the-endings",
+    "label": "The endings",
+    "plain": "Every distinct way a request to the endpoint can end.",
+    "r": 3,
+    "alarm": false,
+    "type": "relation list",
+    "card": "2 · 9 · 22",
+    "first": "mid",
+    "sec": "endings-and-decision-points",
+    "home": null,
+    "shared": true,
+    "shared_in": 6,
+    "shared_blocks": [
+     "c1",
+     "c2",
+     "c7",
+     "c8",
+     "c9",
+     "c11"
+    ]
+   },
+   "the-stage-an-ending-leaves-from": {
+    "id": "the-stage-an-ending-leaves-from",
+    "label": "The stage an ending leaves from",
+    "plain": "The stage where a request stops — edge, gate, input, handler, answer or uncaught.",
+    "r": 3,
+    "alarm": false,
+    "type": "order (1 of 8)",
+    "card": null,
+    "first": "far",
+    "sec": "endings-and-decision-points",
+    "home": null,
+    "shared": true,
+    "shared_in": 3,
+    "shared_blocks": [
+     "c2",
+     "c6",
+     "c8"
+    ]
+   },
+   "the-ordered-chain-per-ending": {
+    "id": "the-ordered-chain-per-ending",
+    "label": "The ordered chain per ending",
+    "plain": "The numbered steps a request runs through on one ending — each check, call, fork, setting and catch, down to the answer.",
+    "r": 3,
+    "alarm": false,
+    "type": "order (relation list)",
+    "card": "4 · 14 · 22",
+    "first": "near",
+    "sec": "endings-and-decision-points",
+    "home": "c6",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "the-checks-met-in-run-order": {
+    "id": "the-checks-met-in-run-order",
+    "label": "The checks met, in run order",
+    "plain": "The checks a request met, in the order they ran, each marked as passed or as the one that stopped it.",
+    "r": 2,
+    "alarm": false,
+    "type": "order (relation list)",
+    "card": "0 · 6 · 10",
+    "first": "mid",
+    "sec": "endings-and-decision-points",
+    "home": "c8",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "the-route-that-passes-every-check": {
+    "id": "the-route-that-passes-every-check",
+    "label": "The route that passes every check",
+    "plain": "The ending that gets past every check, and the single check that stops each of the others.",
+    "r": 3,
+    "alarm": false,
+    "type": "relation",
+    "card": null,
+    "first": "mid",
+    "sec": "endings-and-decision-points",
+    "home": "c2",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "the-predicate-per-decision-point": {
+    "id": "the-predicate-per-decision-point",
+    "label": "The predicate per decision point",
+    "plain": "The condition behind each fork, in the author's own words.",
+    "r": 3,
+    "alarm": false,
+    "type": "text + relation",
+    "card": "0 · 0 · 4",
+    "first": "near",
+    "sec": "endings-and-decision-points",
+    "home": "c8",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "status-code-per-ending": {
+    "id": "status-code-per-ending",
+    "label": "Status code per ending",
+    "plain": "The HTTP number each ending answers with.",
+    "r": 2,
+    "alarm": false,
+    "type": "category + text",
+    "card": "2 · 7 · 11",
+    "first": "mid",
+    "sec": "endings-and-decision-points",
+    "home": "c8",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "own-guards": {
+    "id": "own-guards",
+    "label": "Own guards",
+    "plain": "A check in the handler's own code that refuses the request.",
+    "r": 3,
+    "alarm": false,
+    "type": "relation",
+    "card": "0 · 1 · 16",
+    "first": "mid",
+    "sec": "endings-and-decision-points",
+    "home": null,
+    "shared": true,
+    "shared_in": 4,
+    "shared_blocks": [
+     "c1",
+     "c7",
+     "c6",
+     "c8"
+    ]
+   },
+   "deciding-branches": {
+    "id": "deciding-branches",
+    "label": "Deciding branches",
+    "plain": "A branch inside a called function that changes how the request ends.",
+    "r": 3,
+    "alarm": true,
+    "type": "relation",
+    "card": "0 · 0 · 8",
+    "first": "mid",
+    "sec": "endings-and-decision-points",
+    "home": "c8",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "catches": {
+    "id": "catches",
+    "label": "Catches",
+    "plain": "A try/except that turns a failure into a status — or hides the failure.",
+    "r": 3,
+    "alarm": false,
+    "type": "relation",
+    "card": "0 · 1 · 8",
+    "first": "mid",
+    "sec": "endings-and-decision-points",
+    "home": "c8",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "switches": {
+    "id": "switches",
+    "label": "Switches",
+    "plain": "A setting or a swapped-in implementation that changes what the endpoint does.",
+    "r": 2,
+    "alarm": false,
+    "type": "relation",
+    "card": "0 · 2 · 4",
+    "first": "near",
+    "sec": "endings-and-decision-points",
+    "home": "c5",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "tables-touched": {
+    "id": "tables-touched",
+    "label": "Tables touched",
+    "plain": "The database tables the endpoint reads or writes.",
+    "r": 3,
+    "alarm": false,
+    "type": "relation",
+    "card": "0 · 6 · 18",
+    "first": "far",
+    "sec": "effects",
+    "home": null,
+    "shared": true,
+    "shared_in": 3,
+    "shared_blocks": [
+     "c1",
+     "c9",
+     "c10"
+    ]
+   },
+   "operation-per-table": {
+    "id": "operation-per-table",
+    "label": "Operation per table",
+    "plain": "The kind of touch each table gets — read, add, update or delete.",
+    "r": 3,
+    "alarm": false,
+    "type": "category",
+    "card": null,
+    "first": "mid",
+    "sec": "effects",
+    "home": "c1",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "fate-of-the-writes-per-ending": {
+    "id": "fate-of-the-writes-per-ending",
+    "label": "Fate of the writes per ending",
+    "plain": "The outcome of the writes on one ending — saved, rolled back or left unsaved.",
+    "r": 3,
+    "alarm": false,
+    "type": "category",
+    "card": "0 · 2 · 46",
+    "first": "mid",
+    "sec": "effects",
+    "home": "c1",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "the-moment-a-table-is-touched": {
+    "id": "the-moment-a-table-is-touched",
+    "label": "The moment a table is touched",
+    "plain": "The stage and step at which a table is touched.",
+    "r": 2,
+    "alarm": false,
+    "type": "order",
+    "card": null,
+    "first": "mid",
+    "sec": "effects",
+    "home": "c6",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "provisions": {
+    "id": "provisions",
+    "label": "Provisions",
+    "plain": "A row the endpoint creates before the handler even starts.",
+    "r": 2,
+    "alarm": false,
+    "type": "relation",
+    "card": null,
+    "first": "near",
+    "sec": "effects",
+    "home": "c1",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "race-on-a-unique-key": {
+    "id": "race-on-a-unique-key",
+    "label": "Race on a unique key",
+    "plain": "Two simultaneous requests that insert the same unique key.",
+    "r": 1,
+    "alarm": true,
+    "type": "state",
+    "card": null,
+    "first": "far",
+    "sec": "effects",
+    "home": "c7",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "idempotency-claim": {
+    "id": "idempotency-claim",
+    "label": "Idempotency claim",
+    "plain": "A key that makes a request safe to send twice.",
+    "r": 2,
+    "alarm": false,
+    "type": "relation",
+    "card": "0 · 0 · 1",
+    "first": "near",
+    "sec": "effects",
+    "home": "c5",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "how-this-table-was-found": {
+    "id": "how-this-table-was-found",
+    "label": "How this table was found",
+    "plain": "The source that says a table is touched — the map's own edge, the steps of a route, or both.",
+    "r": 1,
+    "alarm": false,
+    "type": "category",
+    "card": "0 · 4 · 7",
+    "first": "near",
+    "sec": "effects",
+    "home": "c1",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "events-published": {
+    "id": "events-published",
+    "label": "Events published",
+    "plain": "An event the endpoint announces, and the other code that runs because it heard it.",
+    "r": 3,
+    "alarm": false,
+    "type": "relation",
+    "card": null,
+    "first": "mid",
+    "sec": "effects",
+    "home": "c5",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "tasks-dispatched": {
+    "id": "tasks-dispatched",
+    "label": "Tasks dispatched",
+    "plain": "Background work the endpoint starts that keeps running after the answer.",
+    "r": 3,
+    "alarm": false,
+    "type": "relation",
+    "card": null,
+    "first": "mid",
+    "sec": "effects",
+    "home": "c5",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "outside-services-called": {
+    "id": "outside-services-called",
+    "label": "Outside services called",
+    "plain": "A service outside the app the endpoint calls — an LLM, an identity provider, a payment API.",
+    "r": 3,
+    "alarm": false,
+    "type": "relation",
+    "card": null,
+    "first": "mid",
+    "sec": "effects",
+    "home": "c10",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "request-scoped-state": {
+    "id": "request-scoped-state",
+    "label": "Request-scoped state",
+    "plain": "A value set early in the request that later steps rely on — the auth context, a key on request.state.",
+    "r": 1,
+    "alarm": false,
+    "type": "relation",
+    "card": null,
+    "first": "near",
+    "sec": "in-flight-state",
+    "home": "c4",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "client-cache-effects": {
+    "id": "client-cache-effects",
+    "label": "Client cache effects",
+    "plain": "The cached queries the screen drops or refills after the answer.",
+    "r": 2,
+    "alarm": false,
+    "type": "relation",
+    "card": null,
+    "first": "near",
+    "sec": "in-flight-state",
+    "home": "c4",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "in-flight-values": {
+    "id": "in-flight-values",
+    "label": "In-flight values",
+    "plain": "The values alive only while a request runs, and the ones the server keeps between requests.",
+    "r": 2,
+    "alarm": false,
+    "type": "relation",
+    "card": "6 · 8 · 15",
+    "first": "near",
+    "sec": "in-flight-state",
+    "home": "c4",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "request-shape": {
+    "id": "request-shape",
+    "label": "Request shape",
+    "plain": "The schema the request body must match.",
+    "r": 2,
+    "alarm": false,
+    "type": "relation",
+    "card": null,
+    "first": "mid",
+    "sec": "structures",
+    "home": "c9",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "response-shape-per-ending": {
+    "id": "response-shape-per-ending",
+    "label": "Response shape per ending",
+    "plain": "The body each ending answers with.",
+    "r": 2,
+    "alarm": false,
+    "type": "relation",
+    "card": "2 · 9 · 22",
+    "first": "mid",
+    "sec": "structures",
+    "home": null,
+    "shared": true,
+    "shared_in": 3,
+    "shared_blocks": [
+     "c6",
+     "c9",
+     "c11"
+    ]
+   },
+   "delivery": {
+    "id": "delivery",
+    "label": "Delivery",
+    "plain": "The way the answer travels — one reply, or a stream that keeps sending.",
+    "r": 2,
+    "alarm": false,
+    "type": "category",
+    "card": null,
+    "first": "mid",
+    "sec": "structures",
+    "home": "c5",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "response-headers-per-ending": {
+    "id": "response-headers-per-ending",
+    "label": "Response headers per ending",
+    "plain": "The headers an ending sends back beside its body — a retry delay, a login scheme.",
+    "r": 2,
+    "alarm": false,
+    "type": "relation",
+    "card": "0 · 2 · 5",
+    "first": "near",
+    "sec": "structures",
+    "home": "c9",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "field-rules-of-the-request-body": {
+    "id": "field-rules-of-the-request-body",
+    "label": "Field rules of the request body",
+    "plain": "The rule on each field of the request body — required, a length, a range, a list of allowed values.",
+    "r": 2,
+    "alarm": false,
+    "type": "relation",
+    "card": "0 · 2 · 29",
+    "first": "near",
+    "sec": "structures",
+    "home": "c9",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "validation-cases": {
+    "id": "validation-cases",
+    "label": "Validation cases",
+    "plain": "The rules that make a request body fail with a 422.",
+    "r": 2,
+    "alarm": false,
+    "type": "relation",
+    "card": "1 · 4 · 42",
+    "first": "near",
+    "sec": "structures",
+    "home": "c6",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "the-handler": {
+    "id": "the-handler",
+    "label": "The handler",
+    "plain": "The function that faces the API and receives the request.",
+    "r": 3,
+    "alarm": false,
+    "type": "relation",
+    "card": null,
+    "first": "far",
+    "sec": "functions",
+    "home": "c3",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "decision-point-functions": {
+    "id": "decision-point-functions",
+    "label": "Decision-point functions",
+    "plain": "A function whose raise or refusal becomes one of the endings.",
+    "r": 3,
+    "alarm": false,
+    "type": "relation",
+    "card": "1 · 4 · 12",
+    "first": "mid",
+    "sec": "functions",
+    "home": "c3",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "roles-per-function": {
+    "id": "roles-per-function",
+    "label": "Roles per function",
+    "plain": "The part each function plays here — facing the API, deciding an ending, touching the data, giving context.",
+    "r": 3,
+    "alarm": false,
+    "type": "category list",
+    "card": "0 · 2 · 6",
+    "first": "mid",
+    "sec": "functions",
+    "home": "c3",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "data-touching-functions": {
+    "id": "data-touching-functions",
+    "label": "Data-touching functions",
+    "plain": "A function that reads, writes or commits to the database.",
+    "r": 3,
+    "alarm": false,
+    "type": "relation",
+    "card": null,
+    "first": "mid",
+    "sec": "functions",
+    "home": "c3",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "context-giving-functions": {
+    "id": "context-giving-functions",
+    "label": "Context-giving functions",
+    "plain": "A function that prepares context for the rest — authentication, the session, settings.",
+    "r": 2,
+    "alarm": false,
+    "type": "relation",
+    "card": "0 · 4 · 5",
+    "first": "mid",
+    "sec": "functions",
+    "home": null,
+    "shared": true,
+    "shared_in": 4,
+    "shared_blocks": [
+     "c6",
+     "c8",
+     "c3",
+     "c5"
+    ]
+   },
+   "little-helpers-with-a-type": {
+    "id": "little-helpers-with-a-type",
+    "label": "Little helpers, with a TYPE",
+    "plain": "A small function that formats, caps or validates one value.",
+    "r": 1,
+    "alarm": false,
+    "type": "relation",
+    "card": null,
+    "first": "tooltip",
+    "sec": "functions",
+    "home": "c3",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "functions-behind-walk-levels": {
+    "id": "functions-behind-walk-levels",
+    "label": "Functions behind · walk levels",
+    "plain": "The count of functions reachable behind the handler and the depth of that walk.",
+    "r": 1,
+    "alarm": false,
+    "type": "quantity",
+    "card": null,
+    "first": "tooltip",
+    "sec": "functions",
+    "home": "c10",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "coverage-per-condition": {
+    "id": "coverage-per-condition",
+    "label": "Coverage per condition",
+    "plain": "The share of endings and guards that a test proves.",
+    "r": 3,
+    "alarm": false,
+    "type": "state",
+    "card": "0 · 2.5 · 44",
+    "first": "far",
+    "sec": "coverage-context-client-findings",
+    "home": "c10",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "cases": {
+    "id": "cases",
+    "label": "Cases",
+    "plain": "The named test cases that prove an ending.",
+    "r": 2,
+    "alarm": false,
+    "type": "relation",
+    "card": null,
+    "first": "near",
+    "sec": "coverage-context-client-findings",
+    "home": "c7",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "what-the-case-asserts-on-this-condition": {
+    "id": "what-the-case-asserts-on-this-condition",
+    "label": "What the case asserts on this condition",
+    "plain": "The thing a test really checked on a condition — the status, the message, a code, or something else.",
+    "r": 3,
+    "alarm": false,
+    "type": "relation",
+    "card": null,
+    "first": "near",
+    "sec": "coverage-context-client-findings",
+    "home": "c7",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "case-role-on-this-endpoint": {
+    "id": "case-role-on-this-endpoint",
+    "label": "Case role on this endpoint",
+    "plain": "The reason a test came to this endpoint — to test it, or only to set something up for another test.",
+    "r": 2,
+    "alarm": false,
+    "type": "category",
+    "card": "0 · 2 · 32",
+    "first": "near",
+    "sec": "coverage-context-client-findings",
+    "home": "c7",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "workflow-step": {
+    "id": "workflow-step",
+    "label": "Workflow step",
+    "plain": "The step before this endpoint in its named walk, and the step after.",
+    "r": 1,
+    "alarm": false,
+    "type": "relation",
+    "card": null,
+    "first": "tooltip",
+    "sec": "coverage-context-client-findings",
+    "home": "c2",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "auth-scheme-gate": {
+    "id": "auth-scheme-gate",
+    "label": "Auth scheme + gate",
+    "plain": "The login scheme and the function that checks it.",
+    "r": 2,
+    "alarm": true,
+    "type": "category",
+    "card": "0 · 1 · 2",
+    "first": "mid",
+    "sec": "coverage-context-client-findings",
+    "home": null,
+    "shared": true,
+    "shared_in": 3,
+    "shared_blocks": [
+     "c6",
+     "c8",
+     "c5"
+    ]
+   },
+   "rate-tier": {
+    "id": "rate-tier",
+    "label": "Rate tier",
+    "plain": "The rate tier this endpoint sits on, tighter, standard or exempt — the cap is its detail.",
+    "r": 1,
+    "alarm": false,
+    "type": "category",
+    "card": "23 · 56 · 1",
+    "first": "near",
+    "sec": "coverage-context-client-findings",
+    "home": "c8",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "app-band": {
+    "id": "app-band",
+    "label": "App band",
+    "plain": "The middleware every request in the app passes through.",
+    "r": 1,
+    "alarm": false,
+    "type": "relation",
+    "card": null,
+    "first": "tooltip",
+    "sec": "coverage-context-client-findings",
+    "home": null,
+    "shared": true,
+    "shared_in": 3,
+    "shared_blocks": [
+     "c6",
+     "c8",
+     "c5"
+    ]
+   },
+   "who-fetches-it": {
+    "id": "who-fetches-it",
+    "label": "Who fetches it",
+    "plain": "The frontend hook that calls the endpoint and the screen that uses the hook.",
+    "r": 2,
+    "alarm": false,
+    "type": "relation",
+    "card": null,
+    "first": "mid",
+    "sec": "coverage-context-client-findings",
+    "home": "c11",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "can-the-client-tell-the-endings-apart": {
+    "id": "can-the-client-tell-the-endings-apart",
+    "label": "Can the client tell the endings apart",
+    "plain": "The screen's ability to tell two different refusals apart.",
+    "r": 1,
+    "alarm": true,
+    "type": "state",
+    "card": null,
+    "first": "not said",
+    "sec": "coverage-context-client-findings",
+    "home": "c11",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "findings": {
+    "id": "findings",
+    "label": "Findings",
+    "plain": "The anomalies the form check found on the endpoint.",
+    "r": 1,
+    "alarm": true,
+    "type": "state list",
+    "card": "2 · 2 · 6",
+    "first": "far",
+    "sec": "coverage-context-client-findings",
+    "home": "c10",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "how-common-this-piece-is": {
+    "id": "how-common-this-piece-is",
+    "label": "How common this piece is",
+    "plain": "The count of other endpoints that use the same piece, so the odd one out is visible.",
+    "r": 2,
+    "alarm": false,
+    "type": "quantity",
+    "card": "4 · 10 · 10",
+    "first": "mid",
+    "sec": "coverage-context-client-findings",
+    "home": "c5",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "where-this-endpoint-sits-in-the-app": {
+    "id": "where-this-endpoint-sits-in-the-app",
+    "label": "Where this endpoint sits in the app",
+    "plain": "The place of this endpoint among all the others — its rank, the middle value and the largest.",
+    "r": 2,
+    "alarm": false,
+    "type": "quantity",
+    "card": null,
+    "first": "mid",
+    "sec": "coverage-context-client-findings",
+    "home": "c10",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "why-this-slot-is-empty": {
+    "id": "why-this-slot-is-empty",
+    "label": "Why this slot is empty",
+    "plain": "The reason a slot is empty — we looked and found nothing, we did not look, or the kind has no such slot.",
+    "r": 3,
+    "alarm": false,
+    "type": "state",
+    "card": null,
+    "first": "far",
+    "sec": "coverage-context-client-findings",
+    "home": null,
+    "shared": true,
+    "shared_in": 3,
+    "shared_blocks": [
+     "c7",
+     "c6",
+     "c10"
+    ]
+   },
+   "expected-slots-at-this-stage": {
+    "id": "expected-slots-at-this-stage",
+    "label": "Expected slots at this stage",
+    "plain": "The line that says what a stage normally holds for this kind of element.",
+    "r": 2,
+    "alarm": false,
+    "type": "text",
+    "card": null,
+    "first": "tooltip",
+    "sec": "coverage-context-client-findings",
+    "home": "c6",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   },
+   "what-the-screen-does-on-this-ending": {
+    "id": "what-the-screen-does-on-this-ending",
+    "label": "What the screen does on this ending",
+    "plain": "The thing the user gets on an ending — a message, a retry, or a redirect.",
+    "r": 3,
+    "alarm": false,
+    "type": "relation",
+    "card": "0 · 0 · 6",
+    "first": "mid",
+    "sec": "coverage-context-client-findings",
+    "home": "c11",
+    "shared": false,
+    "shared_in": 0,
+    "shared_blocks": []
+   }
+  },
+  "sections": [
+   {
+    "key": "identity",
+    "short": "Identity",
+    "title": "Identity",
+    "plain": "The endpoint's name and the place it lives.",
+    "attrs": [
+     "method-path",
+     "entity-cluster",
+     "declared-status",
+     "file-line",
+     "risk-flag",
+     "signature"
+    ]
+   },
+   {
+    "key": "endings-and-decision-points",
+    "short": "Endings and decision points",
+    "title": "Endings and decision points — what determines the path",
+    "plain": "The ways a request can end and the checks that decide it.",
+    "attrs": [
+     "kinds-of-ending",
+     "the-endings",
+     "the-stage-an-ending-leaves-from",
+     "the-ordered-chain-per-ending",
+     "the-checks-met-in-run-order",
+     "the-route-that-passes-every-check",
+     "the-predicate-per-decision-point",
+     "status-code-per-ending",
+     "own-guards",
+     "deciding-branches",
+     "catches",
+     "switches"
+    ]
+   },
+   {
+    "key": "effects",
+    "short": "Effects",
+    "title": "Effects — the database, and what the endpoint sets in motion beyond it",
+    "plain": "The rows the endpoint reads and changes, and the work it starts outside the database.",
+    "attrs": [
+     "tables-touched",
+     "operation-per-table",
+     "fate-of-the-writes-per-ending",
+     "the-moment-a-table-is-touched",
+     "provisions",
+     "race-on-a-unique-key",
+     "idempotency-claim",
+     "how-this-table-was-found",
+     "events-published",
+     "tasks-dispatched",
+     "outside-services-called"
+    ]
+   },
+   {
+    "key": "in-flight-state",
+    "short": "In-flight state",
+    "title": "In-flight state — ephemeral but alive during the process",
+    "plain": "The values that stay alive only while the request runs.",
+    "attrs": [
+     "request-scoped-state",
+     "client-cache-effects",
+     "in-flight-values"
+    ]
+   },
+   {
+    "key": "structures",
+    "short": "Structures",
+    "title": "Structures",
+    "plain": "The shapes of the body that comes in and the body that goes out.",
+    "attrs": [
+     "request-shape",
+     "response-shape-per-ending",
+     "delivery",
+     "response-headers-per-ending",
+     "field-rules-of-the-request-body",
+     "validation-cases"
+    ]
+   },
+   {
+    "key": "functions",
+    "short": "Functions",
+    "title": "Functions — by how crucial they are",
+    "plain": "The code that runs, sorted by how much it decides.",
+    "attrs": [
+     "the-handler",
+     "decision-point-functions",
+     "roles-per-function",
+     "data-touching-functions",
+     "context-giving-functions",
+     "little-helpers-with-a-type",
+     "functions-behind-walk-levels"
+    ]
+   },
+   {
+    "key": "coverage-context-client-findings",
+    "short": "Coverage, context, client, findings",
+    "title": "Coverage, context, client, findings",
+    "plain": "The proof from tests, the callers, and the things that look wrong.",
+    "attrs": [
+     "coverage-per-condition",
+     "cases",
+     "what-the-case-asserts-on-this-condition",
+     "case-role-on-this-endpoint",
+     "workflow-step",
+     "auth-scheme-gate",
+     "rate-tier",
+     "app-band",
+     "who-fetches-it",
+     "can-the-client-tell-the-endings-apart",
+     "findings",
+     "how-common-this-piece-is",
+     "where-this-endpoint-sits-in-the-app",
+     "why-this-slot-is-empty",
+     "expected-slots-at-this-stage",
+     "what-the-screen-does-on-this-ending"
+    ]
+   }
+  ],
+  "shared": [
+   "the-endings",
+   "the-stage-an-ending-leaves-from",
+   "own-guards",
+   "tables-touched",
+   "response-shape-per-ending",
+   "context-giving-functions",
+   "auth-scheme-gate",
+   "app-band",
+   "why-this-slot-is-empty"
+  ],
+  "unplaced": [],
+  "n": {
+   "attrs": 61,
+   "blocks": 11,
+   "shared": 9,
+   "unplaced": 0,
+   "own": 52,
+   "groups": 9,
+   "sections": 7,
+   "with_surface": 10,
+   "without_surface": 1
   }
  }
 };

@@ -1744,7 +1744,7 @@ await p.waitForTimeout(320);
 const bootShown = await p.$$eval('.rtab', els => els.filter(e => !e.hidden && e.offsetParent !== null).map(e => e.id));
 ok(bootShown.length === 1 && bootShown[0] === 'rt-controls', 'at BOOT only the controls show — the toggle runs on load', bootShown.join(','));
 const rtabs = await p.$$eval('#railtabs .rtb', els => els.map(e => e.dataset.rt));
-ok(rtabs.join(',') === 'controls,cov', 'the rail toggles between CONTROLS and the no-loss checklist', rtabs.join(','));
+ok(rtabs.join(',') === 'controls,cov,map', 'the rail toggles between CONTROLS, the no-loss checklist and the section map', rtabs.join(','));
 ok(await p.$eval('#railtabs .rtb', e => e.classList.contains('on') && e.dataset.rt === 'controls'), 'controls are the DEFAULT view');
 for (const t of rtabs) { await p.click(`#railtabs .rtb[data-rt="${t}"]`); await p.waitForTimeout(90);
   const shown = await p.$$eval('.rtab', els => els.filter(e => !e.hidden).map(e => e.id));
@@ -1787,8 +1787,8 @@ ok(zones.join(',') === 'left,right', 'the rail shows one drop zone per pile, div
 const cpb = await p.$$('.barblk .cpb');
 ok(cpb.length === 9, 'every control block has a COPY button', String(cpb.length));
 const lines = await p.evaluate(() => Object.keys(window.COPYTXT).map(k => window.COPYTXT[k]()));
-ok(lines.length === 11 && lines.every(l => l.length > 20),
-   'eleven copy lines for nine blocks — `parts` and `frame` survive with no button, as the part-bar clause and the whole-frame round trip',
+ok(lines.length === 12 && lines.every(l => l.length > 20),
+   'twelve copy lines for nine control blocks — `parts` and `frame` survive with no button, and `sectionmap` writes the section map\'s feedback note',
    lines.join(' // ').slice(0, 160));
 { const headLine = await p.evaluate(() => window.COPYTXT.head());
   ok(/head bar · verbosity .* LEFT .* RIGHT .* off .* styles /.test(headLine), 'the head-bar copy line carries verbosity, both piles, what is off, and the per-element styles', headLine); }
@@ -3487,6 +3487,151 @@ if (checksFile) {
       'its card answers the four the operator asked for — what it is, where it is set and by what, where it is read, how long it lasts — and names the header its value came from', String(card).slice(0, 190)); }
   await p.mouse.move(5, 1090); await p.evaluate(() => window.hoverHide && window.hoverHide()); await p.waitForTimeout(200);
   ok(errs.length === errs0, 'the in-flight facts raise no page error', errs.slice(errs0, errs0 + 3).join(' | ')); }
+
+// ═══ THE SECTION MAP (operator 2026-09-22) — the card's ELEVEN RULED BLOCKS beside the bench that
+//     answers them, in the rail's third tab. Everything here MEASURES: the tree against LABEP's own
+//     generated data, the bench's STATE after a block click (never a class), the lit block after a
+//     bench move, the no-surface row's words, and the ids the feedback note carries. ═══
+{ const errs0 = errs.length;
+  const SM = await p.evaluate(() => window.LABEP.sectionmap);
+  ok(SM && SM.state === 'present' && Array.isArray(SM.blocks) && SM.blocks.length > 0,
+    'the facts carry a section map, read from the card\'s own ruled tree', SM ? SM.state + ' · ' + (SM.reason || '') : 'absent');
+  // the THIRD tab exists, is named, and SWITCHES — one rail section visible at a time
+  const rtabs = await p.$$eval('#railtabs .rtb', els => els.map(e => [e.dataset.rt, e.textContent.trim()]));
+  ok(rtabs.length === 3 && rtabs[2][0] === 'map' && rtabs[2][1] === 'section map',
+    'the rail has a THIRD tab, and it is the section map', JSON.stringify(rtabs));
+  await p.evaluate(() => window.railTab('map')); await p.waitForTimeout(150);
+  ok(await p.evaluate(() => [document.getElementById('rt-controls').hidden, document.getElementById('rt-cov').hidden, document.getElementById('rt-map').hidden].join(','))
+     === 'true,true,false', 'opening it hides the other two rail sections and shows its own');
+  ok(await p.$eval('#railtabs .rtb[data-rt="map"]', e => e.classList.contains('on')), 'and the tab reads as the one in play');
+  // ONE ROW PER BLOCK, and every count is the feed's own — never a number the page made up
+  const rows = await p.$$eval('#smtree .smb', els => els.map(e => ({ key: e.dataset.sm, built: e.dataset.built, act: e.dataset.act,
+    part: e.dataset.part, name: e.querySelector('.smbn').textContent, surf: e.querySelector('.smsurf').textContent, ct: e.querySelector('.smct').textContent })));
+  ok(rows.length === SM.blocks.length && rows.length === SM.n.blocks,
+    'the map draws one row per ruled block, and as many as the feed counts', rows.length + ' vs ' + SM.n.blocks);
+  ok(rows.every((r, i) => r.key === SM.blocks[i].key && r.name === SM.blocks[i].name),
+    'each row is the block the feed named, in the feed\'s own order', JSON.stringify(rows.map(r => r.key)));
+  ok(rows.every((r, i) => r.ct === SM.blocks[i].own.length + '·' + SM.blocks[i].shared.length),
+    'and its two counts are that block\'s own attributes and its shared ones, recounted from the feed',
+    JSON.stringify(rows.map((r, i) => [r.ct, SM.blocks[i].own.length + '·' + SM.blocks[i].shared.length]).filter(x => x[0] !== x[1])));
+  ok(rows.every((r, i) => r.surf === (SM.blocks[i].join.built ? '→ ' : '✕ ') + SM.blocks[i].join.surface),
+    'every row names the bench surface the words pair it with', JSON.stringify(rows.map(r => r.surf)));
+  ok(rows.filter(r => r.built === 'true').length === SM.n.with_surface
+     && rows.filter(r => r.built === 'false').length === SM.n.without_surface && SM.n.without_surface >= 1,
+    'the answered rows and the gap rows add up to the feed\'s own two counts',
+    rows.filter(r => r.built === 'true').length + '/' + SM.n.with_surface + ' · ' + rows.filter(r => r.built === 'false').length + '/' + SM.n.without_surface);
+  /* recount against a SECOND source: the drawn rows, not the generator's own sum of the same array (which is true by
+     construction). Every attribute of the inventory must appear once as a block's own, or be shared, or be said unplaced. */
+  const seen = await p.evaluate(() => { const S = window.LABEP.sectionmap, own = new Set(), sh = new Set();
+    S.blocks.forEach((b) => { (b.own || []).forEach((a) => own.add(a)); (b.shared || []).forEach((a) => sh.add(a)); });
+    return { own: own.size, shared: sh.size, both: [...own].filter((a) => sh.has(a)).length, attrs: (window.LABEP.sectionmap.attrs || []).length }; });
+  ok(seen.own === SM.n.own && seen.shared === SM.n.shared && seen.both === 0,
+    'no attribute is both a block\'s own and a shared one, and the counts are a recount of the rows themselves',
+    JSON.stringify(seen) + ' vs ' + JSON.stringify(SM.n));
+  ok(seen.own + seen.shared + SM.n.unplaced === SM.n.attrs,
+    'every attribute of the inventory is in a block, shared by three or more, or said to be unplaced',
+    seen.own + '+' + seen.shared + '+' + SM.n.unplaced + ' vs ' + SM.n.attrs);
+  // OPENING a block lists its attributes — own first, then the shared ones, marked apart
+  const first = SM.blocks[0];
+  await p.click(`#smtree .smb[data-sm="${first.key}"]`); await p.waitForTimeout(300);
+  const kids = await p.$$eval('#smtree .sma', els => els.map(e => [e.dataset.sm, e.dataset.shared, e.textContent.trim()]));
+  ok(kids.length === first.own.length + first.shared.length
+     && kids.slice(0, first.own.length).every((k, i) => k[0] === first.own[i] && k[1] === 'false')
+     && kids.slice(first.own.length).every((k, i) => k[0] === first.shared[i] && k[1] === 'true'),
+    'opening a block lists its own attributes, then the ones it shares, each marked for which it is', JSON.stringify(kids.map(k => k[0] + ':' + k[1])));
+  ok(kids.every(k => /^[123] /.test(k[2])), 'and each attribute leads with the importance it was RULED at', JSON.stringify(kids.map(k => k[2]).slice(0, 3)));
+  // ── BOTH WAYS, arm 1: a block click MOVES THE BENCH. Asserted on the bench's own state. ──
+  const byAct = (kind, variant) => SM.blocks.find(b => b.join.act.kind === kind && (variant === undefined || !!b.join.act.variant === variant));
+  const plain = byAct('part', false), withVar = byAct('part', true);
+  await p.evaluate(() => window.showTab('security')); await p.waitForTimeout(250);
+  await p.click(`#smtree .smb[data-sm="${plain.key}"]`); await p.waitForTimeout(350);
+  ok(await p.$eval('#panel', e => e.dataset.tab) === plain.join.act.part,
+    'clicking a block opens the part its words name — the PANEL moved, not a class', await p.$eval('#panel', e => e.dataset.tab));
+  ok(await p.$eval(`#smtree .smb[data-sm="${plain.key}"]`, e => e.dataset.lit) === 'true'
+     && await p.$eval('#smlead', e => e.dataset.lead) === 'map',
+    'and the map says YOU opened it here', await p.$eval('#smlead', e => e.textContent.trim()));
+  await p.click(`#smtree .smb[data-sm="${withVar.key}"]`); await p.waitForTimeout(350);
+  ok(await p.evaluate(() => [document.getElementById('panel').dataset.tab, document.getElementById('panel').dataset.variant].join('/'))
+     === withVar.join.act.part + '/' + withVar.join.act.variant,
+    'a block whose words name a distribution switches the panel to THAT distribution',
+    await p.evaluate(() => document.getElementById('panel').dataset.tab + '/' + document.getElementById('panel').dataset.variant));
+  const pathB = byAct('path'), exitB = byAct('exit');
+  await p.evaluate(() => window.clearPath()); await p.waitForTimeout(200);
+  await p.click(`#smtree .smb[data-sm="${pathB.key}"]`); await p.waitForTimeout(400);
+  ok(await p.evaluate(() => !!(window.SEL || {}).path) && await p.evaluate(() => window.portraitVar(document.getElementById('panel').dataset.tab)) === 'cmd-path',
+    'the in-flight block picks a whole route and leads the portrait with its record',
+    JSON.stringify(await p.evaluate(() => [(window.SEL || {}).path, window.portraitVar(document.getElementById('panel').dataset.tab)])));
+  // ── BOTH WAYS, arm 2: the BENCH moves and the right block lights. No polling — the calls are wrapped. ──
+  await p.evaluate(() => window.clearPath()); await p.waitForTimeout(200);
+  for (const b of SM.blocks.filter(x => x.join.act.kind === 'part' && !x.join.act.variant)) {
+    await p.evaluate(k => window.showTab(k), b.join.act.part); await p.waitForTimeout(220);
+    const lit = await p.evaluate(() => Object.keys(window.smLit()));
+    ok(lit.indexOf(b.key) >= 0, `opening ${b.join.act.part} on the bench lights ${b.name}`, lit.join(','));
+    ok(await p.$eval('#smlead', e => e.dataset.lead) === 'lab', 'and the map says the BENCH moved, not the map', await p.$eval('#smlead', e => e.textContent.trim())); }
+  { await p.evaluate(k => window.showTab(k), withVar.join.act.part); await p.waitForTimeout(200);
+    const other = await p.evaluate(a => (window.PANELS[a.part].variants.map(v => v.key).filter(k => k !== a.variant))[0], withVar.join.act);
+    ok(!!other, 'the part that block names draws more than one distribution, so the dark test can run', String(other));
+    await p.evaluate(a => window.showVariant(a.part, a.other), { part: withVar.join.act.part, other });
+    await p.waitForTimeout(250);
+    ok((await p.evaluate(() => Object.keys(window.smLit()))).indexOf(withVar.key) < 0,
+      'a block that names a distribution goes DARK when the bench draws a different one', JSON.stringify(await p.evaluate(() => Object.keys(window.smLit()))));
+    await p.evaluate(a => window.showVariant(a.part, a.variant), withVar.join.act); await p.waitForTimeout(250);
+    ok((await p.evaluate(() => Object.keys(window.smLit()))).indexOf(withVar.key) >= 0, 'and lights again when it comes back'); }
+  { await p.evaluate(() => { const e = ((window.LABEP.forms || {}).exits || [])[0]; if (e) window.selectExit(e.id); }); await p.waitForTimeout(300);
+    ok((await p.evaluate(() => Object.keys(window.smLit()))).indexOf(exitB.key) >= 0,
+      'picking an ending on the bench lights the Endings block', JSON.stringify(await p.evaluate(() => Object.keys(window.smLit()))));
+    await p.evaluate(() => window.clearPath()); await p.waitForTimeout(250);
+    ok((await p.evaluate(() => Object.keys(window.smLit()))).indexOf(exitB.key) < 0, 'and clearing it puts the block out again'); }
+  // ── A BLOCK WITH NO SURFACE says what would have to be built, and never moves the bench silently ──
+  { const gapB = SM.blocks.find(b => !b.join.built);
+    ok(gapB && gapB.join.gap, 'the feed names at least one block no bench surface answers, and says what is missing', gapB ? gapB.name : 'none');
+    await p.evaluate(() => window.showTab('tests')); await p.waitForTimeout(250);
+    await p.evaluate(() => window.hoverHide());
+    await p.click(`#smtree .smb[data-sm="${gapB.key}"]`); await p.waitForTimeout(400);
+    ok(await p.$eval('#panel', e => e.dataset.tab) === 'tests', 'clicking it leaves the bench exactly where it was', await p.$eval('#panel', e => e.dataset.tab));
+    const said = await p.evaluate(() => { const s = document.getElementById('smsay'); return s.hidden ? null : s.innerText.replace(/\s+/g, ' '); });
+    ok(!!said && /to build/.test(said) && said.indexOf(gapB.join.gap.slice(0, 40)) >= 0,
+      'and writes instead what would have to be built, in the words file\'s own sentence', String(said).slice(0, 170));
+    ok(await p.$eval(`#smtree .smb[data-sm="${gapB.key}"]`, e => e.dataset.lit) === 'false', 'a block with no surface never lights');
+    await p.evaluate(k => window.smGo(k), SM.blocks.find(b => b.join.built).key); await p.waitForTimeout(300);
+    ok(await p.$eval('#smsay', e => e.hidden), 'and the ask goes away as soon as a block with a surface is picked');
+    await p.evaluate(() => window.hoverHide()); }
+  // ── THE FEEDBACK COPY: the ids someone would need to act on the note, and a blank line for his words ──
+  { await p.evaluate(() => window.showTab('data')); await p.waitForTimeout(200);
+    await p.evaluate(() => { const pth = ((window.LABEP.forms || {}).paths || [])[0]; if (pth) window.selectPath(pth.id); }); await p.waitForTimeout(300);
+    await p.evaluate(k => window.smGo(k), SM.blocks[0].key); await p.waitForTimeout(300);
+    const note = await p.evaluate(() => window.COPYTXT.sectionmap());
+    const sel = await p.evaluate(() => (window.SEL || {}).path);
+    const b0 = SM.blocks[0];
+    ok(note.indexOf(F.identity.label) >= 0 && note.indexOf(sel) >= 0, 'the note carries the door and the id of what is selected', note.slice(0, 120));
+    ok(note.indexOf(b0.name) >= 0 && note.indexOf(b0.sig) >= 0 && note.indexOf(b0.key) >= 0,
+      'and the block by name, by its question signature and by its key', note.split('\n').find(l => /^block/.test(l)));
+    ok(note.indexOf(b0.plain) >= 0 && note.indexOf(b0.join.says) >= 0,
+      'it says what the card should hold against what the bench draws', note.split('\n').filter(l => /^(the map says|the bench draws)/.test(l)).join(' | ').slice(0, 160));
+    ok(note.indexOf(SM.source.inv_hash) >= 0 && note.indexOf(SM.source.cells_hash) >= 0 && note.indexOf(String(F.head)) >= 0,
+      'and the head the facts came from with the two hashes the tree was checked against', note.split('\n').filter(l => /^(facts|tree)/.test(l)).join(' | '));
+    ok(/\n\n[^\n]*\n$/.test(note) && note.split('\n').length <= 14, 'it ends with a blank line and his own prompt, and stays short enough to read', String(note.split('\n').length));
+    const btn = await p.$('#smhd .cpb');
+    ok(!!btn, 'the feedback copy sits in the tab\'s header, as the same button every other rail block carries');
+    if (btn) { await btn.hover(); await p.waitForTimeout(500);
+      const hv = await p.evaluate(() => { const h = document.getElementById('hover'); return h.hidden ? null : (h.textContent || '').replace(/\s+/g, ' '); });
+      ok(!!hv && /paste back/.test(hv), 'and its hover card shows the note it would put on the clipboard', String(hv).slice(0, 120));
+      await p.evaluate(() => window.hoverHide()); } }
+  // ── D-017: how the MAP knows is folded away, not on the face ──
+  { ok(await p.$eval('#smmore', e => e.hidden), 'how the map knows a thing is folded away at boot (D-017)');
+    const face = await p.$eval('#rt-map', e => e.innerText);
+    ok(face.indexOf(SM.source.inv_hash) < 0, 'so no hash rides the tab\'s face', face.slice(0, 80));
+    await p.click('#smmoreb'); await p.waitForTimeout(250);
+    const more = await p.$eval('#smmore', e => e.innerText);
+    ok(!await p.$eval('#smmore', e => e.hidden) && more.indexOf(SM.source.inv_hash) >= 0 && /weighs into most/.test(more),
+      'and opening it gives the rule and the hashes, once asked for', more.slice(0, 110));
+    await p.click('#smmoreb'); await p.waitForTimeout(150); }
+  // ── the 12px floor, inside the tab ──
+  { const small = await p.$$eval('#rt-map *', els => els.filter(e => e.offsetParent !== null && (e.textContent || '').trim() && !e.children.length)
+      .map(e => [e.className || e.tagName, parseFloat(getComputedStyle(e).fontSize)]).filter(x => x[1] < 12));
+    ok(small.length === 0, 'nothing in the section map computes under 12px', JSON.stringify(small.slice(0, 4))); }
+  ok(errs.length === errs0, 'the section map raises no page error', errs.slice(errs0, errs0 + 3).join(' | '));
+  await p.evaluate(() => { window.clearPath(); window.railTab('controls'); }); await p.waitForTimeout(150); }
 
 const cov = await p.evaluate(() => window.COV.state());
 const covered = Object.keys(cov).filter(k => cov[k].length), missing = Object.keys(cov).filter(k => !cov[k].length);

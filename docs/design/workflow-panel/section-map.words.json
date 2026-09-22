@@ -1,0 +1,138 @@
+{
+ "_about": "Authored words for the endpoint lab's SECTION MAP tab — the card's eleven ruled blocks (prisms-endpoint.json, D-015) laid beside the lab surface that answers each one. The tree, the attributes and every count are GENERATED (gen-endpoint-facts.py reads the brain map's own committed tree, which is m1-cluster.js's homes, self-proven at its generation). Nothing numeric is typed here: {tokens} are filled by the generator. The JOIN below is a PROPOSAL — authored words, never a measurement — and the page says so on its face. Plain lines follow gabe-lens plain mode and are checked by plain-audit.py.",
+ "tab": {
+  "word": "section map",
+  "note": "the card's {nBlocks} ruled blocks against the lab surface that answers each one. Clicking a block moves the bench; moving the bench lights the block. Lab chrome — none of it ships with the console."
+ },
+ "head": {
+  "title": "section map",
+  "sub": "{nBlocks} blocks · {nAttrs} attributes · {nWithSurface} answered here, {nWithoutSurface} not",
+  "lede": "The ruled shape of the endpoint card, beside what the bench draws for it today.",
+  "proposal": "The pairing of a block to a lab surface is AUTHORED, not measured — it is a proposal, and the gap rows are the ones worth arguing with."
+ },
+ "strings": {
+  "rootSub": "{nAttrs} attributes · {nBlocks} blocks",
+  "ownWord": "own",
+  "sharedWord": "shared",
+  "sharedNote": "An attribute three or more blocks need belongs to none of them, so it is listed under each as shared.",
+  "noSurface": "no surface on the bench",
+  "leadYou": "you opened this here",
+  "leadLab": "the bench moved and this lit",
+  "leadIdle": "nothing open yet",
+  "absent": "The card's ruled tree was not read, so nothing is drawn here.",
+  "staleNote": "The brain map's committed tree was built from an older inventory, so the blocks below may not match the ruling.",
+  "moreShow": "more information",
+  "moreHide": "hide it again",
+  "feedbackWhat": "a note about what you are looking at",
+  "feedbackHint": "the bench's state, the block it answers and the gap between them, ready to paste back with your words under it"
+ },
+ "more": {
+  "lines": [
+   "A block is a group of the {nQuestions} questions, ruled by hand; the {nBlocks} groups are the ruling D-015.",
+   "An attribute's home is the block its use weighs into most, and one that three or more blocks need is shared and homed nowhere.",
+   "The tree is read from the brain map's committed page, whose own generator proves its home rule against m1-cluster.js on every run."
+  ]
+ },
+ "surfaces": {
+  "data": "the Data panel",
+  "schemas": "the Schemas panel",
+  "functions": "the Functions panel",
+  "tests": "the Tests panel",
+  "widening": "the Widening panel",
+  "security": "the Security panel",
+  "command": "the command panel",
+  "portrait": "the portrait, path record",
+  "none": "nothing yet"
+ },
+ "acts": {
+  "part": "opens that part on the bench",
+  "variant": "opens that part and switches it to the distribution that draws the block",
+  "exit": "picks an ending, so every part is projected onto it",
+  "path": "picks a whole route and draws its record in the portrait",
+  "none": "names what would have to be built, because no surface answers it"
+ },
+ "join": {
+  "_about": "Keyed by the block's QUESTION SIGNATURE, which is prisms-endpoint.json's own key and survives a reorder. Every signature must appear here or the generator stops. `act` is parsed: part:<k> · part:<k>/<variant> · exit · path · none.",
+  "Q1+Q2+Q9": {
+   "act": "part:data",
+   "says": "The Data panel draws every table the endpoint touches, the operation on each, and the fate of the writes at the end.",
+   "gap": "Provisions — what a dependency's own commit leaves behind — is carried in the feed and drawn nowhere.",
+   "plain": "Tables the endpoint reads and writes, with the fate of each change."
+  },
+  "Q3+Q11": {
+   "act": "exit",
+   "says": "The command panel holds one cell per way the request ends, and picking one projects every part onto that ending.",
+   "gap": null,
+   "plain": "Every way the request can end, and the one it is expected to take."
+  },
+  "Q5+Q7": {
+   "act": "part:data/stageblocks",
+   "says": "Stage blocks lay the same tables under the stage that touches them, which is the request order the block asks for.",
+   "gap": "The stage spine is drawn only under the Data topic, so the other five parts have no stage reading of their own.",
+   "plain": "Stations a request passes, in the order they run."
+  },
+  "Q4": {
+   "act": "part:tests",
+   "says": "The Tests panel stacks the cases by the status they assert and names the conditions nothing reaches.",
+   "gap": null,
+   "plain": "Conditions a test proves, and the ones nothing reaches."
+  },
+  "Q6+Q17": {
+   "act": "part:security",
+   "says": "The Security panel draws the app band, this endpoint's own guards and the gate among them, in run order.",
+   "gap": "Deciding branches and catches — the forks one call down — ride the path portrait instead of this panel.",
+   "plain": "Checks that stop a request, and the forks that decide its ending."
+  },
+  "Q10+Q13": {
+   "act": "part:schemas",
+   "says": "The Schemas panel draws the request body and the response body as blocks, every field a mark of its declared kind.",
+   "gap": "Response headers per ending are in the feed and appear on no schema block.",
+   "plain": "Shape of the body that comes in, and the body that goes out."
+  },
+  "Q15+Q18+Q19": {
+   "act": "part:functions",
+   "says": "The Functions panel draws the handler and the call tree behind it, each function marked by what it decides and touches.",
+   "gap": null,
+   "plain": "Code that runs behind the door, sorted by how much it decides."
+  },
+  "Q16": {
+   "act": "path",
+   "says": "The path record's last section names everything alive while the request runs, coloured by how long it lasts.",
+   "gap": "A route must be picked first — the in-flight reading has no panel of its own.",
+   "plain": "Values alive while the request runs, and how long each one lasts."
+  },
+  "Q12": {
+   "act": "part:security",
+   "says": "The Security panel carries the idempotency claim and the delivery fact as two of its one-line rows.",
+   "gap": "How common a piece is rides hover cards only, and the tasks and events the endpoint sets in motion are drawn nowhere.",
+   "plain": "Machinery this door shares with the rest of the app, against what only it does."
+  },
+  "Q14+Q20": {
+   "act": "none",
+   "says": "The head bar names the door and flies the risk flag, and the command panel counts the findings behind one cell.",
+   "gap": "No panel gathers the overview — coverage per condition, the findings themselves, the endpoint's place in the app and the outside services it calls have no surface.",
+   "plain": "Whole-door reading — size, findings, and the place this endpoint sits in the app."
+  },
+  "Q8": {
+   "act": "part:widening",
+   "says": "The Widening panel draws the screens that fetch this endpoint and the ladder from the door out to the app.",
+   "gap": "Whether the client can tell the endings apart is measured in the feed and drawn on no rung.",
+   "plain": "Screens that call this door, and what they do with each answer."
+  }
+ },
+ "feedback": {
+  "lede": "section map · a note from the bench",
+  "fields": {
+   "door": "door",
+   "bench": "bench",
+   "block": "block",
+   "surface": "the map says",
+   "draws": "the bench draws",
+   "gap": "gap",
+   "selection": "selected",
+   "facts": "facts",
+   "tree": "tree"
+  },
+  "tail": "your words:"
+ }
+}
