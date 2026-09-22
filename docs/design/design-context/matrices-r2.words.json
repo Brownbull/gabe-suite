@@ -1,0 +1,70 @@
+{
+ "_about": "Authored prose ONLY for the round-2 matrices page (gen-matrices.js --round 2). Every number is a {token} the generator fills from m1-input.json · m1-endpoint.json · inventory-endpoint.md · prisms-endpoint.json and m1-cluster.js's arithmetic; a digit typed in here is a bug (a decision's id, D-0NN, is a name, not a fact). Block names, plain lines and standpoints are NOT repeated here — they live in prisms-endpoint.json. A block the arithmetic merged is named by the ruled blocks it holds, from the data. The round-1 takes for the matrix, the spine, the plan and the leftovers are reused from prisms-endpoint.json; only the points-of-view takes change with the cut.",
+ "pageTitle": "Endpoint Matrices Round Two",
+ "head": {
+  "eyebrow": "design context · loop 1 · step 2 of 6 · round 2",
+  "title": "Which attributes answer which questions — round 2",
+  "lede": "{nq} questions you ask about an endpoint, against the {na} attributes M1 round 2 rated. A filled square means you need that attribute on screen to answer that question. The squares are the round-2 data; how the columns are cut into blocks is the one thing on this page that is a ruling, not arithmetic."
+ },
+ "statement": {
+  "title": "A cut the arithmetic did not choose",
+  "open": "This page draws a cut the arithmetic did not choose: the ladder's own cut leaves {arithN} blocks, and your ruling holds {ruledN}.",
+  "how": "The arithmetic cuts where the drop between two joins is widest — {arithDrop}, after {arithJoins} joins. The runner-up drop, {runnerDrop}, would leave {runnerN} blocks.",
+  "ruledOn": "Your {ruledN} are this same ladder stopped after {ruledJoins} joins, at a drop of {ruledDrop} — {ruledRank} of the drops the rule weighs.",
+  "ruledOff": "Your {ruledN} are not a cut of this ladder: no number of joins draws them.",
+  "why": "D-021 keeps your {ruledN}. The round-2 cells stand as data: every attribute's home and the top band are read from them over your blocks. Only the cut is yours.",
+  "bigArith": "the arithmetic's cut",
+  "bigRuled": "your ruling",
+  "mergesHead": "What the arithmetic merged that you keep apart",
+  "mergeJoin": "joined at",
+  "mergeThen": "then",
+  "mergesNone": "Nothing — every block of the arithmetic's cut is one of yours.",
+  "switchLabel": "Blocks drawn",
+  "pick": "Shown as a switch, not side by side: two copies of a {na}-row, {nq}-column matrix do not fit beside each other in one column, and a switch keeps one matrix at full size with every section below following the same cut.",
+  "changedHead": "What changed since round 1",
+  "changed": "{nAdded} attributes were added and rated, so the rows went from {r1Attrs} to {na} and the rated squares from {r1Cells} to {nCells}. {nGone} of the rated rows are no longer in the living inventory (D-016): their squares still count in the arithmetic, and the matrix draws their names struck through.",
+  "recordLink": "Round 1's page stays the record",
+  "recordNote": "it drew {r1Blocks} blocks from {r1Attrs} attributes, and it is the page you ruled on (D-015).",
+  "pickMark": "my pick",
+  "addedHead": "The attributes added since round 1"
+ },
+ "cuts": {
+  "eleven": {
+   "name": "Your {ruledN}",
+   "tag": "your ruling · the default",
+   "tip": "Draw the blocks you ruled (D-015, D-021)."
+  },
+  "arith": {
+   "name": "The arithmetic's {arithN}",
+   "tag": "not ruled",
+   "tip": "Draw the ladder's own cut, by the widest drop."
+  }
+ },
+ "status": {
+  "eleven": "Ruled: kept (D-015, D-021).",
+  "arithSame": "The arithmetic's block, and the same as one of yours.",
+  "arithMerged": "The arithmetic's block — not ruled. It merges {k} of your blocks; your ruling keeps them apart."
+ },
+ "ladder": {
+  "arith": "the arithmetic's cut · a drop of {d}",
+  "ruled": "your cut · a drop of {d}",
+  "ruledTip": "Where your ruling stops the ladder: the joins above this line are in your blocks, the ones below are kept apart.",
+  "arithJoin": "joined by the arithmetic, kept apart by your ruling"
+ },
+ "goneWord": "No longer a row of the living inventory (D-016). Its squares still count in the arithmetic.",
+ "goneItem": "no longer a row (D-016)",
+ "takes": {
+  "eleven": [
+   "These are your {ruledN} blocks, drawn over the round-2 squares. Where each attribute sits, and which ones form the top band, is read from the squares; only the cut is yours.",
+   "{nSingle} of them hold a single question.",
+   "The arithmetic would stop at {arithN}. Switch to its cut above the matrix to see those blocks drawn."
+  ],
+  "arith": [
+   "The ladder's own cut: the widest drop between two joins is {arithDrop}, between {simAbove} and {simBelow}, and it leaves {arithN} blocks.",
+   "{nMerged} of them merge blocks you keep apart.",
+   "Not ruled. Your ruling holds {ruledN} (D-021); this view is here so the choice stays visible."
+  ]
+ },
+ "prismsCap": "One card per block, in the cut the switch above draws. The blocks of your ruling are settled (D-015, D-021); nothing on this page asks for a verdict.",
+ "mergedPlain": "The arithmetic's block over {k} of your blocks: {names}."
+}

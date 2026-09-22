@@ -1,4 +1,4 @@
-<title>Endpoint Card Matrices</title>
+<!--__R1{--><title>Endpoint Card Matrices</title><!--}__R1--><!--__R2{--><title>{{pageTitle}}</title><!--}__R2-->
 
 <!--__KIT1__-->
 <style>
@@ -154,15 +154,54 @@
   .out { font: inherit; letter-spacing: inherit; font-size: var(--fs-sm); line-height: 1.5; color: var(--ink); background: var(--raised); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; width: 100%; box-sizing: border-box; min-height: 12em; resize: vertical; white-space: pre; overflow: auto; }
   .acts { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; position: relative; }
   .said { font-size: var(--fs-sm); color: var(--accent); min-height: 1.4em; }
-</style>
+/*__R2{*/
+  /* ── round 2 only: the cut statement, the cut switch, the rows no longer in the inventory ── */
+  .cut-open { font-size: 1.3em; line-height: 1.4; color: var(--ink); margin: 0; max-width: 60ch; text-wrap: pretty; }
+  .bigs { display: flex; flex-wrap: wrap; gap: 12px 28px; }
+  .big { display: flex; align-items: baseline; gap: 10px; }
+  .big b { font-size: 2.6em; line-height: 1; font-variant-numeric: tabular-nums; color: var(--alert); }
+  .big[data-cut="eleven"] b { color: var(--accent); }
+  .big span { font-size: var(--fs-sm); color: var(--ink-soft); }
+  .h3 { margin: 0; font-size: 1em; }
+  .merges { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 5px; font-size: var(--fs-sm); color: var(--ink-soft); }
+  .merges b { color: var(--ink); font-weight: 650; }
+  .cutsw .btn { display: inline-flex; align-items: baseline; gap: 8px; }
+  .cutsw .tag { font-size: var(--fs-min); color: var(--muted); }
+  .cutsw .btn[aria-checked="true"] .tag { color: inherit; }
+  .pick { font-size: var(--fs-sm); color: var(--ink-soft); border: 1.5px dashed var(--rule); border-radius: 8px; padding: 8px 12px; margin: 0; max-width: 78ch; }
+  .pickmark { display: inline-block; font-size: var(--fs-min); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); border: 1px dashed var(--accent); border-radius: 999px; padding: 0 8px; margin-right: 8px; }
+  .prism .status { font-size: var(--fs-sm); color: var(--ink); border-left: 3px solid var(--accent); padding-left: 8px; margin: 0; }
+  .prism .status[data-ruled="false"] { border-left-color: var(--alert); color: var(--alert); }
+  .prism .verdict, .prism .note, #sec-copy { display: none; }
+  .ladder .trk[data-arith="true"] i { background: color-mix(in srgb, var(--alert) 55%, var(--card)); }
+  .ladder .cutline[data-cut="ruled"] { color: var(--accent); }
+  .ladder .cutline[data-cut="ruled"]::before, .ladder .cutline[data-cut="ruled"]::after { border-top: 2px solid var(--accent); }
+  .mx .rl[data-gone="true"] .t, .chip[data-gone="true"], .nm[data-gone="true"] .tx { text-decoration: line-through; text-decoration-color: var(--alert); color: var(--muted); }
+  .lg .mg { width: 18px; height: 0; border-top: 2px solid var(--alert); }
+/*}__R2*/</style>
 
 <div class="artifact-page">
   <header>
-    <p class="eyebrow">design context · loop 1 · step 2 of 6</p>
+<!--__R1{-->    <p class="eyebrow">design context · loop 1 · step 2 of 6</p>
     <h1>Which attributes answer which questions</h1>
     <p class="lede"><span id="n-q">—</span> questions you ask about an endpoint, against the <span id="n-a">—</span> attributes of the endpoint card, <span id="n-f">—</span> of them added by me after your rating pass. A filled square means you need that attribute on screen to answer that question. Reordered, the squares fall into blocks, and each block is a point of view.</p>
-  </header>
-
+<!--}__R1--><!--__R2{-->    <p class="eyebrow">{{eyebrow}}</p>
+    <h1>{{title}}</h1>
+    <p class="lede">{{lede}}<span id="n-f" hidden></span></p>
+<!--}__R2-->  </header>
+<!--__R2{-->
+  <section class="sec" data-sec="7" id="sec-cut">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="3"></circle><path d="M8.12 8.12 12 12"></path><path d="M20 4 8.12 15.88"></path><circle cx="6" cy="18" r="3"></circle><path d="M14.8 14.8 20 20"></path></svg>{{stTitle}}</h2><span class="n">D-021</span></div>
+    <p class="cut-open" id="cut-open">{{stOpen}}</p>
+    <div class="bigs"><div class="big" data-cut="arith"><b data-n="arith">{{arithN}}</b><span>{{bigArith}}</span></div><div class="big" data-cut="eleven"><b data-n="ruled">{{ruledN}}</b><span>{{bigRuled}}</span></div></div>
+    <p class="cap" id="cut-how">{{stHow}}</p>
+    <p class="cap" id="cut-why">{{stWhy}}</p>
+    <div class="panel"><h3 class="h3">{{mergesHead}}</h3>{{merges}}</div>
+    <div class="bar-ctl"><span class="lab2">{{switchLabel}}</span>{{switch1}}</div>
+    <p class="pick" id="cut-pick"><span class="pickmark">{{pickMark}}</span>{{pick}}</p>
+    <div class="panel"><h3 class="h3">{{changedHead}}</h3><p class="cap" id="cut-changed">{{changed}}</p><p class="lab2">{{addedHead}}</p><div class="chips" id="cut-added">{{added}}</div><p class="cap" id="cut-record"><a href="matrices-endpoint.html">{{recordLink}}</a> — {{recordNote}}</p></div>
+  </section>
+<!--}__R2-->
   <section class="sec" data-sec="1" id="sec-m1">
     <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M3 9h18"></path><path d="M3 15h18"></path><path d="M9 3v18"></path><path d="M15 3v18"></path></svg>The matrix</h2><span class="n" id="m1-n">—</span></div>
     <p class="cap">Each row is an attribute, each column a question. Hover anything for its words.</p>
@@ -172,8 +211,8 @@
         <button class="btn" type="button" role="radio" data-ord="inv" aria-checked="false">Inventory order</button>
       </div>
       <button class="btn" type="button" id="replay">Replay the reordering</button>
-      <span class="sp"></span>
-      <div class="lg" id="lg1"><span><i class="m2"></i>needed</span><span><i class="m1"></i>helps</span><span><i class="mj"></i>the agent raters split, a judge agent settled it</span><span><i class="mbs"></i>three or more points of view need it</span><span><i class="mb"></i>a block</span></div>
+<!--__R2{-->{{switch2}}<!--}__R2-->      <span class="sp"></span>
+      <div class="lg" id="lg1"><span><i class="m2"></i>needed</span><span><i class="m1"></i>helps</span><span><i class="mj"></i>the agent raters split, a judge agent settled it</span><span><i class="mbs"></i>three or more points of view need it</span><span><i class="mb"></i>a block</span><!--__R2{--><span><i class="mg"></i>{{goneLegend}}</span><!--}__R2--></div>
     </div>
     <div class="panel"><div class="mx-wrap"><div class="mx still" id="mx" data-fx="m1" data-order="clu"></div></div></div>
     <div class="take" id="take1"></div>
@@ -181,7 +220,7 @@
 
   <section class="sec" data-sec="2" id="sec-prisms">
     <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path><circle cx="12" cy="12" r="3"></circle></svg>The points of view</h2><span class="n" id="pr-n">—</span></div>
-    <p class="cap">One card per block. The name is my proposal. Keep it, merge it into another, or drop it, and write a better name in the note if mine is wrong.</p>
+    <!--__R1{--><p class="cap">One card per block. The name is my proposal. Keep it, merge it into another, or drop it, and write a better name in the note if mine is wrong.</p><!--}__R1--><!--__R2{--><p class="cap">{{prismsCap}}</p><!--}__R2-->
     <div class="panel"><p class="lab2">Where the cut falls</p><div class="ladder" id="ladder"></div></div>
     <div class="prisms" id="prisms"></div>
     <div class="take" id="take2"></div>
@@ -222,7 +261,8 @@
 <!--__KIT3__-->
 <script>window.MX_DATA = /*__DATA__*/null;</script>
 <script>
-(function () {
+/*__R2{*/window.__MXRUN = function () {
+/*}__R2*/(function () {
   "use strict";
   var D = window.MX_DATA, KEY = "gabe:matrices:" + D.kind;
   var BELL = '<path d="M10.268 21a2 2 0 0 0 3.464 0"></path><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path>';
@@ -449,5 +489,61 @@
   });
   paintOut();
   window.__mx = { text: buildText, data: D, order: function () { return order; } };
+})();/*__R2{*/
+};
+window.__MXRUN();/*}__R2*/
+</script><!--__R2{-->
+<script>
+(function () {                                        /* round 2: the cut switch — his eleven (default) or the arithmetic's cut */
+  "use strict";
+  var BASE = JSON.parse(JSON.stringify(window.MX_DATA)), R = BASE.r2, cur = "eleven";
+  var PER = ["clusters", "spine", "spineIn", "rowOrder", "colOrder", "ladder", "cut", "cutWord"];
+  var CLEAR = ["mx", "prisms", "ladder", "bars", "meter", "m2g", "lg2", "left", "take1", "take2", "take3", "take4", "take5"];
+  var FRESH = ["ord", "replay", "copy", "reset", "face-note"];              /* re-made so a re-run never stacks a second listener */
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function compose(k) {
+    var v = R.cuts[k], D = JSON.parse(JSON.stringify(BASE));
+    PER.forEach(function (key) { D[key] = v[key]; }); D.takes.prisms = v.takes;
+    D.attrs.forEach(function (a) { a.home = v.homes[a.id] || null; }); D.questions.forEach(function (q) { q.cluster = v.qc[q.id]; });
+    return D;
+  }
+  var GONE = {}; BASE.attrs.forEach(function (a) { if (a.gone) GONE[a.label] = true; });
+  function decorate() {
+    var D = window.MX_DATA, v = R.cuts[cur];
+    Array.prototype.forEach.call(document.querySelectorAll("#prisms .prism"), function (card, i) {
+      var c = D.clusters[i], st = document.createElement("p"); card.setAttribute("data-sig", c.sig);
+      st.className = "status"; st.setAttribute("data-ruled", String(!!v.ruled[c.sig])); st.textContent = v.status[c.sig];
+      var h3 = card.querySelector("h3"); card.insertBefore(st, h3.nextSibling);
+    });
+    var host = $("ladder"), whos = host.querySelectorAll(".who"), trks = host.querySelectorAll(".trk");
+    Array.prototype.forEach.call(trks, function (t, i) { if (D.ladder[i] && D.ladder[i].arith) t.setAttribute("data-arith", "true"); });
+    var own = host.querySelector(".cutline"), mine = cur === "eleven" ? "ruled" : "arith", other = mine === "ruled" ? "arith" : "ruled";
+    if (own) { own.setAttribute("data-cut", mine); own.textContent = R.lines[mine]; }
+    var oi = R.lines.at[other], at = whos[oi];
+    if (at && oi !== D.cut.index) { var cl = document.createElement("div"); cl.className = "cutline"; cl.setAttribute("data-cut", other); cl.textContent = R.lines[other]; host.insertBefore(cl, at); }
+    Array.prototype.forEach.call(document.querySelectorAll("#mx .rl, #prisms .chip, #m2g .nm, #bars .nm"), function (n) {
+      var t = n.querySelector(".t, .tx"), label = t ? t.textContent : n.lastChild && n.lastChild.textContent; if (GONE[label]) n.setAttribute("data-gone", "true");
+    });
+    Array.prototype.forEach.call(document.querySelectorAll(".cutsw [data-cut]"), function (b) { b.setAttribute("aria-checked", String(b.getAttribute("data-cut") === cur)); });
+    document.documentElement.setAttribute("data-cut", cur);
+  }
+  function setCut(k) {
+    if (!R.cuts[k] || k === cur) return; cur = k;
+    window.MX_DATA = compose(k);
+    CLEAR.forEach(function (id) { $(id).innerHTML = ""; });
+    Array.prototype.forEach.call(document.querySelectorAll("#sec-m1 .tip, #sec-prisms .tip, #sec-spine .tip, #sec-m2 .tip, #sec-left .tip"), function (n) { n.remove(); });
+    FRESH.forEach(function (id) { var n = $(id); n.parentNode.replaceChild(n.cloneNode(true), n); });
+    window.__MXRUN(); decorate();
+  }
+  /* the switch's hover: short, a control's */
+  var sec = $("sec-cut"), tip = document.createElement("div"); tip.className = "tip"; tip.setAttribute("role", "tooltip"); sec.style.position = "relative"; sec.appendChild(tip);
+  Array.prototype.forEach.call(document.querySelectorAll(".cutsw [data-cut]"), function (b) {
+    b.addEventListener("click", function () { setCut(b.getAttribute("data-cut")); });
+    b.addEventListener("mousemove", function (e) { var box = sec.getBoundingClientRect(); tip.innerHTML = '<span class="ln">' + esc(R.tips[b.getAttribute("data-cut")]) + "</span>"; tip.setAttribute("data-show", "true"); tip.style.left = Math.max(0, Math.min(e.clientX - box.left + 14, box.width - tip.offsetWidth - 4)) + "px"; tip.style.top = (e.clientY - box.top + 22) + "px"; });
+    b.addEventListener("mouseleave", function () { tip.setAttribute("data-show", "false"); });
+  });
+  decorate();
+  window.__mxr2 = { set: setCut, cut: function () { return cur; }, base: BASE };
 })();
-</script>
+</script><!--}__R2-->
