@@ -1,5 +1,7 @@
 # How we design the panels — the working method (adopted 2026-09-18)
 
+> **Start at [STATE.md](STATE.md)** — one page: what is ruled, what is open, what is next. This file is the METHOD; that one is the position.
+
 Source: `design-context-agent-guide.md` (Gabe's research handoff, same folder). That guide is recommendations; THIS file is
 the working agreement built from it, and it changes when Gabe says so. Yesterday's work advanced but moved many faders at
 once; this is the structure that stops that.
