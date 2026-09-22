@@ -136,3 +136,18 @@ What the agent did with it, rather than rubber-stamping: read each of the twenty
 Consequence: the endpoint card's inventory is fully ruled — 26 rows at 3, 25 at 2, 9 at 1 over 60 attributes — and nothing on it is a proposal. The rating sheet stops being a form and becomes a record. Loop 1 moves to its display half: M1 round 2 re-cuts the blocks against the ruled inventory, then M3, then the variants, decided by SEEING built options.
 Revisit if: a built variant shows a row rated 2 doing the work of a 3 on the face (or the reverse) — then that row is re-rated from what he sees, which is the loop's own method, not from the table.
 
+## D-021 — The card stays ELEVEN blocks; the brain map groups by stage AND by section, toggleable
+Date: 2026-09-22 · Input: his reply in the chat, after M1 round 2 re-cut the matrix to eight ("11 blocks" · "both, toggleable").
+Decision, his: **the eleven blocks stand.** M1 round 2 scored the 18 attributes added since round 1 and the parameter-free cut
+fell at eight: Proof folded into Endings, and Stages and order + Gates and decisions + Standard or specialist merged into one.
+The merge survived four attempts to prove it an artifact. He keeps his eleven. **The round-2 CELLS stand as data** — every
+attribute's home and the shared spine are read from them; only the CUT is his, not the arithmetic's.
+**The brain map's grouping rail offers BOTH his six stages and the inventory's seven sections, toggleable.**
+Consequence: the matrices page must say plainly that it draws a cut the arithmetic did not choose — the ladder's own cut was
+eight, his ruling holds eleven — and show both, so the choice stays visible rather than silently overwritten. The brain map and
+the lab's section map already read the eleven with round-2 homes, so they need no change. A stage grouping needs a block→stage
+mapping that nothing in the data supplies; it is AUTHORED as a proposal, and a block that spans stages sits under its own
+"across the stages" branch rather than being forced onto one.
+Revisit if: a built variant shows a merged pair (Proof beside Endings, or Stages beside Gates) reading as one subject on the
+face — then the arithmetic's eight gets a second look, judged by seeing.
+
