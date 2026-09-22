@@ -92,6 +92,7 @@ Reason: the first cut used a similarity threshold of 0.42, which landed INSIDE a
 Tests run: probe-matrices 76 asserts (the cut is asserted to be the ladder's widest drop; a claim on a card must be checkable on that card); a four-lens review + verifier, 47 findings, 31 confirmed and fixed. Not run: any test with Gabe — the blocks are a proposal until he rules.
 Known weak points, said on the page: the raters are agents, not people · three blocks hold a single question · 202 of 301 marked cells had the raters one step apart.
 Revisit if: Gabe corrects the question list (the blocks are made of his questions, so they move with it) · his verdicts merge or drop more than a third of the blocks (then the questions, not the clustering, are the thing to fix) · a second rating run on the same input moves a block.
+**Correction, 2026-09-22 (a count only; the ruled text above stands):** FOUR blocks hold a single question, not three — Proof (Q4) · Client (Q8) · Standard or specialist (Q12) · In-flight state (Q16), as `prisms-endpoint.json` `blocks` and `prisms.md` record.
 
 ## D-015 — The API endpoint has eleven prisms; all kept, none merged
 Date: 2026-09-19 · Input: the RULING text pasted from `matrices-endpoint.html` (m1 95121cec) — eleven `keep`, no note.
@@ -168,3 +169,233 @@ Consequence: the lab's section map gains a third kind of pairing, the running he
 Keep-only CONTROL that shows its state, so option C can be seen working rather than read about.
 Revisit if: a running header reads as noise once every part carries its own stage reading — then it becomes a chapter again.
 
+---
+
+# Entries D-023 … (2026-09-22) — today's rule and ask, then the rulings that had no home
+
+D-023 and D-024 were ruled or asked today. D-025 … D-033 are BACKFILLED on 2026-09-22 from the source each one names: a ruling
+that lived only in session memory, a brief or a commit body now has one home here. Every quote was checked against its source
+— for his typed words, the session transcript (`~/.claude/projects/-home-khujta-projects-gabe-lens/<session>.jsonl`, times in
+UTC). Where a line is the agent's reading and not his words, it says so.
+
+## D-023 — No propagation: the work stays in the Gabe Suite
+Date: 2026-09-22 · Input: his message in the chat (transcript `fa35dc07…`, 20:57 UTC): "And by the way, our work now will not
+affect anything anymore. We will not propagate any more changes for now. We will just work in the Gabe Suite for now."
+Decision, his: nothing is propagated to the twins (gustify, gastify) and no twin is rebuilt, until he says otherwise.
+Consequence: the design pages read the FROZEN lab feed — `~/.cache/gabe-map-baselines/lab-input/{forms.json,archmap.json}`
+(gustify @ `05007957`, every arm on; backup `lab-input.bak-2026-09-22`) — and `_lab-ep.js` is regenerated only with
+`--forms` pointing there. The "twins" step is suspended wherever a definition of done carries it: `program-leftovers.md`
+(the paragraph for the generation pieces) and the landing orders in `element-forms/amendment-1.md` (e.g. Slice 11e's and
+Slice 12's). Those files are not edited; this entry is what suspends them. The twins' unpushed commits stay his, and are no
+longer a next step.
+Revisit if: he names a twin again, or the station (Gabe Universe) must show arm data — no committed twin feed carries any.
+
+## D-024 — His ask: simpler docs, a method for what matters, the brain map folded into the lab, one page for every endpoint
+Date: 2026-09-22 · Input: two messages (transcript `fa35dc07…`). This is an ASK, not a display ruling.
+- 15:18 UTC, the second section: "in the lab, we will do a division on the right side, where we have the middle panel, the
+  rail, and the command panel. We will have a second section below that one where we will show all the information in an
+  indented format that we have for an API endpoint. The idea is that, as we go through the different sections in the
+  panels, we highlight what parts of information are we show[ing] on the panels".
+- 20:57 UTC, the consolidation: "Check the documentation that we have generated for this. Consolidate some things. See if
+  there is redundant work. Establish a method to be able to figure out what is more important and what is not." · "I would
+  like to simplify the documentation that we have." · "I would like to see if we should tackle something important before
+  we consolidate this in the endpoint lab." · "matrices for your context are very good to have around." · "the other one
+  for the brain map endpoint didn't really cover it. I would like to consolidate it in the endpoint lab instead of having a
+  separate file. I need to see what is happening in the panels when we go through the brain map and highlight the different
+  fields that we navigate through that brain map." · and one more page: "all the fields that we have available in the
+  different dimensions and group them intuitively for one of the applications … let's pick one of them … all of one type of
+  element on the same page at the same time … Maybe one row per endpoint, or maybe two columns per row, or three … so I can
+  spot patterns".
+Consequence: (1) the docs — every ruling gets one home here (this entry and D-025 … D-033), `STATE.md` is rewritten as one
+page, `method.md` keeps method only and gains the importance procedure; no file moves until the fold and the skeptics'
+verdicts. (2) the fold — the brain map's tree leaves its page for a data file the lab reads, then a FIELD layer (attribute →
+the element a panel draws) so navigating lights fields, not only blocks; the second section and the fold are the same thing,
+built once. Where it sits is a display choice, built as rail options and picked by seeing. `brainmap-endpoint.html` retires
+only after D-021, D-022 and its open picks are carried. (3) the all-endpoints page — the app is the agent's pick, gustify,
+because the frozen feed is gustify's (D-023); rows vs two or three columns per row are built as options. (4) the matrices
+pages stay, by his words.
+Revisit if: the field layer can be generated for fewer than half the attributes — then the authored proposals outnumber the
+measured ones and the layer is re-priced on a page before it is built.
+
+## D-025 — Standing rules of this loop (backfilled 2026-09-22)
+The working rules that until today lived in memory, briefs or commit bodies. One line each: the rule · since · source.
+1. **Display is decided by SEEING built options, and generation is finished before display.** Since 2026-09-14 · transcript
+   `fa35dc07…` 13:55 UTC: "Just skip the decision. I want to be able to see all of them and then decide. Anything related to
+   how we display information, we basically are not going to decide from summaries or text." and, first, "I want to complete
+   our codebase generation first." · memory `decide-display-by-seeing.md`.
+2. **Every choice the agent would make alone is built as a switchable rail option, with the agent's pick marked.** Since
+   2026-09-13 · transcript 19:18 UTC: "let's build them all and have them as options to choose in the left panel to
+   experiment with them." · memory `options-not-decisions.md`. Bounded since 2026-09-18 by method rule 2 (3–5 variants, one
+   fader each). "The pick marked" is the agent's practice, not his words.
+3. **Facts are generated, never typed** — a number inside an authored sentence is a token the generator fills. Since
+   2026-09-09 (the kind lab's law) · memory `kind-lab-arc.md`; `program-leftovers.md` definition of done, item 1; enforced by
+   the brain map's generator since `8f1bbbf`. The AGENT's law; he has never contradicted it, but it is not his words.
+4. **A click path handed to him comes from a real-click walk** (words read off the controls, a picture per step), never from
+   a probe's script calls. Since 2026-09-21 · transcript 13:44 UTC, after a script-derived path failed him: "Can you maybe do
+   a playwright test and navigate through the sections to see if they are actually displaying?" · memory
+   `click-paths-from-real-clicks.md` · commit `6e72cdc`. His words ask only for the walk; the rule itself (words off the
+   controls, a picture per step, never a probe's script calls) is the AGENT's standing rule drawn from it
+   (`program-leftovers.md`, "STANDING RULE FROM THIS"), not his words.
+5. **A ruling is written into the design-context docs, never only into session memory — into `decisions.md`, in the same
+   commit that acts on it.** Since 2026-09-18 · transcript 14:57 UTC: "let's make sure to not save this only in the context
+   memory of this session, but also save all this information in the actual design context documents." · commit `a2abb89`.
+   The same-commit clause is added 2026-09-22, because rulings kept leaking into commit bodies and memory.
+6. **Analysis, not diagnosis.** A verdict is restated as the fact underneath it (a rank in a distribution, what a test
+   asserted, a floor). Since 2026-09-19 · transcript 22:07 UTC: "…having this tool as an analysis tool of the codebase and
+   not a diagnostic tool." (and 2026-09-17, 23:24 UTC, on the stage hovers: "the information that we should get there is not
+   diagnostic") · memory `gaps-endpoint-eval.md` · commit `2ff4716`. His words are the standpoint; restating a verdict as
+   the fact underneath it (a rank, what a test asserted, a floor) is the AGENT's reading of it, recorded in
+   `gaps-endpoint-eval.md`, not his words.
+7. **Explanations for him are pictures, one part per page**, built from the gabe-artifact kit and the pattern libraries, one
+   idea per section, words on hover, each section ending with a short "take from this". Since 2026-09-17 · transcript 17:34
+   UTC: "this is unreadable, too much for my cognitive bandwidth. Again, visual representations: Gabe Artifact skill." ·
+   17:35 UTC: "let's do it only for the tables section, only for models and tables" · 18:42 UTC: "after each table … put
+   some brief pointers with a plain explanation about what is expected" · memory `one-part-as-pictures.md` · commit `9c568e4`.
+8. **He reviews built work — and rates — on a GENERATED decision page** with options, the agent's picks, real-click pictures
+   and one copy button, never a text plan or a markdown table. Since 2026-09-18 (15:10 UTC: "Maybe we can do a GabeArtifact
+   with the table … and we can put a copy button so I can copy the ratings") and 2026-09-20 (18:50 UTC: "let's create an
+   artifact for it, just like we did for the other decisions, with the options, some recommendations, and everything that
+   needs to be read and figured out") · memory `rating-sheet.md`, `review-page.md` · commit `3ff8d79`.
+9. **Two navigation systems are explained on a page of their own before he is asked to rule on them.** Since 2026-09-17 ·
+   transcript 05:06 UTC: "Can we create a diagram that shows me all the possible options to navigate this? I also want to
+   understand how they relate to the buttons that we already have in the panel" · answered by `workflow-panel/command-map.html`
+   (`5b73e2e`) · memory `command-card-rules.md`. His words ask for the diagram; "before he is asked to rule on them" is the
+   AGENT's rule (the "How to apply" of `command-card-rules.md`), not his words.
+Revisit if: a rule here contradicts a later ruling of his — the later ruling wins and this line gets a dated note.
+
+## D-026 — The six parts of an element, from his alphabet, and the lab's no-loss law (backfilled 2026-09-22)
+Date: 2026-09-10 · 2026-09-11 · 2026-09-12 · Source: transcript `fa35dc07…`; memory `operator-alphabet-rulings.md`,
+`endpoint-lab-arc.md`; commit `390e270`.
+- **The alphabet as it binds the lab (2026-09-10, 17:30 UTC).** A "how many" is "crucial"; its fields group into DIMENSIONS
+  — data · functions · tests · widening · flags or security · schemas (he also named dependencies) — which became the six
+  PARTS, each a fixed slot. C:
+  "use the icon instead of the word. If we hover over the icon, we will see what we mean by that icon." D: "limit to one or
+  two of these representations per element" (the agent placed them: FUNCTIONS with a moving bead, WIDENING as the ladder); F
+  merges into D. E: stacks for data, "the sequence might be used in things that relate more to the ephemeral, like functions
+  or states". I: commit is the DATABASE transaction, never git — his question ("Is that what you mean by commit, or is the
+  comment in the sense of GitHub?") answered that way. J (mutation), K (speed) and M (waiting): agreed — M in his words
+  "agree with these". B, G, H and L: he asked for applied examples — L (acceleration) in his words "This is more difficult
+  to grasp, so I will need examples of the application of this".
+  **Tension with D-017, not resolved here:** his G intuition was about data's LIFETIME (ephemeral, in transit, deleted later);
+  the agent's applied example made G the MAP's certainty (dashed inferred · hatched unmeasured · hollow measured-zero), and
+  by D-017 a fact about the map is hidden by default. Which reading G keeps is his.
+- **No loss (2026-09-11, 13:07 UTC):** "If we have more information than what we are showing today, that's okay, but what we
+  cannot do is show less or lose information." Every row the station's card shows lands somewhere in the lab; a hover card
+  counts.
+- **Schemas split back out of Data (2026-09-12, commit `390e270`):** "Merging them was too much" — six parts again, DATA ·
+  SCHEMAS · FUNCTIONS · TESTS · WIDENING · SECURITY. `workflow-panel/ep-brief.md` still describes the merge; it is superseded
+  on this point.
+Revisit if: a part stays empty on most endpoints of an app (then its fixed slot is noise there, as D-012 asks of endings).
+
+## D-027 — The Pattern Book laws, and which boot lines are his (backfilled 2026-09-22)
+Date: 2026-09-11 … 2026-09-13 · Source: `workflow-panel/panel-patterns.html` (commit `559b8d7`, the full text — it stays the
+home of every rule); transcript `fa35dc07…`; memory `panel-pattern-book.md`, `endpoint-lab-arc.md`; `probe-eplab.mjs`.
+- **The five laws** (panel-patterns.html): the panel holds only what ships · icons are the labels · a card mirrors its thing ·
+  every look is a setting, pasted back as a copy line · measure what is drawn. Its card law carries "no feed-wide comparison"
+  on a card (rank, median and the heaviest belong one level up).
+- **His words behind the rules:** "I want all the controls minimized except for the one that we are working on currently"
+  (2026-09-12, 14:56 UTC) · a slider's current value opens a third along: "The size right now should be like a third of the
+  available sizes to select." (2026-09-13, 15:12 UTC) · "I kind of agree with that, but I didn't ask for that" → anything
+  drawn by choice becomes a dial with a none option, and unique was narrowed to corners (2026-09-13, 16:12 UTC) · one hover
+  per drawn element: "consolidate the hover only to show the hover that we are showing for the whole table" (2026-09-13).
+- **Which boot lines are his.** He pasted the DATA line — nine versions from 2026-09-12 16:11 to 2026-09-13 16:59 UTC; at
+  14:54 UTC on 09-13 he said "take this as the default configuration for everything" over an earlier version, and the line
+  the lab boots on is his LAST paste (16:59 UTC), except `shown as stageblocks` and the `stages` segment D-007 added. He
+  pasted the HEAD BAR line (2026-09-11, 17:55 and 18:11 UTC), the PART BUTTONS line (2026-09-11 19:42 UTC, revised 2026-09-12
+  14:17 and 14:42 UTC) and the FRAME line (2026-09-12, 14:42 UTC; its parts now close the bench, head-bar and part-buttons
+  copy lines). The COMMAND · MIDDLE · PORTRAIT lines (`CMDBOOT` · `MIDBOOT` · `PORTBOOT` in `probe-eplab.mjs`) were never
+  pasted by him — they are the agent's defaults.
+- **What the probe pins, measured 2026-09-22.** Word for word (`===`): his DATA line and the agent's three lines. His HEAD BAR,
+  PART BUTTONS and FRAME lines are NOT pinned: `probe-eplab.mjs` checks only their endings (the frame parts, by regex), the
+  head line's shape (`verbosity … LEFT … RIGHT … off … styles`), or the line against itself before and after an action. Their
+  words — e.g. `styles kind(none,icon 24) … kindword(rect)`, `glyph 22px ghost at 77% · titles caps` — are asserted
+  nowhere, so a rail change can overwrite them and nothing goes red. Owed before the fold (D-024) changes the rail: pin those
+  three word for word, and put a comment beside every pinned line saying whose it is and when he pasted it (audit 2026-09-22,
+  `rulingsToLift` #25). Not done in this backfill: the probe is outside the three design-context docs this wave edits.
+Revisit if: he pastes a line for a region — it replaces the agent's default word for word.
+
+## D-028 — Go shallow (backfilled 2026-09-22)
+Date: 2026-09-13 · Source: transcript `fa35dc07…` 20:16 UTC; memory `shallow-logic-map.md`.
+His words: "so we are missing something like a shallow internal wiring map right (we don't want to map everything for that is
+better to watch code directly) ?"
+Decision: the map follows the major paths inside pieces that carry logic and stops; the code itself is the deep view. It is
+encoded, without his quote, as the element forms' depth rule — `element-forms/plan.md` D6 (handler + one call level + the
+dependency chain) and `amendment-1.md` D17.
+Revisit if: a question he asks cannot be answered one level down and the answer changes an ending.
+
+## D-029 — One kind at a time, and the lab is the API endpoint kind only (backfilled 2026-09-22)
+Date: 2026-09-09 · 2026-09-17 · Source: transcript `0b3d1f35…` 2026-09-09 19:58 UTC; commit `a015def`; memory
+`kind-lab-arc.md`, `endpoint-lab-arc.md`.
+- **One kind at a time (2026-09-09):** "…continue with the next one and start merging and seeing patterns … but one at a
+  time." Nothing is generalised from one kind. The kind ORDER the kind lab recorded is superseded by his tier-1 priorities
+  (2026-09-18, under D-001): backend endpoints · functions · schemas · models; frontend views · components · stores · hooks.
+- **Lab scope (2026-09-17, 22:19 UTC, `a015def`):** "Right now, we are working just in the setup for this API endpoint, and
+  that's it for setup complete. The API endpoint is it. The entity one, we will work on that separately. It is a completely
+  different setup" (the transcript; the `a015def` body condenses it). The entity card and the scope pick left the lab.
+Revisit if: the second kind (functions) opens — it gets its own inventory and loop, never the endpoint's by copy.
+
+## D-030 — The console model WHAT × PATH × TIME, and the arrange lab parked (backfilled 2026-09-22)
+Date: 2026-09-17 · Source: transcript `fa35dc07…` 16:13 UTC and 17:19 UTC; memory `console-model-what-path-time.md`,
+`arrange-lab.md`, `field-atlas.md`; `workflow-panel/arrange-brief.md`.
+- **The model, his words (16:13 UTC):** "The first dimension is just rich, but the second one is like path, moment, or
+  case/use case. For tables, we might want to see those for use case, and the same goes for schemas, functions, tests … it
+  should be path dimension, because inside each path we might also have time". The agent's reading, built in the arrange lab:
+  every standpoint has three views — all · path · time — and tests have no time inside ("a case proves an ending", the
+  agent's words); dimensions are typed by nature (global · temporal · standpoint · control · transient · record). D-008 now
+  governs which region holds what; this entry is the axis model beside it.
+- **The arrange lab is parked, not retired (17:19 UTC):** "the [arrange] lab will still exist, but I will work in both the
+  [arrange] lab and the endpoint lab. In the endpoint lab, we are polishing what we are actually going to show for a given
+  entity." (the transcript's speech-to-text reads "range lab"). D-010 then put loop 1 on the endpoint card.
+Revisit if: loop 1 reaches layout across regions (the variants step) — the arrange lab is the tool for that.
+
+## D-031 — The selection-independent WORLD region (backfilled 2026-09-22)
+Date: 2026-09-08 · Source: transcript `0b3d1f35…` 13:16 UTC; `workflow-panel/CONSOLE-MAP.md` (§ the information / action
+law) and `MINIMAP-CONSTRAINTS.md` (C3, C5).
+His words: "on the left, we have a panel to have the high overview. That would be a mini map of the entirety of the map in
+2D" · "this entire panel is dedicated to the information about what you have selected. The right-hand side panel is dedicated
+to the actions." So LEFT = the minimap · CENTRE = information · RIGHT = actions are his. The agent's reading from the game
+console adds only the framing: the left is the WORLD — selection-independent — and holds the global counters beside his
+minimap. D-008 replaced what the centre and right hold for the endpoint console; the WORLD region is PARKED, not dropped. His
+minimap asks stand with it: "The map should be able to rotate just like we do" (a camera-relative projection), and the size:
+after it read as "a sixth of the page" he asked "Let's try a fourth of the page, 25% of the page" — `MINIMAP-CONSTRAINTS.md`
+C5 implements it as `--dock: 25vh` (sizing in `vh` is the agent's mechanism). The audit (2026-09-22, `rulingsToLift` #21)
+also wanted a line for this region in `suite-backlog.md`; it is owed, not written — this wave edits only the three
+design-context docs.
+Revisit if: the station (Gabe Universe) work opens — the world counters are the first thing a selection must never erase.
+
+## D-032 — The brain map is a navigator, and his display words from looking at it (backfilled 2026-09-22)
+Date: 2026-09-21 · Source: transcript `fa35dc07…` (UTC times below); commits `7f0390b`, `535c07a`, `2294e74`, `eae286e`.
+- 21:43 UTC: "I would need a brain map for navigation of resulting panels, lilke is shown in the image (rotate it 45
+  degreewes though)". Built as a NAVIGATOR, not a diagram: clicking a node opens its panel into the tray (`7f0390b`).
+- 22:37 UTC: "The panel is too small to see. Can you use more of the screen? … I would like to have the panel tray on the
+  right side." (`535c07a`)
+- 23:00 UTC: "consolidate this artifact's layout to use the entire page with the right panel … the navigation of the actions
+  in the right-side panel … whether they are going to select new data or show new data (maybe in the middle section or in
+  the portrait) … The arrow is weird". (`2294e74`; the moves a node offers — Show · Keep only · Open · Follow — and the
+  region each answers in are the agent's PROPOSAL, since ruled in part by D-022.)
+- 23:19 UTC, in the lab: "Let's add the endpoint card section map with the indented map … We will open things on the
+  indented map or the other way around … a way to put feedback as a copy button in that left panel. With this, I should
+  actually see what is happening in the panels, not only read about it" (`eae286e`, the lab's third rail tab).
+Consequence: these are display requirements the fold (D-024) inherits — the whole width, the tray on the right, every move
+saying which region answers, an arrow that no longer reads as weird, both directions of navigation, a feedback copy. The fix
+built for the arrow — one short hop from the opened node to ITS panel (`2294e74`) — is the AGENT's, not his requirement: in
+the fold it is an option picked by seeing (D-025.2), not a ruled line.
+Note: `brainmap.words.json` `acts._why` dates the 23:00 ask 2026-09-22; the transcript and the commit put it on 2026-09-21.
+Revisit if: in the fold, a placement he picks by seeing contradicts one of these lines — the picture wins, and the line gets a
+dated note.
+
+
+## D-033 — His scorecard U1–U14: the slots an element's form must fill (backfilled 2026-09-22)
+Date: 2026-09-13 · 2026-09-21 · Source: `logic-map/element-forms.html` (the slot list U1–U14 and the `COVER` table of what
+the map captured on 2026-09-13 — it stays their only full home); `element-forms/plan.md` ("The operator accepted the approach
+on the Element Forms page", `df62e8c`); `element-forms/amendment-1.md` R1, ruled 2026-09-21 ("U1–U14 are his scorecard; U15
+is the next free number" — U15 is in-flight state, Slice 12).
+The slots: U1 Purpose · U2 Inputs · U3 Preconditions · U4 Defaults · U5 Bounds · U6 Paths · U7 Refusal reasons · U8 Switches
+& flags · U9 Effects · U10 Invariants · U11 Failure handling · U12 Repeat safety · U13 Observability · U14 Tests per path. An
+empty slot is a finding, the way a scorecard with no capping rule was one.
+Not built as a slot of their own, by the 2026-09-22 audit (`rulingsToLift` #26): U1 Purpose · U2 Inputs · U4 Defaults · U5
+Bounds · U10 Invariants · U13 Observability. Some of their facts are read in passing by other arms (e.g. schema and setting
+bounds by the short arm); no arm fills these slots as slots. `element-forms.html` marks U1 Purpose and U10 Invariants as
+needing a person's judgement.
+Consequence: `method.md` step 1 reads these slots as inventory rows for every kind; nothing here builds them.
+Revisit if: a kind's inventory rates one of the six at 3 — then that slot is priced as an arm on a page before it is built.
