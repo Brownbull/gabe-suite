@@ -7,12 +7,12 @@ them. This module puts the second beside the first so the GAP is visible instead
 WHERE THE TREE COMES FROM, and why it is not recomputed here.
   The home rule ("an attribute's home is the block its use weighs into most; one that three or more blocks
   need is shared and homed nowhere") lives in design-context/m1-cluster.js. gen-brainmap.js restates it and
-  PROVES the restatement against that module on every run, then writes the answer twice: into the page
-  brainmap-endpoint.html as `window.BM_DATA`, and as DATA into brainmap-endpoint.json (the same object, key for
-  key, plus each block's stage list with its cite). A third Python restatement would be a second mapping, and a
+  PROVES the restatement against that module on every run, then writes the answer as DATA into
+  brainmap-endpoint.json (the object its retired page embedded as `window.BM_DATA`, key for key, plus each block's
+  stage list with its cite). A third Python restatement would be a second mapping, and a
   second mapping is an invention — so this module READS the committed JSON and verifies it is not stale by
   re-hashing the two inputs the brain map stamped into it (the inventory's bytes, the matrix's cells). The page
-  is a VIEW and is meant to retire; nothing here reads it. (`gen-brainmap.js --check` fails when the JSON is not
+  was a VIEW and has retired to design-context/records/brainmap/; nothing here reads it. (`gen-brainmap.js --check` fails when the JSON is not
   what the generator would write now; the re-hash below is this reader's own proof, independent of that run.)
 
 STATE WORDS. present · stale (the tree was built from an older inventory or matrix) · absent (a file the map
@@ -199,9 +199,8 @@ def _build() -> dict:
         "state": "present" if fresh else "stale",
         "reason": why,
         # `map` names the PAGE a reader opens to see the tree; the tree itself is read from brainmap-endpoint.json.
-        # Left as the page so LABEP.sectionmap did not move a byte when the reader switched files (Track C) —
-        # re-point it, or add a `tree` key, when the page retires.
-        "source": {"map": "docs/design/design-context/brainmap-endpoint.html",
+        # The brain map's own page retired (D-024), so the page that draws the tree is the lab itself.
+        "source": {"map": "docs/design/workflow-panel/endpoint-lab.html",
                    "inventory": (tree.get("inv") or {}).get("file"), "inv_hash": (tree.get("inv") or {}).get("hash"),
                    "cells_hash": tree.get("cellsHash"), "prisms": "docs/design/design-context/prisms-endpoint.json",
                    "ruled": tree.get("ruled")},

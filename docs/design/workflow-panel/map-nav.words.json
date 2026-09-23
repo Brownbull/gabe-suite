@@ -1,0 +1,265 @@
+{
+ "_about": "Authored words for the endpoint lab's MAP NAVIGATION — the brain map's groupings, its Keep-only filter, its moves and its sweep, folded into the lab (D-024). The tree, the groups, the stage rows, each block's stage list with its cite, the Keep-only words and the brain map's open picks are NOT here: _ep_mapnav.py carries them from design-context/brainmap-endpoint.json, the brain map's own generated data. What is here is only what the lab does differently. Nothing numeric is typed: {tokens} are filled on the page from what it measures, and the generator refuses a digit outside a token. The generator also refuses the two words D-018 swept in anything the lab draws from this file — only the `was` lines of `reword` say them, because they quote the brain map's lines they replace. A `pick` names the agent's pick for a rail option; the page marks it dashed (D-025.2).",
+ "grouping": {
+  "label": "grouping",
+  "tip": "What the first level under the card is. Changes only the map.",
+  "pick": "flat",
+  "tips": {
+   "flat": "Every block directly under the card, with its fields below it.",
+   "standpoint": "The blocks gathered under the standpoint each one names.",
+   "section": "The inventory's own sections, each field under the one it was written in.",
+   "stage": "Your record's rows in order, each holding the blocks proposed for it. A proposal."
+  }
+ },
+ "stageRule": {
+  "tip": "Where a block that names several rows, or none, is drawn."
+ },
+ "placement": {
+  "label": "where the map sits",
+  "tip": "Where the section map is drawn. The bench and its lights do not change.",
+  "pick": "rail",
+  "opts": {
+   "rail": {
+    "name": "rail tab",
+    "tip": "In this tab, left of the panels it lights. The bench keeps the size its lines were set at."
+   },
+   "right": {
+    "name": "right column",
+    "tip": "A column right of the panels, the whole height of the page."
+   },
+   "below": {
+    "name": "below",
+    "tip": "Full width under the rail, the middle and the command panel — the second section."
+   }
+  },
+  "movedRight": "The map is drawn in a column right of the panels.",
+  "movedBelow": "The map is drawn full width below the panels.",
+  "why": "My pick is the rail tab: it moves nothing on the bench, and the map stays left of the panels it lights, so the line from a node runs toward what it lit."
+ },
+ "sweep": {
+  "label": "the line from a node",
+  "tip": "Where the line from the node you showed last ends, or no line.",
+  "pick": "on",
+  "opts": {
+   "on": "to what it lit",
+   "panel": "to the panel that answers",
+   "off": "hidden"
+  },
+  "tips": {
+   "on": "Ends at the nearest element the node lit, in view. Drawn whole, never animated.",
+   "panel": "Ends at the panel that answers the last move: the middle for Show, the portrait for Open, where Follow landed. The brain map's hop.",
+   "off": "No line. The outline alone says what was lit."
+  }
+ },
+ "moves": {
+  "show": {
+   "name": "Show",
+   "icon": "layers"
+  },
+  "open": {
+   "name": "Open",
+   "icon": "doc",
+   "where": "the portrait",
+   "tip": "Draws this node's record in the portrait."
+  },
+  "follow": {
+   "name": "Follow",
+   "icon": "journey",
+   "where": "the part, record or command panel level it lands on",
+   "tip": "Takes the bench to the next place that draws this field and names where it went. It may pick a path; it never changes a rail setting."
+  },
+  "byNode": {
+   "root": {
+    "show": "lights every field the panels draw for the card",
+    "where": "the bench",
+    "offers": [
+     "open"
+    ]
+   },
+   "block": {
+    "show": "moves the bench to the block's page and lights its fields",
+    "where": "the bench",
+    "offers": [
+     "open"
+    ]
+   },
+   "attr": {
+    "show": "lights every element the panels draw for this field",
+    "where": "the bench",
+    "offers": [
+     "open",
+     "follow"
+    ]
+   },
+   "group": {
+    "show": "opens it and lights the fields of every block it holds",
+    "where": "the bench",
+    "offers": [
+     "open"
+    ]
+   },
+   "stage": {
+    "show": "opens it and lights the fields of every block drawn under it",
+    "where": "the bench",
+    "offers": [
+     "open"
+    ]
+   },
+   "sec": {
+    "show": "opens it and lights every field it holds",
+    "where": "the bench",
+    "offers": [
+     "open"
+    ]
+   },
+   "added": {
+    "show": "opens it and lights the fields no block claims",
+    "where": "the bench",
+    "offers": [
+     "open"
+    ]
+   }
+  },
+  "rowClick": "a click",
+  "rowOffers": "it also offers",
+  "offersNone": "no other move",
+  "followNone": "No other place on the panels draws this field, so there is nowhere to follow it to.",
+  "followDone": "Followed to {place}, in {region}.",
+  "showRow": "{name} — {where} · {what}",
+  "offerRow": "{name} — {where}",
+  "regions": {
+   "middle": "the middle",
+   "command": "the command panel",
+   "portrait": "the portrait"
+  },
+  "followRail": "Drawn on {places} — each needs a rail setting changed, and Follow moves the bench, never the rail.",
+  "followPath": "A path was picked to draw it: {path}."
+ },
+ "keep": {
+  "head": "filter",
+  "tip": "Keep only is not a click. It is this control: it keeps the node you showed last, and stays on until you remove it.",
+  "bench": "On the bench, {n} elements carry its fields and the rest are quiet — dimmed, never removed.",
+  "benchOne": "On the bench, {n} element carries its fields and the rest are quiet — dimmed, never removed.",
+  "benchNone": "Nothing on the bench carries its fields right now, so the whole bench is quiet — dimmed, never removed.",
+  "how": "It stays on through clicks, part changes, placements and groupings. Remove it with the button beside this.",
+  "btnNone": "Keep only — show a node first",
+  "btnTip": "Takes the node you showed last and quiets every node that does not carry it. It stays on until you remove it.",
+  "barTip": "Keep only is on. This bar stays at the top of the rail on every tab until you remove it."
+ },
+ "kinds": {
+  "root": "the card",
+  "attr": "field",
+  "block": "block",
+  "group": "standpoint",
+  "sec": "section",
+  "stage": "row",
+  "added": "not placed"
+ },
+ "stageKinds": {
+  "stage": "a stage",
+  "bay": "the bay",
+  "screen": "the screen",
+  "across": "a branch of this map"
+ },
+ "strings": {
+  "nBlocks": "{n} blocks",
+  "oneBlock": "{n} block",
+  "noBlock": "no block here",
+  "nFields": "{n} fields",
+  "deep": "{n} fields sit one level below the {levels} levels this map draws. Show a block and they light on the bench; Flat lists them.",
+  "rowsHold": "holds",
+  "rowsBlocks": "blocks",
+  "rowStages": "proposed rows",
+  "rowWhy": "why",
+  "rowCites": "the line it rests on",
+  "rowUnder": "drawn under",
+  "rowRule": "rule in force",
+  "recLabel": "its record, from the map",
+  "recHint": "The node you opened on the section map, drawn whole.",
+  "recCounts": "what the card holds",
+  "recBlocks": "blocks, by how much each holds",
+  "recQuestions": "questions it answers",
+  "recFields": "fields",
+  "recOwn": "its own",
+  "recShared": "shared",
+  "recStandpoint": "standpoint",
+  "recType": "data type",
+  "recHowMany": "how many",
+  "recFirst": "first visible at",
+  "recHome": "home",
+  "recRated": "importance",
+  "recSharedBy": "shared by {n} blocks",
+  "recStages": "rows it touches",
+  "recNoStage": "none — it belongs under no row",
+  "recDrawn": "drawn by the lab",
+  "attrs": "attributes",
+  "blocks": "blocks",
+  "shared": "shared",
+  "unplaced": "not placed",
+  "openHead": "What I chose that you have not ruled",
+  "openWhy": "Each pick the brain map made alone, and what the lab does with it.",
+  "openLab": "in the lab",
+  "factsHead": "What the tree measures",
+  "lookLine": "grouped {grp} · Keep only {keep} · where the map sits: {place} · line to what it lit: {sweep}",
+  "lookOff": "off",
+  "placeHead": "Where the map sits",
+  "absent": "The map's groupings were not read, so only the blocks are drawn."
+ },
+ "reword": {
+  "_why": "The brain map's own lines (the agent's, not his) that say a word D-018 swept, reworded for the lab. Each applies only while the brain map still says exactly `was`; the generator stops when a `was` no longer matches, and when any line the lab carries from the brain map still says either word — his questions and his stage record excepted, which stay verbatim.",
+  "stageWhy": {
+   "Q12": {
+    "was": "Its own question sets the whole door against other doors; it is about the endpoint, not about any single stage of it.",
+    "now": "Its own question sets the whole endpoint against other endpoints; it is about the endpoint, not about any single stage of it."
+   },
+   "Q10+Q13": {
+    "was": "The schemas row of the topics table: the request shape and its 422 cases at INPUT, the response shape at ANSWER. The bay is NOT in its list: the body that leaves there is the framework's, not a shape this door declares.",
+    "now": "The schemas row of the topics table: the request shape and its 422 cases at INPUT, the response shape at ANSWER. The bay is NOT in its list: the body that leaves there is the framework's, not a shape this endpoint declares."
+   },
+   "Q14+Q20": {
+    "was": "Its own questions are about the whole door at a glance, and its risks can sit in any row, so no single row holds it.",
+    "now": "Its own questions are about the whole endpoint at a glance, and its risks can sit in any row, so no single row holds it."
+   }
+  },
+  "emptyPlain": {
+   "was": "No block sits under this row with the rule you picked. It is drawn anyway, dashed, because a door that has nothing at a stage still HAS the stage.",
+   "now": "No block sits under this row with the rule you picked. It is drawn anyway, dashed, because an endpoint that has nothing at a stage still HAS the stage."
+  }
+ },
+ "openLab": [
+  "Built here as the switch under By stage: under every stage it touches is my pick, under Across the stages is D-021 as recorded.",
+  "By standpoint draws every group the blocks name, one node each.",
+  "Here it sits in the map's own header, so it travels with the map to every placement; it keeps the node you showed last, and while it is on a bar at the top of the rail says so on every tab.",
+  "Here the line starts at the node you showed last. It ends at the nearest element it lit (my pick) or at the panel that answers (the brain map's hop), or is hidden — a switch.",
+  "Here Open on the card draws the card as a whole in the portrait — the counts, and the blocks by how much each holds.",
+  "Here the records Open draws in the portrait are kept, newest first, each closing on its own (the brain map's pick) — or one at a time, a switch. Folds never close one another."
+ ],
+ "records": {
+  "label": "records in the portrait",
+  "tip": "How many node records the portrait holds at once.",
+  "pick": "stack",
+  "opts": {
+   "stack": {
+    "name": "all kept, newest first",
+    "tip": "Each Open adds a record above the others; each closes on its own. The brain map's pick."
+   },
+   "one": {
+    "name": "one at a time",
+    "tip": "Each Open replaces the record that was there."
+   }
+  },
+  "close": "close",
+  "closeTip": "Closes this record only."
+ },
+ "keys": {
+  "tip": "Tab reaches every node. Enter or Space shows it, the arrow keys move between nodes and fold them, Escape closes the newest record."
+ },
+ "notCarried": {
+  "head": "What the brain map had that the lab does not carry yet",
+  "why": "The brain map's page is kept as a record, where these can still be seen: design-context/records/brainmap/brainmap-endpoint.html.",
+  "items": [
+   "The drawn map: the brain map's layouts A to D, among them As sketched at about forty-five degrees (his ask, D-032), with the layout pick copied as a line and Replay. The lab draws only the indented tree, the brain map's layout E.",
+   "Shared fields as one band, with a wire to every block that needs them. The lab lists a shared field under each block that holds it."
+  ]
+ }
+}

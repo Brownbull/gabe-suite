@@ -172,7 +172,7 @@
   }
  },
  "ui": {
-  "_why": "The plain line of a CONTROL the page paints, one per control, shown on its hover. The generator checks both ways against brainmap.tpl.html (§ 6d): a line here that the template never paints is a line nobody reads, and a control the template hovers with no line here is a hover that says nothing. Six lines (node · shared · added · open · sweep · pick) were removed on 2026-09-22 for the first reason — a node's hover is already built per KIND in tipHtml, and `node` carried the claim “the number beside the name is how many attributes it holds”, which is false under By stage.",
+  "_why": "The plain line of a CONTROL the page paints, one per control, shown on its hover. While the page lived, the generator checked these both ways against brainmap.tpl.html (now a record in records/brainmap/): a line the template never painted was a line nobody read, and a control it hovered with no line here was a hover that said nothing. Six lines (node · shared · added · open · sweep · pick) were removed on 2026-09-22 for the first reason — a node's hover is already built per KIND in tipHtml, and `node` carried the claim “the number beside the name is how many attributes it holds”, which is false under By stage.",
   "replay": {
    "plain": "Runs the opening move again from the start."
   },

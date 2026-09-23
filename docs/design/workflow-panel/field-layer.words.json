@@ -1,0 +1,160 @@
+{
+  "_about": "The FIELD LAYER's words and its SELECTOR ties (D-024). The lab's renderers tag what they draw in their own code (window.DRAWN); this file holds only (1) the words the section map's field marks, status line, kept-outline bar and rail options say, and (2) the ties a renderer cannot say — a selector per attribute, applied to what one region drew. Every tie, in the code or here, is the agent's proposal: the ids are typed by hand in both places. A tie here is marked on its field's hover card, and on the face (dashed) only when the rail's proposals option says so, because how the map knows is behind \"more information\" by D-017. Read by _ep_fieldlayer.py, which refuses an id the inventory does not have, a region the lab does not have, or a tie with no reason. A {token} is filled by the page from what it measured; no number is typed here.",
+  "strings": {
+    "idle": "point at a field or a block to outline what the panels draw for it — click one to keep the outline",
+    "lit": "{what} · {n} outlined, {v} in view — {regions}",
+    "elsewhere": "{what} · nothing outlined here — drawn on {where}",
+    "none": "{what} · not drawn by the lab — nothing outlined",
+    "noneBlock": "{what} · none of its fields is drawn here — nothing outlined",
+    "markHere": "drawn here · places {n} · in view {v}",
+    "markElse": "on another part",
+    "markNone": "not drawn by the lab",
+    "blockCount": "{n} of {m} fields drawn here",
+    "totals": "the lab draws {drawn} of {of} fields · {none} not drawn",
+    "rowHere": "drawn now",
+    "rowNot": "nothing on the bench now",
+    "rowWhere": "drawn by the lab on",
+    "rowProposal": "a proposal",
+    "proposal": "a selector I wrote ties this field to what the panels draw — the renderer does not say it",
+    "more": "and {n} more",
+    "opt_hold": "outline",
+    "opt_rest": "the rest",
+    "val_point": "while pointing",
+    "val_held": "held",
+    "val_dim": "dimmed while pointing",
+    "val_asis": "as it is",
+    "tip_point": "pointing at a field or a block outlines it until the pointer leaves; a click keeps it",
+    "tip_held": "a block you Show stays outlined until you point at something else",
+    "tip_dim": "while you point, everything the field does not draw fades back; a click keeps only the outline and fades nothing (D-022)",
+    "tip_asis": "only the outline — the rest of the bench keeps its full colour",
+    "tipPick": "(my pick — dashed)",
+    "noteField": "field",
+    "noteNone": "none pointed at yet",
+    "noteLit": "{what} · {n} outlined, {v} in view: {els}",
+    "noteNothing": "{what} · nothing outlined — {why}",
+    "moreCounts": "how the lab ties each field to what the panels draw — every tie is my proposal, typed by hand: tied in the code that draws it {generated} · tied afterwards by a selector in the words file {authored} (of them, {both} also tied in the code) · not drawn {none} — {notDrawn}",
+    "litOut": "· click it to keep the outline and walk to the rest",
+    "off": "{what} · nothing outlined — {why}",
+    "markOff": "behind a switch no control reaches yet",
+    "blockElse": " · {e} on another part",
+    "rowInView": "{v} in view",
+    "placeSep": " ; ",
+    "opt_prop": "my selector ties",
+    "val_click": "only on a click",
+    "val_hidden": "unmarked",
+    "val_marked": "marked dashed",
+    "tip_click": "pointing does nothing; a click outlines a field or a block and keeps it",
+    "tip_hidden": "a tie I wrote as a selector looks like any other — how the map knows sits behind more information",
+    "tip_marked": "a tie I wrote as a selector is outlined dashed on the bench and underlined dashed in the tree",
+    "keySolid": "solid — on its face",
+    "keyDotted": "dotted — only in its hover card",
+    "keyDashed": "dashed — a tie I wrote as a selector",
+    "kept": "kept: {what} · {n} outlined, {v} in view",
+    "next": "next out of view ({n})",
+    "tipNext": "scrolls to the next outlined element that is out of view",
+    "clear": "clear",
+    "tipClear": "takes the kept outline off — Esc does the same",
+    "noteLook": "look — outline {hold} · the rest {rest} · my selector ties {prop}",
+    "noText": "an element with no words of its own"
+  },
+  "places": {
+    "middle": "middle",
+    "command": "command",
+    "portrait": "portrait",
+    "head": "head bar",
+    "middleAll": "{part} · {variant}",
+    "middlePath": "{part} · {variant}, a path picked",
+    "cmd_card_rows_cmd": "the command panel with its verbs laid out as rows (a rail setting)",
+    "cmd_card_g2_cmd": "the command panel · its topics",
+    "cmd_card_g2_path": "the command panel · PATHS opened",
+    "cmd_ladder": "the command panel as a ladder (a rail setting)",
+    "cmd_matrix": "the command panel as a matrix (a rail setting)",
+    "cmd_strip": "the command panel as a strip (a rail setting)",
+    "portOwn": "the portrait · {part} {variant}",
+    "portMore": "the portrait · {part} {variant}, with the switch that is off",
+    "portPath": "the portrait · a path's record",
+    "portExit": "the portrait · an ending's record",
+    "portCase": "the portrait · a case's record"
+  },
+  "authored": [
+    {
+      "id": "the-endings",
+      "region": "command",
+      "sel": ".cmdcell[data-cmd=\"walk\"], .cmdcell[data-cmd=\"grp-paths\"]",
+      "why": "the verb and the topic cell count the paths and open the grid of them; the card's generic cell cannot say it carries the endings"
+    },
+    {
+      "id": "kinds-of-ending",
+      "region": "command",
+      "sel": ".cmdcell[data-cmd=\"refusals\"], .cmdcell[data-cmd=\"success\"]",
+      "why": "each verb filters the paths to one kind of ending"
+    },
+    {
+      "id": "tables-touched",
+      "region": "command",
+      "sel": ".cmdcell[data-cmd=\"writes\"]",
+      "how": "hover",
+      "why": "the verb's hover names the tables the ending writes"
+    },
+    {
+      "id": "own-guards",
+      "region": "command",
+      "sel": ".cmdcell[data-cmd=\"pre\"]",
+      "how": "hover",
+      "why": "the verb's hover lists each precondition with its status"
+    },
+    {
+      "id": "app-band",
+      "region": "command",
+      "sel": ".cmdcell[data-cmd=\"gates\"]",
+      "how": "hover",
+      "why": "the verb's hover counts the middleware lanes the whole app runs"
+    },
+    {
+      "id": "findings",
+      "region": "command",
+      "sel": ".cmdcell[data-cmd=\"findings\"]",
+      "why": "the verb counts the findings and names each on hover"
+    },
+    {
+      "id": "declared-status",
+      "region": "command",
+      "sel": ".cmdcell[data-cmd=\"declared\"]",
+      "how": "hover",
+      "why": "the verb's hover sets the declared status beside what is produced"
+    },
+    {
+      "id": "status-code-per-ending",
+      "region": "command",
+      "sel": ".cmdcell[data-cmd=\"declared\"]",
+      "how": "hover",
+      "why": "the verb's hover lists every status the endpoint produces"
+    },
+    {
+      "id": "cases",
+      "region": "command",
+      "sel": ".cmdcell[data-cmd=\"tests\"]",
+      "why": "the verb counts the cases for the ending in force"
+    },
+    {
+      "id": "coverage-per-condition",
+      "region": "command",
+      "sel": ".cmdcell[data-cmd=\"untested\"]",
+      "why": "the verb counts the endings no case asserts"
+    },
+    {
+      "id": "the-handler",
+      "region": "command",
+      "sel": ".cmdcell[data-cmd=\"handler\"]",
+      "how": "hover",
+      "why": "the verb opens the handler and names its file on hover"
+    },
+    {
+      "id": "entity-cluster",
+      "region": "command",
+      "sel": ".cmdcell[data-cmd=\"up\"]",
+      "how": "hover",
+      "why": "the verb's hover names the levels above the endpoint"
+    }
+  ]
+}

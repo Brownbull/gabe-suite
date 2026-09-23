@@ -1,6 +1,6 @@
 {
- "about": "The endpoint card's brain-map tree as data, written by gen-brainmap.js beside brainmap-endpoint.html, which embeds the same object as window.BM_DATA. Generated; never edit by hand.",
- "page": "brainmap-endpoint.html",
+ "about": "The endpoint card's brain-map tree as data, written by gen-brainmap.js and read by the endpoint lab's section map tab. The brain map's own page retired to records/brainmap/ once the lab carried it (D-024). Generated; never edit by hand.",
+ "page": "docs/design/workflow-panel/endpoint-lab.html",
  "kind": "endpoint-card",
  "rotDeg": 45,
  "maxDepth": 2,

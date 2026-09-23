@@ -30562,7 +30562,7 @@ window.LABEP = {
   "state": "present",
   "reason": null,
   "source": {
-   "map": "docs/design/design-context/brainmap-endpoint.html",
+   "map": "docs/design/workflow-panel/endpoint-lab.html",
    "inventory": "inventory-endpoint.md",
    "inv_hash": "11931871",
    "cells_hash": "1a215eb2",
@@ -30605,6 +30605,8 @@ window.LABEP = {
     "headerNone": "has no stage reading yet, so the stages cannot be read on this part — you are still on it.",
     "headerGapShort": "has none yet",
     "headerOffShort": "is drawn another way",
+    "foldWord": "fold",
+    "foldTip": "shows or hides this block's fields, and moves nothing",
     "kindWords": {
      "page": "a page",
      "none": "no page yet",
@@ -30621,7 +30623,7 @@ window.LABEP = {
    "feedback": {
     "lede": "section map · a note from the bench",
     "fields": {
-     "door": "door",
+     "door": "endpoint",
      "bench": "bench",
      "block": "block",
      "surface": "the map says",
@@ -30745,7 +30747,7 @@ window.LABEP = {
      "built": true,
      "says": "The Functions panel draws the handler and the call tree behind it, each function marked by what it decides and touches.",
      "gap": null,
-     "plain": "Code that runs behind the door, sorted by how much it decides."
+     "plain": "Code that runs behind the endpoint, sorted by how much it decides."
     }
    },
    {
@@ -30811,8 +30813,8 @@ window.LABEP = {
      "kind": "none",
      "built": false,
      "says": "The Security panel carries the idempotency claim and the delivery fact as one-line rows, and hover cards say how common a piece is.",
-     "gap": "It compares this endpoint against the others, and no part does that — nothing lays the shared machinery beside what only this door does.",
-     "plain": "Machinery this door shares with the rest of the app, against what only it does."
+     "gap": "It compares this endpoint against the others, and no part does that — nothing lays the shared machinery beside what only this endpoint does.",
+     "plain": "Machinery this endpoint shares with the rest of the app, against what only it does."
     }
    },
    {
@@ -31006,9 +31008,9 @@ window.LABEP = {
      },
      "kind": "none",
      "built": false,
-     "says": "The head bar names the door and flies the risk flag, and the command panel counts the findings behind one cell.",
+     "says": "The head bar names the endpoint and flies the risk flag, and the command panel counts the findings behind one cell.",
      "gap": "No panel gathers the overview — coverage per condition, the findings themselves, the endpoint's place in the app and the outside services it calls have no surface.",
-     "plain": "Whole-door reading — size, findings, and the place this endpoint sits in the app."
+     "plain": "The whole endpoint at a glance — size, findings, and the place it sits in the app."
     }
    },
    {
@@ -31040,9 +31042,9 @@ window.LABEP = {
      },
      "kind": "page",
      "built": true,
-     "says": "The Widening panel draws the screens that fetch this endpoint and the ladder from the door out to the app.",
+     "says": "The Widening panel draws the screens that fetch this endpoint and the ladder from the endpoint out to the app.",
      "gap": "Whether the client can tell the endings apart is measured in the feed and drawn on no rung.",
-     "plain": "Screens that call this door, and what they do with each answer."
+     "plain": "Screens that call this endpoint, and what they do with each answer."
     }
    }
   ],
@@ -32146,6 +32148,1385 @@ window.LABEP = {
    "with_surface": 7,
    "without_surface": 3,
    "header": 1
+  }
+ },
+ "fieldlayer": {
+  "state": "present",
+  "reason": null,
+  "words": {
+   "strings": {
+    "idle": "point at a field or a block to outline what the panels draw for it — click one to keep the outline",
+    "lit": "{what} · {n} outlined, {v} in view — {regions}",
+    "elsewhere": "{what} · nothing outlined here — drawn on {where}",
+    "none": "{what} · not drawn by the lab — nothing outlined",
+    "noneBlock": "{what} · none of its fields is drawn here — nothing outlined",
+    "markHere": "drawn here · places {n} · in view {v}",
+    "markElse": "on another part",
+    "markNone": "not drawn by the lab",
+    "blockCount": "{n} of {m} fields drawn here",
+    "totals": "the lab draws {drawn} of {of} fields · {none} not drawn",
+    "rowHere": "drawn now",
+    "rowNot": "nothing on the bench now",
+    "rowWhere": "drawn by the lab on",
+    "rowProposal": "a proposal",
+    "proposal": "a selector I wrote ties this field to what the panels draw — the renderer does not say it",
+    "more": "and {n} more",
+    "opt_hold": "outline",
+    "opt_rest": "the rest",
+    "val_point": "while pointing",
+    "val_held": "held",
+    "val_dim": "dimmed while pointing",
+    "val_asis": "as it is",
+    "tip_point": "pointing at a field or a block outlines it until the pointer leaves; a click keeps it",
+    "tip_held": "a block you Show stays outlined until you point at something else",
+    "tip_dim": "while you point, everything the field does not draw fades back; a click keeps only the outline and fades nothing (D-022)",
+    "tip_asis": "only the outline — the rest of the bench keeps its full colour",
+    "tipPick": "(my pick — dashed)",
+    "noteField": "field",
+    "noteNone": "none pointed at yet",
+    "noteLit": "{what} · {n} outlined, {v} in view: {els}",
+    "noteNothing": "{what} · nothing outlined — {why}",
+    "moreCounts": "how the lab ties each field to what the panels draw — every tie is my proposal, typed by hand: tied in the code that draws it {generated} · tied afterwards by a selector in the words file {authored} (of them, {both} also tied in the code) · not drawn {none} — {notDrawn}",
+    "litOut": "· click it to keep the outline and walk to the rest",
+    "off": "{what} · nothing outlined — {why}",
+    "markOff": "behind a switch no control reaches yet",
+    "blockElse": " · {e} on another part",
+    "rowInView": "{v} in view",
+    "placeSep": " ; ",
+    "opt_prop": "my selector ties",
+    "val_click": "only on a click",
+    "val_hidden": "unmarked",
+    "val_marked": "marked dashed",
+    "tip_click": "pointing does nothing; a click outlines a field or a block and keeps it",
+    "tip_hidden": "a tie I wrote as a selector looks like any other — how the map knows sits behind more information",
+    "tip_marked": "a tie I wrote as a selector is outlined dashed on the bench and underlined dashed in the tree",
+    "keySolid": "solid — on its face",
+    "keyDotted": "dotted — only in its hover card",
+    "keyDashed": "dashed — a tie I wrote as a selector",
+    "kept": "kept: {what} · {n} outlined, {v} in view",
+    "next": "next out of view ({n})",
+    "tipNext": "scrolls to the next outlined element that is out of view",
+    "clear": "clear",
+    "tipClear": "takes the kept outline off — Esc does the same",
+    "noteLook": "look — outline {hold} · the rest {rest} · my selector ties {prop}",
+    "noText": "an element with no words of its own"
+   },
+   "places": {
+    "middle": "middle",
+    "command": "command",
+    "portrait": "portrait",
+    "head": "head bar",
+    "middleAll": "{part} · {variant}",
+    "middlePath": "{part} · {variant}, a path picked",
+    "cmd_card_rows_cmd": "the command panel with its verbs laid out as rows (a rail setting)",
+    "cmd_card_g2_cmd": "the command panel · its topics",
+    "cmd_card_g2_path": "the command panel · PATHS opened",
+    "cmd_ladder": "the command panel as a ladder (a rail setting)",
+    "cmd_matrix": "the command panel as a matrix (a rail setting)",
+    "cmd_strip": "the command panel as a strip (a rail setting)",
+    "portOwn": "the portrait · {part} {variant}",
+    "portMore": "the portrait · {part} {variant}, with the switch that is off",
+    "portPath": "the portrait · a path's record",
+    "portExit": "the portrait · an ending's record",
+    "portCase": "the portrait · a case's record"
+   }
+  },
+  "authored": [
+   {
+    "id": "the-endings",
+    "region": "command",
+    "sel": ".cmdcell[data-cmd=\"walk\"], .cmdcell[data-cmd=\"grp-paths\"]",
+    "how": "face",
+    "why": "the verb and the topic cell count the paths and open the grid of them; the card's generic cell cannot say it carries the endings"
+   },
+   {
+    "id": "kinds-of-ending",
+    "region": "command",
+    "sel": ".cmdcell[data-cmd=\"refusals\"], .cmdcell[data-cmd=\"success\"]",
+    "how": "face",
+    "why": "each verb filters the paths to one kind of ending"
+   },
+   {
+    "id": "tables-touched",
+    "region": "command",
+    "sel": ".cmdcell[data-cmd=\"writes\"]",
+    "how": "hover",
+    "why": "the verb's hover names the tables the ending writes"
+   },
+   {
+    "id": "own-guards",
+    "region": "command",
+    "sel": ".cmdcell[data-cmd=\"pre\"]",
+    "how": "hover",
+    "why": "the verb's hover lists each precondition with its status"
+   },
+   {
+    "id": "app-band",
+    "region": "command",
+    "sel": ".cmdcell[data-cmd=\"gates\"]",
+    "how": "hover",
+    "why": "the verb's hover counts the middleware lanes the whole app runs"
+   },
+   {
+    "id": "findings",
+    "region": "command",
+    "sel": ".cmdcell[data-cmd=\"findings\"]",
+    "how": "face",
+    "why": "the verb counts the findings and names each on hover"
+   },
+   {
+    "id": "declared-status",
+    "region": "command",
+    "sel": ".cmdcell[data-cmd=\"declared\"]",
+    "how": "hover",
+    "why": "the verb's hover sets the declared status beside what is produced"
+   },
+   {
+    "id": "status-code-per-ending",
+    "region": "command",
+    "sel": ".cmdcell[data-cmd=\"declared\"]",
+    "how": "hover",
+    "why": "the verb's hover lists every status the endpoint produces"
+   },
+   {
+    "id": "cases",
+    "region": "command",
+    "sel": ".cmdcell[data-cmd=\"tests\"]",
+    "how": "face",
+    "why": "the verb counts the cases for the ending in force"
+   },
+   {
+    "id": "coverage-per-condition",
+    "region": "command",
+    "sel": ".cmdcell[data-cmd=\"untested\"]",
+    "how": "face",
+    "why": "the verb counts the endings no case asserts"
+   },
+   {
+    "id": "the-handler",
+    "region": "command",
+    "sel": ".cmdcell[data-cmd=\"handler\"]",
+    "how": "hover",
+    "why": "the verb opens the handler and names its file on hover"
+   },
+   {
+    "id": "entity-cluster",
+    "region": "command",
+    "sel": ".cmdcell[data-cmd=\"up\"]",
+    "how": "hover",
+    "why": "the verb's hover names the levels above the endpoint"
+   }
+  ],
+  "n": {
+   "ties": 12,
+   "ids": 12
+  }
+ },
+ "mapnav": {
+  "state": "present",
+  "reason": null,
+  "source": {
+   "tree": "docs/design/design-context/brainmap-endpoint.json",
+   "inv_hash": "11931871",
+   "cells_hash": "1a215eb2"
+  },
+  "maxDepth": 2,
+  "groupings": {
+   "flat": {
+    "name": "Flat",
+    "note": "all 11 at one level",
+    "plain": "Every block sits directly under the root, with its attributes below it."
+   },
+   "standpoint": {
+    "name": "By standpoint",
+    "note": "9 groups",
+    "plain": "The blocks gather under the standpoint each one names, in your words."
+   },
+   "section": {
+    "name": "By section",
+    "note": "7 groups",
+    "plain": "The inventory's own groups, with each attribute under the one it was written in."
+   },
+   "stage": {
+    "name": "By stage",
+    "note": "8 rows + across · a proposal",
+    "plain": "Your record's spine, in its order: 6 stages, then the UNCAUGHT bay that runs beside every stage, then the CLIENT screen after the answer leaves — each holding the blocks proposed for it. A proposal: nothing in the data says which rows a block touches."
+   }
+  },
+  "groups": [
+   {
+    "key": "what-we-read-write-modify-create-and-delete",
+    "name": "what we read, write, modify, create and delete",
+    "blocks": [
+     "c1"
+    ],
+    "n": 7,
+    "plain": "The blocks that answer from one standpoint: what we read, write, modify, create and delete."
+   },
+   {
+    "key": "what-determines-the-path",
+    "name": "what determines the path",
+    "blocks": [
+     "c2",
+     "c8"
+    ],
+    "n": 16,
+    "plain": "The blocks that answer from one standpoint: what determines the path."
+   },
+   {
+    "key": "functions",
+    "name": "functions",
+    "blocks": [
+     "c3"
+    ],
+    "n": 8,
+    "plain": "The blocks that answer from one standpoint: functions."
+   },
+   {
+    "key": "what-is-saved-temporarily-and-alive-during-the-process",
+    "name": "what is saved temporarily and alive during the process",
+    "blocks": [
+     "c4"
+    ],
+    "n": 3,
+    "plain": "The blocks that answer from one standpoint: what is saved temporarily and alive during the process."
+   },
+   {
+    "key": "named-by-none",
+    "name": "named by none",
+    "blocks": [
+     "c5",
+     "c10"
+    ],
+    "n": 19,
+    "plain": "The blocks that answer from one standpoint: named by none."
+   },
+   {
+    "key": "stage-spine",
+    "name": "stage spine",
+    "blocks": [
+     "c6"
+    ],
+    "n": 11,
+    "plain": "The blocks that answer from one standpoint: stage spine."
+   },
+   {
+    "key": "coverage",
+    "name": "coverage",
+    "blocks": [
+     "c7"
+    ],
+    "n": 7,
+    "plain": "The blocks that answer from one standpoint: coverage."
+   },
+   {
+    "key": "structures",
+    "name": "structures",
+    "blocks": [
+     "c9"
+    ],
+    "n": 6,
+    "plain": "The blocks that answer from one standpoint: structures."
+   },
+   {
+    "key": "reach-outward",
+    "name": "reach outward",
+    "blocks": [
+     "c11"
+    ],
+    "n": 5,
+    "plain": "The blocks that answer from one standpoint: reach outward."
+   }
+  ],
+  "stages": [
+   {
+    "key": "edge",
+    "stage": "EDGE",
+    "name": "EDGE",
+    "kind": "stage",
+    "mark": null,
+    "plain": "The checks every request meets before it reaches this door — the app band.",
+    "across": false,
+    "under": {
+     "one": [],
+     "every": [
+      "c2",
+      "c7",
+      "c8"
+     ]
+    },
+    "n": {
+     "one": 0,
+     "every": 21
+    }
+   },
+   {
+    "key": "gate",
+    "stage": "GATE",
+    "name": "GATE",
+    "kind": "stage",
+    "mark": null,
+    "plain": "The lock on the door — who may knock, and what the gate provisions.",
+    "across": false,
+    "under": {
+     "one": [],
+     "every": [
+      "c1",
+      "c2",
+      "c3",
+      "c7",
+      "c8"
+     ]
+    },
+    "n": {
+     "one": 0,
+     "every": 33
+    }
+   },
+   {
+    "key": "input",
+    "stage": "INPUT",
+    "name": "INPUT",
+    "kind": "stage",
+    "mark": null,
+    "plain": "The body — can it be read, does it fit the shape.",
+    "across": false,
+    "under": {
+     "one": [],
+     "every": [
+      "c2",
+      "c7",
+      "c9"
+     ]
+    },
+    "n": {
+     "one": 0,
+     "every": 17
+    }
+   },
+   {
+    "key": "handler",
+    "stage": "HANDLER",
+    "name": "HANDLER",
+    "kind": "stage",
+    "mark": null,
+    "plain": "The door's own decisions — guards, calls, arms, catches.",
+    "across": false,
+    "under": {
+     "one": [],
+     "every": [
+      "c1",
+      "c2",
+      "c3",
+      "c7",
+      "c8"
+     ]
+    },
+    "n": {
+     "one": 0,
+     "every": 33
+    }
+   },
+   {
+    "key": "effects",
+    "stage": "EFFECTS",
+    "name": "EFFECTS",
+    "kind": "stage",
+    "mark": null,
+    "plain": "The writes the door leaves behind — which survive each ending.",
+    "across": false,
+    "under": {
+     "one": [],
+     "every": [
+      "c1"
+     ]
+    },
+    "n": {
+     "one": 0,
+     "every": 7
+    }
+   },
+   {
+    "key": "answer",
+    "stage": "ANSWER",
+    "name": "ANSWER",
+    "kind": "stage",
+    "mark": null,
+    "plain": "The reply the caller gets — one body per ending, beside what was promised.",
+    "across": false,
+    "under": {
+     "one": [],
+     "every": [
+      "c1",
+      "c2",
+      "c7",
+      "c9"
+     ]
+    },
+    "n": {
+     "one": 0,
+     "every": 21
+    }
+   },
+   {
+    "key": "uncaught",
+    "stage": "UNCAUGHT",
+    "name": "UNCAUGHT",
+    "kind": "bay",
+    "mark": "runs beside every stage",
+    "plain": "Anything nobody caught — possible at any step. It is the BAY of your record, not a step of its own: it runs beside every stage, and what leaves here is the 500 that nothing translated.",
+    "across": false,
+    "under": {
+     "one": [],
+     "every": [
+      "c1",
+      "c2",
+      "c7"
+     ]
+    },
+    "n": {
+     "one": 0,
+     "every": 17
+    }
+   },
+   {
+    "key": "client",
+    "stage": "CLIENT",
+    "name": "CLIENT",
+    "kind": "screen",
+    "mark": "sits after the answer leaves",
+    "plain": "The screen that reads the answer — can it tell the endings apart. It is the SCREEN of your record: it sits after the answer leaves, so it is a row of its own and not a part of ANSWER.",
+    "across": false,
+    "under": {
+     "one": [
+      "c11"
+     ],
+     "every": [
+      "c11"
+     ]
+    },
+    "n": {
+     "one": 5,
+     "every": 5
+    }
+   },
+   {
+    "key": "across",
+    "stage": "across",
+    "name": "Across the stages",
+    "kind": "across",
+    "mark": null,
+    "plain": null,
+    "across": true,
+    "under": {
+     "one": [
+      "c1",
+      "c2",
+      "c3",
+      "c4",
+      "c5",
+      "c6",
+      "c7",
+      "c8",
+      "c9",
+      "c10"
+     ],
+     "every": [
+      "c4",
+      "c5",
+      "c6",
+      "c10"
+     ]
+    },
+    "n": {
+     "one": 58,
+     "every": 29
+    }
+   }
+  ],
+  "stageRule": {
+   "label": "A block that spans rows goes",
+   "plain": "Where a block that names several rows, or none, is drawn.",
+   "default": "every",
+   "opts": {
+    "one": {
+     "name": "under Across the stages",
+     "note": "the rule as recorded in D-021",
+     "plain": "A block that names a single row sits under it; a block that names several, or none, sits under Across the stages."
+    },
+    "every": {
+     "name": "under every stage it touches",
+     "note": "the agent's pick",
+     "plain": "A block is drawn under every row in its list, so it appears more than once; only a block with an empty list sits under Across."
+    }
+   }
+  },
+  "stageRules": [
+   "one",
+   "every"
+  ],
+  "stageNote": "The rail draws your spine: 8 rows, in your order — 6 stages, then the UNCAUGHT bay, which runs beside every stage, then the CLIENT screen, which sits after the answer leaves. Across the stages is a branch of this map, not a row of your record. What is a PROPOSAL, not a measurement, is which rows each block touches: the agent chose them from your stage record — the topics table for the topic blocks, the block's own questions for the rest. Open a block to read why; correct any of them.",
+  "acrossPlain": {
+   "one": "Blocks that name several rows, or none: D-021's rule puts them here rather than forcing them onto a single row.",
+   "every": "Blocks that belong under no row of your spine: their lists are empty, so there is nothing to draw them under."
+  },
+  "emptyPlain": "No block sits under this row with the rule you picked. It is drawn anyway, dashed, because an endpoint that has nothing at a stage still HAS the stage.",
+  "byBlock": {
+   "c1": {
+    "sig": "Q1+Q2+Q9",
+    "stages": [
+     "gate",
+     "handler",
+     "effects",
+     "answer",
+     "uncaught"
+    ],
+    "names": [
+     "GATE",
+     "HANDLER",
+     "EFFECTS",
+     "ANSWER",
+     "UNCAUGHT"
+    ],
+    "why": "The data row of the topics table: users at GATE, the rest at HANDLER, the fate at ANSWER — and EFFECTS is the stage of the writes themselves. It also reaches the UNCAUGHT bay: its own question asks whether a write survived THIS ending, and on the failure nobody caught the writes are left neither committed nor rolled back.",
+    "cites": "| data | the tables touched at each stage — the WHEN picture (users at GATE, the rest at HANDLER, the fate at ANSWER)",
+    "from": "docs/design/workflow-panel/endpoint-stages.md",
+    "fromEndingsColumn": false
+   },
+   "c2": {
+    "sig": "Q3+Q11",
+    "stages": [
+     "edge",
+     "gate",
+     "input",
+     "handler",
+     "answer",
+     "uncaught"
+    ],
+    "names": [
+     "EDGE",
+     "GATE",
+     "INPUT",
+     "HANDLER",
+     "ANSWER",
+     "UNCAUGHT"
+    ],
+    "why": "Its own question asks at which stage each ending leaves, so its list is exactly the rows whose 'endings that leave here' column is not empty — 6 of them, the UNCAUGHT bay among them: the 500 nobody caught is an ending, and the bay is where it leaves.",
+    "cites": "| Q3 | Which endings can this door produce, and at which stage does each one leave?",
+    "from": "docs/design/design-context/questions.md",
+    "fromEndingsColumn": true
+   },
+   "c3": {
+    "sig": "Q15+Q18+Q19",
+    "stages": [
+     "gate",
+     "handler"
+    ],
+    "names": [
+     "GATE",
+     "HANDLER"
+    ],
+    "why": "The functions row of the topics table: the dependencies at GATE, the handler and its calls at HANDLER. The catches sit where they are, so they add no row of their own. The bay is NOT in its list: a raise nothing catches is a fact about the ENDING it produces, which the endings block draws there; what the functions row names is where the catches ARE.",
+    "cites": "| functions | the dependencies at GATE, the handler and its calls at HANDLER, the catches where they are",
+    "from": "docs/design/workflow-panel/endpoint-stages.md",
+    "fromEndingsColumn": false
+   },
+   "c4": {
+    "sig": "Q16",
+    "stages": [],
+    "names": [],
+    "why": "Its own question is about what was alive DURING the process: a value set at a stage and read at a later stage lives between them, so no single row holds it.",
+    "cites": "| Q16 | What did the door save temporarily",
+    "from": "docs/design/design-context/questions.md",
+    "fromEndingsColumn": false
+   },
+   "c5": {
+    "sig": "Q12",
+    "stages": [],
+    "names": [],
+    "why": "Its own question sets the whole endpoint against other endpoints; it is about the endpoint, not about any single stage of it.",
+    "cites": "| Q12 | Is this door built from standard pieces, or did it go specialist?",
+    "from": "docs/design/design-context/questions.md",
+    "fromEndingsColumn": false
+   },
+   "c6": {
+    "sig": "Q5+Q7",
+    "stages": [],
+    "names": [],
+    "why": "Its own questions ARE the stages and their order; drawing it under any of them would make it its own child.",
+    "cites": "| Q5 | What should be at this stage for this topic?",
+    "from": "docs/design/design-context/questions.md",
+    "fromEndingsColumn": false
+   },
+   "c7": {
+    "sig": "Q4",
+    "stages": [
+     "edge",
+     "gate",
+     "input",
+     "handler",
+     "answer",
+     "uncaught"
+    ],
+    "names": [
+     "EDGE",
+     "GATE",
+     "INPUT",
+     "HANDLER",
+     "ANSWER",
+     "UNCAUGHT"
+    ],
+    "why": "Its own question is about conditions, and a condition ends the request at the stage its ending leaves — the tests row of the topics table says the same: the cases hang at the stage the ending leaves. The UNCAUGHT bay is in the list because its 500 is the condition nothing reaches: no case is written for it, and that absence is the answer the question wants.",
+    "cites": "| Q4 | Which conditions of this door does a test prove, and which does nothing reach?",
+    "from": "docs/design/design-context/questions.md",
+    "fromEndingsColumn": false
+   },
+   "c8": {
+    "sig": "Q6+Q17",
+    "stages": [
+     "edge",
+     "gate",
+     "handler"
+    ],
+    "names": [
+     "EDGE",
+     "GATE",
+     "HANDLER"
+    ],
+    "why": "The security row of the topics table: the band at EDGE, the scheme and gates at GATE, the guards at HANDLER. The bay is NOT in its list: what leaves there is by definition the failure no gate decided.",
+    "cites": "| security | the band at EDGE, the scheme and gates at GATE, the guards at HANDLER — passed or fired",
+    "from": "docs/design/workflow-panel/endpoint-stages.md",
+    "fromEndingsColumn": false
+   },
+   "c9": {
+    "sig": "Q10+Q13",
+    "stages": [
+     "input",
+     "answer"
+    ],
+    "names": [
+     "INPUT",
+     "ANSWER"
+    ],
+    "why": "The schemas row of the topics table: the request shape and its 422 cases at INPUT, the response shape at ANSWER. The bay is NOT in its list: the body that leaves there is the framework's, not a shape this endpoint declares.",
+    "cites": "| schemas | the request shape at INPUT, the response shape at ANSWER, the 422 cases at INPUT",
+    "from": "docs/design/workflow-panel/endpoint-stages.md",
+    "fromEndingsColumn": false
+   },
+   "c10": {
+    "sig": "Q14+Q20",
+    "stages": [],
+    "names": [],
+    "why": "Its own questions are about the whole endpoint at a glance, and its risks can sit in any row, so no single row holds it.",
+    "cites": "| Q14 | Which door is the densest, the riskiest, the least tested?",
+    "from": "docs/design/design-context/questions.md",
+    "fromEndingsColumn": false
+   },
+   "c11": {
+    "sig": "Q8",
+    "stages": [
+     "client"
+    ],
+    "names": [
+     "CLIENT"
+    ],
+    "why": "The widening row of the topics table: the screen at CLIENT. The screen sits after the answer leaves, so it is its own row, not ANSWER's. The bay is NOT in its list: the screen must still handle the 500 that nothing translated, but it reads it after the answer leaves — at CLIENT, the row it already sits under.",
+    "cites": "| widening | the screen at CLIENT — the reason site, the guard chain, the hook's moves",
+    "from": "docs/design/workflow-panel/endpoint-stages.md",
+    "fromEndingsColumn": false
+   }
+  },
+  "keep": {
+   "label": "Keep only",
+   "plain": "Takes the node you opened last and quiets every node that does not carry it. It stays on until you remove it.",
+   "btnIdle": "Keep only what carries “{name}”",
+   "btnNone": "Keep only — open a node first",
+   "btnRoot": "Keep only — the root carries everything",
+   "chipOn": "Keep only is ON: the map keeps what carries “{name}” ({kind}); {quiet} other nodes are quiet.",
+   "chipHow": "It stays on through clicks, placements and groupings. Remove it with the button beside this.",
+   "off": "Remove the filter",
+   "offPlain": "Turns Keep only off: every node comes back."
+  },
+  "acts": {
+   "where": {
+    "middle": {
+     "name": "the middle",
+     "plain": "The panel under the map changes to show this — the result, in the dimension you picked."
+    },
+    "portrait": {
+     "name": "the portrait",
+     "plain": "One thing, in full, in the panel on the right. It replaces nothing else."
+    },
+    "map": {
+     "name": "the map itself",
+     "plain": "The map redraws: what is kept stays, what is not goes quiet. Nothing new is fetched."
+    },
+    "here": {
+     "name": "here",
+     "plain": "It opens in this tray, beside what you already opened."
+    }
+   },
+   "kinds": {
+    "select": {
+     "name": "Show",
+     "icon": "layers",
+     "plain": "Puts this thing's own rows in front of you. It replaces what the region was showing, and nothing is hidden elsewhere."
+    },
+    "filter": {
+     "name": "Keep only",
+     "icon": "target",
+     "plain": "Narrows what every other region shows to the things that carry this. A filter is sticky: it stays until you drop it, and the page says it is on."
+    },
+    "open": {
+     "name": "Open",
+     "icon": "doc",
+     "plain": "Opens the one record — every field of it, with where it came from. It is a detail view, not a change of subject."
+    },
+    "trace": {
+     "name": "Follow",
+     "icon": "route",
+     "plain": "Walks from this thing to what it reaches, one step at a time. It changes the subject to the step you land on."
+    }
+   },
+   "byNode": {
+    "root": {
+     "click": {
+      "act": "select",
+      "where": "middle",
+      "what": "every block of the card, ordered by how much each holds"
+     },
+     "offers": []
+    },
+    "block": {
+     "click": {
+      "act": "select",
+      "where": "middle",
+      "what": "this block's attributes, as the card would show them"
+     },
+     "offers": [
+      {
+       "act": "open",
+       "where": "portrait",
+       "what": "the block itself: its questions, its standpoint, what it holds"
+      }
+     ]
+    },
+    "attr": {
+     "click": {
+      "act": "select",
+      "where": "middle",
+      "what": "this attribute in every block that carries it, side by side"
+     },
+     "offers": [
+      {
+       "act": "open",
+       "where": "portrait",
+       "what": "this attribute's record: its type, how many there are, where it first shows"
+      },
+      {
+       "act": "trace",
+       "where": "middle",
+       "what": "the questions this attribute answers, and what else answers them"
+      }
+     ]
+    },
+    "group": {
+     "click": {
+      "act": "select",
+      "where": "middle",
+      "what": "the blocks in this group, side by side"
+     },
+     "offers": []
+    },
+    "stage": {
+     "click": {
+      "act": "select",
+      "where": "middle",
+      "what": "the blocks drawn under this stage, side by side"
+     },
+     "offers": []
+    },
+    "sec": {
+     "click": {
+      "act": "select",
+      "where": "middle",
+      "what": "the attributes this section of the inventory holds"
+     },
+     "offers": []
+    },
+    "added": {
+     "click": {
+      "act": "select",
+      "where": "middle",
+      "what": "the rows no block claims yet"
+     },
+     "offers": []
+    }
+   },
+   "head": "What a click does",
+   "offersHead": "Other moves this node offers",
+   "offersNone": "No other move: a click is the only one.",
+   "filterLine": "Filtering is not a click. Keep only is its own control, on the rail above the map, and it says it is on until you remove it.",
+   "lead": "Each of these is a move, not a link: it says what changes and which part of the console answers.",
+   "note": "PROPOSED, not built. The map is the COMMAND region — it names concepts and never a code. Nothing here reaches the feed yet; what it would show is named so you can rule on it by looking."
+  },
+  "open": {
+   "why": "Every place the agent chose something you have not ruled. Named here rather than buried in a commit message.",
+   "items": [
+    {
+     "q": "Which rows of your spine each block touches, and where a block that spans rows is drawn. Nothing in the data maps a block to a row.",
+     "did": "Proposed a list per block (D-021), over all 8 rows of your record — the 6 stages, the UNCAUGHT bay and the CLIENT screen. Blocks naming a single row: 1 · several: 6 · none: 4. D-021 as recorded puts every block whose list is not a single row under Across the stages (10 blocks), and the rows it leaves empty are: EDGE · GATE · INPUT · HANDLER · EFFECTS · ANSWER · UNCAUGHT. My pick draws each block under every row it touches, so Across holds only the blocks with an empty list (4), and the rows it leaves empty are: none. A switch under By stage shows both. 3 blocks are drawn under the bay — “Data effects” · “Endings” · “Proof” — because the 500 nobody caught is an ending they must be able to show.",
+     "ask": "Move any block you would put elsewhere, and say which rule you keep for a block that spans rows.",
+     "lab": "Built here as the switch under By stage: under every stage it touches is my pick, under Across the stages is D-021 as recorded."
+    },
+    {
+     "q": "You said “the four standpoints the blocks name”. The blocks name 9.",
+     "did": "Grouped by all 9, each one read off the block's own standpoint sentence. Named by more than a single block: “what determines the path” (Endings · Gates and decisions). The blocks your standpoints do not name — 2 of them — gather in a bucket of their own, which is not a standpoint they share.",
+     "ask": "Tell me which of them you meant, or accept 9.",
+     "lab": "By standpoint draws every group the blocks name, one node each."
+    },
+    {
+     "q": "Where the Keep-only control sits, and which node it keeps.",
+     "did": "On the rail above the map, as its own group, taking the node opened last. A filter changes the map, and the rail is where the controls that change the map live; in a panel's head it would look like one of the node's moves again, and closing the panel would hide the only way to remove it.",
+     "ask": "Say if it belongs in the panel head instead, or should keep a node you pick some other way.",
+     "lab": "Here it sits in the map's own header, so it travels with the map to every placement; it keeps the node you showed last, and while it is on a bar at the top of the rail says so on every tab."
+    },
+    {
+     "q": "Which node the sweep starts from when more than one is open.",
+     "did": "The sweep starts at the node opened last, so it follows where you are rather than where you were.",
+     "ask": "Say if it should stay on the first one instead.",
+     "lab": "Here the line starts at the node you showed last. It ends at the nearest element it lit (my pick) or at the panel that answers (the brain map's hop), or is hidden — a switch."
+    },
+    {
+     "q": "What the root node opens.",
+     "did": "A panel for the card as a whole: the counts, and the blocks in order of how many attributes they hold.",
+     "ask": "Say if the root should open nothing at all.",
+     "lab": "Here Open on the card draws the card as a whole in the portrait — the counts, and the blocks by how much each holds."
+    },
+    {
+     "q": "Whether opening a second branch closes the first.",
+     "did": "It does not. The tray grows, and a node closes only when you click it again or press Escape.",
+     "ask": "Say if one open branch at a time reads better.",
+     "lab": "Here the records Open draws in the portrait are kept, newest first, each closing on its own (the brain map's pick) — or one at a time, a switch. Folds never close one another."
+    }
+   ]
+  },
+  "qtext": {
+   "Q1": "At which moment is a table touched, and on what does that depend?",
+   "Q2": "On THIS ending, which tables were written, and did the write survive?",
+   "Q3": "Which endings can this door produce, and at which stage does each one leave?",
+   "Q4": "Which conditions of this door does a test prove, and which does nothing reach?",
+   "Q5": "What should be at this stage for this topic?",
+   "Q6": "Which gate stopped this request, and which ones did it pass first?",
+   "Q7": "What executes after what inside the door?",
+   "Q8": "What does the client do with each ending — can it tell two 409s apart?",
+   "Q9": "Which tables does the door touch that the Data panel never draws?",
+   "Q10": "What fields does this entity carry, and how do they hang together?",
+   "Q11": "Which route is the expected one, and which are the exceptions?",
+   "Q12": "Is this door built from standard pieces, or did it go specialist?",
+   "Q13": "What shape goes in and what shape comes back on this ending?",
+   "Q14": "Which door is the densest, the riskiest, the least tested?",
+   "Q15": "Where in the code is this — can I open it?",
+   "Q16": "What did the door save temporarily — cache, or something ephemeral that was alive and important during the process?",
+   "Q17": "What determines the path — what makes this a 401, a 402 or a 200?",
+   "Q18": "Which functions are the crucial ones: facing the API, deciding the ending, touching the database, giving context?",
+   "Q19": "Which little functions sit inside the loop, and of what type (formatting · capping · validation…)?",
+   "Q20": "What is inside this element, and what is there to explore — implications, effects, impact, coverage?"
+  },
+  "needs": {
+   "method-path": [
+    "Q14",
+    "Q20"
+   ],
+   "entity-cluster": [],
+   "declared-status": [
+    "Q11"
+   ],
+   "file-line": [
+    "Q15"
+   ],
+   "risk-flag": [
+    "Q14"
+   ],
+   "signature": [],
+   "kinds-of-ending": [
+    "Q3",
+    "Q11",
+    "Q20"
+   ],
+   "the-endings": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q4",
+    "Q6",
+    "Q8",
+    "Q11",
+    "Q13",
+    "Q17"
+   ],
+   "the-stage-an-ending-leaves-from": [
+    "Q3",
+    "Q5",
+    "Q6",
+    "Q7"
+   ],
+   "the-ordered-chain-per-ending": [
+    "Q1",
+    "Q5",
+    "Q7"
+   ],
+   "the-checks-met-in-run-order": [
+    "Q6"
+   ],
+   "the-route-that-passes-every-check": [
+    "Q11",
+    "Q17"
+   ],
+   "the-predicate-per-decision-point": [
+    "Q1",
+    "Q17"
+   ],
+   "status-code-per-ending": [
+    "Q8",
+    "Q17"
+   ],
+   "own-guards": [
+    "Q1",
+    "Q4",
+    "Q5",
+    "Q6",
+    "Q17"
+   ],
+   "deciding-branches": [
+    "Q1",
+    "Q17"
+   ],
+   "catches": [
+    "Q17"
+   ],
+   "switches": [
+    "Q12",
+    "Q17"
+   ],
+   "tables-touched": [
+    "Q1",
+    "Q2",
+    "Q9",
+    "Q10",
+    "Q14",
+    "Q20"
+   ],
+   "operation-per-table": [
+    "Q2",
+    "Q9"
+   ],
+   "fate-of-the-writes-per-ending": [
+    "Q2"
+   ],
+   "the-moment-a-table-is-touched": [
+    "Q1",
+    "Q5",
+    "Q7"
+   ],
+   "provisions": [],
+   "race-on-a-unique-key": [],
+   "idempotency-claim": [
+    "Q12"
+   ],
+   "how-this-table-was-found": [
+    "Q9"
+   ],
+   "events-published": [
+    "Q12",
+    "Q20"
+   ],
+   "tasks-dispatched": [
+    "Q12",
+    "Q20"
+   ],
+   "outside-services-called": [
+    "Q20"
+   ],
+   "request-scoped-state": [
+    "Q16"
+   ],
+   "client-cache-effects": [
+    "Q16"
+   ],
+   "in-flight-values": [
+    "Q16",
+    "Q20"
+   ],
+   "request-shape": [
+    "Q5",
+    "Q10",
+    "Q13"
+   ],
+   "response-shape-per-ending": [
+    "Q5",
+    "Q8",
+    "Q10",
+    "Q13"
+   ],
+   "delivery": [
+    "Q12"
+   ],
+   "response-headers-per-ending": [
+    "Q13"
+   ],
+   "field-rules-of-the-request-body": [
+    "Q10",
+    "Q13"
+   ],
+   "validation-cases": [
+    "Q5"
+   ],
+   "the-handler": [
+    "Q5",
+    "Q7",
+    "Q15",
+    "Q18"
+   ],
+   "decision-point-functions": [
+    "Q18"
+   ],
+   "roles-per-function": [
+    "Q18"
+   ],
+   "data-touching-functions": [
+    "Q7",
+    "Q18"
+   ],
+   "context-giving-functions": [
+    "Q5",
+    "Q6",
+    "Q7",
+    "Q12",
+    "Q18"
+   ],
+   "little-helpers-with-a-type": [
+    "Q19"
+   ],
+   "functions-behind-walk-levels": [
+    "Q14"
+   ],
+   "coverage-per-condition": [
+    "Q4",
+    "Q14",
+    "Q20"
+   ],
+   "cases": [],
+   "what-the-case-asserts-on-this-condition": [
+    "Q4"
+   ],
+   "case-role-on-this-endpoint": [],
+   "workflow-step": [],
+   "auth-scheme-gate": [
+    "Q5",
+    "Q6",
+    "Q12",
+    "Q17"
+   ],
+   "rate-tier": [],
+   "app-band": [
+    "Q5",
+    "Q6",
+    "Q12"
+   ],
+   "who-fetches-it": [
+    "Q8",
+    "Q20"
+   ],
+   "can-the-client-tell-the-endings-apart": [
+    "Q8"
+   ],
+   "findings": [
+    "Q14",
+    "Q20"
+   ],
+   "how-common-this-piece-is": [
+    "Q12"
+   ],
+   "where-this-endpoint-sits-in-the-app": [
+    "Q14"
+   ],
+   "why-this-slot-is-empty": [
+    "Q4",
+    "Q5",
+    "Q20"
+   ],
+   "expected-slots-at-this-stage": [
+    "Q5"
+   ],
+   "what-the-screen-does-on-this-ending": [
+    "Q8"
+   ]
+  },
+  "facts": [
+   {
+    "big": "3",
+    "text": "The map draws 3 levels and no more, which is your ruling on the command card. A grouping that would put attributes on a fourth level does not draw them: they open in the block's panel instead, and the line under the map says how many are waiting there."
+   },
+   {
+    "big": "9",
+    "text": "An attribute the map calls shared is needed by 3 or more of the 11 blocks. 9 attributes qualify; “The endings” is the extreme, needed by 6."
+   },
+   {
+    "big": "0",
+    "text": "Every one of the 61 rows is claimed: 52 sit in a block of their own and 9 are shared. Nothing hangs loose, so the map draws no branch for the unplaced."
+   },
+   {
+    "big": "4",
+    "text": "4 attributes M1 placed no longer have a row in the inventory, so they are drawn nowhere: “usage fan in” and “steps in the longest chain” and “rate limit” and “journeys workflow step”."
+   }
+  ],
+  "added": {
+   "name": "Not placed yet",
+   "plain": "Rows written into the inventory after M1 was rated. No block claims them, and nothing here guesses one."
+  },
+  "words": {
+   "grouping": {
+    "label": "grouping",
+    "tip": "What the first level under the card is. Changes only the map.",
+    "pick": "flat",
+    "tips": {
+     "flat": "Every block directly under the card, with its fields below it.",
+     "standpoint": "The blocks gathered under the standpoint each one names.",
+     "section": "The inventory's own sections, each field under the one it was written in.",
+     "stage": "Your record's rows in order, each holding the blocks proposed for it. A proposal."
+    }
+   },
+   "stageRule": {
+    "tip": "Where a block that names several rows, or none, is drawn."
+   },
+   "placement": {
+    "label": "where the map sits",
+    "tip": "Where the section map is drawn. The bench and its lights do not change.",
+    "pick": "rail",
+    "opts": {
+     "rail": {
+      "name": "rail tab",
+      "tip": "In this tab, left of the panels it lights. The bench keeps the size its lines were set at."
+     },
+     "right": {
+      "name": "right column",
+      "tip": "A column right of the panels, the whole height of the page."
+     },
+     "below": {
+      "name": "below",
+      "tip": "Full width under the rail, the middle and the command panel — the second section."
+     }
+    },
+    "movedRight": "The map is drawn in a column right of the panels.",
+    "movedBelow": "The map is drawn full width below the panels.",
+    "why": "My pick is the rail tab: it moves nothing on the bench, and the map stays left of the panels it lights, so the line from a node runs toward what it lit."
+   },
+   "sweep": {
+    "label": "the line from a node",
+    "tip": "Where the line from the node you showed last ends, or no line.",
+    "pick": "on",
+    "opts": {
+     "on": "to what it lit",
+     "panel": "to the panel that answers",
+     "off": "hidden"
+    },
+    "tips": {
+     "on": "Ends at the nearest element the node lit, in view. Drawn whole, never animated.",
+     "panel": "Ends at the panel that answers the last move: the middle for Show, the portrait for Open, where Follow landed. The brain map's hop.",
+     "off": "No line. The outline alone says what was lit."
+    }
+   },
+   "moves": {
+    "show": {
+     "name": "Show",
+     "icon": "layers"
+    },
+    "open": {
+     "name": "Open",
+     "icon": "doc",
+     "where": "the portrait",
+     "tip": "Draws this node's record in the portrait."
+    },
+    "follow": {
+     "name": "Follow",
+     "icon": "journey",
+     "where": "the part, record or command panel level it lands on",
+     "tip": "Takes the bench to the next place that draws this field and names where it went. It may pick a path; it never changes a rail setting."
+    },
+    "byNode": {
+     "root": {
+      "show": "lights every field the panels draw for the card",
+      "where": "the bench",
+      "offers": [
+       "open"
+      ]
+     },
+     "block": {
+      "show": "moves the bench to the block's page and lights its fields",
+      "where": "the bench",
+      "offers": [
+       "open"
+      ]
+     },
+     "attr": {
+      "show": "lights every element the panels draw for this field",
+      "where": "the bench",
+      "offers": [
+       "open",
+       "follow"
+      ]
+     },
+     "group": {
+      "show": "opens it and lights the fields of every block it holds",
+      "where": "the bench",
+      "offers": [
+       "open"
+      ]
+     },
+     "stage": {
+      "show": "opens it and lights the fields of every block drawn under it",
+      "where": "the bench",
+      "offers": [
+       "open"
+      ]
+     },
+     "sec": {
+      "show": "opens it and lights every field it holds",
+      "where": "the bench",
+      "offers": [
+       "open"
+      ]
+     },
+     "added": {
+      "show": "opens it and lights the fields no block claims",
+      "where": "the bench",
+      "offers": [
+       "open"
+      ]
+     }
+    },
+    "rowClick": "a click",
+    "rowOffers": "it also offers",
+    "offersNone": "no other move",
+    "followNone": "No other place on the panels draws this field, so there is nowhere to follow it to.",
+    "followDone": "Followed to {place}, in {region}.",
+    "showRow": "{name} — {where} · {what}",
+    "offerRow": "{name} — {where}",
+    "regions": {
+     "middle": "the middle",
+     "command": "the command panel",
+     "portrait": "the portrait"
+    },
+    "followRail": "Drawn on {places} — each needs a rail setting changed, and Follow moves the bench, never the rail.",
+    "followPath": "A path was picked to draw it: {path}."
+   },
+   "keep": {
+    "head": "filter",
+    "tip": "Keep only is not a click. It is this control: it keeps the node you showed last, and stays on until you remove it.",
+    "bench": "On the bench, {n} elements carry its fields and the rest are quiet — dimmed, never removed.",
+    "benchOne": "On the bench, {n} element carries its fields and the rest are quiet — dimmed, never removed.",
+    "benchNone": "Nothing on the bench carries its fields right now, so the whole bench is quiet — dimmed, never removed.",
+    "how": "It stays on through clicks, part changes, placements and groupings. Remove it with the button beside this.",
+    "btnNone": "Keep only — show a node first",
+    "btnTip": "Takes the node you showed last and quiets every node that does not carry it. It stays on until you remove it.",
+    "barTip": "Keep only is on. This bar stays at the top of the rail on every tab until you remove it."
+   },
+   "kinds": {
+    "root": "the card",
+    "attr": "field",
+    "block": "block",
+    "group": "standpoint",
+    "sec": "section",
+    "stage": "row",
+    "added": "not placed"
+   },
+   "stageKinds": {
+    "stage": "a stage",
+    "bay": "the bay",
+    "screen": "the screen",
+    "across": "a branch of this map"
+   },
+   "strings": {
+    "nBlocks": "{n} blocks",
+    "oneBlock": "{n} block",
+    "noBlock": "no block here",
+    "nFields": "{n} fields",
+    "deep": "{n} fields sit one level below the {levels} levels this map draws. Show a block and they light on the bench; Flat lists them.",
+    "rowsHold": "holds",
+    "rowsBlocks": "blocks",
+    "rowStages": "proposed rows",
+    "rowWhy": "why",
+    "rowCites": "the line it rests on",
+    "rowUnder": "drawn under",
+    "rowRule": "rule in force",
+    "recLabel": "its record, from the map",
+    "recHint": "The node you opened on the section map, drawn whole.",
+    "recCounts": "what the card holds",
+    "recBlocks": "blocks, by how much each holds",
+    "recQuestions": "questions it answers",
+    "recFields": "fields",
+    "recOwn": "its own",
+    "recShared": "shared",
+    "recStandpoint": "standpoint",
+    "recType": "data type",
+    "recHowMany": "how many",
+    "recFirst": "first visible at",
+    "recHome": "home",
+    "recRated": "importance",
+    "recSharedBy": "shared by {n} blocks",
+    "recStages": "rows it touches",
+    "recNoStage": "none — it belongs under no row",
+    "recDrawn": "drawn by the lab",
+    "attrs": "attributes",
+    "blocks": "blocks",
+    "shared": "shared",
+    "unplaced": "not placed",
+    "openHead": "What I chose that you have not ruled",
+    "openWhy": "Each pick the brain map made alone, and what the lab does with it.",
+    "openLab": "in the lab",
+    "factsHead": "What the tree measures",
+    "lookLine": "grouped {grp} · Keep only {keep} · where the map sits: {place} · line to what it lit: {sweep}",
+    "lookOff": "off",
+    "placeHead": "Where the map sits",
+    "absent": "The map's groupings were not read, so only the blocks are drawn."
+   },
+   "openLab": [
+    "Built here as the switch under By stage: under every stage it touches is my pick, under Across the stages is D-021 as recorded.",
+    "By standpoint draws every group the blocks name, one node each.",
+    "Here it sits in the map's own header, so it travels with the map to every placement; it keeps the node you showed last, and while it is on a bar at the top of the rail says so on every tab.",
+    "Here the line starts at the node you showed last. It ends at the nearest element it lit (my pick) or at the panel that answers (the brain map's hop), or is hidden — a switch.",
+    "Here Open on the card draws the card as a whole in the portrait — the counts, and the blocks by how much each holds.",
+    "Here the records Open draws in the portrait are kept, newest first, each closing on its own (the brain map's pick) — or one at a time, a switch. Folds never close one another."
+   ],
+   "records": {
+    "label": "records in the portrait",
+    "tip": "How many node records the portrait holds at once.",
+    "pick": "stack",
+    "opts": {
+     "stack": {
+      "name": "all kept, newest first",
+      "tip": "Each Open adds a record above the others; each closes on its own. The brain map's pick."
+     },
+     "one": {
+      "name": "one at a time",
+      "tip": "Each Open replaces the record that was there."
+     }
+    },
+    "close": "close",
+    "closeTip": "Closes this record only."
+   },
+   "keys": {
+    "tip": "Tab reaches every node. Enter or Space shows it, the arrow keys move between nodes and fold them, Escape closes the newest record."
+   },
+   "notCarried": {
+    "head": "What the brain map had that the lab does not carry yet",
+    "why": "The brain map's page is kept as a record, where these can still be seen: design-context/records/brainmap/brainmap-endpoint.html.",
+    "items": [
+     "The drawn map: the brain map's layouts A to D, among them As sketched at about forty-five degrees (his ask, D-032), with the layout pick copied as a line and Replay. The lab draws only the indented tree, the brain map's layout E.",
+     "Shared fields as one band, with a wire to every block that needs them. The lab lists a shared field under each block that holds it."
+    ]
+   }
   }
  }
 };

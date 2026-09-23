@@ -1,0 +1,471 @@
+{
+ "viewport": [
+  2560,
+  1400
+ ],
+ "steps": [
+  [
+   "remembered before clearing",
+   {
+    "eplab.mapnav": "{\"grp\":\"flat\",\"srule\":\"every\",\"place\":\"rail\",\"sweep\":\"on\",\"recmode\":\"stack\",\"kee"
+   }
+  ],
+  [
+   "rail tabs",
+   [
+    "controls",
+    "no-loss",
+    "section map"
+   ]
+  ],
+  [
+   "part buttons",
+   [
+    "15Data",
+    "13Schemas",
+    "29Functions",
+    "27Tests",
+    "5Widening",
+    "6Security"
+   ]
+  ],
+  [
+   "step 1 · cold-load",
+   {
+    "picture": "01-cold-load.png",
+    "bench": {
+     "part": "data",
+     "outlined": 0,
+     "outlinedInView": 0,
+     "faded": 0,
+     "quiet": 0,
+     "mapAt": "#rt-map",
+     "mapTopInView": true,
+     "line": "point at a field or a block to outline what the panels draw for it — click one to keep the outline",
+     "keepBar": null
+    }
+   }
+  ],
+  [
+   "step 2 · open-the-map",
+   {
+    "did": "click",
+    "words": "section map",
+    "at": [
+     299,
+     117
+    ],
+    "picture": "02-open-the-map.png",
+    "what": "the rail shows the section map: its groupings, the line and Keep only, then the tree of eleven blocks",
+    "bench": {
+     "part": "data",
+     "outlined": 0,
+     "outlinedInView": 0,
+     "faded": 0,
+     "quiet": 0,
+     "mapAt": "#rt-map",
+     "mapTopInView": true,
+     "line": "point at a field or a block to outline what the panels draw for it — click one to keep the outline",
+     "keepBar": null
+    }
+   }
+  ],
+  [
+   "step 3 · pick-by-stage",
+   {
+    "did": "click",
+    "words": "By stage8 rows + across · a proposal",
+    "at": [
+     238,
+     363
+    ],
+    "picture": "03-pick-by-stage.png",
+    "what": "the tree regroups under his rows EDGE … ANSWER, the UNCAUGHT bay, the CLIENT screen, then Across the stages",
+    "bench": {
+     "part": "data",
+     "outlined": 0,
+     "outlinedInView": 0,
+     "faded": 0,
+     "quiet": 0,
+     "mapAt": "#rt-map",
+     "mapTopInView": true,
+     "line": "point at a field or a block to outline what the panels draw for it — click one to keep the outline",
+     "keepBar": null
+    }
+   }
+  ],
+  [
+   "rows under By stage",
+   [
+    "EDGE3 blocks2 of 21 fields drawn here · 19 on another part",
+    "GATE5 blocks8 of 33 fields drawn here · 23 on another part",
+    "INPUT3 blocks3 of 17 fields drawn here · 14 on another part",
+    "HANDLER5 blocks8 of 33 fields drawn here · 23 on another part",
+    "EFFECTS1 block5 of 7 fields drawn here · 1 on another part",
+    "ANSWER4 blocks6 of 21 fields drawn here · 14 on another part",
+    "UNCAUGHT3 blocksruns beside every stage6 of 17 fields drawn here · 10 ",
+    "CLIENT1 blocksits after the answer leaves1 of 5 fields drawn here · 4 ",
+    "Across the stages4 blocks7 of 29 fields drawn here · 19 on another par"
+   ]
+  ],
+  [
+   "step 4 · open-the-handler-row",
+   {
+    "did": "click",
+    "words": "▸",
+    "at": [
+     66,
+     1063
+    ],
+    "picture": "04-open-the-handler-row.png",
+    "what": "the HANDLER row opens: the five blocks proposed for it, each with where its page is and how many of its fields the bench draws",
+    "bench": {
+     "part": "data",
+     "outlined": 0,
+     "outlinedInView": 0,
+     "faded": 0,
+     "quiet": 0,
+     "mapAt": "#rt-map",
+     "mapTopInView": true,
+     "line": "point at a field or a block to outline what the panels draw for it — click one to keep the outline",
+     "keepBar": null
+    }
+   }
+  ],
+  [
+   "blocks under HANDLER",
+   [
+    "Data effects4·3→ the Data panel5 of 7 fields drawn here · 1 on another part",
+    "Endings4·2→ the command panel2 of 6 fields drawn here · 4 on another part",
+    "Functions7·1→ the Functions panel2 of 8 fields drawn here · 5 on another part",
+    "Proof4·3→ the Tests panel1 of 7 fields drawn here · 6 on another part",
+    "Gates and decisions6·6→ the Security panel1 of 12 fields drawn here · 11 on anot"
+   ]
+  ],
+  [
+   "under By stage, the note under the tree says",
+   "33 fields sit one level below the 3 levels this map draws. Show a block and they light on the bench; Flat lists them."
+  ],
+  [
+   "fields in the tree under By stage",
+   0
+  ],
+  [
+   "step 5 · the-note-sends-you-to-flat",
+   {
+    "did": "click",
+    "words": "Flatall 11 at one level",
+    "at": [
+     212,
+     319
+    ],
+    "picture": "05-the-note-sends-you-to-flat.png",
+    "what": "Flat lists every block with its fields folded under it",
+    "bench": {
+     "part": "data",
+     "outlined": 0,
+     "outlinedInView": 0,
+     "faded": 0,
+     "quiet": 0,
+     "mapAt": "#rt-map",
+     "mapTopInView": true,
+     "line": "point at a field or a block to outline what the panels draw for it — click one to keep the outline",
+     "keepBar": null
+    }
+   }
+  ],
+  [
+   "step 6 · open-data-effects",
+   {
+    "did": "click",
+    "words": "▸",
+    "at": [
+     66,
+     806
+    ],
+    "picture": "06-open-data-effects.png",
+    "what": "the block Data effects opens: its fields, each saying whether the bench draws it here",
+    "bench": {
+     "part": "data",
+     "outlined": 0,
+     "outlinedInView": 0,
+     "faded": 0,
+     "quiet": 0,
+     "mapAt": "#rt-map",
+     "mapTopInView": true,
+     "line": "point at a field or a block to outline what the panels draw for it — click one to keep the outline",
+     "keepBar": null
+    }
+   }
+  ],
+  [
+   "step 7 · hover-a-field",
+   {
+    "did": "rest the mouse on",
+    "words": "3 Operation per tabledrawn here · places 31 · in view 4",
+    "at": [
+     286,
+     875
+    ],
+    "picture": "07-hover-a-field.png",
+    "what": "the mouse rests on the field: every element the panels draw for it is outlined, the rest of the bench fades, and the field's card opens",
+    "bench": {
+     "part": "data",
+     "outlined": 31,
+     "outlinedInView": 31,
+     "faded": 203,
+     "quiet": 0,
+     "mapAt": "#rt-map",
+     "mapTopInView": true,
+     "line": "Operation per table · 31 outlined, 4 in view — middle 31 · click it to keep the outline and walk to the rest",
+     "keepBar": null
+    }
+   }
+  ],
+  [
+   "hover card while resting on the field",
+   {
+    "box": [
+     90,
+     900,
+     360,
+     375
+    ],
+    "outlined": 31,
+    "outlinedUnderTheCard": 0
+   }
+  ],
+  [
+   "step 8 · back-to-by-stage",
+   {
+    "did": "click",
+    "words": "By stage8 rows + across · a proposal",
+    "at": [
+     238,
+     363
+    ],
+    "picture": "08-back-to-by-stage.png",
+    "what": "By stage again; the HANDLER row is still open",
+    "bench": {
+     "part": "data",
+     "outlined": 0,
+     "outlinedInView": 0,
+     "faded": 0,
+     "quiet": 0,
+     "mapAt": "#rt-map",
+     "mapTopInView": true,
+     "line": "point at a field or a block to outline what the panels draw for it — click one to keep the outline",
+     "keepBar": null
+    }
+   }
+  ],
+  [
+   "step 9 · show-functions",
+   {
+    "did": "click",
+    "words": "Functions7·1→ the Functions panel2 of 8 fields drawn here · 5 on another part",
+    "at": [
+     286,
+     1242
+    ],
+    "picture": "09-show-functions.png",
+    "what": "the bench moves to the Functions part and every element carrying the block's fields is outlined; a click fades nothing",
+    "bench": {
+     "part": "functions",
+     "outlined": 85,
+     "outlinedInView": 85,
+     "faded": 0,
+     "quiet": 0,
+     "mapAt": "#rt-map",
+     "mapTopInView": true,
+     "line": "Functions · 85 outlined, 61 in view — middle 84 · head bar 1",
+     "keepBar": null
+    }
+   }
+  ],
+  [
+   "step 10 · switch-to-tests",
+   {
+    "did": "click",
+    "words": "27Tests",
+    "at": [
+     1152,
+     164
+    ],
+    "picture": "10-switch-to-tests.png",
+    "what": "the bench draws Tests; the tree lights the Proof block and every row recounts how many of its fields are drawn here",
+    "bench": {
+     "part": "tests",
+     "outlined": 1,
+     "outlinedInView": 1,
+     "faded": 0,
+     "quiet": 0,
+     "mapAt": "#rt-map",
+     "mapTopInView": true,
+     "line": "Functions · 1 outlined, 1 in view — head bar 1",
+     "keepBar": null
+    }
+   }
+  ],
+  [
+   "step 11 · roll-the-map-to-the-lit-block",
+   {
+    "did": "wheel down over the map",
+    "picture": "11-roll-the-map-to-the-lit-block.png",
+    "shows": true,
+    "bench": {
+     "part": "tests",
+     "outlined": 1,
+     "outlinedInView": 1,
+     "faded": 0,
+     "quiet": 0,
+     "mapAt": "#rt-map",
+     "mapTopInView": true,
+     "line": "Functions · 1 outlined, 1 in view — head bar 1",
+     "keepBar": null
+    }
+   }
+  ],
+  [
+   "lit block before → after the part switch",
+   {
+    "before": [
+     "Functions"
+    ],
+    "after": [
+     "Proof"
+    ]
+   }
+  ],
+  [
+   "Keep only button before",
+   {
+    "words": "Keep only what carries “Functions”",
+    "disabled": false
+   }
+  ],
+  [
+   "step 12 · keep-only-on",
+   {
+    "did": "click",
+    "words": "Keep only what carries “Functions”",
+    "at": [
+     267,
+     556
+    ],
+    "picture": "12-keep-only-on.png",
+    "what": "Keep only is on: the bench quiets every element that does not carry the block's fields, the tree quiets every node that does not, and a bar at the top of the rail says so",
+    "bench": {
+     "part": "tests",
+     "outlined": 1,
+     "outlinedInView": 1,
+     "faded": 0,
+     "quiet": 11,
+     "mapAt": "#rt-map",
+     "mapTopInView": true,
+     "line": "Functions · 1 outlined, 1 in view — head bar 1",
+     "keepBar": "Keep only is ON: the map keeps what carries “Functions” (block); 11 other nodes are quiet. On the bench, 1 element carries its fields and the rest are quiet — dimmed, never removed.Remove the filter"
+    }
+   }
+  ],
+  [
+   "step 13 · map-in-the-right-column",
+   {
+    "did": "click",
+    "words": "right column",
+    "at": [
+     304,
+     345
+    ],
+    "picture": "13-map-in-the-right-column.png",
+    "what": "the map moves to a column right of the panels; the bench and its lights do not change",
+    "bench": {
+     "part": "tests",
+     "outlined": 1,
+     "outlinedInView": 1,
+     "faded": 0,
+     "quiet": 11,
+     "mapAt": "#mapcol",
+     "mapTopInView": true,
+     "line": "Functions · 1 outlined, 1 in view — head bar 1",
+     "keepBar": "Keep only is ON: the map keeps what carries “Functions” (block); 11 other nodes are quiet. On the bench, 1 element carries its fields and the rest are quiet — dimmed, never removed.Remove the filter"
+    }
+   }
+  ],
+  [
+   "the lab slid left to show the right column, by (px)",
+   396
+  ],
+  [
+   "step 14 · slide-the-lab-back-left",
+   {
+    "did": "Shift + wheel over the panels, toward the left",
+    "picture": "14-slide-the-lab-back-left.png",
+    "slidNow": 0,
+    "bench": {
+     "part": "tests",
+     "outlined": 1,
+     "outlinedInView": 1,
+     "faded": 0,
+     "quiet": 11,
+     "mapAt": "#mapcol",
+     "mapTopInView": true,
+     "line": "Functions · 1 outlined, 1 in view — head bar 1",
+     "keepBar": "Keep only is ON: the map keeps what carries “Functions” (block); 11 other nodes are quiet. On the bench, 1 element carries its fields and the rest are quiet — dimmed, never removed.Remove the filter"
+    }
+   }
+  ],
+  [
+   "step 15 · map-full-width-below",
+   {
+    "did": "click",
+    "words": "below",
+    "at": [
+     388,
+     345
+    ],
+    "picture": "15-map-full-width-below.png",
+    "what": "the map moves under the rail, the middle and the command panel, full width",
+    "bench": {
+     "part": "tests",
+     "outlined": 1,
+     "outlinedInView": 1,
+     "faded": 0,
+     "quiet": 11,
+     "mapAt": "#mapbelow",
+     "mapTopInView": true,
+     "line": "Functions · 1 outlined, 1 in view — head bar 1",
+     "keepBar": "Keep only is ON: the map keeps what carries “Functions” (block); 11 other nodes are quiet. On the bench, 1 element carries its fields and the rest are quiet — dimmed, never removed.Remove the filter"
+    }
+   }
+  ],
+  [
+   "step 16 · remove-keep-only",
+   {
+    "did": "click",
+    "words": "Remove the filter",
+    "at": [
+     114,
+     258
+    ],
+    "picture": "16-remove-keep-only.png",
+    "what": "Keep only is off: nothing is quiet on the bench or in the tree, the bar at the top of the rail is gone and the button in the map offers Keep only again (ringed); the kept outline stays",
+    "bench": {
+     "part": "tests",
+     "outlined": 1,
+     "outlinedInView": 1,
+     "faded": 0,
+     "quiet": 0,
+     "mapAt": "#mapbelow",
+     "mapTopInView": true,
+     "line": "Functions · 1 outlined, 1 in view — head bar 1",
+     "keepBar": null
+    }
+   }
+  ],
+  [
+   "page errors",
+   []
+  ]
+ ]
+}

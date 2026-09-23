@@ -30,6 +30,8 @@
   "headerNone": "has no stage reading yet, so the stages cannot be read on this part — you are still on it.",
   "headerGapShort": "has none yet",
   "headerOffShort": "is drawn another way",
+  "foldWord": "fold",
+  "foldTip": "shows or hides this block's fields, and moves nothing",
   "kindWords": {
    "page": "a page",
    "none": "no page yet",
@@ -108,7 +110,7 @@
    "act": "part:functions",
    "says": "The Functions panel draws the handler and the call tree behind it, each function marked by what it decides and touches.",
    "gap": null,
-   "plain": "Code that runs behind the door, sorted by how much it decides."
+   "plain": "Code that runs behind the endpoint, sorted by how much it decides."
   },
   "Q16": {
    "act": "none",
@@ -119,26 +121,26 @@
   "Q12": {
    "act": "none",
    "says": "The Security panel carries the idempotency claim and the delivery fact as one-line rows, and hover cards say how common a piece is.",
-   "gap": "It compares this endpoint against the others, and no part does that — nothing lays the shared machinery beside what only this door does.",
-   "plain": "Machinery this door shares with the rest of the app, against what only it does."
+   "gap": "It compares this endpoint against the others, and no part does that — nothing lays the shared machinery beside what only this endpoint does.",
+   "plain": "Machinery this endpoint shares with the rest of the app, against what only it does."
   },
   "Q14+Q20": {
    "act": "none",
-   "says": "The head bar names the door and flies the risk flag, and the command panel counts the findings behind one cell.",
+   "says": "The head bar names the endpoint and flies the risk flag, and the command panel counts the findings behind one cell.",
    "gap": "No panel gathers the overview — coverage per condition, the findings themselves, the endpoint's place in the app and the outside services it calls have no surface.",
-   "plain": "Whole-door reading — size, findings, and the place this endpoint sits in the app."
+   "plain": "The whole endpoint at a glance — size, findings, and the place it sits in the app."
   },
   "Q8": {
    "act": "part:widening",
-   "says": "The Widening panel draws the screens that fetch this endpoint and the ladder from the door out to the app.",
+   "says": "The Widening panel draws the screens that fetch this endpoint and the ladder from the endpoint out to the app.",
    "gap": "Whether the client can tell the endings apart is measured in the feed and drawn on no rung.",
-   "plain": "Screens that call this door, and what they do with each answer."
+   "plain": "Screens that call this endpoint, and what they do with each answer."
   }
  },
  "feedback": {
   "lede": "section map · a note from the bench",
   "fields": {
-   "door": "door",
+   "door": "endpoint",
    "bench": "bench",
    "block": "block",
    "surface": "the map says",

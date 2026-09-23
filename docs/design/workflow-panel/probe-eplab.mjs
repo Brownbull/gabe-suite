@@ -63,7 +63,10 @@ ok(tabs.join(',') === 'data,schemas,functions,tests,widening,security', 'SIX tab
   await p.evaluate(() => document.querySelectorAll('.barblk.min').forEach(b => b.classList.remove('min')));
   await p.waitForTimeout(120); }
 
-// the DATA panel boots on the operator's own default line (2026-09-12)
+// ── BOOT LINES, WORD FOR WORD — whose each one is (D-027). His lines are pinned against what he pasted;
+//    the agent's (CMDBOOT · MIDBOOT · PORTBOOT) are the agent's defaults, never pasted by him.
+// HIS — the DATA line: his last paste, 2026-09-13 16:59 UTC, except `shown as stageblocks` (his paste
+// said `blocks`) and the `stages …` segment, which D-007 added after it.
 ok(await p.evaluate(() => window.COPYTXT.data()) ===
    'data · shown as stageblocks · tables all · title counts tables icon, fields icon, ops icon · sort channel, icon, accent on panel 45% · pills each, shape pill, text ink, ground kind 15%'
    + ' · block block (icon on model, chip on, name on, entity both, count badge, model both) · edge left solid 2px · chips count pill 100%, channel pill 90%'
@@ -72,10 +75,36 @@ ok(await p.evaluate(() => window.COPYTXT.data()) ===
    + ' · stages axis rows, placement every, empty shown, union counts, fate station, rail shown'
    + ' · drawn counts shapes rw commit ev mdl ents legend · hidden title note',
    'the data panel boots on the operator\'s default line', await p.evaluate(() => window.COPYTXT.data()));
+// HIS — the HEAD BAR line, verbatim as he pasted it, 2026-09-11 18:11 UTC (his second paste; it replaced 17:55's).
+const HIS_HEAD = 'head bar · verbosity value · LEFT kind method name status risk · RIGHT source above · off entity cluster kindword'
+  + ' · styles kind(none,icon 24) method(none) name(none,text on) status(pill) risk(round,text off) source(none) above(round) kindword(rect)';
+// HIS — the PART BUTTONS line, verbatim, 2026-09-12 14:42 UTC (his last paste; 19:42 on 09-11 and 14:17 on 09-12 came before it).
+const HIS_TABS = 'part buttons · colour focus · intensity dim · pattern valley · glyph 22px ghost at 77% · titles caps'
+  + ' · count 12px pill · button rect · row fill wide';
+// HIS — the FRAME line, verbatim, 2026-09-12 14:42 UTC. `frame` still writes it whole; its three parts also
+// close the bench, head-bar and part-buttons lines, each named in that line's own words (the only rewording).
+const HIS_FRAME = 'frame · bench outline 1px solid · head bar 45px, outline none, divider none, gap 0px'
+  + ' · part buttons row 52px, button 43px, outline none, divider none, gap 0px';
+const HIS_FR = HIS_FRAME.split(' · ');   // ['frame', 'bench outline …', 'head bar 45px …', 'part buttons row 52px …']
+// HIS — head bar at boot = his head line + his frame's head-bar part (`head bar 45px` written `height 45px`)
+const HEADBOOT = HIS_HEAD + ' · ' + HIS_FR[2].replace(/^head bar /, 'height ');
+ok(await p.evaluate(() => window.COPYTXT.head()) === HEADBOOT,
+   'the head-bar copy line at boot equals his pasted head-bar line and his frame\'s head-bar part',
+   await p.evaluate(() => window.COPYTXT.head()));
+// HIS — part buttons at boot = his part-buttons line + his frame's part-buttons part (`row 52px` written `row height 52px`)
+const TABSBOOT = HIS_TABS + ' · ' + HIS_FR[3].replace(/^part buttons row /, 'row height ');
+ok(await p.evaluate(() => window.COPYTXT.tabs()) === TABSBOOT,
+   'the part-buttons copy line at boot equals his pasted part-buttons line and his frame\'s part-buttons part',
+   await p.evaluate(() => window.COPYTXT.tabs()));
+// HIS — the frame line at boot, exactly as he pasted it
+ok(await p.evaluate(() => window.COPYTXT.frame()) === HIS_FRAME,
+   'the frame copy line at boot equals his pasted frame line',
+   await p.evaluate(() => window.COPYTXT.frame()));
 
 // the COMMAND panel boots on ITS default line (2026-09-17: the by-part card is the default grouping)
 // ── THE THREE REGION LINES (operator 2026-09-17): the rail is grouped by region, so the picks that
 //    reach the MIDDLE and the PORTRAIT left the command line and took their own.
+// THE AGENT'S — CMDBOOT: the agent's default command line (2026-09-17), never pasted by him (D-027)
 const CMDBOOT = 'command · layout card · verbs g2 · grouping request · names drawn · success shown'
   + ' · sub-paths split · wrong-question blank · hotkeys QWERT grid'
   + ' · cells 64px valley · tooltip lab hover card'
@@ -84,11 +113,13 @@ const CMDBOOT = 'command · layout card · verbs g2 · grouping request · names
 ok(await p.evaluate(() => window.COPYTXT.command()) === CMDBOOT,
    'the command panel boots on its default line, word for word — only what reaches the command region',
    await p.evaluate(() => window.COPYTXT.command()));
+// THE AGENT'S — MIDBOOT: the agent's default middle line (2026-09-17), never pasted by him (D-027)
 const MIDBOOT = 'middle · part bars data=stageblocks · schemas=shapes · functions=levels · tests=status · widening=ladder · security=band'
   + ' · label dim .28 · rows command · on part switch kept · test join exact';
 ok(await p.evaluate(() => window.COPYTXT.middle()) === MIDBOOT,
    'the middle boots on its own line — the part bars and the four dials a chosen ending drives',
    await p.evaluate(() => window.COPYTXT.middle()));
+// THE AGENT'S — PORTBOOT: the agent's default portrait line (2026-09-17), never pasted by him (D-027)
 const PORTBOOT = 'portrait · on select path record · width 440px, height 560px, outline 1px solid, gap 12px';
 ok(await p.evaluate(() => window.COPYTXT.portrait()) === PORTBOOT,
    'and the portrait on its own — what it leads with, and how big it stands',
@@ -1119,7 +1150,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
       return out; });
     ok(cuts.length === 0, 'across every shape, no field name or type is cut and nothing runs past the portrait', JSON.stringify(cuts.slice(0, 5))); }
   await p.evaluate(() => window.selectIn('schemas', null)); await p.waitForTimeout(200);
-  // the rail and the copy line
+  // the rail and the copy line — THE AGENT'S default schemas line, never pasted by him (D-027)
   ok(await p.evaluate(() => window.COPYTXT.schemas()) === 'schemas · shown as blocks · directions in+out · title counts shapes icon, fields icon, nested icon · sort tree'
      + ' · block block (glyph on, chip on, name on, entity both, count badge, where both) · lines icon name | — / ent | count dir / via | — · sizes icon 13 name 13 ent 12 via 12'
      + ' · footer icon count · drawn legend · hidden title note · map blocks all, nested shape, colour rw, looks shared', 'the schemas copy line names every setting, the schema map among them', await p.evaluate(() => window.COPYTXT.schemas()));
@@ -1255,7 +1286,7 @@ function e0(cols){ return cols.some(c => { const m = c.match(/\d+/g); return m &
       return out; });
     ok(cuts.length === 0, 'across every function, no name is cut and nothing runs past the portrait', JSON.stringify(cuts.slice(0, 5))); }
   await p.evaluate(() => window.selectIn('functions', null)); await p.waitForTimeout(200);
-  // the rail
+  // the rail — THE AGENT'S default functions line, never pasted by him (D-027)
   ok(await p.evaluate(() => window.COPYTXT.functions()) === 'functions · shown as blocks · roles accessor+caller+gate+pure · title counts functions icon, levels icon, commits icon · sort walk'
      + ' · block block (glyph on, chip on, name on, file both, count badge, where both) · lines icon name | commit / file | count role / via | — · sizes icon 13 name 13 file 12 via 12'
      + ' · footer icon count · drawn legend · hidden title note · map pieces tables, handler block, roles station, inferred dashed, looks shared',
@@ -1884,7 +1915,7 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
       consentN: f.paths.find(x => x.names.drawn === 'consent required').effects.n,
       labTables: window.LABEP.data.tables.map(t => t.table) }; });
 
-  const DEFLINE = CMDBOOT.replace('verbs g2', 'verbs rows');
+  const DEFLINE = CMDBOOT.replace('verbs g2', 'verbs rows');   // THE AGENT'S — CMDBOOT with one pick changed
   ok(await p.evaluate(() => window.COPYTXT.command()) === DEFLINE && DEFLINE === CMDBOOT.replace('verbs g2', 'verbs rows'),
     'this section reads the card on its ROWS grouping — the boot line with one word changed, nothing else', await p.evaluate(() => window.COPYTXT.command()));
   ok(await p.evaluate(() => window.OPENBLK) === 'blk-command', 'the rail opens on the region being worked on');
@@ -3695,6 +3726,882 @@ if (checksFile) {
     ok(small.length === 0, 'nothing in the section map computes under 12px', JSON.stringify(small.slice(0, 4))); }
   ok(errs.length === errs0, 'the section map raises no page error', errs.slice(errs0, errs0 + 3).join(' | '));
   await p.evaluate(() => { window.clearPath(); window.railTab('controls'); }); await p.waitForTimeout(150); }
+
+// ═══ FIELD LAYER BEGIN ═══ THE FIELD LAYER (D-024) — navigating the brain map lights the FIELDS the panels draw.
+//     The renderers register what they draw into window.DRAWN; the map lights from DRAWN. The asserts below read a
+//     SECOND source wherever one exists: the page's geometry (elementFromPoint) for what is in view, the computed
+//     outline style for how a lit element carries its field, the words FILE (LABEP.fieldlayer) for the lines' wording
+//     and for which fields a selector ties, and an element's own class or text for what it shows. The integrity and
+//     recount checks read DRAWN against the DOM and the catalog — they catch a registry that drifts from the page, not
+//     a tie that is wrong. It starts from a FRESH page: the sections above leave the rail, the command and the selection moved.
+{ await p.goto('file://' + PAGE);
+  await p.waitForFunction('window.__eplabReady===true', { timeout: 20000 }).catch(() => {});
+  const errs0 = errs.length;
+  const SM = await p.evaluate(() => window.LABEP.sectionmap);
+  const ATTRS = Object.keys(SM.attrs);
+  const FL = await p.evaluate(() => window.LABEP.fieldlayer);
+  const WS = FL.words.strings, WP = FL.words.places;
+  const fillW = (t, o) => String(t).replace(/\{(\w+)\}/g, (m, k) => o[k] != null ? String(o[k]) : m);
+  const TIED = [...new Set(FL.authored.map(a => a.id))];
+  ok(FL && FL.state === 'present' && FL.authored.length > 0 && FL.authored.every(a => SM.attrs[a.id]),
+    'the ties written by hand are read, and each names an attribute the inventory carries', FL ? FL.state + ' · ' + (FL.reason || '') : 'absent');
+  // at boot nothing is lit, and the line says what pointing does — in the words file's words, not a bare dash
+  ok(await p.$eval('#smfl', e => e.textContent) === WS.idle, 'before anything is pointed at, the line under the lead says what pointing and clicking do', await p.$eval('#smfl', e => e.textContent));
+  await p.evaluate(() => window.railTab('map')); await p.waitForTimeout(150);
+  /* IN VIEW, measured by the probe itself: an element is in view when the point at its centre hits it (or a child) */
+  const seenByProbe = () => p.evaluate(() => { window.hoverHide && window.hoverHide();
+    return [...document.querySelectorAll('.fl-hit')].map(e => { const r = e.getBoundingClientRect(); if (r.width < 1 || r.height < 1) return 0;
+      const t = document.elementFromPoint((r.left + r.right) / 2, (r.top + r.bottom) / 2); return t && (t === e || e.contains(t)) ? 1 : 0; }).reduce((a, b) => a + b, 0); });
+  const regionsOfLit = () => p.evaluate((WP) => { const by = { middle: 0, command: 0, portrait: 0, head: 0 };
+    document.querySelectorAll('.fl-hit').forEach(e => { const r = e.closest('#cmd,#pathstrip,#portlad') ? 'command' : e.closest('#portbody') ? 'portrait' : e.closest('#panel') ? 'middle' : e.closest('#headstrip') ? 'head' : null; if (r) by[r]++; });
+    return Object.keys(by).filter(r => by[r]).map(r => (WP[r] || r) + ' ' + by[r]).join(' · '); }, WP);
+  /* the INTEGRITY of DRAWN against the DOM — run after every move below */
+  const integrity = async (where) => {
+    const r = await p.evaluate(() => { const D = window.DRAWN, SA = window.LABEP.sectionmap.attrs;
+      const roots = ['#panel', '#cmd', '#pathstrip', '#portlad', '#portbody', '#headstrip'].map(s => document.querySelector(s)).filter(Boolean);
+      const tagged = roots.flatMap(r => [...r.querySelectorAll('[data-fa]')]);
+      const E = D.entries(), inD = new Set(E.map(e => e.el));
+      return { tagged: tagged.length, entries: E.length, loose: D.loose(),
+        untracked: tagged.filter(e => !inD.has(e)).map(e => e.className + ':' + e.dataset.fa).slice(0, 4),
+        gone: E.filter(e => !e.el.isConnected).length,
+        misplaced: E.filter(e => D.regionOf(e.el) !== e.region).map(e => e.region + '→' + D.regionOf(e.el)).slice(0, 4),
+        wrongTag: E.filter(e => e.ids.some(id => (e.el.dataset.fa || '').split(' ').indexOf(id) < 0)).length,
+        unknown: [...new Set(tagged.flatMap(e => e.dataset.fa.split(' ')))].filter(id => !SA[id]) }; });
+    ok(r.entries > 0 && r.untracked.length === 0 && r.loose === 0,
+      `${where}: every element tagged with a field in the four regions is in DRAWN, and nothing was tagged outside a render`, JSON.stringify([r.tagged, r.entries, r.loose, r.untracked]));
+    ok(r.gone === 0 && r.misplaced.length === 0 && r.wrongTag === 0,
+      `${where}: every element DRAWN holds is on the page, in the region it was drawn for, carrying the ids DRAWN lists`, JSON.stringify([r.gone, r.misplaced, r.wrongTag]));
+    ok(r.unknown.length === 0, `${where}: every tagged id is an attribute of the inventory`, r.unknown.join(','));
+    return r; };
+  /* the TREE against a recount of DRAWN and the two catalogs: each field's mark and each block's count */
+  const treeRecount = async (where) => {
+    const r = await p.evaluate(() => { const D = window.DRAWN, C = D.catalog(), CO = D.catalogOff(), S = window.LABEP.sectionmap, here = new Set();
+      D.entries().forEach(e => e.ids.forEach(id => here.add(id)));
+      /* four states since the MOREINFO fix: a field only the switch that is off draws is `off`, never "another part" */
+      const want = id => here.has(id) ? 'here' : Object.keys(C[id] || {}).length ? 'elsewhere' : Object.keys(CO[id] || {}).length ? 'off' : 'none';
+      const rows = [...document.querySelectorAll('#smtree .sma[data-sm]')];
+      const badRows = rows.filter(n => n.dataset.fd !== want(n.dataset.sm)).map(n => n.dataset.sm + ':' + n.dataset.fd + '≠' + want(n.dataset.sm));
+      const badBlocks = S.blocks.map(b => { const btn = document.querySelector(`#smtree .smb[data-sm="${b.key}"]`), ids = b.own.concat(b.shared);
+        const n = ids.filter(id => here.has(id)).length, e = ids.filter(id => want(id) === 'elsewhere').length, t = btn && btn.querySelector('.smfn') ? btn.querySelector('.smfn').textContent : '';
+        return (!btn || btn.dataset.fdn !== String(n) || btn.dataset.fdof !== String(ids.length) || t.indexOf(n + ' of ' + ids.length) < 0
+          || (e ? t.indexOf(e + ' on another part') < 0 : /on another part/.test(t))) ? b.key + ':' + (btn && btn.dataset.fdn) + '≠' + n + '|' + t : null; }).filter(Boolean);
+      return { rows: rows.length, badRows, badBlocks, here: [...here].sort() }; });
+    ok(r.rows >= Object.keys(SM.attrs).length && r.badRows.length === 0,
+      `${where}: each field in the tree says drawn here, on another part, behind the switch that is off, or not drawn — a recount of DRAWN and the catalogs`, r.badRows.slice(0, 4).join(' ; '));
+    ok(r.badBlocks.length === 0, `${where}: each block's count equals a recount of its fields drawn here and on another part`, r.badBlocks.slice(0, 4).join(' ; '));
+    return r; };
+  /* EVERY FIELD, hovered: the elements outlined equal DRAWN's elements for it; leaving restores the bench. (A guard on
+     the light's plumbing — the outline is built from DRAWN, so this goes red only on a lost or extra element.) */
+  const hoverAll = async (where) => {
+    const r = await p.evaluate(async (ids) => { const out = [], rest = [];
+      for (const id of ids) { const n = document.querySelector(`#smtree .sma[data-sm="${id}"]`); if (!n) { out.push(id + ':no row'); continue; }
+        n.dispatchEvent(new MouseEvent('mouseenter'));
+        const lit = new Set(document.querySelectorAll('.fl-hit')), want = new Set(window.DRAWN.els(id));
+        if (lit.size !== want.size || [...want].some(e => !lit.has(e))) out.push(id + ':' + lit.size + '≠' + want.size);
+        n.dispatchEvent(new MouseEvent('mouseleave'));
+        if (document.querySelectorAll('.fl-hit,.fl-dim').length) rest.push(id); }
+      return { out, rest }; }, ATTRS);
+    ok(r.out.length === 0, `${where}: for every one of the ${ATTRS.length} fields, pointing at it outlines exactly the elements DRAWN holds for it`, r.out.slice(0, 5).join(' ; '));
+    ok(r.rest.length === 0, `${where}: and leaving each one takes every outline and every fade off the bench`, r.rest.slice(0, 5).join(','));
+  };
+  /* the outline style of every lit element matching `sel`, for one field lit through the map's own call */
+  const styles = (id, sel) => p.evaluate(a => { window.FIELDMAP.light([a.id], 'probe');
+    const s = [...document.querySelectorAll('.fl-hit')].filter(e => e.matches(a.sel)).map(e => getComputedStyle(e).outlineStyle);
+    window.FIELDMAP.unlight(); return s; }, { id, sel });
+  // STATE 1 — Data, a path in force (so the portrait draws the path record and the stage blocks read one ending)
+  await p.evaluate(() => { window.showTab('data'); const ps = (window.LABEP.forms.paths || []).slice().sort((a, b) => ((b.effects || {}).tables || []).length - ((a.effects || {}).tables || []).length); const pth = ps[0]; window.selectPath(pth.id); });
+  await p.waitForTimeout(300);
+  await p.evaluate(keys => window.smOpen(keys), SM.blocks.map(b => b.key)); await p.waitForTimeout(200);
+  const i1 = await integrity('Data with a path picked');
+  const byRegion = await p.evaluate(() => { const o = {}; window.DRAWN.entries().forEach(e => { o[e.region] = (o[e.region] || 0) + 1; }); return o; });
+  ok(['middle', 'command', 'portrait', 'head'].every(r => byRegion[r] > 0), 'in that state every region draws at least one field — the middle, the command, the portrait and the head', JSON.stringify(byRegion));
+  // the renderers say what they drew, where a reader would look for it (a wrong id in a renderer fails here)
+  const spots = await p.evaluate(() => { const has = (el, id) => (el.dataset.fa || '').split(' ').indexOf(id) >= 0;
+    const blk = [...document.querySelectorAll('#panel .blk[data-table]')], ch = [...document.querySelectorAll('#portbody .ptcr[data-step]')];
+    const m = document.querySelector('#headstrip .hel[data-el="method"]'), st = document.querySelector('#headstrip .hel[data-el="status"]');
+    return { blk: blk.length, blkOk: blk.every(b => has(b, 'tables-touched')), rw: blk.filter(b => b.querySelector('.bkrw')).every(b => has(b.querySelector('.bkrw'), 'operation-per-table')),
+      chain: ch.length, chainOk: ch.every(r => has(r, 'the-ordered-chain-per-ending')), head: !!m && has(m, 'method-path') && !!st && has(st, 'declared-status') }; });
+  ok(spots.blk > 0 && spots.blkOk && spots.rw, 'every table block in the middle is tagged a table touched, and its channel chip the operation on it', JSON.stringify(spots));
+  ok(spots.chain > 0 && spots.chainOk, 'every step of the path record in the portrait is tagged the ordered chain', JSON.stringify(spots));
+  ok(spots.head, 'the head bar\'s method chip is the method and path, its status chip the declared status', JSON.stringify(spots));
+  // the head chip of the ending in force is drawn and tagged — a fact drawn by a pass after the render (finding: untagged projection facts)
+  ok(await p.evaluate(() => { const c = document.querySelector('#headstrip .hel.pathchip'); return !!c && (c.dataset.fa || '').split(' ').indexOf('the-endings') >= 0 && window.DRAWN.els('the-endings', 'head').indexOf(c) >= 0; }),
+    'the head bar\'s chip for the ending in force is tagged the endings, and DRAWN holds it in the head');
+  const t1 = await treeRecount('Data with a path picked');
+  await hoverAll('Data with a path picked');
+  // HOW an element carries a field is per FIELD: a chain row carries the chain on its face and "how common" only on its hover card
+  { const hc = await styles('how-common-this-piece-is', '#portbody .ptcr[data-step]'), ch = await styles('the-ordered-chain-per-ending', '#portbody .ptcr[data-step]');
+    ok(hc.length > 0 && hc.every(s => s === 'dotted') && ch.length > 0 && ch.every(s => s === 'solid'),
+      'a chain row lit for "how common this piece is" (on its hover card) is outlined dotted, and the same row lit for the chain (on its face) solid', JSON.stringify([hc.slice(0, 4), ch.slice(0, 2)]));
+    const ex = await styles('expected-slots-at-this-stage', '#panel .sbhd');
+    ok(ex.length > 0 && ex.every(s => s === 'dotted'), 'a stage head lit for the slots a stage expects (a line on its hover card only) is outlined dotted', JSON.stringify(ex.slice(0, 4))); }
+  // a row whose value is a bare dash draws nothing of its field — checked on the ending's record of EVERY ending
+  { const r = await p.evaluate(async () => { let rows = 0; const bad = [];
+      for (const e of (window.LABEP.forms.exits || [])) { window.selectExit(e.id); window.showPortraitVar('cmd-exit'); await new Promise(f => setTimeout(f, 30));
+        document.querySelectorAll('#portbody .ptrow').forEach(x => { const v = x.querySelector('.v'); if (!v) return; rows++;
+          if (v.textContent === '—' && x.dataset.fa) bad.push(e.id + ':' + x.querySelector('.k').textContent + '→' + x.dataset.fa); }); }
+      return { rows, dash: document.querySelectorAll('#portbody .ptrow').length, bad }; });
+    ok(r.rows > 0 && r.bad.length === 0, 'on every ending\'s record, no row whose value is a bare "—" is tagged with a field', JSON.stringify([r.rows, r.bad.slice(0, 4)]));
+    await p.evaluate(() => { const ps = (window.LABEP.forms.paths || []).slice().sort((a, b) => ((b.effects || {}).tables || []).length - ((a.effects || {}).tables || []).length); window.selectPath(ps[0].id); window.showPortraitVar('cmd-path'); });
+    await p.waitForTimeout(250); }
+  // a raise inside a call shows its class and line; its condition is on the hover card — so it is outlined dotted
+  { const pr = await styles('the-predicate-per-decision-point', '#portbody .ptcr.k-inside');
+    ok(pr.length > 0 && pr.every(s => s === 'dotted'), 'a raise or refusal inside a call, lit for its predicate, is outlined dotted', JSON.stringify(pr.slice(0, 4))); }
+  // IN VIEW: the line counts what is outlined AND how much of it is in view — the probe measures in view itself
+  { await p.evaluate(() => window.FIELDMAP.light(['tables-touched'], null)); await p.waitForTimeout(100);
+    const n = await p.evaluate(() => document.querySelectorAll('.fl-hit').length), v = await seenByProbe(), regions = await regionsOfLit();
+    const line = await p.$eval('#smfl', e => e.textContent);
+    const want = fillW(WS.lit, { what: SM.attrs['tables-touched'].label, n, v, regions }) + (v < n ? ' ' + WS.litOut : '');
+    ok(v < n && line === want, 'lit for tables touched, the line says how many are outlined and how many of them are in view, measured by the page\'s own geometry',
+      JSON.stringify({ line, want }).slice(0, 300));
+    const mark = await p.$eval('#smtree .sma[data-sm="tables-touched"] .smfd', e => e.textContent);
+    ok(mark === fillW(WS.markHere, { n, v }), 'and the tree\'s mark names its unit — places, and how many are in view — with the same two numbers', mark + ' vs ' + fillW(WS.markHere, { n, v }));
+    ok(await p.$$eval('#smtree .smfd', els => els.every(e => !/^drawn here \d+$/.test(e.textContent))), 'no mark is a bare number beside "drawn here"');
+    await p.evaluate(() => window.FIELDMAP.unlight()); }
+  // a real pointer, four fields: one drawn here, one on another part, one behind the switch that is off, one the lab does not draw
+  { const tot = await p.evaluate(() => window.FIELDMAP.totals());
+    ok(tot.of === ATTRS.length && tot.authored === TIED.length && tot.none >= 1,
+      'every field a selector in the words file ties is counted as tied by a selector — the count read from the words file, not from the page', JSON.stringify([tot.authored, TIED.length, tot.none]));
+    const here = 'tables-touched';
+    const st = await p.evaluate(() => Object.fromEntries(Object.keys(window.LABEP.sectionmap.attrs).map(id => [id, window.FIELDMAP.state(id)])));
+    const none = ATTRS.find(id => st[id] === 'none'), elsewhere = ATTRS.find(id => st[id] === 'elsewhere');
+    await p.hover(`#smtree .sma[data-sm="${here}"]`); await p.waitForTimeout(250);
+    const h1 = await p.evaluate(id => ({ lit: document.querySelectorAll('.fl-hit').length, want: window.DRAWN.els(id).length, dim: document.querySelectorAll('#bench .fl-dim, #port .fl-dim, #cmd .fl-dim').length,
+      fl: document.getElementById('smfl').dataset.fl, t: document.getElementById('smfl').textContent }), here);
+    ok(h1.lit === h1.want && h1.lit > 0 && h1.dim > 0 && h1.fl === 'lit' && h1.t.indexOf(h1.lit + ' outlined') >= 0,
+      'a real pointer on a field drawn here outlines its elements, fades the rest of the bench, and the line under the lead counts them', JSON.stringify(h1));
+    await p.hover(`#smtree .sma[data-sm="${none}"]`); await p.waitForTimeout(250);
+    const h2 = await p.evaluate(id => ({ lit: document.querySelectorAll('.fl-hit').length, fl: document.getElementById('smfl').dataset.fl, t: document.getElementById('smfl').textContent,
+      mark: document.querySelector(`#smtree .sma[data-sm="${id}"] .smfd`).textContent }), none);
+    ok(h2.lit === 0 && h2.fl === 'none' && h2.t.indexOf(WS.markNone) >= 0 && h2.mark === WS.markNone,
+      'a field the lab does not draw lights nothing, and both its row and the line say it is not drawn by the lab', JSON.stringify(h2));
+    await p.hover(`#smtree .sma[data-sm="${elsewhere}"]`); await p.waitForTimeout(250);
+    const h3 = await p.evaluate(id => ({ lit: document.querySelectorAll('.fl-hit').length, fl: document.getElementById('smfl').dataset.fl, t: document.getElementById('smfl').textContent,
+      where: window.FIELDMAP.where(id) }), elsewhere);
+    ok(h3.lit === 0 && h3.fl === 'elsewhere' && h3.where.length > 0 && h3.t.indexOf(h3.where[0]) >= 0,
+      'a field drawn only on another part lights nothing here, and the line names where the lab does draw it', JSON.stringify(h3).slice(0, 200));
+    // the places: one separator between them that no place uses inside, and a place never listed twice as itself "with a path picked"
+    const pl = await p.evaluate(sep => Object.keys(window.LABEP.sectionmap.attrs).map(id => window.FIELDMAP.places(id, 99)).filter(Boolean).map(s => s.split(sep)), WS.placeSep);
+    const dup = pl.filter(ws => ws.some(w => ws.some(q => q !== w && w.indexOf(q + ',') === 0)));
+    ok(pl.length > 0 && dup.length === 0 && !Object.values(WP).some(w => w.indexOf(WS.placeSep.trim()) >= 0),
+      'places are joined by a separator no place name uses, and no place is listed again as itself with a path picked', JSON.stringify(dup.slice(0, 2)).slice(0, 200));
+    // D-017's switch has no control: what only it draws is `off`, not "another part" — and the words say no control reaches it
+    const off = await p.evaluate(() => ({ st: window.FIELDMAP.state('how-this-table-was-found'), where: window.FIELDMAP.where('how-this-table-was-found'),
+      mark: (document.querySelector('#smtree .sma[data-sm="how-this-table-was-found"] .smfd') || {}).textContent }));
+    ok(off.st === 'off' && off.where.length === 0 && off.mark === WS.markOff,
+      'a field only the switch that is off draws (how this table was found) is not reported as drawn on another part — its mark says no control reaches it', JSON.stringify(off));
+    await p.mouse.move(2, 2); await p.waitForTimeout(200);
+    ok(await p.evaluate(() => document.querySelectorAll('.fl-hit,.fl-dim').length) === 0, 'moving the pointer off the map puts the bench back');
+    // the feedback copy names the field, the elements it lit in THEIR OWN words, and the look the rail is set to
+    await p.hover(`#smtree .sma[data-sm="${here}"]`); await p.waitForTimeout(250);
+    const litTexts = await p.evaluate(() => window.FIELDMAP.lit().map(e => (e.innerText || e.textContent || '').split('\n').map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean)[0] || ''));
+    await p.mouse.move(2, 2); await p.waitForTimeout(150);
+    const note = await p.evaluate(() => window.COPYTXT.sectionmap()), line = note.split('\n').find(l => /^field: /.test(l)) || '';
+    const quoted = [...line.matchAll(/“([^”]*)”/g)].map(m => m[1].replace(/…$/, ''));
+    ok(line.indexOf(SM.attrs[here].label) >= 0 && line.indexOf(here) >= 0 && line.indexOf(h1.lit + ' outlined') >= 0,
+      'the feedback note names the field, its id, and how many elements it outlined', line.slice(0, 160));
+    ok(quoted.length > 0 && quoted.every(q => litTexts.some(t => t.indexOf(q) === 0)),
+      'and each element it names is named by the first line of words that element shows, not by an internal class', JSON.stringify(quoted.slice(0, 3)));
+    const look = fillW(WS.noteLook, { hold: WS.val_point, rest: WS.val_dim, prop: WS.val_hidden });
+    ok(line.endsWith(' · ' + look), 'and the field line ends with the look the rail is set to, in the options\' own words', line.slice(-120));
+    ok(note.split('\n').length <= 14, 'and the note stays short enough to read', String(note.split('\n').length));
+    const sweep = /\b(doors?|locks?)\b/i;
+    /* the block words the generator carried onto each block (its plain line, what the bench draws, the gap) and the note's field names */
+    const smWords = await p.evaluate(() => { const S = window.LABEP.sectionmap, out = [];
+      (S.blocks || []).forEach(b => { [b.plain, (b.join || {}).says, (b.join || {}).gap, (b.join || {}).plain].forEach(x => { if (x) out.push(x); }); });
+      Object.values(((S.words || {}).feedback || {}).fields || {}).forEach(v => out.push(v)); return out; });
+    ok(smWords.length > 20 && !sweep.test(note) && smWords.every(s => !sweep.test(s)) && !sweep.test(await p.$eval('#rt-map', e => e.innerText)),
+      'the note, the tab and the section map\'s own block words never say door or lock (D-018)', [note.split('\n')[1], smWords.find(s => sweep.test(s))].join(' | ').slice(0, 160)); }
+  // a PROJECTION fact is tagged: the path's chips on Data's tables, and its marks on Security's gates
+  { const dv = await p.evaluate(() => window.PANELS.data.variants.map(v => v.key).find(k => ['stages', 'stageblocks'].indexOf(k) < 0 && !window.PANELS.data.variants.find(v => v.key === k).pathAware));
+    await p.evaluate(v => window.showVariant('data', v), dv); await p.waitForTimeout(300);
+    const bc = await p.evaluate(() => { const c = [...document.querySelectorAll('#panel .bchip')];
+      return { n: c.length, ok: c.every(e => (e.dataset.fa || '').split(' ').indexOf('fate-of-the-writes-per-ending') >= 0 && window.DRAWN.els('fate-of-the-writes-per-ending', 'middle').indexOf(e) >= 0) }; });
+    ok(bc.n > 0 && bc.ok, 'on a Data distribution the path projects onto, every "committed ×n" chip is tagged the fate of the writes, and DRAWN holds it', dv + ' ' + JSON.stringify(bc));
+    await integrity('Data, projected ' + dv);
+    const dvPlace = await p.evaluate(a => a.t.replace('{part}', window.PANELS.data.word).replace('{variant}', window.PANELS.data.variants.find(v => v.key === a.dv).label), { t: WP.middlePath, dv });
+    ok(await p.evaluate(w => window.FIELDMAP.where('fate-of-the-writes-per-ending').indexOf(w) >= 0, dvPlace),
+      'and the catalog knows those chips too, as drawn on that distribution with a path picked', dvPlace + ' in ' + JSON.stringify(await p.evaluate(() => window.FIELDMAP.where('fate-of-the-writes-per-ending'))).slice(0, 200));
+    await p.evaluate(() => window.showVariant('data', window.PANELS.data.defaultVariant || window.PANELS.data.variants[0].key));
+    await p.evaluate(() => window.showTab('security')); await p.waitForTimeout(300);
+    const gm = await p.evaluate(() => { const c = [...document.querySelectorAll('#panel .gatemark')];
+      return { n: c.length, ok: c.every(e => (e.dataset.fa || '').split(' ').indexOf('the-checks-met-in-run-order') >= 0 && window.DRAWN.els('the-checks-met-in-run-order', 'middle').indexOf(e) >= 0) }; });
+    ok(gm.n > 0 && gm.ok, 'on Security, every "fired / passed" mark the path draws is tagged the checks met in run order, and DRAWN holds it', JSON.stringify(gm));
+    await integrity('Security with a path picked');
+    await p.evaluate(() => window.showTab('data')); await p.waitForTimeout(300); }
+  // SHOW a block: its fields are outlined across the regions — the union of DRAWN's elements for them — and nothing is removed
+  { const b = SM.blocks.find(x => x.join.act.kind === 'part' && x.join.act.part === 'data');
+    const before = await p.evaluate(() => document.querySelectorAll('#bench *, #port *, #cmd *').length);
+    await p.evaluate(k => window.smGo(k), b.key); await p.waitForTimeout(300);
+    const s = await p.evaluate(ids => { const want = new Set(ids.flatMap(id => window.DRAWN.els(id))), lit = new Set(document.querySelectorAll('.fl-hit'));
+      return { want: want.size, lit: lit.size, same: [...want].every(e => lit.has(e)), dim: document.querySelectorAll('.fl-dim').length, all: document.querySelectorAll('#bench *, #port *, #cmd *').length }; },
+      b.own.concat(b.shared));
+    /* CHANGED 2026-09-22 (review of the map's navigation, finding 1): this assert used to DEMAND the fade (`s.dim > 0`).
+       A Show is a click, and a click that dims the rest of the bench until it is cleared is a filter — D-022 option C gives
+       that to Keep only alone. The fade is now a PREVIEW only (the pointer on a node, asserted by the real-pointer check
+       above), so a Show must fade nothing. */
+    ok(s.lit === s.want && s.same && s.lit > 0 && s.dim === 0, 'Showing a block outlines every element DRAWN holds for its fields and fades nothing', JSON.stringify(s));
+    ok(s.all === before, 'and the Show removes nothing from the bench', before + ' vs ' + s.all);
+    await p.evaluate(() => window.FIELDMAP.clear()); await p.waitForTimeout(100);
+    ok(await p.evaluate(() => document.querySelectorAll('.fl-hit,.fl-dim').length) === 0, 'clearing it restores the bench'); }
+  // D-022: a CLICK keeps the outline, and a kept outline SAYS SO on every rail tab until it is removed
+  { const b = SM.blocks.find(x => x.join.act.kind === 'part' && x.join.act.part === 'data');
+    await p.hover(`#smtree .smb[data-sm="${b.key}"]`); await p.waitForTimeout(200);
+    ok(await p.evaluate(() => document.querySelectorAll('.fl-hit').length) > 0, 'pointing at a block previews its fields');
+    await p.evaluate(keys => window.smOpen(keys, false), SM.blocks.map(x => x.key)); await p.waitForTimeout(150);
+    await p.click(`#smtree .smb[data-sm="${b.key}"]`); await p.waitForTimeout(300);
+    await p.click(`#smtree .smb[data-sm="${b.key}"]`); await p.waitForTimeout(300);
+    ok(await p.evaluate(a => document.querySelector(`#smtree .smb[data-sm="${a.k}"]`).dataset.open === 'true' && !!document.querySelector(`#smtree .sma[data-sm="${a.f}"]`), { k: b.key, f: b.own[0] }),
+      'clicking a block that is already open keeps it open — the click shows, and its fields stay listed');
+    await p.click(`#smtree .smfold[data-sm="${b.key}"]`); await p.waitForTimeout(200);
+    ok(await p.evaluate(k => document.querySelector(`#smtree .smb[data-sm="${k}"]`).dataset.open === 'false', b.key), 'its own fold control closes it');
+    await p.click(`#smtree .smfold[data-sm="${b.key}"]`); await p.waitForTimeout(200);
+    await p.mouse.move(2, 2); await p.waitForTimeout(150);
+    const k1 = await p.evaluate(() => ({ lit: document.querySelectorAll('.fl-hit').length, bar: !document.getElementById('flkeep').hidden, t: document.getElementById('flkeep').textContent }));
+    ok(k1.lit > 0 && k1.bar && k1.t.indexOf(b.name) >= 0, 'after the click, the pointer leaves and the outline stays — and the rail\'s kept bar names what is kept', JSON.stringify(k1).slice(0, 200));
+    await p.evaluate(() => window.railTab('controls')); await p.waitForTimeout(150);
+    ok(await p.evaluate(() => { const k = document.getElementById('flkeep'); return !k.hidden && k.offsetParent !== null && !!k.querySelector('.flclear'); }),
+      'on another rail tab the kept bar is still in view, with its clear button');
+    await p.click('#flkeep .flclear'); await p.waitForTimeout(150);
+    ok(await p.evaluate(() => document.querySelectorAll('.fl-hit,.fl-dim').length === 0 && document.getElementById('flkeep').hidden), 'and its clear button takes the outline and the fade off, and the bar goes');
+    await p.evaluate(() => window.railTab('map')); await p.waitForTimeout(150);
+    // a FIELD row click keeps too, and the kept bar walks to the outlined elements that are out of view
+    await p.click('#smtree .sma[data-sm="tables-touched"]'); await p.mouse.move(2, 2); await p.waitForTimeout(250);
+    const before = await p.evaluate(() => ({ out: window.FIELDMAP.last().out.length, first: window.FIELDMAP.last().out[0] ? 1 : 0 }));
+    await p.evaluate(() => { window.__flFirstOut = window.FIELDMAP.last().out[0]; });
+    await p.click('#flkeep .flnext'); await p.waitForTimeout(300);
+    const after = await p.evaluate(() => { const e = window.__flFirstOut, r = e.getBoundingClientRect(), t = document.elementFromPoint((r.left + r.right) / 2, (r.top + r.bottom) / 2);
+      return { seen: !!t && (t === e || e.contains(t)), lit: document.querySelectorAll('.fl-hit').length }; });
+    ok(before.out > 0 && after.seen && after.lit > 0, 'clicking a field keeps its outline, and "next out of view" scrolls an outlined element that was out of view into view', JSON.stringify([before, after]));
+    await p.keyboard.press('Escape'); await p.waitForTimeout(150);
+    ok(await p.evaluate(() => document.querySelectorAll('.fl-hit').length === 0 && document.getElementById('flkeep').hidden), 'Esc clears a kept outline');
+    await p.evaluate(() => { const ps = (window.LABEP.forms.paths || []).slice().sort((a, b) => ((b.effects || {}).tables || []).length - ((a.effects || {}).tables || []).length); window.selectPath(ps[0].id); });
+    await p.evaluate(keys => window.smOpen(keys), SM.blocks.map(b => b.key)); await p.waitForTimeout(250); }
+  // STATE 2 — the part SWITCHED: DRAWN refills from the new render and the tree re-lights at field level
+  { const beforeHere = (await treeRecount('before the switch')).here;
+    await p.evaluate(() => window.showTab('functions')); await p.waitForTimeout(300);
+    await integrity('after switching to Functions');
+    const t2 = await treeRecount('after switching to Functions');
+    ok(JSON.stringify(t2.here) !== JSON.stringify(beforeHere) && t2.here.indexOf('roles-per-function') >= 0 && beforeHere.indexOf('roles-per-function') < 0,
+      'switching the part changes what is drawn here, and the tree follows — roles per function lights on Functions', JSON.stringify(t2.here.filter(x => beforeHere.indexOf(x) < 0)));
+    // a function block's FACE shows its name, file, length and graph role; what it DOES is on its hover card
+    const rf = await styles('roles-per-function', '#panel .blk.fn'), ff = await p.evaluate(() => { window.FIELDMAP.light(['file-line'], 'probe');
+      const s = [...document.querySelectorAll('.fl-hit')].filter(e => e.matches('#panel .bkf')).map(e => getComputedStyle(e).outlineStyle); window.FIELDMAP.unlight(); return s; });
+    ok(rf.length > 0 && rf.every(s => s === 'dotted') && ff.length > 0 && ff.every(s => s === 'solid'),
+      'on the function blocks, "roles per function" (the does words, on the hover card) is outlined dotted, and the file name on the face is outlined solid', JSON.stringify([rf.slice(0, 3), ff.slice(0, 3)]));
+    await hoverAll('on Functions');
+    await p.evaluate(() => window.clearPath()); await p.waitForTimeout(250);
+    await integrity('after clearing the path');
+    await treeRecount('after clearing the path'); }
+  { // the gates verb counts dependencies and lanes — it names no login scheme, so it is not tied to the auth scheme.
+    // The card is laid out with its verbs as rows for this one check, so the gates verb is drawn, then put back.
+    const g = await p.evaluate(() => { const C = window.CMD, keep = { layout: C.layout, verbs: C.verbs, mode: C.mode, grp: C.grp };
+      C.layout = 'card'; C.verbs = 'rows'; C.mode = 'cmd'; C.grp = null; window.drawCmd();
+      window.FIELDMAP.light(['auth-scheme-gate'], 'probe');
+      const r = { cells: document.querySelectorAll('#cmd .cmdcell[data-cmd="gates"]').length, lit: document.querySelectorAll('#cmd .cmdcell[data-cmd="gates"].fl-hit').length };
+      window.FIELDMAP.unlight(); Object.assign(C, keep); window.drawCmd(); return r; });
+    ok(g.cells > 0 && g.lit === 0, 'lighting the auth scheme and gate outlines no gates verb of the command card', JSON.stringify(g)); }
+  // the rail options — the agent's picks marked dashed; each one changes what a light does
+  { const opts = await p.$$eval('#smflopt .smflb', els => els.map(e => [e.closest('.smflo').dataset.opt, e.dataset.v, e.classList.contains('on'), e.classList.contains('pick')]));
+    ok(opts.length === 6 && opts.filter(o => o[3]).map(o => o[0] + ':' + o[1]).join(',') === 'hold:point,rest:dim,prop:hidden' && opts.filter(o => o[2]).map(o => o[1]).join(',') === 'point,dim,hidden',
+      'the outline, the fade and the selector-tie mark are rail options; the agent\'s picks are on and marked', JSON.stringify(opts));
+    await p.click('#smflopt .smflo[data-opt="rest"] .smflb[data-v="asis"]'); await p.waitForTimeout(100);
+    await p.evaluate(() => window.FIELDMAP.light([window.DRAWN.ids()[0]], 'probe')); await p.waitForTimeout(100);
+    ok(await p.evaluate(() => document.querySelectorAll('.fl-hit').length > 0 && document.querySelectorAll('.fl-dim').length === 0), '"as it is" outlines without fading the rest',
+      JSON.stringify(await p.evaluate(() => [window.FIELDMAP.opt(), document.querySelectorAll('.fl-hit').length, document.querySelectorAll('.fl-dim').length])));
+    await p.evaluate(() => window.FIELDMAP.unlight());
+    ok((await p.evaluate(() => window.COPYTXT.sectionmap())).indexOf(fillW(WS.noteLook, { hold: WS.val_point, rest: WS.val_asis, prop: WS.val_hidden })) >= 0,
+      'a look picked on the rail is carried by the note — "as it is" is pasted back');
+    await p.click('#smflopt .smflo[data-opt="rest"] .smflb[data-v="dim"]');
+    await p.click('#smflopt .smflo[data-opt="hold"] .smflb[data-v="click"]'); await p.waitForTimeout(100);
+    await p.hover('#smtree .sma[data-sm="the-endings"]'); await p.waitForTimeout(200);
+    const onlyPoint = await p.evaluate(() => document.querySelectorAll('.fl-hit').length);
+    await p.click('#smtree .sma[data-sm="the-endings"]'); await p.waitForTimeout(200);
+    ok(onlyPoint === 0 && await p.evaluate(() => document.querySelectorAll('.fl-hit').length) > 0, '"only on a click": pointing outlines nothing, a click outlines and keeps', String(onlyPoint));
+    await p.evaluate(() => window.FIELDMAP.clear());
+    await p.click('#smflopt .smflo[data-opt="hold"] .smflb[data-v="point"]'); await p.waitForTimeout(100); }
+  // the SELECTOR ties are the agent's proposals: named on their field's hover card always, marked dashed on the face only when the rail says so
+  { const rowsOf = await p.evaluate(label => Object.fromEntries(Object.keys(window.LABEP.sectionmap.attrs).map(id => [id, window.FIELDMAP.rows(id).some(r => r[0] === label)])), WS.rowProposal);
+    const wrongRows = ATTRS.filter(id => rowsOf[id] !== (TIED.indexOf(id) >= 0));
+    ok(wrongRows.length === 0, 'every field a selector in the words file ties — and only those — says "a proposal" on its hover card', wrongRows.join(','));
+    const dashedOff = await p.$$eval('#smtree .sma .smfd', els => els.filter(e => getComputedStyle(e).textDecorationStyle === 'dashed').length);
+    /* a field the words file ties by a selector to a command cell drawn right now, on its face (the card's layout decides which cells are drawn) */
+    const cid = await p.evaluate(T => T.find(id => [...document.querySelectorAll('#cmd .cmdcell')].some(e => (e.dataset.faAut || '').split(' ').indexOf(id) >= 0
+      && (e.dataset.faHov || '').split(' ').indexOf(id) < 0)) || null, TIED);
+    const cellOff = await styles(cid, '#cmd .cmdcell');
+    await p.click('#smflopt .smflo[data-opt="prop"] .smflb[data-v="marked"]'); await p.waitForTimeout(150);
+    const dashedOn = await p.$$eval('#smtree .sma', els => [...new Set(els.filter(e => getComputedStyle(e.querySelector('.smfd')).textDecorationStyle === 'dashed').map(e => e.dataset.sm))].sort());
+    const cellOn = await styles(cid, '#cmd .cmdcell');
+    const inTree = await p.$$eval('#smtree .sma', els => [...new Set(els.map(e => e.dataset.sm))]);
+    ok(dashedOff === 0 && JSON.stringify(dashedOn) === JSON.stringify(TIED.filter(id => inTree.indexOf(id) >= 0).sort()),
+      'unmarked, no field is underlined; marked, exactly the fields a selector ties are underlined dashed', JSON.stringify([dashedOff, dashedOn.length, TIED.length]));
+    ok(cellOff.length > 0 && cellOff.every(s => s === 'solid') && cellOn.length > 0 && cellOn.every(s => s === 'dashed'),
+      'and on the bench, a command cell a selector ties to a field is outlined solid when unmarked and dashed when marked', JSON.stringify([cid, cellOff, cellOn]));
+    ok(await p.evaluate(() => [...document.querySelectorAll('#smflkey .smflks')].map(e => e.dataset.style).join(',')) === 'solid,dotted,dashed',
+      'the key under the options draws the three outline styles once the ties are marked');
+    await p.click('#smflopt .smflo[data-opt="prop"] .smflb[data-v="hidden"]'); await p.waitForTimeout(100); }
+  // a block's count is a count: the same muted ink whatever it says, even at zero (analysis, not a verdict)
+  { let c = [];
+    for (const k of ['widening', 'tests', 'schemas', 'security', 'functions', 'data']) { await p.evaluate(k => window.showTab(k), k); await p.waitForTimeout(250);
+      c = await p.$$eval('#smtree .smb .smfn', els => els.map(e => [e.closest('.smb').dataset.fdn, getComputedStyle(e).color]));
+      if (c.some(x => x[0] === '0')) break; }
+    ok(c.some(x => x[0] === '0') && new Set(c.map(x => x[1])).size === 1, 'every block\'s count is drawn in one ink, a block with no field drawn here included', JSON.stringify(c.filter(x => x[0] === '0').slice(0, 2)));
+    await p.evaluate(() => window.showTab('data')); await p.waitForTimeout(250); }
+  // D-017: how the lab ties each field is behind "more information" — its line, in the words file's words, off the face
+  { const face = await p.$eval('#rt-map', e => e.innerText), more = await p.$eval('#smflmore', e => e.textContent);
+    const tot = await p.evaluate(() => window.FIELDMAP.totals());
+    const want = fillW(WS.moreCounts, { generated: tot.generated, authored: TIED.length, both: tot.both, none: tot.none,
+      notDrawn: tot.notDrawn.map(id => SM.attrs[id].r + ' ' + SM.attrs[id].label).join(' · ') });
+    ok(face.indexOf(more) < 0 && more === want,
+      'how each field is tied — in the code, or by a selector the words file holds — is behind "more information", in the words file\'s words', more.slice(0, 160)); }
+  { const small = await p.$$eval('#rt-map *, #flkeep *', els => els.filter(e => e.offsetParent !== null && (e.textContent || '').trim() && !e.children.length)
+      .map(e => [e.className || e.tagName, parseFloat(getComputedStyle(e).fontSize)]).filter(x => x[1] < 12));
+    ok(small.length === 0, 'nothing the field layer adds computes under 12px', JSON.stringify(small.slice(0, 4))); }
+  ok(errs.length === errs0, 'the field layer raises no page error', errs.slice(errs0, errs0 + 3).join(' | ')); }
+// ═══ FIELD LAYER END ═══
+
+// ═══ MAP NAV BEGIN ═══ THE BRAIN MAP'S NAVIGATION IN THE LAB (D-024) — the groupings (D-021), Keep only (D-022), the moves,
+//     the three placements (D-025.2) and the sweep (D-032). The rulings are ported from design-context/records/brainmap/probe-brainmap.mjs
+//     and read SECOND sources wherever one exists: his stage record (endpoint-stages.md) for the eight rows and their
+//     kinds, the brain map's WORDS file (brainmap.words.json) for each block's stage list, questions.md for the questions'
+//     own text, the section map's own block data for what a kept node carries, and the page's geometry for the line.
+//     Each block below starts from what the one before it left, so it is read top to bottom; a fresh page to begin.
+{ await p.goto('file://' + PAGE);
+  await p.waitForFunction('window.__eplabReady===true', { timeout: 20000 }).catch(() => {});
+  const errs0 = errs.length;
+  const hide = () => p.evaluate(() => window.hoverHide && window.hoverHide());
+  const NVW = JSON.parse(fs.readFileSync(path.join(HERE, 'map-nav.words.json'), 'utf8'));
+  const BW = JSON.parse(fs.readFileSync(path.join(REPO, 'docs/design/design-context/brainmap.words.json'), 'utf8'));
+  const STMD = fs.readFileSync(path.join(HERE, 'endpoint-stages.md'), 'utf8');
+  const QMD = fs.readFileSync(path.join(REPO, 'docs/design/design-context/questions.md'), 'utf8');
+  const SM = await p.evaluate(() => window.LABEP.sectionmap), NV = await p.evaluate(() => window.LABEP.mapnav);
+  const BL = Object.fromEntries(SM.blocks.map(b => [b.key, b]));
+  const fillW = (t, o) => String(t).replace(/\{(\w+)\}/g, (m, k) => o[k] != null ? String(o[k]) : m);
+  /* the record's spine, parsed HERE from his markdown (the brain map probe's own parse) */
+  const REC = STMD.split('\n').map(l => ({ m: l.match(/^\|\s*(\d+|bay|screen)\s*\|\s*\*\*([A-Z]+)\*\*\s*\|/) })).filter(x => x.m)
+    .map(x => ({ name: x.m[2], kind: /^\d+$/.test(x.m[1]) ? 'stage' : x.m[1] === 'bay' ? 'bay' : 'screen' }));
+  /* where a block is drawn under By stage, recomputed HERE from the brain map's words file — never read from the page */
+  const listOf = (bk) => BW.stages.byBlock[BL[bk].sig].stages.map(s => s.toLowerCase());
+  const placeUnder = (bk, rule) => { const l = listOf(bk); return rule === 'one' ? (l.length === 1 ? l : ['across']) : (l.length ? l : ['across']); };
+  /* what carries a kept BLOCK, recomputed from the section map's own block data (its fields, its standpoint key) */
+  const carriesBlock = (keptBk, pk, rule) => { const kb = BL[keptBk], held = new Set(kb.own.concat(kb.shared));
+    if (pk === 'root') return true;
+    if (pk.startsWith('block:')) return pk.slice(6) === keptBk;
+    if (pk.startsWith('attr:')) return held.has(pk.slice(5));
+    if (pk.startsWith('group:')) return SM.blocks.some(b => b.gkey === pk.slice(6) && b.key === keptBk);
+    if (pk.startsWith('sec:')) return SM.sections.find(s => 'sec:' + s.key === pk).attrs.some(i => held.has(i));
+    if (pk.startsWith('stage:')) return placeUnder(keptBk, rule).indexOf(pk.slice(6)) >= 0;
+    if (pk === 'added:x') return (SM.unplaced || []).some(i => held.has(i));
+    return true; };
+  const pks = () => p.evaluate(() => [...document.querySelectorAll('#smtree [data-pk]')].map(n => n.dataset.pk));
+  const quietPks = () => p.evaluate(() => [...new Set([...document.querySelectorAll('#smtree [data-pk][data-quiet="true"]')].map(n => n.dataset.pk))].sort());
+  const expectQuiet = async (bk, rule) => [...new Set((await pks()).filter(k => !carriesBlock(bk, k, rule)))].sort();
+  const setOpt = async (opt, v) => { await p.click(`#smnav .smno[data-opt="${opt}"] .smnb[data-v="${v}"]`); await p.waitForTimeout(250); await hide(); };
+  const setPlace = async (v) => { await p.evaluate(() => window.railTab('map')); await p.click(`#smplace .smno[data-opt="place"] .smnb[data-v="${v}"]`); await p.waitForTimeout(400); await hide(); };
+  const node = (pk, parent) => `#smtree [data-pk="${pk}"]` + (parent ? `[data-parent="${parent}"]` : '');
+  const openAll = async (keys) => { await p.evaluate(k => window.LABMAP.open(k), keys); await p.waitForTimeout(250); };
+  const state = () => p.evaluate(() => window.LABMAP.state());
+  await p.evaluate(() => window.railTab('map')); await p.waitForTimeout(150);
+
+  // ── A · the data, and the picks the page boots on ──
+  ok(NV && NV.state === 'present' && NV.stages.length && NV.groups.length, 'the facts carry the brain map\'s navigation, read from its own data', NV ? NV.state + ' · ' + (NV.reason || '') : 'absent');
+  { const s = await state(), pk = await p.evaluate(() => window.LABMAP.picks());
+    const opt = (o) => p.$$eval(`#smwrap .smno[data-opt="${o}"] .smnb, #smplace .smno[data-opt="${o}"] .smnb`, els => els.map(e => [e.dataset.v, e.classList.contains('on'), e.classList.contains('pick')]));
+    const g = await opt('grp'), pl = await opt('place'), sw = await opt('sweep');
+    ok(s.grp === NVW.grouping.pick && pk.grp === NVW.grouping.pick && g.map(x => x[0]).join(',') === 'flat,standpoint,section,stage'
+       && g.filter(x => x[2]).map(x => x[0]).join() === NVW.grouping.pick && g.filter(x => x[1]).map(x => x[0]).join() === NVW.grouping.pick,
+      'the grouping switch offers Flat · By standpoint · By section · By stage, boots on the words file\'s pick, and marks it dashed', JSON.stringify(g));
+    ok(pk.srule === BW.stages.rule['default'] && s.srule === BW.stages.rule['default'] && BW.stages.rule['default'] === 'every',
+      'By stage\'s rule boots on the brain map\'s default — under every stage a block touches, the agent\'s pick', JSON.stringify([pk.srule, s.srule]));
+    ok(s.place === NVW.placement.pick && pl.map(x => x[0]).join(',') === 'rail,right,below' && pl.filter(x => x[2]).map(x => x[0]).join() === NVW.placement.pick
+       && pl.filter(x => x[1]).map(x => x[0]).join() === NVW.placement.pick,
+      'the placement offers the rail tab, a right column and below; it boots on the pick, marked dashed', JSON.stringify(pl));
+    ok(sw.filter(x => x[2]).map(x => x[0]).join() === NVW.sweep.pick && s.sweep === NVW.sweep.pick, 'the line to what a node lit is a rail option, its pick marked', JSON.stringify(sw));
+    /* D-032: the brain map's hop (to the panel that answers) was replaced by the agent alone — so it is an option beside the lab's */
+    ok(sw.map(x => x[0]).join(',') === 'on,panel,off', 'where the line ends is a rail option: the nearest lit element, the panel that answers (the brain map\'s hop), or no line', sw.map(x => x[0]).join(','));
+    const rc = await opt('recs');
+    ok(rc.map(x => x[0]).join(',') === 'stack,one' && rc.filter(x => x[2]).map(x => x[0]).join() === NVW.records.pick && s.recmode === NVW.records.pick,
+      'how many records the portrait holds is a rail option — all kept (the brain map\'s tray, its pick) or one at a time', JSON.stringify(rc));
+    const where = await p.evaluate(() => ({ grpInMap: !!document.querySelector('#smwrap #smnav .smno[data-opt="grp"]'),
+      placeInRail: !!document.querySelector('#rt-map > #smplace .smno[data-opt="place"]') && !document.querySelector('#smwrap #smplace') }));
+    ok(where.grpInMap && where.placeInRail, 'the grouping switch rides the map\'s own header (it travels with the map); the placement stays in the rail tab', JSON.stringify(where)); }
+
+  // ── B · the four groupings (D-021) ──
+  { const top = async () => p.evaluate(() => [...document.querySelectorAll('#smtree [data-pk][data-depth="1"]')].map(n => n.dataset.pk));
+    ok((await top()).join('|') === SM.blocks.map(b => 'block:' + b.key).join('|'), 'Flat puts the blocks directly under the card, in the feed\'s order');
+    await setOpt('grp', 'standpoint');
+    const gs = NV.groups.map(g => g.key);
+    ok((await top()).join('|') === gs.map(k => 'group:' + k).join('|') && gs.length === new Set(SM.blocks.map(b => b.gkey)).size,
+      'By standpoint puts one node per standpoint the blocks name — as many as the blocks\' own standpoint keys', (await top()).length + ' vs ' + new Set(SM.blocks.map(b => b.gkey)).size);
+    await openAll(gs.map(k => 'group:' + k));
+    const under = await p.evaluate(() => [...document.querySelectorAll('#smtree .smb[data-pk]')].map(n => [n.dataset.pk.slice(6), n.dataset.parent.slice(6)]));
+    ok(under.length === SM.blocks.length && under.every(([bk, g]) => BL[bk].gkey === g),
+      'and every block hangs under the standpoint its own data names, once', JSON.stringify(under.filter(([bk, g]) => BL[bk].gkey !== g)));
+    /* CHANGED 2026-09-22 (finding 4): the oracle summed own+shared per block — the page's own arithmetic, so it could not
+       catch a shared field counted once per block. The line says FIELDS: count the distinct fields of the block rows the
+       page drew, here from the section map's own block data. Checked again under By stage below, where a block is drawn
+       under several rows. */
+    const deepNow = () => p.evaluate(() => ({ attrs: document.querySelectorAll('#smtree .sma').length, t: document.getElementById('smdeep').textContent, hidden: document.getElementById('smdeep').hidden,
+      rows: [...document.querySelectorAll('#smtree .smb[data-pk]')].map(n => n.dataset.pk.slice(6)) }));
+    const distinctBelow = (rows) => new Set(rows.flatMap(k => BL[k].own.concat(BL[k].shared))).size;
+    const deep = await deepNow();
+    ok(deep.attrs === 0 && !deep.hidden && deep.rows.length > 0 && deep.t === fillW(NVW.strings.deep, { n: distinctBelow(deep.rows), levels: NV.maxDepth + 1 }),
+      'a block under a standpoint draws no fields — that would be a fourth level — and the line under the map says how many distinct fields wait there', JSON.stringify(deep).slice(0, 220));
+    /* one standpoint open, the rest folded: the count follows what is drawn, not the whole card */
+    await p.evaluate(() => window.LABMAP.open(window.LABEP.mapnav.groups.map(g => 'group:' + g.key), false));
+    await openAll(['group:' + NV.groups.slice().sort((a, c) => c.blocks.length - a.blocks.length)[0].key]);
+    const deep1 = await deepNow();
+    ok(deep1.rows.length > 0 && deep1.rows.length < SM.blocks.length && deep1.t === fillW(NVW.strings.deep, { n: distinctBelow(deep1.rows), levels: NV.maxDepth + 1 }),
+      'with one standpoint open, the line counts only the fields below the blocks drawn', JSON.stringify([deep1.rows, deep1.t.slice(0, 40)]));
+    await setOpt('grp', 'section');
+    ok((await top()).join('|') === SM.sections.map(s => 'sec:' + s.key).join('|'), 'By section puts the inventory\'s own sections under the card, in its order');
+    await openAll(SM.sections.map(s => 'sec:' + s.key));
+    const as = await p.evaluate(() => [...document.querySelectorAll('#smtree .sma[data-pk]')].map(n => [n.dataset.pk.slice(5), n.dataset.parent.slice(4)]));
+    ok(as.length === Object.keys(SM.attrs).length && new Set(as.map(a => a[0])).size === as.length && as.every(([id, s]) => SM.attrs[id].sec === s),
+      'and every field of the inventory appears once, under the section it was written in', as.length + ' of ' + Object.keys(SM.attrs).length);
+    await setOpt('grp', 'stage');
+    const t1 = await top(), stKeys = REC.map(r => 'stage:' + r.name.toLowerCase()).concat(['stage:across']);
+    ok(REC.length === 8 && REC.filter(r => r.kind === 'bay').length === 1 && REC.filter(r => r.kind === 'screen').length === 1
+       && t1.join('|') === stKeys.concat((SM.unplaced || []).length ? ['added:x'] : []).join('|'),
+      'By stage draws HIS RECORD\'S EIGHT ROWS — every row of endpoint-stages.md, in its order — then Across the stages', t1.join(' '));
+    const strk = await p.evaluate(() => Object.fromEntries([...document.querySelectorAll('#smtree .smn[data-kind="stage"]')].map(n => [n.dataset.pk.slice(6), n.dataset.strk])));
+    ok(REC.every(r => strk[r.name.toLowerCase()] === r.kind) && strk.across === 'across' && Object.values(strk).filter(k => k === 'stage').length === REC.filter(r => r.kind === 'stage').length,
+      'each row is drawn as the KIND the record gives it — six stages, the bay, the screen — and Across as a branch of its own', JSON.stringify(strk));
+    const marks = await p.evaluate(() => Object.fromEntries([...document.querySelectorAll('#smtree .smn[data-kind="stage"]')].map(n => { const m = n.querySelector('.smmk');
+      return [n.dataset.pk.slice(6), m ? { t: m.textContent, fs: parseFloat(getComputedStyle(m).fontSize) } : null]; })));
+    ok(REC.every(r => { const m = marks[r.name.toLowerCase()]; return r.kind === 'stage' ? m === null : !!m && m.t === BW.stages.names[r.name].mark && STMD.includes(m.t) && m.fs >= 12; }),
+      'the bay and the screen are marked in the record\'s own words, above the floor; an ordinary stage carries no mark', JSON.stringify([marks.uncaught, marks.client]));
+    const says = await p.evaluate(() => ({ opt: document.querySelector('#smnav .smno[data-opt="grp"] .smnb[data-v="stage"]').textContent,
+      note: (document.querySelector('#smnav .smnote') || {}).textContent || '' }));
+    const nRows = +((says.note.match(/(\d+) rows/) || [])[1]), nSt = +((says.note.match(/(\d+) stages/) || [])[1]);
+    ok(/proposal/i.test(says.opt) && /PROPOSAL/.test(says.note) && nRows === REC.length && nSt === REC.filter(r => r.kind === 'stage').length,
+      'the rendered words say By stage is a PROPOSAL, and the note\'s counts are the rows and stages drawn', JSON.stringify([nRows, nSt]));
+    // the ONE switch By stage adds, with both rules marked for whose they are
+    const rOpts = await p.$$eval('#smnav .smno[data-opt="srule"] .smnb', els => els.map(e => ({ v: e.dataset.v, on: e.classList.contains('on'), pick: e.classList.contains('pick'), t: e.textContent })));
+    ok(rOpts.length === 2 && rOpts.find(o => o.v === 'every').on && rOpts.find(o => o.v === 'every').pick && /the agent's pick/.test(rOpts.find(o => o.v === 'every').t)
+       && !rOpts.find(o => o.v === 'one').pick && /the rule as recorded in D-021/.test(rOpts.find(o => o.v === 'one').t),
+      'By stage carries ONE switch with both rules: every stage it touches (on, dashed as my pick) and Across (marked as D-021\'s rule)', JSON.stringify(rOpts.map(o => [o.v, o.on, o.pick])));
+    const drawnUnder = async () => { await openAll(stKeys);
+      return p.evaluate(() => [...document.querySelectorAll('#smtree .smb[data-pk]')].map(n => [n.dataset.pk.slice(6), n.dataset.parent.replace(/^stage:/, '')])); };
+    const byBlk = (pairs) => { const m = {}; SM.blocks.forEach(x => { m[x.key] = []; }); pairs.forEach(([bk, st]) => m[bk].push(st)); return m; };
+    const heldBy = (pairs, st) => pairs.filter(x => x[1] === st).map(x => x[0]).sort();
+    const rowShape = () => p.evaluate(() => [...document.querySelectorAll('#smtree .smn[data-kind="stage"]')].map(n => ({ k: n.dataset.pk.slice(6), empty: n.dataset.empty, dash: getComputedStyle(n).borderTopStyle })));
+    { const pairs = await drawnUnder(), m = byBlk(pairs);
+      const bad = SM.blocks.filter(x => m[x.key].slice().sort().join('|') !== placeUnder(x.key, 'every').slice().sort().join('|'));
+      ok(bad.length === 0, 'under every-stage, each block is drawn under exactly the rows its list names — counted per block against the brain map\'s words file', bad.map(x => x.name + ': ' + m[x.key].join(',')).join(' ; '));
+      const wantAcross = SM.blocks.filter(x => !listOf(x.key).length).map(x => x.key).sort();
+      ok(wantAcross.length > 0 && heldBy(pairs, 'across').join('|') === wantAcross.join('|'), 'and Across holds exactly the blocks whose list is empty', heldBy(pairs, 'across').join(','));
+      ok(SM.blocks.some(x => listOf(x.key).length > 1 && m[x.key].length > 1), 'a block that spans rows really is drawn more than once');
+      { const d = await deepNow(), nRows = d.rows.length, perRow = d.rows.reduce((a, k) => a + BL[k].own.length + BL[k].shared.length, 0);
+        ok(nRows > SM.blocks.length && perRow > distinctBelow(d.rows) && d.t === fillW(NVW.strings.deep, { n: distinctBelow(d.rows), levels: NV.maxDepth + 1 }),
+          'and the line under the map still counts each field once, however many rows its blocks hang under', JSON.stringify([nRows, perRow, distinctBelow(d.rows), d.t.slice(0, 40)])); }
+      const sh = await rowShape(), wantEmpty = REC.map(r => r.name.toLowerCase()).filter(st => !SM.blocks.some(x => placeUnder(x.key, 'every').indexOf(st) >= 0));
+      ok(sh.length === REC.length + 1 && sh.every(r => (r.empty === 'true') === (wantEmpty.indexOf(r.k) >= 0) && (r.empty === 'true' ? r.dash === 'dashed' : r.dash !== 'dashed')),
+        'every row is drawn, and a row with no block is dashed rather than dropped', JSON.stringify(sh)); }
+    await setOpt('srule', 'one');
+    ok((await state()).srule === 'one', 'the switch moves to the rule as recorded');
+    { const pairs = await drawnUnder(), m = byBlk(pairs);
+      const bad = SM.blocks.filter(x => m[x.key].join('|') !== placeUnder(x.key, 'one').join('|'));
+      ok(bad.length === 0, 'under D-021 as recorded, every block is drawn once: under its one row, or under Across', bad.map(x => x.name + ': ' + m[x.key].join(',')).join(' ; '));
+      const wantAcross = SM.blocks.filter(x => listOf(x.key).length !== 1).map(x => x.key).sort();
+      ok(heldBy(pairs, 'across').join('|') === wantAcross.join('|'), 'and Across holds exactly the blocks whose list is not one row long', heldBy(pairs, 'across').join(','));
+      const sh = await rowShape(), wantEmpty = REC.map(r => r.name.toLowerCase()).filter(st => !SM.blocks.some(x => placeUnder(x.key, 'one').indexOf(st) >= 0));
+      ok(wantEmpty.length > 0 && sh.every(r => (r.empty === 'true') === (wantEmpty.indexOf(r.k) >= 0) && (r.empty === 'true' ? r.dash === 'dashed' : true)),
+        'the rows that rule leaves empty are still drawn, dashed', wantEmpty.join(',')); }
+    await setPlace('right'); await setPlace('rail');
+    ok((await state()).srule === 'one' && (await p.evaluate(() => window.COPYTXT.sectionmap())).split('\n')[0].indexOf(BW.stages.rule.opts.one.name) >= 0,
+      'the rule survives a placement change, and the copy note\'s first line names it', (await p.evaluate(() => window.COPYTXT.sectionmap())).split('\n')[0].slice(0, 200));
+    await setOpt('srule', 'every'); await setOpt('grp', 'flat'); }
+
+  // ── D · the moves (D-022, option C): a click SHOWS; Open and Follow are moves the node offers ──
+  { await p.evaluate(() => { window.showTab('security'); window.clearPath(); }); await p.waitForTimeout(250);
+    const b = SM.blocks.find(x => x.join.act.kind === 'part' && x.join.act.part === 'data');
+    await p.click(node('block:' + b.key)); await p.waitForTimeout(350); await hide();
+    const s1 = await p.evaluate(ids => { const want = new Set(ids.flatMap(id => window.DRAWN.els(id))), lit = new Set(document.querySelectorAll('.fl-hit'));
+      return { tab: document.getElementById('panel').dataset.tab, want: want.size, lit: lit.size, same: [...want].every(e => lit.has(e)),
+        moves: [...document.querySelectorAll('#smtree .smmv .smmvb')].map(e => e.dataset.move), at: (document.querySelector('#smtree .smmv') || {}).dataset?.for }; }, b.own.concat(b.shared));
+    ok(s1.tab === 'data' && s1.lit === s1.want && s1.same && s1.lit > 0, 'a click on a block SHOWS: the bench moves to its part and exactly its fields light', JSON.stringify(s1));
+    ok(s1.at === 'block:' + b.key && s1.moves.join(',') === NVW.moves.byNode.block.offers.join(','),
+      'and the node shown last offers the moves the words file lists for a block — Open — and nothing else', JSON.stringify(s1.moves));
+    // a click on a row of a group lights its fields and leaves the bench's part alone
+    await setOpt('grp', 'stage');
+    const tab0 = await p.evaluate(() => document.getElementById('panel').dataset.tab);
+    await p.click(node('stage:gate')); await p.waitForTimeout(350); await hide();
+    const s2 = await p.evaluate(() => { const ids = window.LABMAP.ids('stage:gate'), want = new Set(ids.flatMap(id => window.DRAWN.els(id))), lit = new Set(document.querySelectorAll('.fl-hit'));
+      return { tab: document.getElementById('panel').dataset.tab, want: want.size, lit: lit.size, same: [...want].every(e => lit.has(e)), open: document.querySelector('#smtree .smn[data-pk="stage:gate"]').dataset.open,
+        ids: ids.slice().sort() }; });
+    const gateIds = [...new Set(SM.blocks.filter(x => placeUnder(x.key, 'every').indexOf('gate') >= 0).flatMap(x => x.own.concat(x.shared)))].sort();
+    ok(s2.tab === tab0 && s2.lit === s2.want && s2.same && s2.open === 'true' && s2.ids.join('|') === gateIds.join('|'),
+      'a click on a row SHOWS too: it opens, and the fields of every block drawn under it light — recounted from the words file — while the part stays', JSON.stringify([s2.tab, s2.lit, s2.ids.length, gateIds.length]));
+    ok(await p.evaluate(() => [...document.querySelectorAll('#smtree .smmv .smmvb')].map(e => e.dataset.move).join(',')) === NVW.moves.byNode.stage.offers.join(','), 'and it offers Open');
+    // hovers: a CONTROL's card is one short line; an ELEMENT's card says what a click does and what else it offers (D-009)
+    await p.mouse.move(2, 2); await p.hover(node('stage:gate')); await p.waitForTimeout(250);
+    const hvN = await p.evaluate(() => { const h = document.getElementById('hover'); return h.hidden ? null : { rows: [...h.querySelectorAll('.cprow .cpk')].map(e => e.textContent), plain: !!h.querySelector('.cpplain'),
+      vals: Object.fromEntries([...h.querySelectorAll('.cprow')].map(r => [(r.querySelector('.cpk') || {}).textContent, (r.querySelector('.cpv') || {}).textContent])) }; });
+    await p.hover('#smnav .smno[data-opt="srule"] .smnb[data-v="one"]'); await p.waitForTimeout(250);
+    const hvC = await p.evaluate(() => { const h = document.getElementById('hover'); return h.hidden ? null : { rows: h.querySelectorAll('.cprow').length, plain: (h.querySelector('.cpplain') || {}).textContent || '' }; });
+    ok(!!hvN && hvN.rows.indexOf(NVW.moves.rowClick) >= 0 && hvN.rows.indexOf(NVW.moves.rowOffers) >= 0 && hvN.plain,
+      'a node\'s hover card says what a click does and what it also offers', JSON.stringify(hvN).slice(0, 200));
+    /* D-032: every move says which region answers — Show included (its region is the words file's byNode.<kind>.where) */
+    ok(!!hvN && (hvN.vals[NVW.moves.rowClick] || '').indexOf(NVW.moves.byNode.stage.where) >= 0
+       && NVW.moves.byNode.stage.offers.every(o => (hvN.vals[NVW.moves.rowOffers] || '').indexOf(NVW.moves[o].where) >= 0),
+      'and each move on it names the region that answers — Show as well as the moves it offers', JSON.stringify(hvN && hvN.vals[NVW.moves.rowClick]));
+    ok(!!hvC && hvC.rows === 0 && hvC.plain.length > 0 && hvC.plain.length < 200, 'a switch\'s hover card is one short line, no rows', JSON.stringify(hvC));
+    await hide(); await setOpt('grp', 'flat');
+    // OPEN — the node's record in the portrait (the brain map's panel for it)
+    await p.click(node('block:' + b.key)); await p.waitForTimeout(300); await hide();
+    await p.click('#smtree .smmv .smmvb[data-move="open"]'); await p.waitForTimeout(350);
+    const r1 = await p.evaluate(() => ({ pk: (document.querySelector('#portbody .mrec') || {}).dataset?.pk, t: document.getElementById('portt').textContent,
+      q: [...document.querySelectorAll('#portbody .mrec ol')].map(ol => [...ol.children].map(li => li.textContent)) }));
+    const qs = (r1.q[0] || []);
+    ok(r1.pk === 'block:' + b.key && r1.t === b.name, 'Open draws the block\'s record in the portrait, and the portrait\'s header names it', JSON.stringify([r1.pk, r1.t]));
+    ok(await p.evaluate(() => { const m = document.querySelector('#portbody .mrec'); if (!m || !document.querySelector('.fl-hit')) return false;
+        for (let e = m; e && e !== document.body; e = e.parentElement) if (e.classList.contains('fl-dim') || e.classList.contains('fl-quiet')) return false;
+        return ![...m.querySelectorAll('*')].some(e => e.classList.contains('fl-dim')); }),
+      'and the record is read at full strength while the block\'s fields stay lit — the light it answers never fades it');
+    ok(qs.length === b.questions.length && qs.every((l, i) => { const m = l.match(/^(Q\d+) · (.*)$/); return m && m[1] === b.questions[i] && QMD.includes('| ' + m[1] + ' | ' + m[2] + ' |'); })
+       && (r1.q[1] || []).length === b.own.length && (r1.q[2] || []).length === b.shared.length,
+      'and it lists the block\'s questions in his own words from questions.md, then its own fields and its shared ones', JSON.stringify(qs).slice(0, 200));
+    await p.click('#smtree .smroot'); await p.waitForTimeout(300); await hide();
+    await p.click('#smtree .smmv .smmvb[data-move="open"]'); await p.waitForTimeout(350);
+    /* CHANGED 2026-09-22 (finding 7c): the portrait keeps every record Open drew, newest first, so the card's rows are read
+       from ITS record — before, one record replaced the other and `#portbody .mrecr` could only be the card's */
+    const r2 = await p.evaluate(() => ({ pk: (document.querySelector('#portbody .mrec') || {}).dataset?.pk, rows: [...document.querySelectorAll('#portbody .mrec[data-pk="root"] .mrecr')].map(r => r.querySelector('.v').textContent),
+      order: [...document.querySelectorAll('#portbody .mrec[data-pk="root"] ol li')].map(li => li.textContent) }));
+    const byHold = SM.blocks.slice().sort((a, c) => (c.own.length + c.shared.length) - (a.own.length + a.shared.length) || a.n - c.n);
+    ok(r2.pk === 'root' && r2.rows.join('|') === [SM.n.attrs, SM.n.blocks, SM.n.shared, SM.n.unplaced].join('|')
+       && r2.order.length === SM.blocks.length && r2.order.every((t, i) => t.indexOf(byHold[i].name + ' · ') === 0),
+      'Open on the card draws the card as a whole — its counts, and the blocks by how much each holds, recounted here', JSON.stringify(r2.order.slice(0, 3)));
+    // THE RECORDS (the brain map's tray grew — its open pick, carried as a rail option): all kept, newest first, each closes alone
+    const recs = () => p.evaluate(() => [...document.querySelectorAll('#portbody .mrec')].map(e => e.dataset.pk));
+    const rs1 = await recs();
+    ok(rs1.join('|') === ['root', 'block:' + b.key].join('|') && await p.evaluate(() => document.querySelectorAll('#portbody .mrec .mrecx').length) === 2,
+      'a second Open keeps the first record: both are in the portrait, newest first, each with its own close', JSON.stringify(rs1));
+    /* guarded: when the record is missing, the assert above is already red — the probe goes on instead of stopping on a click */
+    await p.evaluate(k => { const x = document.querySelector(`#portbody .mrecx[data-pk="block:${k}"]`); if (x) x.click(); }, b.key); await p.waitForTimeout(250); await hide();
+    ok((await recs()).join('|') === 'root', 'closing one record leaves the other', JSON.stringify(await recs()));
+    await setOpt('recs', 'one');
+    await p.click(node('block:' + b.key)); await p.waitForTimeout(300); await hide();
+    await p.click('#smtree .smmv .smmvb[data-move="open"]'); await p.waitForTimeout(300);
+    ok((await recs()).join('|') === 'block:' + b.key, 'one at a time, Open replaces the record that was there', JSON.stringify(await recs()));
+    await setOpt('recs', 'stack');
+    await p.evaluate(() => window.LABMAP.closeRec()); await p.waitForTimeout(200);
+    ok(await p.evaluate(() => !document.querySelector('#portbody .mrec') && !document.querySelector('#portvars [data-pvar="map-node"]')), 'and closing the records gives the portrait back as it was');
+    // FOLLOW — a field drawn on another part: the bench goes there, the command panel goes to that part, the field lights
+    await p.evaluate(() => { window.showTab('data'); window.clearPath(); }); await p.waitForTimeout(300);
+    /* CHANGED 2026-09-22 (finding 5): every catalog place now carries how Follow reaches it (the portrait's and the command
+       card's too), so "some place has a part" no longer picks a field whose NEXT place is a part. This check is about a
+       part: the field is one whose first place is a distribution on a part other than Data */
+    const fid = await p.evaluate(() => Object.keys(window.LABEP.sectionmap.attrs).find(id => { if (window.FIELDMAP.state(id) !== 'elsewhere') return false;
+      const c = window.DRAWN.catalog()[id] || {}, w0 = window.FIELDMAP.where(id)[0], t = w0 && c[w0] && c[w0].tgt; return !!t && t.region === 'middle' && t.part !== 'data'; }));
+    const fb = SM.blocks.find(x => x.own.concat(x.shared).indexOf(fid) >= 0);
+    await p.evaluate(k => window.smOpen([k]), fb.key); await p.waitForTimeout(250);
+    await p.click(`#smtree .sma[data-sm="${fid}"]`); await p.waitForTimeout(300); await hide();
+    const mv = await p.evaluate(() => [...document.querySelectorAll('#smtree .smmv .smmvb')].map(e => e.dataset.move));
+    ok(mv.join(',') === NVW.moves.byNode.attr.offers.join(',') && mv.indexOf('keep') < 0, 'a field offers Open and Follow — never Keep only', mv.join(','));
+    const before = await p.evaluate(() => document.getElementById('panel').dataset.tab);
+    await p.click('#smtree .smmv .smmvb[data-move="follow"]'); await p.waitForTimeout(450); await hide();
+    const f1 = await p.evaluate(id => ({ tab: document.getElementById('panel').dataset.tab, st: window.FIELDMAP.state(id), lit: document.querySelectorAll('.fl-hit').length,
+      want: window.DRAWN.els(id).length, grp: window.CMD.grp, layout: window.CMD.layout, verbs: window.CMD.verbs, lead: document.getElementById('smlead').dataset.lead,
+      places: Object.keys(window.DRAWN.catalog()[id] || {}), say: document.getElementById('smsay').textContent }), fid);
+    ok(f1.tab !== before && f1.st === 'here' && f1.lit === f1.want && f1.lit > 0,
+      'Follow takes the bench to a part that draws the field, and every element drawn for it lights there', JSON.stringify([fid, before, f1.tab, f1.st, f1.lit]));
+    ok(f1.layout === 'card' && f1.verbs === 'g2' && f1.grp === f1.tab && f1.lead === 'map' && f1.places.some(w => f1.say.indexOf(w) >= 0),
+      'and the command panel stands on that part\'s topic, the lead says the map moved, and the map names the place it went to', JSON.stringify([f1.grp, f1.tab, f1.lead, f1.say.slice(0, 80)]));
+    await p.evaluate(() => { window.FIELDMAP.clear(); window.clearPath(); window.CMD.grp = null; window.drawCmd(); window.showTab('data'); }); await p.waitForTimeout(300);
+    /* a field drawn only in the portrait or the command card: Follow reaches it there, and names the region */
+    const pid = await p.evaluate(() => Object.keys(window.LABEP.sectionmap.attrs).find(id => { if (window.FIELDMAP.state(id) !== 'elsewhere') return false;
+      const c = window.DRAWN.catalog()[id] || {}, ws = window.FIELDMAP.where(id);
+      return ws.length > 0 && ws.every(w => c[w] && c[w].tgt && c[w].tgt.region !== 'middle') && ws.some(w => c[w].tgt.region === 'portrait'); }));
+    ok(!!pid, 'the feed has a field the middle never draws but a record in the portrait does', String(pid));
+    const pb = SM.blocks.find(x => x.own.concat(x.shared).indexOf(pid) >= 0);
+    await p.evaluate(k => window.smOpen([k]), pb.key); await p.waitForTimeout(250);
+    await p.click(`#smtree .sma[data-sm="${pid}"]`); await p.waitForTimeout(300); await hide();
+    await p.click('#smtree .smmv .smmvb[data-move="follow"]'); await p.waitForTimeout(450); await hide();
+    const f2 = await p.evaluate(id => ({ st: window.FIELDMAP.state(id), lit: document.querySelectorAll('.fl-hit').length, want: window.DRAWN.els(id).length,
+      say: document.getElementById('smsay').textContent, reg: (window.__smFollow || {}).tgt && window.__smFollow.tgt.region }), pid);
+    ok(f2.st === 'here' && f2.lit === f2.want && f2.lit > 0 && f2.say !== NVW.moves.followNone && f2.say.indexOf(NVW.moves.regions[f2.reg] || '??') >= 0,
+      'Follow reaches a field the middle never draws — in the portrait or the command card — lights it there, and names the region', JSON.stringify([pid, f2]).slice(0, 220));
+    /* every field drawn on another part: Follow lands where it is drawn, or says that each of its places needs a rail
+       setting changed — never that no place draws it */
+    const all = await p.evaluate(() => { const ids = Object.keys(window.LABEP.sectionmap.attrs).filter(id => window.FIELDMAP.state(id) === 'elsewhere'), r = [];
+      ids.forEach(id => { window.LABMAP.follow('attr:' + id); r.push({ id, st: window.FIELDMAP.state(id), say: document.getElementById('smsay').textContent }); }); return r; });
+    const railLead = NVW.moves.followRail.split('{')[0];
+    const bad = all.filter(r => r.say === NVW.moves.followNone || (r.st !== 'here' && r.say.indexOf(railLead) !== 0));
+    ok(all.length > 0 && bad.length === 0 && all.filter(r => r.st === 'here').length > all.length / 2,
+      'Follow on every field drawn on another part lands where it is drawn, or says each of its places needs a rail setting — never that none draws it',
+      `${all.filter(r => r.st === 'here').length} of ${all.length} landed · ` + JSON.stringify(bad.slice(0, 2)).slice(0, 200));
+    await p.evaluate(() => { window.FIELDMAP.clear(); window.clearPath(); window.CMD.grp = null; window.drawCmd(); window.showTab('data'); }); await p.waitForTimeout(300); }
+
+  // ── C · KEEP ONLY (D-022, option C): its own control, never a click; survives part, grouping and placement; removal restores ──
+  { const st = async () => (await state()).keep;
+    await p.reload(); await p.waitForFunction('window.__eplabReady===true', { timeout: 20000 }).catch(() => {});
+    await p.evaluate(() => window.railTab('map')); await p.waitForTimeout(150);
+    ok(await st() === null && await p.locator('#smkeepc').isHidden() && await p.locator('#smkeepb').isDisabled(),
+      'the page arrives with Keep only off, no chip, and the control has no node to keep yet', await p.textContent('#smkeepb'));
+    /* finding 3: the control's words are the LAB's — it keeps the node SHOWN last; a fold opens a node and counts for nothing */
+    await p.click(`#smtree .smfold[data-sm="${SM.blocks[1].key}"]`); await p.waitForTimeout(200); await hide();
+    await p.hover('#smkeepb'); await p.waitForTimeout(250);
+    const kw = await p.evaluate(() => ({ t: document.getElementById('smkeepb').textContent, dis: document.getElementById('smkeepb').disabled, last: window.LABMAP.state().last,
+      hov: ((document.getElementById('hover').querySelector('.cpplain') || {}).textContent || '') }));
+    await hide(); await p.mouse.move(2, 2);
+    ok(kw.t === NVW.keep.btnNone && kw.dis && kw.last === null && kw.hov === NVW.keep.btnTip,
+      'after a fold, the control still has no node, and its own words say why — show a node first; its hover says it keeps the node you showed last', JSON.stringify(kw));
+    await p.click(`#smtree .smfold[data-sm="${SM.blocks[1].key}"]`); await p.waitForTimeout(200); await hide();
+    const bk = SM.blocks.find(x => x.join.act.kind === 'part' && x.join.act.part === 'data');
+    await p.click(node('block:' + bk.key)); await p.waitForTimeout(300); await hide();
+    await p.click('#smtree .smroot'); await p.waitForTimeout(250); await hide();
+    await p.click(node('block:' + bk.key)); await p.waitForTimeout(300); await hide();
+    await setOpt('grp', 'stage'); await p.click(node('stage:gate')); await p.waitForTimeout(300); await hide(); await setOpt('grp', 'flat');
+    await p.click(node('block:' + bk.key)); await p.waitForTimeout(300); await hide();
+    const n0 = (await pks()).length;
+    await p.mouse.move(2, 2); await p.waitForTimeout(200);   // the pointer off the map: what stays is what the clicks left, not a preview
+    /* CHANGED 2026-09-22 (finding 1): `.fl-dim` is counted too — the field layer's fade after a click dimmed the same bench
+       elements Keep only quiets, and this guard, reading `.fl-quiet` alone, could not see it */
+    const clk = await p.evaluate(() => ({ quiet: document.querySelectorAll('.fl-quiet').length, dim: document.querySelectorAll('.fl-dim').length, hit: document.querySelectorAll('.fl-hit').length }));
+    ok(await st() === null && (await quietPks()).length === 0 && await p.locator('#smkeepc').isHidden() && clk.quiet === 0 && clk.dim === 0 && clk.hit > 0,
+      'clicks on nodes — a block, the card, a row — NEVER turn the filter on: they SHOW (outlined), nothing is dimmed or quiet on the map or the bench, and no chip appears', `keep=${await st()} ` + JSON.stringify(clk));
+    ok((await p.textContent('#smkeepb')).indexOf(bk.name) >= 0, 'the control names the node it would keep — the one shown last', await p.textContent('#smkeepb'));
+    await p.click('#smkeepb'); await p.waitForTimeout(400); await hide();
+    ok(await st() === 'block:' + bk.key, 'the CONTROL turns it on, keeping the node shown last', await st());
+    const chip = await p.textContent('#smkeepc');
+    ok(await p.locator('#smkeepc').isVisible() && chip.indexOf(bk.name) >= 0 && chip.indexOf(NVW.keep.how) >= 0 && (await p.textContent('#smkeepb')).trim() === NV.keep.off,
+      'a chip says in words what it keeps and how to remove it, and the control now removes it', chip.slice(0, 200));
+    /* finding 2: the chip lives with the map, and a rail tab hides the map — the rail's own bar says it on EVERY tab */
+    for (const tab of ['controls', 'cov']) { await p.evaluate(t => window.railTab(t), tab); await p.waitForTimeout(150);
+      const bar = await p.evaluate(() => { const m = document.getElementById('mkeep'), r = m && m.getBoundingClientRect();
+        return { vis: !!m && !m.hidden && m.offsetParent !== null && r.width > 50 && r.top >= -12 && r.bottom <= window.innerHeight, t: m ? m.textContent : '',
+          off: m ? (m.querySelector('.mkoff') || {}).textContent : '', chipVis: document.getElementById('smkeepc').offsetParent !== null }; });
+      ok(bar.vis && !bar.chipVis && bar.t.indexOf(NV.keep.label) >= 0 && bar.t.indexOf(bk.name) >= 0 && bar.off === NV.keep.off,
+        `on the ${tab} tab, where the map and its chip are hidden, a bar at the top of the rail says Keep only is on, what it keeps, and removes it`, JSON.stringify(bar).slice(0, 200)); }
+    await p.keyboard.press('Escape'); await p.waitForTimeout(150);
+    ok(await st() === 'block:' + bk.key && await p.locator('#mkeep').isVisible(), 'Esc clears a kept outline, never the filter: the bar stays', await st());
+    await p.evaluate(() => window.railTab('map')); await p.waitForTimeout(150);
+    let q = await quietPks(), eq = await expectQuiet(bk.key, 'every');
+    ok(q.length > 0 && q.join('|') === eq.join('|'), 'the map\'s nodes that do not carry the kept block go quiet, and only those', `${q.length} vs ${eq.length}`);
+    ok((await pks()).length === n0 && +((chip.match(/(\d+) other nodes are quiet/) || [])[1]) === (await p.evaluate(() => document.querySelectorAll('#smtree [data-pk][data-quiet="true"]').length)),
+      'quiet is dimmed, never removed — every node is still drawn — and the chip\'s count is the quiet nodes drawn', `${(await pks()).length} vs ${n0}`);
+    /* the BENCH half, through the field layer: what is quiet carries nothing kept; what is kept is never quiet */
+    const bench = () => p.evaluate(ids => { const kept = new Set(ids.flatMap(id => window.DRAWN.els(id))), Q = [...document.querySelectorAll('.fl-quiet')];
+      const hasKept = (e) => [...kept].some(k => k === e || e.contains(k) || k.contains(e));
+      return { kept: kept.size, quiet: Q.length, badQuiet: Q.filter(hasKept).length,
+        keptDim: [...kept].filter(k => { for (let a = k; a && a !== document.body; a = a.parentElement) if (a.classList.contains('fl-quiet')) return true; return false; }).length,
+        /* the rule, walked HERE: every element of the three regions that is not kept, holds nothing kept and sits inside nothing kept must be quiet */
+        missing: (() => { let n = 0; ['#bench', '#port', '#cmd'].forEach(sel => { const r = document.querySelector(sel); if (!r) return;
+          (function walk(e) { [...e.children].forEach(c => { if (kept.has(c)) return; if ([...kept].some(k => c.contains(k))) walk(c); else if (!c.classList.contains('fl-quiet')) n++; }); })(r); }); return n; })(),
+        line: document.querySelectorAll('#smkeepc .smkh')[0].textContent }; }, bk.own.concat(bk.shared));
+    let bq = await bench();
+    ok(bq.kept > 0 && bq.quiet > 0 && bq.badQuiet === 0 && bq.keptDim === 0 && bq.missing === 0 && bq.line === fillW(bq.kept === 1 ? NVW.keep.benchOne : NVW.keep.bench, { n: bq.kept }),
+      'on the bench, every element that carries none of the kept fields is quiet, no kept element is, and the chip counts them', JSON.stringify(bq));
+    await p.click(node('block:' + SM.blocks.find(x => x.key !== bk.key && x.join.act.kind === 'part').key)); await p.waitForTimeout(350); await hide();
+    ok(await st() === 'block:' + bk.key && await p.locator('#smkeepc').isVisible(), 'a click on another node leaves the filter as it was', await st());
+    await p.evaluate(() => window.showTab('functions')); await p.waitForTimeout(350);
+    bq = await bench();
+    ok(await st() === 'block:' + bk.key && bq.quiet > 0 && bq.missing === 0 && bq.badQuiet === 0 && bq.keptDim === 0 && bq.line === fillW(bq.kept === 1 ? NVW.keep.benchOne : NVW.keep.bench, { n: bq.kept }),
+      'it survives a PART change: the new render is quieted by the same rule the moment it is drawn, and the chip recounts', JSON.stringify(bq));
+    /* a region re-rendered on its own — the command panel, which no map move wraps — is quieted too: the rule rides the render, not the map */
+    await p.evaluate(() => window.drawCmd()); await p.waitForTimeout(200);
+    bq = await bench();
+    ok(bq.missing === 0 && bq.badQuiet === 0 && bq.keptDim === 0, 'and a region re-rendered on its own (the command panel) is quieted the moment it is drawn', JSON.stringify(bq));
+    for (const pl of ['right', 'below', 'rail']) { await setPlace(pl);
+      q = await quietPks(); eq = await expectQuiet(bk.key, 'every');
+      ok(await st() === 'block:' + bk.key && await p.locator('#smkeepc').isVisible() && q.length > 0 && q.join('|') === eq.join('|'),
+        `it survives the placement ${pl}, still quieting the same nodes`, `${q.length} vs ${eq.length}`); }
+    await setOpt('grp', 'stage');
+    await openAll(REC.map(r => 'stage:' + r.name.toLowerCase()).concat(['stage:across']));
+    q = await quietPks(); eq = await expectQuiet(bk.key, 'every');
+    const stq = await p.evaluate(() => [...document.querySelectorAll('#smtree .smn[data-kind="stage"]')].filter(n => n.dataset.quiet !== 'true').map(n => n.dataset.pk.slice(6)).sort());
+    ok(await st() === 'block:' + bk.key && q.join('|') === eq.join('|') && stq.join('|') === placeUnder(bk.key, 'every').slice().sort().join('|'),
+      'and a grouping change: under By stage exactly the rows the kept block is drawn under stay lit', stq.join(' '));
+    const apps = await p.evaluate(k => [...document.querySelectorAll(`#smtree .smb[data-pk="block:${k}"]`)].map(n => n.dataset.quiet || 'lit'), bk.key);
+    ok(apps.length === listOf(bk.key).length && apps.every(x => x === 'lit'), 'every appearance of the kept block is lit, not only the first', JSON.stringify(apps));
+    await setOpt('grp', 'flat');
+    await p.click('#smkeepb'); await p.waitForTimeout(400); await hide();
+    /* CHANGED 2026-09-22 (finding 2): removal must also take the rail's Keep-only bar away, not only the map's chip */
+    ok(await st() === null && (await quietPks()).length === 0 && await p.locator('#smkeepc').isHidden() && await p.evaluate(() => document.querySelectorAll('.fl-quiet').length) === 0
+       && (await pks()).length >= n0 && await p.locator('#mkeep').isHidden(),
+      'removing it brings back every node and every bench element, and the chip goes', `quiet map ${(await quietPks()).length} · bench ${await p.evaluate(() => document.querySelectorAll('.fl-quiet').length)}`);
+    await p.evaluate(() => window.showTab('data')); await p.waitForTimeout(300); }
+
+  // ── E · the three placements: each draws the WHOLE map, and the field layer lights the same elements in all three ──
+  { const bk = SM.blocks.find(x => x.join.act.kind === 'part' && x.join.act.part === 'data');
+    await p.evaluate(() => { const ps = (window.LABEP.forms.paths || []).slice().sort((a, b) => ((b.effects || {}).tables || []).length - ((a.effects || {}).tables || []).length); window.selectPath(ps[0].id); });
+    await p.evaluate(k => window.smOpen([k]), bk.key); await p.waitForTimeout(300);
+    const desc = (ids) => p.evaluate(ids => { window.FIELDMAP.light(ids, 'probe');
+      const lit = [...document.querySelectorAll('.fl-hit')].map(e => window.DRAWN.regionOf(e) + '|' + (e.dataset.fa || '') + '|' + String(e.textContent || '').replace(/\s+/g, ' ').slice(0, 40)).sort();
+      const want = new Set(ids.flatMap(id => window.DRAWN.els(id))).size; window.FIELDMAP.unlight(); return { lit, want }; }, ids);
+    const snap = {};
+    for (const pl of ['rail', 'right', 'below']) { await setPlace(pl);
+      const g = await p.evaluate(() => { const w = document.getElementById('smwrap'), host = w.parentElement.id;
+        return { host, vis: w.offsetParent !== null && w.getBoundingClientRect().width > 200, others: ['mapcol', 'mapbelow'].filter(id => id !== host).map(id => document.getElementById(id).hidden),
+          pks: [...document.querySelectorAll('#smtree [data-pk]')].map(n => n.dataset.pk), body: document.body.dataset.mapplace }; });
+      snap[pl] = { g, d: await desc(bk.own.concat(bk.shared)) };
+      await p.hover(`#smtree .smb[data-sm="${bk.key}"]`); await p.waitForTimeout(250);
+      snap[pl].real = await p.evaluate(() => document.querySelectorAll('.fl-hit').length);
+      await p.mouse.move(2, 2); await p.waitForTimeout(150); await hide(); }
+    const want = { rail: 'rt-map', right: 'mapcol', below: 'mapbelow' };
+    ok(Object.keys(want).every(pl => snap[pl].g.host === want[pl] && snap[pl].g.vis && snap[pl].g.others.every(Boolean) && snap[pl].g.body === pl),
+      'each placement puts the map in its own place — the rail tab, the right column, the section below — and hides the other two', JSON.stringify(Object.fromEntries(Object.keys(snap).map(k => [k, [snap[k].g.host, snap[k].g.vis]]))));
+    ok(snap.rail.g.pks.length > SM.blocks.length && ['right', 'below'].every(pl => snap[pl].g.pks.join('|') === snap.rail.g.pks.join('|')),
+      'and each draws the whole map — the same nodes, in the same order', ['rail', 'right', 'below'].map(pl => snap[pl].g.pks.length).join(' · '));
+    ok(snap.rail.d.lit.length > 0 && snap.rail.d.lit.length === snap.rail.d.want && ['right', 'below'].every(pl => snap[pl].d.lit.join('\n') === snap.rail.d.lit.join('\n')),
+      'the field layer lights the same elements in all three — region, fields and words, element for element', ['rail', 'right', 'below'].map(pl => snap[pl].d.lit.length).join(' · '));
+    ok(['rail', 'right', 'below'].every(pl => snap[pl].real === snap.rail.d.want), 'and a real pointer on the block lights that many in each', ['rail', 'right', 'below'].map(pl => snap[pl].real).join(' · '));
+    await setPlace('rail');
+    const geo = await p.evaluate(() => ({ doc: document.documentElement.scrollHeight, win: window.innerHeight, left: document.getElementById('lab').scrollLeft }));
+    ok(geo.doc <= geo.win + 2 && geo.left === 0, 'back in the rail tab, the page is as it was: nothing scrolls the page', JSON.stringify(geo)); }
+
+  // ── F · THE SWEEP (D-032 "the arrow is weird", D-004): one short hop, both ends real things, drawn whole ──
+  { const bk = SM.blocks.find(x => x.join.act.kind === 'part' && x.join.act.part === 'data');
+    const sweep = () => p.evaluate(() => { const s = window.LABMAP.sweep(); if (!s) return null;
+      const n = s.node.getBoundingClientRect(), t = s.target.getBoundingClientRect(), E = 1.6;
+      const onEdge = (pt, r) => pt[0] >= r.left - E && pt[0] <= r.right + E && pt[1] >= r.top - E && pt[1] <= r.bottom + E
+        && (Math.abs(pt[0] - r.left) < E || Math.abs(pt[0] - r.right) < E || Math.abs(pt[1] - r.top) < E || Math.abs(pt[1] - r.bottom) < E);
+      const nums = (s.d.match(/-?\d+(?:\.\d+)?/g) || []).map(Number), xs = nums.filter((v, i) => i % 2 === 0), ys = nums.filter((v, i) => i % 2 === 1);
+      const bx = [Math.min(s.from[0], s.to[0]) - 0.5, Math.max(s.from[0], s.to[0]) + 0.5], by = [Math.min(s.from[1], s.to[1]) - 0.5, Math.max(s.from[1], s.to[1]) + 0.5];
+      const path = document.querySelector('#smsweep path'), cs = path ? getComputedStyle(path) : null;
+      const inView = (e) => { const r = e.getBoundingClientRect(); if (r.width < 1 || r.height < 1) return false; const x = (r.left + r.right) / 2, y = (r.top + r.bottom) / 2;
+        const h = document.elementFromPoint(x, y); return !!h && (h === e || e.contains(h)); };
+      const dist = (e) => { const r = e.getBoundingClientRect(), fx = (n.left + n.right) / 2, fy = (n.top + n.bottom) / 2;
+        const dx = Math.max(r.left - fx, 0, fx - r.right), dy = Math.max(r.top - fy, 0, fy - r.bottom); return dx * dx + dy * dy; };
+      const nearer = [...document.querySelectorAll('.fl-hit')].filter(e => e !== s.target && inView(e) && dist(e) < dist(s.target) - 1).length;
+      return { pk: s.node.dataset.pk, onNode: onEdge(s.from, n), onTarget: onEdge(s.to, t), lit: s.target.classList.contains('fl-hit'), tIn: inView(s.target),
+        between: xs.every(x => x >= bx[0] && x <= bx[1]) && ys.every(y => y >= by[0] && y <= by[1]), drawn: !!path && path.getAttribute('d') === s.d,
+        finished: !!cs && cs.animationName === 'none' && parseFloat(cs.transitionDuration) === 0, nearer }; });
+    const good = (s, pk) => !!s && s.pk === pk && s.onNode && s.onTarget && s.lit && s.tIn && s.between && s.drawn && s.finished && s.nearer === 0;
+    for (const pl of ['rail', 'right', 'below']) { await setPlace(pl);
+      await p.click(`#smtree .smb[data-sm="${bk.key}"]`); await p.waitForTimeout(400); await hide(); await p.mouse.move(2, 2); await p.waitForTimeout(150);
+      const s = await sweep();
+      ok(good(s, 'block:' + bk.key), `${pl}: the line runs from the node shown last to the nearest lit element in view — on both edges, its bend between them, drawn whole`, JSON.stringify(s)); }
+    await setPlace('rail');
+    /* a part switch rewords every row of the tree AFTER the line is drawn (the field counts), which moves the node: the
+       line must start on the node where it is NOW. Found by walk-fold.mjs (its picture after a part switch showed the line
+       starting two rows above its node); a line drawn only once, before the counts, fails this. */
+    { const fb = SM.blocks.find(x => x.join.act.kind === 'part' && x.join.act.part === 'functions');
+      /* the node is put mid-rail BEFORE the Show, so it stays in view after the switch without a scroll (a scroll redraws the
+         line and would hide the fault this checks) */
+      await p.$eval(`#smtree .smb[data-sm="${fb.key}"]`, e => e.scrollIntoView({ block: 'center' })); await p.waitForTimeout(250);
+      await p.click(`#smtree .smb[data-sm="${fb.key}"]`); await p.waitForTimeout(400); await hide();
+      await p.click('#tabs .tab[data-tab="tests"]'); await p.waitForTimeout(500); await hide(); await p.mouse.move(2, 2); await p.waitForTimeout(150);
+      const s = await sweep();
+      ok(!!s && s.pk === 'block:' + fb.key && s.onNode && s.onTarget && s.drawn, 'after a part switch the line still starts on the node shown last, where the node is now', JSON.stringify(s));
+      await p.click('#tabs .tab[data-tab="data"]'); await p.waitForTimeout(400); await hide(); }
+    /* the brain map's hop, as an option (D-032: its fix was the agent's, so it is picked by seeing): the line ends at the
+       panel that answered the last move — the middle for Show, the portrait for Open */
+    await setOpt('sweep', 'panel');
+    await p.click(`#smtree .smb[data-sm="${bk.key}"]`); await p.waitForTimeout(350); await hide(); await p.mouse.move(2, 2); await p.waitForTimeout(150);
+    const pan = async () => p.evaluate(() => { const s = window.LABMAP.sweep(); if (!s) return null; const r = s.target.getBoundingClientRect(), E = 1.6;
+      const onEdge = Math.abs(s.to[0] - r.left) < E || Math.abs(s.to[0] - r.right) < E || Math.abs(s.to[1] - r.top) < E || Math.abs(s.to[1] - r.bottom) < E;
+      return { id: s.target.id, ans: s.ans, onEdge, drawn: (document.querySelector('#smsweep path') || {}).getAttribute?.('d') === s.d }; });
+    const pv1 = await pan();
+    ok(!!pv1 && pv1.id === 'panel' && pv1.ans === 'middle' && pv1.onEdge && pv1.drawn, 'set to the panel, a Show draws the line to the middle — the panel that answers it', JSON.stringify(pv1));
+    await p.click('#smtree .smmv .smmvb[data-move="open"]'); await p.waitForTimeout(350); await hide();
+    const pv2 = await pan();
+    ok(!!pv2 && pv2.id === 'port' && pv2.ans === 'portrait' && pv2.onEdge && pv2.drawn, 'and after Open it ends at the portrait', JSON.stringify(pv2));
+    await p.evaluate(() => window.LABMAP.closeRec()); await setOpt('sweep', 'on');
+    await p.click(`#smtree .smb[data-sm="${bk.key}"]`); await p.waitForTimeout(350); await hide();
+    await setOpt('sweep', 'off');
+    ok(await p.evaluate(() => !window.LABMAP.sweep() && !document.querySelector('#smsweep path')), 'hidden, the line is not drawn');
+    await setOpt('sweep', 'on');
+    await p.evaluate(() => window.FIELDMAP.clear()); await p.waitForTimeout(150);
+    ok(await p.evaluate(() => !window.LABMAP.sweep() && !document.querySelector('#smsweep path')), 'and it goes when the light goes'); }
+
+  // ── G · words and floors: facts are tokens, the swept words stay out of what the agent wrote, nothing under 12px ──
+  { const strs = []; (function walk(x, at) { if (typeof x === 'string') strs.push([at, x]); else if (Array.isArray(x)) x.forEach((v, i) => walk(v, at + '[' + i + ']'));
+      else if (x && typeof x === 'object') Object.keys(x).forEach(k => { if (k[0] !== '_') walk(x[k], at + '.' + k); }); })(NVW, '');
+    const mine = strs.filter(([at]) => !/^\.reword\..*\.was$/.test(at));
+    const digits = mine.filter(([, s]) => /\d/.test(s.replace(/\{\w+\}/g, '').replace(/\b[1-5]\d\d\b/g, '').replace(/\bD-\d{3}\b/g, '')));
+    ok(mine.length > 40 && digits.length === 0, 'the lab\'s navigation words type no number — every count is a {token}', JSON.stringify(digits.slice(0, 2)));
+    const sweep = /\b(doors?|locks?)\b/i;
+    const faces = {};
+    for (const g of ['flat', 'standpoint', 'section', 'stage']) { await setOpt('grp', g); faces[g] = await p.$eval('#smwrap', e => e.innerText); }
+    await setOpt('grp', 'flat');
+    /* and what the PAGE draws from: every line LABEP.mapnav carries — the lab's words and the brain map's own lines — except his
+       questions, his stage record and the lines a block cites, which stay verbatim */
+    const carried = []; (function walk(x, at) { if (typeof x === 'string') carried.push([at, x]); else if (Array.isArray(x)) x.forEach((v, i) => walk(v, at + '[' + i + ']'));
+      else if (x && typeof x === 'object') Object.keys(x).forEach(k => walk(x[k], at + '.' + k)); })(NV, '');
+    const his = ([at]) => /^\.qtext\./.test(at) || /^\.stages\[\d+\]\.plain$/.test(at) || /^\.byBlock\.[^.]+\.cites$/.test(at) || /^\.source\./.test(at);
+    const said = mine.filter(([, s]) => sweep.test(s)).concat(carried.filter(x => !his(x) && sweep.test(x[1]))).concat(Object.entries(faces).filter(([, t]) => sweep.test(t)));
+    ok(carried.length > 100 && said.length === 0, 'neither the navigation\'s words, nor any line the page carries from the brain map, nor the map\'s face under any grouping says door or lock (D-018)', JSON.stringify(said.slice(0, 2)).slice(0, 200));
+    await p.click('#smmoreb'); await p.waitForTimeout(250);
+    const more = await p.evaluate(() => [...document.querySelectorAll('#smopen .smoq')].map(e => ({ q: (e.querySelector('.q') || {}).textContent, l: !!e.querySelector('.l') })));
+    const asks = BW.open.items.map(it => it.ask).filter(a => !/\{/.test(a));
+    ok(more.filter(m => m.l).length === BW.open.items.length && asks.length > 0 && await p.evaluate(a => a.every(x => document.getElementById('smopen').textContent.indexOf(x) >= 0), asks),
+      'behind "more information", every open pick of the brain map is listed with what the lab does with it (D-017)', `${more.filter(m => m.l).length} of ${BW.open.items.length}`);
+    await p.click(`#smtree .smb[data-sm="${SM.blocks[0].key}"]`); await p.waitForTimeout(300); await hide();
+    await p.click('#smtree .smmv .smmvb[data-move="open"]'); await p.waitForTimeout(300);
+    const small = await p.$$eval('#smwrap *, #smplace *, #portbody .mrec *', els => els.filter(e => e.offsetParent !== null && (e.textContent || '').trim() && !e.children.length)
+      .map(e => [e.className || e.tagName, parseFloat(getComputedStyle(e).fontSize)]).filter(x => x[1] < 12));
+    ok(small.length === 0, 'nothing the navigation adds — its header, the tree, the chip, the moves, the portrait\'s record — computes under 12px', JSON.stringify(small.slice(0, 4)));
+    await p.click('#smmoreb'); await p.evaluate(() => window.LABMAP.closeRec()); }
+  // ── H · what else the brain map had (finding 6 · 7 · 8): the keyboard, what a reload keeps, short control hovers, and the
+  //     list of what is not carried yet ──
+  { await p.evaluate(() => window.railTab('map')); await setOpt('grp', 'flat');
+    const b0 = SM.blocks[0];
+    await p.evaluate(k => { window.smOpen(window.LABEP.sectionmap.blocks.map(b => b.key), false); window.smOpen([k]); }, b0.key); await p.waitForTimeout(250);
+    const act = () => p.evaluate(() => { const a = document.activeElement; return a ? (a.dataset.pk || a.className || a.tagName) : null; });
+    /* TAB reaches a field: from the card's row, the block's fold, the block, then its first field */
+    await p.focus('#smtree .smroot'); let tabbed = null;
+    for (let i = 0; i < 12 && !tabbed; i++) { await p.keyboard.press('Tab'); const a = await act(); if (/^attr:/.test(a || '')) tabbed = a; }
+    ok(tabbed === 'attr:' + b0.own[0], 'Tab reaches a field row, as it reaches every node', String(tabbed));
+    await p.keyboard.press('Enter'); await p.waitForTimeout(300);
+    const en = await p.evaluate(() => ({ last: window.LABMAP.state().last, kept: (window.FIELDMAP.kept() || {}).ids, lit: document.querySelectorAll('.fl-hit').length, act: document.activeElement.dataset.pk }));
+    ok(en.last === 'attr:' + b0.own[0] && JSON.stringify(en.kept) === JSON.stringify([b0.own[0]]) && en.act === en.last,
+      'Enter on a field SHOWS it — the map moves to it, its outline is kept — and the focus stays on it through the redraw', JSON.stringify(en));
+    await p.keyboard.press('ArrowDown'); await p.waitForTimeout(100);
+    ok(await act() === 'attr:' + (b0.own[1] || b0.shared[0]), 'ArrowDown moves to the next node', await act());
+    await p.keyboard.press('ArrowLeft'); await p.waitForTimeout(100);
+    ok(await act() === 'block:' + b0.key, 'ArrowLeft from a field goes up to its block', await act());
+    await p.keyboard.press('ArrowLeft'); await p.waitForTimeout(250);
+    const fo = await p.evaluate(k => document.querySelector(`#smtree .smb[data-sm="${k}"]`).dataset.open, b0.key);
+    await p.keyboard.press('ArrowRight'); await p.waitForTimeout(250);
+    const fo2 = await p.evaluate(k => document.querySelector(`#smtree .smb[data-sm="${k}"]`).dataset.open, b0.key);
+    ok(fo === 'false' && fo2 === 'true' && await act() === 'block:' + b0.key, 'on an open block ArrowLeft folds it, and ArrowRight opens it again — the focus stays on the block', JSON.stringify([fo, fo2]));
+    await p.focus('#smtree .smroot'); await p.keyboard.press(' '); await p.waitForTimeout(300);
+    ok((await state()).last === 'root', 'Space on the card\'s row shows the card', (await state()).last);
+    /* Escape, from the tree, closes the newest record — the brain map's "close the last panel" */
+    await p.evaluate(k => { window.LABMAP.openRec('block:' + k); window.LABMAP.openRec('root'); }, b0.key); await p.waitForTimeout(250);
+    await p.focus('#smtree .smroot'); await p.keyboard.press('Escape'); await p.waitForTimeout(250);
+    ok((await state()).recs.join('|') === 'block:' + b0.key, 'Escape from the tree closes the newest record and leaves the one before it', JSON.stringify((await state()).recs));
+    await p.evaluate(() => window.LABMAP.closeRec()); await p.evaluate(() => window.FIELDMAP.clear());
+    /* WHAT A RELOAD KEEPS — the brain map's probe asserted "a reload keeps the pick, the switches and the open panels" */
+    await setOpt('grp', 'section'); await openAll([ 'sec:' + SM.sections[1].key ]); await setOpt('sweep', 'panel'); await setOpt('recs', 'one');
+    await p.click(node('sec:' + SM.sections[1].key)); await p.waitForTimeout(300); await hide();
+    await p.click('#smkeepb'); await p.waitForTimeout(300); await hide();
+    await p.click('#smtree .smmv .smmvb[data-move="open"]'); await p.waitForTimeout(300);
+    const s0 = await state();
+    await p.reload(); await p.waitForFunction('window.__eplabReady===true', { timeout: 20000 }).catch(() => {});
+    const s1 = await state(), bar1 = await p.evaluate(() => !document.getElementById('mkeep').hidden);
+    ok(s0.keep === 'sec:' + SM.sections[1].key && ['grp', 'sweep', 'recmode', 'keep'].every(k => s1[k] === s0[k]) && s1.open.indexOf('sec:' + SM.sections[1].key) >= 0
+       && s1.recs.join('|') === s0.recs.join('|') && s1.recs.length === 1 && bar1,
+      'a reload keeps the grouping, the switches, Keep only (and says so), the open folds and the open record', JSON.stringify([s0.keep, s1.grp, s1.sweep, s1.recmode, s1.keep, s1.recs]));
+    await p.evaluate(() => window.railTab('map'));
+    await p.evaluate(() => { const x = document.querySelector('#mkeep .mkoff'); if (x) x.click(); }); await p.waitForTimeout(250); await hide();   // guarded, as above
+    ok((await state()).keep === null && await p.locator('#mkeep').isHidden(), 'the bar\'s own button removes the filter, and the bar goes');
+    await p.evaluate(() => window.LABMAP.keepOff());   // tidy for what follows, whatever the assert found
+    await p.evaluate(() => window.LABMAP.closeRec()); await setOpt('recs', 'stack'); await setOpt('sweep', 'on'); await setOpt('grp', 'flat');
+    /* D-009: a CONTROL's hover is one short line — every switch of the map's header, its placement, Keep only, the folds and
+       the moves, under every grouping (the stage rule shows only under By stage) */
+    const hv = [];
+    for (const g of ['flat', 'stage']) { await setOpt('grp', g);
+      await p.click('#smtree .smroot'); await p.waitForTimeout(250); await hide();
+      for (const sel of ['#smnav .smnb', '#smnav .smnk', '#smkeepb', '#smplace .smnb', '#smplace .smnk', '#smtree .smfold', '#smtree .smmvb']) {
+        const els = await p.$$(sel);
+        for (const el of els.slice(0, 10)) { if (!(await el.isVisible())) continue; await p.mouse.move(2, 2); await p.waitForTimeout(40); await el.hover(); await p.waitForTimeout(160);
+          hv.push(await p.evaluate(s => { const h = document.getElementById('hover'); return h.hidden ? { s, none: 1 } : { s, rows: h.querySelectorAll('.cprow').length, n: ((h.querySelector('.cpplain') || {}).textContent || '').length }; }, sel)); } } }
+    await p.mouse.move(2, 2); await hide(); await setOpt('grp', 'flat');
+    const long = hv.filter(h => h.none || h.rows > 0 || !(h.n > 0 && h.n < 200));
+    ok(hv.length > 20 && long.length === 0, 'every control the map draws has a hover of one short line — no rows, under two hundred characters', `${hv.length} hovers · ` + JSON.stringify(long.slice(0, 3)));
+    /* D-024: what the brain map had and the lab does not carry is SAID, behind "more information", before its page retires */
+    await p.click('#smmoreb'); await p.waitForTimeout(250);
+    const nc = await p.evaluate(() => [...document.querySelectorAll('#smopen .smnc')].map(e => e.textContent));
+    ok(nc.length === NVW.notCarried.items.length && nc.length > 0 && NVW.notCarried.items.every((t, i) => nc[i] === t)
+       && await p.evaluate(h => document.getElementById('smopen').textContent.indexOf(h) >= 0, NVW.notCarried.head),
+      'behind "more information", what the brain map had and the lab does not carry yet is listed, item by item', `${nc.length} of ${NVW.notCarried.items.length}`);
+    await p.click('#smmoreb');
+    await p.evaluate(k => { try { window.localStorage.removeItem(k); } catch (e) { /* storage off */ } }, 'eplab.mapnav'); }
+  ok(errs.length === errs0, 'the map\'s navigation raises no page error', errs.slice(errs0, errs0 + 3).join(' | ')); }
+// ═══ MAP NAV END ═══
 
 const cov = await p.evaluate(() => window.COV.state());
 const covered = Object.keys(cov).filter(k => cov[k].length), missing = Object.keys(cov).filter(k => !cov[k].length);

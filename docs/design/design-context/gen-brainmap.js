@@ -1,8 +1,15 @@
 #!/usr/bin/env node
-/* gen-brainmap.js — the navigator for the endpoint card's panels, as a Gabe Artifact page.
+/* gen-brainmap.js — the endpoint card's brain-map TREE, as data for the endpoint lab.
 
-     node docs/design/design-context/gen-brainmap.js            # → brainmap-endpoint.html + brainmap-endpoint.json
-     node docs/design/design-context/gen-brainmap.js --check     # exit 1 when either committed output is stale
+     node docs/design/design-context/gen-brainmap.js            # → brainmap-endpoint.json
+     node docs/design/design-context/gen-brainmap.js --check     # exit 1 when the committed tree is stale
+
+   THE PAGE HAS RETIRED. The brain map folded into the endpoint lab (D-024: workflow-panel/endpoint-lab.html → the
+   section map tab, whose navigation _ep_mapnav.py reads from this tree). The page it used to write, its template, its
+   probe, its walk and its pictures are a RECORD in records/brainmap/ — the page still opens there, frozen as it was
+   last generated. What the template once proved against the words file (the placements it draws, every rail and
+   every control line it paints) was a contract of that page; it left with it. The tree below is computed exactly as
+   before, so the JSON's data is byte-for-byte what the page embedded.
      node docs/design/design-context/gen-brainmap.js --table     # the tree it computed, as text
 
    READS   inventory-endpoint.md     the living inventory: every attribute, ruled (via inventory-parse.js)
@@ -12,13 +19,10 @@
            questions.md              the questions in their own words
            rate-sheet.words.json     the plain line of every inventory row (already authored, never re-authored here)
            brainmap.words.json       this page's authored prose — and ONLY prose: every number is a {token}
-           brainmap.tpl.html         the page's CSS, markup and script
-           skills/gabe-artifact/assets/artifact-chrome.html   the kit, pasted verbatim (+ one extra cog group)
-   WRITES  brainmap-endpoint.html     the page, with the tree embedded as window.BM_DATA
-           brainmap-endpoint.json     the SAME tree as data, for readers that must not depend on the page (the lab's
-                                      section-map tab reads it through workflow-panel/_ep_sectionmap.py): every key
-                                      the page embeds, plus `stagesByBlock` — each block's authored stage list with the
-                                      line it cites and where that line is from, which the page itself never carries
+   WRITES  brainmap-endpoint.json     the tree as data (the lab's section-map tab reads it through
+                                      workflow-panel/_ep_sectionmap.py and _ep_mapnav.py): every key the retired page
+                                      embedded, plus `stagesByBlock` — each block's authored stage list with the line
+                                      it cites and where that line is from
 
    THE TREE IS NOT INVENTED HERE.
    · The BLOCKS are his ruling: the question groups authored in prisms-endpoint.json. They are checked to be a
@@ -40,7 +44,7 @@
    No wallclock: same inputs, same bytes. */
 "use strict";
 const fs = require("fs"), path = require("path"), crypto = require("crypto");
-const HERE = __dirname, ROOT = path.resolve(HERE, "../../.."), OUT = path.join(HERE, "brainmap-endpoint.html");
+const HERE = __dirname;
 const OUT_JSON = path.join(HERE, "brainmap-endpoint.json");
 const KIND = "endpoint-card", ROT_DEG = 45, MAX_DEPTH = 2;          /* three drawn levels: root, branch, leaf */
 const die = (m) => { console.error("gen-brainmap: " + m); process.exit(2); };
@@ -292,32 +296,13 @@ const nOneStage = blocks.filter((b) => b.stages.length === 1).length, nNone = bl
 const bayRow = stageRows.find((r) => r.kind === KINDS.bay) || die("the record's spine has no bay row to draw");
 const bayBlocks = blocks.filter((b) => b.stages.indexOf(bayRow.key) >= 0);
 
-/* ── 6d · what the page itself paints, read off the template ──────────────
-   Two counts on the page are counts of the PAGE: how many placements it draws, and how many switches sit beside the
-   placement pick. Both are read off brainmap.tpl.html here, so neither is a second list kept in the words file: the
-   template's own `LAYS` must be the placements the words file describes, and every rail the template paints must be
-   described, and every rail described must be painted. The copy text must carry a value for each switch, or the line
-   it writes would name a switch and say nothing about it. */
-const TPL = fs.readFileSync(path.join(HERE, "brainmap.tpl.html"), "utf8");
-const mLays = TPL.match(/var LAYS = \[([^\]]*)\]/) || die("the template no longer declares its placements as `var LAYS = [...]`");
-const LAYKEYS = mLays[1].split(",").map((s) => s.trim().replace(/^"|"$/g, ""));
-if (LAYKEYS.join("|") !== Object.keys(W.layouts).join("|"))
-  die(`the template draws the placements ${LAYKEYS.join(",")}, the words file describes ${Object.keys(W.layouts).join(",")}`);
+/* ── 6d · the placements and the switches ─────────────────────────────────
+   Two counts the words quote are counts of the placements and of the switches beside the placement pick. While the
+   page lived they were read off its template; the template is a record now (records/brainmap/), so they are read off
+   the words file that described them — the same keys the template was proven to paint when it last ran. */
+const LAYKEYS = Object.keys(W.layouts);
 const RAILKEYS = Object.keys(W.rails);
-for (const k of RAILKEYS) if (!TPL.includes("D.rails." + k + ".")) die("the words file describes a rail the template never paints: " + k);
-{ const used = [...TPL.matchAll(/D\.rails\.(\w+)\./g)].map((m) => m[1]);
-  const extra = [...new Set(used)].filter((k) => RAILKEYS.indexOf(k) < 0);
-  if (extra.length) die("the template paints a rail the words file does not describe: " + extra.join(", ")); }
 const SWITCH_RAILS = RAILKEYS.filter((k) => k !== "layout");     /* Placement is the PICK; every other rail is a switch */
-for (const k of SWITCH_RAILS) if (!new RegExp("\\b" + k + ": function").test(TPL))
-  die(`the template's copy text has no value for the switch "${k}" — add it to SWITCHVAL, or the text names a switch and says nothing about it`);
-/* the CONTROL plain lines, checked both ways like the rails: six of the ten were carried here and painted nowhere
-   (2026-09-22), so an authored line nobody could read survived — including `ui.node`, whose claim about a branch's
-   number is false under By stage. A line here must be painted; a `D.ui.x` the template paints must be described. */
-const UIKEYS = Object.keys(W.ui).filter((k) => k[0] !== "_");
-for (const k of UIKEYS) if (!TPL.includes("D.ui." + k)) die(`the words file carries a plain line the template never paints: ui.${k} — paint it, or drop the line`);
-{ const used = [...new Set([...TPL.matchAll(/D\.ui\.(\w+)/g)].map((m) => m[1]))].filter((k) => UIKEYS.indexOf(k) < 0);
-  if (used.length) die("the template paints a plain line the words file does not carry: ui." + used.join(", ui.")); }
 
 /* ── 7 · the tokens, and the words they fill ────────────────────────────── */
 const mlabel = (mid) => { const l = liveOf(mid); return l ? liveById.get(l).label : mid.replace(/-/g, " "); };
@@ -378,54 +363,38 @@ const data = {
   qtext: Object.fromEntries(QS.map((q) => [q.id, q.text])),
 };
 
-/* ── 8 · the kit, verbatim, plus one cog group for the motion rule ──────── */
-let KIT; try { KIT = require("./kit-blocks.js").kitBlocks(ROOT); } catch (e) { die(e.message); }
-const swap = (s, a, b) => { if (!s.includes(a)) die("kit text to adapt not found: " + a.slice(0, 50)); return s.replace(a, b); };
-/* the page animates, so the kit's Motion group STAYS; an Animations group is added beside it (his standing rule:
-   a page opens on the finished picture, and the cog offers to play it instead) */
-const k2 = swap(KIT.k2.replace(/\s*<!-- Drop this Motion group[^>]*-->/, ""), '<p class="af-foot" id="af-foot">',
-  '<div class="af-divider"></div>\n    <div class="af-group" role="radiogroup" aria-label="Animations" id="af-anim"><p class="af-legend">Animations</p></div>\n    <p class="af-foot" id="af-foot">');
-
-let html = TPL;
-for (const [mark, val2] of [["<!--__KIT1__-->", KIT.k1], ["<!--__KIT2__-->", k2.trim()], ["<!--__KIT3__-->", KIT.k3],
-                            ["/*__DATA__*/null", JSON.stringify(data).replace(/</g, "\\u003c")]]) {
-  if (!html.includes(mark)) die("template marker missing: " + mark);
-  html = html.split(mark).join(val2);
-}
 { const left = JSON.stringify(data).replace(new RegExp("\\{(" + [...RUNTIME].join("|") + ")\\}", "g"), "").match(/\{[a-z]\w*\}/i);
-  if (left) die("an unfilled token survived into the page data: " + left[0]); }
+  if (left) die("an unfilled token survived into the tree's data: " + left[0]); }
 
 /* ── 9 · the tree as DATA, beside the page ────────────────────────────────
-   The page is a view and is meant to retire; the lab must not lift its tree out of a view. So the object the page
-   embeds is written again as its own file — the same object, key for key, so nothing in it is a second derivation —
-   with `stagesByBlock` added: the authored stage list of every ruled block, its reason, the line it cites and which
-   record that line is from (the cite was proven verbatim in 6b; the page draws the list and the reason, never the cite). */
+   The page was a view and has retired; the lab never lifted its tree out of a view. The object the page embedded is
+   this file's data — the same object, key for key, so nothing in it is a second derivation — with `stagesByBlock`
+   added: the authored stage list of every ruled block, its reason, the line it cites and which record that line is
+   from (the cite was proven verbatim in 6b). */
 const stagesByBlock = {};
 for (const b of blocks) { const e = SW.byBlock[b.sig];
   stagesByBlock[b.sig] = { block: b.key, stages: e.stages.slice(), keys: b.stages.slice(), why: b.stageWhy,
     cites: e.cites, from: e.from === "stages" ? "docs/design/workflow-panel/endpoint-stages.md" : "docs/design/design-context/questions.md",
     fromEndingsColumn: !!e.fromEndingsColumn }; }
-const tree = Object.assign({ about: "The endpoint card's brain-map tree as data, written by gen-brainmap.js beside brainmap-endpoint.html, which embeds the same object as window.BM_DATA. Generated; never edit by hand.",
-  page: "brainmap-endpoint.html" }, data, { stagesByBlock });
+const tree = Object.assign({ about: "The endpoint card's brain-map tree as data, written by gen-brainmap.js and read by the endpoint lab's section map tab. The brain map's own page retired to records/brainmap/ once the lab carried it (D-024). Generated; never edit by hand.",
+  page: "docs/design/workflow-panel/endpoint-lab.html" }, data, { stagesByBlock });
 const json = JSON.stringify(tree, null, 1) + "\n";
-{ const back = JSON.parse(json);                      /* the file must hold exactly what the page embeds, key for key */
-  for (const k of Object.keys(data)) if (JSON.stringify(back[k]) !== JSON.stringify(data[k])) die("the JSON tree does not carry the page's " + k + " unchanged");
+{ const back = JSON.parse(json);                      /* the file must hold exactly the computed data, key for key */
+  for (const k of Object.keys(data)) if (JSON.stringify(back[k]) !== JSON.stringify(data[k])) die("the JSON tree does not carry the data's " + k + " unchanged");
   const left = JSON.stringify(stagesByBlock).match(/\{[a-z]\w*\}/i);
   if (left) die("an unfilled token survived into the stage lists: " + left[0]); }
 
 if (process.argv.includes("--check")) {
   let bad = 0;
-  for (const [file, want] of [[OUT, html], [OUT_JSON, json]]) {
+  for (const [file, want] of [[OUT_JSON, json]]) {
     const same = fs.existsSync(file) && fs.readFileSync(file, "utf8") === want, name = path.basename(file);
     console.log(same ? name + " is current" : name + " is STALE — run gen-brainmap.js");
     if (!same) bad++;
   }
   process.exit(bad ? 1 : 0);
 }
-fs.writeFileSync(OUT, html);
 fs.writeFileSync(OUT_JSON, json);
-console.log(`brainmap-endpoint.html · ${attrs.length} attributes · ${blocks.length} blocks · ${spineLive.length} shared · ${added.length} not placed · ${groups.length} standpoints · ${sections.length} sections · ${tok.nCells} cells (${unjudged} unsettled) · inventory ${tok.invHash} · cells ${tok.cellsHash} · ${html.length} bytes`);
-console.log(`brainmap-endpoint.json · the same tree + ${Object.keys(stagesByBlock).length} stage lists · ${Buffer.byteLength(json)} bytes`);
+console.log(`brainmap-endpoint.json · ${attrs.length} attributes · ${blocks.length} blocks · ${spineLive.length} shared · ${added.length} not placed · ${groups.length} standpoints · ${sections.length} sections · ${tok.nCells} cells (${unjudged} unsettled) · inventory ${tok.invHash} · cells ${tok.cellsHash} · ${Object.keys(stagesByBlock).length} stage lists · ${Buffer.byteLength(json)} bytes`);
 if (process.argv.includes("--table")) {
   console.log(`root  ${data.root.name}`);
   for (const b of blocks) console.log(`  ${String(b.n).padStart(2)} ${b.name.padEnd(24)} ${b.sig.padEnd(15)} own ${String(b.attrs.length).padStart(2)} shared ${String(b.spine.length).padStart(2)}  standpoint: ${b.gkey}`);

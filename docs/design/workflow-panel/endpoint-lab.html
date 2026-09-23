@@ -82,15 +82,28 @@
            says so on its face. Wired BOTH WAYS: a block click moves the bench, a bench move lights the
            block, and the lead line says which of the two moved. Lab chrome — none of it ships. -->
       <section class="rtab" id="rt-map">
+        <!-- WHERE THE MAP SITS (D-025.2) — a rail option that always stays in this tab; the map itself (#smwrap) moves
+             between this tab, a column right of the panels (#mapcol) and a section below them (#mapbelow). -->
+        <div class="smplace" id="smplace"></div>
+        <div class="smwrap" id="smwrap">
         <div class="nhd" id="smhd">section map <span id="smn">—</span></div>
         <div class="nsub" id="smsub">—</div>
+        <!-- the map's own header (D-021 · D-022): grouping, By stage's rule, the line, and Keep only — it travels with the map -->
+        <div class="smnav" id="smnav"></div>
         <div class="smlead" id="smlead"><i></i><span>—</span></div>
+        <!-- THE FIELD LAYER (D-024): what the last pointed-at field or block outlined in the panels — or that it drew
+             nothing, and why. Every word is field-layer.words.json's; every number is measured off window.DRAWN. -->
+        <div class="smfl" id="smfl" data-fl="idle">—</div>
+        <div class="smfln" id="smfln">—</div>
+        <div class="smflopt" id="smflopt"></div>
         <!-- a block with NO bench surface never moves the bench silently: what would have to be built
              is written HERE, and stays until something else is picked. -->
         <div class="smsay" id="smsay" hidden></div>
         <div id="smtree"></div>
+        <div class="smdeep" id="smdeep" hidden></div>
         <button class="smmb" id="smmoreb" type="button">more information</button>
         <div class="smmore" id="smmore" hidden></div>
+        </div>
       </section>
     </aside>
     <section id="bench" class="box-work" aria-label="the console's middle region, boxed — only what would be built">
@@ -114,9 +127,13 @@
          `order` renumbered for it: rail 1 · cmd-left 2 · bench 3 · port 4 · cmd-right 5, so choice 16
          (card side) is ONE order value. -->
     <section id="cmd" aria-label="the command panel — every way a request through this endpoint ends"></section>
+    <!-- the section map's two other places (D-025.2): a column right of the panels, and full width below them -->
+    <section id="mapcol" hidden aria-label="the section map, in a column right of the panels"></section>
   </div>
+  <section id="mapbelow" hidden aria-label="the section map, full width below the panels"></section>
 </div>
 <div id="hover" class="jdcolpop" hidden></div>
+<script src="_lab-ep-map.js"></script>
 <script src="_lab-ep-panels.js"></script>
 <script>
 /* ═══ the shell: station tokens → CSS · head strip · tabs · box · clock · hover · coverage ═══ */
@@ -354,6 +371,7 @@
     if (words && HEADCFG.mode === "label" && opt.label) c.append(el("span", { class: "hlbl" }, opt.label));
     if (words && opt.value != null) c.append(el("span", { class: "hval" }, opt.value));
     if (opt.card) hoverBind(c, opt.card);
+    if (opt.fa && window.DRAWN) window.DRAWN.tag(c, opt.fa, opt.faHover ? { hover: 1 } : null);   /* the field layer (D-024) */
     return c; }
 
   /* The bar is two PILES: what stacks to the left of the gap and what stacks to the right
@@ -413,7 +431,7 @@
         var cx = cv.getContext("2d"); cx.scale(64 / 128, 64 / 128); S.badgeGlyph(cx, "method", I.method); cv.style.opacity = .9;
         cv.style.width = cv.style.height = mz + "px";
         var w = el("span", { class: "mbadge", id: "mbadge" }); w.append(cv);
-        return chip({ key: "method", iconNode: w, cls: "methodchip", label: "method", value: I.method,
+        return chip({ key: "method", fa: "method-path", iconNode: w, cls: "methodchip", label: "method", value: I.method,
           card: hcard({ title: I.method, value: "HTTP verb", icon: "endpoint", color: S.METHOD[I.method],
             rows: [["means", (S.BADGE_DESC.method || {})[I.method] || "—"],
                    ["its colour", S.METHOD[I.method] + " — the same in the graph"],
@@ -422,6 +440,7 @@
     { key: "name", word: "name", note: "the endpoint's path — the one thing that is always words",
       build: function(){ var st = window.elStyle("name");
         var c = el("span", { class: "hel hname sh-" + st.shape + " fit-" + st.fit }); c.dataset.el = "name";
+        if (window.DRAWN) window.DRAWN.tag(c, "method-path");
         c.style.setProperty("--d", (st.size + 14) + "px");
         if (wantText("name")) c.append(el("span", { class: "pname" }, I.path));
         else c.insertAdjacentHTML("beforeend", S.icon("doc", st.size, "var(--muted)"));
@@ -431,7 +450,7 @@
                  ["id", I.id]],
           plainKey: "name", station: I.id })); return c; } },
     { key: "entity", word: "entity", note: "which entity claims the endpoint — the dot is the entity colour used everywhere in the graph",
-      build: function(){ return chip({ key: "entity", dot: ec, label: "entity", value: I.entity, cls: "entchip",
+      build: function(){ return chip({ key: "entity", fa: "entity-cluster", dot: ec, label: "entity", value: I.entity, cls: "entchip",
         card: hcard({ title: I.entity, value: "entity", icon: "entity", color: ec,
           rows: [["endpoints", String((F.feedwide.entity_counts || {}).endpoints || "—")],
                  ["models", String((F.feedwide.entity_counts || {}).models || "—")],
@@ -440,7 +459,7 @@
                  ["lines", String((F.feedwide.entity_counts || {}).lines || "—")]],
           plainKey: "entity" }) }); } },
     { key: "cluster", word: "cluster", note: "the sub-group inside the entity — it was MISSING from the bar (operator 2026-09-11)",
-      build: function(){ return chip({ key: "cluster", icon: "layers", label: "cluster", value: I.cluster, cls: "cluchip",
+      build: function(){ return chip({ key: "cluster", fa: "entity-cluster", icon: "layers", label: "cluster", value: I.cluster, cls: "cluchip",
         card: hcard({ title: I.cluster, value: "cluster", icon: "layers",
           rows: [["read from", "the URL's first segment"], ["inside", I.entity]],
           plainKey: "cluster" }) }); } },
@@ -460,7 +479,7 @@
           return { state: c === mine ? "ok" : "quiet", name: c, value: n ? n + " test" + (n === 1 ? "" : "s") : "no test",
                    rule: (c === mine ? "SUCCESS — " : "") + (HTTPM[c] || "—"),
                    note: c === mine ? "the code this endpoint DECLARES on its decorator; the others are the ways it refuses." : null }; });
-        return chip({ key: "status", icon: "info", label: "declares", value: I.status + (I.status_name ? " " + I.status_name : ""), col: S.OPC.read, cls: "statchip",
+        return chip({ key: "status", fa: "declared-status", icon: "info", label: "declares", value: I.status + (I.status_name ? " " + I.status_name : ""), col: S.OPC.read, cls: "statchip",
           card: hcard({ title: "declares", value: I.status, icon: "info", color: S.OPC.read,
             factors: factors, factorLabel: "every code its TEST CASES assert · ● is the one it declares",
             rows: [["a test is", "one case in the project's suite whose name carries this endpoint — " + F.tests.cases.length + " do, all passing"],
@@ -468,7 +487,7 @@
                    ["untyped tests", (F.tests.by_status["no code in name"] || []).length + " of " + F.tests.cases.length + " name no code"]],
             plainKey: "status" }) }); } },
     { key: "source", word: "source", note: "the file and line the handler is defined at",
-      build: function(){ return chip({ key: "source", icon: "file", label: "source", value: I.at || I.file, cls: "srcchip",   /* the handler's own line — `flines` is the file's LENGTH (leftovers piece 8) */
+      build: function(){ return chip({ key: "source", fa: ["file-line", "signature"], icon: "file", label: "source", value: I.at || I.file, cls: "srcchip",   /* the handler's own line — `flines` is the file's LENGTH (leftovers piece 8) */
         card: hcard({ title: I.file, value: I.line ? "line " + I.line : "line not read", icon: "file",
           rows: [["handler", F.functions.handler.name || "—"],
                  ["the file", I.flines ? I.flines + " lines long" : "—"],
@@ -495,9 +514,9 @@
             factors: factors, factorLabel: "the three rules · ● is the one that fired",
             rows: [["impact", "editing this endpoint touches " + I.risk.behind + " functions"]],
             plainKey: "risk" }); }
-        if (I.risk.large) w.append(chip({ key: "risk", icon: "burst", cls: "flagchip warn", label: "risk", value: I.risk.conflict || "conflict", card: riskCard("large") }));
-        if (I.risk.god) w.append(chip({ key: "risk", icon: "alert", cls: "flagchip god", label: "risk", value: "god-object", card: riskCard("god") }));
-        if (I.risk.untested) w.append(chip({ key: "risk", icon: "alert", cls: "flagchip warn", label: "risk", value: "unguarded", card: riskCard("untested") }));
+        if (I.risk.large) w.append(chip({ key: "risk", fa: "risk-flag", icon: "burst", cls: "flagchip warn", label: "risk", value: I.risk.conflict || "conflict", card: riskCard("large") }));
+        if (I.risk.god) w.append(chip({ key: "risk", fa: "risk-flag", icon: "alert", cls: "flagchip god", label: "risk", value: "god-object", card: riskCard("god") }));
+        if (I.risk.untested) w.append(chip({ key: "risk", fa: "risk-flag", icon: "alert", cls: "flagchip warn", label: "risk", value: "unguarded", card: riskCard("untested") }));
         return w.children.length ? w : null; } },
     { key: "above", word: "up", note: "the ladder out — cluster · entity · everything, as three icons. It carries the entity and the cluster (their own chips are off by default) and will TRANSPORT to that level in the graph.",
       build: function(){ var w = el("span", { class: "hgrp habove" });
@@ -508,7 +527,8 @@
           if (A) out.push(["async", A.n + " of " + A.of + " endpoints are — " + (A.n / A.of >= 0.9 ? "the mark separates nothing in this app" : "a real difference in this app")]);
           return out; }
         I.above.forEach(function(a){ var isEnt = a.kind === "entity";
-          w.append(chip({ key: "above", icon: a.kind === "cluster" ? "layers" : a.kind === "entity" ? "entity" : "globe", col: isEnt ? ec : null,
+          w.append(chip({ key: "above", fa: a.kind === "everything" ? (placeRows().length ? "where-this-endpoint-sits-in-the-app" : null) : "entity-cluster", faHover: true,
+            icon: a.kind === "cluster" ? "layers" : a.kind === "entity" ? "entity" : "globe", col: isEnt ? ec : null,
             cls: "upchip", label: a.kind, value: HEADCFG.mode === "label" ? (a.kind === "everything" ? "everything" : a.label) : null,
             card: hcard({ title: a.kind === "everything" ? "everything" : a.label, value: "one level up",
               icon: a.kind === "cluster" ? "layers" : isEnt ? "entity" : "globe", color: isEnt ? ec : null,
@@ -519,7 +539,8 @@
         return w; } }   /* no trailing arrow: the three icons ARE the ladder (operator 2026-09-11) */
   ];
   var BYKEY = {}; HEADEL.forEach(function(e){ BYKEY[e.key] = e; });
-  function drawHead(){ HS.innerHTML = "";
+  function drawHead(){ if (window.DRAWN) return window.DRAWN.run("head", drawHead0); return drawHead0(); }
+  function drawHead0(){ HS.innerHTML = "";
     ["left", "right"].forEach(function(side){ var pile = el("span", { class: "hpile " + side });
       window.headOrder(side).forEach(function(k){ var e = BYKEY[k]; if (!e) return; var n = e.build(); if (n) pile.append(n); });
       HS.append(pile); });
@@ -2333,7 +2354,8 @@
     drawVars();
     PANEL.innerHTML = ""; PANEL.dataset.tab = k; PANEL.dataset.variant = curVar[k];
     var v = P.variants.filter(function(x){ return x.key === curVar[k]; })[0] || P.variants[0];
-    try { v.render(PANEL, F, S); } catch (e) { PANEL.innerHTML = '<div class="perr">render error: ' + e.message + '</div>'; console.error(e); }
+    try { if (window.DRAWN) window.DRAWN.run("middle", function(){ v.render(PANEL, F, S); }); else v.render(PANEL, F, S); }
+    catch (e) { PANEL.innerHTML = '<div class="perr">render error: ' + e.message + '</div>'; console.error(e); }
     if (window.applyData) window.applyData();
     if (window.drawDataCfg && k === "data") window.drawDataCfg();   /* which sections THIS distribution draws */
     if (window.drawSchCfg && k === "schemas") window.drawSchCfg();
@@ -2355,12 +2377,15 @@
     if (key === "cmd-exit") { var e = window.CMDKIT.exitById(F, SL.exit); return e ? (e.status + (e.detail ? " " + e.detail : "")) : null; }
     if (key === "cmd-case") return SL["case"] || null;
     return null; }
-  function drawPortrait(){ if (!PORT) return; PORT.innerHTML = ""; PORTV.innerHTML = "";
+  function drawPortrait(){ if (window.DRAWN) return window.DRAWN.run("portrait", drawPortrait0); return drawPortrait0(); }
+  function drawPortrait0(){ if (!PORT) return; PORT.innerHTML = ""; PORTV.innerHTML = "";
     var P = window.PANELS[cur], own = (P && P.portraits) || null;
     /* choice 9 — the command panel LENDS every part its three records while something is selected:
        `path record` puts them first, `split` keeps the part's own first, `keep selection` lends none. */
     var lent = (window.CMDKIT && window.CMD && window.CMD.portrait !== "keep") ? window.CMDKIT.portraits(F) : [];
     var vs = lent.length ? (window.CMD.portrait === "path" ? lent.concat(own || []) : (own || []).concat(lent)) : own;
+    var mp = window.LABMAP ? window.LABMAP.portrait() : null;   /* Open on the section map: the node's record, a variant beside the others */
+    if (mp) vs = (vs || []).concat([mp]);
     if (vs && !vs.length) vs = null;
     document.getElementById("portt").textContent = vs ? P.word.toLowerCase() : "portrait";
     if (!vs) { document.getElementById("portsub").textContent = "—";
@@ -2370,9 +2395,10 @@
     if (!portVar[cur] || !vs.some(function(v){ return v.key === portVar[cur]; })) portVar[cur] = vs[0].key;
     /* the header names the SUBJECT — what is drawn — not the part it came from */
     var lentNow = vs.filter(function(v){ return v.key === portVar[cur] && /^cmd-/.test(v.key); })[0];
-    var subj = lentNow ? cmdSubject(portVar[cur]) : (P.portraitSubject ? P.portraitSubject(F) : null);
+    var mapNow = mp && portVar[cur] === mp.key;
+    var subj = mapNow ? mp.subject : lentNow ? cmdSubject(portVar[cur]) : (P.portraitSubject ? P.portraitSubject(F) : null);
     document.getElementById("portt").textContent = subj || P.word.toLowerCase();
-    document.getElementById("porthd").querySelector(".pti").innerHTML = S.icon(lentNow ? lentNow.icon : (subj ? (P.portraitIcon || "model") : P.icon), 14, (subj || lentNow) ? "var(--accent)" : P.col);
+    document.getElementById("porthd").querySelector(".pti").innerHTML = S.icon(mapNow ? mp.icon : lentNow ? lentNow.icon : (subj ? (P.portraitIcon || "model") : P.icon), 14, (subj || lentNow) ? "var(--accent)" : P.col);
     vs.forEach(function(v){ var b = el("button", { class: "ptv" + (portVar[cur] === v.key ? " on" : "") });
       b.dataset.pvar = v.key; b.innerHTML = S.icon(v.icon, 14);
       hoverBind(b, hcard({ title: v.label, value: "a way of drawing it", icon: v.icon, plain: v.hint }));
@@ -2428,7 +2454,11 @@
     ghost.style.cssText = "position:absolute;left:-99999px;top:0;width:1100px;height:420px;overflow:hidden";
     document.body.appendChild(ghost);
     order.forEach(function(k){ var P = window.PANELS[k]; P.variants.forEach(function(v){ ghost.innerHTML = "";
-      try { v.render(ghost, F, S); } catch (e) { console.warn("prewalk " + k + "/" + v.key, e); } }); });
+      /* tgt: how the map's Follow reaches this place — the part and its distribution, no path needed */
+      if (window.DRAWN) window.DRAWN.begin("middle", { ghost: true, host: ghost, where: window.FIELDMAP.place("middleAll", { part: P.word, variant: v.label }),
+        tgt: { region: "middle", part: k, variant: v.key } });
+      try { v.render(ghost, F, S); } catch (e) { console.warn("prewalk " + k + "/" + v.key, e); }
+      finally { if (window.DRAWN) window.DRAWN.end(); } }); });
     ghost.remove(); })();
 
   /* ══ THE COMMAND PANEL (Phase 6 slice 1, 2026-09-17) ═══════════════════════════════════════
@@ -2473,7 +2503,8 @@
     CMDEL.classList.toggle("side-left", !!left);
     CMDEL.classList.toggle("no-title", !CMD.show.title);
     CMDEL.classList.toggle("no-caption", !CMD.show.caption); }
-  function drawCmd(){ if (!CMDEL) return;
+  function drawCmd(){ if (window.DRAWN) return window.DRAWN.run("command", drawCmd0); return drawCmd0(); }
+  function drawCmd0(){ if (!CMDEL) return;
     var inPort = CMD.layout === "ladder" && CMD.ladder === "portrait";
     cmdPlace();
     CMDEL.hidden = FRAME.cmdW === 0 || !CMD.show.region || inPort;
@@ -2491,7 +2522,10 @@
   /* the HEAD CHIP: while a path is in force it rides the RIGHT pile, the kind glyph in the path's
      colour and the name the `names` pick chose (choice 5). drawHead() rebuilds the bar, so it calls
      back here every time rather than the chip being appended once. */
-  window.__cmdChip = function(host){
+  /* the chip is an ADDITION to the head bar: it runs as one with the field layer (DRAWN.more), so a chip it takes
+     off leaves the registry with it and the chip it draws is registered as the ending in force */
+  window.__cmdChip = function(host){ if (window.DRAWN) return window.DRAWN.more("head", function(){ cmdChip0(host); }); cmdChip0(host); };
+  function cmdChip0(host){
     var old = host.querySelector(".hel.pathchip"); if (old) old.remove();
     if (!CMD.show.chip || !window.CMDKIT) return;
     var p = window.CMDKIT.pathById(F, window.SEL.path); if (!p) return;
@@ -2507,7 +2541,8 @@
              ["steps", String(p.n.steps)], ["clear", "Esc, or the Clear cell"]],
       plain: "the way this request ends, held across every part until you clear it" }); });
     c.onclick = function(ev){ ev.stopPropagation(); hoverHide(); clearPath(); };
-    pile.append(c); };
+    pile.append(c);
+    if (window.DRAWN) window.DRAWN.tag(c, "the-endings"); }
 
   /* ── the ONE selection, and the four calls that move it ── */
   function cmdPortKey(k){ if (CMD.portrait === "path") portVar[cur] = k; }
@@ -2803,8 +2838,8 @@
   function smGo(b){
     if (b.join.act.kind === "header") { var rv = smReading(b, cur);
       SMFROM = true; try { if (rv && smVarOf(cur) !== rv) window.showVariant(cur, rv); } finally { SMFROM = false; }
-      SMLEAD = "map"; SMPICK = b.key; smDraw(); return; }
-    if (b.join.act.kind === "none") { SMLEAD = "map"; SMPICK = b.key; smDraw();
+      SMLEAD = "map"; SMPICK = b.key; smDraw(); smShow(b); return; }
+    if (b.join.act.kind === "none") { SMLEAD = "map"; SMPICK = b.key; smDraw(); smShow(b);
       var n = document.querySelector('#smtree .smb[data-sm="' + b.key + '"]');
       if (n) hoverShow(n, hcard({ title: b.name, value: SMS.noSurface || "no surface", icon: "alert", color: "var(--red)",
         rows: [["the card should hold", b.plain], ["what exists today", b.join.says], ["to build", b.join.gap || "—"]],
@@ -2819,50 +2854,29 @@
         var p = (S2.path && pts.filter(function(x){ return x.id === S2.path; })[0]) || pts[0];
         if (p) { selectPath(p.id); if (window.showPortraitVar) window.showPortraitVar("cmd-path"); } } }
     finally { SMFROM = false; }
-    SMLEAD = "map"; SMPICK = b.key; smDraw(); }
+    SMLEAD = "map"; SMPICK = b.key; smDraw(); smShow(b); }
+  function smShow(b){ if (window.FIELDMAP) window.FIELDMAP.show(b.own.concat(b.shared), b.name); }
   window.smGo = function(k){ var b = smBlock(k); if (b) smGo(b); };
+  /* open (or close) blocks WITHOUT moving the bench — a block's row click is a Show; unfolding its fields is not */
+  window.smOpen = function(keys, open){ (keys || []).forEach(function(k){ SMOPEN[k] = open !== false; }); smDraw(); };
   function smAttrRow(id, shared, gut){ var a = (SM.attrs || {})[id] || null;
     var li = el("li"), row = el("div", { class: "smrow" });
     row.append(el("span", { class: "smtw" }, gut));
     var n = el("i", { class: "sma" }); n.dataset.sm = id; n.dataset.shared = String(!!shared);
     n.innerHTML = "<b>" + smEsc(a ? a.r : "?") + "</b> " + smEsc(a ? a.label : id);
-    if (a) hoverBind(n, hcard({ title: a.label, value: "importance " + a.r + (a.alarm ? " · an alert" : ""),
+    /* THE FIELD LAYER (D-024): pointing at a field outlines what the panels drew for it; the card says where it is drawn */
+    if (a) hoverBind(n, function(){ return hcard({ title: a.label, value: "importance " + a.r + (a.alarm ? " · an alert" : ""),
       icon: shared ? "merge" : "info",
       rows: [["data type", a.type], ["how many", a.card || "one"], ["first visible at", a.first],
-             ["home", shared ? (a.shared_in + " blocks need it, so it is homed in none") : ((smBlock(a.home) || {}).name || "not placed")]],
-      plain: a.plain }));
+             ["home", shared ? (a.shared_in + " blocks need it, so it is homed in none") : ((smBlock(a.home) || {}).name || "not placed")]]
+        .concat(window.FIELDMAP ? window.FIELDMAP.rows(id) : []).concat(window.LABMAP ? window.LABMAP.moveRows("attr") : []),
+      plain: a.plain }); });
+    if (window.FIELDMAP) window.FIELDMAP.bind(n, [id], a ? a.label : id);
     row.append(n); li.append(row); return li; }
-  function smDraw(){
-    var host = document.getElementById("smtree"); if (!host) return;
-    var hd = document.getElementById("smn"), sub = document.getElementById("smsub");
-    var lead = document.getElementById("smlead"), moreb = document.getElementById("smmoreb");
-    host.innerHTML = "";
-    if (!SM.blocks) { hd.textContent = SM.state;
-      sub.textContent = SMS.absent || "The card's ruled tree was not read, so nothing is drawn here.";
-      lead.hidden = true; moreb.hidden = true;
-      host.append(el("div", { class: "smabs" }, SM.reason || "no reason was recorded")); return; }
-    var lit = smLit(), leadKey = smLead(lit);
-    hd.textContent = SM.n.with_surface + " of " + SM.n.blocks + " with a page";
-    sub.textContent = (SM.state === "stale" ? (SMS.staleNote || "") + " " : "")
-      + (SMH.sub ? SMH.sub + ". " : "") + (SMH.lede || "") + " " + (SMH.proposal || "");
-    lead.hidden = false; lead.dataset.lead = SMLEAD || "idle";
-    var leadName = !SMLEAD ? null : SMLEAD === "map" ? (smBlock(SMPICK) || {}).name : leadKey ? (smBlock(leadKey) || {}).name : null;
-    lead.querySelector("span").textContent = (SMLEAD === "map" ? (SMS.leadYou || "you opened this here")
-      : SMLEAD === "lab" ? (SMS.leadLab || "the bench moved and this lit") : (SMS.leadIdle || "nothing open yet"))
-      + (leadName ? " · " + leadName : "");
-    /* a block with no bench surface, picked: the ask stays on the page rather than in a hover that goes */
-    var say = document.getElementById("smsay"), picked = SMLEAD === "map" ? smBlock(SMPICK) : null;
-    if (picked && smKind(picked) === "none") { say.hidden = false; say.dataset.kind = "none"; say.innerHTML = "";
-      say.append(el("b", null, picked.name + " · " + (SMS.noSurface || "no page yet")),
-                 el("span", null, "to build — " + (picked.join.gap || picked.join.says || ""))); }
-    /* the running header on a part with NO stage reading: the gap is said PER PART, and you stay on it */
-    else if (picked && smKind(picked) === "header" && !smReading(picked, cur)) { say.hidden = false; say.dataset.kind = "header"; say.innerHTML = "";
-      say.dataset.part = cur;
-      say.append(el("b", null, picked.name + " · " + (SMS.headerMark || "across every part")),
-                 el("span", null, ((window.PANELS[cur] || {}).word || cur) + " " + (SMS.headerNone || "has no stage reading yet."))); }
-    else { say.hidden = true; say.dataset.kind = ""; say.dataset.part = ""; }
+  /* the ROOT row — the card as a whole, with its counts on the hover card */
+  function smRootRow(){
     var root = el("div", { class: "smroot" });
-    root.dataset.lit = String(Object.keys(lit).length > 0);
+    root.dataset.lit = String(Object.keys(smLit()).length > 0);
     root.append(el("b", null, (SM.root || {}).name || "the card"), el("em", null, SMS.rootSub || ""));
     hoverBind(root, hcard({ title: (SM.root || {}).name || "the card", value: SM.n.attrs + " attributes",
       icon: "endpoint", rows: [["blocks", String(SM.n.blocks)], ["homed in one block", String(SM.n.own)],
@@ -2870,15 +2884,23 @@
         ["with a page", String(SM.n.with_surface)], ["no page yet", String(SM.n.without_surface)],
         ["a running header", String(SM.n.header || 0)]],
       plain: (SM.root || {}).plain }));
-    var ul = el("ul");
-    SM.blocks.forEach(function(b, i){
-      var last = i === SM.blocks.length - 1, li = el("li"), row = el("div", { class: "smrow" });
-      row.append(el("span", { class: "smtw" }, last ? "└─ " : "├─ "));
+    return root; }
+  /* a BLOCK row. `o.fold` false (a block under a group, a row or a section) draws no fold and no fields: they would be a
+     fourth level, and the map draws three (the command card's ruling); Show still lights them all */
+  function smBlockRow(b, o){ o = o || {}; var lit = smLit(), fold0 = o.fold !== false, last = !!o.last;
+      var li = el("li"), row = el("div", { class: "smrow" });
+      row.append(el("span", { class: "smtw" }, o.gut || (last ? "└─ " : "├─ ")));
+      /* the FOLD is its own small control: a click on the block always SHOWS (D-022) and opens it, never folds it away */
+      if (fold0) { var fold = el("button", { class: "smfold", type: "button", "aria-label": SMS.foldWord || "fold" }, SMOPEN[b.key] ? "▾" : "▸");
+      fold.dataset.sm = b.key; fold.dataset.open = String(!!SMOPEN[b.key]);
+      hoverBind(fold, hcard({ title: SMS.foldWord || "fold", icon: "info", plain: SMS.foldTip || "shows or hides this block's fields, and moves nothing" }));
+      fold.onclick = function(ev){ ev.stopPropagation(); hoverHide(); SMOPEN[b.key] = !SMOPEN[b.key]; smDraw(); };
+      row.append(fold); }
       var btn = el("button", { class: "smb", type: "button" });
-      btn.dataset.sm = b.key; btn.dataset.open = String(!!SMOPEN[b.key]);
+      btn.dataset.sm = b.key; btn.dataset.open = String(fold0 && !!SMOPEN[b.key]);
       btn.dataset.lit = String(!!lit[b.key]); btn.dataset.built = String(!!b.join.built); btn.dataset.kind = smKind(b);
       btn.dataset.part = b.join.act.part || ""; btn.dataset.act = b.join.act.kind;
-      btn.setAttribute("aria-pressed", String(!!SMOPEN[b.key]));
+      btn.setAttribute("aria-pressed", String(fold0 && !!SMOPEN[b.key]));
       btn.append(el("span", { class: "smbn" }, b.name),
                  el("span", { class: "smct" }, b.own.length + "·" + b.shared.length),
                  el("span", { class: "smsurf" }, ({ page: "→ ", none: "✕ ", header: "↔ " })[smKind(b)] + b.join.surface
@@ -2895,17 +2917,58 @@
                  ["the bench draws", b.join.says],
                  ["the gap", b.join.gap || "nothing the map names is left out here"],
                  ["right now", hk === "header" ? (((window.PANELS[cur] || {}).word || cur) + (rv ? " has a stage reading" : " has no stage reading yet"))
-                   : L[b.key] ? "the bench is on this block" : "the bench is elsewhere"]],
+                   : L[b.key] ? "the bench is on this block" : "the bench is elsewhere"]]
+            .concat(window.LABMAP ? window.LABMAP.blockRows(b) : []),   /* By stage: its proposed rows, why, the line it rests on; then the moves */
           plain: b.join.plain }); });
-      btn.onclick = function(ev){ ev.stopPropagation(); SMOPEN[b.key] = !SMOPEN[b.key]; smGo(b); };
+      btn.onclick = function(ev){ ev.stopPropagation(); if (fold0) SMOPEN[b.key] = true; if (window.LABMAP) window.LABMAP.note("block:" + b.key); smGo(b); };
+      if (window.FIELDMAP) window.FIELDMAP.hover(btn, b.own.concat(b.shared), b.name);   /* pointing previews its fields; the click keeps them */
       row.append(btn); li.append(row);
-      if (SMOPEN[b.key]) { var kids = el("ul"), gut = last ? "    " : "│   ";
+      if (fold0 && SMOPEN[b.key]) { var kids = el("ul"), gut = o.kidGut || (last ? "    " : "│   ");
         b.own.forEach(function(id){ kids.append(smAttrRow(id, false, gut + "├─ ")); });
         b.shared.forEach(function(id, j){ kids.append(smAttrRow(id, true, gut + (j === b.shared.length - 1 ? "└─ " : "├─ "))); });
         li.append(kids); }
-      ul.append(li); });
-    host.append(root, ul); }
+      return li; }
+  function smDraw(){
+    var host = document.getElementById("smtree"); if (!host) return;
+    var hd = document.getElementById("smn"), sub = document.getElementById("smsub");
+    var lead = document.getElementById("smlead"), moreb = document.getElementById("smmoreb");
+    host.innerHTML = "";
+    if (!SM.blocks) { hd.textContent = SM.state;
+      sub.textContent = SMS.absent || "The card's ruled tree was not read, so nothing is drawn here.";
+      lead.hidden = true; moreb.hidden = true;
+      host.append(el("div", { class: "smabs" }, SM.reason || "no reason was recorded")); return; }
+    var lit = smLit(), leadKey = smLead(lit);
+    hd.textContent = SM.n.with_surface + " of " + SM.n.blocks + " with a page";
+    sub.textContent = (SM.state === "stale" ? (SMS.staleNote || "") + " " : "")
+      + (SMH.sub ? SMH.sub + ". " : "") + (SMH.lede || "") + " " + (SMH.proposal || "");
+    lead.hidden = false; lead.dataset.lead = SMLEAD || "idle";
+    var leadName = !SMLEAD ? null : SMLEAD === "map" ? ((smBlock(SMPICK) || {}).name || (window.LABMAP ? window.LABMAP.lastName() : null))
+      : leadKey ? (smBlock(leadKey) || {}).name : null;
+    lead.querySelector("span").textContent = (SMLEAD === "map" ? (SMS.leadYou || "you opened this here")
+      : SMLEAD === "lab" ? (SMS.leadLab || "the bench moved and this lit") : (SMS.leadIdle || "nothing open yet"))
+      + (leadName ? " · " + leadName : "");
+    /* a block with no bench surface, picked: the ask stays on the page rather than in a hover that goes */
+    var say = document.getElementById("smsay"), picked = SMLEAD === "map" ? smBlock(SMPICK) : null;
+    if (picked && smKind(picked) === "none") { say.hidden = false; say.dataset.kind = "none"; say.innerHTML = "";
+      say.append(el("b", null, picked.name + " · " + (SMS.noSurface || "no page yet")),
+                 el("span", null, "to build — " + (picked.join.gap || picked.join.says || ""))); }
+    /* the running header on a part with NO stage reading: the gap is said PER PART, and you stay on it */
+    else if (picked && smKind(picked) === "header" && !smReading(picked, cur)) { say.hidden = false; say.dataset.kind = "header"; say.innerHTML = "";
+      say.dataset.part = cur;
+      say.append(el("b", null, picked.name + " · " + (SMS.headerMark || "across every part")),
+                 el("span", null, ((window.PANELS[cur] || {}).word || cur) + " " + (SMS.headerNone || "has no stage reading yet."))); }
+    else { say.hidden = true; say.dataset.kind = ""; say.dataset.part = ""; }
+    /* THE TREE — arranged by the map module (_lab-ep-map.js), which owns the groupings (D-021), Keep only (D-022), the
+       moves and the placement; the page lends it the three rows it has always drawn — the root, a block, a field */
+    if (window.LABMAP) window.LABMAP.drawTree(host, SMKIT);
+    else { var ul = el("ul"); SM.blocks.forEach(function(b, i){ ul.append(smBlockRow(b, { last: i === SM.blocks.length - 1, fold: true })); }); host.append(smRootRow(), ul); }
+    if (window.FIELDMAP) window.FIELDMAP.paintTree(); }
   window.smDraw = smDraw;
+  /* SMKIT — what the page lends the map module (_lab-ep-map.js): its three rows, its block move, and a way to say the
+     map moved (a node other than a block was shown) */
+  var SMKIT = { rootRow: smRootRow, blockRow: smBlockRow, attrRow: smAttrRow, go: smGo, draw: smDraw,
+    mark: function(pk){ SMLEAD = "map"; SMPICK = /^block:/.test(pk) ? pk.slice(6) : null; smDraw(); },
+    words: function(k, d){ var v = SMS[k]; return typeof v === "string" && v ? v : d; } };
   /* THE FEEDBACK NOTE (operator 2026-09-22) — the same copy button as every other rail block, writing a
      paste-able note instead of one line: the door, where the bench stands, the block that answers it,
      what the map says against what the bench draws, the ids someone would need, and a blank line for
@@ -2920,8 +2983,8 @@
       + (S0.path ? " · path " + S0.path : "") + (S0.exit ? " · exit " + S0.exit : "") + (S0["case"] ? " · case " + S0["case"] : "");
     ["data", "schemas", "functions", "tests", "widening", "security"].forEach(function(k){ if (S0[k]) bench += " · " + k + " " + S0[k]; });
     var pv = window.portraitVar && window.portraitVar(cur); if (pv) bench += " · portrait " + pv;
-    var L = [SMF.lede || "section map · a note from the bench",
-      (N.door || "door") + ": " + F.identity.label + " · " + F.identity.entity,
+    var L = [(SMF.lede || "section map · a note from the bench") + (window.LABMAP ? " · " + window.LABMAP.look() : ""),
+      (N.door || "endpoint") + ": " + F.identity.label + " · " + F.identity.entity,
       (N.bench || "bench") + ": " + bench,
       (N.block || "block") + ": " + (b ? b.name + " · " + b.sig + " · " + b.key : "none lit · " + (SMLEAD ? "the bench is on no block" : "nothing opened yet"))];
     if (b) L.push((N.kind || "pairing") + ": " + smKindWord(b)
@@ -2929,6 +2992,19 @@
                   (N.surface || "the map says") + ": " + b.plain,
                   (N.draws || "the bench draws") + ": " + (smKind(b) === "none" ? (SMS.noSurface || "no page yet") : b.join.surface) + " — " + b.join.says,
                   (N.gap || "gap") + ": " + (b.join.gap || "none"));
+    /* the field layer (D-024): the last field or block pointed at, and the elements it outlined — or why it outlined none */
+    var FM = window.FIELDMAP, FLs = FM ? FM.last() : null, fw = FM ? FM.words : function(k, d){ return d; };
+    var flTxt = function(t, o){ return String(t).replace(/\{(\w+)\}/g, function(m, k){ return o[k] != null ? String(o[k]) : m; }); };
+    if (!FLs) L.push(fw("noteField", "field") + ": " + fw("noteNone", "none pointed at yet"));
+    else { var one = FLs.ids.length === 1 ? FLs.ids[0] : null, what = (FLs.what || (one && SM.attrs[one] ? SM.attrs[one].label : FLs.ids.length + " fields")) + (one ? " · " + one : "");
+      if (FLs.n) L.push(fw("noteField", "field") + ": " + flTxt(fw("noteLit", "{what} · {n} outlined, {v} in view: {els}"), { what: what, n: FLs.n, v: FLs.v,
+        els: FLs.els.slice(0, 4).map(FM.describe).join(" ; ") + (FLs.n > 4 ? " ; " + flTxt(fw("more", "and {n} more"), { n: FLs.n - 4 }) : "") }));
+      else { var st1 = one ? FM.state(one) : null;
+        L.push(fw("noteField", "field") + ": " + flTxt(fw("noteNothing", "{what} · nothing outlined — {why}"), { what: what,
+        why: one ? (st1 === "elsewhere" ? fw("markElse", "on another part") + " · " + FM.places(one, 2) : st1 === "off" ? fw("markOff", "behind a switch no control reaches yet") : fw("markNone", "not drawn by the lab"))
+                 : fw("noneBlock", "none of its fields is drawn here").replace(/^\{what\} · /, "") })); } }
+    /* the field layer's rail options are a LOOK (D-027: every look is a setting, pasted back as a copy line) — they ride the field line */
+    if (FM) L[L.length - 1] += " · " + FM.look();
     L.push((N.facts || "facts") + ": _lab-ep.js · feed head " + (F.head || "?"),
       (N.tree || "tree") + ": " + (src.map || "?") + " · inventory " + (src.inv_hash || "?") + " · cells " + (src.cells_hash || "?") + " · ruled " + (src.ruled || "?") + " · " + SM.state,
       "", SMF.tail || "your words:", "");
@@ -2939,10 +3015,11 @@
   (function(){ var mb = document.getElementById("smmoreb"), box = document.getElementById("smmore"), src = SM.source || {};
     mb.textContent = SMS.moreShow || "more information";
     hoverBind(mb, hcard({ title: SMS.moreShow || "more information", icon: "info",
-      plain: "The rule that put each attribute in a block, and the two files the tree was hashed against." }));
+      plain: "The rule that put each attribute in a block, how each field is tied to what the panels draw, and the two files the tree was hashed against." }));
     mb.onclick = function(ev){ ev.stopPropagation(); var open = box.hidden; box.hidden = !open;
       mb.textContent = open ? (SMS.moreHide || "hide it again") : (SMS.moreShow || "more information"); };
     box.innerHTML = (((SMW.more || {}).lines) || []).map(function(l){ return "<p>" + smEsc(l) + "</p>"; }).join("")
+      + '<p id="smflmore"></p>' + (window.LABMAP ? window.LABMAP.moreHtml() : "")
       + "<p>" + smEsc("tree " + (src.map || "?") + " · inventory " + (src.inv_hash || "?") + " · cells " + (src.cells_hash || "?")
       + " · ruled " + (src.ruled || "?") + " · read " + SM.state) + "</p>"; })();
   /* THE OTHER DIRECTION — the bench's own moving calls, wrapped at the binding the bench itself uses,
@@ -2964,6 +3041,8 @@
   drawCmd(); drawHead();
   tagRegions();
   var first = (location.hash || "#data").slice(1); show(order.indexOf(first) >= 0 ? first : "data");
+  if (window.FIELDMAP) { window.FIELDMAP.walk(); window.FIELDMAP.drawOpts(); }   /* the field layer's catalog: every place the lab can draw a field */
+  if (window.LABMAP) window.LABMAP.init();   /* the map's placement (D-025.2) and its header — grouping, By stage's rule, the line, Keep only */
   SMLEAD = null; SMPICK = null; smDraw();   /* boot: the map draws, and says out loud that neither side has moved yet */
   window.__eplabReady = true;
 })();
