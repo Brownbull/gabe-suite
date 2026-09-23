@@ -2342,6 +2342,44 @@
     if (r[4]) { var t = el("span", { class: "bht" }); t.innerHTML = S.icon(r[4], 12, "var(--muted)");
       hl.insertBefore(t, hl.querySelector(".bhn")); }
     hl.append(copyBtn(r[2], r[3])); });
+  /* THE HEADER'S REGION ICONS (his ask 2026-09-23: "remove the word 'affects' and put icons instead … so I can quickly see
+     this is affecting this part, this part, and so on"). The words became the icons of EVERY region the block's controls reach —
+     the union of the region tags tagRegions() writes on its labels, the block's own region first, then console order — each
+     naming itself on hover (a control's hover stays short, D-009). Read off the labels, never typed; repainted when they change. */
+  var RGORDER = ["bench", "head", "tabs", "middle", "portrait", "command"];
+  function bhnPaint(){ RAILBLK.forEach(function(r){ var blk = document.getElementById(r[0]), note = blk && blk.querySelector(".bhl .bhn"); if (!note) return;
+      var seen = {}; [].forEach.call(blk.querySelectorAll(".cfl[data-rg]"), function(l){ l.dataset.rg.split(" ").forEach(function(g){ if (RGICO[g]) seen[g] = 1; }); });
+      var regs = [r[1]].concat(RGORDER.filter(function(g){ return g !== r[1] && seen[g]; })), key = regs.join(" ");
+      if (note.dataset.rgs === key) return;
+      var topic = r[4] ? (((window.PANELS || {})[r[2]] || {}).word || r[2]) : null;
+      note.dataset.rgs = key; note.textContent = "";
+      regs.forEach(function(g, i){ var ic = el("i", { class: "bhr" }); ic.dataset.rg = g; ic.innerHTML = RGICO[g](14, "currentColor");
+        var what = RGWORD[g] + (i === 0 && topic ? " — when " + topic + " is open" : "");
+        ic.setAttribute("aria-label", "changes " + what);
+        hoverBind(ic, hcard({ title: what, value: i === 0 ? "its own region" : "also reached", icon: "shape",
+          plain: "these controls change " + what }));
+        note.append(ic); }); }); }
+  window.bhnPaint = bhnPaint; bhnPaint();
+  /* POINTING AT A REGION ICON LIGHTS THAT REGION (his ask 2026-09-23: "when we hover over the icons … highlight that part in the
+     panel if it's available"). One delegated listener serves both the header icons (.bhr) and each control's region tags (.rgt);
+     a region that is not on screen (hidden, or zero-sized) is left alone. */
+  var RGEL = { bench: "bench", head: "headstrip", tabs: "tabs", middle: "panel", portrait: "port", command: "cmd" };
+  (function(){ var host = document.getElementById("rt-controls"), lit = null;
+    function off(){ if (lit) { lit.classList.remove("rg-hit"); lit = null; } }
+    function on(t){ var g = t && t.dataset.rg, e = g && RGEL[g] && document.getElementById(RGEL[g]); off();
+      if (!e || e.hidden || !e.getClientRects().length) return;
+      e.classList.add("rg-hit"); lit = e; }
+    if (!host) return;
+    host.addEventListener("mouseover", function(ev){ var t = ev.target.closest && ev.target.closest(".bhr, .rgt"); if (t) on(t); });
+    host.addEventListener("mouseout", function(ev){ var t = ev.target.closest && ev.target.closest(".bhr, .rgt");
+      if (t && !(ev.relatedTarget && t.contains(ev.relatedTarget))) off(); });
+    host.addEventListener("focusin", function(ev){ var t = ev.target.closest && ev.target.closest(".bhr, .rgt"); if (t) on(t); });
+    host.addEventListener("focusout", off);
+    window.__rgLit = function(){ return lit ? lit.id : null; }; })();
+  (function(){ var host = document.getElementById("rt-controls"), queued = false;
+    if (!host || !window.MutationObserver) return;
+    new MutationObserver(function(){ if (queued) return; queued = true;
+      requestAnimationFrame(function(){ queued = false; bhnPaint(); }); }).observe(host, { childList: true, subtree: true }); })();
   /* THE RAIL OPENS ON ONE REGION (operator 2026-09-12): every block folds away except the one being
      worked on. Moving to the next region is this one line. */
   var OPENBLK = window.OPENBLK = "blk-command";   /* the region being worked on (operator 2026-09-17: the COMMAND panel) */

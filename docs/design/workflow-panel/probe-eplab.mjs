@@ -3136,7 +3136,7 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
       `of the ${RAILCTL_9b163fc.length} controls the rail carried before the regroup, the only one gone is the entity card's scope pick — deleted by ruling, not mislaid`, lost.join(','));
     // and the controls ADDED on purpose since that recording, each named with what it belongs to
     const RAILCTL_ADDED = ['data-cmdinside', 'data-dstgempty', 'data-dstgplace'];   /* the stage blocks' placement and empty-stage dials (2026-09-17) · what sits inside a call (2026-09-20, D-018) */
-    const STRUCTURE = ['data-frame', 'data-region', 'data-rg'];   /* not controls: the block's region, the frame-dial wrapper, each label's region tag */
+    const STRUCTURE = ['data-frame', 'data-region', 'data-rg', 'data-rgs'];   /* not controls: the block's region, the frame-dial wrapper, each label's region tag, the header note's painted region set (2026-09-23) */
     ok(added.join(',') === RAILCTL_ADDED.concat(STRUCTURE).sort().join(','),
       'and everything added is either a named new control or a structure tag — nothing arrived unaccounted for', added.join(',')); }
 
@@ -3150,8 +3150,27 @@ ok((await p.$$('#headstrip .hel[data-el="status"]')).length === 1, 'and brings i
     ok(hd.map(x => x.region).join(',') === 'bench,head,tabs,middle,middle,middle,middle,portrait,command',
       'every block declares its region — the three topic blocks are the MIDDLE, read when that topic is open', hd.map(x => x.region).join(','));
     ok(hd.every(x => x.glyph > 0), 'and draws that region\'s glyph before its name', JSON.stringify(hd.filter(x => !x.glyph)));
-    ok(hd.every(x => /^affects: /.test(x.note)), 'every header note begins "affects:" — never silent about what it reaches',
-      hd.map(x => x.note).join(' | ').slice(0, 130));
+    /* CHANGED 2026-09-23 (his ask): the note is no longer the words "affects: …" — it is the ICONS of every region the block's controls
+       reach, its own region first, each naming itself (aria-label + hover). Recounted here from the labels' own region tags. */
+    const rg = await p.$$eval('#rt-controls .barblk', els => els.map(e => { const note = e.querySelector('.bhl .bhn');
+      const icons = [...note.querySelectorAll('.bhr')].map(i => ({ rg: i.dataset.rg, label: i.getAttribute('aria-label') || '' }));
+      const want = new Set([e.dataset.region]); e.querySelectorAll('.cfl[data-rg]').forEach(l => l.dataset.rg.split(' ').forEach(g => want.add(g)));
+      return { id: e.id, own: e.dataset.region, text: note.textContent.trim(), icons, want: [...want].sort() }; }));
+    ok(rg.every(x => x.icons.length >= 1 && x.icons[0].rg === x.own && x.text === ''),
+      'every header note is region ICONS, no words — its own region first', JSON.stringify(rg.filter(x => !(x.icons.length && x.icons[0].rg === x.own && x.text === '')).map(x => x.id + ':' + x.text.slice(0, 30))));
+    ok(rg.every(x => x.icons.map(i => i.rg).sort().join(',') === x.want.join(',')),
+      'and the icons are exactly the regions its controls reach — read off their own labels', JSON.stringify(rg.filter(x => x.icons.map(i => i.rg).sort().join(',') !== x.want.join(',')).map(x => [x.id, x.icons.map(i => i.rg), x.want])));
+    ok(rg.every(x => x.icons.every(i => /^changes the /.test(i.label))) && rg.filter(x => /^blk-(data|schemas|functions)$/.test(x.id)).every(x => / when .+ is open$/.test(x.icons[0].label)),
+      'each icon names what it changes; a topic block says when its topic is open', JSON.stringify(rg.map(x => x.icons[0] && x.icons[0].label)).slice(0, 200));
+    ok(rg.some(x => x.icons.length > 1), 'at least one block reaches more than its own region, and shows it', JSON.stringify(rg.map(x => x.id + ':' + x.icons.length)));
+    /* pointing at a region icon lights that region on the bench (his ask 2026-09-23) — real mouse, then away */
+    { const tgt = await p.$('#blk-command .bhl .bhn .bhr[data-rg="command"]'); const want = { command: 'cmd' };
+      let got = null, after = 'x';
+      if (tgt) { await tgt.scrollIntoViewIfNeeded(); const bx = await tgt.boundingBox(); await p.mouse.move(bx.x + bx.width / 2, bx.y + bx.height / 2); await p.waitForTimeout(150);
+        got = await p.evaluate(() => [window.__rgLit && window.__rgLit(), [...document.querySelectorAll('.rg-hit')].map(e => e.id)]);
+        await p.mouse.move(5, 5); await p.waitForTimeout(120); after = await p.evaluate(() => document.querySelectorAll('.rg-hit').length); }
+      ok(!!got && got[0] === want.command && got[1].join(',') === want.command && after === 0,
+        'pointing at the command panel\'s icon lights the command panel alone, and leaving puts it out', JSON.stringify({ got, after })); }
     const muted = await p.evaluate(() => { const d = document.createElement('i'); d.style.color = 'var(--muted)';
       document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; });
     ok(hd.every(x => x.ink === muted), 'drawn in the muted ink, under the block name', hd[0].ink + ' vs ' + muted);
