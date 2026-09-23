@@ -1,8 +1,7 @@
 # Where loop 1 stands
 
 One page, rewritten (never appended) whenever the position moves. Read it before `method.md` (the method) and
-`decisions.md` (every ruling, D-001 …). Updated 2026-09-23 · suite `6153724` on `graft-adoption`, plus uncommitted work:
-the fold (the brain map in the lab), D-034's build of the all-endpoints page, and the records move (`records/README.md`).
+`decisions.md` (every ruling, D-001 …). Updated 2026-09-23 · suite `810f858` on `graft-adoption`, pushed to both remotes.
 
 ## In plain words
 
@@ -82,8 +81,7 @@ Every page below opens from this folder with a relative path. The lab is `../wor
 
 ## Next, in order
 
-1. **Your look at 1–5** — each ruling goes into `decisions.md` in the same commit that acts on it (D-025.5). Before it: the
-   working tree holds the fold, D-034's build and the records move, uncommitted. The lab's probe is 1397/0 on it.
+1. **Your look at 1–5** — each ruling goes into `decisions.md` in the same commit that acts on it (D-025.5). The lab's probe is 1436/0.
 2. **M3**: the channel budget for the first prism.
 3. **The gallery**: 3–5 variants of the card at true size, one fader each, judged by seeing. Then the tests, and promote.
 
