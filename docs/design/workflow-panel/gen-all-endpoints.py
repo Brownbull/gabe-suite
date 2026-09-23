@@ -548,6 +548,17 @@ def build(argv: list) -> tuple:
     spec, feeds = UNI.station_spec(), UNI.station_feeds()
     for L, r in zip(facts, rows):
         r["uni"] = UNI.universe(L, spec, feeds, W["universe"])
+    # the link into the running station (D-038): the example station, by a path RELATIVE to the page (the operator opens pages
+    # from Windows Chrome over wsl.localhost, where an absolute file:///home path 404s), on its ?node=<id> deep link. A row whose
+    # node the station's feed does not hold is marked, so its link says so instead of opening a station that selects nothing
+    uni_page = UNI.EX / "gabe-universe.html"
+    if 'q.get("node")' not in uni_page.read_text(encoding="utf-8"):
+        die(f"{uni_page} does not read ?node= — the page's universe link would open it on nothing")
+    uni_ids = {p["id"] for e in (feeds["graph"].get("l2") or {}).values() for p in (e.get("nodes") or [])}
+    for r in rows:
+        if "endpoint:" + r["id"] not in uni_ids:
+            r["nu"] = 1
+    uni_href = os.path.relpath(uni_page, out.parent).replace(os.sep, "/")
     app = facts[0]["feedwide"]["pieces"].get("app")
     if not app:
         die("pieces-digest.json names no app at this head — the page must say which app it is")
@@ -615,7 +626,7 @@ def build(argv: list) -> tuple:
     arms_on = sorted(a for a, x in (fj.get("arms") or {}).items() if isinstance(x, dict) and x.get("present"))
     arms_off = sorted(a for a, x in (fj.get("arms") or {}).items() if isinstance(x, dict) and not x.get("present"))
 
-    tok = {"app": app, "head": head, "nFeed": len(keys), "nRows": len(rows), "nCols": len(cols), "nBlocks": len(blocks),
+    tok = {"app": app, "head": head, "uniHref": uni_href, "nFeed": len(keys), "nRows": len(rows), "nCols": len(cols), "nBlocks": len(blocks),
            "formsSha": sha(forms)[:8], "archmapSha": sha(archmap)[:8], "formsPath": tilde(forms), "archmapPath": tilde(archmap),
            "arms": " · ".join(arms_on) or "none", "armsOff": " · ".join(arms_off) or "none",
            "nShare": n_share, "rTop": max(a["r"] for a in A.values()), "nR3": sum(1 for c in cols if c["r"] == max(a["r"] for a in A.values())),

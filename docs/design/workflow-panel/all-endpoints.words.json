@@ -36,6 +36,10 @@
   "stamp": "{app} at head {head} · {nFeed} endpoints in its feed",
   "partial": "A fixture page, not the app's page: it draws {nRows} of the feed's {nFeed} endpoints.",
   "keys": "Click a column header to sort by it, again to reverse it. Click a piece of a header strip to light the rows in it. Click a row to open it in the endpoint section below the table.",
+  "info": {
+    "open": "show what this section is",
+    "close": "hide what this section is"
+  },
   "sec": {
     "board": "the endpoints",
     "one": "one endpoint",
@@ -582,8 +586,13 @@
     "none": "none",
     "more": "and {more} more",
     "lab": "open it in the lab",
+    "labShort": "lab",
     "labPlain": "The lab opens any endpoint whose facts are built here. The link opens this one; when its file is not built, the lab says so and names the command below, which builds it.",
     "open": "open {ep} in the lab",
+    "uniShort": "universe",
+    "openUni": "open {ep} in the Gabe Universe",
+    "uni": "open the Gabe Universe on this endpoint, its card showing",
+    "uniMissing": "the Gabe Universe's feed holds no node for this endpoint",
     "cmd": "cd docs/design/workflow-panel\npython3 gen-endpoint-set.py --only \"{ep}\" --forms {formsPath} --archmap {archmapPath}",
     "copy": "copy the command",
     "copied": "copied",

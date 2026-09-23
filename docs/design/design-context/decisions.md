@@ -481,3 +481,20 @@ Why: the tests found real defects — but the ones that mattered to him (false n
 reviews reading the data against its source; the browser re-runs and sabotage checks mostly re-proved panels that are
 exploration, not product, at ~75% of every build's time.
 Revisit if: a design page shows him a wrong number or breaks while he is navigating it — then that page's check grows back.
+
+## D-038 — The all-endpoints page: less title, a link into the Gabe Universe, the non-actionable text behind a toggle
+Date: 2026-09-23 · Input: his message after opening the page.
+Decision, his: "in the top section on the one endpoint, we reduce the amount of title that we have there. We have a [Gabe]
+universe in place … already running … Let's use that to be able to produce the same kind of link that we have for the endpoint
+lab, but for the Gabe universe. That way, I can check in the endpoint lab or the Gabe universe what is being shown. I can also
+compare against the actual universe to see if our aggregate description of the [Gabe] universe matches the actual [display] in
+the [Gabe] universe and the titles and description in general. Whatever is not actionable, let's hide it in a toggle button
+next to the title in one endpoint and also in the endpoints. For the endpoints, I want to hide whatever is above it, like the
+description of the title. All 80 endpoints, not justified, one row each."
+Consequence: the station gains a `?node=<id>` deep link (both copies of gabe-universe.html; its battery proves it fires on a
+real endpoint and stays silent on an unknown id), and ONE ENDPOINT links to it beside the lab link. Each section's title
+carries one toggle; everything that is not a control, a value or a link — ledes, column descriptions, the build command, the
+head line — sits behind it, closed by default. "All 80 endpoints, not justified, one row each" asks for NO change: the agent
+first read it as "every endpoint at once, one unwrapped line each"; asked, he answered "Nothing — leave the table as it was"
+(2026-09-23). The table stays as D-034/D-036 left it.
+Revisit if: a hidden line turns out to be one he reads every time — it comes back to the face.

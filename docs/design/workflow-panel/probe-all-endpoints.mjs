@@ -253,9 +253,10 @@ ok(labSha() === LAB0, 'the lab\'s own facts file is untouched by the sample');
   const z = await p.evaluate(() => { const c = document.querySelector('#board tr.row [data-col="request"][data-v="0"]'); if (!c) return null;
     c.dispatchEvent(new MouseEvent('mouseover', { bubbles: true })); return document.getElementById('tip').textContent; });
   ok(z && z.includes(D.words.cols.request.zero), 'a zero cell\'s hover carries its reason on screen', z);
-  const txt = await p.evaluate(() => document.body.innerText);
+  // CHANGED 2026-09-23 (D-038): the head line sits behind THE ENDPOINTS' toggle — counted with the toggle open
+  const txt = await p.evaluate(() => { document.getElementById('itog-board').click(); const t = document.body.innerText; document.getElementById('itog-board').click(); return t; });
   const heads = (txt.match(new RegExp(D.tok.head, 'g')) || []).length;
-  ok(heads === 1, 'the page says its head once', heads);
+  ok(heads === 1, 'the page says its head once (behind the toggle)', heads);
   ok(txt.includes(D.tok.app), 'the page names the app'); }
 
 /* 5b · a group row: endings add up, a shared thing is counted once — recomputed from its members for every group */
@@ -296,7 +297,7 @@ ok(labSha() === LAB0, 'the lab\'s own facts file is untouched by the sample');
   const ep = 'POST /setup/complete'; await p.click('#board tr.row[data-ep="' + ep + '"] td.id'); await p.waitForTimeout(80);
   // CHANGED 2026-09-23 (D-036): the side panel is gone — a row click fills the ONE-ENDPOINT section below the table and the address
   ok(!(await p.$('#side, aside.side')), 'no side panel is drawn on the page');
-  const side = await p.evaluate(() => ({ h: document.querySelector('#onehead h3').textContent, n: document.getElementById('n-one').textContent, search: window.location.search,
+  const side = await p.evaluate(() => ({ h: document.querySelector('#onehead h3').textContent, n: document.querySelector('#onehead h3').textContent, search: window.location.search,
     cmd: (document.getElementById('labcmd') || {}).textContent || '', href: document.getElementById('lablink') ? document.getElementById('lablink').getAttribute('href') : '' }));
   const slugOf = require(path.join(HERE, '_ep-slug.js')).slug;
   ok(side.h.replace(/\s+/g, '') === ep.replace(/\s+/g, '') && side.n === ep, 'a row click fills the endpoint section with the row clicked', side);
@@ -307,6 +308,19 @@ ok(labSha() === LAB0, 'the lab\'s own facts file is untouched by the sample');
   ok(side.cmd.includes('"' + ep + '"') && side.cmd.includes('--forms') && side.cmd.includes('gen-endpoint-set.py --only') && !side.cmd.includes('gen-endpoint-facts.py'),
     'the endpoint section gives the command that builds this endpoint\'s lab file, never one that rewrites the lab\'s own', side.cmd);
   ok(side.href === 'endpoint-lab.html?ep=' + slugOf(ep), 'the endpoint section links the lab on this endpoint, by the one slug rule', side.href);
+  /* D-038: the Gabe Universe link — the example station's ?node=<the row's id>, by a RELATIVE path (Windows Chrome over wsl.localhost) */
+  const UNI_REL = '../../../templates/center/shell/example/codebase-graph-station/gabe-universe.html';
+  const uh = await p.getAttribute('#unilink', 'href');
+  ok(uh === UNI_REL + '?node=' + encodeURIComponent('endpoint:' + ep) && fs.existsSync(path.resolve(path.dirname(PAGE), UNI_REL)),
+    'the universe link opens the example station on ?node= with the row\'s id, by a relative path to a file that exists', uh);
+  /* D-038: with the toggle closed the ONE ENDPOINT face holds no paragraph text; the toggle opens it and closes it again */
+  const faceText = () => p.evaluate(() => [...document.querySelectorAll('#sec-one p, #sec-one pre, #sec-one .ainfo, #sec-board .ainfo, #sec-board .ainfo *')].filter((e) => e.offsetParent !== null && e.textContent.trim()).map((e) => e.id || e.className));
+  const closed = await faceText();
+  ok(!closed.length && (await p.getAttribute('#itog-one', 'aria-expanded')) === 'false', 'with the toggles closed, no paragraph text is on the face of either section', closed);
+  await p.click('#itog-one'); await p.click('#itog-board'); await p.waitForTimeout(40);
+  const opened = await faceText();
+  ok(['one-lede', 'labcmd', 'lede', 'keys'].every((id) => opened.includes(id)), 'the toggles show what they hid', opened);
+  await p.click('#itog-one'); await p.click('#itog-board'); await p.waitForTimeout(40);
   await shot('one-endpoint');
   const full = await p.evaluate(() => { document.getElementById('more-btn').click(); return document.body.innerText; });
   ok(!/\b(door|doors|lock|locks)\b/i.test(full), 'no string on the page says a word D-018 took out', (full.match(/.{30}\b(door|lock)s?\b.{30}/i) || [''])[0]);
@@ -323,7 +337,8 @@ ok(labSha() === LAB0, 'the lab\'s own facts file is untouched by the sample');
   ok(await p.evaluate(() => window.__allep.state.lay === 'two'), 'the rail is remembered across a reload');
   await pick('lay', 'rows'); }
 
-/* 6b · the column names stay on screen while a person reads down a column: the page scrolled past the board's top, the board scrolled too */
+/* 6b · the column names stay on screen while a person reads down a column: the page scrolled past the board's top, the board scrolled too.
+   (2026-09-23: the table keeps its own scroll box — he asked for no change to the table, D-038) */
 { await p.evaluate(() => { const bd = document.getElementById('board'); window.scrollTo(0, 0); window.scrollTo(0, bd.getBoundingClientRect().top + 400); bd.scrollTop = 600; });
   const settle = (cond) => p.waitForFunction(cond, null, { timeout: 3000 }).catch(() => {});   /* a scroll event lands on the next frame, which a heavy table can delay */
   await settle(() => { const b0 = document.querySelector('#board thead tr.bh th.bstart'); return Math.abs(b0.getBoundingClientRect().top) <= 4; });
@@ -519,13 +534,13 @@ const INVENTORY = path.join(REPO, 'docs/design/design-context/inventory-endpoint
   ok(await p.evaluate(() => { const m = document.getElementById('sec-more'), all = [...document.querySelectorAll('.artifact-page *')];
     return all.filter((x) => x.offsetParent !== null && !m.contains(x) && (m.compareDocumentPosition(x) & Node.DOCUMENT_POSITION_FOLLOWING)).length === 0; }), 'nothing on the page is drawn after more information');
   /* a cold start shows the first row drawn */
-  const c9 = await p.evaluate(() => ({ first: document.querySelector('#board tr.row[data-ep]').getAttribute('data-ep'), open: window.__allep.state.open, n: document.getElementById('n-one').textContent,
+  const c9 = await p.evaluate(() => ({ first: document.querySelector('#board tr.row[data-ep]').getAttribute('data-ep'), open: window.__allep.state.open, n: document.querySelector('#onehead h3').textContent,
     sel: [...document.querySelectorAll('#board tr.row[data-sel="true"]')].map((e) => e.getAttribute('data-ep')) }));
   ok(c9.open === c9.first && c9.n === c9.first && c9.sel.length === 1 && c9.sel[0] === c9.first, 'a cold start shows the table\'s first row in the endpoint section, and marks that row', c9);
   /* ?ep= on load picks that row; a slug the page does not hold says so and shows the first row */
   const ADDR = 'GET /recipe-creation/gustify/stream';
   await p.goto('file://' + PAGE + '?ep=' + slug9(ADDR)); await p.waitForFunction('window.__allep && window.__allep.ready');
-  const a9 = await p.evaluate(() => ({ open: window.__allep.state.open, n: document.getElementById('n-one').textContent, sel: [...document.querySelectorAll('#board tr.row[data-sel="true"]')].map((e) => e.getAttribute('data-ep')),
+  const a9 = await p.evaluate(() => ({ open: window.__allep.state.open, n: document.querySelector('#onehead h3').textContent, sel: [...document.querySelectorAll('#board tr.row[data-sel="true"]')].map((e) => e.getAttribute('data-ep')),
     note: !document.getElementById('onenote').hidden }));
   ok(a9.open === ADDR && a9.n === ADDR && a9.sel.join() === ADDR && !a9.note, 'an address that names an endpoint opens the page on it', a9);
   await p.goto('file://' + PAGE + '?ep=no-such-endpoint'); await p.waitForFunction('window.__allep && window.__allep.ready');
@@ -661,7 +676,7 @@ const INVENTORY = path.join(REPO, 'docs/design/design-context/inventory-endpoint
   const SAMPLE9 = ['POST /setup/complete', 'GET /recipes', 'GET /recipe-creation/gustify/stream', 'DELETE /', 'GET /healthz', 'PATCH /pantry/items/{item_id}'].filter((x) => FEED.includes(x));
   for (const ep of SAMPLE9) {
     await p.click('#board tr.row[data-ep="' + ep + '"] td.id'); await p.waitForTimeout(60);
-    const dom = await p.evaluate(() => ({ n: document.getElementById('n-one').textContent, search: window.location.search,
+    const dom = await p.evaluate(() => ({ n: document.querySelector('#onehead h3').textContent, search: window.location.search,
       uni: [...document.querySelectorAll('#ocol-uni .urow')].map((u) => ({ row: u.getAttribute('data-row'), count: (u.querySelector('.ut b') || {}).textContent || null, v: u.querySelector('.uv').textContent, icon: (u.querySelector('.ui svg') || {}).innerHTML || '' })),
       /* changed 2026-09-23 (review finding 3/4): an attribute the card shows only in part is drawn in the column too, marked
          data-part — the whole gaps are the ones without that mark, and they are compared as before */

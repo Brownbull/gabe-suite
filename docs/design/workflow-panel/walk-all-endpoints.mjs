@@ -41,6 +41,11 @@ say('rails at load', await p.$$eval('.rgrp', (gs) => gs.map((g) => (g.querySelec
   const on = o.getAttribute('aria-checked') === 'true', dash = getComputedStyle(o).borderTopStyle === 'dashed', w = o.getAttribute('aria-label');
   return (on ? '[' : '') + (dash ? '{' + w + '}' : w) + (on ? ']' : ''); }).join(' | '))));
 await pic('cold-load');
+// D-038: the toggle beside THE ENDPOINTS' title shows what sits above the table that is not a control, and hides it again
+await step('endpoints-info-open', '#itog-board', 'the info toggle beside THE ENDPOINTS');
+say('endpoints info shown', await p.$$eval('#info-board p', (ps) => ps.filter((e) => e.offsetParent).map((e) => e.textContent.slice(0, 60))));
+await p.evaluate(() => window.scrollTo(0, 0)); await pic('endpoints-info-shown');
+await step('endpoints-info-close', '#itog-board', 'the same toggle, again');
 const railClip = async () => { const r = await (await p.$('#rail')).boundingBox(); return { x: Math.max(0, r.x - 8), y: Math.max(0, r.y - 8), width: Math.min(W - 1, r.width + 16), height: r.height + 16 }; };
 await pic('the-rail', await railClip());
 { // hover one square with the real mouse: its words appear, short
@@ -71,7 +76,7 @@ say('rows at load', await rows());
   await pic('the-table-by-wheel'); say('board top after wheel', Math.round((await bd.boundingBox()).y)); }
 // wheel INSIDE the board: its header must stay on top OF THE SCREEN while the rows move under it, even when the wheel has also
 // carried the page past the board's top (the log says whether the column names were on screen when the photo was taken)
-{ const bd = await p.$('#board'), bx = await bd.boundingBox(); await p.mouse.move(bx.x + bx.width / 2, Math.min(H - 60, Math.max(60, bx.y + 300))); for (let i = 0; i < 12; i++) { await p.mouse.wheel(0, 120); await wait(40); } await wait(200);
+{ const bd = await p.$('#board'), bx = await bd.boundingBox(); await p.mouse.move(bx.x + bx.width / 2, Math.min(H - 60, Math.max(60, bx.y + 300))); for (let i = 0; i < 5; i++) { await p.mouse.wheel(0, 120); await wait(40); } await wait(200);   /* D-038: the page scrolls now, so a short wheel keeps the photo inside the table */
   const hdr = await p.evaluate(() => { const h = document.querySelector('#board thead tr.ch th[data-col]'), bd = document.getElementById('board'); return { head: Math.round(h.getBoundingClientRect().top), board: Math.round(bd.getBoundingClientRect().top), scrolled: bd.scrollTop }; });
   hdr.onScreen = hdr.head >= 0 && hdr.head < 120;
   say('header while the board scrolls', hdr); await pic('header-stays-on-top'); }
@@ -117,6 +122,11 @@ say('endpoint section', { title: await txt('#onehead h3'), address: await p.eval
   universe: await p.$$eval('#ocol-uni .urow', (us) => us.map((u) => u.innerText.replace(/\s+/g, ' ').slice(0, 90))),
   gaps: await p.$$eval('#ocol-gaps .gap', (gs) => gs.map((g) => g.textContent)) });
 await onePic('one-endpoint-three-columns');
+// D-038: the face of ONE ENDPOINT is its title, the method and path, two links and the toggle; the toggle shows the rest, then hides it
+await step('one-info-open', '#itog-one', 'the info toggle beside ONE ENDPOINT');
+say('one endpoint info shown', await p.$$eval('#sec-one .ainfo', (xs) => xs.filter((e) => e.offsetParent).map((e) => (e.id || e.className) + ': ' + e.textContent.replace(/\s+/g, ' ').slice(0, 70))));
+await onePic('one-endpoint-info-shown');
+await step('one-info-close', '#itog-one', 'the same toggle, again');
 { // point at the first gap with the real mouse: the code-map pairs that hold it light up
   const g = await p.$('#ocol-gaps .gap'); await g.scrollIntoViewIfNeeded(); const bx = await g.boundingBox();
   await p.mouse.move(bx.x + 10, bx.y + bx.height / 2); await wait(250);
@@ -127,6 +137,13 @@ await onePic('one-endpoint-three-columns');
   await p.waitForLoadState('load'); await wait(1500);
   say('the lab opened', { url: p.url().replace(/^.*\//, ''), lede: await p.evaluate(() => { const e = document.getElementById('ledebench'); return e ? e.textContent : null; }) });
   await pic('the-lab-on-this-endpoint');
+  await p.goBack(); await p.waitForFunction('window.__allep && window.__allep.ready', { timeout: 20000 }); await wait(200);
+  say('back on the page', { open: await p.evaluate(() => window.__allep.state.open), address: await p.evaluate(() => window.location.search) }); }
+{ // the Gabe Universe link: a real click opens the example station on this endpoint (?node=), its card open; then back
+  await step('open-in-the-universe', '#unilink', 'the universe link');
+  await p.waitForLoadState('load'); await p.waitForFunction('window.__nodeDone === true', null, { timeout: 30000 }).catch(() => {}); await wait(4000);
+  say('the station opened', { url: p.url().replace(/^.*\//, ''), node: await p.evaluate(() => window.__node || null), selected: await p.evaluate(() => window.__nodeDone === true) });
+  await pic('the-universe-on-this-endpoint');
   await p.goBack(); await p.waitForFunction('window.__allep && window.__allep.ready', { timeout: 20000 }); await wait(200);
   say('back on the page', { open: await p.evaluate(() => window.__allep.state.open), address: await p.evaluate(() => window.location.search) }); }
 { // the streaming endpoint: its station card draws the flag that walls it, so a switch and an own guard are shown in part

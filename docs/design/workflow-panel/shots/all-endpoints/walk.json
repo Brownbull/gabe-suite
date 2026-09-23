@@ -21,16 +21,56 @@
    ]
   ],
   [
+   "step 2 · endpoints-info-open",
+   {
+    "click": "show what this section is",
+    "at": [
+     230,
+     70
+    ],
+    "size": [
+     26,
+     26
+    ],
+    "note": "the info toggle beside THE ENDPOINTS"
+   }
+  ],
+  [
+   "endpoints info shown",
+   [
+    "every endpoint of one app, side by side",
+    "Each row is one endpoint. Each column is one attribute of th",
+    "This page is a proposal. Which attributes became columns and",
+    "gustify at head 05007957 · 80 endpoints in its feed",
+    "Click a column header to sort by it, again to reverse it. Cl"
+   ]
+  ],
+  [
+   "step 4 · endpoints-info-close",
+   {
+    "click": "hide what this section is",
+    "at": [
+     230,
+     70
+    ],
+    "size": [
+     26,
+     26
+    ],
+    "note": "the same toggle, again"
+   }
+  ],
+  [
    "hover on a square",
    "ending labelsEndpoints with the same ending labels sit together, so clones group."
   ],
   [
-   "step 5 · shared-marked-by-a-rule",
+   "step 8 · shared-marked-by-a-rule",
    {
     "click": "a strong rule",
     "at": [
      985,
-     450
+     143
     ],
     "size": [
      32,
@@ -40,12 +80,12 @@
    }
   ],
   [
-   "step 7 · shared-marked-by-a-frame",
+   "step 10 · shared-marked-by-a-frame",
    {
     "click": "a frame",
     "at": [
      1022,
-     450
+     143
     ],
     "size": [
      32,
@@ -55,12 +95,12 @@
    }
   ],
   [
-   "step 9 · shared-back-to-the-band",
+   "step 12 · shared-back-to-the-band",
    {
     "click": "a tinted band",
     "at": [
      948,
-     450
+     143
     ],
     "size": [
      32,
@@ -74,12 +114,12 @@
    "dark"
   ],
   [
-   "step 11 · dark-table-pick-rule",
+   "step 14 · dark-table-pick-rule",
    {
     "click": "a strong rule",
     "at": [
      985,
-     450
+     143
     ],
     "size": [
      32,
@@ -89,12 +129,12 @@
    }
   ],
   [
-   "step 13 · dark-table-pick-box",
+   "step 16 · dark-table-pick-box",
    {
     "click": "a frame",
     "at": [
      1022,
-     450
+     143
     ],
     "size": [
      32,
@@ -104,12 +144,12 @@
    }
   ],
   [
-   "step 15 · dark-table-back-to-the-band",
+   "step 18 · dark-table-back-to-the-band",
    {
     "click": "a tinted band",
     "at": [
      948,
-     450
+     143
     ],
     "size": [
      32,
@@ -128,19 +168,19 @@
   ],
   [
    "board top after wheel",
-   345
+   278
   ],
   [
    "header while the board scrolls",
    {
     "head": 40,
-    "board": -855,
+    "board": -322,
     "scrolled": 905,
     "onScreen": true
    }
   ],
   [
-   "step 18 · sort-by-tables",
+   "step 21 · sort-by-tables",
    {
     "click": "tables",
     "at": [
@@ -159,7 +199,7 @@
    "sorted by tables ↑"
   ],
   [
-   "step 20 · sort-again-reverses",
+   "step 23 · sort-again-reverses",
    {
     "click": "tables ↑",
     "at": [
@@ -178,7 +218,7 @@
    "sorted by tables ↓"
   ],
   [
-   "step 21 · back-to-path-order",
+   "step 24 · back-to-path-order",
    {
     "click": "back to path order",
     "at": [
@@ -193,7 +233,7 @@
    }
   ],
   [
-   "step 22 · light-a-strip-piece",
+   "step 25 · light-a-strip-piece",
    {
     "click": "",
     "at": [
@@ -216,12 +256,12 @@
    26
   ],
   [
-   "step 24 · clear-the-light",
+   "step 27 · clear-the-light",
    {
     "click": "clear",
     "at": [
      403,
-     530
+     239
     ],
     "size": [
      37,
@@ -231,12 +271,12 @@
    }
   ],
   [
-   "step 25 · group-by-ending-labels",
+   "step 28 · group-by-ending-labels",
    {
     "click": "ending labels",
     "at": [
      271,
-     434
+     143
     ],
     "size": [
      32,
@@ -266,12 +306,12 @@
    ]
   ],
   [
-   "step 27 · three-per-row",
+   "step 30 · three-per-row",
    {
     "click": "3 per row",
     "at": [
      106,
-     434
+     143
     ],
     "size": [
      32,
@@ -285,12 +325,12 @@
    80
   ],
   [
-   "step 30 · cards-pick-rule",
+   "step 33 · cards-pick-rule",
    {
     "click": "a strong rule",
     "at": [
      985,
-     434
+     143
     ],
     "size": [
      32,
@@ -300,12 +340,12 @@
    }
   ],
   [
-   "step 32 · cards-pick-box",
+   "step 35 · cards-pick-box",
    {
     "click": "a frame",
     "at": [
      1022,
-     434
+     143
     ],
     "size": [
      32,
@@ -315,12 +355,12 @@
    }
   ],
   [
-   "step 34 · cards-back-to-the-band",
+   "step 37 · cards-back-to-the-band",
    {
     "click": "a tinted band",
     "at": [
      948,
-     434
+     143
     ],
     "size": [
      32,
@@ -334,12 +374,12 @@
    "dark"
   ],
   [
-   "step 36 · dark-cards-pick-rule",
+   "step 39 · dark-cards-pick-rule",
    {
     "click": "a strong rule",
     "at": [
      985,
-     434
+     143
     ],
     "size": [
      32,
@@ -349,12 +389,12 @@
    }
   ],
   [
-   "step 38 · dark-cards-pick-box",
+   "step 41 · dark-cards-pick-box",
    {
     "click": "a frame",
     "at": [
      1022,
-     434
+     143
     ],
     "size": [
      32,
@@ -364,12 +404,12 @@
    }
   ],
   [
-   "step 40 · dark-cards-back-to-the-band",
+   "step 43 · dark-cards-back-to-the-band",
    {
     "click": "a tinted band",
     "at": [
      948,
-     434
+     143
     ],
     "size": [
      32,
@@ -383,12 +423,12 @@
    "light"
   ],
   [
-   "step 41 · open-a-card",
+   "step 44 · open-a-card",
    {
     "click": "/",
     "at": [
      101,
-     712
+     421
     ],
     "size": [
      7,
@@ -400,18 +440,18 @@
   [
    "endpoint section",
    {
-    "title": "GET/",
+    "title": "GET /",
     "address": "?ep=get",
     "scrolledTo": 0
    }
   ],
   [
-   "step 43 · one-per-row",
+   "step 46 · one-per-row",
    {
     "click": "one per row",
     "at": [
      32,
-     450
+     143
     ],
     "size": [
      32,
@@ -421,12 +461,12 @@
    }
   ],
   [
-   "step 44 · group-by-entity",
+   "step 47 · group-by-entity",
    {
     "click": "entity",
     "at": [
      160,
-     450
+     143
     ],
     "size": [
      32,
@@ -436,7 +476,7 @@
    }
   ],
   [
-   "step 45 · click-a-row",
+   "step 48 · click-a-row",
    {
     "click": "POST/setup/complete",
     "at": [
@@ -453,29 +493,29 @@
   [
    "endpoint section",
    {
-    "title": "POST/setup/complete",
+    "title": "POST /setup/complete",
     "address": "?ep=post-setup-complete",
     "columns": [
      [
       "ocol-uni",
       32,
-      330,
+      53,
       561,
-      1336
+      1288
      ],
      [
       "ocol-gaps",
       607,
-      330,
+      53,
       331,
-      1015
+      888
      ],
      [
       "ocol-cm",
       953,
-      330,
+      53,
       935,
-      3202
+      3174
      ]
     ],
     "universe": [
@@ -523,6 +563,45 @@
    }
   ],
   [
+   "step 50 · one-info-open",
+   {
+    "click": "show what this section is",
+    "at": [
+     221,
+     2
+    ],
+    "size": [
+     26,
+     26
+    ],
+    "note": "the info toggle beside ONE ENDPOINT"
+   }
+  ],
+  [
+   "one endpoint info shown",
+   [
+    "info-one: setup_complete · apps/api/api/setup.py:183 · authThe endpoint picked i",
+    "plain ainfo: The card the station draws for this endpoint as it opens (the Surface ",
+    "plain ainfo: Attributes of the card the code map holds something for here, that no ",
+    "plain ainfo: What the code map knows about this endpoint, under the card's blocks: "
+   ]
+  ],
+  [
+   "step 52 · one-info-close",
+   {
+    "click": "hide what this section is",
+    "at": [
+     221,
+     2
+    ],
+    "size": [
+     26,
+     26
+    ],
+    "note": "the same toggle, again"
+   }
+  ],
+  [
    "pointing at a gap",
    {
     "gap": "The endings",
@@ -534,16 +613,16 @@
    }
   ],
   [
-   "step 48 · open-in-the-lab",
+   "step 54 · open-in-the-lab",
    {
     "click": "open POST /setup/complete in the lab",
     "at": [
-     651,
-     47
+     480,
+     0
     ],
     "size": [
-     312,
-     35
+     64,
+     30
     ],
     "note": "the open-in-the-lab link"
    }
@@ -563,12 +642,42 @@
    }
   ],
   [
-   "step 50 · click-the-stream-row",
+   "step 56 · open-in-the-universe",
+   {
+    "click": "open POST /setup/complete in the Gabe Universe",
+    "at": [
+     554,
+     0
+    ],
+    "size": [
+     101,
+     30
+    ],
+    "note": "the universe link"
+   }
+  ],
+  [
+   "the station opened",
+   {
+    "url": "gabe-universe.html?node=endpoint%3APOST%20%2Fsetup%2Fcomplete",
+    "node": "endpoint:POST /setup/complete",
+    "selected": true
+   }
+  ],
+  [
+   "back on the page",
+   {
+    "open": "POST /setup/complete",
+    "address": "?ep=post-setup-complete"
+   }
+  ],
+  [
+   "step 58 · click-the-stream-row",
    {
     "click": "GET/recipe-creation/gustify/stream",
     "at": [
      33,
-     980
+     673
     ],
     "size": [
      224,
@@ -580,7 +689,7 @@
   [
    "endpoint section",
    {
-    "title": "GET/recipe-creation/gustify/stream",
+    "title": "GET /recipe-creation/gustify/stream",
     "plain": "The card the station draws for this endpoint as it opens (the Surface tier, functions hidden), row by row, in the station's order.",
     "universe": [
      "HEAD GET /recipe-creation/gustify/stream · API endpoint · recipe",
@@ -630,7 +739,7 @@
    }
   ],
   [
-   "step 53 · more-information",
+   "step 61 · more-information",
    {
     "click": "Show how the map knows this",
     "at": [
