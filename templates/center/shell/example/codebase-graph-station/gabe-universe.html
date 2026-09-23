@@ -4193,7 +4193,7 @@ window.__uniScaleGuard=function(){ var n=(typeof nodes!=="undefined"&&nodes)?nod
   window.__uniBudgetHit={nodes:n, budget:b}; if(window.__uniSetTier){ try{ __uniSetTier(0); }catch(e){} }   /* tier 0 only — the capsule fold left with its option (2026-09-07) */
   try{ console.info("gabe-universe: "+n+" nodes > budget "+b+" — booted at tier 0 (Skeleton); raise window.__uniBudget to draw more"); }catch(e){} return true; };
 window.__uniApplyDeepLinks=function(){   /* the ENTITY MODEL is applied FIRST (so ?ent= resolves against its clusters) · ?journey=<name|cid> opens ONE walk · ?ent=<slug> opens that entity's panel — the ramp-up's "one trace per session" (review 2026-09-06) */
-  var jv=window.__jrn, ev=window.__ent;
+  var jv=window.__jrn, ev=window.__ent, nv=window.__node;   /* ?node=<id> (e.g. endpoint:POST /setup/complete) selects ONE node and opens its card — the design pages link here to compare what the station shows (D-038) */
   /* SETTLED 2026-09-07 (operator): no ?model=, no stored key, no pill. The station always shows `seeded`.
      The NAMES strategy and the FRONTEND MARK lost their choosers in the same ruling — __uniStrategy() and
      __uniConvention() now read the FEED's own defaults every time, which is the naming strategy the emitter
@@ -4204,7 +4204,8 @@ window.__uniApplyDeepLinks=function(){   /* the ENTITY MODEL is applied FIRST (s
     if(_want&&_want!=="claim"){ try{ if(!_applyEntityModel(_want,{noStore:true})) console.info("gabe-universe: the settled entity model \""+_want+"\" is not on this feed — showing the claim registry (regen the centre to weigh the other three)"); }catch(e){} } }
   if(jv && !window.__jrnDone){ window.__jrnDone=true; try{ var lv=String(jv).toLowerCase(); var j=_jrnCollect().filter(function(x){ return x.cid===jv || String(x.name||"").toLowerCase()===lv; })[0];
     if(j) __uniJrnStart(j.cid); else console.info("gabe-universe: ?journey="+jv+" names no journey (workflows tab lists them)"); }catch(e){} }
-  if(ev && !window.__entDone){ window.__entDone=true; try{ if(window.__uniPanelEnt) __uniPanelEnt(ev); }catch(e){} } };
+  if(ev && !window.__entDone){ window.__entDone=true; try{ if(window.__uniPanelEnt) __uniPanelEnt(ev); }catch(e){} }
+  if(nv && !window.__nodeDone){ window.__nodeDone=true; try{ if(typeof NIDS!=="undefined" && NIDS[nv] && window.__uniGoto) __uniGoto(nv); else console.info("gabe-universe: ?node="+nv+" names no node on this feed"); }catch(e){} } };
 window.UNICAP={ on:false, threshold:80, open:{} };   // DEFAULT OFF and NEVER WRITTEN since 2026-09-07 (the CAPSULES option was dropped — operator): simplification is the tier control; the fold machinery is dormant
 var _CAPST=null;   // {nodes:[...], links:[...], caps:[capIds], byPiece:{pieceId:capId}}
 window.__uniApplyCapsules=function(){ try{
@@ -6611,7 +6612,7 @@ buildLegend(); palLoop();   // legend renders now (placeholders); thumbnails pai
   ["iso","sub","entNodeR","entTubeR","subNodeR","subTubeR","entRes","subRes","every"].forEach(function(k){ var v=q.get("w"+k); if(v!=null) WRAPCFG[k]=+v; });
   var ep=q.get("enc"); if(ep&&PRESETS[ep]){ applyPreset(ep); buildExpl(); }
   var hb=q.get("heatBy"); if(hb){ ENC.heatBy=hb; } var cm=q.get("cmode"); if(cm){ ENC.color=cm; buildExpl(); } var sp=q.get("speed"); if(sp!=null){ ENC.speed=+sp; buildExpl(); }
-  window.__drive=q.get("drive"); window.__panel=q.get("panel"); window.__link=q.get("link"); window.__cam=q.get("cam"); window.__jrn=q.get("journey"); window.__ent=q.get("ent");   /* ?model= / ?naming= / ?feconv= are no longer read: all three choosers were settled away 2026-09-07 (the model is always `seeded`; the naming strategy and the `case` mark come from the feed) */
+  window.__drive=q.get("drive"); window.__panel=q.get("panel"); window.__link=q.get("link"); window.__cam=q.get("cam"); window.__jrn=q.get("journey"); window.__ent=q.get("ent"); window.__node=q.get("node");   /* ?model= / ?naming= / ?feconv= are no longer read: all three choosers were settled away 2026-09-07 (the model is always `seeded`; the naming strategy and the `case` mark come from the feed) */
   if(changed && document.getElementById("cfg")){ buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniAddFocusCfg) __uniAddFocusCfg(); if(window.__uniFleetSync) __uniFleetSync(); } })();
 buildExpl();   // build the encode panel now that DIMR/drow exist
 preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); (window.__uniAssignSplit?__uniAssignSplit():assignSub(CFG.coreByBE||"kind")); recomputeSubAnchors(); }catch(e){} build(); try{ if(window.__uniComputeSolo) __uniComputeSolo(); }catch(e){} try{ __uniSetupOrbit(); }catch(e){} setTimeout(function(){ try{ if(window.__uniSetKindState) __uniSetKindState("function","critical"); }catch(e){} if(window.__uniApplyCapsules) __uniApplyCapsules(); if(window.__uniSetTier){ try{ __uniSetTier(1); }catch(e){} } if(window.__uniScaleGuard){ try{ __uniScaleGuard(); }catch(e){} } if(window.__uniApplyDeepLinks){ try{ __uniApplyDeepLinks(); }catch(e){} } if(window.__uniCamFit) __uniCamFit(0); }, 400); window.__spikeKindsReady=true; loadShips(); });   // load the ship/sat GLBs → onShipsReady() repaints fleets
