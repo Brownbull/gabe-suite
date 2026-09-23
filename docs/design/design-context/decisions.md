@@ -426,3 +426,58 @@ they stand out is built as options and decided by seeing (D-025.2).
 Consequence: the page's rail shrinks to titles + icon squares; the Shared group's header (and its cells) carry a distinct
 treatment; the probe asserts his five defaults, the dashed mark on exactly the unruled picks, and every icon's hover.
 Revisit if: an icon square cannot be told from its neighbours at a glance — then that option gets a short word beside it.
+
+## D-035 — The endpoint lab: the section map lives below, simpler and in icons, and the lab switches endpoints
+Date: 2026-09-23 · Input: his message with a screenshot of the lab (the section map full width below the panels) and a
+hand-drawn sketch.
+Decision, his: "In the endpoint lab, I would like to: Consolidate the layout we have in the image. Leave the section map in
+the bottom section and remove it from the top-left section selector, where we have the controls and the [no-loss] list.
+Restructure it to be more simplified and use more icons. Right now, I cannot understand what is happening in that section
+map. Be able to change the endpoint for any of the other endpoints that we have here in the all endpoints.html file."
+(Dictated; "now list" read as the no-loss list, the rail's second tab.)
+Consequence: the map's placement is RULED — full width below the panels; the rail-tab and right-column placements leave with
+the rail's "section map" tab, and the rail is back to controls · no-loss. The section map is redrawn to be read at a glance —
+icons and marks instead of sentences — and what is still the agent's choice inside it is built as options, the pick dashed
+(D-034's convention). The lab opens any of the endpoints the all-endpoints page lists, the facts for each generated the same
+way as today's one baked endpoint (never typed).
+Revisit if: the simpler map loses a fact he then asks for — it returns behind "more information", not on the face.
+
+## D-036 — The all-endpoints page: the table, then one endpoint compared three ways
+Date: 2026-09-23 · Input: the same message and his sketch ("THE ENDPOINTS · OPTIONS · a table SHARED | ENDINGS | Proof | … ·
+ENDPOINT INFO FROM GRAPH · INFO FROM CODE MAP").
+Decision, his: "the all endpoints will have just two sections: The endpoints with the table, as shown in the screenshot where I
+hand-drew everything. One specific endpoint. For whatever endpoint we select, we are showing the detail in a right-side panel.
+I would like to change that. Instead of that, I would like to see the information that we show in the right-side panel or from
+the code map in the column on the right, on the endpoint. On the left, I want us to show the information that we are showing
+today in the Gabe universe. I didn't put it, but in the middle, probably I will add a narrower third column with the gaps.
+Also, let's add icons and colors, if possible, to the different sections that we have in the table form for all the endpoints
+in the all endpoints.html file, to align it better with our controls in the endpoint lab and the sections in the all
+endpoints. For more information on what I'm looking at, they remain, but at the end or bottom of the page."
+Consequence: the page has two sections — THE ENDPOINTS (options, then the table) and ONE ENDPOINT (the row picked in the
+table): left, what the Gabe Universe shows for it today; right, what the code map knows (today's side panel); a narrow middle
+column of the gaps between them (built, and marked as the agent's reading of "the gaps" until he rules it). The table's block
+groups carry an icon and a colour, the same as the lab's parts where a block is paired to one. "More information" moves to the
+end of the page.
+Revisit if: the universe column and the code-map column cannot be read side by side at 1920 — then they stack, left above right.
+
+## D-037 — Design pages are checked lightly; the heavy proof is for what ships
+Date: 2026-09-23 · Input: his question after a build ran 253 minutes, three-quarters of it in browser tests.
+His words: "What are we gaining with these tests? What we're doing right now is not application development itself. It's just
+developing some panels for me to look at, navigate, and establish how we are going to represent the different elements in the
+Gabe universe. This is not part of the application, so I'm not sure if we are gaining much by testing that much at this stage
+in this context."
+Decision — the agent's reading of his direction, his to adjust. For the DESIGN pages (the endpoint lab, the all-endpoints
+page, the matrices, any page he looks at to decide how the universe draws an element):
+- KEEP: the numbers on a page are true — checked inside its generator, no browser, seconds (a page he reads patterns from must
+  not lie) · a SMOKE check — every page loads without a page error, and the lab opens every endpoint · ONE real-click walk at
+  the end of a build, because its pictures are what he reviews (D-025.4) · ONE read-only review only when a page shows NEW
+  numbers or claims.
+- DROP for design pages: sabotage (mutant) runs proving each check can fail · the full probe re-run after every edit · second
+  review rounds on layout polish.
+- The existing full probes are kept, not deleted, and run ONCE before a commit, not during iteration.
+- Unchanged: the suite's GENERATION code that ships (the forms arms, the station's generators, hooks) keeps its full proof —
+  batteries that fire and stay silent, mutants, dry runs (CLAUDE.md's rules).
+Why: the tests found real defects — but the ones that mattered to him (false numbers on the all-endpoints page) came from
+reviews reading the data against its source; the browser re-runs and sabotage checks mostly re-proved panels that are
+exploration, not product, at ~75% of every build's time.
+Revisit if: a design page shows him a wrong number or breaks while he is navigating it — then that page's check grows back.

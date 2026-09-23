@@ -279,7 +279,7 @@ ok(labSha() === LAB0, 'the lab\'s own facts file is untouched by the sample');
   const norm = D.rows.reduce((m, r) => { m[r.v.rate] = (m[r.v.rate] || 0) + 1; return m; }, {}), top = Object.keys(norm).sort((a, b) => norm[b] - norm[a])[0];
   ok(rt.every(([v, t]) => v === top ? t === '·' : t === v.replace(/\+/g, ' · ')), 'a rate that is not the common one is written out in full', rt.filter(([v, t]) => v !== top).slice(0, 2)); }
 
-/* 6 · sorting, lighting, the side panel, the rails */
+/* 6 · sorting, lighting, the endpoint section, the rails */
 { await p.click('#board thead th[data-col="tables"]'); await p.waitForTimeout(60);
   const vals = async () => p.evaluate(() => { const out = []; let cur = []; document.querySelectorAll('#board tbody tr').forEach((tr) => {
     if (tr.classList.contains('grow')) { cur = []; out.push(cur); } else cur.push(+tr.querySelector('[data-col="tables"]').getAttribute('data-v')); }); return out; });
@@ -294,17 +294,26 @@ ok(labSha() === LAB0, 'the lab\'s own facts file is untouched by the sample');
   ok(await p.isVisible('#litchip'), 'while rows are lit, a chip says so');
   await p.click('#litclear'); await p.waitForTimeout(40);
   const ep = 'POST /setup/complete'; await p.click('#board tr.row[data-ep="' + ep + '"] td.id'); await p.waitForTimeout(80);
-  ok(await p.isVisible('#side'), 'a row click opens the side panel');
-  const side = await p.evaluate(() => ({ h: document.querySelector('#side h3').textContent, cmd: (document.getElementById('labcmd') || {}).textContent || '' }));
-  ok(side.h.replace(/\s+/g, '') === ep.replace(/\s+/g, ''), 'the side panel is about the row clicked', side.h);
-  ok(side.cmd.includes('"' + ep + '"') && side.cmd.includes('--forms') && side.cmd.includes('gen-endpoint-facts.py'), 'the side panel gives the command that bakes the lab to this endpoint', side.cmd);
-  await shot('side');
+  // CHANGED 2026-09-23 (D-036): the side panel is gone — a row click fills the ONE-ENDPOINT section below the table and the address
+  ok(!(await p.$('#side, aside.side')), 'no side panel is drawn on the page');
+  const side = await p.evaluate(() => ({ h: document.querySelector('#onehead h3').textContent, n: document.getElementById('n-one').textContent, search: window.location.search,
+    cmd: (document.getElementById('labcmd') || {}).textContent || '', href: document.getElementById('lablink') ? document.getElementById('lablink').getAttribute('href') : '' }));
+  const slugOf = require(path.join(HERE, '_ep-slug.js')).slug;
+  ok(side.h.replace(/\s+/g, '') === ep.replace(/\s+/g, '') && side.n === ep, 'a row click fills the endpoint section with the row clicked', side);
+  ok(side.search === '?ep=' + slugOf(ep), 'a row click writes the endpoint into the address, by the one slug rule', side.search);
+  // CHANGED 2026-09-23 (D-035): the lab opens any endpoint through ?ep=, so the panel no longer hands a command that rewrites the
+  // lab's own facts file (gen-endpoint-facts.py over _lab-ep.js) — it links the lab on this endpoint and names the command that
+  // builds that endpoint's file (gen-endpoint-set.py --only); the slug is _ep-slug.js's, the rule the lab reads too.
+  ok(side.cmd.includes('"' + ep + '"') && side.cmd.includes('--forms') && side.cmd.includes('gen-endpoint-set.py --only') && !side.cmd.includes('gen-endpoint-facts.py'),
+    'the endpoint section gives the command that builds this endpoint\'s lab file, never one that rewrites the lab\'s own', side.cmd);
+  ok(side.href === 'endpoint-lab.html?ep=' + slugOf(ep), 'the endpoint section links the lab on this endpoint, by the one slug rule', side.href);
+  await shot('one-endpoint');
   const full = await p.evaluate(() => { document.getElementById('more-btn').click(); return document.body.innerText; });
   ok(!/\b(door|doors|lock|locks)\b/i.test(full), 'no string on the page says a word D-018 took out', (full.match(/.{30}\b(door|lock)s?\b.{30}/i) || [''])[0]);
   const small = await p.evaluate(() => { const bad = []; document.querySelectorAll('body *').forEach((e) => { if (!e.offsetParent && e.tagName !== 'BODY') return;
     const own = [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()); if (!own) return; const fs = parseFloat(getComputedStyle(e).fontSize); if (fs < 12) bad.push(e.tagName + '.' + e.className + ' ' + fs); }); return bad; });
   ok(!small.length, 'no visible text under the 12px floor', small.slice(0, 4));
-  await p.keyboard.press('Escape'); await p.waitForTimeout(40); ok(!(await p.isVisible('#side')), 'Escape closes the side panel');
+  // REMOVED 2026-09-23 (D-036): "Escape closes the side panel" — there is no panel to close; the section stays on the page
   const picks = await p.evaluate(() => [...document.querySelectorAll('.rgrp')].map((g) => g.querySelectorAll('.opt[data-pick], .opt[data-ruled]').length));
   ok(picks.length && picks.every((n) => n === 1), 'every rail marks exactly one option as its default, his or mine', picks);
   await pick('cols', 'top');
@@ -346,14 +355,17 @@ const PRISMS = path.join(REPO, 'docs/design/design-context/prisms-endpoint.json'
     out: document.getElementById('out').value.split('\n') }));
   /* the copy text's state block (the lines before the first empty one), split into his paste's lines and the Shared treatment's
      line — the one rail on the copy text he has not ruled; everything else must be his paste, line for line and in order */
-  const CL = W8.copy.lines, isSlook = (l) => l.startsWith(CL.slook + ': ');
-  const asPaste = (out) => { const blk = out.slice(0, out.indexOf('')), his = blk.filter((l) => !isSlook(l));
+  // CHANGED 2026-09-23 (D-036): the page always shows one endpoint below the table, and the copy text names it on its own line
+  // (the first row on a cold start) — set aside beside the Shared treatment's line; his paste is still compared line for line
+  const CL = W8.copy.lines, isSlook = (l) => l.startsWith(CL.slook + ': '), isEp = (l) => l.startsWith(CL.open + ': ');
+  const asPaste = (out) => { const blk = out.slice(0, out.indexOf('')), his = blk.filter((l) => !isSlook(l) && !isEp(l));
     return { blk, his, same: his.length === paste.length && his[0] === 'page: all-endpoints · ' + D.tok.app + ' @ ' + D.tok.head && JSON.stringify(his.slice(1)) === JSON.stringify(paste.slice(1)) }; };
   await open(PAGE);
   const c0 = await cold(), a0 = asPaste(c0.out);
-  ok(a0.same, 'a cold start\'s copy text is his paste line for line, with the Shared treatment\'s line set aside', { page: a0.his, his: paste });
-  const sl = a0.blk.filter(isSlook), colsAt = a0.blk.findIndex((l) => l.startsWith(CL.cols + ': '));
-  ok(sl.length === 1 && a0.blk.length === paste.length + 1 && a0.blk.indexOf(sl[0]) === colsAt + 1, 'the copy text adds one line to his paste, the Shared treatment\'s, right under the columns line', a0.blk);
+  ok(a0.same, 'a cold start\'s copy text is his paste line for line, with the Shared treatment\'s and the endpoint\'s lines set aside', { page: a0.his, his: paste });
+  const sl = a0.blk.filter(isSlook), colsAt = a0.blk.findIndex((l) => l.startsWith(CL.cols + ': ')), el0 = a0.blk.filter(isEp);
+  ok(sl.length === 1 && a0.blk.indexOf(sl[0]) === colsAt + 1, 'the copy text puts the Shared treatment\'s line right under the columns line', a0.blk);
+  ok(el0.length === 1 && a0.blk.length === paste.length + 2 && a0.blk[a0.blk.length - 1] === el0[0], 'the copy text adds one more line, the endpoint shown, last', a0.blk);
   ok(c0.sort === null, 'a cold start is in path order', c0.sort);
   /* an old remembered state, from before the ruling, must not override it */
   const OLD = { lay: 'three', grp: 'method', alone: 'own', gord: 'name', shared: 'first', bord: 'card', cols: 'top', heat: 'plain', norm: 'full', sort: { col: 'tables', dir: -1 } };
@@ -457,7 +469,9 @@ const PRISMS = path.join(REPO, 'docs/design/design-context/prisms-endpoint.json'
     const parse = (c) => { const n = c.match(/[\d.]+/g).map(Number); return c.startsWith('color(') ? n.slice(0, 3).map((x) => x * 255) : n.slice(0, 3); };
     const A = parse(rgb('var(--accent)')), C = parse(rgb('var(--card)'));
     const ground = (sel) => { const e = document.querySelector(sel); return e ? parse(getComputedStyle(e).backgroundColor) : null; };
-    const band = ground('#board tbody tr.row td.sh'), bz = ground('#board tbody tr.row td.bz:not(.sh)');
+    // CHANGED 2026-09-23 (D-036): one row is always picked now (the endpoint section shows it), and a picked row wears the
+    // accent — so the grounds are read on a row that is NOT picked, which is what every other row looks like
+    const band = ground('#board tbody tr.row:not([data-sel]) td.sh'), bz = ground('#board tbody tr.row:not([data-sel]) td.bz:not(.sh)');
     /* the hue of a TINT, read against the card it is laid on (a dark card is itself bluish): the ground's step from the card,
        its grey part removed, as an angle from the accent's step; a step with almost no colour in it is neutral (180) */
     const chroma = (x) => { const d = x.map((v, i) => v - C[i]), m = (d[0] + d[1] + d[2]) / 3; return [d.map((v) => v - m), Math.hypot(...d)]; };
@@ -493,6 +507,247 @@ const PRISMS = path.join(REPO, 'docs/design/design-context/prisms-endpoint.json'
   await shot('d034-shared-first');
   await pick('shared', 'own'); }
 ok(!errs.length, 'no page error after the D-034 checks', errs);
+
+/* 9 · D-036: two sections, the endpoint picked, the universe card as the station draws it, the gaps, the block marks, nothing lost */
+const STATION_PAGE = path.join(REPO, 'templates/center/shell/example/codebase-graph-station/gabe-universe.html');
+const INVENTORY = path.join(REPO, 'docs/design/design-context/inventory-endpoint.md');
+{ await open(PAGE);
+  const W9 = D.words, slug9 = require(path.join(HERE, '_ep-slug.js')).slug;
+  /* the page's sections, in order: the endpoints, one endpoint, the copy text, and more information LAST */
+  const secs = await p.evaluate(() => [...document.querySelectorAll('section')].map((s) => s.id));
+  ok(JSON.stringify(secs) === JSON.stringify(['sec-board', 'sec-one', 'sec-copy', 'sec-more']), 'the page is the endpoints, then one endpoint, then the copy text, then more information', secs);
+  ok(await p.evaluate(() => { const m = document.getElementById('sec-more'), all = [...document.querySelectorAll('.artifact-page *')];
+    return all.filter((x) => x.offsetParent !== null && !m.contains(x) && (m.compareDocumentPosition(x) & Node.DOCUMENT_POSITION_FOLLOWING)).length === 0; }), 'nothing on the page is drawn after more information');
+  /* a cold start shows the first row drawn */
+  const c9 = await p.evaluate(() => ({ first: document.querySelector('#board tr.row[data-ep]').getAttribute('data-ep'), open: window.__allep.state.open, n: document.getElementById('n-one').textContent,
+    sel: [...document.querySelectorAll('#board tr.row[data-sel="true"]')].map((e) => e.getAttribute('data-ep')) }));
+  ok(c9.open === c9.first && c9.n === c9.first && c9.sel.length === 1 && c9.sel[0] === c9.first, 'a cold start shows the table\'s first row in the endpoint section, and marks that row', c9);
+  /* ?ep= on load picks that row; a slug the page does not hold says so and shows the first row */
+  const ADDR = 'GET /recipe-creation/gustify/stream';
+  await p.goto('file://' + PAGE + '?ep=' + slug9(ADDR)); await p.waitForFunction('window.__allep && window.__allep.ready');
+  const a9 = await p.evaluate(() => ({ open: window.__allep.state.open, n: document.getElementById('n-one').textContent, sel: [...document.querySelectorAll('#board tr.row[data-sel="true"]')].map((e) => e.getAttribute('data-ep')),
+    note: !document.getElementById('onenote').hidden }));
+  ok(a9.open === ADDR && a9.n === ADDR && a9.sel.join() === ADDR && !a9.note, 'an address that names an endpoint opens the page on it', a9);
+  await p.goto('file://' + PAGE + '?ep=no-such-endpoint'); await p.waitForFunction('window.__allep && window.__allep.ready');
+  const b9 = await p.evaluate(() => ({ open: window.__allep.state.open, first: document.querySelector('#board tr.row[data-ep]').getAttribute('data-ep'),
+    note: document.getElementById('onenote').hidden ? '' : document.getElementById('onenote').textContent }));
+  ok(b9.open === b9.first && b9.note.includes('no-such-endpoint'), 'an address naming no endpoint shows the first row and says so', b9);
+  await open(PAGE);
+
+  /* THE UNIVERSE COLUMN, against the station itself: the example station opened beside, every endpoint selected through the
+     station's own select path, and its card read off the panel — row set, order, counts, values, icons */
+  const p2 = await ctx.newPage(); p2.on('pageerror', (e) => errs.push('station: ' + e.message));
+  await p2.goto('file://' + STATION_PAGE); await p2.waitForFunction('window.__uniGoto && window.__uniSelNode', null, { timeout: 60000 });
+  const TITLE = Object.fromEntries(D.uspec.filter((u) => u.title).map((u) => [u.title, u.row]));
+  const cards = await p2.evaluate(({ ids, TITLE }) => { const norm = (x) => x.replace(/\s+/g, ' ').trim(); const out = {};
+    for (const id of ids) { window.__uniGoto('endpoint:' + id); const pb = document.getElementById('pbody'), rows = [];
+      [...pb.children].forEach((ch) => {
+        if (ch.classList.contains('flagssec')) { rows.push({ row: 'RISK', text: norm(ch.innerText), icon: (ch.querySelector('svg') || {}).innerHTML || '' }); return; }
+        const hd = ch.querySelector(':scope > .sechd');
+        if (hd) { const title = [...hd.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('').trim(), cnt = hd.querySelector('.cnt');
+          const row = { row: TITLE[title] || '?' + title, count: cnt ? cnt.textContent : null, text: norm(ch.innerText.slice(hd.innerText.length)), icon: (hd.querySelector('svg') || {}).innerHTML || '' };
+          /* what the row draws inside it: chips, a "+N more", a green count, its lines (a chip's own label, its icon and marks aside) */
+          const lab = (c) => [...c.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('').trim();
+          const vis = (e) => e.offsetParent !== null;
+          if (row.row === 'CONNECTIONS') { row.groups = [...ch.querySelectorAll('.connbox > .sublbl')].map((sb) => { const box = sb.nextElementSibling;
+              return { head: norm(sb.innerText), chips: [...box.querySelectorAll(':scope > .xpl > .xrow > .xhead .pchip')].map(lab), more: norm((box.querySelector(':scope > .xpl > .xmore') || {}).textContent || '') }; });
+            ch.querySelectorAll('.connbox .xmore').forEach((b) => b.click());           /* every member, the ones behind "+N more" too */
+            const sbs = [...ch.querySelectorAll('.connbox > .sublbl')];
+            row.groups.forEach((g, i) => { g.all = [...sbs[i].nextElementSibling.querySelectorAll(':scope > .xpl > .xrow > .xhead .pchip')].map(lab); }); }
+          if (row.row === 'CODE BEHIND') row.chips = [...ch.querySelectorAll('.xpl > .xrow > .xhead .pchip')].map(lab), row.more = norm((ch.querySelector('.xpl > .xmore') || {}).textContent || '');
+          if (row.row === 'TESTS') row.ok = !!hd.querySelector('.cnt.ok'), row.chips = [...ch.querySelectorAll('.pchip[class*="st-"]')].filter(vis).map((c) => [lab(c), (c.className.match(/\bst-(\w+)/) || [])[1]]);
+          if (row.row === 'ACCESSES') row.lines = [...ch.querySelectorAll(':scope > div:not(.sechd) > .sublbl')].map((x) => norm(x.innerText));
+          if (row.row === 'JOURNEYS') row.lines = [...ch.querySelectorAll('.jmeta')].map((x) => norm(x.innerText)), row.faces = [...ch.querySelectorAll('.jfaces')].map((f) => [...f.querySelectorAll('.face')].map((x) => x.title));
+          if (row.row === 'SIGNATURE') row.sig = norm(ch.innerText);
+          rows.push(row); return; }
+        if (ch.classList.contains('kv')) { const k = ch.querySelector('.k').textContent; rows.push({ row: TITLE[k] || '?' + k, count: null, text: norm(ch.querySelector('.v').innerText), icon: (ch.querySelector('svg') || {}).innerHTML || '' }); return; }
+        rows.push({ row: '?' + ch.className }); });
+      out[id] = { head: norm(document.getElementById('phead').innerText), headIcon: (document.querySelector('#phead .ptype svg') || {}).innerHTML || '', rows }; }
+    return out; }, { ids: FEED, TITLE });
+  /* the station's opening view (the tier it boots on and whether it draws functions), read off the running station */
+  const view9 = await p2.evaluate(() => ({ tier: window.__uniTier, name: (_TIER_PRESETS[window.__uniTier] || {}).name, fns: CFG.showFns,
+    deeper: _TIER_PRESETS.slice(window.__uniTier + 1).filter((t) => t.koff.indexOf('function') < 0).map((t) => t.name) }));
+  const nv = (x) => String(x).replace(/·/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+  const sq = (x) => String(x).replace(/\s+/g, '').replace(/\/>/g, '>').replace(/<\/(path|circle|rect|ellipse|line|polyline|polygon)>/g, '');   /* drawn svg markup, serialisation aside */
+  const VALUE_ROWS = ['USAGE', 'EVIDENCE', 'MODEL ROW', 'PAYLOAD', 'DELIVERY', 'IDENTITY', 'SOURCE', 'RISK', 'ABOVE'];
+  const u9 = {};
+  for (const ep of FEED) { const st = cards[ep], mine = ROW[ep].uni.rows, bad = (k, x) => { (u9[k] = u9[k] || []).push([ep, x]); };
+    const sr = st.rows.map((x) => x.row), mr = mine.filter((x) => x.row !== 'HEAD').map((x) => x.row);
+    if (JSON.stringify(sr) !== JSON.stringify(mr)) bad('rows', { station: sr, page: mr });
+    for (const x of st.rows) { const m = mine.find((y) => y.row === x.row); if (!m) continue;
+      if ((x.count || null) !== (m.count == null ? null : String(m.count))) bad('counts', [x.row, x.count, m.count]);
+      if (VALUE_ROWS.includes(x.row) && !nv(x.text).includes(nv(m.value))) bad('values', [x.row, x.text.slice(0, 120), m.value]); }
+    if (nv(st.head) !== nv(mine[0].value)) bad('head', [st.head, mine[0].value]);
+    const silentWant = D.uspec.map((u) => u.row).filter((r) => r !== 'HEAD' && !mr.includes(r));
+    if (JSON.stringify([...ROW[ep].uni.silent].sort()) !== JSON.stringify(silentWant.sort())) bad('silent', { page: ROW[ep].uni.silent, want: silentWant }); }
+  for (const k of ['rows', 'counts', 'values', 'head', 'silent'])
+    ok(!u9[k], 'every endpoint · the universe column\'s ' + k + ' are the station card\'s, read off the station', (u9[k] || []).slice(0, 3));
+  /* what each row draws INSIDE it (review 2026-09-23): the Connections groups as the station keys them (relation · direction · the
+     other end's kind), each group's shown members and its "+N more"; Code behind's listed callees and its "+N more" (never the
+     feed's names_more, which the station draws nowhere); each test's state and the green count; the table on every access line;
+     the Delivery note; each journey's corpus, component count and entities */
+  const in9 = {}, inBad = (k, ep, x) => { (in9[k] = in9[k] || []).push([ep, x]); };
+  const UC = D.ucard, moreOf = (t) => { const m = /^\+(\d+) (\w+)$/.exec(t || ''); return m ? [+m[1], m[2]] : [0, null]; };
+  for (const ep of FEED) { const st = cards[ep], by = Object.fromEntries(ROW[ep].uni.rows.map((u) => [u.row, u])), sr = Object.fromEntries(st.rows.map((x) => [x.row, x]));
+    const c = sr.CONNECTIONS, mc = by.CONNECTIONS;
+    if (c && mc) { const want = c.groups.map((g) => { const [n, w] = moreOf(g.more); return [g.head, g.chips, n, w]; }),
+        got = mc.items.map((g) => [g[0] + ' ' + g[1] + ' ' + g[2], g[3], g[4], g[4] ? UC.more : null]);
+      if (JSON.stringify(want.map((x) => [nv(x[0]), x[1], x[2], x[3]])) !== JSON.stringify(got.map((x) => [nv(x[0]), x[1], x[2], x[3]]))) inBad('conns', ep, { station: want, page: got }); }
+    const b = sr['CODE BEHIND'], mb = by['CODE BEHIND'];
+    if (b && mb) { const [n, w] = moreOf(b.more); if (JSON.stringify(b.chips) !== JSON.stringify(mb.items) || n !== (mb.more || 0) || (n && w !== UC.more)) inBad('behind', ep, { station: [b.chips.length, b.more], page: [mb.items.length, mb.more] }); }
+    const t = sr.TESTS, mt = by.TESTS;
+    if (t && mt) { const mine = Object.fromEntries(mt.items.map((x) => [x[0], x[1]]));
+      if (t.ok !== !!mt.ok || t.chips.some(([cid, stt]) => mine[cid] !== stt)) inBad('tests', ep, { station: [t.ok, t.chips.slice(0, 3)], page: [mt.ok, mt.items.slice(0, 3)] }); }
+    const a = sr.ACCESSES, ma = by.ACCESSES;
+    if (a && ma && JSON.stringify(a.lines.map(nv)) !== JSON.stringify(ma.items.map((o) => nv((o[0] === 'w' ? D.words.universe.say.writes : D.words.universe.say.reads) + ' → ' + o[1] + ' · ' + o[2])))) inBad('accesses', ep, { station: a.lines.slice(0, 2), page: ma.items.slice(0, 2) });
+    const dl = sr.DELIVERY, md = by.DELIVERY;
+    if (dl && md && !(md.note && nv(dl.text).includes(nv(md.note)))) inBad('delivery', ep, { station: dl.text, page: md.note });
+    const j = sr.JOURNEYS, mj = by.JOURNEYS;
+    if (j && mj && (JSON.stringify(j.lines.map(nv)) !== JSON.stringify(mj.items.map((x) => nv(x[0] + ' ' + x[1] + ' ' + x[2] + ' ' + UC.comp)))
+      || JSON.stringify(j.faces) !== JSON.stringify(mj.items.map((x) => [...new Set(x[3])])))) inBad('journeys', ep, { station: [j.lines.slice(0, 2), j.faces.slice(0, 1)], page: mj.items.slice(0, 2) }); }
+  for (const k of ['conns', 'behind', 'tests', 'accesses', 'delivery', 'journeys'])
+    ok(!in9[k], 'every endpoint · what the universe column\'s ' + k + ' row draws inside it is what the station\'s card draws there', (in9[k] || []).slice(0, 2));
+  /* the tested fixture of the grouping fix: an endpoint whose station card keeps two `touches` groups apart (a model and a schema) */
+  ok(FEED.some((ep) => ROW[ep].uni.rows.find((u) => u.row === 'CONNECTIONS').items.filter((g) => g[0] === 'touches').length === 2), 'some endpoint draws two touches groups, as the station keys them apart by the other end\'s kind');
+  /* the column says which view of the station it reproduces: the tier the station opens on, functions hidden there (the words say so) */
+  ok(view9.name && view9.fns === 'off' && D.tok.uniTier === view9.name && D.tok.uniDeeper === view9.deeper.join(' · '), 'the universe column names the tier the station opens on, and the deeper tiers that draw functions', view9);
+
+  /* a sample, DRAWN: pick it by a click in the table, and read the three columns off the page */
+  const INV_IDS = new Set(fs.readFileSync(INVENTORY, 'utf8').split('\n').map((l) => l.match(/^\|\s*([^|]+?)\s*\|/)).filter(Boolean).map((m) => m[1])
+    .filter((x) => x !== 'attribute' && !/^-+$/.test(x)).map((x) => x.replace(/\*|`|\([^)]*\)/g, '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')));
+  ok(INV_IDS.size === Object.keys(D.attrs).length && Object.keys(D.attrs).every((a) => INV_IDS.has(a)), 'the page\'s attributes are the inventory\'s rows', { inv: INV_IDS.size, page: Object.keys(D.attrs).length });
+  const UMAP = Object.fromEntries(D.uspec.map((u) => [u.row, u.attrs]));
+  ok(D.uspec.every((u) => u.attrs.every((a) => INV_IDS.has(a))), 'every attribute a universe row is said to show is an inventory row');
+  /* what the code map HOLDS for a row, recomputed here from the row record (a zero, an empty list, none, absent or unknown holds nothing) */
+  const DET = W9.codemap.details, HEADP = W9.codemap.head;
+  const holds = (r) => { const out = new Set(), add = (as) => as.forEach((a) => out.add(a));
+    add(HEADP.method.attrs); if (r.fn) add(HEADP.handler.attrs); if (r.ent) add(HEADP.entity.attrs); if (r.seg) add(HEADP.segment.attrs); if (r.declared) add(HEADP.declared.attrs);
+    for (const c of D.cols) { const v = r.v[c.id]; if (v === 'absent' || v === 'unknown') continue;
+      const has = c.kind === 'num' || c.kind === 'slot' ? v > 0 : c.kind === 'cat' ? !!v && v !== 'none' : c.kind === 'spine' ? Object.values(v).some((n) => n > 0)
+        : c.kind === 'stack' ? (c.id === 'fate' ? Object.entries(v).some(([f, n]) => f !== 'none' && n > 0) : r.k[c.id] > 0) : c.kind === 'ratio' ? v[1] > 0 : c.kind === 'dots' ? v.length > 0 : false;
+      if (has) add([c.attr]); }
+    const d = r.d, len = (x) => (x && x.items ? x.items.length : (x || []).length);
+    const H = { exits: len(d.exits), tables: len(d.tables), gateWrites: d.gateWrites.length, fates: d.fates.items.some((f) => f[2] !== 'none'), guards: len(d.guards), gates: d.gates.length, limits: d.limits.length,
+      request: d.request != null, response: d.response != null, cases: Object.keys(d.cases).length, deciders: len(d.deciders), switches: len(d.switches), behind: d.behind[0] > 0,
+      proof: (d.proof.produced || 0) > 0, inflight: len(d.inflight), hook: !!d.hook, screens: d.screens > 0, reasons: len(d.reasons), alarms: d.alarms.length, pieces: len(d.pieces), lacks: d.lacks.length };
+    if (JSON.stringify(Object.keys(H).sort()) !== JSON.stringify(Object.keys(DET).sort())) throw new Error('the recomputation does not read every code-map pair the words name');
+    for (const k of Object.keys(H)) if (H[k]) add(DET[k].attrs);
+    return out; };
+  /* changed 2026-09-23 (review findings 3 and 4): the gaps were "held less the rows' fixed attributes"; a few attributes are now
+     read per endpoint off the STATION's card: request shape is shown when a Connections chip or the signature names the request
+     schema; a switch or an own guard when a flag the card draws as "walled by" is a name its condition reads (some → in part) */
+  const IDN = /[A-Za-z_][A-Za-z0-9_]*/g, perEp = (ep, r) => { const st = cards[ep], c = st.rows.find((x) => x.row === 'CONNECTIONS'), sg = st.rows.find((x) => x.row === 'SIGNATURE');
+    const members = new Set((c ? c.groups : []).flatMap((g) => g.all)), walls = new Set((c ? c.groups : []).filter((g) => /^walled by\b/i.test(g.head)).flatMap((g) => g.all)), out = {};
+    if (r.d.request) { const nm = r.d.request[0], hit = members.has(nm) || (sg && new RegExp('\\b' + nm + '\\b').test(sg.sig)); out['request-shape'] = [hit ? 1 : 0, 1, hit ? [nm] : []]; }
+    for (const [attr, key, text] of [['switches', 'switches', (x) => x.filter(Boolean).join(' ')], ['own-guards', 'guards', (x) => String(x[1] || '')]]) {
+      const L2 = r.d[key] || { items: [], more: 0 }, hits = L2.items.map((x) => (text(x).match(IDN) || []).filter((w) => walls.has(w)));
+      out[attr] = [hits.filter((h) => h.length).length, L2.items.length + (L2.more || 0), [...new Set(hits.flat())].sort()]; }
+    return out; };
+  const g9 = [], p9 = [];
+  for (const ep of FEED) { const r = ROW[ep], shown = new Set(r.uni.rows.flatMap((u) => UMAP[u.row])), here = perEp(ep, r), ord = (a, b) => D.attrOrder.indexOf(a) - D.attrOrder.indexOf(b);
+    const cand = [...holds(r)].filter((a) => !shown.has(a)), want = cand.filter((a) => !here[a] || !here[a][0]).sort(ord),
+      part = cand.filter((a) => here[a] && here[a][0] && here[a][0] < here[a][1]).sort(ord).map((a) => [a, ...here[a]]);
+    if (JSON.stringify(want) !== JSON.stringify(r.gaps)) g9.push([ep, { page: r.gaps, want }]);
+    if (JSON.stringify(part) !== JSON.stringify(r.partly)) p9.push([ep, { page: r.partly, want: part }]); }
+  ok(!g9.length, 'every endpoint · the gaps are what the code map holds less what the universe rows drawn show, read off the station card', g9.slice(0, 2));
+  ok(!p9.length, 'every endpoint · an attribute the station card shows only part of here is listed as shown in part, with what it draws', p9.slice(0, 2));
+  ok(FEED.filter((ep) => ROW[ep].d.request && !ROW[ep].gaps.includes('request-shape')).length > 0 && FEED.some((ep) => ROW[ep].partly.length),
+    'the request schema the card names clears request shape, and a flag it draws walled by makes a switch and a guard shown in part');
+  /* a switch is named in the code-map column — by its port, else its settings, else the condition it tests (the feed's) */
+  const sw9 = FEED.filter((ep) => { const fe = FJ.endpoints['endpoint:' + ep], want = (fe.switches || []).slice(0, 14).map((w) => [w.kind, w.port || Object.keys(w.settings || {}).sort().join(', ') || String(w.expr || w.pred || '').slice(0, 80)]);
+    return JSON.stringify(want) !== JSON.stringify(ROW[ep].d.switches.items); });
+  ok(!sw9.length && FEED.every((ep) => ROW[ep].d.switches.items.every((x) => x[1])), 'every endpoint · each switch in the code-map column carries its name or its condition, never its kind alone', sw9.slice(0, 3));
+  const OLD_PANEL = ['exits', 'tables', 'gateWrites', 'fates', 'guards', 'gates', 'limits', 'request', 'response', 'cases', 'deciders', 'switches', 'behind', 'proof', 'inflight', 'hook', 'screens', 'reasons', 'alarms', 'pieces', 'lacks'];
+  const SAMPLE9 = ['POST /setup/complete', 'GET /recipes', 'GET /recipe-creation/gustify/stream', 'DELETE /', 'GET /healthz', 'PATCH /pantry/items/{item_id}'].filter((x) => FEED.includes(x));
+  for (const ep of SAMPLE9) {
+    await p.click('#board tr.row[data-ep="' + ep + '"] td.id'); await p.waitForTimeout(60);
+    const dom = await p.evaluate(() => ({ n: document.getElementById('n-one').textContent, search: window.location.search,
+      uni: [...document.querySelectorAll('#ocol-uni .urow')].map((u) => ({ row: u.getAttribute('data-row'), count: (u.querySelector('.ut b') || {}).textContent || null, v: u.querySelector('.uv').textContent, icon: (u.querySelector('.ui svg') || {}).innerHTML || '' })),
+      /* changed 2026-09-23 (review finding 3/4): an attribute the card shows only in part is drawn in the column too, marked
+         data-part — the whole gaps are the ones without that mark, and they are compared as before */
+      gaps: [...document.querySelectorAll('#ocol-gaps .gap[data-attr]:not([data-part])')].map((g) => g.getAttribute('data-attr')),
+      part: [...document.querySelectorAll('#ocol-gaps .gap[data-part]')].map((g) => [g.getAttribute('data-attr'), g.getAttribute('data-part')]),
+      uit: Object.fromEntries([...document.querySelectorAll('#ocol-uni .urow')].filter((u) => u.querySelector('.uit')).map((u) => [u.getAttribute('data-row'), u.querySelector('.uit').textContent])),
+      states: [...document.querySelectorAll('#ocol-uni .urow[data-row="TESTS"] .uit .st')].map((x) => [x.textContent, x.getAttribute('data-state')]),
+      testsOk: !!document.querySelector('#ocol-uni .urow[data-row="TESTS"] .ut b.ok'),
+      plain: (document.querySelector('#ocol-uni .plain') || {}).textContent || '',
+      pairs: [...document.querySelectorAll('#ocol-cm .pair[data-attr]')].map((x) => ({ k: x.getAttribute('data-k'), attrs: x.getAttribute('data-attr').split(' ') })),
+      lab: !!document.getElementById('lablink') && !!document.getElementById('labcmd') }));
+    const r = ROW[ep], st = cards[ep];
+    ok(dom.n === ep && dom.search === '?ep=' + slug9(ep), ep + ' · a click fills the section and the address', { n: dom.n, search: dom.search });
+    ok(JSON.stringify(dom.uni.map((u) => [u.row, u.count, u.v])) === JSON.stringify(r.uni.rows.map((u) => [u.row, u.count == null ? null : String(u.count), u.value])), ep + ' · the universe column draws its rows, counts and values', dom.uni.slice(0, 3));
+    /* the icon each row wears is the icon the station's card draws for that row (compared as drawn markup) */
+    const iconBad = dom.uni.filter((u) => u.row !== 'HEAD').filter((u) => { const s2 = st.rows.find((x) => x.row === u.row); return !s2 || sq(s2.icon) !== sq(u.icon); }).map((u) => u.row);
+    const headBad = sq(st.headIcon) !== sq(dom.uni[0].icon);
+    ok(!iconBad.length && !headBad, ep + ' · every universe row wears the icon the station draws for it', { rows: iconBad, head: headBad });
+    ok(JSON.stringify([...dom.gaps].sort()) === JSON.stringify([...r.gaps].sort()) && dom.gaps.length === r.gaps.length, ep + ' · the gaps column lists the row\'s gaps, each once (drawn by block)', { dom: dom.gaps, data: r.gaps });
+    ok(JSON.stringify(dom.part) === JSON.stringify(r.partly.map((x) => [x[0], x[1] + '/' + x[2]])), ep + ' · the gaps column draws what the card shows only in part, marked so', dom.part);
+    /* the lines drawn inside the rows: every station group's words and shown members, the listed callees, each case's state */
+    const scn = st.rows.find((x) => x.row === 'CONNECTIONS'), sbh = st.rows.find((x) => x.row === 'CODE BEHIND'), sts = st.rows.find((x) => x.row === 'TESTS');
+    ok(!scn || scn.groups.every((g) => nv(dom.uit.CONNECTIONS || '').includes(nv(g.head)) && g.chips.every((m) => (dom.uit.CONNECTIONS || '').includes(m)) && (!g.more || (dom.uit.CONNECTIONS || '').includes(g.more))),
+      ep + ' · the Connections line draws each station group, its shown members and its more', [scn && scn.groups.slice(0, 2), dom.uit.CONNECTIONS]);
+    ok(!sbh || nv(dom.uit['CODE BEHIND']) === nv(sbh.chips.join(' ') + (sbh.more ? ' ' + sbh.more : '')), ep + ' · the Code behind line draws the callees the station lists and its more, nothing else', [sbh && sbh.more, dom.uit['CODE BEHIND']]);
+    ok(!sts || sts.chips.every(([cid, stt]) => dom.states.some(([c2, s2]) => c2 === cid && s2 === stt)), ep + ' · each case the station shows is drawn with its state', dom.states.slice(0, 3));
+    ok(!sts || sts.ok === dom.testsOk, ep + ' · the Tests count is green exactly when the station\'s is', [sts && sts.ok, dom.testsOk]);
+    ok(dom.plain.includes(view9.name), ep + ' · the universe column says which tier of the station it is', dom.plain);
+    const inRight = new Set(dom.pairs.flatMap((x) => x.attrs)), leftAttrs = new Set(dom.uni.flatMap((u) => UMAP[u.row] || []));
+    ok(dom.gaps.every((a) => INV_IDS.has(a) && inRight.has(a) && !leftAttrs.has(a)), ep + ' · every gap is an inventory attribute the code-map column carries and no universe row drawn shows',
+      dom.gaps.filter((a) => !(INV_IDS.has(a) && inRight.has(a) && !leftAttrs.has(a))));
+    /* nothing the old side panel held is lost: its header lines, every column's value, every detail block, the lab's link and command */
+    const ks = new Set(dom.pairs.flatMap((x) => x.k.replace(/^c:/, '').split(',').map((y) => (x.k.startsWith('c:') ? 'c:' + y : x.k))));
+    const miss = [...['handler', 'entity', 'segment', 'declared'].map((k) => 'h:' + k), ...D.cols.map((c) => 'c:' + c.id), ...OLD_PANEL.map((k) => 'd:' + k)].filter((k) => !ks.has(k));
+    ok(!miss.length && dom.lab, ep + ' · every line the side panel held is in the code-map column (only its close button left, with the panel)', miss); }
+  await p2.close();
+
+  /* THE BLOCK MARKS: each block's icon and colour, expected from an independent read — the lab's registry run here, the tree's
+     pairing from the lab's own facts, the marks the words file picks for blocks with no part */
+  const vm = await import('node:vm'); const win = {}; win.window = win; const vctx = vm.createContext(win);
+  for (const f of ['_station.js', '_lab-ep.js', '_lab-ep-panels.js']) vm.runInContext(fs.readFileSync(path.join(HERE, f), 'utf8'), vctx, { filename: f });
+  const PAN = win.PANELS, STN = win.STATION, SMB = facts('POST /setup/complete').sectionmap.blocks, MK = W9.marks;
+  const iconOf = (n) => { const t = STN.icon(n, 16, 'currentColor'); return t.slice(t.indexOf('>') + 1, t.lastIndexOf('</svg>')); };
+  /* the lab's own section map, opened: the mark its blockMark() gives each block (D-036 — the table aligns with the lab).
+     changed 2026-09-23 (review finding 7): a block no part answers was expected to wear the words file's own pick; it now wears
+     the lab section map's mark, read here off the running lab, not off the page's generator */
+  const p3 = await ctx.newPage(); p3.on('pageerror', (e) => errs.push('lab: ' + e.message));
+  await p3.goto('file://' + path.join(HERE, 'endpoint-lab.html')); await p3.waitForFunction('window.LABMAP && window.LABMAP.mark && window.LABEP', null, { timeout: 60000 });
+  const LABM = await p3.evaluate(() => Object.fromEntries(window.LABEP.sectionmap.blocks.map((b) => { const m = window.LABMAP.mark(b), t = m.svg || '';
+    return [b.key, { kind: m.kind, col: m.col, inner: t.slice(t.indexOf('>') + 1, t.lastIndexOf('</svg>')) }]; })));
+  await p3.close();
+  const want9 = Object.fromEntries(SMB.map((b) => { const pt = PAN[b.join.surface_key];
+    return [b.key, pt ? { inner: iconOf(pt.icon), col: pt.col, pick: false } : { inner: LABM[b.key].inner, col: LABM[b.key].col, pick: true }]; }));
+  want9._shared = { inner: iconOf(MK.shared.icon), col: null, pick: true };
+  ok(SMB.filter((b) => !PAN[b.join.surface_key]).every((b) => LABM[b.key] && LABM[b.key].inner && LABM[b.key].col), 'the lab draws a mark for every block no part answers', LABM);
+  const readMarks = (sel) => p.evaluate(({ sel, want }) => { const rgb = (c) => { const q = document.createElement('i'); q.style.color = c; document.body.appendChild(q); const v = getComputedStyle(q).color; q.remove(); return v; };
+    return [...document.querySelectorAll(sel)].map((h) => { const bm = h.querySelector('.bm'), sv = bm && bm.querySelector('svg'), k = h.getAttribute('data-block');
+      return { key: k, inner: sv ? sv.innerHTML : '', color: bm ? getComputedStyle(bm).color : '', dash: bm ? getComputedStyle(bm).outlineStyle : '', shadow: getComputedStyle(h).boxShadow,
+        sh: rgb('var(--sh)'), wantRgb: want[k] && want[k].col ? rgb(want[k].col) : null }; }); }, { sel, want: want9 });
+  const checkMarks = (list, where, stripe) => { const bad = [];
+    for (const m of list) { const w = want9[m.key]; if (!w) { bad.push([m.key, 'no expectation']); continue; }
+      if (sq(m.inner) !== sq(w.inner)) bad.push([m.key, 'icon']);
+      /* a colour is a hex (a part's) or the token the lab names (var(--accent) …), resolved on this page */
+      if (m.color !== (w.col ? m.wantRgb : m.sh)) bad.push([m.key, 'colour', m.color, w.col]);
+      if ((m.dash === 'dashed') !== w.pick) bad.push([m.key, 'dash', m.dash, w.pick]);
+      if (stripe && w.col && m.key !== '_shared' && !m.shadow.includes(m.wantRgb)) bad.push([m.key, 'stripe', m.shadow]); }
+    ok(list.length >= 11 && !bad.length, where + ' · every block wears its part\'s icon and colour, or the lab section map\'s mark for it dashed', bad.slice(0, 4)); };
+  checkMarks(await readMarks('#board thead tr.bh th[data-block]'), 'the table\'s block headers', true);
+  checkMarks(await readMarks('#ocol-cm .cbh[data-block]'), 'the code-map column\'s block heads', false);
+  ok(SMB.filter((b) => PAN[b.join.surface_key]).length >= 6, 'six blocks are paired to a lab part', SMB.map((b) => b.join.surface_key));
+  await pick('lay', 'three'); checkMarks(await readMarks('#board .card[data-ep] .bn[data-block]'), 'the cards\' block names', false); await pick('lay', 'rows');
+  const shHue = await p.evaluate(() => { const b = document.querySelector('#board thead tr.bh th[data-block="_shared"]'); return b ? getComputedStyle(b.querySelector('.bm')).color : null; });
+  ok(shHue && shHue === (await p.evaluate(() => { const q = document.createElement('i'); q.style.color = 'var(--sh)'; document.body.appendChild(q); const v = getComputedStyle(q).color; q.remove(); return v; })), 'the Shared group\'s mark keeps its rose', shHue);
+
+  /* at 1920 the three columns stand side by side, the gaps the narrowest (D-036's revisit trigger: they stack when they cannot) */
+  const lay9 = await p.evaluate(() => ['ocol-uni', 'ocol-gaps', 'ocol-cm'].map((id) => { const b = document.getElementById(id).getBoundingClientRect(); return [Math.round(b.left), Math.round(b.top), Math.round(b.width)]; }));
+  ok(lay9[0][1] === lay9[1][1] && lay9[1][1] === lay9[2][1] && lay9[0][0] < lay9[1][0] && lay9[1][0] < lay9[2][0] && lay9[1][2] < lay9[0][2] && lay9[1][2] < lay9[2][2],
+    'at 1920 the universe, the gaps and the code map stand side by side, the gaps the narrowest', lay9);
+  /* the mapping the gaps are computed from is on the page, behind more information, row by row */
+  /* more information says how a few attributes are read per endpoint, and that a deeper tier changes the card (naming those tiers) */
+  const mi = await p.evaluate(() => document.getElementById('more-body').textContent);
+  ok(mi.includes(D.words.one.gaps.perEp) && view9.deeper.every((t) => mi.includes(t)), 'more information says which attributes are read per endpoint, and names the deeper tiers whose card differs', view9.deeper);
+  const um = await p.evaluate(() => [...document.querySelectorAll('#umap tr[data-row]')].map((t) => t.getAttribute('data-row')));
+  ok(JSON.stringify(um) === JSON.stringify(D.uspec.map((u) => u.row)), 'more information lists which attributes each universe row shows', um);
+}
+ok(!errs.length, 'no page error after the D-036 checks', errs);
 
 /* 7 · an arm the feed lacks reads "absent", never 0 — on a fixture built from a scratch copy of the feed */
 { const copy = JSON.parse(JSON.stringify(FJ));

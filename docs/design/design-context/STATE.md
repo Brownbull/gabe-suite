@@ -1,7 +1,7 @@
 # Where loop 1 stands
 
 One page, rewritten (never appended) whenever the position moves. Read it before `method.md` (the method) and
-`decisions.md` (every ruling, D-001 …). Updated 2026-09-23 · suite `810f858` on `graft-adoption`, pushed to both remotes.
+`decisions.md` (every ruling, D-001 …). Updated 2026-09-23 · D-035, D-036 and D-037 built, on `graft-adoption`.
 
 ## In plain words
 
@@ -45,17 +45,19 @@ page reads the frozen lab feed.
 
 ## Open for you — what to LOOK at
 
-Every page below opens from this folder with a relative path. The lab is `../workflow-panel/endpoint-lab.html`; its rail tab
-**section map** is the brain map now. The click paths named come from the real-click walk `../workflow-panel/walk-fold.mjs`
-(pictures in `../workflow-panel/shots/fold/`, D-025.4).
+Every page below opens from this folder with a relative path. The lab is `../workflow-panel/endpoint-lab.html`: the section
+map now lives ONLY below the panels (D-035), and the lab opens any endpoint — the picker is the endpoint name in the page's
+header. The other 79 endpoints are a local build: `cd ../workflow-panel && python3 gen-endpoint-set.py` (~15 s; the picker says
+so when one is missing). Pictures: `../workflow-panel/shots/fold/` (the lab) and `../workflow-panel/shots/all-endpoints/`.
 
-1. **Which stage rule is the default.** BUILT as two options. Look: the lab → the rail tab *section map* → *By stage*
-   (walk steps 2–3, `shots/fold/03-pick-by-stage.png`) → the switch under it. The agent's pick (marked) puts a block under
-   every stage it touches; D-021 as recorded puts it under *Across the stages*, which leaves all six stages and the bay
-   empty. The walk stops before that switch: its last click is not walked yet.
-2. **Where the brain map sits in the lab** — BUILT as three options under *where the map sits*: the rail tab (the agent's
-   pick, marked) · right column · below (your second-section sketch). Look: walk steps 13 and 15,
-   `shots/fold/13-map-in-the-right-column.png` and `shots/fold/15-map-full-width-below.png`.
+1. **The simpler section map** (D-035): each block is its part's icon, its name and one bar (drawn in view · out of view · on
+   another part · not drawn); a legend strip; the rare switches behind *more*. Look: `shots/fold/02-rest-on-a-block.png`, and
+   the map's *By stage* switch — *under every stage it touches* (the agent's pick, dashed) or *under Across the stages* (D-021 as
+   recorded, which leaves all six stages and the bay empty; `shots/fold/06-…` and `07-…`).
+2. **One endpoint, three ways** (D-036): pick a row on `../workflow-panel/all-endpoints.html` — left, the Gabe Universe card as
+   the station draws it today; middle, THE GAPS (the agent's reading: card fields the code map holds that no universe row
+   shows); right, the code map by the card's blocks. Look: `shots/all-endpoints/46-one-endpoint-three-columns.png` and `51-…`
+   (the stream endpoint). The table's block headers now carry the lab part's icon and colour; *more information* is last.
 3. **"The four standpoints the blocks name."** The brain map credits these words to you, and the blocks name nine. The
    transcript shows the phrase first in the agent's own message (2026-09-21), not in anything you typed. Unless you meant
    four, all nine stand. Look: the lab → *section map* → *By standpoint*.
@@ -64,9 +66,8 @@ Every page below opens from this folder with a relative path. The lab is `../wor
    last (walk steps 9–16). What the lab does NOT carry — the drawn layouts A–D, among them As sketched at about 45° (D-032),
    and shared fields as one band — is listed behind "more information" in the tab, and still drawn on the retired page:
    `records/brainmap/brainmap-endpoint.html`. Also: `matrices-round2.html` shows the two cuts as a switch, not side by side.
-5. **The all-endpoints page after D-034**: the options as icon squares, the dash on the agent's unruled picks, and how the
-   Shared group stands out, built as options. Look: `../workflow-panel/all-endpoints.html` and the walk's pictures in
-   `../workflow-panel/shots/all-endpoints/`.
+5. **The all-endpoints page's own picks** (D-034): how the Shared group stands out (band · rule · frame) and the four rails
+   your paste did not name, each dashed as the agent's pick.
 6. **Which face M3 starts from.** Blocks M3. Look: `inventory-endpoint.md` § "The face this inventory suggests" against the
    face M2 gives by rule on `matrices-round2.html`.
 7. **The command layout**: its picks and the colour-by option (B13) are BUILT as options and have never been ruled. Two known
@@ -81,7 +82,8 @@ Every page below opens from this folder with a relative path. The lab is `../wor
 
 ## Next, in order
 
-1. **Your look at 1–5** — each ruling goes into `decisions.md` in the same commit that acts on it (D-025.5). The lab's probe is 1436/0.
+1. **Your look at 1–5** — each ruling goes into `decisions.md` in the same commit that acts on it (D-025.5). Design pages are
+   checked lightly from now on (D-037): true numbers, a smoke check, one walk.
 2. **M3**: the channel budget for the first prism.
 3. **The gallery**: 3–5 variants of the card at true size, one fader each, judged by seeing. Then the tests, and promote.
 

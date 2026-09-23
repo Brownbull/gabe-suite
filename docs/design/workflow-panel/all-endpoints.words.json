@@ -22,7 +22,12 @@
     "model",
     "amb",
     "rails",
-    "ruling"
+    "ruling",
+    "claim",
+    "home",
+    "area",
+    "rows",
+    "names"
   ],
   "eyebrow": "every endpoint of one app, side by side",
   "h1": "All {nRows} endpoints of {app}, one row each",
@@ -30,9 +35,10 @@
   "proposal": "This page is a proposal. Which attributes became columns and how each is drawn are my picks. On the rail below, a square with a dashed border is my pick on a rail you have not ruled; a rail you ruled starts on your default, with no dash. Every square is yours to change by looking.",
   "stamp": "{app} at head {head} · {nFeed} endpoints in its feed",
   "partial": "A fixture page, not the app's page: it draws {nRows} of the feed's {nFeed} endpoints.",
-  "keys": "Click a column header to sort by it, again to reverse it. Click a piece of a header strip to light the rows in it. Click a row for everything it holds.",
+  "keys": "Click a column header to sort by it, again to reverse it. Click a piece of a header strip to light the rows in it. Click a row to open it in the endpoint section below the table.",
   "sec": {
     "board": "the endpoints",
+    "one": "one endpoint",
     "more": "more information",
     "copy": "what I am looking at"
   },
@@ -205,6 +211,20 @@
           "plain": "Every value written out, the common one too."
         }
       }
+    },
+    "go": {
+      "label": "on a row click",
+      "pick": "scroll",
+      "opts": {
+        "scroll": {
+          "name": "go to the endpoint",
+          "plain": "The page moves down to the endpoint you picked."
+        },
+        "stay": {
+          "name": "stay on the table",
+          "plain": "The page stays put; only the endpoint section changes."
+        }
+      }
     }
   },
   "pickMark": "my pick",
@@ -325,176 +345,207 @@
     "all": {
       "head": "endings",
       "name": "every way a request can end",
-      "zero": "the feed lists no ending for it"
+      "zero": "the feed lists no ending for it",
+      "icon": "target"
     },
     "stage": {
       "head": "stages",
       "name": "the stages its endings leave from, edge to answer, with the uncaught bay apart",
-      "zero": "no ending leaves from any stage"
+      "zero": "no ending leaves from any stage",
+      "icon": "journey"
     },
     "tables": {
       "head": "tables",
       "name": "tables it reads or writes",
-      "zero": "it touches no table"
+      "zero": "it touches no table",
+      "icon": "table"
     },
     "guards": {
       "head": "guards",
       "name": "checks in its own code that refuse the request",
-      "zero": "its own code holds no check that refuses"
+      "zero": "its own code holds no check that refuses",
+      "icon": "shield"
     },
     "auth": {
       "head": "login",
       "name": "the login scheme it asks for",
-      "zero": "it asks for no login"
+      "zero": "it asks for no login",
+      "icon": "key"
     },
     "response": {
       "head": "reply",
       "name": "fields in the body a success answers with",
       "zero": "it names no reply model",
-      "unknown": "It answers with {model}, and how many fields that has is unknown. This is not a zero."
+      "unknown": "It answers with {model}, and how many fields that has is unknown. This is not a zero.",
+      "icon": "down"
     },
     "e_success": {
       "head": "ok",
       "name": "success endings",
-      "zero": "the feed read no success ending"
+      "zero": "the feed read no success ending",
+      "icon": "target"
     },
     "e_refusal": {
       "head": "refused",
       "name": "refusals",
-      "zero": "its code never refuses"
+      "zero": "its code never refuses",
+      "icon": "target"
     },
     "e_framework": {
       "head": "body",
       "name": "endings the framework produces while it reads the body",
-      "zero": "it reads no body, so the framework cannot refuse one"
+      "zero": "it reads no body, so the framework cannot refuse one",
+      "icon": "target"
     },
     "e_validation": {
       "head": "shape",
       "name": "the ending where its input does not fit its declared shape: the body, the query, the path or a header",
-      "zero": "nothing validates its input here"
+      "zero": "nothing validates its input here",
+      "icon": "target"
     },
     "e_uncaught": {
       "head": "uncaught",
       "name": "uncaught endings",
-      "zero": "the feed read no uncaught ending"
+      "zero": "the feed read no uncaught ending",
+      "icon": "target"
     },
     "acts": {
       "head": "tests",
       "name": "tests that call it to test it",
-      "zero": "no test calls it to test it"
+      "zero": "no test calls it to test it",
+      "icon": "test"
     },
     "asserted": {
       "head": "beyond",
       "name": "proofs that check more than the status code",
-      "zero": "every proof checks the status code alone, or there is no proof"
+      "zero": "every proof checks the status code alone, or there is no proof",
+      "icon": "doc"
     },
     "branches": {
       "head": "forks",
       "name": "branches in called code that change how it ends",
-      "zero": "no called branch changes the ending"
+      "zero": "no called branch changes the ending",
+      "icon": "path"
     },
     "catches": {
       "head": "catches",
       "name": "try and except blocks on its paths",
-      "zero": "no catch on any path"
+      "zero": "no catch on any path",
+      "icon": "wrap"
     },
     "rate": {
       "head": "rate",
       "name": "the rate limiters it sits behind",
-      "zero": "no limiter was read"
+      "zero": "no limiter was read",
+      "icon": "cog"
     },
     "written": {
       "head": "writes",
       "name": "tables its own code writes; a table only the login check writes is left out",
-      "zero": "its own code writes no table"
+      "zero": "its own code writes no table",
+      "icon": "model"
     },
     "fate": {
       "head": "fate",
       "name": "its paths, by what becomes of the endpoint's own writes; the number is the paths that save",
-      "zero": "no path saves a write of its own before the answer"
+      "zero": "no path saves a write of its own before the answer",
+      "icon": "action"
     },
     "deciders": {
       "head": "deciders",
       "name": "functions whose refusal or raise becomes one of its endings",
-      "zero": "no function's refusal becomes an ending here"
+      "zero": "no function's refusal becomes an ending here",
+      "icon": "function"
     },
     "datafns": {
       "head": "data fns",
       "name": "functions that read or write the database on its own paths",
-      "zero": "none of its own functions touches the database"
+      "zero": "none of its own functions touches the database",
+      "icon": "merge"
     },
     "request": {
       "head": "fields",
       "name": "fields at the top of the JSON body it reads",
       "zero": "it reads no body",
-      "unknown": "It reads a JSON body, and how many fields that body has is unknown. This is not a zero."
+      "unknown": "It reads a JSON body, and how many fields that body has is unknown. This is not a zero.",
+      "icon": "schema"
     },
     "fetched": {
       "head": "screen",
       "name": "frontend hooks that call it",
-      "zero": "no screen of the app calls it"
+      "zero": "no screen of the app calls it",
+      "icon": "hook"
     },
     "reasons": {
       "head": "reads",
       "name": "places in the frontend that read its status, detail or code",
-      "zero": "no screen reads why it refused"
+      "zero": "no screen reads why it refused",
+      "icon": "screen"
     },
     "chain": {
       "head": "steps",
       "name": "steps on its longest path",
-      "zero": "no path has steps"
+      "zero": "no path has steps",
+      "icon": "polygon"
     },
     "cases422": {
       "head": "rules",
       "name": "rules on its input, body, query, path or headers, that make it fail with a 422",
-      "zero": "no input rule can fail"
+      "zero": "no input rule can fail",
+      "icon": "bracket"
     },
     "inf_answer": {
       "head": "request",
       "name": "values alive only while the request runs, gone with the answer",
-      "zero": "nothing lives only for the request"
+      "zero": "nothing lives only for the request",
+      "icon": "wave"
     },
     "inf_server": {
       "head": "server",
       "name": "values the server process keeps between requests",
-      "zero": "nothing is kept by the process"
+      "zero": "nothing is kept by the process",
+      "icon": "store"
     },
     "proof": {
       "head": "proven",
       "name": "endings a test proves on its own, of all its endings; a test whose status fits several endings proves none of them",
       "zero": "no test proves any of its endings on its own",
-      "amb": "{amb} more endings only by a test whose status fits several"
+      "amb": "{amb} more endings only by a test whose status fits several",
+      "icon": "test"
     },
     "alarms": {
       "head": "alarms",
       "name": "anomalies the form check found",
-      "zero": "the form check found nothing"
+      "zero": "the form check found nothing",
+      "icon": "alert"
     },
     "behind": {
       "head": "behind",
       "name": "functions reachable behind its handler",
-      "zero": "the map reaches no function behind it"
+      "zero": "the map reaches no function behind it",
+      "icon": "layers"
     },
     "switches": {
       "head": "switches",
       "name": "settings or swapped-in parts that change what it does",
-      "zero": "no switch changes it"
+      "zero": "no switch changes it",
+      "icon": "config"
     },
     "pieces": {
       "head": "pieces",
       "name": "its pieces by how common each is in the app; the number is the rare ones plus the ones only it has",
-      "zero": "every piece it has is common or the norm"
+      "zero": "every piece it has is common or the norm",
+      "icon": "bubble"
     },
     "lacks": {
       "head": "lacks",
       "name": "pieces nearly every endpoint carries that it does not",
-      "zero": "it carries every piece that is the norm"
+      "zero": "it carries every piece that is the norm",
+      "icon": "skip"
     }
   },
   "families": "the form check's findings, one place each, most frequent first",
   "panel": {
-    "close": "close",
-    "closePlain": "Close this panel.",
     "handler": "handler",
     "entity": "entity",
     "segment": "first URL segment",
@@ -531,9 +582,10 @@
     "none": "none",
     "more": "and {more} more",
     "lab": "open it in the lab",
-    "labPlain": "The lab is baked to one endpoint today. These commands bake it to this endpoint; they rewrite the lab's own facts file, so run them only when you mean to move the lab here.",
-    "cmd": "cd docs/design/workflow-panel\npython3 gen-endpoint-facts.py \"{ep}\" --forms {formsPath} --archmap {archmapPath}\n# then open endpoint-lab.html",
-    "copy": "copy the commands",
+    "labPlain": "The lab opens any endpoint whose facts are built here. The link opens this one; when its file is not built, the lab says so and names the command below, which builds it.",
+    "open": "open {ep} in the lab",
+    "cmd": "cd docs/design/workflow-panel\npython3 gen-endpoint-set.py --only \"{ep}\" --forms {formsPath} --archmap {archmapPath}",
+    "copy": "copy the command",
     "copied": "copied",
     "gateWrites": "the login check writes"
   },
@@ -545,7 +597,7 @@
       "The feed is the forms file of {app} at head {head}, sha {formsSha}, with its map beside it, sha {archmapSha}. Arms on: {arms}. Arms off: {armsOff}.",
       "A cell that reads absent means the feed did not look. A cell that reads unknown means it looked, and the value is not known. A zero means it looked and found nothing, and its hover says why.",
       "The stage an ending leaves from follows the robot's lay: the app band's endings at the edge, the login check's at the gate, the body's at the input, the endpoint's own refusals in the handler, every success at the answer, and the uncaught in the bay.",
-      "The writes column and a path's fate read the endpoint's own writes only. The login check can create a user row on almost every endpoint; counting it would paint both columns the same, so the side panel names those writes apart, as the login check's."
+      "The writes column and a path's fate read the endpoint's own writes only. The login check can create a user row on almost every endpoint; counting it would paint both columns the same, so the endpoint section names those writes apart, as the login check's."
     ],
     "colsHead": [
       "column",
@@ -567,12 +619,392 @@
       "group": "grouped by",
       "sort": "sorted",
       "lit": "lit",
-      "open": "open",
+      "open": "endpoint",
       "cols": "columns",
       "your": "your words:",
       "slook": "shared marked by"
     }
   },
   "authNoScheme": "own check",
-  "authNoSchemePlain": "It asks for a login through its own check, with no declared scheme: the check reads the token itself, not from the usual header."
+  "authNoSchemePlain": "It asks for a login through its own check, with no declared scheme: the check reads the token itself, not from the usual header.",
+  "one": {
+    "lede": "The endpoint picked in the table, read side by side. Left, the card the Gabe Universe draws for it today, row by row. Right, what the code map knows about it, under the card's blocks. In the middle, the gaps between them.",
+    "pickNote": "Click a row in the table to change it. The address keeps it, so a link opens this endpoint.",
+    "notFound": "The address names an endpoint this page does not hold ({ep}), so the first row is shown.",
+    "uni": {
+      "title": "the Gabe Universe",
+      "plain": "The card the station draws for this endpoint as it opens (the {uniTier} tier, functions hidden), row by row, in the station's order.",
+      "silent": "The station draws no row here for: {rows}.",
+      "deeper": "On a deeper tier ({uniDeeper}) the station also draws functions, and its card for an endpoint changes: Connections gains the handler, and Code behind can be walked. The left column keeps the card the station opens on."
+    },
+    "gaps": {
+      "title": "the gaps",
+      "plain": "Attributes of the card the code map holds something for here, that no row of the universe card shows, then those it shows only part of. A zero, an empty list, absent or unknown does not count as holding something.",
+      "mine": "my reading",
+      "minePlain": "Which attributes a universe row shows is my proposal, not a ruling. More information, at the end of the page, lists it row by row.",
+      "none": "None: the universe card shows every attribute the code map holds here.",
+      "count": "{n} attributes",
+      "shows": "shown by no universe row",
+      "partly": "shown in part",
+      "partlyTip": "The card draws {names}: {n} of {of}. The rest is shown by no universe row.",
+      "perEp": "Some attributes are read per endpoint, from what the card draws for it. Request shape counts as shown when the card names the request schema, as a Connections chip or in the signature. A switch or an own guard counts as shown when a flag the card draws as walled by is a name its condition reads; some but not all of them makes the attribute shown in part."
+    },
+    "cm": {
+      "title": "the code map",
+      "plain": "What the code map knows about this endpoint, under the card's blocks: everything the side panel held."
+    },
+    "attrOf": "attribute: {v}"
+  },
+  "codemap": {
+    "_about": "The right column of the endpoint section: every pair the old side panel held, each tied to the inventory attribute(s) it carries (ids of the ruled tree) and drawn with a station icon (my pick). A pair sits under the block its FIRST attribute is homed in, the Shared group for a shared one. The table's columns are pairs too: their attribute is the column's own.",
+    "head": {
+      "method": {
+        "attrs": [
+          "method-path"
+        ],
+        "icon": "endpoint",
+        "label": "method and path"
+      },
+      "handler": {
+        "attrs": [
+          "the-handler",
+          "file-line"
+        ],
+        "icon": "function"
+      },
+      "entity": {
+        "attrs": [
+          "entity-cluster"
+        ],
+        "icon": "entity"
+      },
+      "segment": {
+        "attrs": [
+          "entity-cluster"
+        ],
+        "icon": "path"
+      },
+      "declared": {
+        "attrs": [
+          "declared-status"
+        ],
+        "icon": "info"
+      }
+    },
+    "details": {
+      "exits": {
+        "attrs": [
+          "the-endings",
+          "status-code-per-ending"
+        ],
+        "icon": "target"
+      },
+      "tables": {
+        "attrs": [
+          "operation-per-table"
+        ],
+        "icon": "table"
+      },
+      "gateWrites": {
+        "attrs": [
+          "provisions"
+        ],
+        "icon": "key"
+      },
+      "fates": {
+        "attrs": [
+          "fate-of-the-writes-per-ending"
+        ],
+        "icon": "action"
+      },
+      "guards": {
+        "attrs": [
+          "own-guards",
+          "the-predicate-per-decision-point"
+        ],
+        "icon": "shield"
+      },
+      "gates": {
+        "attrs": [
+          "auth-scheme-gate"
+        ],
+        "icon": "key"
+      },
+      "limits": {
+        "attrs": [
+          "rate-tier"
+        ],
+        "icon": "cog"
+      },
+      "request": {
+        "attrs": [
+          "request-shape"
+        ],
+        "icon": "schema"
+      },
+      "response": {
+        "attrs": [
+          "response-shape-per-ending"
+        ],
+        "icon": "down"
+      },
+      "cases": {
+        "attrs": [
+          "validation-cases"
+        ],
+        "icon": "bracket"
+      },
+      "deciders": {
+        "attrs": [
+          "decision-point-functions"
+        ],
+        "icon": "function"
+      },
+      "switches": {
+        "attrs": [
+          "switches"
+        ],
+        "icon": "config"
+      },
+      "behind": {
+        "attrs": [
+          "functions-behind-walk-levels"
+        ],
+        "icon": "layers"
+      },
+      "proof": {
+        "attrs": [
+          "coverage-per-condition"
+        ],
+        "icon": "test"
+      },
+      "inflight": {
+        "attrs": [
+          "in-flight-values"
+        ],
+        "icon": "wave"
+      },
+      "hook": {
+        "attrs": [
+          "who-fetches-it"
+        ],
+        "icon": "hook"
+      },
+      "screens": {
+        "attrs": [
+          "who-fetches-it"
+        ],
+        "icon": "screen"
+      },
+      "reasons": {
+        "attrs": [
+          "what-the-screen-does-on-this-ending"
+        ],
+        "icon": "screen"
+      },
+      "alarms": {
+        "attrs": [
+          "findings"
+        ],
+        "icon": "alert"
+      },
+      "pieces": {
+        "attrs": [
+          "how-common-this-piece-is"
+        ],
+        "icon": "bubble"
+      },
+      "lacks": {
+        "attrs": [
+          "how-common-this-piece-is"
+        ],
+        "icon": "skip"
+      }
+    },
+    "kinds": "kinds of ending"
+  },
+  "universe": {
+    "_about": "The universe column: the Gabe Universe's endpoint card, row by row. Each row's icon and title are LIFTED from the station's source by _ae_universe.py. `say` holds the station card's own words (templates/center/shell/gabe-universe.html), lifted so the values read as the station writes them. `rows[*].attrs` is MY PROPOSAL: which attributes of the card's ruled inventory each station row shows, every id checked against the tree and inventory-endpoint.md; the gaps column is computed from it. `rows[*].attrs` holds for every endpoint; a few attributes are also read per endpoint from what the card draws (_ae_universe.read_here), which one.gaps.perEp says on the page.",
+    "say": {
+      "api": "api",
+      "internal": "internal caller(s)",
+      "depend": "element(s) depend on this",
+      "gate": "gate",
+      "stream": "streams to the client",
+      "home": "home",
+      "byWord": "by",
+      "by": {
+        "file": "its file claim",
+        "config": "the entity config's web claims",
+        "layout": "the feature layout",
+        "idiom": "the directory idiom (no feature layout matched)"
+      },
+      "usersSay": "users say",
+      "usersAbstain": "users abstain",
+      "dataSays": "data says",
+      "dataAbstains": "data abstains",
+      "move": "MOVE CANDIDATE",
+      "alsoUsedOne": "also used by {n} other entity",
+      "alsoUsedMany": "also used by {n} other entities",
+      "shared": "SHARED — a cross-cutting aspect across {n} consuming entities",
+      "stay": "STAY — the file wins",
+      "over": "over",
+      "feArea": "frontend area {area} (not a declared entity)",
+      "evOnly": "evidence only, nothing re-homed",
+      "moved": "claim {claim} → {home} — a view over the claim, nothing re-homed on disk",
+      "abstain": "no witness reaches this piece — it keeps its claim {claim}",
+      "held": "shared plumbing — held out of every re-home, stays with {claim}",
+      "reads": "reads",
+      "writes": "writes",
+      "fieldOne": "field ferried",
+      "fieldMany": "fields ferried",
+      "response": "(response)",
+      "noEdges": "— no edges captured",
+      "reach": "reach",
+      "behind": "behind",
+      "noCases": "— no cases claimed yet",
+      "entity": "entity",
+      "layer": "layer",
+      "fanin": "fan-in",
+      "caller": "caller",
+      "callers": "callers",
+      "indegree": "(graph in-degree)",
+      "async": "async",
+      "lines": "lines",
+      "status": "status",
+      "cluster": "cluster",
+      "everything": "everything",
+      "structural": "structural",
+      "inferred": "inferred"
+    },
+    "rows": {
+      "HEAD": {
+        "name": "head",
+        "attrs": [
+          "method-path",
+          "entity-cluster"
+        ]
+      },
+      "USAGE": {
+        "name": "usage",
+        "attrs": [
+          "who-fetches-it"
+        ]
+      },
+      "GUARDS": {
+        "name": "guards",
+        "attrs": [
+          "auth-scheme-gate"
+        ]
+      },
+      "DELIVERY": {
+        "name": "delivery",
+        "attrs": [
+          "delivery"
+        ]
+      },
+      "EVIDENCE": {
+        "name": "evidence",
+        "attrs": [
+          "entity-cluster"
+        ]
+      },
+      "MODEL ROW": {
+        "name": "model row",
+        "attrs": [
+          "entity-cluster"
+        ]
+      },
+      "ACCESSES": {
+        "name": "accesses",
+        "attrs": [
+          "tables-touched",
+          "operation-per-table"
+        ]
+      },
+      "PAYLOAD": {
+        "name": "payload",
+        "attrs": [
+          "response-shape-per-ending"
+        ]
+      },
+      "CONNECTIONS": {
+        "name": "connections",
+        "attrs": [
+          "tables-touched",
+          "operation-per-table",
+          "who-fetches-it"
+        ]
+      },
+      "CODE BEHIND": {
+        "name": "code behind",
+        "attrs": [
+          "functions-behind-walk-levels"
+        ]
+      },
+      "TESTS": {
+        "name": "tests",
+        "attrs": [
+          "cases"
+        ]
+      },
+      "JOURNEYS": {
+        "name": "journeys",
+        "attrs": [
+          "cases"
+        ]
+      },
+      "IDENTITY": {
+        "name": "identity",
+        "attrs": [
+          "entity-cluster"
+        ]
+      },
+      "SIGNATURE": {
+        "name": "signature",
+        "attrs": [
+          "signature",
+          "the-handler"
+        ]
+      },
+      "DOCSTRING": {
+        "name": "docstring",
+        "attrs": []
+      },
+      "SOURCE": {
+        "name": "source",
+        "attrs": [
+          "file-line",
+          "declared-status"
+        ]
+      },
+      "RISK": {
+        "name": "risk flags",
+        "attrs": [
+          "risk-flag"
+        ]
+      },
+      "ABOVE": {
+        "name": "above",
+        "attrs": [
+          "entity-cluster",
+          "where-this-endpoint-sits-in-the-app"
+        ]
+      }
+    },
+    "mapHead": [
+      "universe row",
+      "attributes it shows (my proposal)"
+    ]
+  },
+  "marks": {
+    "_about": "The block marks on the table and in the endpoint section (D-036). A block the ruled tree pairs to a lab PART wears that part's icon and colour, read from the lab's registry, never from here. A block with no part wears THE LAB SECTION MAP'S mark for it, read from the lab's own source (_lab-ep-map.js blockMark, D-035): the command panel's glyph for Endings, the running header's for the block read across every part, the one no-page mark for the rest, each in the colour token the lab paints it. Those marks are my picks in the lab too, so they stay dashed. Only the Shared group's icon is picked here.",
+    "shared": {
+      "icon": "merge"
+    },
+    "part": "the {v} part's icon and colour, from the lab",
+    "pick": "my pick: the Shared group has no part in the lab",
+    "key": "dashed icon: my pick",
+    "lab": "the lab's section map marks it this way ({v}) — my pick there too, not ruled"
+  }
 }

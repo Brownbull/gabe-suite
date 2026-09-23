@@ -50,7 +50,10 @@ DC = REPO / "docs" / "design" / "design-context"
 BM_WORDS = DC / "brainmap.words.json"
 PRISMS = DC / "prisms-endpoint.json"                                          # the clustering options the ruled tree was built with
 KIT_JS = DC / "kit-blocks.js"
+EPSLUG_JS = HERE / "_ep-slug.js"                                               # the ONE slug rule (D-035), inlined so the page stays standalone
 DEF_FORMS = Path("~/.cache/gabe-map-baselines/lab-input/forms.json")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _ae_universe as UNI  # noqa: E402  (D-036 — the one-endpoint section: the universe card, the block marks, the gaps)
 
 
 def die(msg: str) -> None:
@@ -430,6 +433,7 @@ def distill(L: dict, fj: dict, W: dict) -> dict:
         u.pop("deciders", None)
 
     # ── the side panel's detail: small lists, words kept as the facts wrote them ──
+    fsw = {w.get("id"): w for w in ((fep or {}).get("switches") or [])}
     def cap(xs):
         return {"items": xs[:CAP], "more": max(0, len(xs) - CAP)}
     det = {
@@ -447,7 +451,9 @@ def distill(L: dict, fj: dict, W: dict) -> dict:
                      or L["data"]["schemas"]["response"].get("name"), k["response"]] if k["response"] else None,
         "cases": dict(sorted(F["counts"].get("cases_by_type", {}).items())),
         "deciders": cap([f.get("name") for f in dec]),
-        "switches": cap([[w.get("kind"), w.get("port") or ", ".join(sorted(w.get("settings") or []))] for w in sw]),
+        # a switch is named by its port, else the settings it reads, else the condition it tests — a handler flag carries only
+        # that, and only in the FEED's record (the lab's copy drops `pred`), so the feed's switch of the same id is read for it
+        "switches": cap([[w.get("kind"), w.get("port") or ", ".join(sorted(w.get("settings") or [])) or (w.get("expr") or fsw.get(w.get("id"), {}).get("pred") or "")[:80]] for w in sw]),
         "behind": [L["functions"]["behind"].get("fns"), L["functions"]["behind"].get("depth")],
         "proof": {k2: L["feedwide"]["proof"].get(k2) for k2 in ("tested", "produced", "rank", "rank_to", "of")},
         "inflight": cap([[r.get("kind"), r.get("name"), r.get("dies")] for r in (inf.get("rows") or [])]),
@@ -498,7 +504,7 @@ def build(argv: list) -> tuple:
         argv.remove("--check"); cache = None
     if argv:
         die(f"unknown arguments: {argv}")
-    for p in (forms, archmap, tpl_p, words_p, FACTS, BM_WORDS, KIT_JS, PRISMS):
+    for p in (forms, archmap, tpl_p, words_p, FACTS, BM_WORDS, KIT_JS, PRISMS, EPSLUG_JS):
         if not p.is_file():
             die(f"missing input: {p}")
 
@@ -538,6 +544,10 @@ def build(argv: list) -> tuple:
     if any(json.dumps(L["sectionmap"], sort_keys=True) != smj for L in facts):
         die("the ruled tree differs between two endpoints' facts")
     rows = [distill(L, fj, W) for L in facts]
+    # ── the one-endpoint section (D-036): the station's card per row, lifted from the station and computed from the facts ──
+    spec, feeds = UNI.station_spec(), UNI.station_feeds()
+    for L, r in zip(facts, rows):
+        r["uni"] = UNI.universe(L, spec, feeds, W["universe"])
     app = facts[0]["feedwide"]["pieces"].get("app")
     if not app:
         die("pieces-digest.json names no app at this head — the page must say which app it is")
@@ -566,7 +576,38 @@ def build(argv: list) -> tuple:
             die(f"rail {r_id}: its default {R.get('pick')!r} is not one of its options")
         if "ruled" in R and not re.fullmatch(r"D-\d{3}", str(R["ruled"])):
             die(f"rail {r_id}: `ruled` must name the ruling (D-nnn), not {R['ruled']!r}")
-    blocks = [{"key": b["key"], "sig": b["sig"], "name": b["name"], "plain": b["plain"], "kind": b["join"]["kind"]} for b in sm["blocks"]]
+    blocks = [{"key": b["key"], "sig": b["sig"], "name": b["name"], "plain": b["plain"], "kind": b["join"]["kind"], "act": (b["join"].get("act") or {}).get("kind") or "none",
+               "surface": b["join"].get("surface_key") or "none", "surfaceWords": b["join"].get("surface")} for b in sm["blocks"]]
+    # every attribute id the words file ties to a universe row or a code-map pair is a row of the ruled tree AND of the inventory
+    inv, CM, UW = UNI.inventory_ids(), W["codemap"], W["universe"]
+    tied = {a for r in UW["rows"].values() for a in r["attrs"]} | {a for grp in ("head", "details") for x in CM[grp].values() for a in x["attrs"]}
+    stray = sorted(a for a in tied if a not in A or a not in inv)
+    if stray:
+        die(f"attribute ids the words file names that are not rows of the ruled tree and of inventory-endpoint.md: {stray}")
+    if sorted(UW["rows"]) != sorted(x for x, _ in UNI.ROWS):
+        die("the words file's universe rows and the station rows read here differ")
+    if sorted(CM["details"]) != sorted(k for k in rows[0]["d"]):
+        die(f"the code map's pairs and the row record's details differ: {sorted(set(CM['details']) ^ set(rows[0]['d']))}")
+    order = list(A)
+    for r in rows:
+        r["has"] = UNI.carried(r, cols, CM)
+        g_full, g_part = UNI.gaps(set(r["has"]), r["uni"], UW, UNI.read_here(r, r["uni"]))
+        r["gaps"] = sorted(g_full, key=order.index)
+        r["partly"] = sorted(g_part, key=lambda x: order.index(x[0]))
+        r["uni"].pop("_drawn")                                          # the generator's own reading, never drawn
+    icon_names, colour_refs = UNI.mark_refs(W)
+    icon_names |= {x["icon"] for x in spec.values() if isinstance(x, dict) and x.get("icon")}
+    icon_names |= {f["icon"] for f in spec["RISK"]["flags"].values()} | {c["icon"] for c in W["cols"].values()}
+    icon_names |= {x["icon"] for grp in ("head", "details") for x in CM[grp].values()}
+    got = UNI.harvest(icon_names, colour_refs, HERE)                  # + every lab part's own icon
+    lab = UNI.lab_marks()
+    marks = UNI.marks(blocks, got["parts"], W, lab)
+    got["icons"].update({m["icon"]: m["svg"] for m in lab.values()})
+    for r in rows:
+        UNI.as_station_draws(r["uni"]["rows"], set(got["pico"]))
+    uspec = [{"row": x, "icon": (spec.get(x) or {}).get("icon"), "title": (spec.get(x) or {}).get("title"), "name": UW["rows"][x]["name"], "attrs": UW["rows"][x]["attrs"]} for x, _ in UNI.ROWS]
+    attrs = {a_id: {"label": a["label"], "plain": a["plain"], "r": a["r"], "home": a.get("home"), "shared": bool(a.get("shared")),
+                       "sharedIn": a.get("shared_blocks") or []} for a_id, a in A.items()}
     orders = block_orders(sm)
     # the alarm families, in fixed places, most frequent first — so a dot's column means the same finding on every row
     fam = collections.Counter(a for r in rows for a in (r["v"]["alarms"] if isinstance(r["v"]["alarms"], list) else []))
@@ -577,11 +618,17 @@ def build(argv: list) -> tuple:
     tok = {"app": app, "head": head, "nFeed": len(keys), "nRows": len(rows), "nCols": len(cols), "nBlocks": len(blocks),
            "formsSha": sha(forms)[:8], "archmapSha": sha(archmap)[:8], "formsPath": tilde(forms), "archmapPath": tilde(archmap),
            "arms": " · ".join(arms_on) or "none", "armsOff": " · ".join(arms_off) or "none",
-           "nShare": n_share, "rTop": max(a["r"] for a in A.values()), "nR3": sum(1 for c in cols if c["r"] == max(a["r"] for a in A.values()))}
+           "nShare": n_share, "rTop": max(a["r"] for a in A.values()), "nR3": sum(1 for c in cols if c["r"] == max(a["r"] for a in A.values())),
+           # the tier the station opens on, and the deeper ones that draw functions (the universe column is the opening card)
+           "uniTier": spec["_card"]["tier"], "uniDeeper": " · ".join(t["name"] for t in spec["_card"]["tiers"][spec["_card"]["bootTier"] + 1:] if not t["fnOff"])}
+    if not spec["_card"]["tiers"][spec["_card"]["bootTier"]]["fnOff"]:
+        die("the station now opens with functions drawn — one.uni.plain says they are hidden; reword it before building")
     if sorted(LAYOUTS) != sorted(W["rail"]["lay"]["opts"]):
         die("the words file's layouts and the page's differ")
     data = {"tok": tok, "partial": bool(only), "layouts": LAYOUTS, "rows": rows, "cols": cols, "blocks": blocks, "orders": orders, "families": families,
-            "kinds5": list(KINDS5), "fates": list(FATES), "pieceWords": list(PIECE_WORDS), "words": W}
+            "kinds5": list(KINDS5), "fates": list(FATES), "pieceWords": list(PIECE_WORDS), "words": W,
+            "icons": got["icons"], "marks": marks, "uspec": uspec, "attrs": attrs, "attrOrder": order,
+            "ucard": {k: spec["_card"][k] for k in ("more", "comp", "okState")}}
 
     RUNTIME = set(W.get("_runtime") or [])
     left = set(TOKEN.findall(json.dumps({k2: v2 for k2, v2 in W.items() if not k2.startswith("_")}, ensure_ascii=False))) - {"{" + t + "}" for t in list(tok) + list(RUNTIME)}
@@ -603,6 +650,7 @@ def build(argv: list) -> tuple:
     K = json.loads(kit.stdout)
     html = tpl_p.read_text(encoding="utf-8")
     for mark, val in (("<!--__KIT1__-->", K["k1"]), ("<!--__KIT2__-->", K["k2"].strip()), ("<!--__KIT3__-->", K["k3"]),
+                      ("<!--__EPSLUG__-->", "<script>\n" + EPSLUG_JS.read_text(encoding="utf-8").replace("</", "<\\/") + "</script>"),
                       ("/*__DATA__*/null", json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c"))):
         if mark not in html:
             die("template marker missing: " + mark)

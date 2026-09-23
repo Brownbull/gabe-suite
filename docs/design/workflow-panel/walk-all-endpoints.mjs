@@ -99,14 +99,48 @@ await threeLooks('cards', cardClip);
 await p.emulateMedia({ colorScheme: 'dark' }); await wait(200); say('viewer system theme', 'dark');
 await threeLooks('dark-cards', cardClip);
 await p.emulateMedia({ colorScheme: 'light' }); await wait(200); say('viewer system theme', 'light');
+// D-036: a click on a card or a row fills the ONE-ENDPOINT section below the table (no side panel) and writes ?ep= into the address
+const oneClip = async () => { const b = await p.evaluate(() => { const r = document.getElementById('sec-one').getBoundingClientRect(); return { y: r.top + window.scrollY, h: r.height }; });
+  return { x: 0, y: Math.max(0, b.y - 8), width: W, height: Math.min(4000, b.h + 16) }; };
+const onePic = async (name) => { await p.mouse.move(5, H - 10); await p.evaluate(() => window.hoverHide && window.hoverHide()); await wait(120); n++;
+  await p.screenshot({ path: path.join(OUT, String(n).padStart(2, '0') + '-' + name + '.png'), clip: await oneClip(), fullPage: true }); };
 { const first = await p.$eval('#board .card[data-ep]', (c) => c.getAttribute('data-ep'));
   await step('open-a-card', '#board .card[data-ep="' + first + '"] .pth', 'the first card\'s path');
-  say('side panel', { title: await txt('#side h3'), cmd: await p.$eval('#labcmd', (e) => e.textContent) });
-  await pic('side-panel'); }
-await step('close-the-panel', '#side-close', 'the close button at the top of the panel');
+  say('endpoint section', { title: await txt('#onehead h3'), address: await p.evaluate(() => window.location.search), scrolledTo: await p.evaluate(() => Math.round(document.getElementById('sec-one').getBoundingClientRect().top)) });
+  await pic('one-endpoint-after-a-card'); }
+await p.evaluate(() => window.scrollTo(0, 0)); await wait(150);
 await step('one-per-row', '.opt[data-rail="lay"][data-v="rows"]', 'layout: one per row');
 await step('group-by-entity', '.opt[data-rail="grp"][data-v="entity"]', 'group by: entity');
-await step('more-information', '#more-btn', 'the more information button');
+await step('click-a-row', '#board tr.row[data-ep="POST /setup/complete"] td.id', 'the row POST /setup/complete');
+say('endpoint section', { title: await txt('#onehead h3'), address: await p.evaluate(() => window.location.search),
+  columns: await p.evaluate(() => ['ocol-uni', 'ocol-gaps', 'ocol-cm'].map((id) => { const b = document.getElementById(id).getBoundingClientRect(); return [id, Math.round(b.left), Math.round(b.top), Math.round(b.width), Math.round(b.height)]; })),
+  universe: await p.$$eval('#ocol-uni .urow', (us) => us.map((u) => u.innerText.replace(/\s+/g, ' ').slice(0, 90))),
+  gaps: await p.$$eval('#ocol-gaps .gap', (gs) => gs.map((g) => g.textContent)) });
+await onePic('one-endpoint-three-columns');
+{ // point at the first gap with the real mouse: the code-map pairs that hold it light up
+  const g = await p.$('#ocol-gaps .gap'); await g.scrollIntoViewIfNeeded(); const bx = await g.boundingBox();
+  await p.mouse.move(bx.x + 10, bx.y + bx.height / 2); await wait(250);
+  say('pointing at a gap', { gap: await p.$eval('#ocol-gaps .gap', (e) => e.textContent), lit: await p.$$eval('#ocol-cm [data-lit-attr="true"] .pk', (xs) => xs.map((x) => x.textContent)), tip: await txt('#tip') });
+  await pic('point-at-a-gap'); }
+{ // the lab link: a real click opens the lab on this endpoint, then back
+  await step('open-in-the-lab', '#lablink', 'the open-in-the-lab link');
+  await p.waitForLoadState('load'); await wait(1500);
+  say('the lab opened', { url: p.url().replace(/^.*\//, ''), lede: await p.evaluate(() => { const e = document.getElementById('ledebench'); return e ? e.textContent : null; }) });
+  await pic('the-lab-on-this-endpoint');
+  await p.goBack(); await p.waitForFunction('window.__allep && window.__allep.ready', { timeout: 20000 }); await wait(200);
+  say('back on the page', { open: await p.evaluate(() => window.__allep.state.open), address: await p.evaluate(() => window.location.search) }); }
+{ // the streaming endpoint: its station card draws the flag that walls it, so a switch and an own guard are shown in part
+  await p.evaluate(() => window.scrollTo(0, 0)); await wait(150);
+  await step('click-the-stream-row', '#board tr.row[data-ep="GET /recipe-creation/gustify/stream"] td.id', 'the row GET /recipe-creation/gustify/stream');
+  say('endpoint section', { title: await txt('#onehead h3'), plain: await txt('#ocol-uni .plain'),
+    universe: await p.$$eval('#ocol-uni .urow', (us) => us.map((u) => u.innerText.replace(/\s+/g, ' ').slice(0, 140))),
+    gaps: await p.$$eval('#ocol-gaps .gap', (gs) => gs.map((g) => g.textContent)) });
+  await onePic('stream-endpoint-three-columns');
+  const g = await p.$('#ocol-gaps .gap[data-part]');
+  if (g) { await g.scrollIntoViewIfNeeded(); const bx = await g.boundingBox(); await p.mouse.move(bx.x + 10, bx.y + bx.height / 2); await wait(250);
+    say('pointing at a gap shown in part', { gap: await p.$eval('#ocol-gaps .gap[data-part]', (e) => e.textContent), tip: await txt('#tip') });
+    await pic('point-at-a-gap-shown-in-part'); } else say('MISSING a gap shown in part', '#ocol-gaps .gap[data-part]'); }
+await step('more-information', '#more-btn', 'the more information button, at the end of the page');
 await pic('more-information-open');
 say('rows at the end', await rows());
 say('page errors', errs);

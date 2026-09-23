@@ -16,7 +16,8 @@
     "block order: [stage order] | the card's order",
     "columns: [every column] | rated 3 only",
     "numbers: [{tinted by size}] | plain",
-    "a column's most common value: [{drawn quiet}] | written out"
+    "a column's most common value: [{drawn quiet}] | written out",
+    "on a row click: [{go to the endpoint}] | stay on the table"
    ]
   ],
   [
@@ -127,14 +128,14 @@
   ],
   [
    "board top after wheel",
-   308
+   345
   ],
   [
    "header while the board scrolls",
    {
-    "head": 37,
-    "board": -405,
-    "scrolled": 902,
+    "head": 40,
+    "board": -855,
+    "scrolled": 905,
     "onScreen": true
    }
   ],
@@ -144,7 +145,7 @@
     "click": "tables",
     "at": [
      376,
-     55
+     58
     ],
     "size": [
      42,
@@ -163,7 +164,7 @@
     "click": "tables ↑",
     "at": [
      376,
-     41
+     44
     ],
     "size": [
      42,
@@ -182,7 +183,7 @@
     "click": "back to path order",
     "at": [
      36,
-     75
+     78
     ],
     "size": [
      216,
@@ -197,7 +198,7 @@
     "click": "",
     "at": [
      651,
-     78
+     81
     ],
     "size": [
      15,
@@ -220,7 +221,7 @@
     "click": "clear",
     "at": [
      403,
-     510
+     530
     ],
     "size": [
      37,
@@ -235,7 +236,7 @@
     "click": "ending labels",
     "at": [
      271,
-     450
+     434
     ],
     "size": [
      32,
@@ -270,7 +271,7 @@
     "click": "3 per row",
     "at": [
      106,
-     450
+     434
     ],
     "size": [
      32,
@@ -289,7 +290,7 @@
     "click": "a strong rule",
     "at": [
      985,
-     450
+     434
     ],
     "size": [
      32,
@@ -304,7 +305,7 @@
     "click": "a frame",
     "at": [
      1022,
-     450
+     434
     ],
     "size": [
      32,
@@ -319,7 +320,7 @@
     "click": "a tinted band",
     "at": [
      948,
-     450
+     434
     ],
     "size": [
      32,
@@ -338,7 +339,7 @@
     "click": "a strong rule",
     "at": [
      985,
-     450
+     434
     ],
     "size": [
      32,
@@ -353,7 +354,7 @@
     "click": "a frame",
     "at": [
      1022,
-     450
+     434
     ],
     "size": [
      32,
@@ -368,7 +369,7 @@
     "click": "a tinted band",
     "at": [
      948,
-     450
+     434
     ],
     "size": [
      32,
@@ -387,7 +388,7 @@
     "click": "/",
     "at": [
      101,
-     688
+     712
     ],
     "size": [
      7,
@@ -397,29 +398,15 @@
    }
   ],
   [
-   "side panel",
+   "endpoint section",
    {
     "title": "GET/",
-    "cmd": "cd docs/design/workflow-panel\npython3 gen-endpoint-facts.py \"GET /\" --forms ~/.cache/gabe-map-baselines/lab-input/forms.json --archmap ~/.cache/gabe-map-baselines/lab-input/archmap.json\n# then open endpoint-lab.html"
+    "address": "?ep=get",
+    "scrolledTo": 0
    }
   ],
   [
-   "step 43 · close-the-panel",
-   {
-    "click": "close",
-    "at": [
-     1801,
-     14
-    ],
-    "size": [
-     59,
-     30
-    ],
-    "note": "the close button at the top of the panel"
-   }
-  ],
-  [
-   "step 44 · one-per-row",
+   "step 43 · one-per-row",
    {
     "click": "one per row",
     "at": [
@@ -434,7 +421,7 @@
    }
   ],
   [
-   "step 45 · group-by-entity",
+   "step 44 · group-by-entity",
    {
     "click": "entity",
     "at": [
@@ -449,18 +436,212 @@
    }
   ],
   [
-   "step 46 · more-information",
+   "step 45 · click-a-row",
+   {
+    "click": "POST/setup/complete",
+    "at": [
+     33,
+     529
+    ],
+    "size": [
+     224,
+     21
+    ],
+    "note": "the row POST /setup/complete"
+   }
+  ],
+  [
+   "endpoint section",
+   {
+    "title": "POST/setup/complete",
+    "address": "?ep=post-setup-complete",
+    "columns": [
+     [
+      "ocol-uni",
+      32,
+      330,
+      561,
+      1336
+     ],
+     [
+      "ocol-gaps",
+      607,
+      330,
+      331,
+      1015
+     ],
+     [
+      "ocol-cm",
+      953,
+      330,
+      935,
+      3202
+     ]
+    ],
+    "universe": [
+     "HEAD POST /setup/complete · API endpoint · auth",
+     "USAGE1 1 api · 0 internal caller(s)",
+     "GUARDS3 get_auth_context (gate) · get_session · get_settings get_auth_context · param-dep ",
+     "EVIDENCE home auth by its file claim · users say auth 100% of 1 · data says settings 42% o",
+     "ACCESSES24 13 reads · 11 writes reads → ConsentRecord · consent_records · reads → Househol",
+     "PAYLOAD6 6 fields ferried · → MeResponse (response)",
+     "CONNECTIONS27 reads_from 13 · writes_to 11 · touches 2 · fetched by 1 reads_from 13 inferr",
+     "CODE BEHIND29 reach 5 · 29 behind _discard_claim _load_setup_result _lookup _me_response_f",
+     "TESTS27 api 26 · web 1 C1048 C1049 C1050 C1051 C1052 C1055 C1056 C1057 C1087 C218 C250 C25",
+     "JOURNEYS6+21 C250 · 15 case(s) · C785 … C250 api 27 comp (auth · cooking · pantry · progre",
+     "IDENTITY entity auth · layer endpoints · fan-in 1 caller (graph in-degree)",
+     "SIGNATURE async · 21 lines · → MeResponse async def setup_complete(request: Request, body:",
+     "SOURCE apps/api/api/setup.py:254 · status 200",
+     "RISK FLAGS conflict · large surface",
+     "ABOVE cluster · setup · entity · Auth · everything"
+    ],
+    "gaps": [
+     "The endings",
+     "The stage an ending leaves from",
+     "Own guards",
+     "Kinds of ending",
+     "What the case asserts on this condition",
+     "Case role on this endpoint",
+     "The predicate per decision point",
+     "Status code per ending",
+     "Deciding branches",
+     "Catches",
+     "Rate tier",
+     "Fate of the writes per ending",
+     "Provisions",
+     "Decision-point functions",
+     "Data-touching functions",
+     "What the screen does on this ending",
+     "In-flight values",
+     "Switches",
+     "How common this piece is",
+     "The ordered chain per ending",
+     "Validation cases",
+     "Coverage per condition",
+     "Findings"
+    ]
+   }
+  ],
+  [
+   "pointing at a gap",
+   {
+    "gap": "The endings",
+    "lit": [
+     "endings",
+     "the endings"
+    ],
+    "tip": "The endings · shown by no universe rowEvery distinct way a request to the endpoint can end."
+   }
+  ],
+  [
+   "step 48 · open-in-the-lab",
+   {
+    "click": "open POST /setup/complete in the lab",
+    "at": [
+     651,
+     47
+    ],
+    "size": [
+     312,
+     35
+    ],
+    "note": "the open-in-the-lab link"
+   }
+  ],
+  [
+   "the lab opened",
+   {
+    "url": "endpoint-lab.html?ep=post-setup-complete",
+    "lede": "POST/setup/completeauth"
+   }
+  ],
+  [
+   "back on the page",
+   {
+    "open": "POST /setup/complete",
+    "address": "?ep=post-setup-complete"
+   }
+  ],
+  [
+   "step 50 · click-the-stream-row",
+   {
+    "click": "GET/recipe-creation/gustify/stream",
+    "at": [
+     33,
+     980
+    ],
+    "size": [
+     224,
+     21
+    ],
+    "note": "the row GET /recipe-creation/gustify/stream"
+   }
+  ],
+  [
+   "endpoint section",
+   {
+    "title": "GET/recipe-creation/gustify/stream",
+    "plain": "The card the station draws for this endpoint as it opens (the Surface tier, functions hidden), row by row, in the station's order.",
+    "universe": [
+     "HEAD GET /recipe-creation/gustify/stream · API endpoint · recipe",
+     "USAGE1 1 api · 0 internal caller(s)",
+     "GUARDS3 get_auth_context_from_query (gate) · get_session · get_settings get_auth_context_from_query · param-dep · gate · get_session · param",
+     "DELIVERY streams to the client · SSE / chunked — the handler returns a streaming response, not one payload; an error can land mid-body, afte",
+     "EVIDENCE home recipe by its file claim · users say recipe 100% of 1 · data says recipe 50% of 10 → STAY — the file wins — evidence only, not",
+     "ACCESSES10 7 reads · 3 writes reads → DishHistoryEvent · dish_history_events · reads → PantryItem · pantry_items · reads → Recipe · recipes ",
+     "CONNECTIONS12 writes_to 3 · reads_from 7 · walled by 1 · fetched by 1 writes_to 3 inferred: AiSpendLog, RecipeCreationRequest, IngredientRec",
+     "CODE BEHIND48 reach 6 · 48 behind AuthContext.require_household GeminiConfig.from_settings ResolutionSnapshot.resolve Settings.ai_timeout_fo",
+     "TESTS11 api 11 C1106 C1107 C1108 C1109 C1110 C1111 C1112 C1113 C1114 C1115 C1123",
+     "IDENTITY entity recipe · layer endpoints · fan-in 2 callers (graph in-degree)",
+     "SIGNATURE async · 44 lines · → StreamingResponse async def stream_gustify(request: Request, ctx: Annotated[AuthContext, Depends(get_auth_con",
+     "DOCSTRING SSE stream of the D-GU3 pipeline (REQ-10 web transport). Auth + idempotency key arrive as query params (EventSource has no header ",
+     "SOURCE apps/api/api/recipe_stream.py:251 · status 200",
+     "RISK FLAGS conflict · large surface",
+     "ABOVE cluster · recipe-creation · entity · Recipe · everything"
+    ],
+    "gaps": [
+     "The endings",
+     "The stage an ending leaves from",
+     "Own guardsshown in part",
+     "Kinds of ending",
+     "Case role on this endpoint",
+     "The predicate per decision point",
+     "Status code per ending",
+     "Catches",
+     "Rate tier",
+     "Fate of the writes per ending",
+     "Provisions",
+     "Decision-point functions",
+     "In-flight values",
+     "How common this piece is",
+     "Switchesshown in part",
+     "The ordered chain per ending",
+     "Validation cases",
+     "Coverage per condition",
+     "Findings"
+    ]
+   }
+  ],
+  [
+   "pointing at a gap shown in part",
+   {
+    "gap": "Own guardsshown in part",
+    "tip": "Own guards · shown in partThe card draws RECIPE_CREATION_ENABLED: 1 of 2. The rest is shown by no universe row.A check in the handler's own code that refuses the request."
+   }
+  ],
+  [
+   "step 53 · more-information",
    {
     "click": "Show how the map knows this",
     "at": [
      32,
-     736
+     994
     ],
     "size": [
      220,
      30
     ],
-    "note": "the more information button"
+    "note": "the more information button, at the end of the page"
    }
   ],
   [
