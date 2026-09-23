@@ -78,7 +78,7 @@
       <!-- THE SECTION MAP (operator 2026-09-22): the card's ELEVEN RULED BLOCKS — what the card is
            SUPPOSED to hold (design-context/prisms-endpoint.json, D-015) — as an indented list, beside the
            bench surface that answers each one. The tree and every count are GENERATED (LABEP.sectionmap,
-           read from the brain map's committed tree); the pairing of a block to a surface is AUTHORED and
+           read from design-context/brainmap-endpoint.json); the pairing of a block to a surface is AUTHORED and
            says so on its face. Wired BOTH WAYS: a block click moves the bench, a bench move lights the
            block, and the lead line says which of the two moved. Lab chrome — none of it ships. -->
       <section class="rtab" id="rt-map">
@@ -106,6 +106,10 @@
         </div>
       </section>
     </aside>
+    <!-- THE BAND — the three panels (the middle, the portrait, the command panel) side by side. It is only a row of
+         its own: while the map sits in the right column the band takes the width left between the rail and the column
+         and slides sideways inside it, so the rail and the map are always on screen together. -->
+    <div id="band">
     <section id="bench" class="box-work" aria-label="the console's middle region, boxed — only what would be built">
       <div id="headstrip"></div>
       <nav id="tabs" role="tablist"></nav>
@@ -127,6 +131,7 @@
          `order` renumbered for it: rail 1 · cmd-left 2 · bench 3 · port 4 · cmd-right 5, so choice 16
          (card side) is ONE order value. -->
     <section id="cmd" aria-label="the command panel — every way a request through this endpoint ends"></section>
+    </div>
     <!-- the section map's two other places (D-025.2): a column right of the panels, and full width below them -->
     <section id="mapcol" hidden aria-label="the section map, in a column right of the panels"></section>
   </div>
@@ -2796,14 +2801,14 @@
      ELEVEN blocks ruled in design-context/prisms-endpoint.json (D-015) and the attributes M1 sorted into
      them. Both sit in the rail, in the brain map's INDENTED form, so the gap between them reads instead
      of being described. The tree, the attributes and every count are GENERATED into LABEP.sectionmap
-     (_ep_sectionmap.py, over the brain map's own committed tree); the pairing of a block to a bench
+     (_ep_sectionmap.py, over design-context/brainmap-endpoint.json — the brain map's page is a record now); the pairing of a block to a bench
      surface is AUTHORED prose in section-map.words.json and the tab says on its face that it is a
      proposal. BOTH WAYS: a block click MOVES the bench, and a bench move LIGHTS the block — the moving
      calls are wrapped at their own binding, so a part button clicked on the bench lights the map exactly
      as the map's own click does. A block with no surface says what would have to be built.          ══ */
   var SM = F.sectionmap || { state: "absent", reason: "this feed carries no section map" };
   var SMW = SM.words || {}, SMS = SMW.strings || {}, SMH = SMW.head || {}, SMF = SMW.feedback || {};
-  var SMOPEN = {}, SMLEAD = null, SMPICK = null, SMFROM = false;
+  var SMOPEN = {}, SMLEAD = null, SMPICK = null, SMFROM = false, SMREV = null;   /* SMREV — the lit blocks the last draw saw */
   function smEsc(s){ return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
   function smBlock(k){ return (SM.blocks || []).filter(function(b){ return b.key === k; })[0] || null; }
   function smVarOf(p){ var P = window.PANELS[p]; return P ? (curVar[p] || P.defaultVariant || P.variants[0].key) : null; }
@@ -2946,7 +2951,11 @@
       : leadKey ? (smBlock(leadKey) || {}).name : null;
     lead.querySelector("span").textContent = (SMLEAD === "map" ? (SMS.leadYou || "you opened this here")
       : SMLEAD === "lab" ? (SMS.leadLab || "the bench moved and this lit") : (SMS.leadIdle || "nothing open yet"))
-      + (leadName ? " · " + leadName : "");
+      + (leadName ? " · " + leadName : "")
+      /* a part can light more than one block (Data: Data effects and the running header); the tree shows them all when
+         they fit in its box together, and this line names every one, so one out of view is still named (review 2026-09-23) */
+      + (SMLEAD === "lab" && leadKey ? Object.keys(lit).filter(function(k){ return k !== leadKey; }).map(function(k){ return (smBlock(k) || {}).name; })
+          .filter(Boolean).map(function(nm, i){ return (i ? ", " : " · " + (SMS.leadAlso || "also lit") + " ") + nm; }).join("") : "");
     /* a block with no bench surface, picked: the ask stays on the page rather than in a hover that goes */
     var say = document.getElementById("smsay"), picked = SMLEAD === "map" ? smBlock(SMPICK) : null;
     if (picked && smKind(picked) === "none") { say.hidden = false; say.dataset.kind = "none"; say.innerHTML = "";
@@ -2962,7 +2971,15 @@
        moves and the placement; the page lends it the three rows it has always drawn — the root, a block, a field */
     if (window.LABMAP) window.LABMAP.drawTree(host, SMKIT);
     else { var ul = el("ul"); SM.blocks.forEach(function(b, i){ ul.append(smBlockRow(b, { last: i === SM.blocks.length - 1, fold: true })); }); host.append(smRootRow(), ul); }
-    if (window.FIELDMAP) window.FIELDMAP.paintTree(); }
+    if (window.FIELDMAP) window.FIELDMAP.paintTree();
+    /* a BENCH move that lights a different block brings that block into view inside the map's own scroll box (never the
+       page) — on the next frame, after the counts are written, so it lands where the row is now (walk-fold 2026-09-23).
+       A move the MAP made (Follow goes through the bench's own calls, then marks itself) is the map's by then, and the
+       tree stays where the pointer is: rolling it under a resting pointer would preview whatever node rolls in. */
+    var litKey = Object.keys(lit).sort().join(" ");
+    if (SMLEAD === "lab" && litKey && litKey !== SMREV && window.LABMAP && window.LABMAP.reveal)
+      requestAnimationFrame(function(){ if (SMLEAD === "lab") window.LABMAP.reveal(smLead(smLit())); });
+    SMREV = litKey; }
   window.smDraw = smDraw;
   /* SMKIT — what the page lends the map module (_lab-ep-map.js): its three rows, its block move, and a way to say the
      map moved (a node other than a block was shown) */
@@ -3006,7 +3023,7 @@
     /* the field layer's rail options are a LOOK (D-027: every look is a setting, pasted back as a copy line) — they ride the field line */
     if (FM) L[L.length - 1] += " · " + FM.look();
     L.push((N.facts || "facts") + ": _lab-ep.js · feed head " + (F.head || "?"),
-      (N.tree || "tree") + ": " + (src.map || "?") + " · inventory " + (src.inv_hash || "?") + " · cells " + (src.cells_hash || "?") + " · ruled " + (src.ruled || "?") + " · " + SM.state,
+      (N.tree || "tree") + ": " + (src.tree || "?") + " · inventory " + (src.inv_hash || "?") + " · cells " + (src.cells_hash || "?") + " · ruled " + (src.ruled || "?") + " · " + SM.state,
       "", SMF.tail || "your words:", "");
     return L.join("\n"); };
   document.getElementById("smhd").append(copyBtn("sectionmap", SMS.feedbackWhat || "a note about what you are looking at"));
@@ -3020,7 +3037,7 @@
       mb.textContent = open ? (SMS.moreHide || "hide it again") : (SMS.moreShow || "more information"); };
     box.innerHTML = (((SMW.more || {}).lines) || []).map(function(l){ return "<p>" + smEsc(l) + "</p>"; }).join("")
       + '<p id="smflmore"></p>' + (window.LABMAP ? window.LABMAP.moreHtml() : "")
-      + "<p>" + smEsc("tree " + (src.map || "?") + " · inventory " + (src.inv_hash || "?") + " · cells " + (src.cells_hash || "?")
+      + "<p>" + smEsc("tree " + (src.tree || "?") + " · drawn on " + (src.map || "?") + " · inventory " + (src.inv_hash || "?") + " · cells " + (src.cells_hash || "?")
       + " · ruled " + (src.ruled || "?") + " · read " + SM.state) + "</p>"; })();
   /* THE OTHER DIRECTION — the bench's own moving calls, wrapped at the binding the bench itself uses,
      so a part button or a path cell lights the map without the map polling anything. */

@@ -30562,6 +30562,7 @@ window.LABEP = {
   "state": "present",
   "reason": null,
   "source": {
+   "tree": "docs/design/design-context/brainmap-endpoint.json",
    "map": "docs/design/workflow-panel/endpoint-lab.html",
    "inventory": "inventory-endpoint.md",
    "inv_hash": "11931871",
@@ -30594,8 +30595,9 @@ window.LABEP = {
     "leadYou": "you opened this here",
     "leadLab": "the bench moved and this lit",
     "leadIdle": "nothing open yet",
+    "leadAlso": "also lit",
     "absent": "The card's ruled tree was not read, so nothing is drawn here.",
-    "staleNote": "The brain map's committed tree was built from an older inventory, so the blocks below may not match the ruling.",
+    "staleNote": "The tree in docs/design/design-context/brainmap-endpoint.json was built from an older inventory, so the blocks below may not match the ruling.",
     "moreShow": "more information",
     "moreHide": "hide it again",
     "feedbackWhat": "a note about what you are looking at",
@@ -30617,7 +30619,7 @@ window.LABEP = {
     "lines": [
      "A block is a group of the 20 questions, ruled by hand; the 11 groups are the ruling D-015.",
      "An attribute's home is the block its use weighs into most, and one that three or more blocks need is shared and homed nowhere.",
-     "The tree is read from the brain map's committed page, whose own generator proves its home rule against m1-cluster.js on every run."
+     "The tree is read from docs/design/design-context/brainmap-endpoint.json, the data file gen-brainmap.js writes; that generator proves its home rule against m1-cluster.js on every run."
     ]
    },
    "feedback": {
@@ -33318,7 +33320,23 @@ window.LABEP = {
       "tip": "Full width under the rail, the middle and the command panel — the second section."
      }
     },
-    "movedRight": "The map is drawn in a column right of the panels.",
+    "movedRight": "The map is drawn in a column right of the panels. The panels share the width left between the rail and the column, and slide sideways inside it when they do not fit — the page itself never slides.",
+    "width": {
+     "label": "the column's width",
+     "tip": "How wide the right column is. The panels take the rest.",
+     "pick": "narrow",
+     "opts": {
+      "narrow": {
+       "name": "narrow",
+       "tip": "The column gives the panels more room, so the middle and the portrait stay whole beside it when the screen is wide enough; the tree wraps more."
+      },
+      "wide": {
+       "name": "as wide as the rail",
+       "tip": "The column is as wide as the rail tab, so the tree wraps as it does there; the panels slide sideways more."
+      }
+     },
+     "why": "My pick is narrow: it leaves the panels the most room. On a screen wide enough, the middle and the portrait stay whole between the rail and the map; on a narrower one the band holds less of them, and Show, Open and Follow slide the panel that answers into view."
+    },
     "movedBelow": "The map is drawn full width below the panels.",
     "why": "My pick is the rail tab: it moves nothing on the bench, and the map stays left of the panels it lights, so the line from a node runs toward what it lit."
    },

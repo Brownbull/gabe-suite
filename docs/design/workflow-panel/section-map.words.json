@@ -1,5 +1,5 @@
 {
- "_about": "Authored words for the endpoint lab's SECTION MAP tab — the card's eleven ruled blocks (prisms-endpoint.json, D-015) laid beside the lab surface that answers each one. The tree, the attributes and every count are GENERATED (gen-endpoint-facts.py reads the brain map's own committed tree, which is m1-cluster.js's homes, self-proven at its generation). Nothing numeric is typed here: {tokens} are filled by the generator. The JOIN below is a PROPOSAL — authored words, never a measurement — and the page says so on its face. A block's pairing is one of THREE kinds (D-022): a page (a surface on the bench answers it) · no page yet (nothing does, and the gap is what the next piece should build) · a running header (it belongs to every part: it is lit where the part draws its stage reading, and on every other part its row names the gap for that part). Plain lines follow gabe-lens plain mode and are checked by plain-audit.py.",
+ "_about": "Authored words for the endpoint lab's SECTION MAP tab — the card's eleven ruled blocks (prisms-endpoint.json, D-015) laid beside the lab surface that answers each one. The tree, the attributes and every count are GENERATED (gen-endpoint-facts.py reads the tree from design-context/brainmap-endpoint.json, the data file gen-brainmap.js writes: m1-cluster.js's homes, self-proven at its generation. The brain map's page is a record now (design-context/records/brainmap/) and nothing here reads it). Nothing numeric is typed here: {tokens} are filled by the generator. The JOIN below is a PROPOSAL — authored words, never a measurement — and the page says so on its face. A block's pairing is one of THREE kinds (D-022): a page (a surface on the bench answers it) · no page yet (nothing does, and the gap is what the next piece should build) · a running header (it belongs to every part: it is lit where the part draws its stage reading, and on every other part its row names the gap for that part). Plain lines follow gabe-lens plain mode and are checked by plain-audit.py.",
  "tab": {
   "word": "section map",
   "note": "the card's {nBlocks} ruled blocks against the lab surface that answers each one — a page, no page yet, or a running header across every part. Clicking a block moves the bench; moving the bench lights the block. Lab chrome — none of it ships with the console."
@@ -19,8 +19,9 @@
   "leadYou": "you opened this here",
   "leadLab": "the bench moved and this lit",
   "leadIdle": "nothing open yet",
+  "leadAlso": "also lit",
   "absent": "The card's ruled tree was not read, so nothing is drawn here.",
-  "staleNote": "The brain map's committed tree was built from an older inventory, so the blocks below may not match the ruling.",
+  "staleNote": "The tree in {treeFile} was built from an older inventory, so the blocks below may not match the ruling.",
   "moreShow": "more information",
   "moreHide": "hide it again",
   "feedbackWhat": "a note about what you are looking at",
@@ -42,7 +43,7 @@
   "lines": [
    "A block is a group of the {nQuestions} questions, ruled by hand; the {nBlocks} groups are the ruling D-015.",
    "An attribute's home is the block its use weighs into most, and one that three or more blocks need is shared and homed nowhere.",
-   "The tree is read from the brain map's committed page, whose own generator proves its home rule against m1-cluster.js on every run."
+   "The tree is read from {treeFile}, the data file gen-brainmap.js writes; that generator proves its home rule against m1-cluster.js on every run."
   ]
  },
  "surfaces": {

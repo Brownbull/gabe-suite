@@ -190,7 +190,17 @@ code{ font:600 .95em var(--font-mono); color:var(--ink); }
   border-radius:0 6px 6px 0; padding:3px 6px; cursor:pointer; text-align:left; }
 #smtree .smb:hover{ color:var(--accent); background:var(--chip-bg); }
 #smtree .smb[data-open="true"]{ background:var(--chip-bg); }
-#smtree .smb[data-lit="true"]{ border-left-color:var(--ok); }
+/* LIT — the block the bench is on (walk-fold 2026-09-23: a thin green bar alone was missed at 2560). A tinted row, a green
+   rim AND a wider bar, kept apart from hover (the chip ground, accent words), an open row (the chip ground) and Keep only's
+   kept rows (untouched: Keep only marks what it does NOT keep, dimmed). The padding gives back what the wider bar takes.
+   Only the bar's WIDTH and COLOUR are set: its style stays the row's own, so the running header keeps its dashed rule
+   (D-022) lit, hovered and open. The ground is opaque and dark enough that every line on the row keeps 4.5:1 at 12px
+   (review 2026-09-23: a 20% tint over the panel dropped the accent and muted lines to 3.5:1); the rim carries the glance. */
+#smtree .smb[data-lit="true"], #smtree .smb[data-lit="true"]:hover, #smtree .smb[data-lit="true"][data-open="true"]{
+  border-left-width:5px; border-left-color:var(--ok); padding-left:3px;
+  background:color-mix(in srgb, var(--ok) 14%, var(--chip-bg)); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--ok) 55%, transparent); }
+#smtree .smb[data-lit="true"] .smbn{ color:var(--ok); }
+#smtree .smb[data-lit="true"]:hover .smbn{ color:var(--accent); }
 #smtree .smb .smct{ font-weight:600; color:var(--muted); font-variant-numeric:tabular-nums; }
 #smtree .smb .smsurf{ grid-column:1 / -1; font-weight:600; color:var(--accent); margin-top:1px; }
 #smtree .smb[data-built="false"] .smsurf{ color:var(--red); }
@@ -1689,13 +1699,25 @@ html, body{ height:100%; }
 .smwrap .smfact span{ font:800 12px var(--font-mono); color:var(--accent); }
 .smwrap .smncw{ margin:0; color:var(--muted); line-height:1.45; }
 /* THE TWO OTHER PLACES: a column right of the panels · full width below them */
-#mapcol{ order:6; flex:none; width:460px; align-self:stretch; max-height:100%; overflow-y:auto; background:var(--panel);
+#mapcol{ order:6; flex:none; width:var(--mapw, 340px); align-self:stretch; max-height:100%; overflow-y:auto; background:var(--panel);
   border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-left:12px; }
 #mapcol[hidden], #mapbelow[hidden]{ display:none; }
 #mapbelow{ flex:1 1 0; min-height:320px; margin-top:14px; overflow:auto; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 14px; }
 body[data-mapplace="below"] #lab{ overflow-y:auto; }
 body[data-mapplace="below"] #row{ flex:none; height:var(--rowh, 600px); }
 body[data-mapplace="right"] #row{ flex-wrap:nowrap; }
+/* THE BAND — the three panels in a row of their own, between the rail (order 1) and the right column (order 6); inside
+   it the command panel's side is still one `order` value (cmd-left 2 · bench 3 · port 4 · cmd-right 5). */
+#band{ order:2; flex:none; display:flex; gap:16px; align-items:flex-start; min-height:0; }
+/* THE RIGHT COLUMN FITS THE WINDOW (walk-fold, 2026-09-23: at 2560 the lab slid ~396px left and took the rail and the
+   placement control off screen). The rail keeps its width, the column takes the width its rail option picks, and the
+   band takes what is left: the panels keep the sizes their lines set and slide sideways INSIDE the band, so the page
+   never scrolls sideways and the rail and the map are on screen together. */
+/* the band hugs the panels' height (never more than the row's), so its sideways scrollbar sits right under them — not
+   hundreds of px below at the row's bottom (review 2026-09-23) */
+body[data-mapplace="right"] #band{ flex:1 1 0; min-width:0; align-self:flex-start; max-height:100%; overflow-x:auto; overflow-y:auto; }
+body[data-mapplace="right"] #mapcol{ --mapw:340px; }
+body[data-mapplace="right"][data-mapw="wide"] #mapcol{ --mapw:474px; }   /* the rail's own width: the tree wraps as it does in the tab */
 #mapbelow #smtree > ul{ column-width:420px; column-gap:28px; }
 #mapbelow #smtree > ul > li{ break-inside:avoid; }
 /* THE SWEEP — one short hop from the node shown last to the nearest element it lit; drawn whole, never animated (D-004) */

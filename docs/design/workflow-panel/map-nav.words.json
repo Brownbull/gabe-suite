@@ -32,7 +32,23 @@
     "tip": "Full width under the rail, the middle and the command panel — the second section."
    }
   },
-  "movedRight": "The map is drawn in a column right of the panels.",
+  "movedRight": "The map is drawn in a column right of the panels. The panels share the width left between the rail and the column, and slide sideways inside it when they do not fit — the page itself never slides.",
+  "width": {
+   "label": "the column's width",
+   "tip": "How wide the right column is. The panels take the rest.",
+   "pick": "narrow",
+   "opts": {
+    "narrow": {
+     "name": "narrow",
+     "tip": "The column gives the panels more room, so the middle and the portrait stay whole beside it when the screen is wide enough; the tree wraps more."
+    },
+    "wide": {
+     "name": "as wide as the rail",
+     "tip": "The column is as wide as the rail tab, so the tree wraps as it does there; the panels slide sideways more."
+    }
+   },
+   "why": "My pick is narrow: it leaves the panels the most room. On a screen wide enough, the middle and the portrait stay whole between the rail and the map; on a narrower one the band holds less of them, and Show, Open and Follow slide the panel that answers into view."
+  },
   "movedBelow": "The map is drawn full width below the panels.",
   "why": "My pick is the rail tab: it moves nothing on the bench, and the map stays left of the panels it lights, so the line from a node runs toward what it lit."
  },

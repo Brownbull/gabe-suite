@@ -18,7 +18,7 @@ const HERE = path.dirname(new URL(import.meta.url).pathname), REPO = path.resolv
 const PW = path.join(REPO, 'docs/design/graft-adoption/spike/_build/node_modules/playwright-core'), CHROME = '/usr/bin/google-chrome-stable';
 const { chromium } = require(PW);
 fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive: true });
-const W = Number(process.env.VW || 2560), H = Number(process.env.VH || 1400);   // his screen: the lab's wings are tuned at 2560, and at 1920 the map's right column sits past the window's edge
+const W = Number(process.env.VW || 2560), H = Number(process.env.VH || 1400);   // his screen: the lab's wings are tuned at 2560; the map's right column fits at 2560 and at 1920 (the panels slide inside their band)
 const b = await chromium.launch({ executablePath: CHROME, args: ['--use-angle=swiftshader', '--no-sandbox', '--disable-gpu-sandbox', '--disable-dev-shm-usage'] });
 const p = await b.newPage({ viewport: { width: W, height: H } });
 const errs = []; p.on('pageerror', e => errs.push(e.message));
@@ -50,21 +50,46 @@ const bench = () => p.evaluate(() => {
     faded: q('.fl-dim').length, quiet: q('.fl-quiet').length,
     mapAt: (['#rt-map', '#mapcol', '#mapbelow'].find(s => { const h = document.querySelector(s); return h && h.contains(document.getElementById('smwrap')); }) || '?'),
     mapTopInView: (() => { const m = document.getElementById('smtree'); if (!m) return null; const r = m.getBoundingClientRect(); return r.top >= 0 && r.top < innerHeight; })(),
+    railOnScreen: (() => { const r = document.getElementById('notes').getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth; })(),
+    mapOnScreen: (() => { const r = document.getElementById('smwrap').getBoundingClientRect(); return r.width > 0 && r.left >= 0 && r.right <= innerWidth; })(),
+    /* each panel's share of its width on screen, inside the band that clips it and the window (the right column's band) */
+    panels: (() => { const band = document.getElementById('band'), B = band ? band.getBoundingClientRect() : { left: 0, right: innerWidth };
+      const sh = id => { const e = document.getElementById(id); if (!e || e.hidden) return null; const r = e.getBoundingClientRect();
+        return r.width ? +(Math.max(0, Math.min(r.right, B.right, innerWidth) - Math.max(r.left, B.left, 0)) / r.width).toFixed(2) : null; };
+      return { middle: sh('bench'), portrait: sh('port'), command: sh('cmd') }; })(),
+    litRow: (() => { const e = [...document.querySelectorAll('#smtree .smb[data-lit="true"]')].find(x => x.offsetParent); if (!e) return null;
+      const r = e.getBoundingClientRect(), h = document.elementFromPoint(r.left + Math.min(r.width / 2, 40), (r.top + r.bottom) / 2);
+      return { name: (e.querySelector('.smbn') || e).textContent.trim(), shows: !!h && e.contains(h) }; })(),
     line: (document.getElementById('smfl') || {}).textContent || null,
     keepBar: (() => { const k = document.getElementById('mkeep'); return k && !k.hidden ? (k.textContent || '').trim().replace(/\s+/g, ' ') : null; })() }; });
 /* one step: the mouse goes to the control's centre and clicks (or only rests, for a hover); then the picture. `find` finds the
    control by its words; it is asked again after the click, because a click redraws the tree and the ring must land on the
    control as it is drawn NOW */
-async function step(name, find, what, { hover = false, keepMouse = false, after = null } = {}) {
+async function step(name, find, what, { hover = false, keepMouse = false, after = null, roll = null } = {}) {
   const el = await find(); if (!el) return null;
-  await el.scrollIntoViewIfNeeded(); const t = await words(el), bx = await el.boundingBox();
+  await el.scrollIntoViewIfNeeded();
+  /* a bar that sticks to the top of the rail (the kept outline, Keep only) can sit over a control scrolled just into view —
+     the 2026-09-23 walk clicked the kept-outline bar instead of Keep only. A person rolls the wheel up over the rail until
+     the control is clear; so does the walk, and the log says how many turns it took */
+  const clear = () => el.evaluate(e => { const r = e.getBoundingClientRect(), h = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return !!h && e.contains(h); });
+  let rolled = 0;
+  if (!hover && !(await clear())) { const b0 = await el.boundingBox(); await p.mouse.move(b0.x + b0.width / 2, b0.y + b0.height + 30);
+    for (; rolled < 12 && !(await clear()); rolled++) { await p.mouse.wheel(0, -120); await wait(120); } }
+  const t = await words(el), bx = await el.boundingBox();
   const cx = bx.x + bx.width / 2, cy = bx.y + bx.height / 2;
   if (hover) { await p.mouse.move(cx - 30, cy); await wait(80); await p.mouse.move(cx, cy); await wait(700); }
   else { await p.mouse.click(cx, cy); await wait(650); if (!keepMouse) await park(); }
   const now = hover ? el : await (after || find)(true).catch(() => null);   // `after`: the control that answers when the one clicked is gone
+  /* `roll`: what the step opened can land below the rail's edge (the review of 2026-09-23: picture 05 differed from 04 only
+     by the fold glyph). A person rolls the wheel down over the tree until the rows show; so does the walk, and says so */
+  let down = 0;
+  if (roll && !(await roll())) { const t0 = await p.$eval('#smtree', e => { const r = e.getBoundingClientRect(); return [r.left + r.width / 2, Math.min(r.bottom, innerHeight) - 80]; });
+    await p.mouse.move(t0[0], t0[1]); for (; down < 12 && !(await roll()); down++) { await p.mouse.wheel(0, 120); await wait(140); } await park(); }
   const f = await shot(name, now);
   const s = await bench();
-  say('step ' + n + ' · ' + name, { did: hover ? 'rest the mouse on' : 'click', words: t.slice(0, 90), at: [Math.round(cx), Math.round(cy)], picture: f, what, bench: s });
+  say('step ' + n + ' · ' + name, { did: (rolled ? 'roll the wheel up ' + rolled + ' turn(s) over the rail, then ' : '') + (hover ? 'rest the mouse on' : 'click')
+    + (down ? ', then roll the wheel down ' + down + ' turn(s) over the tree to see what it opened' : ''), words: t.slice(0, 90), at: [Math.round(cx), Math.round(cy)], picture: f, what,
+    ...(roll ? { openedShows: await roll() } : {}), bench: s });
   return s; }
 
 // ── COLD LOAD: every remembered rail cleared, then the page loaded again ─────────────────────────────────────────
@@ -86,6 +111,22 @@ say('rows under By stage', await p.$$eval('#smtree .smn[data-kind="stage"]', els
 // ── 3 · open a row (its fold, the small triangle left of it: the row's own click is a Show) ─────────────────────────
 await step('open-the-handler-row', inRow(/^\S*\s*[▸▾]\s*HANDLER/, 'the HANDLER row', '.smfold'), 'the HANDLER row opens: the five blocks proposed for it, each with where its page is and how many of its fields the bench draws');
 say('blocks under HANDLER', await p.$$eval('#smtree .smb', els => els.filter(e => e.offsetParent).map(e => (e.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 80))));
+
+// ── 3b · By stage's own switch: where a block that names several rows goes (STATE open item 1 asks for these two pictures).
+//         The HANDLER row stays open; Across the stages is opened too, so both pictures show where the blocks moved ─────────
+const rowCounts = () => p.$$eval('#smtree .smn[data-kind="stage"]', els => els.map(e => ((e.querySelector('.smnn') || e).textContent.trim()) + ' ' + ((e.querySelector('.smct') || {}).textContent || '').trim()));
+/* the Across the stages row and every block under it, inside the rail's visible part (or its blocks, when the row and its
+   blocks are taller than the rail) — the check the walk rolls the wheel toward */
+const acrossShows = () => p.evaluate(() => { const box = document.getElementById('notes'), q = box.getBoundingClientRect(), lo = Math.max(q.top, 0), hi = Math.min(q.bottom, innerHeight);
+  const row = [...document.querySelectorAll('#smtree .smn[data-kind="stage"]')].find(e => e.offsetParent && /Across/.test(e.textContent)); if (!row) return null;
+  const li = row.closest('li'), kids = [...li.querySelectorAll('.smb')].filter(e => e.offsetParent); if (!kids.length) return false;
+  const a = row.getBoundingClientRect(), z = kids[kids.length - 1].getBoundingClientRect(), k0 = kids[0].getBoundingClientRect();
+  return z.bottom <= hi - 2 && (a.top >= lo || (z.bottom - k0.top > hi - lo - 40 && k0.top >= lo)); });
+await step('open-across-the-stages', inRow(/^\S*\s*[▸▾]\s*Across/, 'the Across the stages row', '.smfold'), 'the Across the stages row opens under the eight rows of his record', { roll: acrossShows });
+await step('rule-under-across-the-stages', W_('#smnav .smno[data-opt="srule"] .smnb', /^under Across the stages/, 'under Across the stages'), 'the switch is on D-021 as recorded: a block that names one row sits under it, one that names several (or none) sits under Across the stages — the rows empty out and Across fills', { roll: acrossShows });
+say('rows under the rule D-021 recorded', await rowCounts());
+await step('rule-under-every-stage-it-touches', W_('#smnav .smno[data-opt="srule"] .smnb', /^under every stage it touches/, 'under every stage it touches'), 'back on the agent\'s pick (dashed): a block is drawn under every row it names, so it appears more than once, and Across holds only the blocks that name none');
+say('rows under the agent\'s pick', await rowCounts());
 
 // ── 4 · hover a field. Under By stage the tree stops at the block (three levels); the note under the tree says where the
 //        fields are listed. A person follows it: Flat, the block's fold, then rests the mouse on a field drawn here. ──────────
@@ -110,8 +151,9 @@ await step('show-functions', W_('#smtree .smb', /^Functions/, 'the Functions blo
 // ── 6 · switch the part: the tree re-lights for the part the bench is on now ─────────────────────────────────────────
 const litBefore = await p.$$eval('#smtree .smb[data-lit="true"]', els => els.map(e => (e.querySelector('.smbn') || e).textContent.trim()));
 await step('switch-to-tests', W_('#tabs .tab', /Tests/, 'the Tests part'), 'the bench draws Tests; the tree lights the Proof block and every row recounts how many of its fields are drawn here');
-/* the block the bench lit may sit below the rail's fold: a person rolls the wheel over the map until it shows. "Shows" = the
-   element at its centre IS the block (not clipped by the rail, not under anything) */
+/* the block the bench lit could sit below the rail's fold (the first walk had to roll the wheel to it): the map now rolls
+   ITSELF to it, inside its own scroll box. "Shows" = the element at its centre IS the block (not clipped, not under anything).
+   The wheel step below runs only if it still does not show, and says so */
 const litShows = () => p.evaluate(() => { const e = document.querySelector('#smtree .smb[data-lit="true"]'); if (!e) return null;
   const r = e.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + Math.min(r.height / 2, 10);
   if (y < 0 || y >= innerHeight) return false; const hit = document.elementFromPoint(x, y); return !!hit && e.contains(hit); });
@@ -119,6 +161,7 @@ if ((await litShows()) === false) { const t = await p.$eval('#smtree', e => { co
   await p.mouse.move(t[0], t[1]); for (let i = 0; i < 12 && !(await litShows()); i++) { await p.mouse.wheel(0, 160); await wait(160); } await park();
   const lit = await p.$('#smtree .smb[data-lit="true"]');
   say('step ' + (n + 1) + ' · roll-the-map-to-the-lit-block', { did: 'wheel down over the map', picture: await shot('roll-the-map-to-the-lit-block', lit), shows: await litShows(), bench: await bench() }); }
+say('after the part switch, the lit block shows without a wheel', await litShows());
 say('lit block before → after the part switch', { before: litBefore, after: await p.$$eval('#smtree .smb[data-lit="true"]', els => els.map(e => (e.querySelector('.smbn') || e).textContent.trim())) });
 
 // ── 7 · Keep only ────────────────────────────────────────────────────────────────────────────────────────────────
@@ -127,8 +170,10 @@ await step('keep-only-on', W_('#smkeepb', /\S/, 'the Keep only button'), 'Keep o
 
 // ── 8 · where the map sits: the right column, then full width below ───────────────────────────────────────────────
 await step('map-in-the-right-column', W_('#smplace .smnb', /^right column/, 'right column'), 'the map moves to a column right of the panels; the bench and its lights do not change');
-{ // at 2560 the right column makes the lab wider than the window: the lab slides left to show the column and the rail, with
-  // the placement control, leaves the window. A person slides it back with the wheel (Shift + wheel) over the panels.
+await step('right-column-as-wide-as-the-rail', W_('#smplace .smno[data-opt="mapw"] .smnb', /^as wide as the rail/, 'as wide as the rail'), 'the column widens to the rail\'s own width; the panels\' band narrows and what it cannot hold slides under the column\'s edge (the log gives each panel\'s share on screen) — the rail and the map stay on screen');
+await step('right-column-narrow', W_('#smplace .smno[data-opt="mapw"] .smnb', /^narrow/, 'narrow'), 'back on the pick (dashed): the narrow column, so the panels\' band is as wide as it gets beside it (the log gives each panel\'s share on screen)');
+{ // the first walk found the lab sliding ~396px left at 2560, taking the rail and the placement control off screen. It must
+  // not slide now; the step below only runs (and says so) if it does.
   const sl = await labLeft(); say('the lab slid left to show the right column, by (px)', sl);
   if (sl > 0) { await p.mouse.move(W / 2, 700); for (let i = 0; i < 10 && (await labLeft()) > 0; i++) { await p.mouse.wheel(-200, 0); await wait(150); } await park();
     say('step ' + (n + 1) + ' · slide-the-lab-back-left', { did: 'Shift + wheel over the panels, toward the left', picture: await shot('slide-the-lab-back-left'), slidNow: await labLeft(), bench: await bench() }); } }

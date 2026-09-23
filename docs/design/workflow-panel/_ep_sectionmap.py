@@ -180,6 +180,7 @@ def _build() -> dict:
     tok = {"nAttrs": n["attrs"], "nBlocks": n["blocks"], "nShared": n["shared"], "nUnplaced": n["unplaced"],
            "nOwn": n["own"], "nWithSurface": n["with_surface"], "nWithoutSurface": n["without_surface"], "nHeader": n["header"],
            "nSections": n["sections"], "ruled": tree.get("ruled") or "not said",
+           "treeFile": tree_file.relative_to(HERE.parents[2]).as_posix(),
            "nQuestions": len({q for b in blocks for q in (b.get("questions") or [])}) or len(str(tree.get("questions") or "")) }
 
     def fill(x):
@@ -198,9 +199,9 @@ def _build() -> dict:
     return {
         "state": "present" if fresh else "stale",
         "reason": why,
-        # `map` names the PAGE a reader opens to see the tree; the tree itself is read from brainmap-endpoint.json.
-        # The brain map's own page retired (D-024), so the page that draws the tree is the lab itself.
-        "source": {"map": "docs/design/workflow-panel/endpoint-lab.html",
+        # `tree` names the FILE the tree is read from; `map` names the PAGE a reader opens to see it. The brain map's own
+        # page retired (D-024) to design-context/records/brainmap/, so the page that draws the tree is the lab itself.
+        "source": {"tree": tree_file.relative_to(HERE.parents[2]).as_posix(), "map": "docs/design/workflow-panel/endpoint-lab.html",
                    "inventory": (tree.get("inv") or {}).get("file"), "inv_hash": (tree.get("inv") or {}).get("hash"),
                    "cells_hash": tree.get("cellsHash"), "prisms": "docs/design/design-context/prisms-endpoint.json",
                    "ruled": tree.get("ruled")},

@@ -433,6 +433,9 @@
        · WHAT A RELOAD KEEPS — the grouping, the rule, the placement, the line, the records option, Keep only, the open
          folds and the open records (browser storage, this viewer only; the page works without it).
        · THE PLACEMENT — the rail tab · a column right of the panels · full width below them. The agent's pick marked.
+         The right column FITS the window: the panels' band takes the width left and slides inside itself; the column's
+         width (narrow · as wide as the rail) is a rail option of its own.
+       · REVEAL — after a bench move, the block it lit is scrolled into view inside the map's own scroll box.
        · THE SWEEP — a line from the node shown last to the nearest element it lit (the lab's hop, the agent's pick) or
          to the panel that answers the last move (the brain map's hop), or none — a rail option; drawn whole (D-004),
          one short hop between two real things (D-032: "the arrow is weird").
@@ -449,24 +452,26 @@
   function mk(t, c, x){ var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
   function hv(el, html){ if (window.hoverBind) window.hoverBind(el, html); }
   function hc(o){ return window.hcard ? window.hcard(o) : ""; }
-  var GRPS = ["flat", "standpoint", "section", "stage"], PLACES = ["rail", "right", "below"], SWEEPS = ["on", "panel", "off"], RECS = ["stack", "one"];
+  var GRPS = ["flat", "standpoint", "section", "stage"], PLACES = ["rail", "right", "below"], SWEEPS = ["on", "panel", "off"], RECS = ["stack", "one"], MAPWS = ["narrow", "wide"];
   var PICK = { grp: (NW.grouping || {}).pick || "flat", srule: (NV.stageRule || {})["default"] || "every",
-               place: (NW.placement || {}).pick || "rail", sweep: (NW.sweep || {}).pick || "on", recs: (NW.records || {}).pick || "stack" };
+               place: (NW.placement || {}).pick || "rail", sweep: (NW.sweep || {}).pick || "on", recs: (NW.records || {}).pick || "stack",
+               mapw: (((NW.placement || {}).width) || {}).pick || "narrow" };
   /* recs — the records Open drew, newest first · ans — the region that answered the last move (the sweep's panel end) ·
      fol — where Follow went last, per field, so the next Follow goes on to the next place */
-  var MS = { grp: PICK.grp, srule: PICK.srule, place: PICK.place, sweep: PICK.sweep, recmode: PICK.recs, keep: null, last: null, open: {}, recs: [],
-             ans: null, fol: {}, K: null };
+  var MS = { grp: PICK.grp, srule: PICK.srule, place: PICK.place, mapw: PICK.mapw, sweep: PICK.sweep, recmode: PICK.recs, keep: null, last: null, open: {}, recs: [],
+             ans: null, fol: {}, K: null, rev: null };
   var QUIET = { kept: 0, quiet: 0 }, DEEP = 0, DEEPS = {}, SWEEP = null;
   /* WHAT A RELOAD KEEPS (the brain map kept its picks, switches and open panels): this viewer's browser storage only, read
      and written inside try/catch — a private window or blocked storage boots on the picks, nothing breaks */
   var STORE = "eplab.mapnav", RESTORED = false;                     /* nothing is written before what was kept is read back */
-  function save(){ if (!RESTORED) return; try { window.localStorage.setItem(STORE, JSON.stringify({ grp: MS.grp, srule: MS.srule, place: MS.place, sweep: MS.sweep,
+  function save(){ if (!RESTORED) return; try { window.localStorage.setItem(STORE, JSON.stringify({ grp: MS.grp, srule: MS.srule, place: MS.place, mapw: MS.mapw, sweep: MS.sweep,
       recmode: MS.recmode, keep: MS.keep, open: Object.keys(MS.open).filter(function(k){ return MS.open[k]; }), recs: MS.recs })); } catch (e) { /* storage off */ } }
   function restore(){ RESTORED = true; var o = null; try { o = JSON.parse(window.localStorage.getItem(STORE) || "null"); } catch (e) { o = null; }
     if (!o || typeof o !== "object") return;
     if (GRPS.indexOf(o.grp) >= 0) MS.grp = o.grp;
     if ((NV.stageRules || []).indexOf(o.srule) >= 0) MS.srule = o.srule;
     if (PLACES.indexOf(o.place) >= 0) MS.place = o.place;
+    if (MAPWS.indexOf(o.mapw) >= 0) MS.mapw = o.mapw;
     if (SWEEPS.indexOf(o.sweep) >= 0) MS.sweep = o.sweep;
     if (RECS.indexOf(o.recmode) >= 0) MS.recmode = o.recmode;
     if (o.keep && o.keep !== "root" && subj(o.keep)) MS.keep = o.keep;
@@ -667,9 +672,9 @@
   /* ── SHOW — what every click on a node does (D-022). It never turns Keep only on. ── */
   function show(pk){ var s = subj(pk), K = MS.K; if (!s || !K) return;
     MS.last = pk; MS.ans = "middle";
-    if (s.kind === "block") { K.go(s.b); return; }                  // the page's move: the bench goes to the block's page, and its fields light
+    if (s.kind === "block") { K.go(s.b); bringIn("middle"); drawSweep(); return; }   // the page's move: the bench goes to the block's page, and its fields light
     if (s.kind !== "root" && s.kind !== "attr") MS.open[pk] = true;
-    keep(idsOfPk(pk), nameOf(pk)); K.mark(pk); }
+    keep(idsOfPk(pk), nameOf(pk)); K.mark(pk); bringIn("middle"); drawSweep(); }
   /* the moves the node shown last offers, drawn under it */
   function nodeEls(pk){ var h = document.getElementById("smtree"); return h ? [].slice.call(h.querySelectorAll('[data-pk="' + pk.replace(/"/g, '\\"') + '"]')) : []; }
   function placeMoves(){ var h = document.getElementById("smtree"); if (!h) return;
@@ -689,7 +694,7 @@
   function openRec(pk){ if (!subj(pk)) return;
     MS.recs = MS.recmode === "one" ? [pk] : [pk].concat(MS.recs.filter(function(k){ return k !== pk; }));   /* newest first; opened again, it comes to the top */
     MS.ans = "portrait"; save();
-    if (window.showPortraitVar) window.showPortraitVar("map-node"); drawSweep(); }
+    if (window.showPortraitVar) window.showPortraitVar("map-node"); bringIn("portrait"); drawSweep(); }
   function closeOne(pk){ MS.recs = MS.recs.filter(function(k){ return k !== pk; }); save();
     if (window.drawPortrait) window.drawPortrait(); drawSweep(); }
   function recRow(box, k, v){ var r = mk("div", "mrecr"); r.append(mk("span", "k", k), mk("span", "v", v)); box.append(r); }
@@ -776,7 +781,7 @@
     tell(fill(M.followDone || "{place}", { place: w, region: (M.regions || {})[t.region] || t.region })
       + (pth ? " " + fill(M.followPath || "{path}", { path: K0.pathWord ? K0.pathWord(pth) : p1 }) : ""));
     window.__smFollow = { id: s.id, place: w, tgt: t };
-    drawSweep(); }
+    bringIn(t.region); drawSweep(); }
 
   /* ── the map's own header: grouping · the stage rule · the line · Keep only ── */
   function optRow(key, label, tip, opts, cur, pick, set){ var row = mk("div", "smno"); row.dataset.opt = key;
@@ -854,17 +859,78 @@
     var host = v === "right" ? col : v === "below" ? bel : document.getElementById("rt-map");
     if (wrap && host && wrap.parentNode !== host) host.append(wrap);
     if (col) col.hidden = v !== "right"; if (bel) bel.hidden = v !== "below";
-    document.body.dataset.mapplace = v; if (v === "below") rowHeight();
-    var lab = document.getElementById("lab");
-    if (v === "right" && col) col.scrollIntoView({ block: "nearest", inline: "end" }); else if (lab) lab.scrollLeft = 0;
-    /* the node shown last comes back into view in its new place, so the line to what it lit can be drawn there too */
-    var n0 = MS.last ? nodeEls(MS.last)[0] : null; if (n0) n0.scrollIntoView({ block: "nearest", inline: "nearest" });
-    drawPlace(); paintTree(); drawSweep(); save(); }
+    document.body.dataset.mapplace = v; document.body.dataset.mapw = MS.mapw; if (v === "below") rowHeight();
+    /* the right column FITS (walk-fold 2026-09-23): the lab is never slid sideways to show it — the panels' band shares
+       the width and slides inside itself, so the page stays where it is and the rail stays on screen */
+    var lab = document.getElementById("lab"), band = document.getElementById("band");
+    if (lab) lab.scrollLeft = 0; if (band) band.scrollLeft = 0;
+    /* what the bench lit, and the node shown last, come back into view in the new place (walk-fold 2026-09-23 review: a
+       scroll to the node alone pushed the lit row under the column's edge). Below the panels the map is under the window's
+       fold, so the page itself moves to the node there, as it always did. */
+    drawPlace(); paintTree();
+    if (v === "below") { var n0 = MS.last ? nodeEls(MS.last)[0] : null; if (n0) n0.scrollIntoView({ block: "nearest", inline: "nearest" }); }
+    else reveal(MS.rev, true);
+    drawSweep(); save(); }
   function drawPlace(){ var host = document.getElementById("smplace"); if (!host) return; host.innerHTML = ""; if (!NAVOK) return;
     var P = NW.placement || {};
     host.append(optRow("place", P.label, P.tip, PLACES.map(function(k){ var o = (P.opts || {})[k] || {}; return { v: k, name: o.name, tip: o.tip }; }), MS.place, PICK.place, setPlace));
+    /* the right column's width — the agent's choice, so a rail option with the pick marked (D-025.2) */
+    var PW = P.width || {};
+    if (MS.place === "right" && PW.opts) host.append(optRow("mapw", PW.label, PW.tip, MAPWS.map(function(k){ var o = PW.opts[k] || {}; return { v: k, name: o.name, tip: o.tip }; }), MS.mapw, PICK.mapw, setMapw));
     if (MS.place !== "rail") host.append(mk("div", "smplnote", MS.place === "right" ? P.movedRight : P.movedBelow)); }
+  function setMapw(v){ if (MAPWS.indexOf(v) < 0) return; MS.mapw = v; document.body.dataset.mapw = v;
+    var band = document.getElementById("band"); if (band) band.scrollLeft = 0;
+    drawPlace(); paintTree(); reveal(MS.rev, true); drawSweep(); save(); }
   window.addEventListener("resize", function(){ if (MS.place === "below") rowHeight(); });
+
+  /* ── REVEAL — the block the bench lit is brought into view INSIDE the map's own scroll box (the rail, the right column
+        or the section below), never by scrolling the page: after a part switch it could sit below the tree's visible
+        part, named only in the lead line (walk-fold 2026-09-23). A bar that sticks to the top of that box (the kept
+        outline, Keep only) covers its first rows, so the visible part starts under it. ── */
+  function scrollBox(n){ var b = n.closest("#mapcol, #mapbelow, #notes"); return b && b.scrollHeight > b.clientHeight + 1 ? b : null; }
+  function visibleBox(box){ var b = box.getBoundingClientRect(), top = Math.max(b.top, 0), bot = Math.min(b.bottom, window.innerHeight);
+    [].forEach.call(box.querySelectorAll("#flkeep, #mkeep"), function(s){ if (s.hidden) return; var q = s.getBoundingClientRect();
+      if (q.height && q.top <= top + 12 && q.bottom > top) top = q.bottom; });
+    return { top: top, bottom: bot }; }
+  /* EVERY lit row is brought in when they fit together — the Data part lights two blocks, Data effects and the running
+     header (review 2026-09-23: the second one was never shown); `withLast` adds the node shown last, so the line from it
+     can be drawn. What does not fit falls away in that order: the node shown last first, then every lit row but the lead. */
+  function reveal(key, withLast){ var h = document.getElementById("smtree"); if (!h) return null;
+    if (key) MS.rev = key;
+    var ns = [].slice.call(h.querySelectorAll('.smb[data-lit="true"]')).filter(function(n){ return n.offsetParent !== null; });
+    var lead = ns.filter(function(x){ return x.dataset.sm === key; })[0] || ns[0];
+    var last = withLast && MS.last ? nodeEls(MS.last).filter(function(n){ return n.offsetParent !== null; })[0] : null;
+    var first = lead || last; if (!first) return null;
+    var box = scrollBox(first); if (!box) return { key: lead ? lead.dataset.sm : null, box: null, moved: 0, rows: ns.length + (last ? 1 : 0), shown: ns.length + (last ? 1 : 0) };
+    var v = visibleBox(box), pad = 12, room = v.bottom - v.top - 2 * pad;
+    var sets = [ns.concat(last ? [last] : []), ns, lead ? [lead] : [last]].filter(function(g){ return g.length; });
+    var pick = sets[sets.length - 1], lo = 0, hi = 0;
+    for (var i = 0; i < sets.length; i++) { var rs = sets[i].map(function(x){ return x.getBoundingClientRect(); });
+      lo = Math.min.apply(null, rs.map(function(r){ return r.top; })); hi = Math.max.apply(null, rs.map(function(r){ return r.bottom; }));
+      if (hi - lo <= room || i === sets.length - 1) { pick = sets[i]; break; } }
+    var d = 0;
+    /* out of view (or cut by an edge): the rows come to the middle of the visible part, their top never above that part */
+    if (lo < v.top + pad || hi > v.bottom - pad) d = Math.min((lo + hi) / 2 - (v.top + v.bottom) / 2, lo - (v.top + pad));
+    if (d) box.scrollTop += d;
+    return { key: lead ? lead.dataset.sm : null, box: box.id, moved: Math.round(d), rows: ns.length + (last ? 1 : 0), shown: pick.length }; }
+
+  /* ── BRING IN — in the right column the panels slide inside their band: the panel that answers a move (Show → the middle,
+        Open → the portrait, Follow → where it landed) is slid into the band's view, so the answer is on screen (review
+        2026-09-23: at 1920 the portrait sat wholly under the column). The band only; the page never moves. ── */
+  function bringIn(region){ var el = document.querySelector(ANSWERS[region] || ""), band = document.getElementById("band");
+    if (!el || !band || MS.place !== "right" || !band.contains(el) || band.scrollWidth <= band.clientWidth + 1) return null;
+    var b = band.getBoundingClientRect(), r = el.getBoundingClientRect(), d = 0;
+    if (r.width >= b.width || r.left < b.left) d = r.left - b.left; else if (r.right > b.right) d = r.right - b.right;
+    if (d) band.scrollLeft += d;
+    return Math.round(d); }
+  /* the part of an element really on screen: its box cut by the window and by every box around it that clips or scrolls */
+  function shownRect(el){ if (!el || !el.isConnected) return null; var r = el.getBoundingClientRect();
+    var L = Math.max(r.left, 0), T = Math.max(r.top, 0), R = Math.min(r.right, window.innerWidth), B = Math.min(r.bottom, window.innerHeight);
+    for (var p = el.parentElement; p && p !== document.documentElement; p = p.parentElement) { var cs = getComputedStyle(p);
+      if (cs.display === "none") return null;
+      if (/(auto|scroll|hidden|clip)/.test(cs.overflowX + " " + cs.overflowY)) { var q = p.getBoundingClientRect();
+        L = Math.max(L, q.left); T = Math.max(T, q.top); R = Math.min(R, q.right); B = Math.min(B, q.bottom); } }
+    return R - L >= 1 && B - T >= 1 ? { left: L, top: T, right: R, bottom: B, width: R - L, height: B - T } : null; }
 
   /* ── THE SWEEP: one short hop from the node shown last — both ends real things, the bend between them, drawn whole
         (D-004 · D-032). Where it ends is a rail option: the nearest element it lit (it goes when the light goes), or the
@@ -884,13 +950,14 @@
     if (!NAVOK || MS.sweep === "off" || !MS.last) return;
     var see = viewer(), from = nodeEls(MS.last).filter(see)[0]; if (!from) return;
     var hits;
-    if (MS.sweep === "panel") { var box = MS.ans && document.querySelector(ANSWERS[MS.ans] || ""); hits = box && box.offsetParent !== null ? [box] : []; }
+    /* the panel's end is the part of it on screen (in the right column a panel can sit wholly under the column) */
+    if (MS.sweep === "panel") { var box = MS.ans && document.querySelector(ANSWERS[MS.ans] || ""); hits = box && shownRect(box) ? [box] : []; }
     else { if (!KEEP) return; hits = hitsOf(KEEP.ids).filter(see); }
     if (!hits.length) return;
     var fr = from.getBoundingClientRect(), fx = (fr.left + fr.right) / 2, fy = (fr.top + fr.bottom) / 2, best = null, bd = Infinity;
-    hits.forEach(function(h){ var r = h.getBoundingClientRect(), dx = Math.max(r.left - fx, 0, fx - r.right), dy = Math.max(r.top - fy, 0, fy - r.bottom), d = dx * dx + dy * dy;
+    hits.forEach(function(h){ var r = shownRect(h) || h.getBoundingClientRect(), dx = Math.max(r.left - fx, 0, fx - r.right), dy = Math.max(r.top - fy, 0, fy - r.bottom), d = dx * dx + dy * dy;
       if (d < bd) { bd = d; best = h; } });
-    var tr = best.getBoundingClientRect(), sx, sy, ex, ey, d, horiz = tr.left >= fr.right || tr.right <= fr.left;
+    var tr = shownRect(best) || best.getBoundingClientRect(), sx, sy, ex, ey, d, horiz = tr.left >= fr.right || tr.right <= fr.left;
     if (horiz) { var rt = tr.left >= fr.right; sx = rt ? fr.right : fr.left; sy = fy; ex = rt ? tr.left : tr.right;
       ey = Math.max(tr.top + 2, Math.min(tr.bottom - 2, fy)); var mx = (sx + ex) / 2;
       d = "M" + sx + " " + sy + " C" + mx + " " + sy + "," + mx + " " + ey + "," + ex + " " + ey; }
@@ -908,13 +975,15 @@
     return fill(N1("lookLine", "{grp} · {keep} · {place} · {sweep}"), {
       grp: ((G[MS.grp] || {}).name || MS.grp) + (MS.grp === "stage" ? " (" + ruleName() + ")" : ""),
       keep: MS.keep ? "“" + nameOf(MS.keep) + "”" : N1("lookOff", "off"),
-      place: (((NW.placement || {}).opts || {})[MS.place] || {}).name || MS.place,
+      place: ((((NW.placement || {}).opts || {})[MS.place] || {}).name || MS.place)
+        + (MS.place === "right" ? " (" + (((((NW.placement || {}).width || {}).opts || {})[MS.mapw] || {}).name || MS.mapw) + ")" : ""),
       sweep: ((NW.sweep || {}).opts || {})[MS.sweep] || MS.sweep }); }
   function moreHtml(){ if (!NAVOK) return "";
     var h = '<div class="smopen" id="smopen"><b>' + esc(N1("openHead", "")) + '</b><p>' + esc(N1("openWhy", "")) + '</p>';
     ((NV.open || {}).items || []).forEach(function(it){ h += '<div class="smoq"><div class="q">' + esc(it.q) + '</div><div class="d">' + esc(it.did) + '</div>'
       + '<div class="a">' + esc(it.ask) + '</div><div class="l"><i>' + esc(N1("openLab", "")) + '</i> ' + esc(it.lab) + '</div></div>'; });
-    h += '<div class="smoq"><div class="q">' + esc(N1("placeHead", "")) + '</div><div class="d">' + esc((NW.placement || {}).why) + '</div></div>';
+    h += '<div class="smoq"><div class="q">' + esc(N1("placeHead", "")) + '</div><div class="d">' + esc((NW.placement || {}).why)
+      + (((NW.placement || {}).width || {}).why ? " " + esc(NW.placement.width.why) : "") + '</div></div>';
     /* what the brain map had that the lab does not carry yet — said, so its page is not retired on a silent loss (D-024) */
     var NC = NW.notCarried || {};
     if ((NC.items || []).length) { h += '<b>' + esc(NC.head) + '</b><p class="smncw">' + esc(NC.why) + '</p>';
@@ -924,15 +993,15 @@
     return h + '</div>'; }
 
   window.LABMAP = {
-    state: function(){ return { nav: NV.state, grp: MS.grp, srule: MS.srule, place: MS.place, sweep: MS.sweep, recmode: MS.recmode, keep: MS.keep, last: MS.last,
+    state: function(){ return { nav: NV.state, grp: MS.grp, srule: MS.srule, place: MS.place, mapw: MS.mapw, sweep: MS.sweep, recmode: MS.recmode, keep: MS.keep, last: MS.last,
       rec: MS.recs[0] || null, recs: MS.recs.slice(), ans: MS.ans,
       open: Object.keys(MS.open).filter(function(k){ return MS.open[k]; }), deep: DEEP, quiet: QUIET }; },
-    picks: function(){ return { grp: PICK.grp, srule: PICK.srule, place: PICK.place, sweep: PICK.sweep, recs: PICK.recs }; },
+    picks: function(){ return { grp: PICK.grp, srule: PICK.srule, place: PICK.place, mapw: PICK.mapw, sweep: PICK.sweep, recs: PICK.recs }; },
     drawTree: drawTree, drawNav: drawNav, drawPlace: drawPlace, show: show, openRec: openRec, follow: follow,
     note: function(pk){ if (subj(pk)) { MS.last = pk; MS.ans = "middle"; } },
     setRecs: setRecs, closeOne: closeOne, store: STORE,
     open: function(pks, v){ (pks || []).forEach(function(k){ MS.open[k] = v !== false; }); redraw(); },
-    setGroup: setGroup, setRule: setRule, setPlace: setPlace, setSweep: setSweep, keepOn: keepOn, keepOff: keepOff,
+    setGroup: setGroup, setRule: setRule, setPlace: setPlace, setMapw: setMapw, reveal: reveal, bringIn: bringIn, shownRect: shownRect, setSweep: setSweep, keepOn: keepOn, keepOff: keepOff,
     keepSets: keepSets, carries: function(pk){ return carries(pk, keepSets()); }, ids: idsOfPk, name: nameOf, kind: kindOf,
     lastName: function(){ return MS.last ? nameOf(MS.last) : null; },
     blockRows: blockRows, moveRows: moveRows, sweep: function(){ return SWEEP; }, drawSweep: drawSweep, paintQuiet: paintQuiet,

@@ -4318,6 +4318,9 @@ if (checksFile) {
     await p.evaluate(k => window.smOpen([k]), pb.key); await p.waitForTimeout(250);
     await p.click(`#smtree .sma[data-sm="${pid}"]`); await p.waitForTimeout(300); await hide();
     await p.click('#smtree .smmv .smmvb[data-move="follow"]'); await p.waitForTimeout(450); await hide();
+    /* the pointer leaves the tree first: the redraw after Follow can put another node under a resting pointer, and pointing
+       previews that node — a light this check is not about (found 2026-09-23, when the tree kept a scroll the reveal gave it) */
+    await p.mouse.move(2, 2); await p.waitForTimeout(150);
     const f2 = await p.evaluate(id => ({ st: window.FIELDMAP.state(id), lit: document.querySelectorAll('.fl-hit').length, want: window.DRAWN.els(id).length,
       say: document.getElementById('smsay').textContent, reg: (window.__smFollow || {}).tgt && window.__smFollow.tgt.region }), pid);
     ok(f2.st === 'here' && f2.lit === f2.want && f2.lit > 0 && f2.say !== NVW.moves.followNone && f2.say.indexOf(NVW.moves.regions[f2.reg] || '??') >= 0,
@@ -4436,6 +4439,9 @@ if (checksFile) {
         return { host, vis: w.offsetParent !== null && w.getBoundingClientRect().width > 200, others: ['mapcol', 'mapbelow'].filter(id => id !== host).map(id => document.getElementById(id).hidden),
           pks: [...document.querySelectorAll('#smtree [data-pk]')].map(n => n.dataset.pk), body: document.body.dataset.mapplace }; });
       snap[pl] = { g, d: await desc(bk.own.concat(bk.shared)) };
+      /* a pointer ARRIVES on the block: it starts away from the tree, since a placement change can roll the block under
+         wherever the pointer rested (the page previews only on a real arrival) */
+      await p.mouse.move(2, 2); await p.waitForTimeout(80);
       await p.hover(`#smtree .smb[data-sm="${bk.key}"]`); await p.waitForTimeout(250);
       snap[pl].real = await p.evaluate(() => document.querySelectorAll('.fl-hit').length);
       await p.mouse.move(2, 2); await p.waitForTimeout(150); await hide(); }
@@ -4454,7 +4460,12 @@ if (checksFile) {
   // ── F · THE SWEEP (D-032 "the arrow is weird", D-004): one short hop, both ends real things, drawn whole ──
   { const bk = SM.blocks.find(x => x.join.act.kind === 'part' && x.join.act.part === 'data');
     const sweep = () => p.evaluate(() => { const s = window.LABMAP.sweep(); if (!s) return null;
-      const n = s.node.getBoundingClientRect(), t = s.target.getBoundingClientRect(), E = 1.6;
+      /* the target's edge is the edge of its part ON SCREEN: in the right column a panel's element can be cut by the band */
+      const cut = (e) => { const r = e.getBoundingClientRect(); let L = Math.max(r.left, 0), T = Math.max(r.top, 0), R = Math.min(r.right, innerWidth), B = Math.min(r.bottom, innerHeight);
+        for (let x = e.parentElement; x && x !== document.documentElement; x = x.parentElement) { const c = getComputedStyle(x);
+          if (/(auto|scroll|hidden|clip)/.test(c.overflowX + ' ' + c.overflowY)) { const q = x.getBoundingClientRect(); L = Math.max(L, q.left); T = Math.max(T, q.top); R = Math.min(R, q.right); B = Math.min(B, q.bottom); } }
+        return { left: L, top: T, right: R, bottom: B }; };
+      const n = s.node.getBoundingClientRect(), t = cut(s.target), E = 1.6;
       const onEdge = (pt, r) => pt[0] >= r.left - E && pt[0] <= r.right + E && pt[1] >= r.top - E && pt[1] <= r.bottom + E
         && (Math.abs(pt[0] - r.left) < E || Math.abs(pt[0] - r.right) < E || Math.abs(pt[1] - r.top) < E || Math.abs(pt[1] - r.bottom) < E);
       const nums = (s.d.match(/-?\d+(?:\.\d+)?/g) || []).map(Number), xs = nums.filter((v, i) => i % 2 === 0), ys = nums.filter((v, i) => i % 2 === 1);
@@ -4599,6 +4610,191 @@ if (checksFile) {
        && await p.evaluate(h => document.getElementById('smopen').textContent.indexOf(h) >= 0, NVW.notCarried.head),
       'behind "more information", what the brain map had and the lab does not carry yet is listed, item by item', `${nc.length} of ${NVW.notCarried.items.length}`);
     await p.click('#smmoreb');
+    await p.evaluate(k => { try { window.localStorage.removeItem(k); } catch (e) { /* storage off */ } }, 'eplab.mapnav'); }
+  // ── I · WHAT THE FOLD WALK FOUND (walk-fold.mjs, 2026-09-23): a false sentence, a right column that slid the rail off
+  //     screen, a lit block out of view after a part switch, a lit mark too faint to see ──
+  { const vis = (sel) => p.$eval(sel, e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.top < innerHeight; });
+    // I1 · "more information" says where the tree is read from: the JSON file, not the retired page
+    await p.evaluate(() => window.railTab('map'));
+    await p.click('#smmoreb'); await p.waitForTimeout(200);
+    const more = await p.$eval('#smmore', e => e.innerText);
+    const treeLine = more.split('\n').find(l => /^The tree is read from/.test(l)) || '';
+    ok(SM.source.tree === 'docs/design/design-context/brainmap-endpoint.json' && treeLine.indexOf(SM.source.tree) >= 0 && !/committed page/.test(more)
+       && more.indexOf('tree ' + SM.source.tree) >= 0,
+      'behind "more information", the tree is said to be read from design-context/brainmap-endpoint.json', treeLine.slice(0, 140));
+    await p.click('#smmoreb'); await p.waitForTimeout(150);
+    // I2 · the right column FITS: no sideways page scroll, the rail and the map both on screen, at 1920 and at 2560, both widths
+    /* a panel's share of its width on screen, and the part of it on screen — cut by the band that clips it and the window */
+    const shown = () => p.evaluate(() => { const B = document.getElementById('band').getBoundingClientRect();
+      const one = id => { const r = document.getElementById(id).getBoundingClientRect(), L = Math.max(r.left, B.left, 0), R = Math.min(r.right, B.right, innerWidth),
+        T = Math.max(r.top, B.top, 0), Bo = Math.min(r.bottom, B.bottom, innerHeight);
+        return { share: r.width ? +(Math.max(0, R - L) / r.width).toFixed(3) : 0, rect: R - L >= 1 && Bo - T >= 1 ? [L, T, R, Bo] : null, bottom: r.bottom }; };
+      const o = { bench: one('bench'), port: one('port'), cmd: one('cmd') }, col = document.getElementById('mapcol').getBoundingClientRect();
+      o.band = [Math.round(B.left), Math.round(B.right), Math.round(B.bottom)]; o.bandW = B.width; o.benchW = document.getElementById('bench').getBoundingClientRect().width;
+      o.col = [col.left, col.top, col.right, col.bottom]; return o; });
+    const sweepAt = () => p.evaluate(() => { const s = window.LABMAP.sweep(); return s ? { to: s.to, tgt: s.target && s.target.id } : null; });
+    const inR = (pt, r) => !!r && pt[0] >= r[0] - 1 && pt[0] <= r[2] + 1 && pt[1] >= r[1] - 1 && pt[1] <= r[3] + 1;
+    const wide0 = await p.evaluate(() => ['bench', 'port', 'cmd'].map(id => Math.round(document.getElementById(id).getBoundingClientRect().width)));
+    for (const [W, H] of [[1920, 1040], [2560, 1400]]) { await p.setViewportSize({ width: W, height: H }); await p.waitForTimeout(250);
+      await setPlace('right');
+      for (const w of ['narrow', 'wide']) { await p.click(`#smplace .smno[data-opt="mapw"] .smnb[data-v="${w}"]`); await p.waitForTimeout(250); await hide();
+        const g = await p.evaluate(() => { const L = document.getElementById('lab'), d = document.documentElement;
+          return { lab: [L.scrollWidth, L.clientWidth, L.scrollLeft], doc: [d.scrollWidth, innerWidth, scrollX], w: ['bench', 'port', 'cmd'].map(id => Math.round(document.getElementById(id).getBoundingClientRect().width)) }; });
+        const both = await vis('#notes') && await vis('#mapcol') && await vis('#smplace .smno[data-opt="place"] .smnb[data-v="right"]');
+        ok(g.lab[0] <= g.lab[1] && g.lab[2] === 0 && g.doc[0] <= g.doc[1] && g.doc[2] === 0 && both,
+          `${W}: with the map in the right column (${w}) nothing scrolls the page sideways, and the rail, its placement control and the map are all on screen`, JSON.stringify(g));
+        ok(g.w.join() === wide0.join(), `${W} (${w}): the panels keep the sizes their lines set — only the band that shows them narrows`, g.w.join() + ' vs ' + wide0.join());
+        const s0 = await shown(), pb = Math.max(s0.bench.bottom, s0.port.bottom, s0.cmd.bottom);
+        ok(s0.band[2] - pb <= 20, `${W} (${w}): the band ends under the panels, so its sideways scrollbar sits right below them`, `band bottom ${s0.band[2]} · panels' bottom ${Math.round(pb)}`);
+        /* the pick's why: "on a screen wide enough, the middle and the portrait stay whole between the rail and the map" */
+        if (W === 2560 && w === 'narrow')
+          ok(s0.bench.share >= 0.99 && s0.port.share >= 0.99, '2560, the narrow pick: the middle and the portrait are whole on screen between the rail and the map, as its why says',
+            JSON.stringify({ middle: s0.bench.share, portrait: s0.port.share, command: s0.cmd.share }));
+        // Open lands on screen: the portrait slides into the band's view, and the line to "the panel that answers" ends on it
+        await p.evaluate(() => { window.LABMAP.setSweep('panel'); window.LABMAP.note('root'); const r = document.querySelector('#smtree .smroot'); if (r) r.scrollIntoView({ block: 'nearest' }); window.LABMAP.openRec('root'); });
+        await p.waitForTimeout(250);
+        const s1 = await shown(), sw1 = await sweepAt();
+        ok(s1.port.share >= 0.99 && !!sw1 && sw1.tgt === 'port' && inR(sw1.to, s1.port.rect) && !inR(sw1.to, s1.col),
+          `${W} (${w}): Open slides the portrait whole into view, and the line to the panel that answers ends on the portrait's shown part, not on the map column`,
+          JSON.stringify({ portrait: s1.port.share, rect: s1.port.rect && s1.port.rect.map(Math.round), line: sw1 && { to: sw1.to.map(Math.round), tgt: sw1.tgt } }));
+        // a panel slid wholly out of the band's view gets no line; a panel partly in view gets one ending on its shown part
+        await p.evaluate(() => { document.getElementById('band').scrollLeft = 0; window.LABMAP.drawSweep(); }); await p.waitForTimeout(80);
+        const s2 = await shown(), sw2 = await sweepAt();
+        ok(s2.port.rect ? !!sw2 && inR(sw2.to, s2.port.rect) : sw2 === null,
+          `${W} (${w}): with the band slid back, the line ends on the portrait's shown part — or is not drawn when none of it is on screen`,
+          JSON.stringify({ portrait: s2.port.share, line: sw2 && sw2.to.map(Math.round) }));
+        // Show answers in the middle: it slides back into view from its left edge
+        await p.evaluate(() => { document.getElementById('band').scrollLeft = 99999; window.LABMAP.show('root'); }); await p.waitForTimeout(250);
+        const s3 = await shown();
+        ok(s3.bench.share >= Math.min(1, s3.bandW / s3.benchW) - 0.01 && s3.bench.rect && Math.abs(s3.bench.rect[0] - Math.max(s3.band[0], 0)) <= 1,
+          `${W} (${w}): Show slides the middle back into view from its left edge`, JSON.stringify({ middle: s3.bench.share, fits: +(s3.bandW / s3.benchW).toFixed(3) }));
+        await p.evaluate(() => { window.LABMAP.closeRec(); window.LABMAP.setSweep('on'); window.FIELDMAP.clear(); document.getElementById('band').scrollLeft = 0; }); await p.waitForTimeout(150); } }
+    await p.click('#smplace .smno[data-opt="mapw"] .smnb[data-v="narrow"]'); await p.waitForTimeout(200); await hide();
+    await p.setViewportSize({ width: 1920, height: 1040 }); await p.waitForTimeout(250);
+    // I3 · after a part switch, the block the bench lit is brought into view inside the map's own scroll box — the page stays
+    const fb = SM.blocks.find(x => x.join.act.kind === 'part' && x.join.act.part === 'functions'), tb = SM.blocks.find(x => x.join.act.kind === 'part' && x.join.act.part === 'tests');
+    const seen = (k, boxSel) => p.evaluate(([k, boxSel]) => { const box = document.querySelector(boxSel), n = [...document.querySelectorAll(`#smtree .smb[data-sm="${k}"]`)].find(e => e.offsetParent);
+      if (!n || !box) return null; const r = n.getBoundingClientRect(), b = box.getBoundingClientRect(), x = r.left + Math.min(r.width / 2, 40), y = (r.top + r.bottom) / 2, h = document.elementFromPoint(x, y);
+      return { inBox: r.top >= b.top && r.bottom <= b.bottom, shows: !!h && n.contains(h), lit: n.dataset.lit }; }, [k, boxSel]);
+    const allKeys = SM.blocks.map(b => b.key);
+    for (const [pl, boxSel] of [['rail', '#notes'], ['right', '#mapcol']]) { await setPlace(pl); await setOpt('grp', 'flat');
+      await p.evaluate(ks => window.smOpen(ks), allKeys);  await p.waitForTimeout(250);
+      await p.click('#tabs .tab[data-tab="functions"]'); await p.waitForTimeout(350); await hide();
+      /* the tree is rolled so the Tests block sits out of the box before the switch — a precondition, said */
+      await p.$eval(boxSel, (b, k) => { const n = document.querySelector(`#smtree .smb[data-sm="${k}"]`); b.scrollTop = 0;
+        const r = n.getBoundingClientRect(), q = b.getBoundingClientRect(); if (r.bottom <= q.bottom) b.scrollTop = b.scrollHeight; }, tb.key); await p.waitForTimeout(150);
+      const pre = await seen(tb.key, boxSel);
+      await p.click('#tabs .tab[data-tab="tests"]'); await p.waitForTimeout(500); await hide();
+      const post = await seen(tb.key, boxSel), pg = await p.evaluate(() => { const L = document.getElementById('lab'); return [L.scrollLeft, L.scrollTop, scrollX, scrollY]; });
+      ok(!!pre && !pre.shows && !!post && post.lit === 'true' && post.inBox && post.shows && pg.every(v => v === 0),
+        `${pl}: after a part switch the block the bench lit comes into view inside the map's own scroll box, and the page does not move`, JSON.stringify({ pre, post, pg })); }
+    // I3b · a part that lights TWO blocks (Data: Data effects and the running header) shows both when they fit together, and the
+    //       lead line names every lit block — so one that cannot fit beside the other is still named
+    const db = SM.blocks.find(x => x.join.act.kind === 'part' && x.join.act.part === 'data'), hb = SM.blocks.find(x => x.join.kind === 'header');
+    const leadText = () => p.$eval('#smlead', e => e.textContent);
+    for (const [W, H] of [[1920, 1040], [2560, 1400]]) { await p.setViewportSize({ width: W, height: H }); await p.waitForTimeout(250);
+      for (const [pl, boxSel] of [['rail', '#notes'], ['right', '#mapcol']]) { await setPlace(pl); await setOpt('grp', 'flat');
+        /* the folds between the two lit blocks are opened so the two are farther apart than the lead can sit from the box's
+           top, yet near enough to share the box: none at 1920; at 2560 (a taller box) the lead through the block before the
+           header in the rail, the two after the lead in the narrower column */
+        const i0 = allKeys.indexOf(db.key), i1 = allKeys.indexOf(hb.key), opens = W === 1920 ? [] : pl === 'rail' ? allKeys.slice(i0, i1) : allKeys.slice(i0 + 1, i0 + 3);
+        await p.evaluate(([ks, os]) => { window.smOpen(ks, false); window.smOpen(os); }, [allKeys, opens]); await p.waitForTimeout(200);
+        await p.click('#tabs .tab[data-tab="tests"]'); await p.waitForTimeout(350); await hide();
+        /* a precondition, said: the lead block sits just inside the box's bottom edge and the other lit block below it — so
+           bringing the lead alone into view would leave the other out */
+        await p.$eval(boxSel, (b, k) => { const n = document.querySelector(`#smtree .smb[data-sm="${k}"]`), q = b.getBoundingClientRect();
+          b.scrollTop += n.getBoundingClientRect().bottom - (Math.min(q.bottom, innerHeight) - 14); }, db.key); await p.waitForTimeout(100);
+        const a0 = await seen(db.key, boxSel), h0 = await seen(hb.key, boxSel);
+        await p.click('#tabs .tab[data-tab="data"]'); await p.waitForTimeout(500); await hide();
+        const a = await seen(db.key, boxSel), h = await seen(hb.key, boxSel), lt = await leadText();
+        ok(!!a0 && a0.shows && !!h0 && !h0.shows && !!a && !!h && a.lit === 'true' && h.lit === 'true' && a.shows && a.inBox && h.shows && h.inBox && lt.indexOf(db.name) >= 0 && lt.indexOf(hb.name) >= 0,
+          `${W} ${pl}, ${opens.length} fold(s) open: on the Data part both lit blocks come into view in the map's box, and the lead line names both`, JSON.stringify({ pre: { [db.key]: a0, [hb.key]: h0 }, [db.key]: a, [hb.key]: h, lead: lt })); } }
+    { await setPlace('right'); await p.evaluate(ks => window.smOpen(ks), allKeys); await p.waitForTimeout(200);
+      await p.click('#tabs .tab[data-tab="tests"]'); await p.waitForTimeout(350); await hide();
+      await p.click('#tabs .tab[data-tab="data"]'); await p.waitForTimeout(500); await hide();
+      const a = await seen(db.key, '#mapcol'), h = await seen(hb.key, '#mapcol'), lt = await leadText();
+      ok(!!a && a.shows && a.inBox && lt.indexOf(db.name) >= 0 && lt.indexOf(hb.name) > lt.indexOf(db.name),
+        '2560 right, every fold open (the two lit rows are too far apart to share the box): the lead block shows, and the lead line names the other after it',
+        JSON.stringify({ [db.key]: a, [hb.key]: h, lead: lt })); }
+    // I3c · a placement or width change keeps what the bench lit in view (the node shown last is kept too when both fit)
+    await p.setViewportSize({ width: 1920, height: 1040 }); await p.waitForTimeout(250);
+    await setPlace('right'); await p.$eval('#mapcol', b => { b.scrollTop = 0; }); await setPlace('rail');
+    await p.evaluate(ks => window.smOpen(ks), allKeys); await p.waitForTimeout(200);
+    await p.evaluate(k => window.LABMAP.show('block:' + k), fb.key); await p.waitForTimeout(350);
+    await p.click('#tabs .tab[data-tab="tests"]'); await p.waitForTimeout(450); await hide();
+    await p.$eval('#notes', b => { b.scrollTop = 0; }); await p.waitForTimeout(100);
+    const pre3 = await seen(tb.key, '#notes'), steps3 = [];
+    for (const [opt, v] of [['place', 'right'], ['mapw', 'wide'], ['mapw', 'narrow']]) {
+      await p.click(`#smplace .smno[data-opt="${opt}"] .smnb[data-v="${v}"]`); await p.waitForTimeout(400); await hide();
+      steps3.push([v, await seen(tb.key, '#mapcol')]); }
+    ok(!!pre3 && !pre3.shows && steps3.every(([, x]) => x && x.lit === 'true' && x.inBox && x.shows),
+      'the right column, then its two widths: each time the block the bench lit is in view in the column (it sat out of view in the rail before)', JSON.stringify({ pre: pre3, after: steps3 }));
+    await p.evaluate(ks => window.smOpen(ks, false), allKeys); await p.evaluate(() => window.FIELDMAP.clear()); await p.waitForTimeout(150);
+    // I4 · a lit row reads at a glance — on the row itself, at full opacity, under the mouse and open alike
+    await setPlace('rail'); await setOpt('grp', 'flat');
+    await p.evaluate(ks => window.smOpen(ks, false), allKeys);
+    await p.click('#tabs .tab[data-tab="tests"]'); await p.waitForTimeout(400); await hide();
+    const ub = SM.blocks.find(x => x.key !== tb.key && x.join.kind === 'page' && x.join.act.part !== 'tests'), ob = SM.blocks.find(x => x.key !== tb.key && x.key !== ub.key && x.join.kind === 'page' && x.join.act.part !== 'tests');
+    await p.evaluate(k => window.smOpen([k]), ob.key); await p.waitForTimeout(200);
+    const look = (k) => p.$eval(`#smtree .smb[data-sm="${k}"]`, e => { const c = getComputedStyle(e); let op = 1;
+      for (let x = e; x && x !== document.documentElement; x = x.parentElement) op *= parseFloat(getComputedStyle(x).opacity);
+      return { bg: c.backgroundColor, bw: parseFloat(c.borderLeftWidth), bs: c.borderLeftStyle, bc: c.borderLeftColor, op: +op.toFixed(3), q: e.dataset.quiet || '', lit: e.dataset.lit, open: e.dataset.open }; });
+    const hovered = async (k) => { await p.$eval(`#smtree .smb[data-sm="${k}"]`, e => e.scrollIntoView({ block: 'center' })); await p.hover(`#smtree .smb[data-sm="${k}"]`); await p.waitForTimeout(200);
+      const x = await look(k); await p.mouse.move(2, 2); await hide(); await p.waitForTimeout(100); return x; };
+    await p.mouse.move(2, 2); await hide();
+    const L0 = await look(tb.key), U0 = await look(ub.key), O0 = await look(ob.key), H0 = await hovered(ub.key), LH = await hovered(tb.key);
+    await p.evaluate(k => window.smOpen([k]), tb.key); await p.waitForTimeout(200);
+    const LO = await look(tb.key);
+    await p.evaluate(k => window.smOpen([k], false), tb.key); await p.waitForTimeout(150);
+    ok(L0.lit === 'true' && L0.q !== 'true' && L0.op === 1 && U0.lit === 'false' && O0.open === 'true' && O0.lit === 'false' && H0.lit === 'false'
+       && [U0, O0, H0].every(x => x.bg !== L0.bg) && [U0, O0].every(x => L0.bw > x.bw)
+       && [LH, LO].every(x => x.bg === L0.bg && x.bw === L0.bw && x.op === 1),
+      'a lit row, at full opacity, has a ground of its own — unlike an unlit row, an open row and a row under the mouse — and a wider bar; hovered or open, it keeps both',
+      JSON.stringify({ lit: L0, unlit: U0, open: O0, hover: H0, litHover: LH, litOpen: LO }));
+    // a row Keep only keeps that is also lit: still the lit look, at full opacity
+    await p.evaluate(k => { window.LABMAP.note('block:' + k); window.LABMAP.keepOn(); }, tb.key); await p.waitForTimeout(300); await hide();
+    const LK = await look(tb.key); await p.evaluate(() => window.LABMAP.keepOff()); await p.waitForTimeout(250);
+    ok(LK.lit === 'true' && LK.q !== 'true' && LK.op === 1 && LK.bg === L0.bg && LK.bw === L0.bw,
+      'a lit row that Keep only keeps shows the lit look at full opacity', JSON.stringify(LK));
+    // a lit row that Keep only does NOT keep: dimmed like every quiet node (D-022: dimmed, never removed), its lit look kept
+    const kb = SM.blocks.find(x => x.join.kind === 'none');
+    await p.evaluate(k => { window.LABMAP.note('block:' + k); window.LABMAP.keepOn(); }, kb.key); await p.waitForTimeout(300); await hide();
+    const LQ = await look(tb.key), QN = await p.$eval(`#smtree .smb[data-sm="${ub.key}"]`, e => { let op = 1; for (let x = e; x && x !== document.documentElement; x = x.parentElement) op *= parseFloat(getComputedStyle(x).opacity); return { q: e.dataset.quiet, op: +op.toFixed(3) }; });
+    await p.evaluate(() => window.LABMAP.keepOff()); await p.waitForTimeout(250);
+    ok(LQ.lit === 'true' && LQ.q === 'true' && QN.q === 'true' && LQ.op === QN.op && LQ.op > 0.2 && LQ.op < 1 && LQ.bg === L0.bg && LQ.bw === L0.bw,
+      'a lit row that Keep only does not keep is dimmed as much as any quiet row — never hidden — and keeps the lit look', JSON.stringify({ lit: LQ, quiet: QN }));
+    // the running header keeps its dashed rule (D-022) while lit — plain, under the mouse and open
+    await p.click('#tabs .tab[data-tab="data"]'); await p.waitForTimeout(400); await hide();
+    const HP = await look(hb.key), HH = await hovered(hb.key);
+    await p.evaluate(k => window.smOpen([k]), hb.key); await p.waitForTimeout(200);
+    const HO = await look(hb.key); await p.evaluate(k => window.smOpen([k], false), hb.key); await p.waitForTimeout(150);
+    ok([HP, HH, HO].every(x => x.lit === 'true' && x.bs === 'dashed' && x.bw === L0.bw),
+      'the running header, lit, keeps its dashed rule — plain, under the mouse and open — at the lit bar\'s width', JSON.stringify({ plain: HP, hover: HH, open: HO }));
+    // every line on a lit row keeps 4.5:1 against the row's ground, at 12px — plain, under the mouse and open
+    const contrast = (k) => p.$eval(`#smtree .smb[data-sm="${k}"]`, row => {
+      const parse = (c) => { let m = /^rgba?\(([^)]+)\)/.exec(c); if (m) { const v = m[1].split(/[ ,\/]+/).filter(Boolean).map(Number); return [v[0], v[1], v[2], v.length > 3 ? v[3] : 1]; }
+        m = /^color\(srgb ([^)]+)\)/.exec(c); if (m) { const v = m[1].split(/[ \/]+/).filter(Boolean).map(Number); return [v[0] * 255, v[1] * 255, v[2] * 255, v.length > 3 ? v[3] : 1]; }
+        return null; };
+      const over = (a, b) => [0, 1, 2].map(i => a[i] * a[3] + b[i] * (1 - a[3])).concat(1);
+      const ground = (el) => { const st = []; for (let x = el; x; x = x.parentElement) { const c = parse(getComputedStyle(x).backgroundColor); if (c && c[3] > 0) { st.push(c); if (c[3] >= 1) break; } }
+        let g = [255, 255, 255, 1]; for (let i = st.length - 1; i >= 0; i--) g = over(st[i], g); return g; };
+      const lum = (c) => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
+      const out = [];
+      [row, ...row.querySelectorAll('*')].forEach(el => { const own = [...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()); if (!own || !el.offsetParent) return;
+        const g = ground(el), t = over(parse(getComputedStyle(el).color) || [0, 0, 0, 1], g), a = lum(t), b = lum(g);
+        out.push({ cls: el.className || el.tagName, px: parseFloat(getComputedStyle(el).fontSize), r: +((Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)).toFixed(2) }); });
+      return out; });
+    const cts = [];
+    for (const [tab, keys] of [['data', [db.key, hb.key]], ['tests', [tb.key]]]) { await p.click(`#tabs .tab[data-tab="${tab}"]`); await p.waitForTimeout(400); await hide();
+      for (const k of keys) { await p.mouse.move(2, 2); await hide(); cts.push(...(await contrast(k)).map(x => ({ k, at: 'plain', ...x })));
+        await p.$eval(`#smtree .smb[data-sm="${k}"]`, e => e.scrollIntoView({ block: 'center' })); await p.hover(`#smtree .smb[data-sm="${k}"]`); await p.waitForTimeout(200);
+        cts.push(...(await contrast(k)).map(x => ({ k, at: 'hover', ...x }))); await p.mouse.move(2, 2); await hide();
+        await p.evaluate(k => window.smOpen([k]), k); await p.waitForTimeout(200); cts.push(...(await contrast(k)).map(x => ({ k, at: 'open', ...x })));
+        await p.evaluate(k => window.smOpen([k], false), k); await p.waitForTimeout(150); } }
+    const low = cts.filter(x => x.r < (x.px >= 18 ? 3 : 4.5));
+    ok(cts.length >= 9 && low.length === 0, 'every line on a lit row keeps 4.5:1 against the lit ground at 12px — plain, under the mouse and open',
+      `${cts.length} lines · lowest ${Math.min(...cts.map(x => x.r))} · ` + JSON.stringify(low.slice(0, 4)));
+    await p.click('#tabs .tab[data-tab="data"]'); await p.waitForTimeout(300); await hide();
     await p.evaluate(k => { try { window.localStorage.removeItem(k); } catch (e) { /* storage off */ } }, 'eplab.mapnav'); }
   ok(errs.length === errs0, 'the map\'s navigation raises no page error', errs.slice(errs0, errs0 + 3).join(' | ')); }
 // ═══ MAP NAV END ═══

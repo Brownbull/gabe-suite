@@ -7,7 +7,7 @@
   [
    "remembered before clearing",
    {
-    "eplab.mapnav": "{\"grp\":\"flat\",\"srule\":\"every\",\"place\":\"rail\",\"sweep\":\"on\",\"recmode\":\"stack\",\"kee"
+    "eplab.mapnav": "{\"grp\":\"flat\",\"srule\":\"every\",\"place\":\"rail\",\"mapw\":\"narrow\",\"sweep\":\"on\",\"recmo"
    }
   ],
   [
@@ -41,6 +41,14 @@
      "quiet": 0,
      "mapAt": "#rt-map",
      "mapTopInView": true,
+     "railOnScreen": true,
+     "mapOnScreen": false,
+     "panels": {
+      "middle": 1,
+      "portrait": 1,
+      "command": 1
+     },
+     "litRow": null,
      "line": "point at a field or a block to outline what the panels draw for it — click one to keep the outline",
      "keepBar": null
     }
@@ -65,6 +73,17 @@
      "quiet": 0,
      "mapAt": "#rt-map",
      "mapTopInView": true,
+     "railOnScreen": true,
+     "mapOnScreen": true,
+     "panels": {
+      "middle": 1,
+      "portrait": 1,
+      "command": 1
+     },
+     "litRow": {
+      "name": "Data effects",
+      "shows": true
+     },
      "line": "point at a field or a block to outline what the panels draw for it — click one to keep the outline",
      "keepBar": null
     }
@@ -89,6 +108,14 @@
      "quiet": 0,
      "mapAt": "#rt-map",
      "mapTopInView": true,
+     "railOnScreen": true,
+     "mapOnScreen": true,
+     "panels": {
+      "middle": 1,
+      "portrait": 1,
+      "command": 1
+     },
+     "litRow": null,
      "line": "point at a field or a block to outline what the panels draw for it — click one to keep the outline",
      "keepBar": null
     }
@@ -127,6 +154,17 @@
      "quiet": 0,
      "mapAt": "#rt-map",
      "mapTopInView": true,
+     "railOnScreen": true,
+     "mapOnScreen": true,
+     "panels": {
+      "middle": 1,
+      "portrait": 1,
+      "command": 1
+     },
+     "litRow": {
+      "name": "Data effects",
+      "shows": true
+     },
      "line": "point at a field or a block to outline what the panels draw for it — click one to keep the outline",
      "keepBar": null
     }
@@ -143,15 +181,150 @@
    ]
   ],
   [
+   "step 5 · open-across-the-stages",
+   {
+    "did": "click, then roll the wheel down 2 turn(s) over the tree to see what it opened",
+    "words": "▸",
+    "at": [
+     66,
+     1244
+    ],
+    "picture": "05-open-across-the-stages.png",
+    "what": "the Across the stages row opens under the eight rows of his record",
+    "openedShows": true,
+    "bench": {
+     "part": "data",
+     "outlined": 0,
+     "outlinedInView": 0,
+     "faded": 0,
+     "quiet": 0,
+     "mapAt": "#rt-map",
+     "mapTopInView": true,
+     "railOnScreen": true,
+     "mapOnScreen": true,
+     "panels": {
+      "middle": 1,
+      "portrait": 1,
+      "command": 1
+     },
+     "litRow": {
+      "name": "Data effects",
+      "shows": true
+     },
+     "line": "point at a field or a block to outline what the panels draw for it — click one to keep the outline",
+     "keepBar": null
+    }
+   }
+  ],
+  [
+   "step 6 · rule-under-across-the-stages",
+   {
+    "did": "click, then roll the wheel down 5 turn(s) over the tree to see what it opened",
+    "words": "under Across the stagesthe rule as recorded in D-021",
+    "at": [
+     358,
+     408
+    ],
+    "picture": "06-rule-under-across-the-stages.png",
+    "what": "the switch is on D-021 as recorded: a block that names one row sits under it, one that names several (or none) sits under Across the stages — the rows empty out and Across fills",
+    "openedShows": true,
+    "bench": {
+     "part": "data",
+     "outlined": 0,
+     "outlinedInView": 0,
+     "faded": 0,
+     "quiet": 0,
+     "mapAt": "#rt-map",
+     "mapTopInView": true,
+     "railOnScreen": true,
+     "mapOnScreen": true,
+     "panels": {
+      "middle": 1,
+      "portrait": 1,
+      "command": 1
+     },
+     "litRow": {
+      "name": "Data effects",
+      "shows": true
+     },
+     "line": "point at a field or a block to outline what the panels draw for it — click one to keep the outline",
+     "keepBar": null
+    }
+   }
+  ],
+  [
+   "rows under the rule D-021 recorded",
+   [
+    "EDGE no block here",
+    "GATE no block here",
+    "INPUT no block here",
+    "HANDLER no block here",
+    "EFFECTS no block here",
+    "ANSWER no block here",
+    "UNCAUGHT no block here",
+    "CLIENT 1 block",
+    "Across the stages 10 blocks"
+   ]
+  ],
+  [
+   "step 7 · rule-under-every-stage-it-touches",
+   {
+    "did": "click",
+    "words": "under every stage it touchesthe agent's pick",
+    "at": [
+     144,
+     452
+    ],
+    "picture": "07-rule-under-every-stage-it-touches.png",
+    "what": "back on the agent's pick (dashed): a block is drawn under every row it names, so it appears more than once, and Across holds only the blocks that name none",
+    "bench": {
+     "part": "data",
+     "outlined": 0,
+     "outlinedInView": 0,
+     "faded": 0,
+     "quiet": 0,
+     "mapAt": "#rt-map",
+     "mapTopInView": true,
+     "railOnScreen": true,
+     "mapOnScreen": true,
+     "panels": {
+      "middle": 1,
+      "portrait": 1,
+      "command": 1
+     },
+     "litRow": {
+      "name": "Data effects",
+      "shows": true
+     },
+     "line": "point at a field or a block to outline what the panels draw for it — click one to keep the outline",
+     "keepBar": null
+    }
+   }
+  ],
+  [
+   "rows under the agent's pick",
+   [
+    "EDGE 3 blocks",
+    "GATE 5 blocks",
+    "INPUT 3 blocks",
+    "HANDLER 5 blocks",
+    "EFFECTS 1 block",
+    "ANSWER 4 blocks",
+    "UNCAUGHT 3 blocks",
+    "CLIENT 1 block",
+    "Across the stages 4 blocks"
+   ]
+  ],
+  [
    "under By stage, the note under the tree says",
-   "33 fields sit one level below the 3 levels this map draws. Show a block and they light on the bench; Flat lists them."
+   "55 fields sit one level below the 3 levels this map draws. Show a block and they light on the bench; Flat lists them."
   ],
   [
    "fields in the tree under By stage",
    0
   ],
   [
-   "step 5 · the-note-sends-you-to-flat",
+   "step 8 · the-note-sends-you-to-flat",
    {
     "did": "click",
     "words": "Flatall 11 at one level",
@@ -159,7 +332,7 @@
      212,
      319
     ],
-    "picture": "05-the-note-sends-you-to-flat.png",
+    "picture": "08-the-note-sends-you-to-flat.png",
     "what": "Flat lists every block with its fields folded under it",
     "bench": {
      "part": "data",
@@ -169,13 +342,24 @@
      "quiet": 0,
      "mapAt": "#rt-map",
      "mapTopInView": true,
+     "railOnScreen": true,
+     "mapOnScreen": true,
+     "panels": {
+      "middle": 1,
+      "portrait": 1,
+      "command": 1
+     },
+     "litRow": {
+      "name": "Data effects",
+      "shows": true
+     },
      "line": "point at a field or a block to outline what the panels draw for it — click one to keep the outline",
      "keepBar": null
     }
    }
   ],
   [
-   "step 6 · open-data-effects",
+   "step 9 · open-data-effects",
    {
     "did": "click",
     "words": "▸",
@@ -183,7 +367,7 @@
      66,
      806
     ],
-    "picture": "06-open-data-effects.png",
+    "picture": "09-open-data-effects.png",
     "what": "the block Data effects opens: its fields, each saying whether the bench draws it here",
     "bench": {
      "part": "data",
@@ -193,13 +377,24 @@
      "quiet": 0,
      "mapAt": "#rt-map",
      "mapTopInView": true,
+     "railOnScreen": true,
+     "mapOnScreen": true,
+     "panels": {
+      "middle": 1,
+      "portrait": 1,
+      "command": 1
+     },
+     "litRow": {
+      "name": "Data effects",
+      "shows": true
+     },
      "line": "point at a field or a block to outline what the panels draw for it — click one to keep the outline",
      "keepBar": null
     }
    }
   ],
   [
-   "step 7 · hover-a-field",
+   "step 10 · hover-a-field",
    {
     "did": "rest the mouse on",
     "words": "3 Operation per tabledrawn here · places 31 · in view 4",
@@ -207,7 +402,7 @@
      286,
      875
     ],
-    "picture": "07-hover-a-field.png",
+    "picture": "10-hover-a-field.png",
     "what": "the mouse rests on the field: every element the panels draw for it is outlined, the rest of the bench fades, and the field's card opens",
     "bench": {
      "part": "data",
@@ -217,6 +412,17 @@
      "quiet": 0,
      "mapAt": "#rt-map",
      "mapTopInView": true,
+     "railOnScreen": true,
+     "mapOnScreen": true,
+     "panels": {
+      "middle": 1,
+      "portrait": 1,
+      "command": 1
+     },
+     "litRow": {
+      "name": "Data effects",
+      "shows": true
+     },
      "line": "Operation per table · 31 outlined, 4 in view — middle 31 · click it to keep the outline and walk to the rest",
      "keepBar": null
     }
@@ -236,7 +442,7 @@
    }
   ],
   [
-   "step 8 · back-to-by-stage",
+   "step 11 · back-to-by-stage",
    {
     "did": "click",
     "words": "By stage8 rows + across · a proposal",
@@ -244,7 +450,7 @@
      238,
      363
     ],
-    "picture": "08-back-to-by-stage.png",
+    "picture": "11-back-to-by-stage.png",
     "what": "By stage again; the HANDLER row is still open",
     "bench": {
      "part": "data",
@@ -254,13 +460,24 @@
      "quiet": 0,
      "mapAt": "#rt-map",
      "mapTopInView": true,
+     "railOnScreen": true,
+     "mapOnScreen": true,
+     "panels": {
+      "middle": 1,
+      "portrait": 1,
+      "command": 1
+     },
+     "litRow": {
+      "name": "Data effects",
+      "shows": true
+     },
      "line": "point at a field or a block to outline what the panels draw for it — click one to keep the outline",
      "keepBar": null
     }
    }
   ],
   [
-   "step 9 · show-functions",
+   "step 12 · show-functions",
    {
     "did": "click",
     "words": "Functions7·1→ the Functions panel2 of 8 fields drawn here · 5 on another part",
@@ -268,7 +485,7 @@
      286,
      1242
     ],
-    "picture": "09-show-functions.png",
+    "picture": "12-show-functions.png",
     "what": "the bench moves to the Functions part and every element carrying the block's fields is outlined; a click fades nothing",
     "bench": {
      "part": "functions",
@@ -278,13 +495,24 @@
      "quiet": 0,
      "mapAt": "#rt-map",
      "mapTopInView": true,
+     "railOnScreen": true,
+     "mapOnScreen": true,
+     "panels": {
+      "middle": 1,
+      "portrait": 1,
+      "command": 1
+     },
+     "litRow": {
+      "name": "Functions",
+      "shows": true
+     },
      "line": "Functions · 85 outlined, 61 in view — middle 84 · head bar 1",
      "keepBar": null
     }
    }
   ],
   [
-   "step 10 · switch-to-tests",
+   "step 13 · switch-to-tests",
    {
     "did": "click",
     "words": "27Tests",
@@ -292,7 +520,7 @@
      1152,
      164
     ],
-    "picture": "10-switch-to-tests.png",
+    "picture": "13-switch-to-tests.png",
     "what": "the bench draws Tests; the tree lights the Proof block and every row recounts how many of its fields are drawn here",
     "bench": {
      "part": "tests",
@@ -302,29 +530,25 @@
      "quiet": 0,
      "mapAt": "#rt-map",
      "mapTopInView": true,
+     "railOnScreen": true,
+     "mapOnScreen": true,
+     "panels": {
+      "middle": 1,
+      "portrait": 1,
+      "command": 1
+     },
+     "litRow": {
+      "name": "Proof",
+      "shows": true
+     },
      "line": "Functions · 1 outlined, 1 in view — head bar 1",
      "keepBar": null
     }
    }
   ],
   [
-   "step 11 · roll-the-map-to-the-lit-block",
-   {
-    "did": "wheel down over the map",
-    "picture": "11-roll-the-map-to-the-lit-block.png",
-    "shows": true,
-    "bench": {
-     "part": "tests",
-     "outlined": 1,
-     "outlinedInView": 1,
-     "faded": 0,
-     "quiet": 0,
-     "mapAt": "#rt-map",
-     "mapTopInView": true,
-     "line": "Functions · 1 outlined, 1 in view — head bar 1",
-     "keepBar": null
-    }
-   }
+   "after the part switch, the lit block shows without a wheel",
+   true
   ],
   [
    "lit block before → after the part switch",
@@ -345,15 +569,15 @@
    }
   ],
   [
-   "step 12 · keep-only-on",
+   "step 14 · keep-only-on",
    {
-    "did": "click",
+    "did": "roll the wheel up 1 turn(s) over the rail, then click",
     "words": "Keep only what carries “Functions”",
     "at": [
      267,
-     556
+     226
     ],
-    "picture": "12-keep-only-on.png",
+    "picture": "14-keep-only-on.png",
     "what": "Keep only is on: the bench quiets every element that does not carry the block's fields, the tree quiets every node that does not, and a bar at the top of the rail says so",
     "bench": {
      "part": "tests",
@@ -363,13 +587,24 @@
      "quiet": 11,
      "mapAt": "#rt-map",
      "mapTopInView": true,
+     "railOnScreen": true,
+     "mapOnScreen": true,
+     "panels": {
+      "middle": 1,
+      "portrait": 1,
+      "command": 1
+     },
+     "litRow": {
+      "name": "Proof",
+      "shows": true
+     },
      "line": "Functions · 1 outlined, 1 in view — head bar 1",
-     "keepBar": "Keep only is ON: the map keeps what carries “Functions” (block); 11 other nodes are quiet. On the bench, 1 element carries its fields and the rest are quiet — dimmed, never removed.Remove the filter"
+     "keepBar": "Keep only is ON: the map keeps what carries “Functions” (block); 15 other nodes are quiet. On the bench, 1 element carries its fields and the rest are quiet — dimmed, never removed.Remove the filter"
     }
    }
   ],
   [
-   "step 13 · map-in-the-right-column",
+   "step 15 · map-in-the-right-column",
    {
     "did": "click",
     "words": "right column",
@@ -377,7 +612,7 @@
      304,
      345
     ],
-    "picture": "13-map-in-the-right-column.png",
+    "picture": "15-map-in-the-right-column.png",
     "what": "the map moves to a column right of the panels; the bench and its lights do not change",
     "bench": {
      "part": "tests",
@@ -387,21 +622,33 @@
      "quiet": 11,
      "mapAt": "#mapcol",
      "mapTopInView": true,
+     "railOnScreen": true,
+     "mapOnScreen": true,
+     "panels": {
+      "middle": 1,
+      "portrait": 1,
+      "command": 0.17
+     },
+     "litRow": {
+      "name": "Proof",
+      "shows": true
+     },
      "line": "Functions · 1 outlined, 1 in view — head bar 1",
-     "keepBar": "Keep only is ON: the map keeps what carries “Functions” (block); 11 other nodes are quiet. On the bench, 1 element carries its fields and the rest are quiet — dimmed, never removed.Remove the filter"
+     "keepBar": "Keep only is ON: the map keeps what carries “Functions” (block); 15 other nodes are quiet. On the bench, 1 element carries its fields and the rest are quiet — dimmed, never removed.Remove the filter"
     }
    }
   ],
   [
-   "the lab slid left to show the right column, by (px)",
-   396
-  ],
-  [
-   "step 14 · slide-the-lab-back-left",
+   "step 16 · right-column-as-wide-as-the-rail",
    {
-    "did": "Shift + wheel over the panels, toward the left",
-    "picture": "14-slide-the-lab-back-left.png",
-    "slidNow": 0,
+    "did": "click",
+    "words": "as wide as the rail",
+    "at": [
+     315,
+     375
+    ],
+    "picture": "16-right-column-as-wide-as-the-rail.png",
+    "what": "the column widens to the rail's own width; the panels' band narrows and what it cannot hold slides under the column's edge (the log gives each panel's share on screen) — the rail and the map stay on screen",
     "bench": {
      "part": "tests",
      "outlined": 1,
@@ -410,13 +657,63 @@
      "quiet": 11,
      "mapAt": "#mapcol",
      "mapTopInView": true,
+     "railOnScreen": true,
+     "mapOnScreen": true,
+     "panels": {
+      "middle": 1,
+      "portrait": 0.9,
+      "command": 0
+     },
+     "litRow": {
+      "name": "Proof",
+      "shows": true
+     },
      "line": "Functions · 1 outlined, 1 in view — head bar 1",
-     "keepBar": "Keep only is ON: the map keeps what carries “Functions” (block); 11 other nodes are quiet. On the bench, 1 element carries its fields and the rest are quiet — dimmed, never removed.Remove the filter"
+     "keepBar": "Keep only is ON: the map keeps what carries “Functions” (block); 15 other nodes are quiet. On the bench, 1 element carries its fields and the rest are quiet — dimmed, never removed.Remove the filter"
     }
    }
   ],
   [
-   "step 15 · map-full-width-below",
+   "step 17 · right-column-narrow",
+   {
+    "did": "click",
+    "words": "narrow",
+    "at": [
+     203,
+     375
+    ],
+    "picture": "17-right-column-narrow.png",
+    "what": "back on the pick (dashed): the narrow column, so the panels' band is as wide as it gets beside it (the log gives each panel's share on screen)",
+    "bench": {
+     "part": "tests",
+     "outlined": 1,
+     "outlinedInView": 1,
+     "faded": 0,
+     "quiet": 11,
+     "mapAt": "#mapcol",
+     "mapTopInView": true,
+     "railOnScreen": true,
+     "mapOnScreen": true,
+     "panels": {
+      "middle": 1,
+      "portrait": 1,
+      "command": 0.17
+     },
+     "litRow": {
+      "name": "Proof",
+      "shows": true
+     },
+     "line": "Functions · 1 outlined, 1 in view — head bar 1",
+     "keepBar": "Keep only is ON: the map keeps what carries “Functions” (block); 15 other nodes are quiet. On the bench, 1 element carries its fields and the rest are quiet — dimmed, never removed.Remove the filter"
+    }
+   }
+  ],
+  [
+   "the lab slid left to show the right column, by (px)",
+   0
+  ],
+  [
+   "step 18 · map-full-width-below",
    {
     "did": "click",
     "words": "below",
@@ -424,7 +721,7 @@
      388,
      345
     ],
-    "picture": "15-map-full-width-below.png",
+    "picture": "18-map-full-width-below.png",
     "what": "the map moves under the rail, the middle and the command panel, full width",
     "bench": {
      "part": "tests",
@@ -434,13 +731,24 @@
      "quiet": 11,
      "mapAt": "#mapbelow",
      "mapTopInView": true,
+     "railOnScreen": true,
+     "mapOnScreen": true,
+     "panels": {
+      "middle": 1,
+      "portrait": 1,
+      "command": 1
+     },
+     "litRow": {
+      "name": "Proof",
+      "shows": true
+     },
      "line": "Functions · 1 outlined, 1 in view — head bar 1",
-     "keepBar": "Keep only is ON: the map keeps what carries “Functions” (block); 11 other nodes are quiet. On the bench, 1 element carries its fields and the rest are quiet — dimmed, never removed.Remove the filter"
+     "keepBar": "Keep only is ON: the map keeps what carries “Functions” (block); 15 other nodes are quiet. On the bench, 1 element carries its fields and the rest are quiet — dimmed, never removed.Remove the filter"
     }
    }
   ],
   [
-   "step 16 · remove-keep-only",
+   "step 19 · remove-keep-only",
    {
     "did": "click",
     "words": "Remove the filter",
@@ -448,7 +756,7 @@
      114,
      258
     ],
-    "picture": "16-remove-keep-only.png",
+    "picture": "19-remove-keep-only.png",
     "what": "Keep only is off: nothing is quiet on the bench or in the tree, the bar at the top of the rail is gone and the button in the map offers Keep only again (ringed); the kept outline stays",
     "bench": {
      "part": "tests",
@@ -458,6 +766,17 @@
      "quiet": 0,
      "mapAt": "#mapbelow",
      "mapTopInView": true,
+     "railOnScreen": true,
+     "mapOnScreen": true,
+     "panels": {
+      "middle": 1,
+      "portrait": 1,
+      "command": 1
+     },
+     "litRow": {
+      "name": "Proof",
+      "shows": true
+     },
      "line": "Functions · 1 outlined, 1 in view — head bar 1",
      "keepBar": null
     }
