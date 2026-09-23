@@ -3,7 +3,7 @@ name: gabe-commit
 description: "Commit quality gate — deterministic checks incl. the 800-line size budget and the checkpoint task-record trailer (Cases/Class on any Task:-footered message), interactive triage, evidence-triggered simplify pass; docs-audit mode for accumulated drift."
 when_to_use: "Commit, save, checkpoint, ship this work — any request to record completed work in git in a KDBP project."
 metadata:
-  version: 2.7.8
+  version: 2.7.9
 ---
 
 # Gabe Commit — commit quality gate
@@ -35,7 +35,7 @@ Deterministic commit quality gate. Runs checks (lint, types, tests, coverage, sh
 
 ## Simplify tier (runs with the gate)
 
-- Alongside the gate's deterministic checks, run `scripts/size-budget.sh` (this skill): WARN when a touched file is, or newly crosses, >800 first-party lines; generated files (by header) exempt; recorded split seams from `.kdbp/RULES.md`/`.kdbp/PENDING.md` printed with the WARN. Exit 2 = warnings present. A WARN never blocks the commit by itself — it enters triage like any other finding.
+- Alongside the gate's deterministic checks, run `scripts/size-budget.sh` (this skill): WARN when a touched file is, or newly crosses, >800 first-party lines; generated files (by header) and the append-only KDBP logs (`.kdbp/DECISIONS.md` · `LEDGER.md` · `DEPLOYMENTS.md`) exempt; recorded split seams from `.kdbp/RULES.md`/`.kdbp/PENDING.md` printed with the WARN. Exit 2 = warnings present. A WARN never blocks the commit by itself — it enters triage like any other finding.
 - When the check WARNs, when the phase touched a known monolith, or on request: OFFER the quality-only simplify pass per `references/simplify-pass.md` (reuse · simplification · efficiency — never bug-hunting).
 
 ## Evidence + docs discipline (runs with the gate, WARN-and-LOG stage)

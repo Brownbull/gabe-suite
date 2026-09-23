@@ -60,6 +60,23 @@ clean_size
 [ "$(run_size)" = 0 ] && ok || bad "size: generated-file marker must stay SILENT despite being over cap"
 clean_size
 
+(cd "$T/size" && mkdir -p .kdbp && seq 1 900 > .kdbp/DECISIONS.md && seq 1 900 > .kdbp/LEDGER.md \
+   && seq 1 900 > .kdbp/DEPLOYMENTS.md && git add .kdbp/DECISIONS.md .kdbp/LEDGER.md .kdbp/DEPLOYMENTS.md)
+[ "$(run_size)" = 0 ] && ok || bad "size: append-only KDBP logs (DECISIONS/LEDGER/DEPLOYMENTS) must stay SILENT over cap"
+clean_size
+
+(cd "$T/size" && mkdir -p .kdbp && seq 1 900 > .kdbp/PENDING.md && git add .kdbp/PENDING.md)
+rc=$(run_size)
+[ "$rc" = 2 ] && grep -q ".kdbp/PENDING.md" "$T/size.out" \
+  && ok || bad "size: .kdbp/PENDING.md is edited, not append-only — over cap must still FIRE (got $rc)"
+clean_size
+
+(cd "$T/size" && mkdir -p docs && seq 1 900 > docs/DECISIONS.md && git add docs/DECISIONS.md)
+rc=$(run_size)
+[ "$rc" = 2 ] && grep -q "docs/DECISIONS.md" "$T/size.out" \
+  && ok || bad "size: the log exemption is exact-path — docs/DECISIONS.md over cap must still FIRE (got $rc)"
+clean_size
+
 (cd "$T/size" && python3 -c "open('blob.bin','wb').write(b'A\x00B\x00'*400)" && git add blob.bin)
 [ "$(run_size)" = 0 ] && ok || bad "size: binary file must stay SILENT (skipped before line count)"
 clean_size

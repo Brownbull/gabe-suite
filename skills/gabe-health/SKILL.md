@@ -5,7 +5,7 @@ when_to_use: "How healthy is the codebase, are we accumulating mess, unexplained
 context: fork
 agent: Explore
 metadata:
-  version: 1.2.1
+  version: 1.2.2
 ---
 
 # Gabe Health — Codebase Health Analysis
@@ -37,7 +37,7 @@ The six analyses: (1) God Files — touched in >25% of commits, (2) Churn Hotspo
 
 ## Decision-debt lens (absorbed from gabe-debt, 2026-07-30)
 
-`/gabe-health debt` — scan SCOPE + PLAN + code + commit history + retrospectives for decisions that were never made explicitly or that silently contradict each other, citing AP evidence (`templates/architecture-principles.md`). Same read-only discipline as the other lenses. In KDBP projects, open with `mcp__gabe-kdbp__kdbp_snapshot` — the phase table, the open PENDING rows, the last LEDGER rows and the DECISIONS row count in one read — then open the four KDBP surfaces (DECISIONS.md, SCOPE.md §14, RULES.md, PENDING.md) the findings target; proposed, never auto-written from the fork. Deep spec preserved at `../_archive/gabe-debt/references/`.
+`/gabe-health debt` — scan SCOPE + PLAN + code + commit history + retrospectives for decisions that were never made explicitly or that silently contradict each other, citing AP evidence (`templates/architecture-principles.md`). Same read-only discipline as the other lenses. In KDBP projects, open with `mcp__gabe-kdbp__kdbp_snapshot` — the phase table, the open PENDING rows, the last LEDGER rows and the DECISIONS row count in one read — then open the four KDBP surfaces (DECISIONS.md, SCOPE.md §14, RULES.md, PENDING.md) the findings target; proposed, never auto-written from the fork. Deep spec: `references/debt-spec.md` — read it IN FULL before running the lens (missing → E6, STOP); it installs with this skill (moved from the archived gabe-debt, which `install.sh` never ships).
 
 ## Estate-sweep lens (new, 2026-07-30 — ask-first, never auto)
 

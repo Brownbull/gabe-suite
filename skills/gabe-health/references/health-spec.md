@@ -19,7 +19,7 @@
 
 ---
 
-## The 5 Analyses
+## The 6 Analyses
 
 ### 1. God Files
 
@@ -69,7 +69,7 @@ Files that always change together. If A and B are co-modified in >60% of commits
 
 **Detection:**
 ```bash
-git log --since=N.days --name-only --format=--- | python3 -c '
+git log --since=N.days --name-only --format=tformat:--- | python3 -c '
 import sys, itertools, collections
 commits=[set(filter(None,c.strip().split("\n"))) for c in sys.stdin.read().split("---") if c.strip()]
 pair=collections.Counter(); tot=collections.Counter()
@@ -100,8 +100,14 @@ Where do `fix:` and `bug` commits cluster? If 60% of bug fixes touch the same di
 
 **Detection:**
 ```bash
-# Find fix/bug commits and their file distribution
-git log --since=N.days --oneline --grep="fix" --grep="bug" --name-only --format="" | sort | uniq -c | sort -rn
+# Fix commits selected by the subject's TYPE — `git log --grep` also matches bodies, and a word
+# match on the subject still counts "chore(kdbp): record the D48 fix" — so the subject must START
+# with fix/hotfix/bugfix/bug (conventional `fix(scope):` or a plain "Fix login crash"); then the
+# file distribution
+git log --since=N.days --format='%H%x09%s' \
+  | awk -F'\t' 'tolower($2) ~ /^(fix|hotfix|bugfix|bug)([(:!]|[[:space:]]|$)/ {print $1}' \
+  | while read -r sha; do git show --name-only --format="" "$sha"; done \
+  | grep -v '^$' | sort | uniq -c | sort -rn
 ```
 
 **Output:**

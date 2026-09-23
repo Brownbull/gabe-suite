@@ -471,4 +471,4 @@ Override: `--full` flag surfaces all findings regardless of tier. Useful for qua
 - Gastify LESSONS (reference for RULES.md format): `<reference-project>/docs/rebuild/LESSONS.md` (example: the gastify rebuild LESSONS)
 - BoletApp Epic 14c retro (P6/P7/P8/P10/P11 source): `<reference-project>/docs/sprint-artifacts/<retro>.md` (example: the BoletApp Epic 14c retro)
 - Pattern catalog root: `~/.claude/templates/gabe/debt-patterns/`
-- Skill: `~/.claude/skills/gabe-debt/SKILL.md` (+ `references/debt-spec.md`)
+- Skill: `~/.claude/skills/gabe-health/SKILL.md` (+ `references/debt-spec.md`) — the debt lens; gabe-debt itself is archived

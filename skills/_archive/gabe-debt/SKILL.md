@@ -36,7 +36,7 @@ Modes compose (`brief pattern=P3`, `dry-run since=HEAD~20`, etc.). Target defaul
 ## Procedure
 
 1. Treat any text after the invocation as `$ARGUMENTS`; parse mode, target, and any tier override.
-2. Read `references/debt-spec.md` IN FULL before executing — the binding spec. If missing, E6 applies — STOP.
+2. Read `../../gabe-health/references/debt-spec.md` IN FULL before executing — the binding spec (moved into gabe-health with the debt lens, 2026-09-23). If missing, E6 applies — STOP.
 3. **Step 0 Preflight** — detect `.kdbp/`, load maturity from BEHAVIOR.md, load existing DECISIONS/SCOPE/RULES/PENDING/debt-ignore state, resolve the active phase, load the pattern catalog (project-local overrides global; E6 STOP if zero pattern files load) and the AP catalog.
 4. **Step 1** — index project-local rules (`RULES.md`, `LESSONS.md`, retro files) into a single `rules_index`.
 5. **Step 2** — run each pattern's doc pass, code pass, and commit pass; cross-check hits against `rules_index` for rule-violation findings.
