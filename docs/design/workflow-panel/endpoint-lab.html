@@ -1,15 +1,38 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>Endpoint lab · POST /setup/complete — the six parts, one panel at a time</title>
+<title>Endpoint lab — the six parts, one panel at a time</title>
 <!-- The station's visual system and the endpoint's facts are GENERATED (gen-station-tokens.py · gen-endpoint-facts.py). -->
 <script src="_station.js"></script>
 <script src="_lab-ep.js"></script>
+<!-- ANY ENDPOINT (D-035): _lab-ep.js above is the baked default; ?ep=<slug> (_ep-slug.js's rule) swaps in _eps/<slug>.js, a
+     local build (gen-endpoint-set.py), loaded HERE by a script tag so it is in place before the lab boots — file:// cannot
+     fetch. What happened is window.LABEP_OPEN; a file that is missing leaves the default in place and the lede SAYS so
+     (_lab-ep-pick.js). The list of every endpoint is _lab-ep-index.js, committed. -->
+<script src="_ep-slug.js"></script>
+<script src="_lab-ep-index.js"></script>
+<script>
+(function(){ var O = window.LABEP_OPEN = { asked: null, state: "default", label: null }, q = null;
+  window.LABEP_DEFAULT = window.LABEP;
+  try { q = new URLSearchParams(location.search).get("ep"); } catch (e) { q = null; }
+  if (!q) return;
+  O.asked = q;
+  if (!window.EPSLUG.valid(q)) { O.state = "invalid"; return; }
+  O.state = "loading";
+  document.write('<script src="' + window.EPSLUG.file(q) + '" onerror="window.LABEP_OPEN.state=\'missing\'"><\/script>'); })();
+</script>
+<script>
+(function(){ var O = window.LABEP_OPEN, L = window.LABEP, D = window.LABEP_DEFAULT;
+  if (O.state === "loading") O.state = (L && L !== D) ? ((L.identity && window.EPSLUG.slug(L.identity.label) === O.asked) ? "opened" : "mismatch") : "missing";
+  if (O.state !== "opened") window.LABEP = D;
+  O.label = window.LABEP.identity.label; })();
+</script>
 <style id="stationvars">/* filled at boot from STATION.CSSVARS + STATION.CARDCSS — the station's palette and card chrome, verbatim */</style>
 <link rel="stylesheet" href="_lab-ep.css">
 <div id="lab">
   <header id="lede">
     <div class="ltitle"><span id="ledeglyph"></span><b>Endpoint lab</b> · the six parts of an API endpoint, one panel at a time</div>
-    <div class="lsub">bench <code id="ledebench">—</code> · facts from the frozen example feed head <code id="ledehead">—</code> · station tokens lifted by regex · nothing typed by hand.
+    <div class="lmiss" id="ledemiss" hidden></div>
+    <div class="lsub">bench <span id="ledebench">—</span> · facts from the frozen example feed head <code id="ledehead">—</code> · station tokens lifted by regex · nothing typed by hand.
       The bench on the right holds ONLY what would be built — the head strip, the part buttons and the panel. Every lab control lives in the rail on the left, above the no-loss checklist, so nothing you are judging is a knob.</div>
   </header>
   <div id="row">
@@ -75,40 +98,8 @@
         <div class="nsub">every row the station card shows today; a row lights when the panels render it (hover cards count)</div>
         <div id="cov"></div>
       </section>
-      <!-- THE SECTION MAP (operator 2026-09-22): the card's ELEVEN RULED BLOCKS — what the card is
-           SUPPOSED to hold (design-context/prisms-endpoint.json, D-015) — as an indented list, beside the
-           bench surface that answers each one. The tree and every count are GENERATED (LABEP.sectionmap,
-           read from design-context/brainmap-endpoint.json); the pairing of a block to a surface is AUTHORED and
-           says so on its face. Wired BOTH WAYS: a block click moves the bench, a bench move lights the
-           block, and the lead line says which of the two moved. Lab chrome — none of it ships. -->
-      <section class="rtab" id="rt-map">
-        <!-- WHERE THE MAP SITS (D-025.2) — a rail option that always stays in this tab; the map itself (#smwrap) moves
-             between this tab, a column right of the panels (#mapcol) and a section below them (#mapbelow). -->
-        <div class="smplace" id="smplace"></div>
-        <div class="smwrap" id="smwrap">
-        <div class="nhd" id="smhd">section map <span id="smn">—</span></div>
-        <div class="nsub" id="smsub">—</div>
-        <!-- the map's own header (D-021 · D-022): grouping, By stage's rule, the line, and Keep only — it travels with the map -->
-        <div class="smnav" id="smnav"></div>
-        <div class="smlead" id="smlead"><i></i><span>—</span></div>
-        <!-- THE FIELD LAYER (D-024): what the last pointed-at field or block outlined in the panels — or that it drew
-             nothing, and why. Every word is field-layer.words.json's; every number is measured off window.DRAWN. -->
-        <div class="smfl" id="smfl" data-fl="idle">—</div>
-        <div class="smfln" id="smfln">—</div>
-        <div class="smflopt" id="smflopt"></div>
-        <!-- a block with NO bench surface never moves the bench silently: what would have to be built
-             is written HERE, and stays until something else is picked. -->
-        <div class="smsay" id="smsay" hidden></div>
-        <div id="smtree"></div>
-        <div class="smdeep" id="smdeep" hidden></div>
-        <button class="smmb" id="smmoreb" type="button">more information</button>
-        <div class="smmore" id="smmore" hidden></div>
-        </div>
-      </section>
     </aside>
-    <!-- THE BAND — the three panels (the middle, the portrait, the command panel) side by side. It is only a row of
-         its own: while the map sits in the right column the band takes the width left between the rail and the column
-         and slides sideways inside it, so the rail and the map are always on screen together. -->
+    <!-- THE BAND — the three panels (the middle, the portrait, the command panel) side by side, in a row of their own. -->
     <div id="band">
     <section id="bench" class="box-work" aria-label="the console's middle region, boxed — only what would be built">
       <div id="headstrip"></div>
@@ -132,20 +123,41 @@
          (card side) is ONE order value. -->
     <section id="cmd" aria-label="the command panel — every way a request through this endpoint ends"></section>
     </div>
-    <!-- the section map's two other places (D-025.2): a column right of the panels, and full width below them -->
-    <section id="mapcol" hidden aria-label="the section map, in a column right of the panels"></section>
   </div>
-  <section id="mapbelow" hidden aria-label="the section map, full width below the panels"></section>
+  <!-- THE SECTION MAP (operator 2026-09-22; D-035, 2026-09-23: "Leave the section map in the bottom section … more simplified and
+       use more icons") — the card's ELEVEN RULED BLOCKS, always full width BELOW the panels. The tree and every count are
+       GENERATED (LABEP.sectionmap, read from design-context/brainmap-endpoint.json); the pairing of a block to a surface is
+       AUTHORED. A block reads as its mark (the icon and colour of the part that answers it · no page yet · the running header),
+       its name and one bar for its fields; the numbers ride the hover. Wired BOTH WAYS: a block click moves the bench, a bench
+       move lights the block. Lab chrome — none of it ships. -->
+  <section id="mapbelow" aria-label="the section map, full width below the panels">
+    <div class="smwrap" id="smwrap">
+      <!-- the header row carries the status lines too (review 2026-09-23): the field line takes the plain line's place while a
+           node is pointed at, and the lead sits at the right once something moved — one row, so nothing below it ever moves -->
+      <div class="smtop" id="smhd"><b class="smtitle">section map</b><span class="smline"><span class="smplain" id="smsub">—</span><span class="smfl" id="smfl" data-fl="idle" hidden>—</span></span><div class="smlead" id="smlead" hidden><i></i><span>—</span></div></div>
+      <!-- the face's controls: grouping (By stage adds its rule), Keep only (its own control, D-022), and one "more" that
+           folds the rarely needed switches; the legend strip draws what each mark means -->
+      <div class="smbar"><div class="smnav" id="smnav"></div><div class="smleg" id="smleg"></div></div>
+      <div class="smxtra" id="smxtra" hidden><div class="smxnav" id="smxnav"></div><div class="smflopt" id="smflopt"></div></div>
+      <!-- a block with NO bench surface never moves the bench silently: what would have to be built is written HERE -->
+      <div class="smsay" id="smsay" hidden></div>
+      <div id="smtree"></div>
+      <div class="smdeep" id="smdeep" hidden></div>
+      <button class="smmb" id="smmoreb" type="button">more information</button>
+      <div class="smmore" id="smmore" hidden></div>
+    </div>
+  </section>
 </div>
 <div id="hover" class="jdcolpop" hidden></div>
 <script src="_lab-ep-map.js"></script>
 <script src="_lab-ep-panels.js"></script>
+<script src="_lab-ep-pick.js"></script>
 <script>
 /* ═══ the shell: station tokens → CSS · head strip · tabs · box · clock · hover · coverage ═══ */
 (function(){
   var S = window.STATION, F = window.LABEP;
   document.getElementById("stationvars").textContent = S.CSSVARS + "\n" + S.CARDCSS;
-  document.getElementById("ledebench").textContent = F.identity.label + " · " + F.identity.entity;
+  document.getElementById("ledebench").textContent = F.identity.label + " · " + F.identity.entity;   /* the picker (_lab-ep-pick.js) replaces it at the end of boot */
   document.getElementById("ledehead").textContent = F.head || "?";
   document.getElementById("ledeglyph").innerHTML = S.icon("endpoint", 15, S.KINDCOL.endpoint);
 
@@ -216,6 +228,7 @@
     fitgrow: '<path d="M2 4h20M2 20h20" opacity=".55"/><circle cx="12" cy="12" r="7"/>',
     air: '<path d="M4 5h16M4 12h16M4 19h16"/>', normal: '<path d="M4 6h16M4 10h16M4 14h16M4 18h16"/>',
     dense: '<path d="M4 5h16M4 8h16M4 11h16M4 14h16M4 17h16M4 20h16"/>' };
+  window.labIco = function(n, size, col){ return labIco(n, size, col); };   /* the section map (_lab-ep-map.js) marks Endings with the command panel's glyph */
   function labIco(n, size, col){ return '<svg viewBox="0 0 24 24" width="' + (size || 14) + '" height="' + (size || 14) + '" fill="none" stroke="' + (col || "currentColor") + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (LABICO[n] || "") + '</svg>'; }
   function boxIco(w, h, size){ var W = Math.round(20 * w / 1500), H = Math.round(16 * h / 460);
     return '<svg viewBox="0 0 24 20" width="' + (size || 20) + '" height="' + Math.round((size || 20) * 20 / 24) + '" fill="none" stroke="currentColor" stroke-width="1.6">'
@@ -2093,11 +2106,8 @@
   /* TWO toggles (operator 2026-09-11): the CONTROLS are the default view; the no-loss checklist is
      reachable but completely separate from them. Inside controls, bench and bars are distinct blocks. */
   var RAILT = [{ k: "controls", ico: "bench", word: "controls", note: "everything that steers the bench: the box it is drawn in, the density, the clock, and what each BAR carries. None of it ships with the console." },
-               { k: "cov", ico: "check", word: "no-loss", note: "every row the station card shows today, lit when a renderer actually draws it. Kept apart from the controls so it reads as evidence, not as a setting." },
-               { k: "map", ico: "tree", word: SMW("tab", "word", "section map"), note: SMW("tab", "note", "the card's ruled blocks against the bench surface that answers each one.") }];
-  /* the tab's own words are AUTHORED in section-map.words.json and filled by the generator — typing a second copy here is
-     how a count goes stale in one place and not the other */
-  function SMW(a, b, dflt){ var w = ((F.sectionmap || {}).words || {})[a]; var v = w && w[b]; return typeof v === "string" && v ? v : dflt; }
+               { k: "cov", ico: "check", word: "no-loss", note: "every row the station card shows today, lit when a renderer actually draws it. Kept apart from the controls so it reads as evidence, not as a setting." }];
+  /* D-035: the section map is no rail tab — it sits full width below the panels, always (#mapbelow) */
   var RT = document.getElementById("railtabs"), railCur = "controls";
   RAILT.forEach(function(t){ var b = E("button", { class: "rtb", "data-rt": t.k }); b.innerHTML = labIco(t.ico, 15) + '<span>' + t.word + '</span>';
     hoverBind(b, '<div class="cphd">' + labIco(t.ico, 15, "var(--accent)") + '<b>' + t.word + '</b></div><div class="cpsub">rail tab</div><div class="cpbody">' + t.note + '</div>');
@@ -2808,7 +2818,12 @@
      as the map's own click does. A block with no surface says what would have to be built.          ══ */
   var SM = F.sectionmap || { state: "absent", reason: "this feed carries no section map" };
   var SMW = SM.words || {}, SMS = SMW.strings || {}, SMH = SMW.head || {}, SMF = SMW.feedback || {};
+  var SMFACE = (((F.mapnav || {}).words || {}).face) || {};   /* the face's words that carry a {token} filled here, on the page */
   var SMOPEN = {}, SMLEAD = null, SMPICK = null, SMFROM = false, SMREV = null;   /* SMREV — the lit blocks the last draw saw */
+  /* SMMOVE — what the last BENCH move was ("part" · "exit" · "path"), so the block a bench move NAMES is the one that move
+     answers (review 2026-09-23: after one click on Endings, every part button named Endings first and the part moved to
+     read as "also lit") · SMEX — the ending a click on the Endings block picked itself, said on the page, never silently */
+  var SMMOVE = null, SMEX = null;
   function smEsc(s){ return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
   function smBlock(k){ return (SM.blocks || []).filter(function(b){ return b.key === k; })[0] || null; }
   function smVarOf(p){ var P = window.PANELS[p]; return P ? (curVar[p] || P.defaultVariant || P.variants[0].key) : null; }
@@ -2831,19 +2846,31 @@
   function smReading(b, p){ var v = ((b.join.act || {}).readings || {})[p], P = window.PANELS[p];
     return v && P && P.variants.some(function(x){ return x.key === v; }) ? v : null; }
   function smKind(b){ return b.join.kind || (b.join.built ? "page" : "none"); }
+  function fillS(t, o){ return String(t).replace(/\{(\w+)\}/g, function(m, k){ return o[k] != null ? String(o[k]) : m; }); }
+  /* the top of the importance scale, read off the inventory's own ratings */
+  var SMRMAX = Math.max.apply(null, [1].concat(Object.keys(SM.attrs || {}).map(function(k){ return +(SM.attrs[k] || {}).r || 0; })));
   function smKindWord(b){ return ((SMS.kindWords || {})[smKind(b)]) || smKind(b); }
-  /* the block a bench move NAMES — a page first, since the running header is lit on every part */
+  /* the block a bench move NAMES — the block that move answers (the part it opened, or the ending or route it picked), then
+     a page, since the running header is lit on every part */
   function smLead(lit){ var ks = Object.keys(lit), pg = ks.filter(function(k){ var b = smBlock(k); return b && smKind(b) === "page"; });
-    return pg[0] || ks[0] || null; }
+    var mv = pg.filter(function(k){ var a = smBlock(k).join.act;
+      return SMMOVE === "exit" ? a.kind === "exit" : SMMOVE === "path" ? (a.kind === "path" || a.kind === "exit") : a.kind === "part" && a.part === cur; });
+    return mv[0] || pg[0] || ks[0] || null; }
+  window.smLead = function(){ return smLead(smLit()); };
+  /* the region that ANSWERS a block's move — the panel it goes to, brought into the band's view (an ending's is the command
+     panel, a route's the portrait); a block with no page moves nothing, so nothing is brought in */
+  function smRegion(b){ var a = b.join.act || {}; return a.kind === "exit" ? "command" : a.kind === "path" ? "portrait" : a.kind === "none" ? null : "middle"; }
+  function smBring(b){ var rg = smRegion(b); if (rg && window.LABMAP && window.LABMAP.answer) window.LABMAP.answer(rg); }
   window.smLit = smLit;
   window.smState = function(){ return { state: SM.state, lead: SMLEAD, pick: SMPICK, lit: smLit(), open: SMOPEN }; };
   /* the MOVE — one block, one act. `none` never moves the bench silently: it says what is missing. The
      RUNNING HEADER never leaves the part you are on: it shows that part's stage reading, or (drawn by smDraw)
      says plainly that this part has none yet. */
   function smGo(b){
+    SMEX = null;
     if (b.join.act.kind === "header") { var rv = smReading(b, cur);
       SMFROM = true; try { if (rv && smVarOf(cur) !== rv) window.showVariant(cur, rv); } finally { SMFROM = false; }
-      SMLEAD = "map"; SMPICK = b.key; smDraw(); smShow(b); return; }
+      SMLEAD = "map"; SMPICK = b.key; smDraw(); smShow(b); smBring(b); return; }
     if (b.join.act.kind === "none") { SMLEAD = "map"; SMPICK = b.key; smDraw(); smShow(b);
       var n = document.querySelector('#smtree .smb[data-sm="' + b.key + '"]');
       if (n) hoverShow(n, hcard({ title: b.name, value: SMS.noSurface || "no surface", icon: "alert", color: "var(--red)",
@@ -2854,12 +2881,12 @@
       if (a.kind === "part") { show(a.part); if (a.variant) window.showVariant(a.part, a.variant); }
       /* a block's move takes you TO its subject; it never re-picks one you already have in force */
       else if (a.kind === "exit") { var S1 = window.SEL || {}, exs = (F.forms || {}).exits || [];
-        var ex = (S1.exit && exs.filter(function(e){ return e.id === S1.exit; })[0]) || exs[0]; if (ex) selectExit(ex.id); }
+        var ex = (S1.exit && exs.filter(function(e){ return e.id === S1.exit; })[0]) || exs[0]; if (ex) { if (!S1.exit) SMEX = ex; selectExit(ex.id); } }
       else if (a.kind === "path") { var S2 = window.SEL || {}, pts = (F.forms || {}).paths || [];
         var p = (S2.path && pts.filter(function(x){ return x.id === S2.path; })[0]) || pts[0];
         if (p) { selectPath(p.id); if (window.showPortraitVar) window.showPortraitVar("cmd-path"); } } }
     finally { SMFROM = false; }
-    SMLEAD = "map"; SMPICK = b.key; smDraw(); smShow(b); }
+    SMLEAD = "map"; SMPICK = b.key; smDraw(); smShow(b); smBring(b); }
   function smShow(b){ if (window.FIELDMAP) window.FIELDMAP.show(b.own.concat(b.shared), b.name); }
   window.smGo = function(k){ var b = smBlock(k); if (b) smGo(b); };
   /* open (or close) blocks WITHOUT moving the bench — a block's row click is a Show; unfolding its fields is not */
@@ -2868,7 +2895,11 @@
     var li = el("li"), row = el("div", { class: "smrow" });
     row.append(el("span", { class: "smtw" }, gut));
     var n = el("i", { class: "sma" }); n.dataset.sm = id; n.dataset.shared = String(!!shared);
-    n.innerHTML = "<b>" + smEsc(a ? a.r : "?") + "</b> " + smEsc(a ? a.label : id);
+    /* the importance it was RULED at, drawn as rising bars, never a digit — "3 Kinds of ending" read as a count (review
+       2026-09-23); the number is the bars' label and the hover card's */
+    var rr = a ? +a.r || 0 : 0, rtop = SMRMAX;
+    n.innerHTML = '<b class="smr" role="img" data-r="' + rr + '" aria-label="' + smEsc(fillS(SMFACE.ratedAria || "importance {r} of {max}", { r: rr, max: rtop })) + '">'
+      + Array.apply(null, Array(rtop)).map(function(x, i){ return '<i data-i="' + (i + 1) + '"' + (i < rr ? ' class="on"' : "") + "></i>"; }).join("") + "</b> " + smEsc(a ? a.label : id);
     /* THE FIELD LAYER (D-024): pointing at a field outlines what the panels drew for it; the card says where it is drawn */
     if (a) hoverBind(n, function(){ return hcard({ title: a.label, value: "importance " + a.r + (a.alarm ? " · an alert" : ""),
       icon: shared ? "merge" : "info",
@@ -2882,13 +2913,15 @@
   function smRootRow(){
     var root = el("div", { class: "smroot" });
     root.dataset.lit = String(Object.keys(smLit()).length > 0);
-    root.append(el("b", null, (SM.root || {}).name || "the card"), el("em", null, SMS.rootSub || ""));
-    hoverBind(root, hcard({ title: (SM.root || {}).name || "the card", value: SM.n.attrs + " attributes",
+    /* D-035: the card's counts ride its hover card; its face is its name and one bar for every field (painted by the field layer) */
+    root.append(el("b", null, (SM.root || {}).name || "the card"));
+    hoverBind(root, function(){ return hcard({ title: (SM.root || {}).name || "the card", value: SM.n.attrs + " attributes",
       icon: "endpoint", rows: [["blocks", String(SM.n.blocks)], ["homed in one block", String(SM.n.own)],
         ["shared by three or more", String(SM.n.shared)], ["not placed", String(SM.n.unplaced)],
         ["with a page", String(SM.n.with_surface)], ["no page yet", String(SM.n.without_surface)],
-        ["a running header", String(SM.n.header || 0)]],
-      plain: (SM.root || {}).plain }));
+        ["a running header", String(SM.n.header || 0)]]
+        .concat(window.FIELDMAP ? [["fields", window.FIELDMAP.fwords(window.FIELDMAP.fcounts(Object.keys(SM.attrs || {})))]] : []),   /* the bar's own words: in view, out of view, another part, not drawn */
+      plain: (SM.root || {}).plain }); });
     return root; }
   /* a BLOCK row. `o.fold` false (a block under a group, a row or a section) draws no fold and no fields: they would be a
      fourth level, and the map draws three (the command card's ruling); Show still lights them all */
@@ -2906,11 +2939,17 @@
       btn.dataset.lit = String(!!lit[b.key]); btn.dataset.built = String(!!b.join.built); btn.dataset.kind = smKind(b);
       btn.dataset.part = b.join.act.part || ""; btn.dataset.act = b.join.act.kind;
       btn.setAttribute("aria-pressed", String(fold0 && !!SMOPEN[b.key]));
-      btn.append(el("span", { class: "smbn" }, b.name),
-                 el("span", { class: "smct" }, b.own.length + "·" + b.shared.length),
-                 el("span", { class: "smsurf" }, ({ page: "→ ", none: "✕ ", header: "↔ " })[smKind(b)] + b.join.surface
-                   + (smKind(b) !== "header" || smHdr(b) === "on" ? "" : " · " + ((window.PANELS[cur] || {}).word || cur) + " "
-                      + (smHdr(b) === "gap" ? (SMS.headerGapShort || "has none yet") : (SMS.headerOffShort || "is drawn another way")))));
+      /* D-035 — a block reads as ONE MARK (the icon and colour of the part that answers it, the command panel's glyph for an
+         ending; no page yet and the running header their own), its NAME, and one BAR for its fields (painted by the field
+         layer). What the old row said in words — the surface, the counts, a header's gap on this part — is the mark's label
+         and the hover card's rows. */
+      var MK = window.LABMAP ? window.LABMAP.mark(b) : { kind: smKind(b), col: "var(--muted)", svg: "", word: b.join.surface };
+      var mkw = MK.kind === "none" ? (SMS.noSurface || MK.word) : b.join.surface;
+      if (smKind(b) === "header" && smHdr(b) !== "on") mkw += " · " + ((window.PANELS[cur] || {}).word || cur) + " "
+        + (smHdr(b) === "gap" ? (SMS.headerGapShort || "has none yet") : (SMS.headerOffShort || "is drawn another way"));
+      var mark = el("span", { class: "smbk", role: "img", "aria-label": mkw }); mark.innerHTML = MK.svg; mark.dataset.kind = MK.kind;
+      if (MK.part) mark.dataset.part = MK.part; mark.style.setProperty("--pc", MK.col);
+      btn.append(mark, el("span", { class: "smbn" }, b.name));
       if (smKind(b) === "header") btn.dataset.hdr = smHdr(b);
       hoverBind(btn, function(){ var L = smLit();
         var hk = smKind(b), rv = hk === "header" ? smReading(b, cur) : null;
@@ -2919,7 +2958,8 @@
           rows: [["the card should hold", b.plain], ["questions", b.questions.join(" · ")],
                  ["standpoint", b.standpoint],
                  ["attributes", b.own.length + " " + (SMS.ownWord || "own") + " · " + b.shared.length + " " + (SMS.sharedWord || "shared")],
-                 ["the bench draws", b.join.says],
+                 ["fields", window.FIELDMAP ? window.FIELDMAP.fwords(window.FIELDMAP.fcounts(b.own.concat(b.shared))) : "—"],
+                 ["its page", b.join.surface], ["the bench draws", b.join.says],
                  ["the gap", b.join.gap || "nothing the map names is left out here"],
                  ["right now", hk === "header" ? (((window.PANELS[cur] || {}).word || cur) + (rv ? " has a stage reading" : " has no stage reading yet"))
                    : L[b.key] ? "the bench is on this block" : "the bench is elsewhere"]]
@@ -2935,18 +2975,18 @@
       return li; }
   function smDraw(){
     var host = document.getElementById("smtree"); if (!host) return;
-    var hd = document.getElementById("smn"), sub = document.getElementById("smsub");
+    var sub = document.getElementById("smsub");
     var lead = document.getElementById("smlead"), moreb = document.getElementById("smmoreb");
     host.innerHTML = "";
-    if (!SM.blocks) { hd.textContent = SM.state;
-      sub.textContent = SMS.absent || "The card's ruled tree was not read, so nothing is drawn here.";
+    if (!SM.blocks) { sub.textContent = SM.state + " · " + (SMS.absent || "The card's ruled tree was not read, so nothing is drawn here.");
       lead.hidden = true; moreb.hidden = true;
       host.append(el("div", { class: "smabs" }, SM.reason || "no reason was recorded")); return; }
     var lit = smLit(), leadKey = smLead(lit);
-    hd.textContent = SM.n.with_surface + " of " + SM.n.blocks + " with a page";
-    sub.textContent = (SM.state === "stale" ? (SMS.staleNote || "") + " " : "")
-      + (SMH.sub ? SMH.sub + ". " : "") + (SMH.lede || "") + " " + (SMH.proposal || "");
-    lead.hidden = false; lead.dataset.lead = SMLEAD || "idle";
+    /* ONE plain line says what the section is for (D-035); the counts and the proposal note sit behind "more information" */
+    sub.textContent = (SM.state === "stale" ? (SMS.staleNote || "") + " " : "") + ((window.LABMAP && window.LABMAP.plain()) || SMH.lede || "");
+    /* nothing moved yet: the line is away — the plain line above already says what pointing and clicking do (review 2026-09-23:
+       three sentences on the face at boot) */
+    lead.hidden = !SMLEAD; lead.dataset.lead = SMLEAD || "idle";
     var leadName = !SMLEAD ? null : SMLEAD === "map" ? ((smBlock(SMPICK) || {}).name || (window.LABMAP ? window.LABMAP.lastName() : null))
       : leadKey ? (smBlock(leadKey) || {}).name : null;
     lead.querySelector("span").textContent = (SMLEAD === "map" ? (SMS.leadYou || "you opened this here")
@@ -2962,6 +3002,11 @@
       say.append(el("b", null, picked.name + " · " + (SMS.noSurface || "no page yet")),
                  el("span", null, "to build — " + (picked.join.gap || picked.join.says || ""))); }
     /* the running header on a part with NO stage reading: the gap is said PER PART, and you stay on it */
+    /* a click on Endings with no ending in force picks the first one itself — the page says which, so the ending lit on every
+       part after it was never picked silently */
+    else if (picked && picked.join.act.kind === "exit" && SMEX && (window.SEL || {}).exit === SMEX.id) { say.hidden = false; say.dataset.kind = "picked"; say.dataset.part = ""; say.innerHTML = "";
+      say.append(el("b", null, picked.name + " · " + fillS(SMFACE.pickedEnding || "picked the first ending, {ending}", { ending: SMEX.status + " " + (SMEX.detail || SMEX.kind || "") })),
+                 el("span", null, SMFACE.pickedWhy || "")); }
     else if (picked && smKind(picked) === "header" && !smReading(picked, cur)) { say.hidden = false; say.dataset.kind = "header"; say.innerHTML = "";
       say.dataset.part = cur;
       say.append(el("b", null, picked.name + " · " + (SMS.headerMark || "across every part")),
@@ -3035,21 +3080,22 @@
       plain: "The rule that put each attribute in a block, how each field is tied to what the panels draw, and the two files the tree was hashed against." }));
     mb.onclick = function(ev){ ev.stopPropagation(); var open = box.hidden; box.hidden = !open;
       mb.textContent = open ? (SMS.moreHide || "hide it again") : (SMS.moreShow || "more information"); };
-    box.innerHTML = (((SMW.more || {}).lines) || []).map(function(l){ return "<p>" + smEsc(l) + "</p>"; }).join("")
+    box.innerHTML = [SMH.sub ? SMH.sub + "." : "", SMH.lede, SMH.proposal].filter(Boolean).map(function(l){ return '<p class="smhead">' + smEsc(l) + "</p>"; }).join("")
+      + (((SMW.more || {}).lines) || []).map(function(l){ return "<p>" + smEsc(l) + "</p>"; }).join("")
       + '<p id="smflmore"></p>' + (window.LABMAP ? window.LABMAP.moreHtml() : "")
       + "<p>" + smEsc("tree " + (src.tree || "?") + " · drawn on " + (src.map || "?") + " · inventory " + (src.inv_hash || "?") + " · cells " + (src.cells_hash || "?")
       + " · ruled " + (src.ruled || "?") + " · read " + SM.state) + "</p>"; })();
   /* THE OTHER DIRECTION — the bench's own moving calls, wrapped at the binding the bench itself uses,
      so a part button or a path cell lights the map without the map polling anything. */
-  function smWrap(f){ return function(){ var r = f.apply(this, arguments);
-      if (!SMFROM) { SMLEAD = "lab"; SMPICK = null; }
+  function smWrap(f, mv){ return function(){ var r = f.apply(this, arguments);
+      if (!SMFROM) { SMLEAD = "lab"; SMPICK = null; SMMOVE = mv; SMEX = null; }
       smDraw(); return r; }; }
-  show = smWrap(show); window.showTab = show;
-  selectPath = smWrap(selectPath); window.selectPath = selectPath;
-  selectExit = smWrap(selectExit); window.selectExit = selectExit;
-  clearPath = smWrap(clearPath); window.clearPath = clearPath;
-  window.selectIn = smWrap(window.selectIn);
-  window.showVariant = smWrap(window.showVariant);
+  show = smWrap(show, "part"); window.showTab = show;
+  selectPath = smWrap(selectPath, "path"); window.selectPath = selectPath;
+  selectExit = smWrap(selectExit, "exit"); window.selectExit = selectExit;
+  clearPath = smWrap(clearPath, "part"); window.clearPath = clearPath;
+  window.selectIn = smWrap(window.selectIn, "part");
+  window.showVariant = smWrap(window.showVariant, "part");
 
   /* the rail is built REGION BY REGION, in the order the blocks stand (2026-09-17). drawMidCfg runs
      before the first show() because it is what creates #partcfg for drawVars to fill. */
@@ -3059,8 +3105,9 @@
   tagRegions();
   var first = (location.hash || "#data").slice(1); show(order.indexOf(first) >= 0 ? first : "data");
   if (window.FIELDMAP) { window.FIELDMAP.walk(); window.FIELDMAP.drawOpts(); }   /* the field layer's catalog: every place the lab can draw a field */
-  if (window.LABMAP) window.LABMAP.init();   /* the map's placement (D-025.2) and its header — grouping, By stage's rule, the line, Keep only */
+  if (window.LABMAP) window.LABMAP.init();   /* the map's legend and header — grouping, By stage's rule, Keep only, "more" (D-035) */
   SMLEAD = null; SMPICK = null; smDraw();   /* boot: the map draws, and says out loud that neither side has moved yet */
+  if (window.EPPICK) { try { window.EPPICK.init(S); } catch (e) { console.error(e); } }   /* D-035: the endpoint picker + the line a ?ep= the lab could not open */
   window.__eplabReady = true;
 })();
 </script>

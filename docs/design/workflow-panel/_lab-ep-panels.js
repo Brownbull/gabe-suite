@@ -174,8 +174,10 @@
     var col = E("div", { class: "scol " + dir });
     col.append(E("div", { class: "dslbl " + (dir === "in" ? "in" : "out") },
       ico("down", 12, dir === "in" ? S.OPC.read : S.OPC.write), dir === "in" ? "REQUEST" : "RESPONSE",
-      E("span", { class: "n" }, String((sc.cols || []).length))));
-    if (!sc.present) { col.append(E("div", { class: "wempty" }, sc.why || "— not carried by the feed")); return col; }
+      E("span", { class: "n" }, String(schN(sc)))));
+    if (!sc.present) { var we = E("div", { class: "wempty" }, sc.name ? sc.name + " — its fields are not in the feed" : dir === "in" ? "no body is read" : "no shape is returned");
+      if (sc.why) bind(we, card({ title: sc.name || (dir === "in" ? "no request body" : "no response shape"), icon: "schema", color: S.KINDCOL.schema, sub: "how the map reads it", body: esc(sc.why) }));
+      col.append(we); return col; }
     var main = E("div", { class: "schm" }, E("div", { class: "snm" }, ico("schema", 12, S.KINDCOL.schema), esc(sc.name)),
       shapeStack(sc.name, sc.cols || [], { color: S.KINDCOL.schema, nestSet: nest }));
     main.dataset.schema = sc.name; tg(main, dir === "in" ? "request-shape" : "response-shape-per-ending");
@@ -197,9 +199,16 @@
       col.append(nb); }
     return col; }
 
+  function schN(sc){ return sc.present ? (sc.cols || []).length : sc.name ? "?" : 0; }
+  /* the payload line: the field count when it is known, "fields not read" when the shape is named but unread, and no
+     response at all said as such */
+  function payloadWords(F){ var I = F.identity, res = F.data.schemas.response;
+    if ((I.payload || {}).n != null) return I.payload.n + " fields ferried → " + (res.name || "—");
+    if (res.present) return (res.cols || []).length + " fields ferried → " + res.name;
+    return res.name ? "fields not read → " + res.name : "no shape is returned"; }
   function renderSchemas(box, F, S){
     var D = F.data, I = F.identity, req = D.schemas.request, res = D.schemas.response;
-    var nIn = (req.cols || []).length, nOut = (res.cols || []).length;
+    var nIn = schN(req), nOut = schN(res);
     head(box, "schema", "Schemas", nIn + " in · " + nOut + " out",
       "the shapes that cross the endpoint, drawn as LINES — one line per field, its height the field count; the exact fields live on the hover cards");
     var body = E("div", { class: "scbody" });
@@ -209,7 +218,7 @@
     box.append(body);
     var foot = E("div", { class: "pfoot" });
     var pr = E("div", { class: "kv" }, ico("down", 13, S.OPC.write), E("span", { class: "k" }, "payload"), E("span", { class: "v" },
-      ((I.payload || {}).n != null ? I.payload.n : nOut) + " fields ferried → " + (res.name || "—")
+      payloadWords(F)
       + (F.widening.response_consumers.length ? " · also returned by " + F.widening.response_consumers.length + " other endpoint(s)" : "")));
     bind(pr, card({ title: "payload", icon: "down", color: S.OPC.write, sub: "the response contract's field count",
       rows: [["schema", res.name || "—"], ["fields", String((I.payload || {}).n != null ? I.payload.n : nOut)],
@@ -227,9 +236,10 @@
   /* SCHEMAS · B "fields" — every field of both shapes as rows, nested ones indented under their parent */
   function renderSchemaFields(box, F, S){
     var D = F.data, I = F.identity;
-    var nIn = (D.schemas.request.cols || []).length, nOut = (D.schemas.response.cols || []).length;
+    var nIn = schN(D.schemas.request), nOut = schN(D.schemas.response);
     head(box, "schema", "Schemas", nIn + " in · " + nOut + " out",
       "every field of both shapes, one per row — the densest reading, with each nested shape under its parent");
+    if (schNone(box, F, S)) { COV.mark("PAYLOAD", "schemas"); COV.mark("CONNECTIONS", "schemas"); return; }
     var body = E("div", { class: "lbody" });
     [["in", D.schemas.request], ["out", D.schemas.response]].forEach(function(pair){
       var dir = pair[0], sc = pair[1]; if (!sc.present) return;
@@ -254,7 +264,7 @@
     box.append(body);
     var foot = E("div", { class: "pfoot" });
     foot.append(E("div", { class: "kv" }, ico("down", 13, S.OPC.write), E("span", { class: "k" }, "payload"),
-      E("span", { class: "v" }, ((I.payload || {}).n != null ? I.payload.n : nOut) + " fields ferried → " + (D.schemas.response.name || "—"))));
+      E("span", { class: "v" }, payloadWords(F))));
     box.append(foot);
     COV.mark("PAYLOAD", "schemas"); COV.mark("CONNECTIONS", "schemas");
   }
@@ -503,7 +513,10 @@
     var lanes = E("div", { class: "lanes" });
     SEC.asgi.forEach(function(m){
       var lane = E("div", { class: "lane" }, E("span", { class: "lo" }, runsNo(m)), ico("shield", 13, S.OPC.gate), E("b", null, esc(m.name)), E("span", { class: "lg2" }, m.gates + " gated"));
-      lane.dataset.lane = m.name; lane.dataset.runs = m.runs == null ? "" : String(m.runs); tg(lane, "app-band");
+      lane.dataset.lane = m.name; lane.dataset.runs = m.runs == null ? "" : String(m.runs);
+      /* a lane is a CHECK the request meets, drawn in the order it runs (its number): the checks-in-run-order field rides it
+         too (review 2026-09-23: Security drew that order and tied it to nothing, so Gates and decisions lit on no field of its own) */
+      tg(lane, m.gates ? ["app-band", "the-checks-met-in-run-order"] : "app-band");
       bind(lane, card({ title: m.name, icon: "shield", color: S.OPC.gate, sub: "ASGI middleware · " + runsWord(m) + " · scope " + m.scope,
         rows: [["runs", "before every handler — " + runsWord(m)], ["registered", m.registered == null ? "—" : ordinal(m.registered + 1) + " in the code — the last one registered runs first"], ["gates", m.gates + " endpoints"], ["file", m.file + ":" + m.line], ["tie to this endpoint", "— measured at APP scope only; no per-endpoint wire exists"]],
         body: "H — posture: the band is LIT because it is measured; the tie to this one endpoint is not, so no wire is drawn." }));
@@ -530,7 +543,7 @@
         ico(isGate ? "key" : "link", 14, isGate ? S.OPC.gate : "var(--muted)"),
         E("div", { class: "tt" }, E("b", null, esc(g.name)), E("span", { class: "ts" }, g.via + (isGate ? " · gate" : "") + (g.resolved ? " · resolved " + ordinal(g.resolved.order) + " of " + g.resolved.of : ""))),
         E("span", { class: "tw" }, pct + "%"));
-      t.dataset.dep = g.name; tg(t, isGate ? ["auth-scheme-gate", "context-giving-functions"] : "context-giving-functions");
+      t.dataset.dep = g.name; tg(t, isGate ? ["auth-scheme-gate", "context-giving-functions", "the-checks-met-in-run-order"] : "context-giving-functions");   /* a gate is a check, in its resolved order; a resource dep checks nothing */
       if (isGate && (((F.forms || {}).auth || {}).schemes || []).length) tg(t, "how-common-this-piece-is", true);
       bind(t, card({ title: g.name, icon: isGate ? "key" : "link", color: isGate ? S.OPC.gate : null, sub: g.via + (isGate ? " · a GATE" : " · a dependency"),
         rows: [["runs", "before the handler body"], ["feed-wide", g.feedwide + " of " + FW.endpoints + " endpoints use it (" + pct + "%)"],
@@ -1772,6 +1785,9 @@
     return h; }
   /* an empty result is a RESULT — say what was measured instead of drawing nothing */
   function chanEmpty(box, D, S){
+    if (!D.tables.length) { box.append(E("div", { class: "pempty" }, ico("table", 15, "var(--muted)"), E("b", null, "this endpoint touches no table"),
+        E("span", null, "none of its paths reads or writes a table — nothing is switched off; there is nothing to draw.")));
+      return box; }
     var on = CHAN.filter(function(c){ return chanOn(c.key); });
     box.append(E("div", { class: "pempty" }, ico("table", 15, "var(--muted)"),
       E("b", null, on.length ? "no table is " + on.map(function(c){ return c.word; }).join(" or ") : "no channel is switched on"),
@@ -1947,11 +1963,11 @@
     stop({ fa: "method-path", icon: "down", title: "request", sub: F.identity.method + " " + F.identity.path, col: S.OPC.read,
       card: card({ title: "the request arrives", icon: "down", sub: F.identity.method + " " + F.identity.path, rows: [["body", (F.data.schemas.request.name || "—") + " · " + (F.data.schemas.request.cols || []).length + " fields"]] }) });
     lane.append(E("i", { class: "sarr", html: ico("drill", 13, "var(--muted)") }));
-    SEC.asgi.forEach(function(m){ stop({ lane: m.name, fa: "app-band", icon: "shield", title: m.name.replace(/Middleware$/, ""), sub: "app · " + runsWord(m) + " · " + m.gates + " gated", col: S.OPC.gate, cls: "app",
+    SEC.asgi.forEach(function(m){ stop({ lane: m.name, fa: m.gates ? ["app-band", "the-checks-met-in-run-order"] : "app-band", icon: "shield", title: m.name.replace(/Middleware$/, ""), sub: "app · " + runsWord(m) + " · " + m.gates + " gated", col: S.OPC.gate, cls: "app",
       card: card({ title: m.name, icon: "shield", color: S.OPC.gate, sub: "ASGI middleware · scope " + m.scope,
         rows: [["runs", runsWord(m)], ["gates", m.gates + " of " + FW.endpoints + " endpoints"], ["file", m.file + ":" + m.line], ["tie to this endpoint", "— measured at APP scope only"]] }) });
       lane.append(E("i", { class: "sarr", html: ico("drill", 13, "var(--muted)") })); });
-    SEC.guards.forEach(function(g){ stop({ dep: g.name, fa: g.gate ? ["auth-scheme-gate", "context-giving-functions"] : "context-giving-functions", icon: g.gate ? "key" : "link", title: g.name, sub: g.via + (g.gate ? " · GATE" : " · resource") + " · " + Math.round(100 * g.feedwide / FW.endpoints) + "% of endpoints" + (g.resolved ? " · resolved " + ordinal(g.resolved.order) + " of " + g.resolved.of : ""), col: g.gate ? S.OPC.gate : "var(--muted)", cls: g.gate ? "gate" : "",
+    SEC.guards.forEach(function(g){ stop({ dep: g.name, fa: g.gate ? ["auth-scheme-gate", "context-giving-functions", "the-checks-met-in-run-order"] : "context-giving-functions", icon: g.gate ? "key" : "link", title: g.name, sub: g.via + (g.gate ? " · GATE" : " · resource") + " · " + Math.round(100 * g.feedwide / FW.endpoints) + "% of endpoints" + (g.resolved ? " · resolved " + ordinal(g.resolved.order) + " of " + g.resolved.of : ""), col: g.gate ? S.OPC.gate : "var(--muted)", cls: g.gate ? "gate" : "",
       card: card({ title: g.name, icon: g.gate ? "key" : "link", color: g.gate ? S.OPC.gate : null, sub: g.via,
         rows: [["decides", g.gate ? "yes — it can refuse" : "no — it supplies"], ["feed-wide", g.feedwide + " of " + FW.endpoints], g.fn_rec ? ["function", g.fn_rec.name + " · " + (g.fn_rec.role || "—")] : null] }) });
       lane.append(E("i", { class: "sarr", html: ico("drill", 13, "var(--muted)") })); });
@@ -2028,6 +2044,16 @@
     cols: sc.cols || [], cols_more: sc.cols_more || 0, at: sc.at || null, rules: sc.rules || null, rules_why: sc.rules_why || null, extra: sc.extra || null }; }
   function schByName(F, n){ return schShapes(F).filter(function(s){ return s.name === n; })[0] || null; }
   function schShown(F){ return schShapes(F).filter(function(s){ return schDirOn(s.dir); }); }
+  /* an endpoint no shape crosses at all (it reads no body and returns no schema) — the part is empty because the endpoint
+     is, never because a switch is off (D-035: the lab opens every endpoint, and a quarter of gustify's cross no shape) */
+  function schNone(box, F, S){ if (schShapes(F).length) return false;
+    var D = F.data.schemas, named = [[D.request, "in"], [D.response, "out"]].filter(function(p){ return p[0].name; });
+    box.append(named.length
+      ? E("div", { class: "pempty" }, ico("schema", 15, "var(--muted)"), E("b", null, "the shapes it names are not drawn"),
+          E("span", null, named.map(function(p){ return p[0].name + " (" + p[1] + ")"; }).join(" · ") + " — their fields are not in the feed, so there is nothing to draw; no switch hides them."))
+      : E("div", { class: "pempty" }, ico("schema", 15, "var(--muted)"), E("b", null, "no shape crosses this endpoint"),
+          E("span", null, "it reads no body and returns no schema — no switch hides anything; there is nothing to draw.")));
+    return true; }
   function schFields(list){ return list.reduce(function(n, s){ return n + s.cols.length; }, 0); }
   function schNestN(list){ return list.reduce(function(n, s){ return n + s.cols.filter(function(c){ return schIsShape(c); }).length; }, 0); }
   window.SCHSHAPES = function(){ return schShapes(window.LABEP); };
@@ -2206,6 +2232,7 @@
   function renderSchemaBlocks(box, F, S){
     var list = schShown(F), B = schBk(), sel = (window.SEL || {}).schemas, portOn = (window.FRAME || {}).portW > 0;
     schHead(box, F, S, list);
+    if (!schShapes(F).length && schNone(box, F, S)) { COV.mark("PAYLOAD", "schemas"); return; }
     if (!list.length) { box.append(E("div", { class: "pempty" }, ico("schema", 15, "var(--muted)"), E("b", null, "both directions are switched off"),
         E("span", null, "there is nothing to draw — switch IN or OUT back on in the title row, or in the rail.")));
       COV.mark("PAYLOAD", "schemas"); return; }

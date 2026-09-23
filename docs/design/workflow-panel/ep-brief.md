@@ -5,6 +5,13 @@ The bench: **POST /setup/complete** (entity `auth`), the real door from the froz
 the station's visual system is LIFTED into `_station.js` (`window.STATION`) by `gen-station-tokens.py`.
 Nothing in the lab may be typed by hand that either file carries.
 
+**Any endpoint (D-035, 2026-09-23).** `_lab-ep.js` stays the committed default. `endpoint-lab.html?ep=<slug>` opens any
+other endpoint of the feed from `_eps/<slug>.js` — a LOCAL, git-ignored build of the same facts, one file per endpoint:
+`cd docs/design/workflow-panel && python3 gen-endpoint-set.py` (≈ 15 s for all 80; `--only "METHOD /path"` for one). The
+slug is `_ep-slug.js`'s rule (the one place it lives; the all-endpoints page inlines the same file). The committed list of
+every endpoint the picker shows is `_lab-ep-index.js` (`--index-only` rewrites just it). A `?ep=` whose file is missing
+boots the default and says so in the lede, with the command that builds it.
+
 ## The operator's ask (verbatim intent, 2026-09-11)
 
 - The **six parts** of an element (from the alphabet ruling A) become the panels of the console's

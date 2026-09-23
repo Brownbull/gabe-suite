@@ -213,6 +213,8 @@
   function regionWords(){ return REGIONS.filter(function(r){ return LAST.by[r]; }).map(function(r){ return (WP[r] || r) + " " + LAST.by[r]; }).join(" · "); }
   /* one line under the lead: what the light does, in words — including a light that found nothing to draw */
   function say(){ var s = document.getElementById("smfl"); if (!s) return;
+    /* nothing pointed at: the line is away — the plain line above says what pointing and clicking do (review 2026-09-23) */
+    s.hidden = !CUR;
     if (!CUR) { s.dataset.fl = "idle"; s.textContent = W1("idle", "point at a field or a block to outline what the panels draw for it — click one to keep the outline"); return; }
     var one = CUR.ids.length === 1 ? CUR.ids[0] : null, st = one ? state(one) : null, n = (LAST || {}).n || 0;
     var head = CUR.what || (one ? label(one) : CUR.ids.length + " fields");
@@ -255,29 +257,62 @@
   document.addEventListener("scroll", onView, true); window.addEventListener("resize", onView);
   document.addEventListener("keydown", function(ev){ if (ev.key === "Escape" && KEEP) clear(); });
 
-  /* ── the tree, repainted in place from DRAWN (smDraw builds the rows; this only fills the field marks) ── */
+  /* ── the tree, repainted in place from DRAWN (smDraw builds the rows; this only fills the field marks). D-035: a mark per field
+        (a dot) and ONE bar per block, row and the card — drawn here · on another part · behind the switch that is off · not
+        drawn by the lab — with the numbers on the hover and in the bar's label, never in a sentence on the row ── */
+  var STS = ["here", "elsewhere", "off", "none"];
+  function counts(ids){ var o = { here: 0, elsewhere: 0, off: 0, none: 0, of: ids.length };
+    ids.forEach(function(id){ o[state(id)]++; }); return o; }
+  /* WHAT THE FACE PAINTS (review 2026-09-23: "drawn here" counted an element off the window — Endings' one element sat in the
+     command panel past the window's edge, and DELETE /me's Structures lit green on a command cell out of view). The face splits
+     drawn-here by whether you can SEE one of its elements now: in view · here but out of view (scroll the band or the panel) ·
+     on another part · not drawn. "Behind a switch no control reaches" is how the map knows, so on the face it reads as not
+     drawn (D-017); the hover card still says which. */
+  var FST = ["here", "away", "elsewhere", "none"];
+  function faceOf(id, see){ var st = state(id); return st === "here" ? (DRAWN.els(id).some(see) ? "here" : "away") : st === "off" ? "none" : st; }
+  function fcounts(ids, see){ see = see || viewer(); var o = { here: 0, away: 0, elsewhere: 0, none: 0, of: ids.length };
+    ids.forEach(function(id){ o[faceOf(id, see)]++; }); return o; }
+  function fwords(f){ return fill(FW("faceCount", "{n} of {m} fields in view here"), { n: f.here, m: f.of })
+    + (f.away ? fill(FW("faceAway", " · {a} here but out of view"), { a: f.away }) : "")
+    + (f.elsewhere ? fill(W1("blockElse", " · {e} on another part"), { e: f.elsewhere }) : "")
+    + (f.none ? fill(FW("faceNone", " · {x} not drawn"), { x: f.none }) : ""); }
+  /* the bar's words: the old sentence, kept for the hover card and the bar's label */
+  function barWords(k){ return fill(W1("blockCount", "{n} of {m} fields drawn here"), { n: k.here, m: k.of })
+    + (k.elsewhere ? fill(W1("blockElse", " · {e} on another part"), { e: k.elsewhere }) : "")
+    + (k.off ? fill(W1("blockOff", " · {o} behind a switch no control reaches yet"), { o: k.off }) : "")
+    + (k.none ? fill(W1("blockNone", " · {x} not drawn by the lab"), { x: k.none }) : ""); }
+  function markWords(id, st, els, v){ return st === "here" ? fill(W1("markHere", "drawn here · places {n} · in view {v}"), { n: els.length, v: v })
+    : st === "elsewhere" ? W1("markElse", "on another part") : st === "off" ? W1("markOff", "behind a switch no control reaches yet") : W1("markNone", "not drawn by the lab"); }
+  function paintBar(host, ids, see){ var k = counts(ids), f = fcounts(ids, see), m = host.querySelector(":scope > .smfn");
+    if (!ids.length) { if (m) m.remove(); return k; }
+    if (!m) { m = document.createElement("span"); m.className = "smfn"; m.setAttribute("role", "img"); host.append(m); }
+    m.innerHTML = ""; m.setAttribute("aria-label", fwords(f));
+    FST.forEach(function(st){ if (!f[st]) return; var g = document.createElement("i"); g.className = "smseg"; g.dataset.st = st; g.dataset.n = String(f[st]);
+      g.style.flexGrow = String(f[st]); m.append(g); });
+    host.dataset.fdn = String(k.here); host.dataset.fdof = String(k.of); host.dataset.fdelse = String(k.elsewhere);
+    host.dataset.fdoff = String(k.off); host.dataset.fdnone = String(k.none);
+    host.dataset.fvin = String(f.here); host.dataset.fvaway = String(f.away);
+    return k; }
   function paintTree(){ var host = document.getElementById("smtree"); if (!host) return;
     host.dataset.prop = OPT.prop === "marked" ? "on" : "off";
     var see = viewer();
     [].forEach.call(host.querySelectorAll(".sma[data-sm]"), function(n){ var id = n.dataset.sm, st = state(id), els = DRAWN.els(id);
-      n.dataset.fd = st; n.dataset.fsrc = srcOf(id) || "none"; n.dataset.fprop = String(tieOf(id).a);
-      var m = n.querySelector(".smfd"); if (!m) { m = document.createElement("span"); m.className = "smfd"; n.append(m); }
+      n.dataset.fd = st; n.dataset.face = faceOf(id, see); n.dataset.fsrc = srcOf(id) || "none"; n.dataset.fprop = String(tieOf(id).a);
+      var m = n.querySelector(".smfd"); if (!m) { m = document.createElement("span"); m.className = "smfd"; m.setAttribute("role", "img"); n.insertBefore(m, n.firstChild); }
       m.dataset.n = String(els.length); m.dataset.v = String(els.filter(see).length);
-      m.textContent = st === "here" ? fill(W1("markHere", "drawn here · places {n} · in view {v}"), { n: els.length, v: m.dataset.v })
-        : st === "elsewhere" ? W1("markElse", "on another part") : st === "off" ? W1("markOff", "behind a switch no control reaches yet") : W1("markNone", "not drawn by the lab"); });
+      m.setAttribute("aria-label", markWords(id, st, els, m.dataset.v)); });
     [].forEach.call(host.querySelectorAll(".smb[data-sm]"), function(btn){ var b = (SM.blocks || []).filter(function(x){ return x.key === btn.dataset.sm; })[0]; if (!b) return;
-      var k = blockCount(b); btn.dataset.fdn = String(k.drawn); btn.dataset.fdof = String(k.of); btn.dataset.fdelse = String(k.elsewhere);
-      var m = btn.querySelector(".smfn"); if (!m) { m = document.createElement("span"); m.className = "smfn"; btn.append(m); }
-      m.textContent = fill(W1("blockCount", "{n} of {m} fields drawn here"), { n: k.drawn, m: k.of })
-        + (k.elsewhere ? fill(W1("blockElse", " · {e} on another part"), { e: k.elsewhere }) : ""); });
-    [].forEach.call(host.querySelectorAll(".smn[data-ids]"), function(btn){ var ids = idsOf(btn.dataset.ids);
-      var m = btn.querySelector(".smfn"); if (!ids.length) { if (m) m.remove(); return; }
-      var n = ids.filter(function(id){ return DRAWN.has(id); }).length, e = ids.filter(function(id){ return state(id) === "elsewhere"; }).length;
-      btn.dataset.fdn = String(n); btn.dataset.fdof = String(ids.length);
-      if (!m) { m = document.createElement("span"); m.className = "smfn"; btn.append(m); }
-      m.textContent = fill(W1("blockCount", "{n} of {m} fields drawn here"), { n: n, m: ids.length }) + (e ? fill(W1("blockElse", " · {e} on another part"), { e: e }) : ""); });
-    var o = totals(), t = document.getElementById("smfln");
-    if (t) t.textContent = fill(W1("totals", "the lab draws {drawn} of {of} fields · {none} not drawn"), { drawn: o.of - o.none, of: o.of, none: o.none });
+      paintBar(btn, blockIds(b), see);
+      /* a block with NO PAGE YET whose fields the part you are on draws anyway: its mark says they are drawn in PIECES here, so
+         the mark (no page) and the bar (drawn) do not read as a contradiction (review 2026-09-23 — Standard or specialist on
+         Security). Whether such a block's pairing is right is his to rule (D-022); the map only says what it sees. */
+      var mk0 = btn.querySelector(".smbk"); if (mk0 && btn.dataset.kind === "none") { var base = mk0.dataset.base || (mk0.dataset.base = mk0.getAttribute("aria-label") || "");
+        var fk = fcounts(blockIds(b), see), pc = fk.here + fk.away;
+        mk0.dataset.pieces = String(pc);
+        mk0.setAttribute("aria-label", base + (pc ? " · " + fill(FW("nonePieces", "{n} of its {m} fields drawn in pieces on this part"), { n: pc, m: fk.of }) : "")); } });
+    [].forEach.call(host.querySelectorAll(".smn[data-ids]"), function(btn){ paintBar(btn, idsOf(btn.dataset.ids), see); });
+    var root = host.querySelector(".smroot"); if (root) paintBar(root, Object.keys(attrs()), see);
+    var o = totals();
     /* D-017: HOW the lab ties each field to what it draws is about the map — behind "more information" */
     var mo = document.getElementById("smflmore");
     if (mo) mo.textContent = fill(W1("moreCounts", "{generated} · {authored} · {none}"), { generated: o.generated, authored: o.authored, both: o.both, none: o.none,
@@ -292,24 +327,34 @@
     if (tieOf(id).a) out.push([W1("rowProposal", "a proposal"), W1("proposal", "a selector I wrote ties this field to what the panels draw — the renderer does not say it")]);
     return out; }
 
-  /* ── the rail options (the agent's picks marked with a dashed ring) and the key to the outline's styles ── */
+  /* ── the field layer's options, behind the map's "more" (D-035): each an ICON SQUARE, its words on hover and in its aria-label,
+        the agent's pick dashed (D-034) — and the key to the outline's styles, drawn in the legend strip ── */
+  var OPTICO = { point: "point", click: "click", dim: "dim", asis: "asis", hidden: "tieoff", marked: "tieon" };
   function drawOpts(){ var host = document.getElementById("smflopt"); if (!host) return; host.innerHTML = "";
-    OPTS.forEach(function(o){ var row = document.createElement("div"); row.className = "smflo"; row.dataset.opt = o.key;
-      var l = document.createElement("span"); l.className = "smflk"; l.textContent = W1("opt_" + o.key, o.key); row.append(l);
-      o.vals.forEach(function(v){ var b = document.createElement("button"); b.type = "button"; b.className = "smflb" + (OPT[o.key] === v ? " on" : "") + (o.pick === v ? " pick" : "");
-        b.dataset.v = v; b.textContent = W1("val_" + v, v);
+    OPTS.forEach(function(o){ var row = document.createElement("div"); row.className = "smflo smno"; row.dataset.opt = o.key;
+      row.setAttribute("role", "radiogroup"); row.setAttribute("aria-label", W1("opt_" + o.key, o.key));
+      var l = document.createElement("span"); l.className = "smflk smnk"; l.textContent = W1("opt_" + o.key, o.key); row.append(l);
+      if (window.hoverBind && window.hcard) window.hoverBind(l, window.hcard({ title: W1("opt_" + o.key, o.key), icon: "info", plain: W1("optTip_" + o.key, "") }));
+      o.vals.forEach(function(v){ var b = document.createElement("button"); b.type = "button"; b.className = "smflb smopt" + (OPT[o.key] === v ? " on" : "") + (o.pick === v ? " pick" : "");
+        b.dataset.v = v; b.setAttribute("role", "radio"); b.setAttribute("aria-checked", String(OPT[o.key] === v)); b.setAttribute("aria-label", W1("val_" + v, v));
+        if (o.pick === v) b.dataset.pick = "true";
+        b.innerHTML = window.MAPGLY ? window.MAPGLY(OPTICO[v], 18) : "";
         if (window.hoverBind && window.hcard) window.hoverBind(b, window.hcard({ title: W1("val_" + v, v), icon: "info",
           plain: W1("tip_" + v, v) + (o.pick === v ? " " + W1("tipPick", "(my pick — dashed)") : "") }));
         b.onclick = function(ev){ ev.stopPropagation(); setOpt(o.key, v); };
         row.append(b); });
       host.append(row); });
-    var k = document.createElement("div"); k.className = "smflkey"; k.id = "smflkey";
+    drawKey(); say(); }
+  function drawKey(){ var k = document.getElementById("smflkey"); if (!k) return; k.innerHTML = "";
+    /* the key's WORDS are what the style means ("on its face", "only on hover") — the swatch draws the style itself (review
+       2026-09-23: the key said "solid" and "dotted", naming the style, and the meaning hid in the hover) */
     [["solid", W1("keySolid", "solid — on its face")], ["dotted", W1("keyDotted", "dotted — only in its hover card")]]
-      .concat(OPT.prop === "marked" ? [["dashed", W1("keyDashed", "dashed — a tie I wrote as a selector")]] : [])
-      .forEach(function(x){ var s = document.createElement("span"); s.className = "smflks"; s.dataset.style = x[0];
-        var sw = document.createElement("i"); sw.style.outlineStyle = x[0]; s.append(sw, document.createTextNode(x[1])); k.append(s); });
-    host.append(k);
-    say(); }
+      .concat(OPT.prop === "marked" ? [["double", W1("keyDouble", "double — a tie I wrote as a selector")]] : [])
+      .forEach(function(x){ var s = document.createElement("span"); s.className = "smflks smlgi"; s.dataset.style = x[0];
+        var sw = document.createElement("i"); sw.style.outlineStyle = x[0]; var mean = x[1].split(" — ")[1] || x[1];
+        s.append(sw, document.createTextNode(mean));
+        if (window.hoverBind && window.hcard) window.hoverBind(s, window.hcard({ title: mean, icon: "info", plain: x[1] }));
+        k.append(s); }); }
   function setOpt(k, v){ OPT[k] = v; drawOpts(); paintTree(); if (CUR) paint(); }
 
   /* ── the CATALOG: every place the lab can draw a field, rendered off-screen once at boot ── */
@@ -388,7 +433,8 @@
     { hold: W1("val_" + OPT.hold, OPT.hold), rest: W1("val_" + OPT.rest, OPT.rest), prop: W1("val_" + OPT.prop, OPT.prop) }); }
 
   window.FIELDMAP = {
-    state: state, where: where, places: places, src: srcOf, tie: tieOf, blockCount: blockCount, totals: totals, rows: rows,
+    state: state, where: where, places: places, src: srcOf, tie: tieOf, blockCount: blockCount, totals: totals, rows: rows, counts: counts, barWords: barWords, drawKey: drawKey,
+    face: function(id){ return faceOf(id, viewer()); }, fcounts: function(ids){ return fcounts(ids); }, fwords: fwords,
     light: light, unlight: unlight, keep: keep, clear: clear, next: next, paintTree: paintTree, drawOpts: drawOpts, walk: walk,
     lit: function(){ return [].slice.call(document.querySelectorAll(".fl-hit")); },
     current: function(){ return CUR ? { ids: CUR.ids.slice(), what: CUR.what } : null; },
@@ -430,11 +476,14 @@
          its pick) or one at a time: a rail option.
        · THE KEYBOARD — Tab reaches every node, fields included; Enter or Space shows it; the arrow keys move between
          nodes and levels and fold them; Escape, from the tree, closes the newest record.
-       · WHAT A RELOAD KEEPS — the grouping, the rule, the placement, the line, the records option, Keep only, the open
-         folds and the open records (browser storage, this viewer only; the page works without it).
-       · THE PLACEMENT — the rail tab · a column right of the panels · full width below them. The agent's pick marked.
-         The right column FITS the window: the panels' band takes the width left and slides inside itself; the column's
-         width (narrow · as wide as the rail) is a rail option of its own.
+       · WHAT A RELOAD KEEPS — the grouping, the rule, the line, the records option, Keep only, the open folds and the open
+         records (browser storage, this viewer only; the page works without it).
+       · THE PLACE — RULED (D-035): full width below the panels, always. The rail tab and the right column left with their
+         option; the map's face is its header (grouping · By stage's rule · Keep only · "more"), a legend strip and the tree.
+       · THE FACE IN ICONS (D-035: "more simplified and use more icons … I cannot understand what is happening") — every
+         option an icon square (its words on hover and in its aria-label, the agent's unruled pick dashed, D-034); a block is
+         its mark (the icon and colour of the part that answers it · no page yet · the running header), its name and one
+         bar for its fields; a field is a dot. The numbers ride the hover cards and the bars' labels, never a sentence.
        · REVEAL — after a bench move, the block it lit is scrolled into view inside the map's own scroll box.
        · THE SWEEP — a line from the node shown last to the nearest element it lit (the lab's hop, the agent's pick) or
          to the panel that answers the last move (the brain map's hop), or none — a rail option; drawn whole (D-004),
@@ -452,26 +501,61 @@
   function mk(t, c, x){ var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
   function hv(el, html){ if (window.hoverBind) window.hoverBind(el, html); }
   function hc(o){ return window.hcard ? window.hcard(o) : ""; }
-  var GRPS = ["flat", "standpoint", "section", "stage"], PLACES = ["rail", "right", "below"], SWEEPS = ["on", "panel", "off"], RECS = ["stack", "one"], MAPWS = ["narrow", "wide"];
+  var GRPS = ["flat", "standpoint", "section", "stage"], SWEEPS = ["on", "panel", "off"], RECS = ["stack", "one"];
   var PICK = { grp: (NW.grouping || {}).pick || "flat", srule: (NV.stageRule || {})["default"] || "every",
-               place: (NW.placement || {}).pick || "rail", sweep: (NW.sweep || {}).pick || "on", recs: (NW.records || {}).pick || "stack",
-               mapw: (((NW.placement || {}).width) || {}).pick || "narrow" };
+               sweep: (NW.sweep || {}).pick || "on", recs: (NW.records || {}).pick || "stack" };
+  var FACE = NW.face || {};
+  function FW(k, d){ var v = FACE[k]; return typeof v === "string" && v ? v : d; }
+  /* THE MAP'S GLYPHS (D-035) — each draws the thing it names: a list, an eye, stacked sections, a spine with its stops; the
+     stage rule as rows with a block under each or one branch aside; the line to what was lit or to a panel; one record or a
+     stack; the pointer, a click; a faded square or a full one; a dashed tie. Stroke on a 24 grid, currentColor. */
+  var MAPICO = {
+    flat: '<path d="M5 6h14M5 12h14M5 18h14"/>',
+    standpoint: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+    section: '<rect x="4" y="3.5" width="16" height="5" rx="1"/><rect x="4" y="10" width="16" height="4" rx="1"/><rect x="4" y="15.5" width="16" height="5" rx="1"/>',
+    stage: '<path d="M2.5 12h16"/><path d="m15.5 7.5 4.5 4.5-4.5 4.5"/><path d="M6 8.5v7M10.5 8.5v7"/>',
+    every: '<path d="M3 5h7M3 12h7M3 19h7"/><rect x="14" y="3" width="5" height="4" rx="1"/><rect x="14" y="10" width="5" height="4" rx="1"/><rect x="14" y="17" width="5" height="4" rx="1"/>',
+    one: '<path d="M3 5h7M3 12h7" opacity=".45"/><path d="M3 19h7" stroke-dasharray="2 2"/><rect x="14" y="17" width="5" height="4" rx="1"/>',
+    lit: '<path d="M4 19c6 0 6-12 12-12"/><rect x="16" y="4" width="5" height="6" rx="1"/><circle cx="4" cy="19" r="1.6"/>',
+    panel: '<path d="M3 19c5 0 5-7 9-7"/><rect x="12" y="4" width="9" height="16" rx="1.5"/><circle cx="3" cy="19" r="1.6"/>',
+    noline: '<path d="M4 19c6 0 6-12 12-12" opacity=".45"/><path d="m4 4 16 16"/>',
+    stack: '<rect x="4" y="9" width="13" height="11" rx="1.5"/><path d="M7 6h12v11"/><path d="M10 3h11v11"/>',
+    single: '<rect x="5" y="4" width="14" height="16" rx="1.5"/><path d="M8 9h8M8 13h6"/>',
+    point: '<path d="M6 3l12 7-5 1.8L15 19l-2.5 1-2.2-7.2L6 16z"/>',
+    click: '<path d="M8 8l10 5-4 1.4 1.8 5-2 .8-1.9-5L8 18z"/><path d="M5 3v2.5M1.8 6.5h2.5M2.8 3.8l1.8 1.8"/>',
+    dim: '<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="8" y="8" width="8" height="8" rx="1" opacity=".3"/>',
+    asis: '<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="8" y="8" width="8" height="8" rx="1"/>',
+    tieoff: '<rect x="4" y="4" width="16" height="16" rx="2"/>',
+    tieon: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="m8.5 15.5 6-6 1.5 1.5-6 6H8.5z"/>',
+    more: '<circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/>',
+    nopage: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M12 11v6M9 14h6"/>',
+    header: '<path d="M4 12h16"/><path d="m7 8-4 4 4 4M17 8l4 4-4 4"/>',
+    keep: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4"/>' };
+  function gly(n, size, col){ return '<svg viewBox="0 0 24 24" width="' + (size || 16) + '" height="' + (size || 16) + '" fill="none" stroke="' + (col || "currentColor")
+    + '" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (MAPICO[n] || "") + '</svg>'; }
+  window.MAPGLY = gly;
+  /* a BLOCK's mark: the icon and colour of the lab part that answers it (the part buttons' own), the command panel's glyph for
+     an ending, the portrait's for a route; no page yet and the running header get marks of their own */
+  function blockMark(b){ var a = (b.join || {}).act || {}, PN = window.PANELS || {}, S = window.STATION, LI = window.labIco;
+    if (a.kind === "part" && PN[a.part]) return { kind: "page", part: a.part, col: PN[a.part].col, svg: S ? S.icon(PN[a.part].icon, 16, PN[a.part].col) : "", word: PN[a.part].word };
+    if (a.kind === "exit") return { kind: "page", part: "command", col: "var(--accent)", svg: LI ? LI("rggrid", 16, "var(--accent)") : "", word: FW("markCommand", "the command panel") };
+    if (a.kind === "path") return { kind: "page", part: "portrait", col: "var(--accent)", svg: LI ? LI("rgport", 16, "var(--accent)") : "", word: FW("markPortrait", "the portrait") };
+    if (a.kind === "header") return { kind: "header", col: "var(--ink)", svg: gly("header", 16), word: FW("markHeader", "across every part") };
+    return { kind: "none", col: "var(--muted)", svg: gly("nopage", 16), word: FW("markNone", "no page yet") }; }
   /* recs — the records Open drew, newest first · ans — the region that answered the last move (the sweep's panel end) ·
      fol — where Follow went last, per field, so the next Follow goes on to the next place */
-  var MS = { grp: PICK.grp, srule: PICK.srule, place: PICK.place, mapw: PICK.mapw, sweep: PICK.sweep, recmode: PICK.recs, keep: null, last: null, open: {}, recs: [],
-             ans: null, fol: {}, K: null, rev: null };
+  var MS = { grp: PICK.grp, srule: PICK.srule, sweep: PICK.sweep, recmode: PICK.recs, keep: null, last: null, open: {}, recs: [],
+             ans: null, fol: {}, K: null, rev: null, xtra: false };
   var QUIET = { kept: 0, quiet: 0 }, DEEP = 0, DEEPS = {}, SWEEP = null;
   /* WHAT A RELOAD KEEPS (the brain map kept its picks, switches and open panels): this viewer's browser storage only, read
      and written inside try/catch — a private window or blocked storage boots on the picks, nothing breaks */
   var STORE = "eplab.mapnav", RESTORED = false;                     /* nothing is written before what was kept is read back */
-  function save(){ if (!RESTORED) return; try { window.localStorage.setItem(STORE, JSON.stringify({ grp: MS.grp, srule: MS.srule, place: MS.place, mapw: MS.mapw, sweep: MS.sweep,
+  function save(){ if (!RESTORED) return; try { window.localStorage.setItem(STORE, JSON.stringify({ grp: MS.grp, srule: MS.srule, sweep: MS.sweep,
       recmode: MS.recmode, keep: MS.keep, open: Object.keys(MS.open).filter(function(k){ return MS.open[k]; }), recs: MS.recs })); } catch (e) { /* storage off */ } }
   function restore(){ RESTORED = true; var o = null; try { o = JSON.parse(window.localStorage.getItem(STORE) || "null"); } catch (e) { o = null; }
     if (!o || typeof o !== "object") return;
     if (GRPS.indexOf(o.grp) >= 0) MS.grp = o.grp;
     if ((NV.stageRules || []).indexOf(o.srule) >= 0) MS.srule = o.srule;
-    if (PLACES.indexOf(o.place) >= 0) MS.place = o.place;
-    if (MAPWS.indexOf(o.mapw) >= 0) MS.mapw = o.mapw;
     if (SWEEPS.indexOf(o.sweep) >= 0) MS.sweep = o.sweep;
     if (RECS.indexOf(o.recmode) >= 0) MS.recmode = o.recmode;
     if (o.keep && o.keep !== "root" && subj(o.keep)) MS.keep = o.keep;
@@ -555,7 +639,8 @@
         sub: bs.length ? fill(N1(bs.length === 1 ? "oneBlock" : "nBlocks", "{n} blocks"), { n: bs.length }) : N1("noBlock", "no block here") }; });
     return []; }
   function mark(el, pk, parent, depth, Q){ el.dataset.pk = pk; el.dataset.parent = parent; el.dataset.depth = String(depth);
-    if (Q && !carries(pk, Q)) el.dataset.quiet = "true"; else delete el.dataset.quiet; }
+    if (Q && !carries(pk, Q)) el.dataset.quiet = "true"; else delete el.dataset.quiet;
+    if (MS.last === pk) el.dataset.shown = "true"; else delete el.dataset.shown; }   /* the node shown last: its outline is the one kept */
   function decoAttrs(scope, parent, depth, Q){
     [].forEach.call(scope.querySelectorAll(".sma[data-sm]"), function(n){ if (n.dataset.pk) return;
       var pk = "attr:" + n.dataset.sm; mark(n, pk, parent, depth, Q);
@@ -575,8 +660,9 @@
     b.setAttribute("aria-pressed", String(open));
     if (n.kind === "stage") { b.dataset.strk = n.strk || "stage"; b.dataset.empty = String(!!n.empty); b.dataset.across = String(!!n.across); }
     mark(b, n.pk, "root", 1, Q);
-    b.append(mk("span", "smnn", n.name), mk("span", "smct", n.sub));
+    b.append(mk("span", "smnn", n.name));
     if (n.mark) b.append(mk("span", "smmk", n.mark));             // the record's own words for what this row IS
+    b.dataset.sub = n.sub;                                         // D-035: its count rides the hover card, not the row
     hv(b, function(){ return nodeCard(n.pk); });
     window.FIELDMAP.hover(b, ids, n.name);
     b.onclick = function(ev){ ev.stopPropagation(); show(n.pk); };
@@ -591,6 +677,21 @@
         bIds(bl).forEach(function(id){ DEEPS[id] = 1; }); });
       li.append(kids); }
     return li; }
+  /* THE COLUMNS (review 2026-09-23: with CSS columns, opening one block rebalanced them — Functions jumped from the first
+     column to the second under the pointer). The top-level rows are dealt into fixed columns in their own order — as many per
+     column as the first holds — so opening a block only lengthens its own column. How many columns: as many of the map's
+     width as a row needs, three at most (the count CSS columns drew). DOM order is unchanged, so Tab and the arrows walk the
+     same order. */
+  var COLS = 0;
+  function colsFor(host){ return Math.max(1, Math.min(3, Math.floor((host.clientWidth + 32) / 440))); }
+  function splitCols(host, ul){ if (!host.closest("#mapbelow")) return;
+    var kids = [].slice.call(ul.children), n = COLS = colsFor(host);
+    if (n < 2 || kids.length < 2) { ul.classList.add("smcol"); ul.dataset.col = "0"; return; }
+    var per = Math.ceil(kids.length / n), box = mk("div", "smcols"); box.dataset.cols = String(n);
+    for (var c = 0; c * per < kids.length; c++) { var u = mk("ul", "smcol"); u.dataset.col = String(c);
+      kids.slice(c * per, (c + 1) * per).forEach(function(li){ u.append(li); }); box.append(u); }
+    ul.replaceWith(box); }
+  window.addEventListener("resize", function(){ var h = document.getElementById("smtree"); if (h && MS.K && COLS && colsFor(h) !== COLS) MS.K.draw(); });
   function drawTree(host, K){ MS.K = K; host.innerHTML = ""; DEEPS = {}; keysOn(host);
     var Q = keepSets(), g = NAVOK ? MS.grp : "flat";
     host.dataset.grp = g; host.dataset.srule = MS.srule;
@@ -605,6 +706,7 @@
       ul.append(decoBlock(K.blockRow(b, { last: i === SM.blocks.length - 1 && !add, fold: true }), b.key, "root", 1, Q)); });
     else { var L = level1(g); L.forEach(function(n, i){ ul.append(levelNode(n, i === L.length - 1 && !(add && g !== "section"), Q, K)); }); }
     if (add && g !== "section") ul.append(levelNode(add, true, Q, K));
+    splitCols(host, ul);
     DEEP = Object.keys(DEEPS).length;
     var dp = document.getElementById("smdeep");
     if (dp) { dp.hidden = !DEEP; dp.textContent = DEEP ? fill(N1("deep", "{n}"), { n: DEEP, levels: (NV.maxDepth || 2) + 1 }) : ""; }
@@ -660,6 +762,9 @@
     return [[esc(N1("rowStages", "rows")), esc((e.names || []).join(" · ") || N1("recNoStage", "none"))], [esc(N1("rowWhy", "why")), esc(e.why)],
             [esc(N1("rowCites", "cites")), esc(e.cites)], [esc(N1("rowUnder", "drawn under")), esc(under.join(" · ") + " (" + ruleName() + ")")]].concat(moveRows("block")); }
   function nodeCard(pk){ var s = subj(pk); if (!s) return ""; var rows = [], plain = "", value = kindWord(s.kind);
+    var nd = nodeEls(pk).filter(function(n){ return n.dataset.sub; })[0];
+    if (nd) rows.push([esc(N1("rowsHold", "holds")), esc(nd.dataset.sub)]);
+    if (nd && window.FIELDMAP) rows.push([esc(FW("rowFields", "fields")), esc(window.FIELDMAP.fwords(window.FIELDMAP.fcounts(idsOfPk(pk))))]);
     if (s.kind === "group") { value += " · " + fill(N1("nFields", "{n}"), { n: s.g.n });
       rows.push([esc(N1("rowsBlocks", "blocks")), esc(s.g.blocks.map(function(k){ return nameOf("block:" + k); }).join(" · "))]); plain = s.g.plain; }
     else if (s.kind === "stage") { var bs = stBlocks(s.st); value = ((NW.stageKinds || {})[s.st.kind] || s.st.kind) + (s.st.mark ? " · " + s.st.mark : "");
@@ -672,7 +777,7 @@
   /* ── SHOW — what every click on a node does (D-022). It never turns Keep only on. ── */
   function show(pk){ var s = subj(pk), K = MS.K; if (!s || !K) return;
     MS.last = pk; MS.ans = "middle";
-    if (s.kind === "block") { K.go(s.b); bringIn("middle"); drawSweep(); return; }   // the page's move: the bench goes to the block's page, and its fields light
+    if (s.kind === "block") { K.go(s.b); drawSweep(); return; }   // the page's move: the bench goes to the block's page, its fields light, and the page brings in the panel that answers it
     if (s.kind !== "root" && s.kind !== "attr") MS.open[pk] = true;
     keep(idsOfPk(pk), nameOf(pk)); K.mark(pk); bringIn("middle"); drawSweep(); }
   /* the moves the node shown last offers, drawn under it */
@@ -783,53 +888,92 @@
     window.__smFollow = { id: s.id, place: w, tgt: t };
     bringIn(t.region); drawSweep(); }
 
-  /* ── the map's own header: grouping · the stage rule · the line · Keep only ── */
+  /* ── the map's own header (D-035): the title in words, each option an ICON SQUARE — its words on hover and in its aria-label,
+        pressed = filled, the agent's unruled pick DASHED (D-034's convention). The face holds grouping (with By stage's rule)
+        and Keep only; the line and the records sit behind "more", with the field layer's three switches ── */
   function optRow(key, label, tip, opts, cur, pick, set){ var row = mk("div", "smno"); row.dataset.opt = key;
+    row.setAttribute("role", "radiogroup"); row.setAttribute("aria-label", label);
     var l = mk("span", "smnk", label); hv(l, hc({ title: esc(label), icon: "info", plain: esc(tip) })); row.append(l);
-    opts.forEach(function(o){ var b = mk("button", "smnb" + (o.v === cur ? " on" : "") + (o.v === pick ? " pick" : "")); b.type = "button";
-      b.dataset.v = o.v; b.setAttribute("aria-pressed", String(o.v === cur));
-      b.append(mk("span", "smnbn", o.name)); if (o.note) b.append(mk("span", "smnbt", o.note));
-      hv(b, hc({ title: esc(o.name), icon: "info", plain: esc(o.tip) + (o.v === pick ? " " + esc(W1("tipPick", "(my pick — dashed)")) : "") }));
+    opts.forEach(function(o){ var b = mk("button", "smnb smopt" + (o.v === cur ? " on" : "") + (o.v === pick ? " pick" : "")); b.type = "button";
+      b.dataset.v = o.v; b.setAttribute("role", "radio"); b.setAttribute("aria-checked", String(o.v === cur));
+      b.setAttribute("aria-label", o.name + (o.note ? " — " + o.note : ""));
+      if (o.v === pick) b.dataset.pick = "true";                     /* my pick, unruled: the dash (D-034) */
+      b.innerHTML = gly(o.ico, 18);
+      hv(b, hc({ title: esc(o.name), value: o.note ? esc(o.note) : "", icon: "info", plain: esc(o.tip) + (o.v === pick ? " " + esc(W1("tipPick", "(my pick — dashed)")) : "") }));
       b.onclick = function(ev){ ev.stopPropagation(); if (window.hoverHide) window.hoverHide(); set(o.v); };
       row.append(b); });
     return row; }
   function chipLine(){ var KW = NV.keep || {}, s = subj(MS.keep), quiet = document.querySelectorAll('#smtree [data-pk][data-quiet="true"]').length;
     return fill(KW.chipOn || "{name}", { name: nameOf(MS.keep), kind: kindWord(s ? s.kind : ""), quiet: quiet }); }
-  function drawNav(){ var host = document.getElementById("smnav"); if (!host) return; host.innerHTML = "";
+  var GICO = { flat: "flat", standpoint: "standpoint", section: "section", stage: "stage" }, RICO = { every: "every", one: "one" },
+      SICO = { on: "lit", panel: "panel", off: "noline" }, CICO = { stack: "stack", one: "single" };
+  function drawNav(){ var host = document.getElementById("smnav"), xh = document.getElementById("smxnav"); if (!host) return; host.innerHTML = ""; if (xh) xh.innerHTML = "";
     if (!NAVOK) { host.append(mk("div", "smnavabs", N1("absent", "") + " " + (NV.reason || ""))); return; }
     var G = NV.groupings || {}, R = NV.stageRule || {}, Wg = NW.grouping || {}, Ws = NW.sweep || {};
     /* a CONTROL's hover is one short line (D-009): the lab's own tip, not the brain map's paragraph for the grouping */
-    host.append(optRow("grp", Wg.label, Wg.tip, GRPS.map(function(k){ return { v: k, name: (G[k] || {}).name, note: (G[k] || {}).note, tip: (Wg.tips || {})[k] || (G[k] || {}).plain }; }), MS.grp, PICK.grp, setGroup));
-    if (MS.grp === "stage") {
-      host.append(optRow("srule", R.label, (NW.stageRule || {}).tip, (NV.stageRules || []).map(function(k){ var o = (R.opts || {})[k] || {}; return { v: k, name: o.name, note: o.note, tip: o.plain }; }), MS.srule, PICK.srule, setRule));
-      var nt = mk("div", "smnote smclamp", NV.stageNote); hv(nt, hc({ title: esc((G.stage || {}).name), icon: "journey", plain: esc(NV.stageNote) })); host.append(nt); }
-    host.append(optRow("sweep", Ws.label, Ws.tip, SWEEPS.map(function(k){ return { v: k, name: (Ws.opts || {})[k], tip: (Ws.tips || {})[k] }; }), MS.sweep, PICK.sweep, setSweep));
-    var Wr = NW.records || {};
-    host.append(optRow("recs", Wr.label, Wr.tip, RECS.map(function(k){ var o = (Wr.opts || {})[k] || {}; return { v: k, name: o.name, tip: o.tip }; }), MS.recmode, PICK.recs, setRecs));
-    /* KEEP ONLY — its own control (D-022, option C): never a click on a node */
+    host.append(optRow("grp", Wg.label, Wg.tip, GRPS.map(function(k){ return { v: k, ico: GICO[k], name: (G[k] || {}).name, note: (G[k] || {}).note, tip: (Wg.tips || {})[k] || (G[k] || {}).plain }; }), MS.grp, PICK.grp, setGroup));
+    if (MS.grp === "stage")
+      host.append(optRow("srule", R.label, (NW.stageRule || {}).tip, (NV.stageRules || []).map(function(k){ var o = (R.opts || {})[k] || {}; return { v: k, ico: RICO[k], name: o.name, note: o.note, tip: o.plain }; }), MS.srule, PICK.srule, setRule));
+    /* KEEP ONLY — its own control (D-022, option C): never a click on a node; it says in words that it is on */
     /* the brain map's Keep-only words, with the lab's where the lab differs: here the node kept is the one SHOWN last
        (a click), not one "opened" — Open is a different move in the lab, and a fold counts as neither */
+    var lq = document.querySelector("#smleg .lg-quiet"); if (lq) lq.hidden = !MS.keep;   /* the legend's "quiet" says what Keep only does, while it does it */
     var KL = NW.keep || {}, KW = Object.assign({}, NV.keep || {}, KL.btnNone ? { btnNone: KL.btnNone } : {}, KL.btnTip ? { plain: KL.btnTip } : {});
     var box = mk("div", "smkeep"); box.dataset.opt = "keep";
     var kl = mk("span", "smnk", KW.label); hv(kl, hc({ title: esc(KW.label), icon: "target", plain: esc((NW.keep || {}).tip) })); box.append(kl);
     var b = mk("button", "smkb"); b.type = "button"; b.id = "smkeepb";
-    if (MS.keep) { b.setAttribute("aria-pressed", "true"); b.textContent = KW.off; hv(b, hc({ title: esc(KW.off), icon: "target", plain: esc(KW.offPlain) }));
+    if (MS.keep) { b.setAttribute("aria-pressed", "true"); b.innerHTML = gly("keep", 14); b.append(mk("span", null, KW.off)); hv(b, hc({ title: esc(KW.off), icon: "target", plain: esc(KW.offPlain) }));
       b.onclick = function(ev){ ev.stopPropagation(); if (window.hoverHide) window.hoverHide(); keepOff(); }; }
-    else { var last = MS.last; b.setAttribute("aria-pressed", "false");
-      b.textContent = !last ? KW.btnNone : last === "root" ? KW.btnRoot : String(KW.btnIdle).replace("{name}", nameOf(last));
+    else { var last = MS.last; b.setAttribute("aria-pressed", "false"); b.innerHTML = gly("keep", 14);
+      b.append(mk("span", null, !last ? KW.btnNone : last === "root" ? KW.btnRoot : String(KW.btnIdle).replace("{name}", nameOf(last))));
       b.disabled = !last || last === "root";
       hv(b, hc({ title: esc(KW.label), icon: "target", plain: esc(KW.plain) }));
       b.onclick = function(ev){ ev.stopPropagation(); if (window.hoverHide) window.hoverHide(); keepOn(); }; }
     box.append(b);
     var chip = mk("div", "smkc"); chip.id = "smkeepc"; chip.setAttribute("role", "status");
-    if (MS.keep) { chip.append(mk("b", null, chipLine()),
-        mk("span", "smkh smkbench", benchLine()),
-        mk("span", "smkh", (NW.keep || {}).how)); }
+    if (MS.keep) { chip.append(mk("b", null, chipLine()), mk("span", "smkh smkbench", benchLine()));
+      hv(chip, hc({ title: esc(KW.label), icon: "target", plain: esc((NW.keep || {}).how) })); }   /* how to remove it: on the chip's hover */
     else chip.hidden = true;
-    box.append(chip); host.append(box); drawKeepBar(); }
+    box.append(chip); host.append(box);
+    /* MORE — one disclosure for the switches read rarely: the line, the records, and the field layer's outline, fade and ties */
+    var xb = mk("button", "smxb"); xb.type = "button"; xb.id = "smxb"; xb.setAttribute("aria-expanded", String(MS.xtra)); xb.setAttribute("aria-controls", "smxtra");
+    xb.innerHTML = gly("more", 16); xb.append(mk("span", null, FW("more", "more")));
+    hv(xb, hc({ title: esc(FW("more", "more")), icon: "info", plain: esc(FW("moreTip", "")) }));
+    xb.onclick = function(ev){ ev.stopPropagation(); if (window.hoverHide) window.hoverHide(); setXtra(!MS.xtra); };
+    host.append(xb);
+    var xt = document.getElementById("smxtra"); if (xt) xt.hidden = !MS.xtra;
+    if (xh) { if (MS.grp === "stage") { var nt = mk("div", "smnote", NV.stageNote); xh.append(nt); }
+      xh.append(optRow("sweep", Ws.label, Ws.tip, SWEEPS.map(function(k){ return { v: k, ico: SICO[k], name: (Ws.opts || {})[k], tip: (Ws.tips || {})[k] }; }), MS.sweep, PICK.sweep, setSweep));
+      var Wr = NW.records || {};
+      xh.append(optRow("recs", Wr.label, Wr.tip, RECS.map(function(k){ var o = (Wr.opts || {})[k] || {}; return { v: k, ico: CICO[k], name: o.name, tip: o.tip }; }), MS.recmode, PICK.recs, setRecs)); }
+    drawKeepBar(); }
+  function setXtra(v){ MS.xtra = !!v; var xt = document.getElementById("smxtra"), xb = document.getElementById("smxb");
+    if (xt) xt.hidden = !MS.xtra; if (xb) xb.setAttribute("aria-expanded", String(MS.xtra)); }
+  /* THE LEGEND STRIP (D-035): each mark and colour DRAWN, a word beside it, the meaning on hover — the block marks, the field
+     states (bar segment and dot), the row states, the outline styles on the bench, and the dash that marks my pick */
+  function drawLegend(){ var host = document.getElementById("smleg"); if (!host) return; host.innerHTML = ""; var L = FACE.legend || {};
+    function item(cls, sw, word, tip, st){ var s = mk("span", "smlgi " + cls); if (st) s.dataset.st = st; var i = mk("i", "smlgs"); if (sw) i.innerHTML = sw; s.append(i, mk("span", null, word));
+      hv(s, hc({ title: esc(word), icon: "info", plain: esc(tip || "") })); return s; }
+    function grp(key, name, items){ var g = mk("div", "smlgg"); g.dataset.lg = key; g.append(mk("span", "smlgh", name)); items.forEach(function(x){ g.append(x); }); host.append(g); }
+    var PN = window.PANELS || {}, S = window.STATION, part = Object.keys(PN)[0];
+    var pg = part && S ? S.icon(PN[part].icon, 16, PN[part].col) : "";
+    var kn = { page: 0, none: 0, header: 0 }; (SM.blocks || []).forEach(function(b){ kn[blockMark(b).kind]++; });
+    grp("block", L.block || "a block's mark", [
+      item("lg-page", pg, L.page || "its page", fill(L.pageTip || "{n}", { n: kn.page })),
+      item("lg-none", gly("nopage", 16), L.none || "no page yet", fill(L.noneTip || "{n}", { n: kn.none })),
+      item("lg-header", gly("header", 16), L.header || "across every part", fill(L.headerTip || "{n}", { n: kn.header })) ]);
+    grp("fields", L.fields || "its fields", FST.map(function(st){ return item("lg-fd", '<b class="smseg" data-st="' + st + '"></b><b class="smdot" data-st="' + st + '"></b>',
+      (L.st || {})[st] || st, (L.stTip || {})[st] || "", st); })
+      /* italic marks a shared field — said here, not only in a hover (review 2026-09-23) */
+      .concat([item("lg-shared", '<b class="smshs">' + esc(L.sharedSw || "Aa") + "</b>", L.shared || "shared", L.sharedTip)]));
+    var quiet = item("lg-quiet", "", L.quiet || "quiet", L.quietTip); quiet.hidden = !MS.keep;   /* only while Keep only is on */
+    grp("rows", L.rows || "a row", [ item("lg-lit", "", L.lit || "lit", L.litTip), item("lg-shown", "", L.shown || "shown", L.shownTip), quiet ]);
+    var og = mk("div", "smlgg"); og.dataset.lg = "outline"; og.append(mk("span", "smlgh", L.outline || "on the bench")); var k = mk("span"); k.id = "smflkey"; og.append(k); host.append(og);
+    grp("pick", L.pickHead || "an option", [ item("lg-pick", "", L.pick || "my pick", L.pickTip) ]);
+    if (window.FIELDMAP && window.FIELDMAP.drawKey) window.FIELDMAP.drawKey(); }
   /* KEEP ONLY SAYS SO ON EVERY RAIL TAB (D-022: "it says visibly that it is on until it is removed"): the map's chip lives
-     with the map, which a rail tab or a placement can hide, so while the filter is on a bar sits at the top of the rail,
-     outside every tab, with the same words and its own remove button */
+     with the map, below the panels and often under the window's fold, so while the filter is on a bar sits at the top of the
+     rail, outside every tab, with the same words and its own remove button */
   function drawKeepBar(){ var notes = document.getElementById("notes"), bar = document.getElementById("mkeep");
     if (!bar && notes) { bar = mk("div"); bar.id = "mkeep"; bar.setAttribute("role", "status"); bar.hidden = true;
       var fk = document.getElementById("flkeep"); if (fk && fk.parentNode === notes) fk.after(bar); else notes.insertBefore(bar, notes.firstChild); }
@@ -851,43 +995,27 @@
   function keepOn(){ if (!MS.last || MS.last === "root" || !subj(MS.last)) return; MS.keep = MS.last; redraw(); }
   function keepOff(){ MS.keep = null; redraw(); }
 
-  /* ── PLACEMENT (D-025.2): the rail tab · a column right of the panels · full width below them ── */
-  function rowHeight(){ var h = 0; ["bench", "port", "cmd"].forEach(function(id){ var e = document.getElementById(id); if (e && !e.hidden) h = Math.max(h, e.offsetHeight); });
-    document.documentElement.style.setProperty("--rowh", (h + 4) + "px"); }
-  function setPlace(v){ if (PLACES.indexOf(v) < 0) return; MS.place = v;
-    var wrap = document.getElementById("smwrap"), col = document.getElementById("mapcol"), bel = document.getElementById("mapbelow");
-    var host = v === "right" ? col : v === "below" ? bel : document.getElementById("rt-map");
-    if (wrap && host && wrap.parentNode !== host) host.append(wrap);
-    if (col) col.hidden = v !== "right"; if (bel) bel.hidden = v !== "below";
-    document.body.dataset.mapplace = v; document.body.dataset.mapw = MS.mapw; if (v === "below") rowHeight();
-    /* the right column FITS (walk-fold 2026-09-23): the lab is never slid sideways to show it — the panels' band shares
-       the width and slides inside itself, so the page stays where it is and the rail stays on screen */
-    var lab = document.getElementById("lab"), band = document.getElementById("band");
-    if (lab) lab.scrollLeft = 0; if (band) band.scrollLeft = 0;
-    /* what the bench lit, and the node shown last, come back into view in the new place (walk-fold 2026-09-23 review: a
-       scroll to the node alone pushed the lit row under the column's edge). Below the panels the map is under the window's
-       fold, so the page itself moves to the node there, as it always did. */
-    drawPlace(); paintTree();
-    if (v === "below") { var n0 = MS.last ? nodeEls(MS.last)[0] : null; if (n0) n0.scrollIntoView({ block: "nearest", inline: "nearest" }); }
-    else reveal(MS.rev, true);
-    drawSweep(); save(); }
-  function drawPlace(){ var host = document.getElementById("smplace"); if (!host) return; host.innerHTML = ""; if (!NAVOK) return;
-    var P = NW.placement || {};
-    host.append(optRow("place", P.label, P.tip, PLACES.map(function(k){ var o = (P.opts || {})[k] || {}; return { v: k, name: o.name, tip: o.tip }; }), MS.place, PICK.place, setPlace));
-    /* the right column's width — the agent's choice, so a rail option with the pick marked (D-025.2) */
-    var PW = P.width || {};
-    if (MS.place === "right" && PW.opts) host.append(optRow("mapw", PW.label, PW.tip, MAPWS.map(function(k){ var o = PW.opts[k] || {}; return { v: k, name: o.name, tip: o.tip }; }), MS.mapw, PICK.mapw, setMapw));
-    if (MS.place !== "rail") host.append(mk("div", "smplnote", MS.place === "right" ? P.movedRight : P.movedBelow)); }
-  function setMapw(v){ if (MAPWS.indexOf(v) < 0) return; MS.mapw = v; document.body.dataset.mapw = v;
-    var band = document.getElementById("band"); if (band) band.scrollLeft = 0;
-    drawPlace(); paintTree(); reveal(MS.rev, true); drawSweep(); save(); }
-  window.addEventListener("resize", function(){ if (MS.place === "below") rowHeight(); });
+  /* ── THE PLACE (D-035, ruled): full width below the panels. The panels' row takes the height its tallest panel needs, and
+        the map takes the rest of the window, scrolling inside itself ── */
+  function rowHeight(){ var h = 0, band = document.getElementById("band"); ["bench", "port", "cmd"].forEach(function(id){ var e = document.getElementById(id); if (e && !e.hidden) h = Math.max(h, e.offsetHeight); });
+    var bar = band ? band.offsetHeight - band.clientHeight : 0;      /* the band's sideways scrollbar, when the panels do not fit */
+    document.documentElement.style.setProperty("--rowh", (h + bar + 4) + "px"); }
+  window.addEventListener("resize", function(){ rowHeight(); requestAnimationFrame(rowHeight); });
+  /* ── BRING IN — when the panels do not fit beside the rail they slide inside their band: the panel that answers a move (Show →
+        the middle, Open → the portrait, Follow → where it landed) is slid into the band's view. The band only; the page never
+        moves. ── */
+  function bringIn(region){ var el = document.querySelector(ANSWERS[region] || ""), band = document.getElementById("band");
+    if (!el || !band || !band.contains(el) || band.scrollWidth <= band.clientWidth + 1) return null;
+    var b = band.getBoundingClientRect(), r = el.getBoundingClientRect(), d = 0;
+    if (r.width >= b.width || r.left < b.left) d = r.left - b.left; else if (r.right > b.right) d = r.right - b.right;
+    if (d) band.scrollLeft += d;
+    return Math.round(d); }
 
   /* ── REVEAL — the block the bench lit is brought into view INSIDE the map's own scroll box (the rail, the right column
         or the section below), never by scrolling the page: after a part switch it could sit below the tree's visible
         part, named only in the lead line (walk-fold 2026-09-23). A bar that sticks to the top of that box (the kept
         outline, Keep only) covers its first rows, so the visible part starts under it. ── */
-  function scrollBox(n){ var b = n.closest("#mapcol, #mapbelow, #notes"); return b && b.scrollHeight > b.clientHeight + 1 ? b : null; }
+  function scrollBox(n){ var b = n.closest("#mapbelow"); return b && b.scrollHeight > b.clientHeight + 1 ? b : null; }
   function visibleBox(box){ var b = box.getBoundingClientRect(), top = Math.max(b.top, 0), bot = Math.min(b.bottom, window.innerHeight);
     [].forEach.call(box.querySelectorAll("#flkeep, #mkeep"), function(s){ if (s.hidden) return; var q = s.getBoundingClientRect();
       if (q.height && q.top <= top + 12 && q.bottom > top) top = q.bottom; });
@@ -914,15 +1042,6 @@
     if (d) box.scrollTop += d;
     return { key: lead ? lead.dataset.sm : null, box: box.id, moved: Math.round(d), rows: ns.length + (last ? 1 : 0), shown: pick.length }; }
 
-  /* ── BRING IN — in the right column the panels slide inside their band: the panel that answers a move (Show → the middle,
-        Open → the portrait, Follow → where it landed) is slid into the band's view, so the answer is on screen (review
-        2026-09-23: at 1920 the portrait sat wholly under the column). The band only; the page never moves. ── */
-  function bringIn(region){ var el = document.querySelector(ANSWERS[region] || ""), band = document.getElementById("band");
-    if (!el || !band || MS.place !== "right" || !band.contains(el) || band.scrollWidth <= band.clientWidth + 1) return null;
-    var b = band.getBoundingClientRect(), r = el.getBoundingClientRect(), d = 0;
-    if (r.width >= b.width || r.left < b.left) d = r.left - b.left; else if (r.right > b.right) d = r.right - b.right;
-    if (d) band.scrollLeft += d;
-    return Math.round(d); }
   /* the part of an element really on screen: its box cut by the window and by every box around it that clips or scrolls */
   function shownRect(el){ if (!el || !el.isConnected) return null; var r = el.getBoundingClientRect();
     var L = Math.max(r.left, 0), T = Math.max(r.top, 0), R = Math.min(r.right, window.innerWidth), B = Math.min(r.bottom, window.innerHeight);
@@ -972,18 +1091,14 @@
 
   /* ── the copy line and "more information" (D-017: the open picks and what the tree measures are behind it) ── */
   function navLook(){ var G = NV.groupings || {};
-    return fill(N1("lookLine", "{grp} · {keep} · {place} · {sweep}"), {
+    return fill(N1("lookLine", "{grp} · {keep} · {sweep}"), {
       grp: ((G[MS.grp] || {}).name || MS.grp) + (MS.grp === "stage" ? " (" + ruleName() + ")" : ""),
       keep: MS.keep ? "“" + nameOf(MS.keep) + "”" : N1("lookOff", "off"),
-      place: ((((NW.placement || {}).opts || {})[MS.place] || {}).name || MS.place)
-        + (MS.place === "right" ? " (" + (((((NW.placement || {}).width || {}).opts || {})[MS.mapw] || {}).name || MS.mapw) + ")" : ""),
       sweep: ((NW.sweep || {}).opts || {})[MS.sweep] || MS.sweep }); }
   function moreHtml(){ if (!NAVOK) return "";
     var h = '<div class="smopen" id="smopen"><b>' + esc(N1("openHead", "")) + '</b><p>' + esc(N1("openWhy", "")) + '</p>';
     ((NV.open || {}).items || []).forEach(function(it){ h += '<div class="smoq"><div class="q">' + esc(it.q) + '</div><div class="d">' + esc(it.did) + '</div>'
       + '<div class="a">' + esc(it.ask) + '</div><div class="l"><i>' + esc(N1("openLab", "")) + '</i> ' + esc(it.lab) + '</div></div>'; });
-    h += '<div class="smoq"><div class="q">' + esc(N1("placeHead", "")) + '</div><div class="d">' + esc((NW.placement || {}).why)
-      + (((NW.placement || {}).width || {}).why ? " " + esc(NW.placement.width.why) : "") + '</div></div>';
     /* what the brain map had that the lab does not carry yet — said, so its page is not retired on a silent loss (D-024) */
     var NC = NW.notCarried || {};
     if ((NC.items || []).length) { h += '<b>' + esc(NC.head) + '</b><p class="smncw">' + esc(NC.why) + '</p>';
@@ -993,19 +1108,23 @@
     return h + '</div>'; }
 
   window.LABMAP = {
-    state: function(){ return { nav: NV.state, grp: MS.grp, srule: MS.srule, place: MS.place, mapw: MS.mapw, sweep: MS.sweep, recmode: MS.recmode, keep: MS.keep, last: MS.last,
+    state: function(){ return { nav: NV.state, grp: MS.grp, srule: MS.srule, sweep: MS.sweep, recmode: MS.recmode, keep: MS.keep, last: MS.last, xtra: MS.xtra,
       rec: MS.recs[0] || null, recs: MS.recs.slice(), ans: MS.ans,
       open: Object.keys(MS.open).filter(function(k){ return MS.open[k]; }), deep: DEEP, quiet: QUIET }; },
-    picks: function(){ return { grp: PICK.grp, srule: PICK.srule, place: PICK.place, mapw: PICK.mapw, sweep: PICK.sweep, recs: PICK.recs }; },
-    drawTree: drawTree, drawNav: drawNav, drawPlace: drawPlace, show: show, openRec: openRec, follow: follow,
+    picks: function(){ return { grp: PICK.grp, srule: PICK.srule, sweep: PICK.sweep, recs: PICK.recs }; },
+    drawTree: drawTree, drawNav: drawNav, drawLegend: drawLegend, show: show, openRec: openRec, follow: follow, setXtra: setXtra, mark: blockMark,
+    /* the panel that answers a block's move: the sweep's panel end, brought into the band's view (review 2026-09-23: Endings
+       answers in the command panel, which sat past the window's edge at 1920 while only the middle was brought in) */
+    answer: function(region){ if (!ANSWERS[region]) return null; MS.ans = region; var d = bringIn(region); drawSweep(); return d; },
+    cols: function(){ return COLS; },
     note: function(pk){ if (subj(pk)) { MS.last = pk; MS.ans = "middle"; } },
     setRecs: setRecs, closeOne: closeOne, store: STORE,
     open: function(pks, v){ (pks || []).forEach(function(k){ MS.open[k] = v !== false; }); redraw(); },
-    setGroup: setGroup, setRule: setRule, setPlace: setPlace, setMapw: setMapw, reveal: reveal, bringIn: bringIn, shownRect: shownRect, setSweep: setSweep, keepOn: keepOn, keepOff: keepOff,
+    setGroup: setGroup, setRule: setRule, reveal: reveal, bringIn: bringIn, rowHeight: rowHeight, shownRect: shownRect, setSweep: setSweep, keepOn: keepOn, keepOff: keepOff,
     keepSets: keepSets, carries: function(pk){ return carries(pk, keepSets()); }, ids: idsOfPk, name: nameOf, kind: kindOf,
     lastName: function(){ return MS.last ? nameOf(MS.last) : null; },
     blockRows: blockRows, moveRows: moveRows, sweep: function(){ return SWEEP; }, drawSweep: drawSweep, paintQuiet: paintQuiet,
-    look: navLook, moreHtml: moreHtml,
+    look: navLook, moreHtml: moreHtml, plain: function(){ return FW("plain", ""); },
     /* the portrait's record of the node opened last — a variant the portrait offers beside its own, once a node is opened */
     portrait: function(){ MS.recs = MS.recs.filter(function(k){ return !!subj(k); }); if (!MS.recs.length) return null;
       return { key: "map-node", icon: "doc", label: N1("recLabel", "record"), hint: N1("recHint", ""), subject: nameOf(MS.recs[0]),
@@ -1013,6 +1132,7 @@
     /* closes every record the map opened */
     closeRec: function(){ MS.recs = []; save(); if (window.drawPortrait) window.drawPortrait(); drawSweep(); },
     /* boot: what a reload keeps comes back first, then the placement and the header draw from it */
-    init: function(){ if (NAVOK) { restore(); drawPlace(); setPlace(MS.place); if (MS.K) MS.K.draw(); } else drawNav();
+    init: function(){ drawLegend(); rowHeight();
+      if (NAVOK) { restore(); if (MS.K) MS.K.draw(); else drawNav(); } else drawNav();
       if (MS.recs.length && window.showPortraitVar) window.showPortraitVar("map-node"); } };
 })();

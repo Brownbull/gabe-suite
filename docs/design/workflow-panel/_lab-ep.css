@@ -183,7 +183,6 @@ code{ font:600 .95em var(--font-mono); color:var(--ink); }
 #smtree .smtw{ color:var(--line); font:600 12px/1.6 var(--font-mono); white-space:pre; flex:none; }
 #smtree .smroot{ display:flex; align-items:baseline; gap:8px; font:800 12px/1.6 var(--font-mono); color:var(--ink);
   border-bottom:1px solid var(--line); padding-bottom:4px; margin-bottom:4px; }
-#smtree .smroot em{ font-style:normal; color:var(--muted); margin-left:auto; font-weight:600; }
 #smtree .smroot[data-lit="true"]{ color:var(--ok); }
 #smtree .smb{ flex:1 1 auto; min-width:0; display:grid; grid-template-columns:1fr auto; gap:0 8px;
   font:700 12px/1.45 var(--font-mono); color:var(--ink); background:none; border:0; border-left:2px solid transparent;
@@ -201,20 +200,23 @@ code{ font:600 .95em var(--font-mono); color:var(--ink); }
   background:color-mix(in srgb, var(--ok) 14%, var(--chip-bg)); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--ok) 55%, transparent); }
 #smtree .smb[data-lit="true"] .smbn{ color:var(--ok); }
 #smtree .smb[data-lit="true"]:hover .smbn{ color:var(--accent); }
-#smtree .smb .smct{ font-weight:600; color:var(--muted); font-variant-numeric:tabular-nums; }
-#smtree .smb .smsurf{ grid-column:1 / -1; font-weight:600; color:var(--accent); margin-top:1px; }
-#smtree .smb[data-built="false"] .smsurf{ color:var(--red); }
-/* the RUNNING HEADER (D-022): belongs to every part — its own mark, a dashed rule, never the page colour */
-#smtree .smb[data-kind="header"]{ border-left-style:dashed; }
-#smtree .smb[data-kind="header"] .smsurf{ color:var(--muted); font-style:italic; }
+/* the RUNNING HEADER (D-022): belongs to every part — its own mark, a DOUBLE rule, never the page colour. Not dashed: the dash
+   is kept for my unruled pick alone (D-034; review 2026-09-23 found it meaning four things in the map) */
+#smtree .smb[data-kind="header"]{ border-left-style:double; }
 .smwrap .smsay[data-kind="header"]{ border-left-color:var(--muted); }
+.smwrap .smsay[data-kind="picked"]{ border-left-color:var(--accent); }   /* a pick said, not a gap: the accent, never the red */
+.smwrap .smsay[data-kind="picked"] b{ color:var(--accent); }
 .smwrap .smsay[data-kind="header"] b{ color:var(--muted); }
 #smtree .sma{ font:600 12px/1.5 var(--font-mono); color:var(--muted); background:none; border:0;
   padding:1px 5px; border-radius:5px; cursor:help; text-align:left; }
 #smtree .sma:hover{ color:var(--ink); background:var(--chip-bg); }
 #smtree .sma[data-shared="true"]{ font-style:italic; }
-#smtree .sma[data-shared="true"] b{ color:var(--muted); }
-#smtree .sma b{ font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; }
+/* the importance it was ruled at: rising bars, filled up to the rating — never a digit that reads as a count */
+#smtree .sma .smr{ display:inline-flex; align-items:flex-end; gap:1.5px; height:10px; flex:none; }
+#smtree .sma .smr i{ display:block; width:3px; border-radius:1px; background:var(--line); }
+#smtree .sma .smr i[data-i="1"]{ height:4px; } #smtree .sma .smr i[data-i="2"]{ height:7px; } #smtree .sma .smr i[data-i="3"]{ height:10px; }
+#smtree .sma .smr i.on{ background:var(--accent); }
+#smtree .sma[data-shared="true"] .smr i.on{ background:var(--muted); }
 .smwrap .smmb{ margin-top:9px; font:700 12px/1 var(--font-mono); color:var(--muted); background:none;
   border:1px solid var(--line); border-radius:6px; padding:5px 8px; cursor:pointer; }
 .smwrap .smmb:hover{ color:var(--ink); border-color:var(--accent); }
@@ -1587,10 +1589,10 @@ html, body{ height:100%; }
    its ancestors stay at full strength while their other children fade. */
 .fl-hit{ outline:2px solid var(--accent) !important; outline-offset:-2px; }
 /* the outline's style says HOW the element carries the lit field — per field, set by the map on each lit element:
-   solid = on its face · dotted = only in its hover card · dashed = a tie I wrote as a selector (only when the rail marks
-   proposals — the same dashed mark as "my pick" on the rail, D-034; hidden by default, D-017) */
+   solid = on its face · dotted = only in its hover card · double = a tie I wrote as a selector (only when the rail marks
+   proposals; hidden by default, D-017). Never dashed: the dash is "my pick" alone (D-034, review 2026-09-23) */
 .fl-hit.fl-hov{ outline-style:dotted !important; }
-.fl-hit.fl-prop{ outline-style:dashed !important; }
+.fl-hit.fl-prop{ outline-style:double !important; outline-width:4px !important; }   /* my selector ties, when marked: double, never the pick's dash */
 .fl-dim{ opacity:.22 !important; transition:opacity .15s; }
 /* a FIXED height: the line changes while the pointer is on the tree, and a line that grew would move the row under the
    pointer — the row would lose the hover, the line would shrink, and the two would chase each other */
@@ -1600,31 +1602,12 @@ html, body{ height:100%; }
 .smwrap .smfl[data-fl="lit"]{ border-left-color:var(--accent); color:var(--ink); }
 .smwrap .smfl[data-fl="elsewhere"]{ border-left-color:var(--muted); }
 .smwrap .smfl[data-fl="none"]{ border-left-color:var(--red); }
-.smwrap .smfln{ margin:0 0 6px; font:600 12px/1.4 var(--font-mono); color:var(--muted); }
-.smwrap .smflopt{ display:flex; flex-wrap:wrap; gap:4px 12px; margin:0 0 9px; }
-.smwrap .smflo{ display:flex; align-items:center; gap:4px; }
-.smwrap .smflk{ font:700 12px/1 var(--font-mono); color:var(--muted); margin-right:2px; }
-.smwrap .smflb{ font:600 12px/1 var(--font-mono); color:var(--muted); background:none; border:1px solid var(--line);
-  border-radius:6px; padding:4px 7px; cursor:pointer; }
-.smwrap .smflb:hover{ color:var(--ink); border-color:var(--accent); }
-.smwrap .smflb.on{ color:var(--ink); background:var(--chip-bg); border-color:var(--accent); }
-.smwrap .smflb.pick{ outline:1px dashed var(--accent); outline-offset:2px; }   /* the agent's pick — dashed */
-#smtree .sma .smfd{ margin-left:6px; font-weight:600; font-style:normal; color:var(--muted); }
-#smtree .sma[data-fd="here"] .smfd{ color:var(--ok); }
-#smtree .sma[data-fd="none"] .smfd{ color:var(--red); }
-#smtree .sma[data-fd="off"] .smfd{ color:var(--muted); font-style:italic; }
-#smtree[data-prop="on"] .sma[data-fprop="true"] .smfd{ text-decoration:underline dashed; text-underline-offset:3px; }   /* a proposal, when the rail marks them */
+#smtree[data-prop="on"] .sma[data-fprop="true"]{ text-decoration:underline double; text-underline-offset:3px; }   /* a proposal, when the options mark them — double, never the pick's dash */
 #smtree .sma{ cursor:pointer; }
 /* the keyboard's place in the tree: every node is reachable by Tab, and the one in focus says so */
 #smtree [data-pk]:focus-visible, #smtree .smfold:focus-visible, #smtree .smmvb:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; border-radius:4px; }
-/* a block's count is a count, not a verdict — the same muted ink whatever it says (D-025.6) */
-#smtree .smb .smfn{ grid-column:1 / -1; font-weight:600; color:var(--muted); }
 #smtree .smfold{ flex:none; font:700 12px/1.6 var(--font-mono); color:var(--muted); background:none; border:0; padding:0 2px; cursor:pointer; }
 #smtree .smfold:hover{ color:var(--accent); }
-/* the key to the outline's styles, drawn with the outlines themselves */
-.smwrap .smflkey{ flex-basis:100%; display:flex; flex-wrap:wrap; gap:4px 12px; font:600 12px/1.4 var(--font-mono); color:var(--muted); }
-.smwrap .smflks{ display:inline-flex; align-items:center; gap:5px; }
-.smwrap .smflks i{ display:inline-block; width:14px; height:10px; outline:2px solid var(--accent); outline-offset:-2px; }
 /* THE KEPT OUTLINE (D-022: a state a click turned on says so until it is removed) — at the top of the rail, on every tab */
 #flkeep{ position:sticky; top:-10px; z-index:5; display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; margin:-2px 0 8px;
   padding:6px 8px; background:var(--panel); border:1px solid var(--accent); border-radius:8px; font:600 12px/1.4 var(--font-mono); color:var(--ink); }
@@ -1637,27 +1620,12 @@ html, body{ height:100%; }
 /* ═══ THE MAP'S NAVIGATION (D-024: the brain map folded into the lab — D-021 · D-022 · D-032) ═══════════════════════
    The map lives in #smwrap and moves between three places: this rail tab · a column right of the panels · full width
    below them. Its rules are scoped to the wrapper, so they hold wherever it sits. Every size is 12px or more. */
-.smwrap .nhd{ font:800 12px/1 var(--font-mono); letter-spacing:.06em; text-transform:uppercase; color:var(--ink); display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
-.smwrap .nhd span{ color:var(--accent); }
-.smwrap .nsub{ color:var(--muted); font-size:12px; margin:6px 0 8px; }
-/* the header's switches: a label, then one button per option; the agent's pick dashed (D-025.2), a note under the name */
-.smplace, .smwrap .smnav{ display:flex; flex-direction:column; gap:6px; margin:0 0 9px; }
-.smplace{ padding-bottom:9px; border-bottom:1px dashed var(--line); }
-.smno, .smkeep{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px; }
-.smnk{ font:700 12px/1 var(--font-mono); color:var(--muted); margin-right:2px; min-width:92px; cursor:help; }
-.smnb{ display:inline-flex; flex-direction:column; align-items:flex-start; gap:2px; font:600 12px/1.15 var(--font-mono); color:var(--muted);
-  background:none; border:1px solid var(--line); border-radius:6px; padding:4px 7px; cursor:pointer; text-align:left; }
-.smnb:hover{ color:var(--ink); border-color:var(--accent); }
-.smnb.on{ color:var(--ink); background:var(--chip-bg); border-color:var(--accent); }
-.smnb.pick{ outline:1px dashed var(--accent); outline-offset:2px; }   /* the agent's pick — dashed */
-.smnb .smnbt{ font-weight:600; font-size:12px; color:var(--muted); font-style:italic; }
-.smwrap .smnote, .smplnote{ font:600 12px/1.45 var(--font-mono); color:var(--muted); border-left:2px solid var(--line); padding:2px 0 2px 8px; }
 /* KEEP ONLY — its own control (D-022, option C) and the chip that says it is on */
-.smkb{ font:700 12px/1.2 var(--font-mono); color:var(--ink); background:var(--chip-bg); border:1px solid var(--line); border-radius:6px; padding:5px 8px; cursor:pointer; text-align:left; }
+.smkb{ display:inline-flex; align-items:center; gap:6px; font:700 12px/1.2 var(--font-mono); color:var(--ink); background:var(--chip-bg); border:1px solid var(--line); border-radius:6px; padding:5px 8px; cursor:pointer; text-align:left; }
 .smkb:hover:not([disabled]){ border-color:var(--accent); }
 .smkb[disabled]{ color:var(--muted); cursor:default; }
 .smkb[aria-pressed="true"]{ border-color:var(--accent); color:var(--accent); }
-.smkc{ flex-basis:100%; display:flex; flex-direction:column; gap:3px; padding:6px 8px; border:1px solid var(--accent); border-radius:8px;
+.smkc{ display:flex; flex-direction:column; gap:3px; padding:6px 8px; border:1px solid var(--accent); border-radius:8px;
   font:600 12px/1.45 var(--font-mono); color:var(--ink); background:var(--chip-bg); }
 .smkc[hidden]{ display:none; }
 .smkc b{ font-weight:700; } .smkc .smkh{ color:var(--muted); }
@@ -1673,13 +1641,11 @@ html, body{ height:100%; }
   color:var(--ink); background:none; border:0; border-left:2px solid var(--line); border-radius:0 6px 6px 0; padding:3px 6px; cursor:pointer; text-align:left; }
 #smtree .smn:hover{ color:var(--accent); background:var(--chip-bg); }
 #smtree .smn[data-open="true"]{ background:var(--chip-bg); }
-#smtree .smn .smct{ font-weight:600; color:var(--muted); }
 #smtree .smn .smmk{ grid-column:1 / -1; font-weight:600; font-style:italic; color:var(--muted); }
-#smtree .smn .smfn{ grid-column:1 / -1; font-weight:600; color:var(--muted); }
 #smtree .smn[data-strk="bay"]{ border-left-color:var(--red); }          /* the UNCAUGHT bay runs beside every stage */
 #smtree .smn[data-strk="screen"]{ border-left-color:var(--accent); }    /* the CLIENT screen sits after the answer leaves */
 #smtree .smn[data-strk="across"]{ border-left-style:dotted; }
-#smtree .smn[data-empty="true"]{ border:1px dashed var(--line); border-left-width:2px; }   /* an empty row is drawn anyway, dashed */
+#smtree .smn[data-empty="true"]{ border:1px dotted var(--muted); border-left-width:2px; }   /* an empty row is drawn anyway, dotted — the dash is my pick's alone (D-034) */
 /* QUIET — what Keep only does not keep: dimmed, never removed (on the map and, through the field layer, on the bench) */
 #smtree [data-quiet="true"]{ opacity:.38; }
 .fl-quiet{ opacity:.3 !important; }
@@ -1698,31 +1664,26 @@ html, body{ height:100%; }
 .smwrap .smoq .q{ color:var(--ink); font-weight:700; } .smwrap .smoq .l i{ font-style:normal; font-weight:700; color:var(--accent); }
 .smwrap .smfact span{ font:800 12px var(--font-mono); color:var(--accent); }
 .smwrap .smncw{ margin:0; color:var(--muted); line-height:1.45; }
-/* THE TWO OTHER PLACES: a column right of the panels · full width below them */
-#mapcol{ order:6; flex:none; width:var(--mapw, 340px); align-self:stretch; max-height:100%; overflow-y:auto; background:var(--panel);
-  border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-left:12px; }
-#mapcol[hidden], #mapbelow[hidden]{ display:none; }
+/* THE MAP'S PLACE (D-035, ruled): full width below the panels, always. The panels' row is as tall as its tallest panel
+   (--rowh, measured); the map takes the rest of the window and scrolls inside itself. */
 #mapbelow{ flex:1 1 0; min-height:320px; margin-top:14px; overflow:auto; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 14px; }
-body[data-mapplace="below"] #lab{ overflow-y:auto; }
-body[data-mapplace="below"] #row{ flex:none; height:var(--rowh, 600px); }
-body[data-mapplace="right"] #row{ flex-wrap:nowrap; }
-/* THE BAND — the three panels in a row of their own, between the rail (order 1) and the right column (order 6); inside
-   it the command panel's side is still one `order` value (cmd-left 2 · bench 3 · port 4 · cmd-right 5). */
+#lab{ overflow-y:auto; }
+#row{ flex:none; height:var(--rowh, 600px); }
+/* THE BAND — the three panels in a row of their own, right of the rail; inside it the command panel's side is still one
+   `order` value (cmd-left 2 · bench 3 · port 4 · cmd-right 5). */
 #band{ order:2; flex:none; display:flex; gap:16px; align-items:flex-start; min-height:0; }
-/* THE RIGHT COLUMN FITS THE WINDOW (walk-fold, 2026-09-23: at 2560 the lab slid ~396px left and took the rail and the
-   placement control off screen). The rail keeps its width, the column takes the width its rail option picks, and the
-   band takes what is left: the panels keep the sizes their lines set and slide sideways INSIDE the band, so the page
-   never scrolls sideways and the rail and the map are on screen together. */
-/* the band hugs the panels' height (never more than the row's), so its sideways scrollbar sits right under them — not
-   hundreds of px below at the row's bottom (review 2026-09-23) */
-body[data-mapplace="right"] #band{ flex:1 1 0; min-width:0; align-self:flex-start; max-height:100%; overflow-x:auto; overflow-y:auto; }
-body[data-mapplace="right"] #mapcol{ --mapw:340px; }
-body[data-mapplace="right"][data-mapw="wide"] #mapcol{ --mapw:474px; }   /* the rail's own width: the tree wraps as it does in the tab */
-#mapbelow #smtree > ul{ column-width:420px; column-gap:28px; }
-#mapbelow #smtree > ul > li{ break-inside:avoid; }
+/* THE PAGE NEVER SLIDES SIDEWAYS (D-035 probe: no horizontal scroll at 1920 or 2560). The rail keeps its width; the band takes
+   what is left, the panels keep the sizes their lines set and slide sideways INSIDE the band — so the map below stays the
+   window's full width. The band hugs the panels' height, so its scrollbar sits right under them (the old right column's rule). */
+#row{ flex-wrap:nowrap; }
+#band{ flex:1 1 0; min-width:0; align-self:flex-start; max-height:100%; overflow-x:auto; overflow-y:hidden; scroll-padding:0 16px; }   /* a panel brought into view never lands flush on the band's edge, where its outer marks would be cut */
+/* the tree's columns are FIXED (review 2026-09-23): the rows are dealt into them by the map module, so opening a block only
+   lengthens its own column and no other block changes place */
+#mapbelow #smtree .smcols{ display:flex; align-items:flex-start; gap:32px; }
+#mapbelow #smtree .smcols > .smcol{ flex:1 1 0; min-width:0; }
 /* THE SWEEP — one short hop from the node shown last to the nearest element it lit; drawn whole, never animated (D-004) */
 #smsweep{ position:fixed; left:0; top:0; width:100vw; height:100vh; pointer-events:none; z-index:40; overflow:visible; }
-#smsweep .swp{ fill:none; stroke:var(--accent); stroke-width:1.6; stroke-dasharray:5 4; opacity:.85; }
+#smsweep .swp{ fill:none; stroke:var(--accent); stroke-width:1.6; opacity:.85; }   /* solid: the dash is my pick's alone (D-034) */
 #smsweep .swe{ fill:var(--accent); }
 /* the portrait's record of a node opened on the map */
 /* the records Open drew, newest first — the list scrolls, each record is its own box with its own close */
@@ -1739,8 +1700,141 @@ body[data-mapplace="right"][data-mapw="wide"] #mapcol{ --mapw:474px; }   /* the 
 #portbody .mrecl{ margin-top:8px; font:700 12px/1.3 var(--font-mono); color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
 #portbody .mrec ol{ margin:4px 0 0; padding-left:18px; line-height:1.45; }
 .smwrap .smclamp{ display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; cursor:help; }   /* the whole note on its hover card */
-/* below, the width is spent side by side: the map's header on the left, the tree on the right (it flows in columns) */
-#mapbelow .smwrap{ display:grid; grid-template-columns:minmax(360px, 440px) minmax(0, 1fr); column-gap:26px; align-items:start; grid-auto-flow:row dense; }
-#mapbelow .smwrap > *{ grid-column:1; }
-#mapbelow .smwrap > #smtree, #mapbelow .smwrap > .smdeep{ grid-column:2; }
-#mapbelow .smwrap > #smtree{ grid-row:1 / span 30; }
+/* ═══ THE SECTION MAP'S FACE (D-035: "more simplified and use more icons") ══════════════════════════════════════════
+   One plain line; a bar of icon squares (grouping · By stage's rule) with Keep only and "more"; a legend strip that DRAWS each
+   mark; the two status lines; then the tree, full width in columns. Every size is 12px or more. */
+.smwrap .smtop{ display:flex; align-items:baseline; gap:14px; margin:0 0 8px; }
+.smwrap .smtitle{ font:800 12px/1 var(--font-mono); letter-spacing:.06em; text-transform:uppercase; color:var(--ink); flex:none; }
+.smwrap .smplain{ flex:1 1 auto; min-width:0; font-size:13px; line-height:1.4; color:var(--ink); }
+.smwrap .smtop .cpb{ flex:none; }
+.smwrap .smbar{ display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:10px 24px; margin:0 0 8px; }
+.smwrap .smnav{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:8px 22px; }
+.smno, .smkeep{ display:flex; flex-direction:column; align-items:flex-start; gap:5px; }
+.smno{ flex-direction:row; flex-wrap:wrap; align-items:center; }
+.smwrap .smnav .smno, .smwrap .smxtra .smno{ display:grid; grid-auto-flow:column; grid-template-rows:auto auto; justify-items:start; gap:5px 5px; }
+.smwrap .smno > .smnk{ grid-row:1; grid-column:1 / span 6; }
+.smwrap .smno > .smnb, .smwrap .smno > .smflb{ grid-row:2; }
+.smnk{ font:700 12px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; color:var(--muted); cursor:help; }
+/* an option is an ICON SQUARE (D-034): its words are its aria-label and its hover; pressed = filled; the agent's unruled
+   pick wears a DASHED border. background-clip keeps the dashes' gaps open when the square is also pressed */
+.smopt{ width:32px; height:32px; padding:0; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
+  border-radius:7px; border:1.5px solid var(--line); background:var(--chip-bg); background-clip:padding-box; color:var(--muted); }
+.smopt svg{ display:block; pointer-events:none; }
+.smopt:hover{ border-color:var(--accent); color:var(--accent); }
+.smopt[data-pick="true"]{ border-style:dashed; border-color:var(--ink); }
+.smopt.on{ border-color:var(--accent); background:var(--accent); color:var(--panel); }
+.smopt.on[data-pick="true"]{ border-color:var(--ink); }
+.smopt:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.smwrap .smnav{ align-items:flex-start; }
+.smwrap .smkeep{ display:grid; grid-template-columns:auto minmax(0, 460px); gap:5px 8px; align-items:start; }
+.smwrap .smkeep > .smnk{ grid-column:1 / -1; }
+.smwrap .smkeep > .smkb{ height:32px; box-sizing:border-box; }
+.smwrap .smkeep .smkc{ flex-direction:column; gap:2px; padding:4px 8px; }
+.smwrap .smxb{ align-self:auto; margin-top:17px; }
+.smxb{ align-self:flex-end; display:inline-flex; align-items:center; gap:6px; height:32px; box-sizing:border-box; font:700 12px/1 var(--font-mono); color:var(--muted);
+  background:none; border:1.5px solid var(--line); border-radius:7px; padding:0 10px; cursor:pointer; }
+.smxb:hover, .smxb[aria-expanded="true"]{ color:var(--ink); border-color:var(--accent); }
+.smwrap .smxtra{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px 22px; margin:0 0 10px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; }
+.smwrap .smxtra[hidden]{ display:none; }
+.smwrap .smxnav, .smwrap .smflopt{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:8px 22px; margin:0; }
+.smwrap .smnote{ flex-basis:100%; max-width:900px; font:600 12px/1.45 var(--font-mono); color:var(--muted); border-left:2px solid var(--line); padding:2px 0 2px 8px; }
+/* THE LEGEND STRIP — each mark drawn as it is drawn in the tree, a word beside it, the meaning on hover */
+/* one LINE per group (a head, then its items across), so the strip takes two or three lines, not five (review 2026-09-23:
+   at 1920 the face left the tree 140 px of a 355 px box) */
+.smwrap .smleg{ flex:1 1 0; min-width:0; display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-end; gap:6px 22px; align-items:center;
+  font:600 12px/1.3 var(--font-mono); color:var(--muted); }
+.smlgg{ display:flex; flex-direction:row; flex-wrap:nowrap; align-items:center; gap:4px 10px; }
+.smlgi[hidden]{ display:none !important; }
+.smlgh{ font:700 12px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+.smlgg > .smlgi, #smflkey > .smlgi{ display:inline-flex; align-items:center; gap:6px; cursor:help; color:var(--ink); }
+#smflkey{ display:flex; flex-direction:row; flex-wrap:wrap; gap:4px 12px; }
+.smlgi.lg-shared .smshs{ font:italic 600 12px/1 var(--font-mono); color:var(--muted); }
+.smlgs{ display:inline-flex; align-items:center; gap:3px; flex:none; }
+.smlgs svg{ display:block; }
+.smlgi.lg-none .smlgs, .smlgi.lg-header .smlgs{ color:var(--muted); }
+.smlgi.lg-fd .smlgs .smseg{ width:16px; height:8px; border-radius:2px; display:block; }
+.smlgi.lg-lit .smlgs, .smlgi.lg-shown .smlgs, .smlgi.lg-hover .smlgs, .smlgi.lg-quiet .smlgs, .smlgi.lg-pick .smlgs{ width:26px; height:14px; border-radius:3px; box-sizing:border-box; }
+.smlgi.lg-lit .smlgs{ border-left:5px solid var(--ok); background:color-mix(in srgb, var(--ok) 14%, var(--chip-bg)); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--ok) 55%, transparent); }
+.smlgi.lg-shown .smlgs{ border:1.5px solid var(--accent); }
+.smlgi.lg-hover .smlgs{ background:var(--chip-bg); border:1px solid var(--line); }
+.smlgi.lg-quiet .smlgs{ background:var(--ink); opacity:.3; }
+.smlgi.lg-pick .smlgs{ border:1.5px dashed var(--ink); width:16px; height:16px; }
+#smflkey .smflks i{ display:inline-block; width:16px; height:11px; outline:2px solid var(--accent); outline-offset:-2px; }
+/* the status lines: which side moved last, and what the field layer outlined — unseen until something moved or is pointed at
+   (review 2026-09-23: at boot they added two sentences the plain line already says). They KEEP their room: a line that came
+   and went as the pointer lit a node moved the tree under the pointer, which unlit it — a loop */
+.smwrap .smtop{ align-items:center; min-height:26px; }   /* as tall as the lead, so its coming never moves the tree */
+.smwrap .smline{ flex:1 1 auto; min-width:0; display:grid; }
+.smwrap .smline > *{ grid-area:1 / 1; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.smwrap .smline > .smfl{ display:block; height:auto; margin:0; padding:0 8px; -webkit-line-clamp:unset; }
+.smwrap .smline:has(> .smfl:not([hidden])) > .smplain{ visibility:hidden; }
+.smwrap .smtop > .smlead{ flex:0 1 auto; max-width:42%; margin:0; min-width:0; }
+.smwrap .smtop > .smlead > span{ min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.smwrap .smlead[hidden], .smwrap .smfl[hidden]{ display:block; visibility:hidden; }
+.smwrap .smtop > .smlead[hidden]{ display:none; }   /* the lead gives its room back to the plain line; it is one row either way */
+/* the tree: the card's row, then the blocks in columns */
+#smtree .smroot{ display:flex; align-items:center; gap:10px; }
+#smtree .smroot .smfn{ width:180px; }
+#smtree .smb{ grid-template-columns:auto minmax(0, 1fr) auto; align-items:center; gap:0 8px; }
+#mapbelow #smtree .smb, #mapbelow #smtree .smn{ max-width:500px; }   /* the bar stays near the name it counts for, however wide a column is */
+#smtree .smbk{ width:22px; height:22px; border-radius:5px; display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box;
+  border:1.5px solid var(--pc, var(--line)); background:color-mix(in srgb, var(--pc, var(--line)) 16%, transparent); }
+#smtree .smbk svg{ display:block; }
+#smtree .smbk[data-kind="none"]{ border:0; background:none; color:var(--muted); }
+#smtree .smbk[data-kind="header"]{ border-style:double; border-width:3px; border-color:var(--ink); background:none; color:var(--ink); }
+#smtree .smb[data-hdr="gap"] .smbk, #smtree .smb[data-hdr="off"] .smbk{ opacity:.55; border-color:var(--muted); color:var(--muted); }
+#smtree .smb[data-kind="none"] .smbn{ color:var(--muted); }
+/* ONE BAR for a block's (a row's, the card's) fields: drawn here · on another part · behind the switch that is off · not drawn
+   by the lab. A count, never a verdict — the same inks whatever it says (D-025.6); the numbers are on the hover and its label */
+#smtree .smfn{ display:flex; width:96px; height:8px; border-radius:3px; overflow:hidden; background:transparent; box-shadow:inset 0 0 0 1px var(--line); flex:none; }
+#smtree .smn .smfn{ grid-row:1; grid-column:2; align-self:center; }
+.smseg{ display:block; min-width:3px; height:100%; }
+.smseg[data-st="here"]{ background:var(--ok); }
+.smseg[data-st="away"]{ background:repeating-linear-gradient(135deg, var(--ok) 0 2px, transparent 2px 4px); }   /* drawn here, out of view */
+.smseg[data-st="elsewhere"]{ background:var(--accent); opacity:.75; }
+.smseg[data-st="off"]{ background:repeating-linear-gradient(135deg, var(--muted) 0 2px, transparent 2px 4px); }
+.smseg[data-st="none"]{ background:transparent; }
+.smlgi .smseg[data-st="none"]{ box-shadow:inset 0 0 0 1px var(--muted); }
+/* a FIELD's mark: a dot — filled here · a ring on another part · a dotted ring behind the switch · a dash not drawn */
+#smtree .sma{ display:inline-flex; align-items:center; gap:6px; }
+#smtree .sma .smfd, .smdot{ width:9px; height:9px; border-radius:50%; box-sizing:border-box; display:inline-block; flex:none; }
+/* painted by what the FACE says (data-face): in view here · here but out of view · on another part · not drawn */
+#smtree .sma[data-face="here"] .smfd, .smdot[data-st="here"]{ background:var(--ok); }
+#smtree .sma[data-face="away"] .smfd, .smdot[data-st="away"]{ border:2px solid var(--ok); }
+#smtree .sma[data-face="elsewhere"] .smfd, .smdot[data-st="elsewhere"]{ border:2px solid var(--accent); }
+#smtree .sma[data-face="none"] .smfd, .smdot[data-st="none"]{ width:9px; height:2px; border-radius:1px; background:var(--muted); }
+/* the node shown last — its outline is the one kept — ringed, distinct from lit (green), pointed at (the chip ground) and quiet */
+#smtree [data-shown="true"]{ box-shadow:inset 0 0 0 1.5px var(--accent); }
+#smtree .smb[data-lit="true"][data-shown="true"]{ box-shadow:inset 0 0 0 1.5px var(--accent), inset 0 0 0 3px color-mix(in srgb, var(--ok) 55%, transparent); }
+.smwrap .smmore p.smhead{ color:var(--ink); }
+
+/* ══ ANY ENDPOINT (D-035) — the picker in the lede and the line a ?ep= the lab could not open (_lab-ep-pick.js).
+   The picker's place and shape are the agent's pick, unruled: the DASHED border is D-034's mark for that. ══ */
+#ledebench{ position:relative; display:inline-block; vertical-align:middle; }
+.eppick{ display:inline-flex; align-items:center; gap:7px; font:600 12px/1 var(--font-mono); color:var(--ink); background:var(--chip-bg);
+  border:1.5px dashed var(--muted); border-radius:8px; padding:5px 9px; cursor:pointer; }
+.eppick:hover, .eppick[aria-expanded="true"]{ border-color:var(--accent); }
+.eppick svg{ display:block; flex:none; } .eppick .eppe{ color:var(--muted); } .eppick .eppc{ display:inline-flex; color:var(--muted); }
+.epm{ display:inline-block; flex:none; min-width:4.6em; text-align:center; font:700 12px/1 var(--font-mono); letter-spacing:.02em;
+  border:1px solid; border-radius:5px; padding:3px 5px; }
+.eppop{ position:absolute; z-index:60; left:0; top:calc(100% + 6px); width:520px; max-height:70vh; display:flex; flex-direction:column; gap:6px;
+  background:var(--panel); border:1px solid var(--line); border-radius:10px; box-shadow:0 12px 32px rgba(0,0,0,.35); padding:10px; color:var(--ink); }
+.eppop[hidden]{ display:none; }
+.eppop .epf{ font:500 13px var(--font-ui); color:var(--ink); background:var(--chip-bg); border:1px solid var(--line); border-radius:7px; padding:7px 9px; }
+.eppop .epsum{ font-size:12px; color:var(--muted); } .eppop .epsum code{ font-size:12px; user-select:all; }
+.eppop .eplist{ overflow-y:auto; min-height:0; display:flex; flex-direction:column; gap:8px; }
+.epg[hidden], .epi[hidden]{ display:none; }
+.epgh{ display:flex; align-items:center; gap:7px; font:700 12px/1.2 var(--font-ui); text-transform:uppercase; letter-spacing:.06em; padding:2px 2px 4px; }
+.epgh i{ width:10px; height:10px; border-radius:50%; display:block; flex:none; } .epgh span{ color:var(--muted); font-weight:600; }
+.epi{ display:flex; align-items:center; gap:8px; width:100%; text-align:left; font:500 12px/1.2 var(--font-mono); color:var(--ink);
+  background:none; border:1px solid transparent; border-radius:6px; padding:4px 6px; cursor:pointer; }
+.epi:hover{ border-color:var(--accent); background:var(--chip-bg); }
+.epi .epip{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.epi .epin{ flex:none; font:600 12px var(--font-ui); color:var(--muted); }
+.epi.here{ border-color:var(--line); background:var(--chip-bg); cursor:default; } .epi.here .epin{ color:var(--accent); }
+.epi.nb{ cursor:help; } .epi.nb .epip{ color:var(--muted); }
+#lede .lmiss{ margin-top:6px; font-size:12px; color:var(--ink); border:1px solid var(--red,#ff6b6b); border-left-width:4px; border-radius:6px; padding:6px 10px;
+  background:color-mix(in srgb, var(--red,#ff6b6b) 8%, transparent); max-width:1100px; }
+#lede .lmiss b{ color:var(--red,#ff6b6b); } #lede .lmiss .lmcmd{ display:block; margin-top:3px; color:var(--muted); }
+#lede .lmiss code{ font-size:12px; user-select:all; }
+.epi .epmt{ flex:none; max-width:55%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted); }   /* where the app mounts it, when the label's path is not that */

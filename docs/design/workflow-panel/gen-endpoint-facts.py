@@ -464,7 +464,8 @@ def main() -> int:
         if pid and pid in pidx:
             fetch_pieces.append(dict(piece_rec(pidx[pid]), via=f["label"]))
     chain = climb([p["id"] for p in fetch_pieces]) if fetch_pieces else []
-    resp_consumers = [n["label"] for _, n in nodes.values() if n["kind"] == "endpoint" and n.get("resp") == node.get("resp") and n["id"] != ID]
+    # an endpoint that returns no schema shares none: two absent responses are not one shape (D-035 — every endpoint in the lab)
+    resp_consumers = [n["label"] for _, n in nodes.values() if node.get("resp") and n["kind"] == "endpoint" and n.get("resp") == node.get("resp") and n["id"] != ID]
     steps_around = []
     for w in tests["workflows"]:
         for i in w["step_index"]:

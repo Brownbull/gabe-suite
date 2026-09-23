@@ -1,10 +1,12 @@
 /* walk-fold.mjs — REAL mouse clicks only, from a cold load of the endpoint lab through the FOLDED brain map (D-024): the section
-   map tab with the brain map's groupings, its field lights, Keep only and the three places the map can sit.
+   map below the panels (D-035: its one place, ruled), its icon squares, its legend, its field lights, Keep only and "more".
 
      flock "$BROWSER_SERIAL" node docs/design/workflow-panel/walk-fold.mjs    # VW/VH override 2560×1400 · writes shots/fold/*.png + walk.json · browser-gated, run it ALONE (~30 s)
 
    A click path he is asked to follow comes from a walk like this one (D-025.4): the mouse moves to the centre of the control, the
-   words on the control are read off the page and written into the log, and a picture is taken per step. Nothing is picked by a
+   words on the control are read off the page and written into the log, and a picture is taken per step. An icon square has no
+   words on its face (D-034 · D-035): its words are the ones its hover and its aria-label carry, and those are what the walk
+   reads and logs. Nothing is picked by a
    script call. Each picture is taken AFTER the step, with the control the step used ringed in pink (the page's own outline for
    a lit field is its accent colour, so the two never read as one), and the mouse parked away from the panels unless the step
    IS a hover.
@@ -24,7 +26,7 @@ const p = await b.newPage({ viewport: { width: W, height: H } });
 const errs = []; p.on('pageerror', e => errs.push(e.message));
 const LAB = 'file://' + path.join(REPO, 'docs/design/workflow-panel/endpoint-lab.html');
 const wait = ms => p.waitForTimeout(ms), log = [], say = (k, v) => { log.push([k, v]); console.log(k + ': ' + (typeof v === 'string' ? v : JSON.stringify(v))); };
-const words = el => el.evaluate(e => (e.textContent || '').trim().replace(/\s+/g, ' '));
+const words = el => el.evaluate(e => ((e.textContent || '').trim() || e.getAttribute('aria-label') || '').replace(/\s+/g, ' '));
 const PARK = [W - 6, H - 6];                                       // bottom-right corner: over nothing that lights or opens a card
 const park = async () => { await p.mouse.move(PARK[0], PARK[1]); await p.evaluate(() => window.hoverHide && window.hoverHide()); await wait(250); };
 
@@ -48,7 +50,7 @@ const bench = () => p.evaluate(() => {
   const P = document.getElementById('panel');
   return { part: P && P.dataset.tab, outlined: q('.fl-hit').length, outlinedInView: q('.fl-hit').filter(inView).length,
     faded: q('.fl-dim').length, quiet: q('.fl-quiet').length,
-    mapAt: (['#rt-map', '#mapcol', '#mapbelow'].find(s => { const h = document.querySelector(s); return h && h.contains(document.getElementById('smwrap')); }) || '?'),
+    mapAt: (['#mapbelow'].find(s => { const h = document.querySelector(s); return h && h.contains(document.getElementById('smwrap')); }) || '?'),
     mapTopInView: (() => { const m = document.getElementById('smtree'); if (!m) return null; const r = m.getBoundingClientRect(); return r.top >= 0 && r.top < innerHeight; })(),
     railOnScreen: (() => { const r = document.getElementById('notes').getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth; })(),
     mapOnScreen: (() => { const r = document.getElementById('smwrap').getBoundingClientRect(); return r.width > 0 && r.left >= 0 && r.right <= innerWidth; })(),
@@ -101,8 +103,9 @@ say('rail tabs', await p.$$eval('#railtabs .rtb', els => els.map(e => (e.textCon
 say('part buttons', await p.$$eval('#tabs .tab', els => els.map(e => (e.textContent || '').trim().replace(/\s+/g, ' '))));
 say('step 1 · cold-load', { picture: await shot('cold-load'), bench: await bench() });
 
-// ── 1 · open the map ─────────────────────────────────────────────────────────────────────────────────────────────
-await step('open-the-map', W_('#railtabs .rtb', /map/i, 'the map tab'), 'the rail shows the section map: its groupings, the line and Keep only, then the tree of eleven blocks');
+// ── 1 · the map is below the panels (D-035): rest the mouse on a block — its hover says what its mark and its bar mean ────
+await step('rest-on-a-block', W_('#smtree .smb', /^Data effects/, 'the Data effects block'), 'the block\'s card opens: the part that answers it (its mark), and how many of its fields are drawn here, on another part or not at all (its bar)', { hover: true });
+await park();
 
 // ── 2 · pick By stage ────────────────────────────────────────────────────────────────────────────────────────────
 await step('pick-by-stage', W_('#smnav .smno[data-opt="grp"] .smnb', /^By stage/, 'By stage'), 'the tree regroups under his rows EDGE … ANSWER, the UNCAUGHT bay, the CLIENT screen, then Across the stages');
@@ -114,10 +117,10 @@ say('blocks under HANDLER', await p.$$eval('#smtree .smb', els => els.filter(e =
 
 // ── 3b · By stage's own switch: where a block that names several rows goes (STATE open item 1 asks for these two pictures).
 //         The HANDLER row stays open; Across the stages is opened too, so both pictures show where the blocks moved ─────────
-const rowCounts = () => p.$$eval('#smtree .smn[data-kind="stage"]', els => els.map(e => ((e.querySelector('.smnn') || e).textContent.trim()) + ' ' + ((e.querySelector('.smct') || {}).textContent || '').trim()));
+const rowCounts = () => p.$$eval('#smtree .smn[data-kind="stage"]', els => els.map(e => ((e.querySelector('.smnn') || e).textContent.trim()) + ' ' + (e.dataset.sub || '').trim()));
 /* the Across the stages row and every block under it, inside the rail's visible part (or its blocks, when the row and its
    blocks are taller than the rail) — the check the walk rolls the wheel toward */
-const acrossShows = () => p.evaluate(() => { const box = document.getElementById('notes'), q = box.getBoundingClientRect(), lo = Math.max(q.top, 0), hi = Math.min(q.bottom, innerHeight);
+const acrossShows = () => p.evaluate(() => { const box = document.getElementById('mapbelow'), q = box.getBoundingClientRect(), lo = Math.max(q.top, 0), hi = Math.min(q.bottom, innerHeight);
   const row = [...document.querySelectorAll('#smtree .smn[data-kind="stage"]')].find(e => e.offsetParent && /Across/.test(e.textContent)); if (!row) return null;
   const li = row.closest('li'), kids = [...li.querySelectorAll('.smb')].filter(e => e.offsetParent); if (!kids.length) return false;
   const a = row.getBoundingClientRect(), z = kids[kids.length - 1].getBoundingClientRect(), k0 = kids[0].getBoundingClientRect();
@@ -135,7 +138,11 @@ say('under By stage, the note under the tree says', deep);
 say('fields in the tree under By stage', await p.$$eval('#smtree .sma', els => els.filter(e => e.offsetParent).length));
 await step('the-note-sends-you-to-flat', W_('#smnav .smno[data-opt="grp"] .smnb', /^Flat/, 'Flat'), 'Flat lists every block with its fields folded under it');
 await step('open-data-effects', inRow(/Data effects/, 'the Data effects row', '.smfold'), 'the block Data effects opens: its fields, each saying whether the bench draws it here');
-await step('hover-a-field', W_('#smtree .sma[data-fd="here"]', /drawn here · places \d+ · in view [1-9]/, 'a field drawn here and in view'), 'the mouse rests on the field: every element the panels draw for it is outlined, the rest of the bench fades, and the field\'s card opens', { hover: true });
+/* a field's mark is a dot now; the words the walk reads are the dot's label ("drawn here · places n · in view v") */
+const fieldHere = quiet => (async () => { for (const e of await p.$$('#smtree .sma[data-fd="here"]')) { if (!(await e.isVisible())) continue;
+  const t = await e.$eval('.smfd', d => d.getAttribute('aria-label') || ''); if (/in view [1-9]/.test(t)) return e; }
+  if (!quiet) say('MISSING a field drawn here and in view', '#smtree .sma[data-fd="here"]'); return null; })();
+await step('hover-a-field', fieldHere, 'the mouse rests on the field: every element the panels draw for it is outlined, the rest of the bench fades, and the field\'s card opens', { hover: true });
 say('hover card while resting on the field', await p.evaluate(() => { const h = document.getElementById('hover');   /* the page's one hover card: position fixed, so it has no offsetParent — shown = not hidden */
   if (!h || h.hidden || !(h.textContent || '').trim()) return null;
   const r = h.getBoundingClientRect();
@@ -147,6 +154,15 @@ await park();
 // ── 5 · Show a block: back to By stage, the HANDLER row is still open; a click on Functions moves the bench ─────────────
 await step('back-to-by-stage', W_('#smnav .smno[data-opt="grp"] .smnb', /^By stage/, 'By stage'), 'By stage again; the HANDLER row is still open');
 await step('show-functions', W_('#smtree .smb', /^Functions/, 'the Functions block'), 'the bench moves to the Functions part and every element carrying the block\'s fields is outlined; a click fades nothing');
+
+// ── 5b · Show Endings (review 2026-09-23): the command panel that answers it slides into the band's view, the ending the click
+//         picked is named under the map; then a part button — the map names THAT part first, Endings only "also lit" ────────
+await step('show-endings', W_('#smtree .smb', /^Endings/, 'the Endings block'), 'the command panel slides into view; the line under the map names the ending the click picked');
+say('under the map after Endings', await p.evaluate(() => { const s = document.getElementById('smsay'); return s.hidden ? null : s.innerText.replace(/\s+/g, ' '); }));
+await step('then-the-functions-part', W_('#tabs .tab', /Functions/, 'the Functions part'), 'the map names Functions first; Endings, lit by the ending still in force, comes after it');
+say('the map\'s line after the part button', await p.evaluate(() => { const l = document.getElementById('smlead'); return l.hidden ? null : l.innerText.replace(/\s+/g, ' '); }));
+await step('clear-the-ending', W_('#cmd .cmdcell[data-cmd="clear"]', /^B$/, 'the Clear corner cell of the command panel (its face shows its key, B)'), 'the Clear corner cell takes the ending off; the walk goes on from where it stood before');
+await step('back-to-functions', W_('#smtree .smb', /^Functions/, 'the Functions block'), 'the Functions block again, so the walk continues from it');
 
 // ── 6 · switch the part: the tree re-lights for the part the bench is on now ─────────────────────────────────────────
 const litBefore = await p.$$eval('#smtree .smb[data-lit="true"]', els => els.map(e => (e.querySelector('.smbn') || e).textContent.trim()));
@@ -168,20 +184,11 @@ say('lit block before → after the part switch', { before: litBefore, after: aw
 { const k = await byWords('#smkeepb', /^Keep only/, 'the Keep only button'); say('Keep only button before', k && { words: await words(k), disabled: await k.isDisabled() }); }
 await step('keep-only-on', W_('#smkeepb', /\S/, 'the Keep only button'), 'Keep only is on: the bench quiets every element that does not carry the block\'s fields, the tree quiets every node that does not, and a bar at the top of the rail says so');
 
-// ── 8 · where the map sits: the right column, then full width below ───────────────────────────────────────────────
-await step('map-in-the-right-column', W_('#smplace .smnb', /^right column/, 'right column'), 'the map moves to a column right of the panels; the bench and its lights do not change');
-await step('right-column-as-wide-as-the-rail', W_('#smplace .smno[data-opt="mapw"] .smnb', /^as wide as the rail/, 'as wide as the rail'), 'the column widens to the rail\'s own width; the panels\' band narrows and what it cannot hold slides under the column\'s edge (the log gives each panel\'s share on screen) — the rail and the map stay on screen');
-await step('right-column-narrow', W_('#smplace .smno[data-opt="mapw"] .smnb', /^narrow/, 'narrow'), 'back on the pick (dashed): the narrow column, so the panels\' band is as wide as it gets beside it (the log gives each panel\'s share on screen)');
-{ // the first walk found the lab sliding ~396px left at 2560, taking the rail and the placement control off screen. It must
-  // not slide now; the step below only runs (and says so) if it does.
-  const sl = await labLeft(); say('the lab slid left to show the right column, by (px)', sl);
-  if (sl > 0) { await p.mouse.move(W / 2, 700); for (let i = 0; i < 10 && (await labLeft()) > 0; i++) { await p.mouse.wheel(-200, 0); await wait(150); } await park();
-    say('step ' + (n + 1) + ' · slide-the-lab-back-left', { did: 'Shift + wheel over the panels, toward the left', picture: await shot('slide-the-lab-back-left'), slidNow: await labLeft(), bench: await bench() }); } }
-await step('map-full-width-below', W_('#smplace .smnb', /^below/, 'below'), 'the map moves under the rail, the middle and the command panel, full width');
-{ // the map below the panels is under the fold of the window: a person scrolls down with the wheel to see it
-  const t = await bench();
-  if (!t.mapTopInView) { await p.mouse.move(W / 2, H / 2); for (let i = 0; i < 12 && !(await bench()).mapTopInView; i++) { await p.mouse.wheel(0, 300); await wait(200); } await park();
-    say('step ' + (n + 1) + ' · scroll-down-to-the-map', { did: 'wheel down over the page', picture: await shot('scroll-down-to-the-map'), bench: await bench() }); } }
+// ── 8 · "more": the switches read rarely, one disclosure (D-035); then the legend strip's "on another part" ───────────
+await step('open-more', W_('#smxb', /more/, 'the more button'), 'the drawer opens: the line from a node, the records in the portrait, and the outline\'s three switches — each an icon square, my pick dashed');
+await step('rest-on-the-legend', W_('#smleg .smlgi', /^another part/, 'the legend\'s "another part"'), 'the legend\'s card says what a violet bar segment and a ringed dot mean', { hover: true });
+await park();
+await step('close-more', W_('#smxb', /more/, 'the more button'), 'the drawer closes; the face is grouping, Keep only and the legend again');
 
 // ── 9 · remove Keep only (the button on the bar at the top of the rail) ─────────────────────────────────────────────
 await p.mouse.move(W / 2, H / 2); for (let i = 0; i < 12; i++) { await p.mouse.wheel(0, -400); await wait(120); } await park();

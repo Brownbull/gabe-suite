@@ -9,7 +9,9 @@
    the no-loss checklist state is printed. A checks file adds assertions: [{name, tab?, kind:"text"|"selector"|
    "eval"|"hover", arg, expect?}] — text = the panel's innerText contains arg · selector = at least one match ·
    eval = a JS expression on the page returning truthy · hover = hover the first match of arg and expect the card
-   to contain `expect`. Exit 1 on any failure. --shots writes one PNG per tab (work + dock boxes). */
+   to contain `expect`. Exit 1 on any failure. --shots writes one PNG per tab (work + dock boxes).
+   The ANY ENDPOINT section (D-035) opens every endpoint through ?ep= and needs their facts built first, a local build:
+     cd docs/design/workflow-panel && python3 gen-endpoint-set.py        (≈ 15 s; writes _eps/, git-ignored) */
 import path from 'node:path';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
@@ -1775,7 +1777,8 @@ await p.waitForTimeout(320);
 const bootShown = await p.$$eval('.rtab', els => els.filter(e => !e.hidden && e.offsetParent !== null).map(e => e.id));
 ok(bootShown.length === 1 && bootShown[0] === 'rt-controls', 'at BOOT only the controls show — the toggle runs on load', bootShown.join(','));
 const rtabs = await p.$$eval('#railtabs .rtb', els => els.map(e => e.dataset.rt));
-ok(rtabs.join(',') === 'controls,cov,map', 'the rail toggles between CONTROLS, the no-loss checklist and the section map', rtabs.join(','));
+// CHANGED 2026-09-23 (D-035): the section map left the rail — it sits below the panels — so the rail toggles between two
+ok(rtabs.join(',') === 'controls,cov', 'the rail toggles between CONTROLS and the no-loss checklist', rtabs.join(','));
 ok(await p.$eval('#railtabs .rtb', e => e.classList.contains('on') && e.dataset.rt === 'controls'), 'controls are the DEFAULT view');
 for (const t of rtabs) { await p.click(`#railtabs .rtb[data-rt="${t}"]`); await p.waitForTimeout(90);
   const shown = await p.$$eval('.rtab', els => els.filter(e => !e.hidden).map(e => e.id));
@@ -3527,51 +3530,78 @@ if (checksFile) {
   const SM = await p.evaluate(() => window.LABEP.sectionmap);
   ok(SM && SM.state === 'present' && Array.isArray(SM.blocks) && SM.blocks.length > 0,
     'the facts carry a section map, read from the card\'s own ruled tree', SM ? SM.state + ' · ' + (SM.reason || '') : 'absent');
-  // the THIRD tab exists, is named, and SWITCHES — one rail section visible at a time
-  const rtabs = await p.$$eval('#railtabs .rtb', els => els.map(e => [e.dataset.rt, e.textContent.trim()]));
-  ok(rtabs.length === 3 && rtabs[2][0] === 'map' && rtabs[2][1] === 'section map',
-    'the rail has a THIRD tab, and it is the section map', JSON.stringify(rtabs));
-  await p.evaluate(() => window.railTab('map')); await p.waitForTimeout(150);
-  ok(await p.evaluate(() => [document.getElementById('rt-controls').hidden, document.getElementById('rt-cov').hidden, document.getElementById('rt-map').hidden].join(','))
-     === 'true,true,false', 'opening it hides the other two rail sections and shows its own');
-  ok(await p.$eval('#railtabs .rtb[data-rt="map"]', e => e.classList.contains('on')), 'and the tab reads as the one in play');
+  // CHANGED 2026-09-23 (D-035, "remove it from the top-left section selector"): the rail's third tab LEFT. The three asserts
+  // that proved the tab (it exists, it switches, it reads as in play) are replaced by these two: the rail is controls ·
+  // no-loss, and the map sits in its one place below the panels.
+  const rtabs = await p.$$eval('#railtabs .rtb', els => els.map(e => e.dataset.rt));
+  ok(rtabs.join(',') === 'controls,cov' && await p.evaluate(() => !document.getElementById('rt-map') && !document.getElementById('mapcol') && !document.getElementById('smplace')),
+    'the rail has no section map tab — its tabs are controls and no-loss — and no other place for the map is left in the page', JSON.stringify(rtabs));
+  ok(await p.evaluate(() => { const w = document.getElementById('smwrap'), m = document.getElementById('mapbelow'), r = document.getElementById('row').getBoundingClientRect(), q = m.getBoundingClientRect();
+      return w.parentElement === m && !m.hidden && q.top >= r.bottom - 1 && q.width > innerWidth * 0.9; }),
+    'the section map sits in the section below the panels, and spans the window\'s width');
   // ONE ROW PER BLOCK, and every count is the feed's own — never a number the page made up
-  const rows = await p.$$eval('#smtree .smb', els => els.map(e => ({ key: e.dataset.sm, built: e.dataset.built, act: e.dataset.act, kind: e.dataset.kind,
-    part: e.dataset.part, name: e.querySelector('.smbn').textContent, surf: e.querySelector('.smsurf').textContent, ct: e.querySelector('.smct').textContent })));
+  const rows = await p.$$eval('#smtree .smb', els => els.map(e => { const m = e.querySelector('.smbk');
+    return { key: e.dataset.sm, built: e.dataset.built, act: e.dataset.act, kind: e.dataset.kind, part: e.dataset.part, name: e.querySelector('.smbn').textContent,
+      surf: m ? m.getAttribute('aria-label') || '' : '', mk: m ? m.dataset.kind : null, mpart: m ? m.dataset.part || null : null, mhtml: m ? m.innerHTML : '',
+      mcol: m ? m.style.getPropertyValue('--pc') : '', face: e.innerText.replace(/\s+/g, ' ').trim() }; }));
   ok(rows.length === SM.blocks.length && rows.length === SM.n.blocks,
     'the map draws one row per ruled block, and as many as the feed counts', rows.length + ' vs ' + SM.n.blocks);
   ok(rows.every((r, i) => r.key === SM.blocks[i].key && r.name === SM.blocks[i].name),
     'each row is the block the feed named, in the feed\'s own order', JSON.stringify(rows.map(r => r.key)));
-  ok(rows.every((r, i) => r.ct === SM.blocks[i].own.length + '·' + SM.blocks[i].shared.length),
-    'and its two counts are that block\'s own attributes and its shared ones, recounted from the feed',
-    JSON.stringify(rows.map((r, i) => [r.ct, SM.blocks[i].own.length + '·' + SM.blocks[i].shared.length]).filter(x => x[0] !== x[1])));
-  const MARK = { page: '→ ', none: '✕ ', header: '↔ ' };
+  /* CHANGED 2026-09-23 (D-035, "I cannot understand what is happening in that section map"): the row's two counts ("4·3") and
+     its surface sentence ("→ the Data panel · 1 of 7 fields drawn here · 5 on another part") left the face. Asserted now: the
+     row's words are its NAME only, and the counts ride its hover card (checked below with the bar). */
+  ok(rows.every((r, i) => r.face === SM.blocks[i].name),
+    'no block row carries the old sentence: its face reads its name only — no counts, no surface words',
+    JSON.stringify(rows.filter((r, i) => r.face !== SM.blocks[i].name).map(r => r.face).slice(0, 3)));
+  /* the MARK: a page block wears the icon and colour of the part button that answers it; an ending the command panel's glyph */
+  const partMk = await p.evaluate(() => Object.fromEntries(Object.keys(window.PANELS).map(k => [k, { svg: window.STATION.icon(window.PANELS[k].icon, 16, window.PANELS[k].col), col: window.PANELS[k].col }])));
+  /* both sides through the same parser, so the comparison is of the drawing, not of how a string spells its attributes */
+  const norm = (h) => p.evaluate(h => { const d = document.createElement('span'); d.innerHTML = h; return d.innerHTML; }, h);
+  for (const k of Object.keys(partMk)) partMk[k].svg = await norm(partMk[k].svg);
+  const cmdMk = await norm(await p.evaluate(() => window.labIco('rggrid', 16, 'var(--accent)')));
+  ok(rows.every((r, i) => { const a = SM.blocks[i].join.act; return a.kind === 'part' ? r.mpart === a.part && r.mhtml === partMk[a.part].svg && r.mcol === partMk[a.part].col
+      : a.kind === 'exit' ? r.mpart === 'command' && r.mhtml === cmdMk : true; }),
+    'a block with a page is marked with the icon and colour its part button uses — an ending with the command panel\'s glyph',
+    JSON.stringify(rows.filter((r, i) => SM.blocks[i].join.act.kind === 'part' && r.mhtml !== partMk[SM.blocks[i].join.act.part].svg).map(r => r.key)));
+  ok(new Set(rows.filter(r => r.mk === 'none').map(r => r.mhtml)).size === 1 && new Set(rows.filter(r => r.mk === 'header').map(r => r.mhtml)).size === 1
+     && rows.filter(r => r.mk === 'none').every(r => rows.filter(x => x.mk !== 'none').every(x => x.mhtml !== r.mhtml)),
+    'no page yet and the running header each carry a mark of their own, drawn like no part\'s');
   // ── D-022: THREE KINDS of pairing. The kind is read HERE from the move each block makes (its act), never from the
   //    generator's own label — so a generator that mislabels a block, or miscounts, fails these (review 2026-09-22) ──
   const kindOf = a => a.kind === 'none' ? 'none' : a.kind === 'header' ? 'header' : ['part', 'exit', 'path'].indexOf(a.kind) >= 0 ? 'page' : '?';
   const want = SM.blocks.map(b => kindOf(b.join.act));
-  ok(rows.every((r, i) => r.kind === want[i] && r.built === String(want[i] === 'page') && r.surf.indexOf(MARK[want[i]] + SM.blocks[i].join.surface) === 0),
-    'every row\'s kind, its built flag and its mark follow the move the block makes, then name the surface the words pair it with',
+  ok(rows.every((r, i) => r.kind === want[i] && r.mk === want[i] && r.built === String(want[i] === 'page') && r.surf.indexOf(want[i] === 'none' ? SM.words.strings.noSurface : SM.blocks[i].join.surface) === 0),
+    'every row\'s kind, its built flag and its mark follow the move the block makes, and the mark\'s label names the surface the words pair it with',
     JSON.stringify(rows.map((r, i) => [r.kind, want[i], r.built, r.surf.slice(0, 24)]).filter((x, i) => x[0] !== x[1] || x[2] !== String(x[1] === 'page'))));
   const cnt = k => want.filter(x => x === k).length;
   ok(cnt('page') === SM.n.with_surface && cnt('none') === SM.n.without_surface && cnt('header') === SM.n.header
      && cnt('page') >= 1 && cnt('none') >= 1 && cnt('header') >= 1,
     'all three kinds are there — a page, no page yet, a running header — and the feed\'s three totals equal a recount of the moves',
     JSON.stringify([cnt('page'), cnt('none'), cnt('header')]) + ' vs ' + JSON.stringify([SM.n.with_surface, SM.n.without_surface, SM.n.header]));
-  { const hdr = await p.$eval('#smn', e => e.textContent.trim()), sub = await p.$eval('#smsub', e => e.textContent);
-    ok(hdr.indexOf(String(SM.n.with_surface)) === 0 && sub.indexOf(SM.n.with_surface + ' with a page') >= 0
-       && sub.indexOf(SM.n.without_surface + ' with no page yet') >= 0 && sub.indexOf(SM.n.header + ' a running header') >= 0,
-      'the tab states the three totals, filled from the feed\'s recount', hdr + ' | ' + sub.slice(0, 140)); }
+  /* CHANGED 2026-09-23 (D-035): the header's totals sentence moved off the face — ONE plain line leads, and the totals are
+     the first line behind "more information" */
+  { const sub = await p.$eval('#smsub', e => e.textContent), head = await p.$eval('#smmore .smhead', e => e.textContent).catch(() => '');
+    const NVF = await p.evaluate(() => ((window.LABEP.mapnav || {}).words || {}).face || {});
+    ok(!!NVF.plain && sub === NVF.plain && !/\d/.test(sub), 'ONE plain line leads the section, in the words file\'s words, with no number in it', sub);
+    ok(head.indexOf(SM.n.with_surface + ' with a page') >= 0 && head.indexOf(SM.n.without_surface + ' with no page yet') >= 0 && head.indexOf(SM.n.header + ' a running header') >= 0,
+      'the three totals, filled from the feed\'s recount, lead what "more information" holds', head.slice(0, 140)); }
   /* the ruling's four re-pairings, by question signature (D-022) — a pairing drifting back fails here */
   { const K = Object.fromEntries(SM.blocks.map(b => [b.sig, b.join.kind + (b.join.act.kind === 'exit' ? ':exit' : '')]));
     ok(K['Q3+Q11'] === 'page:exit' && K['Q16'] === 'none' && K['Q12'] === 'none' && K['Q5+Q7'] === 'header',
       'Endings keeps the command panel · In-flight state and Standard or specialist have no page yet · Stages and order is the running header',
       JSON.stringify([K['Q3+Q11'], K['Q16'], K['Q12'], K['Q5+Q7']])); }
   /* recount against a SECOND source: the drawn rows, not the generator's own sum of the same array (which is true by
-     construction). Every attribute of the inventory must appear once as a block's own, or be shared, or be said unplaced. */
-  const seen = await p.evaluate(() => { const S = window.LABEP.sectionmap, own = new Set(), sh = new Set();
-    S.blocks.forEach((b) => { (b.own || []).forEach((a) => own.add(a)); (b.shared || []).forEach((a) => sh.add(a)); });
-    return { own: own.size, shared: sh.size, both: [...own].filter((a) => sh.has(a)).length, attrs: (window.LABEP.sectionmap.attrs || []).length }; });
+     construction). Every attribute of the inventory must appear once as a block's own, or be shared, or be said unplaced.
+     CHANGED 2026-09-23 (review: the comment said "the drawn rows" and the code recounted LABEP's own arrays — the same data
+     the generator summed, so it could not go red): every block is OPENED and the field rows the TREE drew are read, each
+     with the own/shared mark it wears; then they are closed again. */
+  const seen = await p.evaluate(() => { const S = window.LABEP.sectionmap, own = new Set(), sh = new Set(), keys = S.blocks.map(b => b.key);
+    window.smOpen(keys, true);
+    document.querySelectorAll('#smtree .smb[data-sm]').forEach(btn => { const li = btn.closest('li');
+      li.querySelectorAll(':scope > ul .sma[data-sm]').forEach(n => (n.dataset.shared === 'true' ? sh : own).add(n.dataset.sm)); });
+    window.smOpen(keys, false);
+    return { own: own.size, shared: sh.size, both: [...own].filter((a) => sh.has(a)).length }; });
   ok(seen.own === SM.n.own && seen.shared === SM.n.shared && seen.both === 0,
     'no attribute is both a block\'s own and a shared one, and the counts are a recount of the rows themselves',
     JSON.stringify(seen) + ' vs ' + JSON.stringify(SM.n));
@@ -3586,7 +3616,13 @@ if (checksFile) {
      && kids.slice(0, first.own.length).every((k, i) => k[0] === first.own[i] && k[1] === 'false')
      && kids.slice(first.own.length).every((k, i) => k[0] === first.shared[i] && k[1] === 'true'),
     'opening a block lists its own attributes, then the ones it shares, each marked for which it is', JSON.stringify(kids.map(k => k[0] + ':' + k[1])));
-  ok(kids.every(k => /^[123] /.test(k[2])), 'and each attribute leads with the importance it was RULED at', JSON.stringify(kids.map(k => k[2]).slice(0, 3)));
+  /* CHANGED 2026-09-23 (review: "3 Kinds of ending" read as a count): the importance is drawn as rising bars filled up to the
+     rating it was RULED at, its number only in the bars' label — no digit leads the row */
+  { const rb = await p.$$eval('#smtree .sma', els => els.map(e => { const r = e.querySelector('.smr'); return { id: e.dataset.sm, on: r ? r.querySelectorAll('i.on').length : -1,
+      all: r ? r.querySelectorAll('i').length : -1, label: r ? r.getAttribute('aria-label') : '', face: e.textContent.trim() }; }));
+    const top = Math.max(...Object.values(SM.attrs).map(a => +a.r));
+    ok(rb.length === kids.length && rb.every(x => x.on === +SM.attrs[x.id].r && x.all === top && x.label.indexOf(String(SM.attrs[x.id].r)) >= 0 && !/^\d/.test(x.face)),
+      'and each attribute leads with the importance it was RULED at, drawn as bars filled to it — never a digit on its face', JSON.stringify(rb.slice(0, 3))); }
   // ── BOTH WAYS, arm 1: a block click MOVES THE BENCH. Asserted on the bench's own state. ──
   const byAct = (kind) => SM.blocks.find(b => b.join.act.kind === kind);
   const plain = byAct('part'), hdrB = byAct('header'), exitB = byAct('exit');
@@ -3606,12 +3642,12 @@ if (checksFile) {
     for (const k of parts) { await p.evaluate(k => window.showTab(k), k); await p.waitForTimeout(200);
       const v = await p.evaluate(() => document.getElementById('panel').dataset.variant), word = await p.evaluate(k => window.PANELS[k].word, k);
       const want = !R[k] ? 'gap' : v === R[k] ? 'on' : 'off';
-      const got = await p.$eval(`#smtree .smb[data-sm="${hdrB.key}"]`, e => ({ hdr: e.dataset.hdr, lit: e.dataset.lit, surf: e.querySelector('.smsurf').textContent }));
+      const got = await p.$eval(`#smtree .smb[data-sm="${hdrB.key}"]`, e => ({ hdr: e.dataset.hdr, lit: e.dataset.lit, surf: e.querySelector('.smbk').getAttribute('aria-label') }));
       const inLit = (await p.evaluate(() => Object.keys(window.smLit()))).indexOf(hdrB.key) >= 0;
       if (got.hdr !== want || got.lit !== String(want === 'on') || inLit !== (want === 'on')
           || (want === 'gap' && got.surf.indexOf(word + ' has none yet') < 0)) wrong.push(k + ':' + JSON.stringify([want, got, inLit])); }
     ok(parts.length === 6 && wrong.length === 0 && Object.keys(R).length >= 1,
-      'the running header is lit only where the part draws its stage reading, and on every other part its row says that part has none yet', wrong.join(' ; ').slice(0, 260));
+      'the running header is lit only where the part draws its stage reading, and on every other part its mark says that part has none yet', wrong.join(' ; ').slice(0, 260));
     ok(await p.$eval('#smlead', e => e.dataset.lead) === 'lab' && (await p.$eval('#smlead span', e => e.textContent)).indexOf(hdrB.name) < 0,
       'and a bench move names the part\'s page block, never the header that is lit everywhere', await p.$eval('#smlead', e => e.textContent.trim()));
     const withR = Object.keys(hdrB.join.act.readings || {}), without = parts.filter(k => withR.indexOf(k) < 0);
@@ -3713,15 +3749,15 @@ if (checksFile) {
       await p.evaluate(() => window.hoverHide()); } }
   // ── D-017: how the MAP knows is folded away, not on the face ──
   { ok(await p.$eval('#smmore', e => e.hidden), 'how the map knows a thing is folded away at boot (D-017)');
-    const face = await p.$eval('#rt-map', e => e.innerText);
-    ok(face.indexOf(SM.source.inv_hash) < 0, 'so no hash rides the tab\'s face', face.slice(0, 80));
+    const face = await p.$eval('#smwrap', e => e.innerText);
+    ok(face.indexOf(SM.source.inv_hash) < 0, 'so no hash rides the map\'s face', face.slice(0, 80));
     await p.click('#smmoreb'); await p.waitForTimeout(250);
     const more = await p.$eval('#smmore', e => e.innerText);
     ok(!await p.$eval('#smmore', e => e.hidden) && more.indexOf(SM.source.inv_hash) >= 0 && /weighs into most/.test(more),
       'and opening it gives the rule and the hashes, once asked for', more.slice(0, 110));
     await p.click('#smmoreb'); await p.waitForTimeout(150); }
   // ── the 12px floor, inside the tab ──
-  { const small = await p.$$eval('#rt-map *', els => els.filter(e => e.offsetParent !== null && (e.textContent || '').trim() && !e.children.length)
+  { const small = await p.$$eval('#smwrap *', els => els.filter(e => e.offsetParent !== null && (e.textContent || '').trim() && !e.children.length)
       .map(e => [e.className || e.tagName, parseFloat(getComputedStyle(e).fontSize)]).filter(x => x[1] < 12));
     ok(small.length === 0, 'nothing in the section map computes under 12px', JSON.stringify(small.slice(0, 4))); }
   ok(errs.length === errs0, 'the section map raises no page error', errs.slice(errs0, errs0 + 3).join(' | '));
@@ -3736,6 +3772,9 @@ if (checksFile) {
 //     a tie that is wrong. It starts from a FRESH page: the sections above leave the rail, the command and the selection moved.
 { await p.goto('file://' + PAGE);
   await p.waitForFunction('window.__eplabReady===true', { timeout: 20000 }).catch(() => {});
+  /* ADDED 2026-09-23 (D-035): the map now sits below the panels, where the pointer left by the section above can rest on a
+     block after the reload and preview it — the pointer is moved off first, so "before anything is pointed at" holds */
+  await p.mouse.move(2, 2); await p.waitForTimeout(150);
   const errs0 = errs.length;
   const SM = await p.evaluate(() => window.LABEP.sectionmap);
   const ATTRS = Object.keys(SM.attrs);
@@ -3745,9 +3784,10 @@ if (checksFile) {
   const TIED = [...new Set(FL.authored.map(a => a.id))];
   ok(FL && FL.state === 'present' && FL.authored.length > 0 && FL.authored.every(a => SM.attrs[a.id]),
     'the ties written by hand are read, and each names an attribute the inventory carries', FL ? FL.state + ' · ' + (FL.reason || '') : 'absent');
-  // at boot nothing is lit, and the line says what pointing does — in the words file's words, not a bare dash
-  ok(await p.$eval('#smfl', e => e.textContent) === WS.idle, 'before anything is pointed at, the line under the lead says what pointing and clicking do', await p.$eval('#smfl', e => e.textContent));
-  await p.evaluate(() => window.railTab('map')); await p.waitForTimeout(150);
+  /* CHANGED 2026-09-23 (review: three sentences on the map's face at boot): before anything is pointed at, the line under the
+     lead is AWAY — the plain line above already says what pointing and clicking do — and so is the lead's "nothing open yet" */
+  ok(await p.evaluate(() => ['smfl', 'smlead'].every(id => { const e = document.getElementById(id); return e.hidden && getComputedStyle(e).visibility === 'hidden'; })),
+    'before anything is pointed at or opened, neither status line is on the face', await p.$eval('#smfl', e => e.textContent));
   /* IN VIEW, measured by the probe itself: an element is in view when the point at its centre hits it (or a child) */
   const seenByProbe = () => p.evaluate(() => { window.hoverHide && window.hoverHide();
     return [...document.querySelectorAll('.fl-hit')].map(e => { const r = e.getBoundingClientRect(); if (r.width < 1 || r.height < 1) return 0;
@@ -3781,14 +3821,29 @@ if (checksFile) {
       const want = id => here.has(id) ? 'here' : Object.keys(C[id] || {}).length ? 'elsewhere' : Object.keys(CO[id] || {}).length ? 'off' : 'none';
       const rows = [...document.querySelectorAll('#smtree .sma[data-sm]')];
       const badRows = rows.filter(n => n.dataset.fd !== want(n.dataset.sm)).map(n => n.dataset.sm + ':' + n.dataset.fd + '≠' + want(n.dataset.sm));
+      /* CHANGED 2026-09-23 (review: "drawn here" ignored whether you can SEE the element, and this recount rebuilt "here" with the
+         page's own rule, so it could not catch that): the FACE paints four states — in view · here but out of view · on another
+         part · not drawn (the switch no control reaches reads as not drawn on the face, D-017). "In view" is measured HERE by the
+         probe's own geometry — the point at an element's centre hits it (elementFromPoint) — never by the page's viewer. Each
+         block's bar is recounted segment by segment; each field's dot against the same rule. */
+      window.hoverHide && window.hoverHide();
+      const seeP = (e) => { const r = e.getBoundingClientRect(); if (r.width < 1 || r.height < 1) return false;
+        const t = document.elementFromPoint((r.left + r.right) / 2, (r.top + r.bottom) / 2); return !!t && (t === e || e.contains(t)); };
+      const face = id => { const w = want(id); return w === 'here' ? (D.els(id).some(seeP) ? 'here' : 'away') : w === 'off' ? 'none' : w; };
+      const badFace = rows.filter(n => n.dataset.face !== face(n.dataset.sm)).map(n => n.dataset.sm + ':' + n.dataset.face + '≠' + face(n.dataset.sm));
       const badBlocks = S.blocks.map(b => { const btn = document.querySelector(`#smtree .smb[data-sm="${b.key}"]`), ids = b.own.concat(b.shared);
-        const n = ids.filter(id => here.has(id)).length, e = ids.filter(id => want(id) === 'elsewhere').length, t = btn && btn.querySelector('.smfn') ? btn.querySelector('.smfn').textContent : '';
-        return (!btn || btn.dataset.fdn !== String(n) || btn.dataset.fdof !== String(ids.length) || t.indexOf(n + ' of ' + ids.length) < 0
-          || (e ? t.indexOf(e + ' on another part') < 0 : /on another part/.test(t))) ? b.key + ':' + (btn && btn.dataset.fdn) + '≠' + n + '|' + t : null; }).filter(Boolean);
-      return { rows: rows.length, badRows, badBlocks, here: [...here].sort() }; });
+        const k = { here: 0, elsewhere: 0, off: 0, none: 0 }; ids.forEach(id => { k[want(id)]++; });
+        const f = { here: 0, away: 0, elsewhere: 0, none: 0 }; ids.forEach(id => { f[face(id)]++; });
+        const bar = btn && btn.querySelector('.smfn'), seg = bar ? Object.fromEntries([...bar.querySelectorAll('.smseg')].map(g => [g.dataset.st, +g.dataset.n])) : null;
+        const segOk = !!seg && Object.keys(f).every(st => (seg[st] || 0) === f[st]) && Object.keys(seg).every(st => st in f) && [...bar.querySelectorAll('.smseg')].every(g => +g.style.flexGrow === +g.dataset.n);
+        return (!btn || !segOk || btn.dataset.fdn !== String(k.here) || btn.dataset.fdof !== String(ids.length) || /\d/.test(bar ? bar.textContent : '1'))
+          ? b.key + ':' + JSON.stringify(seg) + '≠' + JSON.stringify(f) : null; }).filter(Boolean);
+      const away = S.blocks.filter(b => b.own.concat(b.shared).some(id => face(id) === 'away')).length;
+      return { rows: rows.length, badRows, badFace, badBlocks, away, here: [...here].sort() }; });
     ok(r.rows >= Object.keys(SM.attrs).length && r.badRows.length === 0,
       `${where}: each field in the tree says drawn here, on another part, behind the switch that is off, or not drawn — a recount of DRAWN and the catalogs`, r.badRows.slice(0, 4).join(' ; '));
-    ok(r.badBlocks.length === 0, `${where}: each block's count equals a recount of its fields drawn here and on another part`, r.badBlocks.slice(0, 4).join(' ; '));
+    ok(r.badBlocks.length === 0, `${where}: each block's bar has one segment per face state — in view, out of view, another part, not drawn — each as large as the probe's own recount (elementFromPoint for "in view"), and no number on its face`, r.badBlocks.slice(0, 4).join(' ; '));
+    ok(r.badFace.length === 0, `${where}: each field's dot says in view only when the probe can see one of its elements, and out of view when it is drawn but none can be seen`, r.badFace.slice(0, 4).join(' ; '));
     return r; };
   /* EVERY FIELD, hovered: the elements outlined equal DRAWN's elements for it; leaving restores the bench. (A guard on
      the light's plumbing — the outline is built from DRAWN, so this goes red only on a lost or extra element.) */
@@ -3854,9 +3909,10 @@ if (checksFile) {
     const want = fillW(WS.lit, { what: SM.attrs['tables-touched'].label, n, v, regions }) + (v < n ? ' ' + WS.litOut : '');
     ok(v < n && line === want, 'lit for tables touched, the line says how many are outlined and how many of them are in view, measured by the page\'s own geometry',
       JSON.stringify({ line, want }).slice(0, 300));
-    const mark = await p.$eval('#smtree .sma[data-sm="tables-touched"] .smfd', e => e.textContent);
-    ok(mark === fillW(WS.markHere, { n, v }), 'and the tree\'s mark names its unit — places, and how many are in view — with the same two numbers', mark + ' vs ' + fillW(WS.markHere, { n, v }));
-    ok(await p.$$eval('#smtree .smfd', els => els.every(e => !/^drawn here \d+$/.test(e.textContent))), 'no mark is a bare number beside "drawn here"');
+    /* CHANGED 2026-09-23 (D-035): the field's mark is a DOT; the words it used to print are its label */
+    const mark = await p.$eval('#smtree .sma[data-sm="tables-touched"] .smfd', e => e.getAttribute('aria-label'));
+    ok(mark === fillW(WS.markHere, { n, v }), 'and the tree\'s mark is labelled with its unit — places, and how many are in view — with the same two numbers', mark + ' vs ' + fillW(WS.markHere, { n, v }));
+    ok(await p.$$eval('#smtree .smfd', els => els.every(e => !(e.textContent || '').trim() && !/^drawn here \d+$/.test(e.getAttribute('aria-label') || ''))), 'no mark prints words on the face, and no label is a bare number beside "drawn here"');
     await p.evaluate(() => window.FIELDMAP.unlight()); }
   // a real pointer, four fields: one drawn here, one on another part, one behind the switch that is off, one the lab does not draw
   { const tot = await p.evaluate(() => window.FIELDMAP.totals());
@@ -3872,7 +3928,7 @@ if (checksFile) {
       'a real pointer on a field drawn here outlines its elements, fades the rest of the bench, and the line under the lead counts them', JSON.stringify(h1));
     await p.hover(`#smtree .sma[data-sm="${none}"]`); await p.waitForTimeout(250);
     const h2 = await p.evaluate(id => ({ lit: document.querySelectorAll('.fl-hit').length, fl: document.getElementById('smfl').dataset.fl, t: document.getElementById('smfl').textContent,
-      mark: document.querySelector(`#smtree .sma[data-sm="${id}"] .smfd`).textContent }), none);
+      mark: document.querySelector(`#smtree .sma[data-sm="${id}"] .smfd`).getAttribute('aria-label') }), none);
     ok(h2.lit === 0 && h2.fl === 'none' && h2.t.indexOf(WS.markNone) >= 0 && h2.mark === WS.markNone,
       'a field the lab does not draw lights nothing, and both its row and the line say it is not drawn by the lab', JSON.stringify(h2));
     await p.hover(`#smtree .sma[data-sm="${elsewhere}"]`); await p.waitForTimeout(250);
@@ -3887,7 +3943,7 @@ if (checksFile) {
       'places are joined by a separator no place name uses, and no place is listed again as itself with a path picked', JSON.stringify(dup.slice(0, 2)).slice(0, 200));
     // D-017's switch has no control: what only it draws is `off`, not "another part" — and the words say no control reaches it
     const off = await p.evaluate(() => ({ st: window.FIELDMAP.state('how-this-table-was-found'), where: window.FIELDMAP.where('how-this-table-was-found'),
-      mark: (document.querySelector('#smtree .sma[data-sm="how-this-table-was-found"] .smfd') || {}).textContent }));
+      mark: (document.querySelector('#smtree .sma[data-sm="how-this-table-was-found"] .smfd') || { getAttribute: () => null }).getAttribute('aria-label') }));
     ok(off.st === 'off' && off.where.length === 0 && off.mark === WS.markOff,
       'a field only the switch that is off draws (how this table was found) is not reported as drawn on another part — its mark says no control reaches it', JSON.stringify(off));
     await p.mouse.move(2, 2); await p.waitForTimeout(200);
@@ -3910,8 +3966,8 @@ if (checksFile) {
     const smWords = await p.evaluate(() => { const S = window.LABEP.sectionmap, out = [];
       (S.blocks || []).forEach(b => { [b.plain, (b.join || {}).says, (b.join || {}).gap, (b.join || {}).plain].forEach(x => { if (x) out.push(x); }); });
       Object.values(((S.words || {}).feedback || {}).fields || {}).forEach(v => out.push(v)); return out; });
-    ok(smWords.length > 20 && !sweep.test(note) && smWords.every(s => !sweep.test(s)) && !sweep.test(await p.$eval('#rt-map', e => e.innerText)),
-      'the note, the tab and the section map\'s own block words never say door or lock (D-018)', [note.split('\n')[1], smWords.find(s => sweep.test(s))].join(' | ').slice(0, 160)); }
+    ok(smWords.length > 20 && !sweep.test(note) && smWords.every(s => !sweep.test(s)) && !sweep.test(await p.$eval('#smwrap', e => e.innerText)),
+      'the note, the map\'s face and the section map\'s own block words never say door or lock (D-018)', [note.split('\n')[1], smWords.find(s => sweep.test(s))].join(' | ').slice(0, 160)); }
   // a PROJECTION fact is tagged: the path's chips on Data's tables, and its marks on Security's gates
   { const dv = await p.evaluate(() => window.PANELS.data.variants.map(v => v.key).find(k => ['stages', 'stageblocks'].indexOf(k) < 0 && !window.PANELS.data.variants.find(v => v.key === k).pathAware));
     await p.evaluate(v => window.showVariant('data', v), dv); await p.waitForTimeout(300);
@@ -3964,7 +4020,6 @@ if (checksFile) {
       'on another rail tab the kept bar is still in view, with its clear button');
     await p.click('#flkeep .flclear'); await p.waitForTimeout(150);
     ok(await p.evaluate(() => document.querySelectorAll('.fl-hit,.fl-dim').length === 0 && document.getElementById('flkeep').hidden), 'and its clear button takes the outline and the fade off, and the bar goes');
-    await p.evaluate(() => window.railTab('map')); await p.waitForTimeout(150);
     // a FIELD row click keeps too, and the kept bar walks to the outlined elements that are out of view
     await p.click('#smtree .sma[data-sm="tables-touched"]'); await p.mouse.move(2, 2); await p.waitForTimeout(250);
     const before = await p.evaluate(() => ({ out: window.FIELDMAP.last().out.length, first: window.FIELDMAP.last().out[0] ? 1 : 0 }));
@@ -4001,8 +4056,9 @@ if (checksFile) {
       const r = { cells: document.querySelectorAll('#cmd .cmdcell[data-cmd="gates"]').length, lit: document.querySelectorAll('#cmd .cmdcell[data-cmd="gates"].fl-hit').length };
       window.FIELDMAP.unlight(); Object.assign(C, keep); window.drawCmd(); return r; });
     ok(g.cells > 0 && g.lit === 0, 'lighting the auth scheme and gate outlines no gates verb of the command card', JSON.stringify(g)); }
-  // the rail options — the agent's picks marked dashed; each one changes what a light does
-  { const opts = await p.$$eval('#smflopt .smflb', els => els.map(e => [e.closest('.smflo').dataset.opt, e.dataset.v, e.classList.contains('on'), e.classList.contains('pick')]));
+  // the rail options — the agent's picks marked dashed; each one changes what a light does (D-035: behind the map's "more")
+  { await p.evaluate(() => window.LABMAP.setXtra(true)); await p.waitForTimeout(100);
+    const opts = await p.$$eval('#smflopt .smflb', els => els.map(e => [e.closest('.smflo').dataset.opt, e.dataset.v, e.classList.contains('on'), e.classList.contains('pick')]));
     ok(opts.length === 6 && opts.filter(o => o[3]).map(o => o[0] + ':' + o[1]).join(',') === 'hold:point,rest:dim,prop:hidden' && opts.filter(o => o[2]).map(o => o[1]).join(',') === 'point,dim,hidden',
       'the outline, the fade and the selector-tie mark are rail options; the agent\'s picks are on and marked', JSON.stringify(opts));
     await p.click('#smflopt .smflo[data-opt="rest"] .smflb[data-v="asis"]'); await p.waitForTimeout(100);
@@ -4024,37 +4080,43 @@ if (checksFile) {
   { const rowsOf = await p.evaluate(label => Object.fromEntries(Object.keys(window.LABEP.sectionmap.attrs).map(id => [id, window.FIELDMAP.rows(id).some(r => r[0] === label)])), WS.rowProposal);
     const wrongRows = ATTRS.filter(id => rowsOf[id] !== (TIED.indexOf(id) >= 0));
     ok(wrongRows.length === 0, 'every field a selector in the words file ties — and only those — says "a proposal" on its hover card', wrongRows.join(','));
-    const dashedOff = await p.$$eval('#smtree .sma .smfd', els => els.filter(e => getComputedStyle(e).textDecorationStyle === 'dashed').length);
+    /* CHANGED 2026-09-23 (D-035): the field's words left its mark (now a dot), so the dashed underline sits on the field row itself */
+    /* CHANGED 2026-09-23 (review: the dash meant four things in the map; D-034 keeps it for my unruled pick): a tie I wrote as a
+       selector is marked DOUBLE — underlined double in the tree, outlined double on the bench */
+    const dashedOff = await p.$$eval('#smtree .sma', els => els.filter(e => getComputedStyle(e).textDecorationLine.indexOf('underline') >= 0 && getComputedStyle(e).textDecorationStyle === 'double').length);
     /* a field the words file ties by a selector to a command cell drawn right now, on its face (the card's layout decides which cells are drawn) */
     const cid = await p.evaluate(T => T.find(id => [...document.querySelectorAll('#cmd .cmdcell')].some(e => (e.dataset.faAut || '').split(' ').indexOf(id) >= 0
       && (e.dataset.faHov || '').split(' ').indexOf(id) < 0)) || null, TIED);
     const cellOff = await styles(cid, '#cmd .cmdcell');
     await p.click('#smflopt .smflo[data-opt="prop"] .smflb[data-v="marked"]'); await p.waitForTimeout(150);
-    const dashedOn = await p.$$eval('#smtree .sma', els => [...new Set(els.filter(e => getComputedStyle(e.querySelector('.smfd')).textDecorationStyle === 'dashed').map(e => e.dataset.sm))].sort());
+    const dashedOn = await p.$$eval('#smtree .sma', els => [...new Set(els.filter(e => getComputedStyle(e).textDecorationLine.indexOf('underline') >= 0 && getComputedStyle(e).textDecorationStyle === 'double').map(e => e.dataset.sm))].sort());
     const cellOn = await styles(cid, '#cmd .cmdcell');
     const inTree = await p.$$eval('#smtree .sma', els => [...new Set(els.map(e => e.dataset.sm))]);
     ok(dashedOff === 0 && JSON.stringify(dashedOn) === JSON.stringify(TIED.filter(id => inTree.indexOf(id) >= 0).sort()),
-      'unmarked, no field is underlined; marked, exactly the fields a selector ties are underlined dashed', JSON.stringify([dashedOff, dashedOn.length, TIED.length]));
-    ok(cellOff.length > 0 && cellOff.every(s => s === 'solid') && cellOn.length > 0 && cellOn.every(s => s === 'dashed'),
-      'and on the bench, a command cell a selector ties to a field is outlined solid when unmarked and dashed when marked', JSON.stringify([cid, cellOff, cellOn]));
-    ok(await p.evaluate(() => [...document.querySelectorAll('#smflkey .smflks')].map(e => e.dataset.style).join(',')) === 'solid,dotted,dashed',
+      'unmarked, no field is underlined; marked, exactly the fields a selector ties are underlined double', JSON.stringify([dashedOff, dashedOn.length, TIED.length]));
+    ok(cellOff.length > 0 && cellOff.every(s => s === 'solid') && cellOn.length > 0 && cellOn.every(s => s === 'double'),
+      'and on the bench, a command cell a selector ties to a field is outlined solid when unmarked and double when marked', JSON.stringify([cid, cellOff, cellOn]));
+    ok(await p.evaluate(() => [...document.querySelectorAll('#smflkey .smflks')].map(e => e.dataset.style).join(',')) === 'solid,dotted,double',
       'the key under the options draws the three outline styles once the ties are marked');
     await p.click('#smflopt .smflo[data-opt="prop"] .smflb[data-v="hidden"]'); await p.waitForTimeout(100); }
-  // a block's count is a count: the same muted ink whatever it says, even at zero (analysis, not a verdict)
+  // a block's count is a count: the same inks whatever it says, even at zero (analysis, not a verdict). CHANGED 2026-09-23
+  // (D-035): the count is a bar now — each STATE has one colour in every block's bar, a block with no field drawn here included
   { let c = [];
     for (const k of ['widening', 'tests', 'schemas', 'security', 'functions', 'data']) { await p.evaluate(k => window.showTab(k), k); await p.waitForTimeout(250);
-      c = await p.$$eval('#smtree .smb .smfn', els => els.map(e => [e.closest('.smb').dataset.fdn, getComputedStyle(e).color]));
+      c = await p.$$eval('#smtree .smb .smfn', els => els.map(e => [e.closest('.smb').dataset.fdn, [...e.querySelectorAll('.smseg')].map(g => g.dataset.st + '=' + getComputedStyle(g).backgroundColor + getComputedStyle(g).backgroundImage)]));
       if (c.some(x => x[0] === '0')) break; }
-    ok(c.some(x => x[0] === '0') && new Set(c.map(x => x[1])).size === 1, 'every block\'s count is drawn in one ink, a block with no field drawn here included', JSON.stringify(c.filter(x => x[0] === '0').slice(0, 2)));
+    const inks = {}; c.forEach(x => x[1].forEach(v => { const [st, ink] = [v.slice(0, v.indexOf('=')), v.slice(v.indexOf('=') + 1)]; (inks[st] = inks[st] || new Set()).add(ink); }));
+    ok(c.some(x => x[0] === '0') && Object.keys(inks).length >= 2 && Object.values(inks).every(x => x.size === 1) && new Set(Object.values(inks).map(x => [...x][0])).size === Object.keys(inks).length,
+      'every block\'s bar paints each state in one ink of its own, a block with no field drawn here included', JSON.stringify(Object.fromEntries(Object.entries(inks).map(([k, v]) => [k, [...v]]))).slice(0, 220));
     await p.evaluate(() => window.showTab('data')); await p.waitForTimeout(250); }
   // D-017: how the lab ties each field is behind "more information" — its line, in the words file's words, off the face
-  { const face = await p.$eval('#rt-map', e => e.innerText), more = await p.$eval('#smflmore', e => e.textContent);
+  { const face = await p.$eval('#smwrap', e => e.innerText), more = await p.$eval('#smflmore', e => e.textContent);
     const tot = await p.evaluate(() => window.FIELDMAP.totals());
     const want = fillW(WS.moreCounts, { generated: tot.generated, authored: TIED.length, both: tot.both, none: tot.none,
       notDrawn: tot.notDrawn.map(id => SM.attrs[id].r + ' ' + SM.attrs[id].label).join(' · ') });
     ok(face.indexOf(more) < 0 && more === want,
       'how each field is tied — in the code, or by a selector the words file holds — is behind "more information", in the words file\'s words', more.slice(0, 160)); }
-  { const small = await p.$$eval('#rt-map *, #flkeep *', els => els.filter(e => e.offsetParent !== null && (e.textContent || '').trim() && !e.children.length)
+  { const small = await p.$$eval('#smwrap *, #flkeep *', els => els.filter(e => e.offsetParent !== null && (e.textContent || '').trim() && !e.children.length)
       .map(e => [e.className || e.tagName, parseFloat(getComputedStyle(e).fontSize)]).filter(x => x[1] < 12));
     ok(small.length === 0, 'nothing the field layer adds computes under 12px', JSON.stringify(small.slice(0, 4))); }
   ok(errs.length === errs0, 'the field layer raises no page error', errs.slice(errs0, errs0 + 3).join(' | ')); }
@@ -4096,35 +4158,38 @@ if (checksFile) {
   const pks = () => p.evaluate(() => [...document.querySelectorAll('#smtree [data-pk]')].map(n => n.dataset.pk));
   const quietPks = () => p.evaluate(() => [...new Set([...document.querySelectorAll('#smtree [data-pk][data-quiet="true"]')].map(n => n.dataset.pk))].sort());
   const expectQuiet = async (bk, rule) => [...new Set((await pks()).filter(k => !carriesBlock(bk, k, rule)))].sort();
-  const setOpt = async (opt, v) => { await p.click(`#smnav .smno[data-opt="${opt}"] .smnb[data-v="${v}"]`); await p.waitForTimeout(250); await hide(); };
-  const setPlace = async (v) => { await p.evaluate(() => window.railTab('map')); await p.click(`#smplace .smno[data-opt="place"] .smnb[data-v="${v}"]`); await p.waitForTimeout(400); await hide(); };
+  /* D-035: the line and the records sit behind the map's "more" — opened first when the switch asked for is behind it */
+  const setOpt = async (opt, v) => { if (['sweep', 'recs'].indexOf(opt) >= 0) { await p.evaluate(() => window.LABMAP.setXtra(true)); await p.waitForTimeout(80); }
+    await p.click(`#smwrap .smno[data-opt="${opt}"] .smnb[data-v="${v}"]`); await p.waitForTimeout(250); await hide(); };
   const node = (pk, parent) => `#smtree [data-pk="${pk}"]` + (parent ? `[data-parent="${parent}"]` : '');
   const openAll = async (keys) => { await p.evaluate(k => window.LABMAP.open(k), keys); await p.waitForTimeout(250); };
   const state = () => p.evaluate(() => window.LABMAP.state());
-  await p.evaluate(() => window.railTab('map')); await p.waitForTimeout(150);
 
   // ── A · the data, and the picks the page boots on ──
   ok(NV && NV.state === 'present' && NV.stages.length && NV.groups.length, 'the facts carry the brain map\'s navigation, read from its own data', NV ? NV.state + ' · ' + (NV.reason || '') : 'absent');
   { const s = await state(), pk = await p.evaluate(() => window.LABMAP.picks());
-    const opt = (o) => p.$$eval(`#smwrap .smno[data-opt="${o}"] .smnb, #smplace .smno[data-opt="${o}"] .smnb`, els => els.map(e => [e.dataset.v, e.classList.contains('on'), e.classList.contains('pick')]));
-    const g = await opt('grp'), pl = await opt('place'), sw = await opt('sweep');
+    const opt = (o) => p.$$eval(`#smwrap .smno[data-opt="${o}"] .smnb`, els => els.map(e => [e.dataset.v, e.classList.contains('on'), e.classList.contains('pick')]));
+    const g = await opt('grp'), sw = await opt('sweep');
     ok(s.grp === NVW.grouping.pick && pk.grp === NVW.grouping.pick && g.map(x => x[0]).join(',') === 'flat,standpoint,section,stage'
        && g.filter(x => x[2]).map(x => x[0]).join() === NVW.grouping.pick && g.filter(x => x[1]).map(x => x[0]).join() === NVW.grouping.pick,
       'the grouping switch offers Flat · By standpoint · By section · By stage, boots on the words file\'s pick, and marks it dashed', JSON.stringify(g));
     ok(pk.srule === BW.stages.rule['default'] && s.srule === BW.stages.rule['default'] && BW.stages.rule['default'] === 'every',
       'By stage\'s rule boots on the brain map\'s default — under every stage a block touches, the agent\'s pick', JSON.stringify([pk.srule, s.srule]));
-    ok(s.place === NVW.placement.pick && pl.map(x => x[0]).join(',') === 'rail,right,below' && pl.filter(x => x[2]).map(x => x[0]).join() === NVW.placement.pick
-       && pl.filter(x => x[1]).map(x => x[0]).join() === NVW.placement.pick,
-      'the placement offers the rail tab, a right column and below; it boots on the pick, marked dashed', JSON.stringify(pl));
+    /* CHANGED 2026-09-23 (D-035, RULED "leave the section map in the bottom section"): the placement option and its column
+       width left with their code and words — asserted gone, with the map below */
+    ok(!NVW.placement && s.place === undefined && !('place' in pk) && await p.evaluate(() => !document.querySelector('[data-opt="place"], [data-opt="mapw"]')),
+      'there is no placement option any more — no words for it, no state, no control', JSON.stringify(Object.keys(s)));
     ok(sw.filter(x => x[2]).map(x => x[0]).join() === NVW.sweep.pick && s.sweep === NVW.sweep.pick, 'the line to what a node lit is a rail option, its pick marked', JSON.stringify(sw));
     /* D-032: the brain map's hop (to the panel that answers) was replaced by the agent alone — so it is an option beside the lab's */
     ok(sw.map(x => x[0]).join(',') === 'on,panel,off', 'where the line ends is a rail option: the nearest lit element, the panel that answers (the brain map\'s hop), or no line', sw.map(x => x[0]).join(','));
     const rc = await opt('recs');
     ok(rc.map(x => x[0]).join(',') === 'stack,one' && rc.filter(x => x[2]).map(x => x[0]).join() === NVW.records.pick && s.recmode === NVW.records.pick,
       'how many records the portrait holds is a rail option — all kept (the brain map\'s tray, its pick) or one at a time', JSON.stringify(rc));
-    const where = await p.evaluate(() => ({ grpInMap: !!document.querySelector('#smwrap #smnav .smno[data-opt="grp"]'),
-      placeInRail: !!document.querySelector('#rt-map > #smplace .smno[data-opt="place"]') && !document.querySelector('#smwrap #smplace') }));
-    ok(where.grpInMap && where.placeInRail, 'the grouping switch rides the map\'s own header (it travels with the map); the placement stays in the rail tab', JSON.stringify(where)); }
+    const where = await p.evaluate(() => ({ grpInMap: !!document.querySelector('#mapbelow #smnav .smno[data-opt="grp"]'), keepInMap: !!document.querySelector('#mapbelow #smnav #smkeepb'),
+      faceOnly: [...document.querySelectorAll('#smnav .smno')].map(e => e.dataset.opt).join(','),
+      behindMore: [...document.querySelectorAll('#smxtra .smno')].map(e => e.dataset.opt).join(','), moreClosed: document.getElementById('smxtra').hidden }));
+    ok(where.grpInMap && where.keepInMap && where.faceOnly === 'grp' && where.behindMore === 'sweep,recs,hold,rest,prop' && where.moreClosed,
+      'the map\'s face holds grouping and Keep only; the line, the records and the outline\'s three switches sit behind "more", closed at boot', JSON.stringify(where)); }
 
   // ── B · the four groupings (D-021) ──
   { const top = async () => p.evaluate(() => [...document.querySelectorAll('#smtree [data-pk][data-depth="1"]')].map(n => n.dataset.pk));
@@ -4171,13 +4236,13 @@ if (checksFile) {
       return [n.dataset.pk.slice(6), m ? { t: m.textContent, fs: parseFloat(getComputedStyle(m).fontSize) } : null]; })));
     ok(REC.every(r => { const m = marks[r.name.toLowerCase()]; return r.kind === 'stage' ? m === null : !!m && m.t === BW.stages.names[r.name].mark && STMD.includes(m.t) && m.fs >= 12; }),
       'the bay and the screen are marked in the record\'s own words, above the floor; an ordinary stage carries no mark', JSON.stringify([marks.uncaught, marks.client]));
-    const says = await p.evaluate(() => ({ opt: document.querySelector('#smnav .smno[data-opt="grp"] .smnb[data-v="stage"]').textContent,
-      note: (document.querySelector('#smnav .smnote') || {}).textContent || '' }));
+    const says = await p.evaluate(() => ({ opt: document.querySelector('#smnav .smno[data-opt="grp"] .smnb[data-v="stage"]').getAttribute('aria-label'),
+      note: (document.querySelector('#smxnav .smnote') || {}).textContent || '' }));
     const nRows = +((says.note.match(/(\d+) rows/) || [])[1]), nSt = +((says.note.match(/(\d+) stages/) || [])[1]);
     ok(/proposal/i.test(says.opt) && /PROPOSAL/.test(says.note) && nRows === REC.length && nSt === REC.filter(r => r.kind === 'stage').length,
       'the rendered words say By stage is a PROPOSAL, and the note\'s counts are the rows and stages drawn', JSON.stringify([nRows, nSt]));
     // the ONE switch By stage adds, with both rules marked for whose they are
-    const rOpts = await p.$$eval('#smnav .smno[data-opt="srule"] .smnb', els => els.map(e => ({ v: e.dataset.v, on: e.classList.contains('on'), pick: e.classList.contains('pick'), t: e.textContent })));
+    const rOpts = await p.$$eval('#smnav .smno[data-opt="srule"] .smnb', els => els.map(e => ({ v: e.dataset.v, on: e.classList.contains('on'), pick: e.classList.contains('pick'), t: e.getAttribute('aria-label') })));
     ok(rOpts.length === 2 && rOpts.find(o => o.v === 'every').on && rOpts.find(o => o.v === 'every').pick && /the agent's pick/.test(rOpts.find(o => o.v === 'every').t)
        && !rOpts.find(o => o.v === 'one').pick && /the rule as recorded in D-021/.test(rOpts.find(o => o.v === 'one').t),
       'By stage carries ONE switch with both rules: every stage it touches (on, dashed as my pick) and Across (marked as D-021\'s rule)', JSON.stringify(rOpts.map(o => [o.v, o.on, o.pick])));
@@ -4196,8 +4261,9 @@ if (checksFile) {
         ok(nRows > SM.blocks.length && perRow > distinctBelow(d.rows) && d.t === fillW(NVW.strings.deep, { n: distinctBelow(d.rows), levels: NV.maxDepth + 1 }),
           'and the line under the map still counts each field once, however many rows its blocks hang under', JSON.stringify([nRows, perRow, distinctBelow(d.rows), d.t.slice(0, 40)])); }
       const sh = await rowShape(), wantEmpty = REC.map(r => r.name.toLowerCase()).filter(st => !SM.blocks.some(x => placeUnder(x.key, 'every').indexOf(st) >= 0));
-      ok(sh.length === REC.length + 1 && sh.every(r => (r.empty === 'true') === (wantEmpty.indexOf(r.k) >= 0) && (r.empty === 'true' ? r.dash === 'dashed' : r.dash !== 'dashed')),
-        'every row is drawn, and a row with no block is dashed rather than dropped', JSON.stringify(sh)); }
+      /* CHANGED 2026-09-23 (review: the dash is kept for my pick, D-034): an empty row is drawn DOTTED, and no row is dashed */
+      ok(sh.length === REC.length + 1 && sh.every(r => (r.empty === 'true') === (wantEmpty.indexOf(r.k) >= 0) && (r.empty === 'true' ? r.dash === 'dotted' : r.dash !== 'dotted') && r.dash !== 'dashed'),
+        'every row is drawn, and a row with no block is dotted rather than dropped', JSON.stringify(sh)); }
     await setOpt('srule', 'one');
     ok((await state()).srule === 'one', 'the switch moves to the rule as recorded');
     { const pairs = await drawnUnder(), m = byBlk(pairs);
@@ -4206,11 +4272,12 @@ if (checksFile) {
       const wantAcross = SM.blocks.filter(x => listOf(x.key).length !== 1).map(x => x.key).sort();
       ok(heldBy(pairs, 'across').join('|') === wantAcross.join('|'), 'and Across holds exactly the blocks whose list is not one row long', heldBy(pairs, 'across').join(','));
       const sh = await rowShape(), wantEmpty = REC.map(r => r.name.toLowerCase()).filter(st => !SM.blocks.some(x => placeUnder(x.key, 'one').indexOf(st) >= 0));
-      ok(wantEmpty.length > 0 && sh.every(r => (r.empty === 'true') === (wantEmpty.indexOf(r.k) >= 0) && (r.empty === 'true' ? r.dash === 'dashed' : true)),
-        'the rows that rule leaves empty are still drawn, dashed', wantEmpty.join(',')); }
-    await setPlace('right'); await setPlace('rail');
+      ok(wantEmpty.length > 0 && sh.every(r => (r.empty === 'true') === (wantEmpty.indexOf(r.k) >= 0) && (r.empty === 'true' ? r.dash === 'dotted' : true)),
+        'the rows that rule leaves empty are still drawn, dotted', wantEmpty.join(',')); }
+    /* CHANGED 2026-09-23 (D-035): no placement change is left to survive — the rule survives a grouping round trip instead */
+    await setOpt('grp', 'flat'); await setOpt('grp', 'stage');
     ok((await state()).srule === 'one' && (await p.evaluate(() => window.COPYTXT.sectionmap())).split('\n')[0].indexOf(BW.stages.rule.opts.one.name) >= 0,
-      'the rule survives a placement change, and the copy note\'s first line names it', (await p.evaluate(() => window.COPYTXT.sectionmap())).split('\n')[0].slice(0, 200));
+      'the rule survives leaving By stage and coming back, and the copy note\'s first line names it', (await p.evaluate(() => window.COPYTXT.sectionmap())).split('\n')[0].slice(0, 200));
     await setOpt('srule', 'every'); await setOpt('grp', 'flat'); }
 
   // ── D · the moves (D-022, option C): a click SHOWS; Open and Follow are moves the node offers ──
@@ -4301,6 +4368,7 @@ if (checksFile) {
     ok(mv.join(',') === NVW.moves.byNode.attr.offers.join(',') && mv.indexOf('keep') < 0, 'a field offers Open and Follow — never Keep only', mv.join(','));
     const before = await p.evaluate(() => document.getElementById('panel').dataset.tab);
     await p.click('#smtree .smmv .smmvb[data-move="follow"]'); await p.waitForTimeout(450); await hide();
+    await p.mouse.move(2, 2); await p.waitForTimeout(150);   /* the pointer leaves the tree: a redraw can roll another node under it (as for the portrait case below) */
     const f1 = await p.evaluate(id => ({ tab: document.getElementById('panel').dataset.tab, st: window.FIELDMAP.state(id), lit: document.querySelectorAll('.fl-hit').length,
       want: window.DRAWN.els(id).length, grp: window.CMD.grp, layout: window.CMD.layout, verbs: window.CMD.verbs, lead: document.getElementById('smlead').dataset.lead,
       places: Object.keys(window.DRAWN.catalog()[id] || {}), say: document.getElementById('smsay').textContent }), fid);
@@ -4339,7 +4407,6 @@ if (checksFile) {
   // ── C · KEEP ONLY (D-022, option C): its own control, never a click; survives part, grouping and placement; removal restores ──
   { const st = async () => (await state()).keep;
     await p.reload(); await p.waitForFunction('window.__eplabReady===true', { timeout: 20000 }).catch(() => {});
-    await p.evaluate(() => window.railTab('map')); await p.waitForTimeout(150);
     ok(await st() === null && await p.locator('#smkeepc').isHidden() && await p.locator('#smkeepb').isDisabled(),
       'the page arrives with Keep only off, no chip, and the control has no node to keep yet', await p.textContent('#smkeepb'));
     /* finding 3: the control's words are the LAB's — it keeps the node SHOWN last; a fold opens a node and counts for nothing */
@@ -4368,18 +4435,23 @@ if (checksFile) {
     await p.click('#smkeepb'); await p.waitForTimeout(400); await hide();
     ok(await st() === 'block:' + bk.key, 'the CONTROL turns it on, keeping the node shown last', await st());
     const chip = await p.textContent('#smkeepc');
-    ok(await p.locator('#smkeepc').isVisible() && chip.indexOf(bk.name) >= 0 && chip.indexOf(NVW.keep.how) >= 0 && (await p.textContent('#smkeepb')).trim() === NV.keep.off,
-      'a chip says in words what it keeps and how to remove it, and the control now removes it', chip.slice(0, 200));
+    /* CHANGED 2026-09-23 (D-035): how to remove it moved from the chip's face to its hover card; the chip still says it is on */
+    await p.hover('#smkeepc'); await p.waitForTimeout(220);
+    const chipHv = await p.evaluate(() => { const h = document.getElementById('hover'); return h.hidden ? '' : h.textContent; }); await hide(); await p.mouse.move(2, 2);
+    ok(await p.locator('#smkeepc').isVisible() && chip.indexOf(bk.name) >= 0 && chip.indexOf(NVW.keep.how) < 0 && chipHv.indexOf(NVW.keep.how) >= 0 && (await p.textContent('#smkeepb')).trim() === NV.keep.off,
+      'a chip says in words that Keep only is on and what it keeps, its hover says how to remove it, and the control now removes it', chip.slice(0, 200));
     /* finding 2: the chip lives with the map, and a rail tab hides the map — the rail's own bar says it on EVERY tab */
     for (const tab of ['controls', 'cov']) { await p.evaluate(t => window.railTab(t), tab); await p.waitForTimeout(150);
       const bar = await p.evaluate(() => { const m = document.getElementById('mkeep'), r = m && m.getBoundingClientRect();
         return { vis: !!m && !m.hidden && m.offsetParent !== null && r.width > 50 && r.top >= -12 && r.bottom <= window.innerHeight, t: m ? m.textContent : '',
-          off: m ? (m.querySelector('.mkoff') || {}).textContent : '', chipVis: document.getElementById('smkeepc').offsetParent !== null }; });
-      ok(bar.vis && !bar.chipVis && bar.t.indexOf(NV.keep.label) >= 0 && bar.t.indexOf(bk.name) >= 0 && bar.off === NV.keep.off,
-        `on the ${tab} tab, where the map and its chip are hidden, a bar at the top of the rail says Keep only is on, what it keeps, and removes it`, JSON.stringify(bar).slice(0, 200)); }
+          off: m ? (m.querySelector('.mkoff') || {}).textContent : '' }; });
+      /* CHANGED 2026-09-23 (D-035): the chip is no longer hidden by a rail tab (the map is below the panels), so the assert no
+         longer asks for it to be hidden; the rail's bar must still say it on every tab */
+      ok(bar.vis && bar.t.indexOf(NV.keep.label) >= 0 && bar.t.indexOf(bk.name) >= 0 && bar.off === NV.keep.off,
+        `on the ${tab} tab, a bar at the top of the rail says Keep only is on, what it keeps, and removes it`, JSON.stringify(bar).slice(0, 200)); }
     await p.keyboard.press('Escape'); await p.waitForTimeout(150);
     ok(await st() === 'block:' + bk.key && await p.locator('#mkeep').isVisible(), 'Esc clears a kept outline, never the filter: the bar stays', await st());
-    await p.evaluate(() => window.railTab('map')); await p.waitForTimeout(150);
+    await p.evaluate(() => window.railTab('controls')); await p.waitForTimeout(150);
     let q = await quietPks(), eq = await expectQuiet(bk.key, 'every');
     ok(q.length > 0 && q.join('|') === eq.join('|'), 'the map\'s nodes that do not carry the kept block go quiet, and only those', `${q.length} vs ${eq.length}`);
     ok((await pks()).length === n0 && +((chip.match(/(\d+) other nodes are quiet/) || [])[1]) === (await p.evaluate(() => document.querySelectorAll('#smtree [data-pk][data-quiet="true"]').length)),
@@ -4406,10 +4478,7 @@ if (checksFile) {
     await p.evaluate(() => window.drawCmd()); await p.waitForTimeout(200);
     bq = await bench();
     ok(bq.missing === 0 && bq.badQuiet === 0 && bq.keptDim === 0, 'and a region re-rendered on its own (the command panel) is quieted the moment it is drawn', JSON.stringify(bq));
-    for (const pl of ['right', 'below', 'rail']) { await setPlace(pl);
-      q = await quietPks(); eq = await expectQuiet(bk.key, 'every');
-      ok(await st() === 'block:' + bk.key && await p.locator('#smkeepc').isVisible() && q.length > 0 && q.join('|') === eq.join('|'),
-        `it survives the placement ${pl}, still quieting the same nodes`, `${q.length} vs ${eq.length}`); }
+    /* REMOVED 2026-09-23 (D-035): "it survives the placement right / below / rail" — the placement option left; the map is below */
     await setOpt('grp', 'stage');
     await openAll(REC.map(r => 'stage:' + r.name.toLowerCase()).concat(['stage:across']));
     q = await quietPks(); eq = await expectQuiet(bk.key, 'every');
@@ -4426,7 +4495,9 @@ if (checksFile) {
       'removing it brings back every node and every bench element, and the chip goes', `quiet map ${(await quietPks()).length} · bench ${await p.evaluate(() => document.querySelectorAll('.fl-quiet').length)}`);
     await p.evaluate(() => window.showTab('data')); await p.waitForTimeout(300); }
 
-  // ── E · the three placements: each draws the WHOLE map, and the field layer lights the same elements in all three ──
+  // ── E · THE ONE PLACE (D-035, RULED): full width below the panels at 1920 and at 2560 — no sideways scroll, the whole map, and
+  //    the field layer lighting the same elements at both sizes. (REPLACED 2026-09-23: "the three placements" — the rail tab and
+  //    the right column left with their option.) ──
   { const bk = SM.blocks.find(x => x.join.act.kind === 'part' && x.join.act.part === 'data');
     await p.evaluate(() => { const ps = (window.LABEP.forms.paths || []).slice().sort((a, b) => ((b.effects || {}).tables || []).length - ((a.effects || {}).tables || []).length); window.selectPath(ps[0].id); });
     await p.evaluate(k => window.smOpen([k]), bk.key); await p.waitForTimeout(300);
@@ -4434,28 +4505,93 @@ if (checksFile) {
       const lit = [...document.querySelectorAll('.fl-hit')].map(e => window.DRAWN.regionOf(e) + '|' + (e.dataset.fa || '') + '|' + String(e.textContent || '').replace(/\s+/g, ' ').slice(0, 40)).sort();
       const want = new Set(ids.flatMap(id => window.DRAWN.els(id))).size; window.FIELDMAP.unlight(); return { lit, want }; }, ids);
     const snap = {};
-    for (const pl of ['rail', 'right', 'below']) { await setPlace(pl);
-      const g = await p.evaluate(() => { const w = document.getElementById('smwrap'), host = w.parentElement.id;
-        return { host, vis: w.offsetParent !== null && w.getBoundingClientRect().width > 200, others: ['mapcol', 'mapbelow'].filter(id => id !== host).map(id => document.getElementById(id).hidden),
-          pks: [...document.querySelectorAll('#smtree [data-pk]')].map(n => n.dataset.pk), body: document.body.dataset.mapplace }; });
-      snap[pl] = { g, d: await desc(bk.own.concat(bk.shared)) };
-      /* a pointer ARRIVES on the block: it starts away from the tree, since a placement change can roll the block under
-         wherever the pointer rested (the page previews only on a real arrival) */
+    for (const [W, H] of [[1920, 1040], [2560, 1400]]) { await p.setViewportSize({ width: W, height: H }); await p.waitForTimeout(350);
+      const g = await p.evaluate(() => { const d = document.documentElement, L = document.getElementById('lab'), m = document.getElementById('mapbelow'), w = document.getElementById('smwrap');
+        const row = document.getElementById('row').getBoundingClientRect(), q = m.getBoundingClientRect();
+        return { doc: [d.scrollWidth, d.clientWidth, scrollX], lab: [L.scrollWidth, L.clientWidth, L.scrollLeft], host: w.parentElement.id,
+          below: q.top >= row.bottom - 1, left: Math.round(q.left), right: Math.round(q.right), labW: L.clientWidth, tabs: [...document.querySelectorAll('#railtabs .rtb')].map(e => e.dataset.rt).join(','),
+          pks: [...document.querySelectorAll('#smtree [data-pk]')].map(n => n.dataset.pk) }; });
+      snap[W] = { g, d: await desc(bk.own.concat(bk.shared)) };
+      /* every block OPEN, so the map is surely taller than its box at 1920 — then the one block back */
+      snap[W].reach = await p.evaluate(() => { const m = document.getElementById('mapbelow'), L = document.getElementById('lab'), t0 = m.scrollTop, l0 = L.scrollTop, miss = [];
+        const o0 = window.smState().open, was = Object.keys(o0).filter(k => o0[k]);   /* the blocks open before — put back exactly */
+        const all = window.LABEP.sectionmap.blocks.map(b => b.key); window.smOpen(all, true);
+        window.hoverHide && window.hoverHide();
+        const nodes = [...document.querySelectorAll('#smtree [data-pk]')];
+        nodes.forEach(n => { n.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+          const r = n.getBoundingClientRect(), q = m.getBoundingClientRect(), x = Math.min(r.right - 4, r.left + 20), y = (r.top + r.bottom) / 2, h = document.elementFromPoint(x, y);
+          if (!(r.top >= q.top - 1 && r.bottom <= q.bottom + 1 && h && (h === n || n.contains(h) || h.contains(n)))) miss.push(n.dataset.pk); });
+        const scrolls = m.scrollHeight > m.clientHeight + 1 && /(auto|scroll)/.test(getComputedStyle(m).overflowY);
+        window.smOpen(all.filter(x => was.indexOf(x) < 0), false);
+        m.scrollTop = t0; L.scrollTop = l0; return { total: nodes.length, n: nodes.length - miss.length, miss, scrolls }; });
+      ok(g.doc[0] <= g.doc[1] && g.doc[2] === 0 && g.lab[0] <= g.lab[1] && g.lab[2] === 0,
+        `${W}: nothing scrolls the page sideways — the panels slide inside their own band when they do not fit`, JSON.stringify([g.doc, g.lab]));
+      ok(g.host === 'mapbelow' && g.below && g.right - g.left >= g.labW - 60 && g.tabs === 'controls,cov',
+        `${W}: the map is below the panels, the window's full width, and the rail carries no map tab`, JSON.stringify({ host: g.host, below: g.below, w: g.right - g.left, lab: g.labW, tabs: g.tabs }));
       await p.mouse.move(2, 2); await p.waitForTimeout(80);
       await p.hover(`#smtree .smb[data-sm="${bk.key}"]`); await p.waitForTimeout(250);
-      snap[pl].real = await p.evaluate(() => document.querySelectorAll('.fl-hit').length);
+      snap[W].real = await p.evaluate(() => document.querySelectorAll('.fl-hit').length);
       await p.mouse.move(2, 2); await p.waitForTimeout(150); await hide(); }
-    const want = { rail: 'rt-map', right: 'mapcol', below: 'mapbelow' };
-    ok(Object.keys(want).every(pl => snap[pl].g.host === want[pl] && snap[pl].g.vis && snap[pl].g.others.every(Boolean) && snap[pl].g.body === pl),
-      'each placement puts the map in its own place — the rail tab, the right column, the section below — and hides the other two', JSON.stringify(Object.fromEntries(Object.keys(snap).map(k => [k, [snap[k].g.host, snap[k].g.vis]]))));
-    ok(snap.rail.g.pks.length > SM.blocks.length && ['right', 'below'].every(pl => snap[pl].g.pks.join('|') === snap.rail.g.pks.join('|')),
-      'and each draws the whole map — the same nodes, in the same order', ['rail', 'right', 'below'].map(pl => snap[pl].g.pks.length).join(' · '));
-    ok(snap.rail.d.lit.length > 0 && snap.rail.d.lit.length === snap.rail.d.want && ['right', 'below'].every(pl => snap[pl].d.lit.join('\n') === snap.rail.d.lit.join('\n')),
-      'the field layer lights the same elements in all three — region, fields and words, element for element', ['rail', 'right', 'below'].map(pl => snap[pl].d.lit.length).join(' · '));
-    ok(['rail', 'right', 'below'].every(pl => snap[pl].real === snap.rail.d.want), 'and a real pointer on the block lights that many in each', ['rail', 'right', 'below'].map(pl => snap[pl].real).join(' · '));
-    await setPlace('rail');
-    const geo = await p.evaluate(() => ({ doc: document.documentElement.scrollHeight, win: window.innerHeight, left: document.getElementById('lab').scrollLeft }));
-    ok(geo.doc <= geo.win + 2 && geo.left === 0, 'back in the rail tab, the page is as it was: nothing scrolls the page', JSON.stringify(geo)); }
+    /* CHANGED 2026-09-23 (review: this compared the two lists of nodes only — nothing in them depends on the window, and at
+       1920 with a block open the map is taller than its box, so "the whole map" was never on screen): at each size every node
+       is brought on screen INSIDE the map's own box — scrolled into view there, then hit by the point at its centre — and the
+       box scrolls itself rather than cutting what does not fit */
+    ok(snap[1920].g.pks.length > SM.blocks.length && snap[2560].g.pks.join('|') === snap[1920].g.pks.join('|'), 'both sizes draw the same nodes, in the same order', snap[1920].g.pks.length + ' · ' + snap[2560].g.pks.length);
+    ok([1920, 2560].every(W => snap[W].reach.miss.length === 0 && snap[W].reach.total > snap[W].g.pks.length) && snap[1920].reach.scrolls,
+      'at both sizes, every block open, every node of the map can be brought on screen inside the map\'s own box — at 1920 by the box\'s own scroll', JSON.stringify([1920, 2560].map(W => [W, snap[W].reach.n, snap[W].reach.total, snap[W].reach.scrolls, snap[W].reach.miss.slice(0, 3)])));
+    ok(snap[1920].d.lit.length > 0 && snap[1920].d.lit.length === snap[1920].d.want && snap[2560].d.lit.join('\n') === snap[1920].d.lit.join('\n'),
+      'the field layer lights the same elements at both sizes — region, fields and words, element for element', snap[1920].d.lit.length + ' · ' + snap[2560].d.lit.length);
+    ok([1920, 2560].every(W => snap[W].real === snap[1920].d.want), 'and a real pointer on the block lights that many at each', [1920, 2560].map(W => snap[W].real).join(' · '));
+    await p.setViewportSize({ width: 1920, height: 1040 }); await p.waitForTimeout(250); }
+
+  // ── E2 · THE FACE IN ICONS (D-035 · D-034): every option an icon square with its words on hover and in its aria-label; the
+  //    dash on exactly my unruled picks; the legend DRAWS each mark the tree uses ──
+  { await p.evaluate(() => { window.LABMAP.setXtra(true); window.LABMAP.setGroup('stage'); }); await p.waitForTimeout(250);
+    const sq = await p.$$eval('#smwrap .smopt', els => els.map(e => ({ opt: e.closest('.smno').dataset.opt, v: e.dataset.v, svg: !!e.querySelector('svg'), words: (e.textContent || '').trim(),
+      label: e.getAttribute('aria-label') || '', w: e.getBoundingClientRect().width, h: e.getBoundingClientRect().height, dash: getComputedStyle(e).borderTopStyle, pick: e.dataset.pick === 'true' })));
+    const opts = [...new Set(sq.map(x => x.opt))];
+    ok(opts.join(',') === 'grp,srule,sweep,recs,hold,rest,prop' && sq.every(x => x.svg && !x.words && x.label.length > 0 && Math.abs(x.w - x.h) < 1 && x.w <= 40),
+      'every option of the map is an icon square — a glyph, no words on its face, its words in its aria-label', JSON.stringify(sq.filter(x => !(x.svg && !x.words && x.label)).slice(0, 3)) + ' · ' + opts.join(','));
+    const FLW = await p.evaluate(() => ({ hold: 'point', rest: 'dim', prop: 'hidden' }));   // the field layer's picks, as its OPTS name them
+    const PICKS = { grp: NVW.grouping.pick, srule: BW.stages.rule['default'], sweep: NVW.sweep.pick, recs: NVW.records.pick, hold: FLW.hold, rest: FLW.rest, prop: FLW.prop };
+    ok(await p.evaluate(() => JSON.stringify(window.FIELDMAP.opt())) === JSON.stringify({ hold: 'point', rest: 'dim', prop: 'hidden' }), 'the field layer boots on its picks');
+    const wrongDash = sq.filter(x => (x.dash === 'dashed') !== (PICKS[x.opt] === x.v) || x.pick !== (PICKS[x.opt] === x.v));
+    ok(wrongDash.length === 0 && opts.every(o => sq.filter(x => x.opt === o && x.dash === 'dashed').length === 1),
+      'the dashed border sits on exactly my unruled pick in each option, and on nothing else', JSON.stringify(wrongDash.map(x => x.opt + ':' + x.v + ':' + x.dash)));
+    ok(await p.evaluate(() => { const b = [...document.querySelectorAll('#smkeepb, #smxb, #smmoreb')]; return b.length === 3 && b.every(e => getComputedStyle(e).borderTopStyle !== 'dashed'); }),
+      'Keep only, "more" and "more information" are no picks, so none wears the dash');
+    // each square's hover: short (D-009) — one plain line, no rows
+    const hv = [];
+    for (const x of sq) { const sel = `#smwrap .smno[data-opt="${x.opt}"] .smopt[data-v="${x.v}"]`; await p.mouse.move(2, 2); await p.waitForTimeout(40); await p.hover(sel); await p.waitForTimeout(160);
+      hv.push(await p.evaluate(a => { const h = document.getElementById('hover'); return h.hidden ? { a, none: 1 } : { a, rows: h.querySelectorAll('.cprow').length, n: ((h.querySelector('.cpplain') || {}).textContent || '').length,
+        t: (h.querySelector('.cphd') || {}).textContent || '' }; }, x.opt + ':' + x.v)); }
+    await p.mouse.move(2, 2); await hide();
+    const bad = hv.filter((h, i) => h.none || h.rows > 0 || !(h.n > 0 && h.n < 200) || h.t.indexOf(sq[i].label.split(' — ')[0]) < 0);
+    ok(hv.length === sq.length && bad.length === 0, 'every option\'s hover is one short line under the option\'s own words', JSON.stringify(bad.slice(0, 3)));
+    // "more" opens and closes the drawer, and says which it is
+    await p.evaluate(() => window.LABMAP.setXtra(false)); await p.waitForTimeout(80);
+    await p.click('#smxb'); await p.waitForTimeout(150); const o1 = await p.evaluate(() => [document.getElementById('smxtra').hidden, document.getElementById('smxb').getAttribute('aria-expanded')].join());
+    await p.click('#smxb'); await p.waitForTimeout(150); const o2 = await p.evaluate(() => [document.getElementById('smxtra').hidden, document.getElementById('smxb').getAttribute('aria-expanded')].join());
+    ok(o1 === 'false,true' && o2 === 'true,false', '"more" opens the drawer and closes it, and its aria-expanded says which', o1 + ' | ' + o2);
+    // the legend DRAWS the marks: the same dot and segment inks as the tree, a block mark per kind, the outline styles —
+    // read under Flat with every block open, so the tree draws its field dots
+    await p.evaluate(() => { window.LABMAP.setGroup('flat'); window.smOpen(window.LABEP.sectionmap.blocks.map(b => b.key)); }); await p.waitForTimeout(250);
+    const lg = await p.evaluate(() => { const cs = (e, k) => e ? getComputedStyle(e)[k] : null;
+      /* CHANGED 2026-09-23 (review): the legend draws the FACE states the tree paints — in view · out of view · another part ·
+         not drawn — read off each dot's data-face */
+      const dot = e => e ? cs(e, 'backgroundColor') + cs(e, 'borderTopStyle') + (cs(e, 'borderTopStyle') !== 'none' ? cs(e, 'borderTopColor') : '') : null;   /* a border's colour counts where a border is drawn */
+      const st = ['here', 'away', 'elsewhere', 'none'].map(s => ({ s, lgDot: dot(document.querySelector(`#smleg .smdot[data-st="${s}"]`)),
+        trDot: dot(document.querySelector(`#smtree .sma[data-face="${s}"] .smfd`)),
+        lgSeg: cs(document.querySelector(`#smleg .smseg[data-st="${s}"]`), 'backgroundImage') + cs(document.querySelector(`#smleg .smseg[data-st="${s}"]`), 'backgroundColor'),
+        trSeg: (() => { const d = document.querySelector(`#smtree .smseg[data-st="${s}"]`); return d ? cs(d, 'backgroundImage') + cs(d, 'backgroundColor') : null; })() }));
+      return { st, groups: [...document.querySelectorAll('#smleg .smlgg')].map(g => g.dataset.lg).join(','), kinds: [...document.querySelectorAll('#smleg .lg-page, #smleg .lg-none, #smleg .lg-header')].length,
+        noneMk: (document.querySelector('#smleg .lg-none svg') || {}).outerHTML === (document.querySelector('#smtree .smbk[data-kind="none"] svg') || {}).outerHTML,
+        keys: [...document.querySelectorAll('#smflkey .smflks')].map(e => e.dataset.style).join(',') }; });
+    ok(lg.groups === 'block,fields,rows,outline,pick' && lg.kinds === 3 && lg.noneMk && lg.keys.indexOf('solid,dotted') === 0,
+      'the legend strip draws a block\'s three marks (no page yet drawn as the tree draws it), the field states, the row states, the outline styles and the pick', JSON.stringify(lg).slice(0, 220));
+    ok(lg.st.every(x => (x.trDot === null || x.trDot === x.lgDot) && (x.trSeg === null || x.trSeg === x.lgSeg)) && lg.st.filter(x => x.trDot !== null).length >= 2,
+      'each field state is drawn in the legend exactly as in the tree — the same dot and the same bar segment', JSON.stringify(lg.st).slice(0, 260));
+    await p.evaluate(() => { window.LABMAP.setGroup('flat'); window.LABMAP.setXtra(false); window.smOpen(window.LABEP.sectionmap.blocks.map(b => b.key), false); }); await p.waitForTimeout(200); }
 
   // ── F · THE SWEEP (D-032 "the arrow is weird", D-004): one short hop, both ends real things, drawn whole ──
   { const bk = SM.blocks.find(x => x.join.act.kind === 'part' && x.join.act.part === 'data');
@@ -4480,18 +4616,17 @@ if (checksFile) {
         between: xs.every(x => x >= bx[0] && x <= bx[1]) && ys.every(y => y >= by[0] && y <= by[1]), drawn: !!path && path.getAttribute('d') === s.d,
         finished: !!cs && cs.animationName === 'none' && parseFloat(cs.transitionDuration) === 0, nearer }; });
     const good = (s, pk) => !!s && s.pk === pk && s.onNode && s.onTarget && s.lit && s.tIn && s.between && s.drawn && s.finished && s.nearer === 0;
-    for (const pl of ['rail', 'right', 'below']) { await setPlace(pl);
-      await p.click(`#smtree .smb[data-sm="${bk.key}"]`); await p.waitForTimeout(400); await hide(); await p.mouse.move(2, 2); await p.waitForTimeout(150);
+    /* CHANGED 2026-09-23 (D-035): one place now — the map below the panels, so the line runs UP from the node to what it lit */
+    { await p.click(`#smtree .smb[data-sm="${bk.key}"]`); await p.waitForTimeout(400); await hide(); await p.mouse.move(2, 2); await p.waitForTimeout(150);
       const s = await sweep();
-      ok(good(s, 'block:' + bk.key), `${pl}: the line runs from the node shown last to the nearest lit element in view — on both edges, its bend between them, drawn whole`, JSON.stringify(s)); }
-    await setPlace('rail');
+      ok(good(s, 'block:' + bk.key), 'the line runs from the node shown last to the nearest lit element in view — on both edges, its bend between them, drawn whole', JSON.stringify(s)); }
     /* a part switch rewords every row of the tree AFTER the line is drawn (the field counts), which moves the node: the
        line must start on the node where it is NOW. Found by walk-fold.mjs (its picture after a part switch showed the line
        starting two rows above its node); a line drawn only once, before the counts, fails this. */
     { const fb = SM.blocks.find(x => x.join.act.kind === 'part' && x.join.act.part === 'functions');
       /* the node is put mid-rail BEFORE the Show, so it stays in view after the switch without a scroll (a scroll redraws the
          line and would hide the fault this checks) */
-      await p.$eval(`#smtree .smb[data-sm="${fb.key}"]`, e => e.scrollIntoView({ block: 'center' })); await p.waitForTimeout(250);
+      await p.$eval(`#smtree .smb[data-sm="${fb.key}"]`, e => e.scrollIntoView({ block: 'nearest' })); await p.waitForTimeout(250);
       await p.click(`#smtree .smb[data-sm="${fb.key}"]`); await p.waitForTimeout(400); await hide();
       await p.click('#tabs .tab[data-tab="tests"]'); await p.waitForTimeout(500); await hide(); await p.mouse.move(2, 2); await p.waitForTimeout(150);
       const s = await sweep();
@@ -4541,13 +4676,13 @@ if (checksFile) {
       'behind "more information", every open pick of the brain map is listed with what the lab does with it (D-017)', `${more.filter(m => m.l).length} of ${BW.open.items.length}`);
     await p.click(`#smtree .smb[data-sm="${SM.blocks[0].key}"]`); await p.waitForTimeout(300); await hide();
     await p.click('#smtree .smmv .smmvb[data-move="open"]'); await p.waitForTimeout(300);
-    const small = await p.$$eval('#smwrap *, #smplace *, #portbody .mrec *', els => els.filter(e => e.offsetParent !== null && (e.textContent || '').trim() && !e.children.length)
+    const small = await p.$$eval('#smwrap *, #portbody .mrec *', els => els.filter(e => e.offsetParent !== null && (e.textContent || '').trim() && !e.children.length)
       .map(e => [e.className || e.tagName, parseFloat(getComputedStyle(e).fontSize)]).filter(x => x[1] < 12));
     ok(small.length === 0, 'nothing the navigation adds — its header, the tree, the chip, the moves, the portrait\'s record — computes under 12px', JSON.stringify(small.slice(0, 4)));
     await p.click('#smmoreb'); await p.evaluate(() => window.LABMAP.closeRec()); }
   // ── H · what else the brain map had (finding 6 · 7 · 8): the keyboard, what a reload keeps, short control hovers, and the
   //     list of what is not carried yet ──
-  { await p.evaluate(() => window.railTab('map')); await setOpt('grp', 'flat');
+  { await setOpt('grp', 'flat');
     const b0 = SM.blocks[0];
     await p.evaluate(k => { window.smOpen(window.LABEP.sectionmap.blocks.map(b => b.key), false); window.smOpen([k]); }, b0.key); await p.waitForTimeout(250);
     const act = () => p.evaluate(() => { const a = document.activeElement; return a ? (a.dataset.pk || a.className || a.tagName) : null; });
@@ -4586,21 +4721,22 @@ if (checksFile) {
     ok(s0.keep === 'sec:' + SM.sections[1].key && ['grp', 'sweep', 'recmode', 'keep'].every(k => s1[k] === s0[k]) && s1.open.indexOf('sec:' + SM.sections[1].key) >= 0
        && s1.recs.join('|') === s0.recs.join('|') && s1.recs.length === 1 && bar1,
       'a reload keeps the grouping, the switches, Keep only (and says so), the open folds and the open record', JSON.stringify([s0.keep, s1.grp, s1.sweep, s1.recmode, s1.keep, s1.recs]));
-    await p.evaluate(() => window.railTab('map'));
     await p.evaluate(() => { const x = document.querySelector('#mkeep .mkoff'); if (x) x.click(); }); await p.waitForTimeout(250); await hide();   // guarded, as above
     ok((await state()).keep === null && await p.locator('#mkeep').isHidden(), 'the bar\'s own button removes the filter, and the bar goes');
     await p.evaluate(() => window.LABMAP.keepOff());   // tidy for what follows, whatever the assert found
     await p.evaluate(() => window.LABMAP.closeRec()); await setOpt('recs', 'stack'); await setOpt('sweep', 'on'); await setOpt('grp', 'flat');
     /* D-009: a CONTROL's hover is one short line — every switch of the map's header, its placement, Keep only, the folds and
        the moves, under every grouping (the stage rule shows only under By stage) */
+    /* CHANGED 2026-09-23 (D-035): the placement's controls left; "more", what it holds and the legend strip joined the sweep */
     const hv = [];
+    await p.evaluate(() => window.LABMAP.setXtra(true));
     for (const g of ['flat', 'stage']) { await setOpt('grp', g);
       await p.click('#smtree .smroot'); await p.waitForTimeout(250); await hide();
-      for (const sel of ['#smnav .smnb', '#smnav .smnk', '#smkeepb', '#smplace .smnb', '#smplace .smnk', '#smtree .smfold', '#smtree .smmvb']) {
+      for (const sel of ['#smnav .smnb', '#smwrap .smnk', '#smkeepb', '#smxb', '#smxtra .smnb', '#smflopt .smflb', '#smleg .smlgi', '#smtree .smfold', '#smtree .smmvb']) {
         const els = await p.$$(sel);
         for (const el of els.slice(0, 10)) { if (!(await el.isVisible())) continue; await p.mouse.move(2, 2); await p.waitForTimeout(40); await el.hover(); await p.waitForTimeout(160);
           hv.push(await p.evaluate(s => { const h = document.getElementById('hover'); return h.hidden ? { s, none: 1 } : { s, rows: h.querySelectorAll('.cprow').length, n: ((h.querySelector('.cpplain') || {}).textContent || '').length }; }, sel)); } } }
-    await p.mouse.move(2, 2); await hide(); await setOpt('grp', 'flat');
+    await p.mouse.move(2, 2); await hide(); await setOpt('grp', 'flat'); await p.evaluate(() => window.LABMAP.setXtra(false));
     const long = hv.filter(h => h.none || h.rows > 0 || !(h.n > 0 && h.n < 200));
     ok(hv.length > 20 && long.length === 0, 'every control the map draws has a hover of one short line — no rows, under two hundred characters', `${hv.length} hovers · ` + JSON.stringify(long.slice(0, 3)));
     /* D-024: what the brain map had and the lab does not carry is SAID, behind "more information", before its page retires */
@@ -4615,7 +4751,6 @@ if (checksFile) {
   //     screen, a lit block out of view after a part switch, a lit mark too faint to see ──
   { const vis = (sel) => p.$eval(sel, e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.top < innerHeight; });
     // I1 · "more information" says where the tree is read from: the JSON file, not the retired page
-    await p.evaluate(() => window.railTab('map'));
     await p.click('#smmoreb'); await p.waitForTimeout(200);
     const more = await p.$eval('#smmore', e => e.innerText);
     const treeLine = more.split('\n').find(l => /^The tree is read from/.test(l)) || '';
@@ -4623,115 +4758,86 @@ if (checksFile) {
        && more.indexOf('tree ' + SM.source.tree) >= 0,
       'behind "more information", the tree is said to be read from design-context/brainmap-endpoint.json', treeLine.slice(0, 140));
     await p.click('#smmoreb'); await p.waitForTimeout(150);
-    // I2 · the right column FITS: no sideways page scroll, the rail and the map both on screen, at 1920 and at 2560, both widths
-    /* a panel's share of its width on screen, and the part of it on screen — cut by the band that clips it and the window */
+    // I2 · REPLACED 2026-09-23 (D-035): the right column and its two widths left. What it proved still holds for the ONE place:
+    //      where the panels do not fit beside the rail (1920) they slide inside their band — the page never does — and a move
+    //      slides the panel that answers into the band's view; where they fit (2560) all three are whole.
     const shown = () => p.evaluate(() => { const B = document.getElementById('band').getBoundingClientRect();
       const one = id => { const r = document.getElementById(id).getBoundingClientRect(), L = Math.max(r.left, B.left, 0), R = Math.min(r.right, B.right, innerWidth),
         T = Math.max(r.top, B.top, 0), Bo = Math.min(r.bottom, B.bottom, innerHeight);
         return { share: r.width ? +(Math.max(0, R - L) / r.width).toFixed(3) : 0, rect: R - L >= 1 && Bo - T >= 1 ? [L, T, R, Bo] : null, bottom: r.bottom }; };
-      const o = { bench: one('bench'), port: one('port'), cmd: one('cmd') }, col = document.getElementById('mapcol').getBoundingClientRect();
+      const o = { bench: one('bench'), port: one('port'), cmd: one('cmd') }, band = document.getElementById('band');
       o.band = [Math.round(B.left), Math.round(B.right), Math.round(B.bottom)]; o.bandW = B.width; o.benchW = document.getElementById('bench').getBoundingClientRect().width;
-      o.col = [col.left, col.top, col.right, col.bottom]; return o; });
+      o.slides = band.scrollWidth > band.clientWidth + 1; return o; });
     const sweepAt = () => p.evaluate(() => { const s = window.LABMAP.sweep(); return s ? { to: s.to, tgt: s.target && s.target.id } : null; });
     const inR = (pt, r) => !!r && pt[0] >= r[0] - 1 && pt[0] <= r[2] + 1 && pt[1] >= r[1] - 1 && pt[1] <= r[3] + 1;
-    const wide0 = await p.evaluate(() => ['bench', 'port', 'cmd'].map(id => Math.round(document.getElementById(id).getBoundingClientRect().width)));
-    for (const [W, H] of [[1920, 1040], [2560, 1400]]) { await p.setViewportSize({ width: W, height: H }); await p.waitForTimeout(250);
-      await setPlace('right');
-      for (const w of ['narrow', 'wide']) { await p.click(`#smplace .smno[data-opt="mapw"] .smnb[data-v="${w}"]`); await p.waitForTimeout(250); await hide();
-        const g = await p.evaluate(() => { const L = document.getElementById('lab'), d = document.documentElement;
-          return { lab: [L.scrollWidth, L.clientWidth, L.scrollLeft], doc: [d.scrollWidth, innerWidth, scrollX], w: ['bench', 'port', 'cmd'].map(id => Math.round(document.getElementById(id).getBoundingClientRect().width)) }; });
-        const both = await vis('#notes') && await vis('#mapcol') && await vis('#smplace .smno[data-opt="place"] .smnb[data-v="right"]');
-        ok(g.lab[0] <= g.lab[1] && g.lab[2] === 0 && g.doc[0] <= g.doc[1] && g.doc[2] === 0 && both,
-          `${W}: with the map in the right column (${w}) nothing scrolls the page sideways, and the rail, its placement control and the map are all on screen`, JSON.stringify(g));
-        ok(g.w.join() === wide0.join(), `${W} (${w}): the panels keep the sizes their lines set — only the band that shows them narrows`, g.w.join() + ' vs ' + wide0.join());
-        const s0 = await shown(), pb = Math.max(s0.bench.bottom, s0.port.bottom, s0.cmd.bottom);
-        ok(s0.band[2] - pb <= 20, `${W} (${w}): the band ends under the panels, so its sideways scrollbar sits right below them`, `band bottom ${s0.band[2]} · panels' bottom ${Math.round(pb)}`);
-        /* the pick's why: "on a screen wide enough, the middle and the portrait stay whole between the rail and the map" */
-        if (W === 2560 && w === 'narrow')
-          ok(s0.bench.share >= 0.99 && s0.port.share >= 0.99, '2560, the narrow pick: the middle and the portrait are whole on screen between the rail and the map, as its why says',
-            JSON.stringify({ middle: s0.bench.share, portrait: s0.port.share, command: s0.cmd.share }));
-        // Open lands on screen: the portrait slides into the band's view, and the line to "the panel that answers" ends on it
-        await p.evaluate(() => { window.LABMAP.setSweep('panel'); window.LABMAP.note('root'); const r = document.querySelector('#smtree .smroot'); if (r) r.scrollIntoView({ block: 'nearest' }); window.LABMAP.openRec('root'); });
-        await p.waitForTimeout(250);
-        const s1 = await shown(), sw1 = await sweepAt();
-        ok(s1.port.share >= 0.99 && !!sw1 && sw1.tgt === 'port' && inR(sw1.to, s1.port.rect) && !inR(sw1.to, s1.col),
-          `${W} (${w}): Open slides the portrait whole into view, and the line to the panel that answers ends on the portrait's shown part, not on the map column`,
-          JSON.stringify({ portrait: s1.port.share, rect: s1.port.rect && s1.port.rect.map(Math.round), line: sw1 && { to: sw1.to.map(Math.round), tgt: sw1.tgt } }));
-        // a panel slid wholly out of the band's view gets no line; a panel partly in view gets one ending on its shown part
-        await p.evaluate(() => { document.getElementById('band').scrollLeft = 0; window.LABMAP.drawSweep(); }); await p.waitForTimeout(80);
-        const s2 = await shown(), sw2 = await sweepAt();
-        ok(s2.port.rect ? !!sw2 && inR(sw2.to, s2.port.rect) : sw2 === null,
-          `${W} (${w}): with the band slid back, the line ends on the portrait's shown part — or is not drawn when none of it is on screen`,
-          JSON.stringify({ portrait: s2.port.share, line: sw2 && sw2.to.map(Math.round) }));
-        // Show answers in the middle: it slides back into view from its left edge
-        await p.evaluate(() => { document.getElementById('band').scrollLeft = 99999; window.LABMAP.show('root'); }); await p.waitForTimeout(250);
-        const s3 = await shown();
-        ok(s3.bench.share >= Math.min(1, s3.bandW / s3.benchW) - 0.01 && s3.bench.rect && Math.abs(s3.bench.rect[0] - Math.max(s3.band[0], 0)) <= 1,
-          `${W} (${w}): Show slides the middle back into view from its left edge`, JSON.stringify({ middle: s3.bench.share, fits: +(s3.bandW / s3.benchW).toFixed(3) }));
-        await p.evaluate(() => { window.LABMAP.closeRec(); window.LABMAP.setSweep('on'); window.FIELDMAP.clear(); document.getElementById('band').scrollLeft = 0; }); await p.waitForTimeout(150); } }
-    await p.click('#smplace .smno[data-opt="mapw"] .smnb[data-v="narrow"]'); await p.waitForTimeout(200); await hide();
+    const sizes = {};
+    for (const [W, H] of [[1920, 1040], [2560, 1400]]) { await p.setViewportSize({ width: W, height: H }); await p.waitForTimeout(300);
+      await p.evaluate(() => { document.getElementById('lab').scrollTop = 0; document.getElementById('band').scrollLeft = 0; }); await p.waitForTimeout(80);
+      sizes[W] = await p.evaluate(() => ['bench', 'port', 'cmd'].map(id => Math.round(document.getElementById(id).getBoundingClientRect().width)).join());
+      const s0 = await shown(), pb = Math.max(s0.bench.bottom, s0.port.bottom, s0.cmd.bottom);
+      ok(s0.band[2] - pb <= 20, `${W}: the band ends under the panels, so a sideways scrollbar would sit right below them`, `band bottom ${s0.band[2]} · panels' bottom ${Math.round(pb)}`);
+      if (W === 2560) { ok(!s0.slides && s0.bench.share >= 0.99 && s0.port.share >= 0.99 && s0.cmd.share >= 0.99, '2560: the three panels fit beside the rail, whole', JSON.stringify({ m: s0.bench.share, p: s0.port.share, c: s0.cmd.share })); continue; }
+      ok(s0.slides, `${W}: the panels do not fit beside the rail — a precondition, said — so they slide inside their band`, JSON.stringify(s0.band));
+      // Open lands on screen: the portrait slides into the band's view, and the line to "the panel that answers" ends on it
+      await p.evaluate(() => { window.LABMAP.setSweep('panel'); window.LABMAP.note('root'); window.LABMAP.openRec('root'); });
+      await p.waitForTimeout(250);
+      const s1 = await shown(), sw1 = await sweepAt();
+      ok(s1.port.share >= 0.99 && !!sw1 && sw1.tgt === 'port' && inR(sw1.to, s1.port.rect),
+        `${W}: Open slides the portrait whole into view, and the line to the panel that answers ends on the portrait's shown part`,
+        JSON.stringify({ portrait: s1.port.share, rect: s1.port.rect && s1.port.rect.map(Math.round), line: sw1 && { to: sw1.to.map(Math.round), tgt: sw1.tgt } }));
+      // a panel slid wholly out of the band's view gets no line; a panel partly in view gets one ending on its shown part
+      await p.evaluate(() => { document.getElementById('band').scrollLeft = 0; window.LABMAP.drawSweep(); }); await p.waitForTimeout(80);
+      const s2 = await shown(), sw2 = await sweepAt();
+      ok(s2.port.rect ? !!sw2 && inR(sw2.to, s2.port.rect) : sw2 === null,
+        `${W}: with the band slid back, the line ends on the portrait's shown part — or is not drawn when none of it is on screen`, JSON.stringify({ portrait: s2.port.share, line: sw2 && sw2.to.map(Math.round) }));
+      // Show answers in the middle: it slides back into view from its left edge
+      await p.evaluate(() => { document.getElementById('band').scrollLeft = 99999; window.LABMAP.show('root'); }); await p.waitForTimeout(250);
+      const s3 = await shown();
+      ok(s3.bench.share >= Math.min(1, s3.bandW / s3.benchW) - 0.01 && s3.bench.rect && Math.abs(s3.bench.rect[0] - Math.max(s3.band[0], 0)) <= 1,
+        `${W}: Show slides the middle back into view from its left edge`, JSON.stringify({ middle: s3.bench.share, fits: +(s3.bandW / s3.benchW).toFixed(3) }));
+      await p.evaluate(() => { window.LABMAP.closeRec(); window.LABMAP.setSweep('on'); window.FIELDMAP.clear(); document.getElementById('band').scrollLeft = 0; }); await p.waitForTimeout(150); }
+    ok(sizes[1920] === sizes[2560], 'the panels keep the sizes their lines set at both widths — only the band that shows them narrows', sizes[1920] + ' vs ' + sizes[2560]);
     await p.setViewportSize({ width: 1920, height: 1040 }); await p.waitForTimeout(250);
     // I3 · after a part switch, the block the bench lit is brought into view inside the map's own scroll box — the page stays
     const fb = SM.blocks.find(x => x.join.act.kind === 'part' && x.join.act.part === 'functions'), tb = SM.blocks.find(x => x.join.act.kind === 'part' && x.join.act.part === 'tests');
     const seen = (k, boxSel) => p.evaluate(([k, boxSel]) => { const box = document.querySelector(boxSel), n = [...document.querySelectorAll(`#smtree .smb[data-sm="${k}"]`)].find(e => e.offsetParent);
       if (!n || !box) return null; const r = n.getBoundingClientRect(), b = box.getBoundingClientRect(), x = r.left + Math.min(r.width / 2, 40), y = (r.top + r.bottom) / 2, h = document.elementFromPoint(x, y);
-      return { inBox: r.top >= b.top && r.bottom <= b.bottom, shows: !!h && n.contains(h), lit: n.dataset.lit }; }, [k, boxSel]);
-    const allKeys = SM.blocks.map(b => b.key);
-    for (const [pl, boxSel] of [['rail', '#notes'], ['right', '#mapcol']]) { await setPlace(pl); await setOpt('grp', 'flat');
+      return { inBox: r.top >= b.top && r.bottom <= b.bottom, shows: !!h && n.contains(h), lit: n.dataset.lit, top: r.top, bottom: r.bottom }; }, [k, boxSel]);
+    const allKeys = SM.blocks.map(b => b.key), BOX = '#mapbelow';
+    { await setOpt('grp', 'flat');
       await p.evaluate(ks => window.smOpen(ks), allKeys);  await p.waitForTimeout(250);
       await p.click('#tabs .tab[data-tab="functions"]'); await p.waitForTimeout(350); await hide();
+      await p.evaluate(() => { document.getElementById('lab').scrollTop = 0; });
       /* the tree is rolled so the Tests block sits out of the box before the switch — a precondition, said */
-      await p.$eval(boxSel, (b, k) => { const n = document.querySelector(`#smtree .smb[data-sm="${k}"]`); b.scrollTop = 0;
-        const r = n.getBoundingClientRect(), q = b.getBoundingClientRect(); if (r.bottom <= q.bottom) b.scrollTop = b.scrollHeight; }, tb.key); await p.waitForTimeout(150);
-      const pre = await seen(tb.key, boxSel);
+      await p.$eval(BOX, (b, k) => { const n = document.querySelector(`#smtree .smb[data-sm="${k}"]`); b.scrollTop = 0;
+        const r = n.getBoundingClientRect(), q = b.getBoundingClientRect(); if (r.bottom <= Math.min(q.bottom, innerHeight)) b.scrollTop = b.scrollHeight; }, tb.key); await p.waitForTimeout(150);
+      const pre = await seen(tb.key, BOX);
       await p.click('#tabs .tab[data-tab="tests"]'); await p.waitForTimeout(500); await hide();
-      const post = await seen(tb.key, boxSel), pg = await p.evaluate(() => { const L = document.getElementById('lab'); return [L.scrollLeft, L.scrollTop, scrollX, scrollY]; });
+      const post = await seen(tb.key, BOX), pg = await p.evaluate(() => { const L = document.getElementById('lab'); return [L.scrollLeft, L.scrollTop, scrollX, scrollY]; });
       ok(!!pre && !pre.shows && !!post && post.lit === 'true' && post.inBox && post.shows && pg.every(v => v === 0),
-        `${pl}: after a part switch the block the bench lit comes into view inside the map's own scroll box, and the page does not move`, JSON.stringify({ pre, post, pg })); }
-    // I3b · a part that lights TWO blocks (Data: Data effects and the running header) shows both when they fit together, and the
-    //       lead line names every lit block — so one that cannot fit beside the other is still named
+        'after a part switch the block the bench lit comes into view inside the map\'s own scroll box, and the page does not move', JSON.stringify({ pre, post, pg })); }
+    // I3b · a part that lights TWO blocks (Data: Data effects and the running header): the lead block comes into view, the other
+    //       too when both fit in the box's visible part, and the lead line names both — so one that cannot fit is still named
     const db = SM.blocks.find(x => x.join.act.kind === 'part' && x.join.act.part === 'data'), hb = SM.blocks.find(x => x.join.kind === 'header');
     const leadText = () => p.$eval('#smlead', e => e.textContent);
     for (const [W, H] of [[1920, 1040], [2560, 1400]]) { await p.setViewportSize({ width: W, height: H }); await p.waitForTimeout(250);
-      for (const [pl, boxSel] of [['rail', '#notes'], ['right', '#mapcol']]) { await setPlace(pl); await setOpt('grp', 'flat');
-        /* the folds between the two lit blocks are opened so the two are farther apart than the lead can sit from the box's
-           top, yet near enough to share the box: none at 1920; at 2560 (a taller box) the lead through the block before the
-           header in the rail, the two after the lead in the narrower column */
-        const i0 = allKeys.indexOf(db.key), i1 = allKeys.indexOf(hb.key), opens = W === 1920 ? [] : pl === 'rail' ? allKeys.slice(i0, i1) : allKeys.slice(i0 + 1, i0 + 3);
-        await p.evaluate(([ks, os]) => { window.smOpen(ks, false); window.smOpen(os); }, [allKeys, opens]); await p.waitForTimeout(200);
-        await p.click('#tabs .tab[data-tab="tests"]'); await p.waitForTimeout(350); await hide();
-        /* a precondition, said: the lead block sits just inside the box's bottom edge and the other lit block below it — so
-           bringing the lead alone into view would leave the other out */
-        await p.$eval(boxSel, (b, k) => { const n = document.querySelector(`#smtree .smb[data-sm="${k}"]`), q = b.getBoundingClientRect();
-          b.scrollTop += n.getBoundingClientRect().bottom - (Math.min(q.bottom, innerHeight) - 14); }, db.key); await p.waitForTimeout(100);
-        const a0 = await seen(db.key, boxSel), h0 = await seen(hb.key, boxSel);
-        await p.click('#tabs .tab[data-tab="data"]'); await p.waitForTimeout(500); await hide();
-        const a = await seen(db.key, boxSel), h = await seen(hb.key, boxSel), lt = await leadText();
-        ok(!!a0 && a0.shows && !!h0 && !h0.shows && !!a && !!h && a.lit === 'true' && h.lit === 'true' && a.shows && a.inBox && h.shows && h.inBox && lt.indexOf(db.name) >= 0 && lt.indexOf(hb.name) >= 0,
-          `${W} ${pl}, ${opens.length} fold(s) open: on the Data part both lit blocks come into view in the map's box, and the lead line names both`, JSON.stringify({ pre: { [db.key]: a0, [hb.key]: h0 }, [db.key]: a, [hb.key]: h, lead: lt })); } }
-    { await setPlace('right'); await p.evaluate(ks => window.smOpen(ks), allKeys); await p.waitForTimeout(200);
+      await setOpt('grp', 'flat'); await p.evaluate(ks => window.smOpen(ks), allKeys); await p.waitForTimeout(200);
       await p.click('#tabs .tab[data-tab="tests"]'); await p.waitForTimeout(350); await hide();
+      await p.evaluate(() => { document.getElementById('lab').scrollTop = 0; });
+      await p.$eval(BOX, b => { b.scrollTop = b.scrollHeight; }); await p.waitForTimeout(100);
+      const a0 = await seen(db.key, BOX);
       await p.click('#tabs .tab[data-tab="data"]'); await p.waitForTimeout(500); await hide();
-      const a = await seen(db.key, '#mapcol'), h = await seen(hb.key, '#mapcol'), lt = await leadText();
-      ok(!!a && a.shows && a.inBox && lt.indexOf(db.name) >= 0 && lt.indexOf(hb.name) > lt.indexOf(db.name),
-        '2560 right, every fold open (the two lit rows are too far apart to share the box): the lead block shows, and the lead line names the other after it',
-        JSON.stringify({ [db.key]: a, [hb.key]: h, lead: lt })); }
-    // I3c · a placement or width change keeps what the bench lit in view (the node shown last is kept too when both fit)
+      const a = await seen(db.key, BOX), h = await seen(hb.key, BOX), lt = await leadText();
+      const vis = await p.$eval(BOX, b => { const q = b.getBoundingClientRect(); return Math.min(q.bottom, innerHeight) - Math.max(q.top, 0); });
+      const fit = !!a && !!h && Math.max(a.bottom, h.bottom) - Math.min(a.top, h.top) <= vis - 30;
+      ok(!!a0 && !a0.shows && !!a && a.lit === 'true' && a.shows && a.inBox && (!fit || h.shows) && lt.indexOf(db.name) >= 0 && lt.indexOf(hb.name) >= 0,
+        `${W}, every fold open: on the Data part the lead block comes into view in the map's box${fit ? ' with the running header beside it' : ''}, and the lead line names both`,
+        JSON.stringify({ pre: a0, [db.key]: a, [hb.key]: h, fit, lead: lt })); }
     await p.setViewportSize({ width: 1920, height: 1040 }); await p.waitForTimeout(250);
-    await setPlace('right'); await p.$eval('#mapcol', b => { b.scrollTop = 0; }); await setPlace('rail');
-    await p.evaluate(ks => window.smOpen(ks), allKeys); await p.waitForTimeout(200);
-    await p.evaluate(k => window.LABMAP.show('block:' + k), fb.key); await p.waitForTimeout(350);
-    await p.click('#tabs .tab[data-tab="tests"]'); await p.waitForTimeout(450); await hide();
-    await p.$eval('#notes', b => { b.scrollTop = 0; }); await p.waitForTimeout(100);
-    const pre3 = await seen(tb.key, '#notes'), steps3 = [];
-    for (const [opt, v] of [['place', 'right'], ['mapw', 'wide'], ['mapw', 'narrow']]) {
-      await p.click(`#smplace .smno[data-opt="${opt}"] .smnb[data-v="${v}"]`); await p.waitForTimeout(400); await hide();
-      steps3.push([v, await seen(tb.key, '#mapcol')]); }
-    ok(!!pre3 && !pre3.shows && steps3.every(([, x]) => x && x.lit === 'true' && x.inBox && x.shows),
-      'the right column, then its two widths: each time the block the bench lit is in view in the column (it sat out of view in the rail before)', JSON.stringify({ pre: pre3, after: steps3 }));
     await p.evaluate(ks => window.smOpen(ks, false), allKeys); await p.evaluate(() => window.FIELDMAP.clear()); await p.waitForTimeout(150);
+    // REMOVED 2026-09-23 (D-035): I3c "a placement or width change keeps what the bench lit in view" — no placement is left to change
     // I4 · a lit row reads at a glance — on the row itself, at full opacity, under the mouse and open alike
-    await setPlace('rail'); await setOpt('grp', 'flat');
+    await setOpt('grp', 'flat');
     await p.evaluate(ks => window.smOpen(ks, false), allKeys);
     await p.click('#tabs .tab[data-tab="tests"]'); await p.waitForTimeout(400); await hide();
     const ub = SM.blocks.find(x => x.key !== tb.key && x.join.kind === 'page' && x.join.act.part !== 'tests'), ob = SM.blocks.find(x => x.key !== tb.key && x.key !== ub.key && x.join.kind === 'page' && x.join.act.part !== 'tests');
@@ -4763,13 +4869,14 @@ if (checksFile) {
     await p.evaluate(() => window.LABMAP.keepOff()); await p.waitForTimeout(250);
     ok(LQ.lit === 'true' && LQ.q === 'true' && QN.q === 'true' && LQ.op === QN.op && LQ.op > 0.2 && LQ.op < 1 && LQ.bg === L0.bg && LQ.bw === L0.bw,
       'a lit row that Keep only does not keep is dimmed as much as any quiet row — never hidden — and keeps the lit look', JSON.stringify({ lit: LQ, quiet: QN }));
-    // the running header keeps its dashed rule (D-022) while lit — plain, under the mouse and open
+    // the running header keeps its own rule (D-022) while lit — plain, under the mouse and open. CHANGED 2026-09-23 (review: the
+    // dash meant four things in the map; D-034 keeps it for my pick): the rule is DOUBLE now
     await p.click('#tabs .tab[data-tab="data"]'); await p.waitForTimeout(400); await hide();
     const HP = await look(hb.key), HH = await hovered(hb.key);
     await p.evaluate(k => window.smOpen([k]), hb.key); await p.waitForTimeout(200);
     const HO = await look(hb.key); await p.evaluate(k => window.smOpen([k], false), hb.key); await p.waitForTimeout(150);
-    ok([HP, HH, HO].every(x => x.lit === 'true' && x.bs === 'dashed' && x.bw === L0.bw),
-      'the running header, lit, keeps its dashed rule — plain, under the mouse and open — at the lit bar\'s width', JSON.stringify({ plain: HP, hover: HH, open: HO }));
+    ok([HP, HH, HO].every(x => x.lit === 'true' && x.bs === 'double' && x.bw === L0.bw),
+      'the running header, lit, keeps its double rule — plain, under the mouse and open — at the lit bar\'s width', JSON.stringify({ plain: HP, hover: HH, open: HO }));
     // every line on a lit row keeps 4.5:1 against the row's ground, at 12px — plain, under the mouse and open
     const contrast = (k) => p.$eval(`#smtree .smb[data-sm="${k}"]`, row => {
       const parse = (c) => { let m = /^rgba?\(([^)]+)\)/.exec(c); if (m) { const v = m[1].split(/[ ,\/]+/).filter(Boolean).map(Number); return [v[0], v[1], v[2], v.length > 3 ? v[3] : 1]; }
@@ -4798,6 +4905,270 @@ if (checksFile) {
     await p.evaluate(k => { try { window.localStorage.removeItem(k); } catch (e) { /* storage off */ } }, 'eplab.mapnav'); }
   ok(errs.length === errs0, 'the map\'s navigation raises no page error', errs.slice(errs0, errs0 + 3).join(' | ')); }
 // ═══ MAP NAV END ═══
+
+// ═══ MAP REVIEW 2 BEGIN ═══ the section map's second review (2026-09-23) — each finding fixed gets an assert that can go red.
+{ await p.setViewportSize({ width: 1920, height: 1040 });
+  await p.goto('file://' + PAGE); await p.waitForFunction('window.__eplabReady===true', { timeout: 20000 }).catch(() => {});
+  await p.mouse.move(2, 2); await p.waitForTimeout(250);
+  const errs0 = errs.length;
+  const SM = await p.evaluate(() => window.LABEP.sectionmap), FACE = await p.evaluate(() => window.LABEP.mapnav.words.face);
+  const hide = () => p.evaluate(() => window.hoverHide && window.hoverHide());
+  const exB = SM.blocks.find(b => b.join.act.kind === 'exit'), fnB = SM.blocks.find(b => b.join.act.kind === 'part' && b.join.act.part === 'functions');
+  // R1 · the part you are on draws at least one field of its OWN of the page block it lights (review: Security lit Gates and
+  //      decisions and drew none of its own fields — only three it shares). Every part, its default distribution, no route picked.
+  { const bad = [];
+    for (const k of await p.evaluate(() => Object.keys(window.PANELS))) { await p.evaluate(k => { window.clearPath(); window.showTab(k); }, k); await p.waitForTimeout(220);
+      const r = await p.evaluate(() => { const S = window.LABEP.sectionmap;
+        return Object.keys(window.smLit()).map(key => S.blocks.find(b => b.key === key)).filter(b => b.join.act.kind === 'part')
+          .map(b => ({ key: b.key, own: b.own.filter(id => window.DRAWN.has(id)).length })); });
+      if (!r.length || r.some(x => x.own === 0)) bad.push(k + ':' + JSON.stringify(r)); }
+    ok(bad.length === 0, 'on every part, the page block it lights has at least one of its own fields drawn by that part', bad.join(' ; ')); }
+  // R1b · a block with NO PAGE YET whose fields the part draws anyway says so on its mark — pieces, counted from what is drawn
+  { await p.evaluate(() => window.showTab('security')); await p.waitForTimeout(250);
+    const r = await p.evaluate(() => [...document.querySelectorAll('#smtree .smb[data-kind="none"]')].map(btn => { const b = window.LABEP.sectionmap.blocks.find(x => x.key === btn.dataset.sm);
+      return { key: b.key, drawn: b.own.concat(b.shared).filter(id => window.DRAWN.has(id)).length, of: b.own.length + b.shared.length, label: btn.querySelector('.smbk').getAttribute('aria-label') }; }));
+    const fill = (t, o) => String(t).replace(/\{(\w+)\}/g, (m, k) => o[k] != null ? String(o[k]) : m);
+    const tail = x => fill(FACE.nonePieces, { n: '', m: x.of }).trim();
+    ok(r.some(x => x.drawn > 0) && r.some(x => x.drawn === 0) && r.every(x => x.drawn ? x.label.indexOf(fill(FACE.nonePieces, { n: x.drawn, m: x.of })) >= 0 : x.label.indexOf(tail(x)) < 0),
+      'a block with no page yet says on its mark how many of its fields the part you are on draws in pieces — and says nothing of pieces when it draws none', JSON.stringify(r).slice(0, 240)); }
+  // R2 · one click on Endings (real clicks, 1920): the command panel that answers it comes into the band's view, the ending it
+  //      picked is SAID, and the next part button names THAT part first — Endings only "also lit"
+  { await p.goto('file://' + PAGE); await p.waitForFunction('window.__eplabReady===true', { timeout: 20000 }).catch(() => {}); await p.mouse.move(2, 2); await p.waitForTimeout(200);
+    const before = await p.evaluate(() => { const c = document.getElementById('cmd').getBoundingClientRect(); return c.left >= innerWidth - 1; });
+    await p.click(`#smtree .smb[data-sm="${exB.key}"]`); await p.waitForTimeout(450); await hide();
+    const g = await p.evaluate(() => { const c = document.getElementById('cmd').getBoundingClientRect(), bd = document.getElementById('band').getBoundingClientRect(), s = document.getElementById('smsay');
+      const ex = ((window.LABEP.forms || {}).exits || []).find(e => e.id === (window.SEL || {}).exit);
+      return { inBand: c.left >= bd.left - 1 && c.right <= bd.right + 1 && c.right <= innerWidth, say: s.hidden ? null : s.dataset.kind, t: s.innerText, ex: ex ? ex.status + ' ' + (ex.detail || '') : null }; });
+    ok(before && g.inBand, 'at 1920 the command panel starts past the window, and one click on Endings brings it inside the band\'s view', JSON.stringify(g).slice(0, 160));
+    ok(g.say === 'picked' && !!g.ex && g.t.indexOf(g.ex.trim()) >= 0, 'and the ending that click picked is named under the map — never picked silently', String(g.t).slice(0, 140));
+    await p.click('#tabs .tab[data-tab="functions"]'); await p.waitForTimeout(400); await hide();
+    const L = await p.evaluate(() => ({ lead: window.smLead(), t: document.querySelector('#smlead span').textContent, lit: Object.keys(window.smLit()) }));
+    ok(L.lead === fnB.key && L.lit.indexOf(exB.key) >= 0 && L.t.indexOf(fnB.name) >= 0 && L.t.indexOf(fnB.name) < L.t.indexOf(exB.name),
+      'the next part button names that part first; Endings, still lit by the ending in force, comes after it', JSON.stringify(L)); }
+  // R3 · the dash means ONE thing in the map — my unruled pick (D-034): every dashed border, outline, underline or stroke in the
+  //      map (every block open, "more" open) and in the line from a node is an option square I picked or the legend's pick swatch
+  /* read TWICE, my selector ties MARKED: (a) after a block's Show, so the line from its node is drawn (asserted: sweep); (b) with
+     every field a selector ties kept lit, so the bench carries at least one outline of that kind (asserted: prop > 0) — neither
+     a dashed line nor a dashed tie outline can hide behind a light that drew none */
+  { await p.evaluate(k => { window.LABMAP.setXtra(true); window.smOpen(window.LABEP.sectionmap.blocks.map(b => b.key)); window.FIELDMAP.setOpt('prop', 'marked'); }, fnB.key);
+    await p.click(`#smtree .smb[data-sm="${fnB.key}"]`); await p.waitForTimeout(400); await hide(); await p.mouse.move(2, 2); await p.waitForTimeout(150);
+    const scan = () => p.evaluate(() => { const out = [];
+      /* in the map and its line every style counts; on the bench only the OUTLINE the map puts on a lit element — a panel's own
+         dashed border (law G: an inferred hop) is that panel's meaning, not the map's */
+      document.querySelectorAll('#mapbelow *, #smsweep *, .fl-hit').forEach(e => { const c = getComputedStyle(e), bench = !e.closest('#mapbelow, #smsweep');
+        const dashed = bench ? c.outlineStyle === 'dashed' : ['borderTopStyle', 'borderRightStyle', 'borderBottomStyle', 'borderLeftStyle', 'outlineStyle', 'textDecorationStyle'].some(k => c[k] === 'dashed') || (c.strokeDasharray && c.strokeDasharray !== 'none');
+        if (dashed && !(e.matches('.smopt[data-pick="true"]') || e.matches('.lg-pick .smlgs'))) out.push((e.getAttribute('class') || e.tagName) + (e.parentElement ? ' in ' + (e.parentElement.getAttribute('class') || e.parentElement.tagName) : '')); });
+      return { out: [...new Set(out)], picks: document.querySelectorAll('#mapbelow .smopt[data-pick="true"]').length, sweep: !!document.querySelector('#smsweep path'), prop: document.querySelectorAll('.fl-hit.fl-prop').length }; });
+    const da = await scan();
+    await p.evaluate(() => window.FIELDMAP.keep([...new Set(window.LABEP.fieldlayer.authored.map(a => a.id))], 'ties')); await p.waitForTimeout(250);
+    const db = await scan(), d = { out: [...new Set(da.out.concat(db.out))], picks: da.picks, sweep: da.sweep, prop: db.prop };
+    ok(d.out.length === 0 && d.picks > 0 && d.sweep && d.prop > 0, 'nothing in the map, its line or the outlines it puts on the bench is dashed but my picks and the legend\'s swatch for them', JSON.stringify(d).slice(0, 240));
+    await p.evaluate(() => { window.LABMAP.setXtra(false); window.FIELDMAP.setOpt('prop', 'hidden'); window.smOpen(window.LABEP.sectionmap.blocks.map(b => b.key), false); window.FIELDMAP.clear(); }); await p.waitForTimeout(200); }
+  // R4 · the face reads at a glance: at boot no status sentence; the importance is bars; italic (shared) has its legend item; the
+  //      outline key names what a style MEANS; and at 1920 the tree starts in the top half of the map's box
+  { await p.goto('file://' + PAGE); await p.waitForFunction('window.__eplabReady===true', { timeout: 20000 }).catch(() => {}); await p.mouse.move(2, 2); await p.waitForTimeout(250);
+    const f = await p.evaluate(() => { const m = document.getElementById('mapbelow').getBoundingClientRect(), t = document.getElementById('smtree').getBoundingClientRect();
+      const sh = document.querySelector('#smleg .lg-shared'), keys = [...document.querySelectorAll('#smflkey .smflks')].map(e => e.textContent.trim());
+      /* a status line keeps its room while unseen (so the tree never moves under the pointer); "carries" = can be seen */
+      return { lines: ['smlead', 'smfl', 'smsay'].filter(id => { const e = document.getElementById(id); return e.getBoundingClientRect().height > 0 && getComputedStyle(e).visibility !== 'hidden'; }), top: t.top - m.top, box: m.height,
+        shared: !!sh && getComputedStyle(sh.querySelector('.smshs')).fontStyle === 'italic', keys }; });
+    const FLW = await p.evaluate(() => window.LABEP.fieldlayer.words.strings);
+    ok(f.lines.length === 0, 'at boot the map carries no status sentence — only its one plain line', f.lines.join(','));
+    /* the status lines come as the pointer lights a node and as the bench moves: they take the header row's own room, so the
+       tree never moves under the pointer (a line that took room of its own moved the row away, which unlit it — a loop) */
+    { const top = () => p.$eval('#smtree', e => Math.round(e.getBoundingClientRect().top));
+      const t0 = await top(); await p.hover(`#smtree .smb[data-sm="${fnB.key}"]`); await p.waitForTimeout(300);
+      const lit = await p.evaluate(() => !document.getElementById('smfl').hidden), t1 = await top();
+      await p.mouse.move(2, 2); await p.click('#tabs .tab[data-tab="tests"]'); await p.waitForTimeout(350);
+      const led = await p.evaluate(() => !document.getElementById('smlead').hidden), t2 = await top();
+      await p.click('#tabs .tab[data-tab="data"]'); await p.waitForTimeout(250); await hide();
+      ok(lit && led && t1 === t0 && t2 === t0, 'pointing at a node and moving the bench bring the status lines without moving the tree', JSON.stringify({ t0, t1, t2, lit, led })); }
+    ok(f.top <= f.box / 2, 'at 1920 the tree starts in the top half of the map\'s box — the header, options and legend take less than half', `${Math.round(f.top)} of ${Math.round(f.box)}`);
+    ok(f.shared, 'the legend has an item for a shared field, drawn in the italics the tree uses for one');
+    ok(f.keys.join('|') === [FLW.keySolid, FLW.keyDotted].map(x => x.split(' — ')[1]).join('|') && !f.keys.some(k => /^(solid|dotted|dashed|double)$/.test(k)),
+      'the outline key names what each style means, not the style', f.keys.join(' | ')); }
+  // R5 · opening a block never moves another: every other block keeps its column and its place across
+  { const at = () => p.$$eval('#smtree .smb[data-sm]', els => Object.fromEntries(els.map(e => [e.dataset.sm, [Math.round(e.getBoundingClientRect().left), e.closest('.smcol') ? e.closest('.smcol').dataset.col : '?']])));
+    const a = await at(); await p.click(`#smtree .smb[data-sm="${exB.key}"]`); await p.waitForTimeout(400); await hide(); const b2 = await at();
+    const moved = Object.keys(a).filter(k => k !== exB.key && JSON.stringify(a[k]) !== JSON.stringify(b2[k]));
+    ok(new Set(Object.values(a).map(x => x[1])).size >= 2 && moved.length === 0, 'opening a block leaves every other block in its column — nothing rebalances under the pointer', moved.join(',')); }
+  // R6 · the bar's "in view" is not vacuous: at boot at 1920 some block has a field drawn but out of view (the command panel past
+  //      the window), and its segment says so — the recount itself is treeRecount's, against elementFromPoint
+  { await p.goto('file://' + PAGE); await p.waitForFunction('window.__eplabReady===true', { timeout: 20000 }).catch(() => {}); await p.mouse.move(2, 2); await p.waitForTimeout(300);
+    const r = await p.evaluate(() => [...document.querySelectorAll('#smtree .smb[data-sm]')].filter(b => +b.dataset.fvaway > 0).map(b => [b.dataset.sm, b.dataset.fvaway, !!b.querySelector('.smseg[data-st="away"]')]));
+    ok(r.length > 0 && r.every(x => x[2]), 'at boot some block has a field drawn but out of view, and its bar paints that apart from in view', JSON.stringify(r)); }
+  // R7 · the picker: rows the label names "/" carry where the app mounts them; the filter finds them by it; ArrowDown leaves the
+  //      filter for the list; and a pick keeps the part that is open
+  { const rows = await p.evaluate(() => (window.LABEP_INDEX.endpoints || []).filter(r => r.mount).map(r => r.slug));
+    await p.click('#eppick'); await p.waitForTimeout(300);
+    const m = await p.evaluate(sl => sl.map(s => { const e = document.querySelector(`#eppop .epi[data-slug="${s}"]`); return e ? (e.querySelector('.epmt') || {}).textContent || '' : null; }), rows);
+    const want = await p.evaluate(sl => sl.map(s => window.LABEP_INDEX.endpoints.find(r => r.slug === s).mount), rows);
+    ok(rows.length > 0 && m.every((t, i) => t && t.indexOf(want[i]) >= 0), 'every endpoint whose label is not where the app mounts it shows the mount, from the index', JSON.stringify(m));
+    await p.fill('#eppop .epf', 'filter-modes'); await p.waitForTimeout(150);
+    const vis = await p.$$eval('#eppop .epi', els => els.filter(e => !e.hidden && !e.closest('.epg').hidden).map(e => e.dataset.slug));
+    ok(rows.every(s => vis.indexOf(s) >= 0), 'the filter finds them by the mount and the handler\'s file', vis.join(','));
+    await p.focus('#eppop .epf'); await p.keyboard.press('ArrowDown'); await p.waitForTimeout(100);
+    const f1 = await p.evaluate(() => { const a = document.activeElement; return a && a.classList.contains('epi') ? a.dataset.slug : (a && a.className); });
+    await p.keyboard.press('ArrowDown'); await p.waitForTimeout(80);
+    const f2 = await p.evaluate(() => { const a = document.activeElement; return a && a.classList.contains('epi') ? a.dataset.slug : null; });
+    ok(vis.indexOf(f1) >= 0 && vis.indexOf(f2) === vis.indexOf(f1) + 1, 'ArrowDown moves from the filter into the list, then down the rows you can see', f1 + ' → ' + f2);
+    await p.keyboard.press('Escape');
+    await p.click('#tabs .tab[data-tab="tests"]'); await p.waitForTimeout(300);
+    const pick = await p.evaluate(() => window.LABEP_INDEX.endpoints.find(r => r.label !== window.LABEP.identity.label && !r.mount).slug);
+    await Promise.all([p.waitForNavigation({ timeout: 20000 }).catch(() => {}), p.evaluate(s => window.EPPICK.go(s), pick)]);
+    await p.waitForFunction('window.__eplabReady===true', { timeout: 20000 }).catch(() => {});
+    const now = await p.evaluate(() => ({ tab: document.getElementById('panel').dataset.tab, hash: location.hash, ep: new URL(location.href).searchParams.get('ep') }));
+    ok(now.ep === pick && now.tab === 'tests' && now.hash === '#tests', 'picking another endpoint reloads on it and keeps the part that was open', JSON.stringify(now));
+    await p.goto('file://' + PAGE); await p.waitForFunction('window.__eplabReady===true', { timeout: 20000 }).catch(() => {});
+    /* the no-loss checklist the probe prints last counts what this page drew since it opened: every distribution is drawn again */
+    await p.evaluate(() => Object.keys(window.PANELS).forEach(k => { window.showTab(k); window.PANELS[k].variants.forEach(v => window.showVariant(k, v.key)); })); await p.waitForTimeout(300); }
+  ok(errs.length === errs0, 'the map\'s second review raises no page error', errs.slice(errs0, errs0 + 3).join(' | ')); }
+// ═══ MAP REVIEW 2 END ═══
+
+// ═══ ANY ENDPOINT (D-035) ═══
+// "Be able to change the endpoint for any of the other endpoints that we have here in the all endpoints.html file." The lab
+// is baked to one endpoint (_lab-ep.js); ?ep=<slug> loads _eps/<slug>.js, a LOCAL build (gen-endpoint-set.py). This section
+// needs that build: an endpoint whose file is missing fails here, with the command that builds it. It proves (1) the list
+// and the slug rule, (2) the picker, (3) the two ways a ?ep= can fail — each SAID in the lede, never silent — and (4) the
+// lab itself on EVERY endpoint: nothing in it may assume the default one.
+{ const readWin = (f, k) => { const window = {}; eval(fs.readFileSync(path.join(HERE, f), 'utf8')); return window[k]; };
+  const SLUG = require(path.join(HERE, '_ep-slug.js'));
+  const IX = readWin('_lab-ep-index.js', 'LABEP_INDEX');
+  const BUILT = fs.existsSync(path.join(HERE, '_eps/built.js')) ? readWin('_eps/built.js', 'LABEP_BUILT') : null;
+  const BUILD = 'cd docs/design/workflow-panel && python3 gen-endpoint-set.py';
+  // (1) the list: every endpoint the feed holds, each named by the ONE slug rule, no two alike
+  ok(IX && IX.n === IX.endpoints.length && IX.n === F.feedwide.forms_endpoints, 'the index lists every endpoint the forms feed holds', `${IX && IX.n} vs ${F.feedwide.forms_endpoints}`);
+  ok(IX.head === F.head, 'the index is at the facts\' feed head', `${IX.head} vs ${F.head}`);
+  ok(IX.endpoints.every(r => r.slug === SLUG.slug(r.label) && r.m + ' ' + r.p === r.label), 'every slug in the index is _ep-slug.js\'s rule applied to its label',
+    JSON.stringify(IX.endpoints.filter(r => r.slug !== SLUG.slug(r.label)).slice(0, 3)));
+  ok(new Set(IX.endpoints.map(r => r.slug)).size === IX.n, 'no two endpoints share a slug');
+  ok(SLUG.slug('GET /recipes/{recipe_id}') === 'get-recipes-recipe-id' && SLUG.valid('post-setup-complete') && !SLUG.valid('../x') && !SLUG.valid('a--b'),
+    'the slug rule lowercases, joins every non-alphanumeric run with one "-", and its gate refuses what the rule cannot make');
+  const missingBuild = IX.endpoints.filter(r => !(BUILT && BUILT.heads && BUILT.heads[r.slug] === IX.head)).map(r => r.label);
+  ok(missingBuild.length === 0, 'every endpoint has its facts built in _eps/ at the index head', `${missingBuild.length} not built — ${BUILD}`);
+  // (2) the picker, on the default
+  { const q = await b.newPage({ viewport: { width: 1920, height: 1040 } }); const qe = []; q.on('pageerror', e => qe.push(e.message));
+    await q.goto('file://' + PAGE); await q.waitForFunction('window.__eplabReady===true', { timeout: 20000 }).catch(() => {});
+    ok(await q.evaluate(() => window.LABEP_OPEN.state === 'default' && window.LABEP === window.LABEP_DEFAULT), 'with no ?ep the lab runs on the baked default');
+    ok(await q.evaluate(() => document.title.indexOf(window.LABEP.identity.label) >= 0), 'the page title names the endpoint that is open');
+    const bs = await q.$eval('#eppick', e => getComputedStyle(e).borderTopStyle);
+    ok(bs === 'dashed', 'the picker wears the dashed border — the agent\'s unruled pick (D-034\'s mark)', bs);
+    ok(await q.$eval('#eppick', (e, I) => e.innerText.indexOf(I.method) >= 0 && e.innerText.indexOf(I.path) >= 0, F.identity), 'the picker names the open endpoint: its method and its path');
+    // a manifest with one endpoint left out, set before the list first opens: that row must say it is not built here
+    const gone = IX.endpoints.find(r => r.label !== F.identity.label).slug;
+    await q.evaluate(a => { const heads = {}; a.all.forEach(s => { if (s !== a.gone) heads[s] = a.head; }); window.LABEP_BUILT = { n: a.all.length - 1, heads }; },
+      { all: IX.endpoints.map(r => r.slug), gone, head: IX.head });
+    await q.click('#eppick'); await q.waitForTimeout(250);
+    const L = await q.evaluate(() => ({ open: !document.getElementById('eppop').hidden,
+      rows: [...document.querySelectorAll('#eppop .epi')].map(e => ({ slug: e.dataset.slug, m: e.querySelector('.epm').textContent, p: e.querySelector('.epip').textContent, here: e.classList.contains('here'), nb: e.classList.contains('nb'), note: (e.querySelector('.epin') || {}).textContent || '' })),
+      groups: [...document.querySelectorAll('#eppop .epg')].map(g => ({ name: g.querySelector('.epgh b').textContent, n: +g.querySelector('.epgh span').textContent, rows: [...g.querySelectorAll('.epi')].map(e => e.dataset.slug) })),
+      sum: document.querySelector('#eppop .epsum').textContent }));
+    ok(L.open, 'a click on the picker opens the list');
+    ok(L.rows.length === IX.n, 'the list holds every endpoint of the index', `${L.rows.length} of ${IX.n}`);
+    const ents = [...new Set(IX.endpoints.map(r => r.ent))];
+    ok(L.groups.length === ents.length && L.groups.every(g => g.n === g.rows.length && g.rows.every(s => IX.endpoints.find(r => r.slug === s).ent === g.name)),
+      'the list is grouped by entity, each group counting its own rows', JSON.stringify(L.groups.map(g => [g.name, g.n, g.rows.length])));
+    ok(L.groups.every(g => { const ps = g.rows.map(s => { const r = IX.endpoints.find(x => x.slug === s); return r.p + ' ' + r.m; }); return ps.every((x, i) => !i || ps[i - 1] <= x); }),
+      'inside a group the endpoints stand in path order');
+    ok(L.rows.every(r => { const x = IX.endpoints.find(e => e.slug === r.slug); return x && r.m === x.m && r.p === x.p; }), 'every row carries its endpoint\'s method badge and path');
+    ok(L.rows.filter(r => r.here).length === 1 && L.rows.find(r => r.here).slug === SLUG.slug(F.identity.label), 'exactly one row is marked open now, and it is the open endpoint');
+    const nb = L.rows.filter(r => r.nb);
+    ok(nb.length === 1 && nb[0].slug === gone && /not built here/.test(nb[0].note), 'an endpoint left out of the manifest is listed and marked not built here', JSON.stringify(nb.slice(0, 3)));
+    ok(L.sum.indexOf(IX.n + ' endpoints') === 0 && L.sum.indexOf((IX.n - 1) + ' built here') >= 0, 'the list\'s count line reads the index and the manifest', L.sum);
+    const goneRow = await q.$(`#eppop .epi[data-slug="${gone}"]`);   // absent only when the list is wrong — asserted above; never a crash here
+    if (goneRow) { await goneRow.hover(); await q.waitForTimeout(150); }
+    const nbCard = goneRow ? await q.$eval('#hover', e => e.hidden ? '' : e.innerText) : '';
+    ok(nbCard.indexOf('gen-endpoint-set.py --only "' + IX.endpoints.find(r => r.slug === gone).label + '"') >= 0, 'a not-built row\'s hover gives the command that builds it', nbCard.slice(0, 160));
+    if (goneRow) { await goneRow.click(); await q.waitForTimeout(250); }
+    ok(await q.evaluate(() => !/[?&]ep=/.test(location.search)), 'a click on a not-built row does not leave the page');
+    await q.fill('#eppop .epf', 'cooking'); await q.waitForTimeout(100);
+    const vis = await q.$$eval('#eppop .epi', els => els.filter(e => !e.hidden).map(e => e.dataset.q));
+    ok(vis.length > 0 && vis.length < IX.n && vis.every(t => t.indexOf('cooking') >= 0), 'the filter box keeps only the rows that match it', `${vis.length} kept`);
+    await q.fill('#eppop .epf', ''); await q.waitForTimeout(80);
+    const to = IX.endpoints.find(r => r.slug !== gone && r.label !== F.identity.label);
+    const toRow = await q.$(`#eppop .epi[data-slug="${to.slug}"]`);
+    if (toRow) await Promise.all([q.waitForNavigation({ timeout: 20000 }).catch(() => {}), toRow.click()]);
+    await q.waitForFunction('window.__eplabReady===true', { timeout: 20000 }).catch(() => {});
+    ok(await q.evaluate(s => new URLSearchParams(location.search).get('ep') === s && window.LABEP_OPEN.state === 'opened', to.slug), 'choosing a row reloads the lab with ?ep= on that endpoint', to.label);
+    ok(await q.evaluate(l => window.LABEP.identity.label === l && document.querySelector('#eppick').innerText.indexOf(window.LABEP.identity.path) >= 0, to.label), 'and the lab then shows that endpoint');
+    ok(qe.length === 0, 'the picker raises no page error', qe.slice(0, 3).join(' | '));
+    await q.close(); }
+  // (3) a ?ep= the lab cannot open: an endpoint whose file is missing (a copy of the page whose _eps/ lacks one file), a name
+  //     no endpoint has, and a name the slug rule could not make. Each boots on the default and SAYS so in the lede.
+  { const os = await import('node:os'); const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'eplab-ep-'));
+    try {
+      for (const f of ['endpoint-lab.html', '_station.js', '_lab-ep.js', '_ep-slug.js', '_lab-ep-index.js', '_lab-ep-map.js', '_lab-ep-panels.js', '_lab-ep-pick.js', '_lab-ep.css'])
+        fs.symlinkSync(path.join(HERE, f), path.join(tmp, f));
+      const lost = IX.endpoints.find(r => r.label !== F.identity.label);
+      fs.mkdirSync(path.join(tmp, '_eps'));
+      if (fs.existsSync(path.join(HERE, '_eps'))) for (const f of fs.readdirSync(path.join(HERE, '_eps'))) if (f !== lost.slug + '.js') fs.symlinkSync(path.join(HERE, '_eps', f), path.join(tmp, '_eps', f));
+      const cases = [[lost.slug, 'missing', 'could not open ' + lost.label, 'gen-endpoint-set.py --only "' + lost.label + '"'],
+                     ['get-no-such-endpoint', 'missing', 'could not open get-no-such-endpoint', null],
+                     ['..%2F_lab-ep', 'invalid', 'could not open ../_lab-ep', null]];
+      for (const [ep, state, says, cmd] of cases) {
+        const q = await b.newPage({ viewport: { width: 1920, height: 1040 } }); const qe = []; q.on('pageerror', e => qe.push(e.message));
+        await q.goto('file://' + path.join(tmp, 'endpoint-lab.html') + '?ep=' + ep); await q.waitForFunction('window.__eplabReady===true', { timeout: 20000 }).catch(() => {});
+        const R = await q.evaluate(() => ({ ready: window.__eplabReady === true, st: window.LABEP_OPEN.state, dflt: window.LABEP === window.LABEP_DEFAULT,
+          miss: document.getElementById('ledemiss').hidden ? '' : document.getElementById('ledemiss').innerText }));
+        ok(R.ready && R.dflt && R.st === state, `?ep=${ep}: the lab boots on the default and records it as ${state}`, JSON.stringify(R).slice(0, 200));
+        ok(R.miss.indexOf(says) >= 0 && R.miss.indexOf('Showing ' + F.identity.label + ' instead') >= 0, `?ep=${ep}: the lede says which endpoint it could not open, and what it shows instead`, R.miss.slice(0, 200));
+        ok(cmd ? R.miss.indexOf(cmd) >= 0 : R.miss.indexOf('gen-endpoint-set.py') < 0, cmd ? `?ep=${ep}: the lede gives the exact command that builds its file` : `?ep=${ep}: the lede offers no build command for a name the feed does not hold`, R.miss.slice(-160));
+        ok(qe.length === 0, `?ep=${ep}: no page error`, qe.slice(0, 3).join(' | '));
+        await q.close(); }
+      { const q = await b.newPage({ viewport: { width: 1920, height: 1040 } }); await q.goto('file://' + PAGE);
+        await q.waitForFunction('window.__eplabReady===true', { timeout: 20000 }).catch(() => {});
+        ok(await q.$eval('#ledemiss', e => e.hidden), 'with no ?ep the lede carries no could-not-open line'); await q.close(); }
+    } finally { fs.rmSync(tmp, { recursive: true, force: true }); } }
+  // (4) EVERY endpoint through ?ep=: it boots, raises nothing, names itself, draws all six parts (every distribution the
+  //     boot pre-walk renders, and each part button's panel), and the section map and the field layer draw
+  { const broke = []; let nNoShape = 0, nNoTable = 0;
+    for (const r of IX.endpoints) {
+      const q = await b.newPage({ viewport: { width: 1920, height: 1040 } }); const qe = [], qw = [];
+      q.on('pageerror', e => qe.push(e.message)); q.on('console', m => { if (m.type() === 'error') qe.push(m.text()); if (m.type() === 'warning' && /^prewalk /.test(m.text())) qw.push(m.text()); });
+      await q.goto('file://' + PAGE + '?ep=' + r.slug); await q.waitForFunction('window.__eplabReady===true', { timeout: 20000 }).catch(() => {});
+      const R = await q.evaluate(() => ({ ready: window.__eplabReady === true, st: window.LABEP_OPEN.state, I: window.LABEP.identity,
+        head: document.getElementById('headstrip').innerText, pick: (document.getElementById('eppick') || {}).innerText || '', title: document.title,
+        tabs: [...document.querySelectorAll('#tabs .tab')].map(e => e.dataset.tab), smb: document.querySelectorAll('#smtree .smb').length,
+        blocks: window.LABEP.sectionmap.n.blocks, drawn: window.DRAWN.entries().length,
+        here: Object.keys(window.LABEP.sectionmap.attrs).filter(id => window.FIELDMAP.state(id) === 'here') }));
+      const parts = [], why0 = [];
+      for (const t of R.tabs) { await q.click(`#tabs .tab[data-tab="${t}"]`); await q.waitForTimeout(40);
+        parts.push(await q.evaluate(t => ({ t, ok: document.getElementById('panel').dataset.tab === t && !document.querySelector('#panel .perr, #portbody .perr') && document.getElementById('panel').childElementCount > 0 }), t)); }
+      let lit = 0;
+      if (R.here.length) { lit = await q.evaluate(id => { window.FIELDMAP.light([id], 'probe'); const n = document.querySelectorAll('.fl-hit').length; window.FIELDMAP.unlight(); return n; }, R.here[0]); }
+      // an EMPTY part says why it is empty in the code's terms: no shape crosses it, it touches no table — never "switched off"
+      // while every switch is on (the lab's first four empty states assumed the default endpoint, which is never empty)
+      const EM = await q.evaluate(() => { const F = window.LABEP, txt = [];
+        for (const t of ['schemas', 'data']) { window.showTab(t);
+          for (const v of window.PANELS[t].variants.map(x => x.key)) { const bt = document.querySelector(`[data-variant="${v}"][data-part="${t}"]`); if (bt) bt.click();
+            txt.push({ t, v, x: document.getElementById('panel').innerText.replace(/\s+/g, ' ') }); } }
+        const q0 = F.data.schemas.request, r0 = F.data.schemas.response;
+        return { noShape: !q0.present && !r0.present, noTable: !F.data.tables.length, txt, rq: { name: q0.name, present: q0.present }, rs: { name: r0.name, present: r0.present } }; });
+      const emWhy = [];
+      const OFF = /directions are switched off|every role is switched off|no channel is switched on/;   // the lab's switch-off sentences: every switch is on here
+      if (EM.txt.some(o => OFF.test(o.x))) emWhy.push('says a switch is off: ' + EM.txt.filter(o => OFF.test(o.x)).map(o => o.t + '/' + o.v).join(','));
+      const side = (sc, none) => sc.present ? '' : sc.name ? sc.name + ' — its fields are not in the feed' : none;
+      if (EM.noShape) for (const o of EM.txt.filter(o => o.t === 'schemas'))
+        if (!(o.v === 'shapes' ? [side(EM.rq, 'no body is read'), side(EM.rs, 'no shape is returned')].every(w => o.x.indexOf(w) >= 0)
+                               : /no shape crosses this endpoint|the shapes it names are not drawn/.test(o.x))) emWhy.push(`schemas/${o.v} does not say why no shape is drawn`);
+      if (!EM.rs.present && EM.txt.some(o => /\b0 fields ferried/.test(o.x))) emWhy.push('a response whose fields were not read is counted as 0 fields');
+      if (!EM.rs.name && EM.txt.some(o => /also returned by/.test(o.x))) emWhy.push('an endpoint that returns no shape is said to share it');
+      if (EM.noTable && !EM.txt.filter(o => o.t === 'data').every(o => /this endpoint touches no table/.test(o.x))) emWhy.push('data does not say it touches no table');
+      if (EM.txt.some(o => /det\.resp|consumes wire/.test(o.x))) emWhy.push('a map-reading sentence on the face');
+      if (emWhy.length) why0.push('empty parts: ' + emWhy.join(' · '));
+      const why = why0;
+      if (!R.ready) why.push('does not boot'); if (R.st !== 'opened' || R.I.label !== r.label) why.push(`opened ${R.st} on ${R.I.label}`);
+      if (qe.length) why.push('errors: ' + qe.slice(0, 2).join(' | ').slice(0, 200)); if (qw.length) why.push('a distribution threw: ' + qw.slice(0, 2).join(' | ').slice(0, 200));
+      if (!(R.head.indexOf(R.I.path) >= 0 && R.pick.indexOf(R.I.method) >= 0 && R.pick.indexOf(R.I.path) >= 0 && R.title.indexOf(r.label) >= 0)) why.push('the head does not name it');
+      if (R.tabs.join(',') !== 'data,schemas,functions,tests,widening,security' || !parts.every(x => x.ok)) why.push('parts: ' + parts.filter(x => !x.ok).map(x => x.t).join(','));
+      if (!R.smb || R.smb !== R.blocks) why.push(`section map draws ${R.smb} of ${R.blocks} blocks`); if (!R.drawn || !R.here.length || !lit) why.push(`field layer drawn ${R.drawn} · here ${R.here.length} · lit ${lit}`);
+      ok(why.length === 0, `${r.label} opens through ?ep=: boots, raises nothing, names itself, draws the six parts (an empty one saying why in the code's terms), the section map and the field layer`, why.join(' · '));
+      if (EM.noShape) nNoShape++; if (EM.noTable) nNoTable++;
+      if (why.length) broke.push(r.label);
+      await q.close(); }
+    ok(nNoShape > 0 && nNoTable > 0, 'the sweep met at least one endpoint no shape crosses and one that touches no table (the empty states above were exercised)', `${nNoShape} · ${nNoTable}`);
+    console.log(`any endpoint: ${IX.n - broke.length}/${IX.n} open through ?ep= · ${nNoShape} cross no shape · ${nNoTable} touch no table`); } }
+// ═══ ANY ENDPOINT END ═══
 
 const cov = await p.evaluate(() => window.COV.state());
 const covered = Object.keys(cov).filter(k => cov[k].length), missing = Object.keys(cov).filter(k => !cov[k].length);

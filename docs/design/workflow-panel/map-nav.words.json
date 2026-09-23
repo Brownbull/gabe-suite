@@ -11,46 +11,62 @@
    "stage": "Your record's rows in order, each holding the blocks proposed for it. A proposal."
   }
  },
+ "face": {
+  "_why": "D-035 — the map's face, read at a glance: one plain line, icon squares for the options, a mark per block, a bar per block and a dot per field, and a legend strip that draws them. The place is ruled (full width below the panels), so it is no option any more.",
+  "plain": "The card's ruled blocks, each marked with the part that answers it. Point at one to light what the panels draw for it; click it to go there.",
+  "more": "more",
+  "moreTip": "The switches read rarely: the line from a node, the records in the portrait, and how an outline behaves.",
+  "rowFields": "fields",
+  "markCommand": "the command panel",
+  "markPortrait": "the portrait",
+  "markHeader": "across every part",
+  "markNone": "no page yet",
+  "nonePieces": "{n} of its {m} fields drawn in pieces on this part",
+  "faceCount": "{n} of {m} fields in view here",
+  "faceAway": " · {a} here but out of view",
+  "faceNone": " · {x} not drawn",
+  "ratedAria": "importance {r} of {max}",
+  "pickedEnding": "picked the first ending, {ending}",
+  "pickedWhy": " — every part now reads against it; the command panel holds the others.",
+  "legend": {
+   "block": "block",
+   "page": "its page",
+   "pageTip": "The icon and colour of the part that answers the block — the part buttons' own. {n} blocks have one.",
+   "none": "no page yet",
+   "noneTip": "No part gathers this block yet; clicking it says what would have to be built. Its bar still counts the fields other pages draw in pieces. {n} blocks.",
+   "header": "every part",
+   "headerTip": "A running header: it belongs to every part, and is lit where the part draws its stage reading. {n} block.",
+   "fields": "the lab draws",
+   "st": {
+    "here": "in view",
+    "away": "out of view",
+    "elsewhere": "another part",
+    "none": "not drawn"
+   },
+   "stTip": {
+    "here": "The panels draw it and you can see it now. Green in a block's bar, a filled dot beside a field.",
+    "away": "The panels draw it, but off the window or below a panel's fold — scroll to it. Hatched green in the bar, a green ring beside a field.",
+    "elsewhere": "Another part or record draws it. Violet in the bar, a violet ring beside a field.",
+    "none": "The lab does not draw it on any part. The empty end of the bar, a dash beside a field. The bars count what the lab draws, not what this endpoint has."
+   },
+   "shared": "shared",
+   "sharedSw": "Aa",
+   "sharedTip": "A field written in italics is shared: three or more blocks need it, so it is listed under each and homed in none.",
+   "rows": "row",
+   "lit": "lit",
+   "litTip": "The bench is on this block: the part it answers is open.",
+   "shown": "shown",
+   "shownTip": "The node you clicked last; its outline on the bench is the one kept.",
+   "quiet": "quiet",
+   "quietTip": "Keep only is on and this node does not carry what it keeps: dimmed, never removed.",
+   "outline": "on the bench",
+   "pickHead": "option",
+   "pick": "my pick",
+   "pickTip": "A dashed square is the option I picked and you have not ruled."
+  }
+ },
  "stageRule": {
   "tip": "Where a block that names several rows, or none, is drawn."
- },
- "placement": {
-  "label": "where the map sits",
-  "tip": "Where the section map is drawn. The bench and its lights do not change.",
-  "pick": "rail",
-  "opts": {
-   "rail": {
-    "name": "rail tab",
-    "tip": "In this tab, left of the panels it lights. The bench keeps the size its lines were set at."
-   },
-   "right": {
-    "name": "right column",
-    "tip": "A column right of the panels, the whole height of the page."
-   },
-   "below": {
-    "name": "below",
-    "tip": "Full width under the rail, the middle and the command panel — the second section."
-   }
-  },
-  "movedRight": "The map is drawn in a column right of the panels. The panels share the width left between the rail and the column, and slide sideways inside it when they do not fit — the page itself never slides.",
-  "width": {
-   "label": "the column's width",
-   "tip": "How wide the right column is. The panels take the rest.",
-   "pick": "narrow",
-   "opts": {
-    "narrow": {
-     "name": "narrow",
-     "tip": "The column gives the panels more room, so the middle and the portrait stay whole beside it when the screen is wide enough; the tree wraps more."
-    },
-    "wide": {
-     "name": "as wide as the rail",
-     "tip": "The column is as wide as the rail tab, so the tree wraps as it does there; the panels slide sideways more."
-    }
-   },
-   "why": "My pick is narrow: it leaves the panels the most room. On a screen wide enough, the middle and the portrait stay whole between the rail and the map; on a narrower one the band holds less of them, and Show, Open and Follow slide the panel that answers into view."
-  },
-  "movedBelow": "The map is drawn full width below the panels.",
-  "why": "My pick is the rail tab: it moves nothing on the bench, and the map stays left of the panels it lights, so the line from a node runs toward what it lit."
  },
  "sweep": {
   "label": "the line from a node",
@@ -157,7 +173,7 @@
   "bench": "On the bench, {n} elements carry its fields and the rest are quiet — dimmed, never removed.",
   "benchOne": "On the bench, {n} element carries its fields and the rest are quiet — dimmed, never removed.",
   "benchNone": "Nothing on the bench carries its fields right now, so the whole bench is quiet — dimmed, never removed.",
-  "how": "It stays on through clicks, part changes, placements and groupings. Remove it with the button beside this.",
+  "how": "It stays on through clicks, part changes and groupings. Remove it with the button beside this.",
   "btnNone": "Keep only — show a node first",
   "btnTip": "Takes the node you showed last and quiets every node that does not carry it. It stays on until you remove it.",
   "barTip": "Keep only is on. This bar stays at the top of the rail on every tab until you remove it."
@@ -216,9 +232,8 @@
   "openWhy": "Each pick the brain map made alone, and what the lab does with it.",
   "openLab": "in the lab",
   "factsHead": "What the tree measures",
-  "lookLine": "grouped {grp} · Keep only {keep} · where the map sits: {place} · line to what it lit: {sweep}",
+  "lookLine": "grouped {grp} · Keep only {keep} · line to what it lit: {sweep}",
   "lookOff": "off",
-  "placeHead": "Where the map sits",
   "absent": "The map's groupings were not read, so only the blocks are drawn."
  },
  "reword": {
@@ -245,7 +260,7 @@
  "openLab": [
   "Built here as the switch under By stage: under every stage it touches is my pick, under Across the stages is D-021 as recorded.",
   "By standpoint draws every group the blocks name, one node each.",
-  "Here it sits in the map's own header, so it travels with the map to every placement; it keeps the node you showed last, and while it is on a bar at the top of the rail says so on every tab.",
+  "Here it sits in the map's own header below the panels; it keeps the node you showed last, and while it is on a bar at the top of the rail says so on every tab.",
   "Here the line starts at the node you showed last. It ends at the nearest element it lit (my pick) or at the panel that answers (the brain map's hop), or is hidden — a switch.",
   "Here Open on the card draws the card as a whole in the portrait — the counts, and the blocks by how much each holds.",
   "Here the records Open draws in the portrait are kept, newest first, each closing on its own (the brain map's pick) — or one at a time, a switch. Folds never close one another."
