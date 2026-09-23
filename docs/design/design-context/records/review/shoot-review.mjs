@@ -1,11 +1,11 @@
 /* shoot-review.mjs — the lab pictures the review page embeds, taken with REAL clicks (so the click paths the page prints are proven).
 
-     node docs/design/design-context/shoot-review.mjs          # writes review-shots/*.png + review-shots/clicks.json
+     node docs/design/design-context/records/review/shoot-review.mjs          # writes review-shots/*.png + review-shots/clicks.json
 
    Browser-gated (system Chrome + the spike's playwright-core) — run it ALONE. The PNGs are committed inputs of gen-review.js. */
 import { createRequire } from 'node:module'; import path from 'node:path'; import fs from 'node:fs';
 const require = createRequire(import.meta.url);
-const HERE = path.dirname(new URL(import.meta.url).pathname), REPO = path.resolve(HERE, '../../..'), OUT = path.join(HERE, 'review-shots');
+const HERE = path.dirname(new URL(import.meta.url).pathname), REPO = path.resolve(HERE, '../../../../..'), OUT = path.join(HERE, 'review-shots');
 const PW = path.join(REPO, 'docs/design/graft-adoption/spike/_build/node_modules/playwright-core'), CHROME = '/usr/bin/google-chrome-stable';
 if (!fs.existsSync(CHROME) || !fs.existsSync(PW)) { console.log('SKIP — no system chrome / playwright-core on this host'); process.exit(0); }
 const { chromium } = require(PW);

@@ -1,5 +1,5 @@
 {
- "_about": "The raw returns behind M1 (attribute x question) for the endpoint card, 2026-09-18. Three raters filled the whole matrix independently from three standpoints; a judge settled the hard splits. Never edited by hand: m1-merge.js turns this file into m1-endpoint.json. · ROUND 2 (2026-09-22): the 18 attributes added since round 1, scored by the same three standpoints and folded into each rater's own rows; round 1's raw is frozen at m1-round1.raw.json.",
+ "_about": "The raw returns behind M1 (attribute x question) for the endpoint card, 2026-09-18. Three raters filled the whole matrix independently from three standpoints; a judge settled the hard splits. Never edited by hand: m1-merge.js turns this file into m1-endpoint.json. · ROUND 2 (2026-09-22): the 18 attributes added since round 1, scored by the same three standpoints and folded into each rater's own rows; round 1's raw is frozen at records/m1-round1/m1-round1.raw.json.",
  "input": "m1-input.json",
  "input_sha1": "d5e186f8",
  "standpoints": {

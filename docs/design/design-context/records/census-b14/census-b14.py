@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """B14 census — READ-ONLY over the four arms-on feeds in the baseline cache; prints the markdown census-b14.md holds.
 
-    python3 docs/design/element-forms/census-b14.py > docs/design/element-forms/census-b14.md
+    python3 docs/design/design-context/records/census-b14/census-b14.py > docs/design/design-context/records/census-b14/census-b14.md
+
+A RECORD since 2026-09-23: the cross-app counts went to workflow-panel/gen-pieces-digest.py → pieces-digest.json.
 
 The feeds: `scripts/forms-dryrun.sh --arms all` writes ~/.cache/gabe-map-baselines/.check/<target>/forms.json. Nothing generated changes."""
 

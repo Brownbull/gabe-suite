@@ -1,6 +1,10 @@
 /* probe-brainmap.mjs — the brain map's render proof (headless system Chrome via the spike's playwright-core).
 
-     node docs/design/design-context/probe-brainmap.mjs [--shots DIR]
+     node docs/design/design-context/records/brainmap/probe-brainmap.mjs [--shots DIR]
+
+   A RECORD (2026-09-23): the page it proves retired when the brain map folded into the endpoint lab (D-024); its
+   ruling asserts are carried by workflow-panel/probe-eplab.mjs (MAP NAV). It still runs, against the frozen page
+   beside it and the live words file in design-context/.
 
    Every assert MEASURES what is drawn against numbers this file computes for itself from the page's own data —
    never against a number the page prints. Node counts are recomputed here from attrs/blocks/groups/sections;
@@ -10,7 +14,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
-const HERE = path.dirname(new URL(import.meta.url).pathname), REPO = path.resolve(HERE, '../../..');
+const HERE = path.dirname(new URL(import.meta.url).pathname), REPO = path.resolve(HERE, '../../../../..');
 const args = process.argv.slice(2);
 const pageArg = args.indexOf('--page') >= 0 ? args[args.indexOf('--page') + 1] : 'brainmap-endpoint.html';
 const PAGE = path.isAbsolute(pageArg) ? pageArg : path.join(HERE, pageArg);
@@ -440,7 +444,7 @@ await p.click('#reset'); await p.waitForTimeout(500);
 ok((await p.evaluate(() => window.__bm.text())).indexOf('pick: none yet') >= 0 && await p.locator('#tray .pan').count() === 0, 'the second press clears the pick and every panel');
 // ── 11 · Keep only is its OWN control (D-022, option C), and it says it is on ──
 await open();
-const W = JSON.parse(fs.readFileSync(path.join(HERE, 'brainmap.words.json'), 'utf8'));
+const W = JSON.parse(fs.readFileSync(path.join(REPO, 'docs/design/design-context/brainmap.words.json'), 'utf8'));
 const st = () => p.evaluate(() => window.__bm.state().keep);
 const quietKeys = () => p.evaluate(() => [...document.querySelectorAll('#plane .node[data-quiet="true"], #plane .nb[data-quiet="true"]')].map(n => n.getAttribute('data-pkey')).sort());
 const drawnKeys = () => p.evaluate(() => [...document.querySelectorAll('#plane .node, #plane .nb')].map(n => n.getAttribute('data-pkey')));

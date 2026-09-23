@@ -1,23 +1,18 @@
-# The ten pieces of work — order, definition of done, what re-enters the loop
+# The leftovers program — the LOG
 
-Ruled by Gabe on 2026-09-19 (D-016). Evidence and the technical work of each piece: `gaps-endpoint.raw.json` (the evaluation)
-and `gaps-endpoint.effects.raw.json` (what each piece adds); the readable version is `gaps-endpoint.html`.
+The one running log of the leftovers program: ten pieces ruled "do" and piece 9 "later" (D-016). This file keeps the log and
+the definition of done the pieces were held to; everything else has one home, and this file points at it instead of
+restating it:
 
-## Order
+- where the loop stands, what is open for him and what comes next → `STATE.md`
+- every ruling — the order of the pieces (D-016), the twins step suspended (D-023), the rating pass closed (D-020) → `decisions.md`
+- the method (the importance procedure, the loop M1 → M3 → variants → tests) → `method.md`
+- each piece's evidence → `gaps-endpoint.raw.json` · `gaps-endpoint.effects.raw.json`, readable as `gaps-endpoint.html`
+- the records the loop has closed (the review page, the brain map's page, round 1's raw returns) → `records/README.md`
 
-| # | piece | cost (estimate) | where it lands |
-|---|---|---|---|
-| 1 | The route, in order | hours | the lab's panels + the inventory; fixes the app band drawn in registration order |
-| 2 | What an empty slot means | hours | one helper over the lab's twelve lit-or-hollow decisions + the norms per stage |
-| 3 | What each ending carries | hours | `gen-endpoint-facts.py` (cases and headers onto the drawn ending) |
-| 4 | Whose write it is | hours | the Data panel: the endpoint's own writes apart from the gate's; one table set in every layout |
-| 5 | Proof you can open | about a day | `gen-endpoint-facts.py` (asserts · role · the values tests give a setting) + `gen-robot.js` |
-| 6 | Inside the calls | about a day | `gen-endpoint-facts.py` (functions{} · dependencies{} · function facts joined to the chain) |
-| 7 | How common each piece is | about a day | `gen-endpoint-facts.py` (one loop over the 80 endpoints) |
-| 8 | Field rules, and a line to open | about a day | `gen-endpoint-facts.py` (schemas{} · models{} · anchors) |
-| 10 | What the screen does on each ending | days | a new part in the frontend reason arm (`_a3_fe_reason.py`), then the lab carry |
-| 11 | What stays alive during the request | days | a new `inflight` part in the kinds arm, then the lab carry |
-| 9 | Why a touch happens, and why it survives | days | LATER — trigger in D-016 |
+Trimmed 2026-09-23: the order table (estimates and where each piece lands) and "what re-enters the loop" are read as they
+stood at `git show 6153724:docs/design/design-context/program-leftovers.md`; a line cite into this file made before that
+date (`…:26`, `…:44`, `…:51`) reads against that version.
 
 ## Definition of done, for every piece
 
@@ -29,12 +24,6 @@ and `gaps-endpoint.effects.raw.json` (what each piece adds); the readable versio
 6. **One commit per piece, by explicit path**, with the numbers in the message.
 
 For the two generation pieces (10 · 11), before the lab carry: the new part ships with its battery (FIRE and SILENT cases), a dry run on the four study targets with the numbers in the commit message, `suite-doctor.sh` CLEAN, and propagation to the twins. Heavy checks run one at a time on this machine.
-
-## What re-enters the loop afterwards
-
-- The **(proposed)** rows of `inventory-endpoint.md` are rated by Gabe on `rate-endpoint.html`.
-- **M1 round 2** runs on the larger inventory (round 1 stays a record: `m1-round1.inventory.md`, `m1-endpoint.json`). The eleven prisms are ruled; round 2 checks where the new attributes make their home and whether the running count of answerable questions moved as the evaluation predicted (1 of 20 → 16).
-- Then step 3 of the loop: M3, the channel budget, for the first prism.
 
 ## Log
 
@@ -65,3 +54,4 @@ For the two generation pieces (10 · 11), before the lab carry: the new part shi
 | 2026-09-22 | D-022 BUILT — the lab's section map has three kinds of pairing | suite `f513cea` | His ruling landed as three kinds: a page · no page yet · a running header. Endings keeps the command panel; In-flight state and Standard or specialist join Overview and risk as gaps (7 · 3 · 1, recounted by the generator, never typed). The RUNNING HEADER never moves you off the part you are on — on Data it switches to stage blocks, on every other part it says "<part> has none yet" and stays. A read-only review of the first build caught the header still wearing the answered-green on parts with no stage reading, and two asserts that could not fail: LIT now means the part draws its stage reading, and each row's kind, built flag, mark and the three totals are read from the MOVE the block makes, not the generator's label. Probe 1211/0 (was 1203). Four mutants RED, one of them a GENERATOR mutant that relabels the header a page and trips seven asserts. Real-click walk: 13 pictures, no page errors.
 | 2026-09-22 | D-021's consequence BUILT — the round-2 matrices page | suite `82b19c9` | The page D-021 asked for: `matrices-round2.html` opens "This page draws a cut the arithmetic did not choose: the ladder's own cut leaves 8 blocks, and your ruling holds 11", names the widest drop (0.096 after 12 joins), the runner-up (0.068 → 10) and where his cut stops (9 joins, 0.064), and SHOWS BOTH behind a switch — his eleven by default, the arithmetic's eight labelled not ruled, each merged card naming the blocks he keeps apart. Side by side was rejected and marked as the agent's pick (two copies of a 65×20 matrix do not fit one column). Round 1 stays a RECORD, byte-identical: it reads its own frozen inputs (recovered from `7f0390b^`) because round 2 had rewritten the living pair — before this, the generator refused to build at all, unnoticed since round 2 landed. probe-matrices 76/0 (record) + 87/0 (round 2), both re-run by the orchestrator; three mutants RED.
 | 2026-09-22 | D-021 + D-022 BUILT — the brain map's stage grouping and the Keep-only control | suite `8f1bbbf` | Option C landed as a CONTROL, not a click: Keep only sits in its own Filter group at the end of the rail, keeps the node opened last, says what it keeps and how many nodes are quiet, dims them (never removes), and survives clicks, placements and groupings until removed. "By stage" draws HIS OWN SPINE as the first level — the eight rows of `endpoint-stages.md`, the UNCAUGHT bay and the CLIENT screen marked as the record calls them, then this map's own Across the stages branch — with each block's stage list authored from the record and cited line by line. Where a block spans rows the page offers BOTH rules, marked: the recorded one leaves all six stages and the bay empty, which is the argument for the other. THREE review rounds, each one caught real defects: four spanning blocks pinned to one stage and Client forced onto ANSWER; the bay dropped, a count typed ("five") and an assert that could not fail; then four sentences false against what the page draws (the rotation claim, a branch's number, a caption, and a press that only flipped a flag). The generator now enforces what prose cannot — order must equal the record with kinds, every stage line opens with the record's own words, the whole words file is swept for typed numbers with five named exemptions, and the ui lines are checked against the template both ways. Probe 94 → 158/0; mutants RED in every round, incl. five generator gates. Real-click walk added (`walk-brainmap.mjs`, 15 pictures).
+| 2026-09-23 | THE FOLD CLOSED — the working set shrinks into `records/` | uncommitted | The lab's section map tab carries the brain map (groupings, Keep only, the moves, three placements; `probe-eplab.mjs` MAP NAV carries its ruling asserts, `walk-fold.mjs` walked it with no page errors), so the page RETIRED: `brainmap-endpoint.html`, its template, probe, walk and `brainmap-shots/` moved to `records/brainmap/`; `gen-brainmap.js` now writes only `brainmap-endpoint.json` (its data unchanged; `about` and `page` now name the lab), and the section map's `source.map` names the lab (`_lab-ep.js` regenerated: two strings moved). Also moved, each after a repo grep found no live reader: the review group with its ruled JSON, raw returns and `review-plan.md` → `records/review/` · `m1-round1.raw.json` → `records/m1-round1/` · `census-b14.md` + `.py` → `records/census-b14/` · `console-rules.md` → `records/`, its three lines not in D-002/D-008 backfilled there. This file's header was trimmed to pointers. Lab probe 1397/0 · brain-map record probe 158/0 from its new folder · all-endpoints probe 380/0. |

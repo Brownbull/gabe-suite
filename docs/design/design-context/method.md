@@ -54,7 +54,7 @@ the agent's pick (always marked).
 **What the procedure still lacks.** (a) M3 (attribute × channel) and M4 (cardinality × zone) have no generator. (b) Nothing
 ranks ACROSS endpoints — "Standard or specialist" has no instrument; the all-endpoints page (D-024) supplies the distribution
 a rating is checked against (a 3 that is empty on most endpoints is a finding about the rating). (c) Record pages have no
-freeze guard except `gen-review.js`'s `review-leftovers.ruled.json`; `gen-gaps.js`, `gen-rate-sheet.js` and round 1 of
+freeze guard except `gen-review.js`'s `review-leftovers.ruled.json` (both now in `records/review/`); `gen-gaps.js`, `gen-rate-sheet.js` and round 1 of
 `gen-matrices.js` need the same.
 
 ## The rules the agent works under (guide §11, adopted; 10–13 added from D-025)

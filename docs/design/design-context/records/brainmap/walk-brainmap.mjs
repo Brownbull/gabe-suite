@@ -1,13 +1,13 @@
 /* walk-brainmap.mjs — REAL mouse clicks only, from a cold load of the brain map through the two things D-021 and D-022 added:
    the By stage grouping (his eight-row spine, two rules) and the Keep-only CONTROL that a click can never turn on.
 
-     node docs/design/design-context/walk-brainmap.mjs      # writes brainmap-shots/walk/*.png · browser-gated, run it ALONE (~30 s)
+     node docs/design/design-context/records/brainmap/walk-brainmap.mjs      # writes brainmap-shots/walk/*.png · browser-gated, run it ALONE (~30 s)
 
    A click path he is asked to follow comes from a walk like this one — mouse clicks at the control's centre, the words read off
    the controls, a picture per step — or it is not handed over (the standing rule since leftovers piece 10). */
 import { createRequire } from 'node:module'; import path from 'node:path'; import fs from 'node:fs';
 const require = createRequire(import.meta.url);
-const REPO = '/home/khujta/projects/gabe_lens', HERE = REPO + '/docs/design/design-context';
+const REPO = '/home/khujta/projects/gabe_lens', HERE = REPO + '/docs/design/design-context/records/brainmap';   // a RECORD since 2026-09-23 (the page retired, D-024)
 const OUT = HERE + '/brainmap-shots/walk';
 const { chromium } = require(path.join(REPO, 'docs/design/graft-adoption/spike/_build/node_modules/playwright-core'));
 fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive: true });

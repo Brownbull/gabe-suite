@@ -1,9 +1,9 @@
 /* probe-review.mjs — the review page: every decision rules, the text follows, every reference it prints exists.
 
-     node docs/design/design-context/probe-review.mjs [--html <file>]      # browser-gated; run it ALONE */
+     node docs/design/design-context/records/review/probe-review.mjs [--html <file>]      # browser-gated; run it ALONE */
 import { createRequire } from 'node:module'; import path from 'node:path'; import fs from 'node:fs'; import os from 'node:os';
 const require = createRequire(import.meta.url);
-const HERE = path.dirname(new URL(import.meta.url).pathname), REPO = path.resolve(HERE, '../../..');
+const HERE = path.dirname(new URL(import.meta.url).pathname), REPO = path.resolve(HERE, '../../../../..');
 const PW = path.join(REPO, 'docs/design/graft-adoption/spike/_build/node_modules/playwright-core'), CHROME = '/usr/bin/google-chrome-stable';
 const args = process.argv.slice(2), SRC = args.indexOf('--html') >= 0 ? path.resolve(args[args.indexOf('--html') + 1]) : path.join(HERE, 'review-leftovers.html');
 if (!fs.existsSync(CHROME) || !fs.existsSync(PW)) { console.log('SKIP ⚠ — no system chrome / playwright-core on this host (RENDER COVERAGE DID NOT RUN)'); process.exit(0); }

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* gen-review.js — the review of the leftovers program, as a Gabe Artifact page the operator rules on.
 
-     node docs/design/design-context/gen-review.js [--check]
+     node docs/design/design-context/records/review/gen-review.js [--check]   # a RECORD since 2026-09-23: the ruled guard below exits first
 
    READS   review.words.json (authored lines, plain-audited) · ../workflow-panel/_lab-ep.js (the lab's facts) · ../workflow-panel/_lab-ep-panels.js
            (the 36 stage norms and the four test-role words, lifted from the code that draws them — never retyped) · ../workflow-panel/pieces-digest.json ·
@@ -11,7 +11,8 @@
    No wallclock: same inputs, same bytes. */
 "use strict";
 const fs = require("fs"), path = require("path"), crypto = require("crypto");
-const HERE = __dirname, ROOT = path.resolve(HERE, "../../.."), WP = path.join(HERE, "../workflow-panel"), OUT = path.join(HERE, "review-leftovers.html");
+const HERE = __dirname, DC = path.resolve(HERE, "../.."), ROOT = path.resolve(DC, "../../.."), WP = path.join(DC, "../workflow-panel"), OUT = path.join(HERE, "review-leftovers.html");
+/* HERE is records/review/ (the review's own files); DC is design-context/, where the living inputs stay */
 const die = (m) => { console.error("gen-review: " + m); process.exit(2); };
 /* a RULED review is a record: the lab moves on after a ruling, so regenerating would rewrite what he ruled on */
 { const RULED = path.join(HERE, "review-leftovers.ruled.json"); if (fs.existsSync(RULED)) { const r = JSON.parse(fs.readFileSync(RULED, "utf8"));
@@ -58,12 +59,12 @@ const FACTS = {
   slotwords: slotWords,
   afterhandler: (L.security.resolution.rows || []).filter((r) => r.runs_after_the_handler).map((r) => ({ name: r.name, n: r.applies_to, of: r.endpoints })),
 };
-const PLAN10 = rd(path.join(HERE, "../element-forms/plans/slice-11e-does.plan.json")).plan, PLAN11 = rd(path.join(HERE, "../element-forms/plans/kinds-inflight.plan.json")).plan;
+const PLAN10 = rd(path.join(DC, "../element-forms/plans/slice-11e-does.plan.json")).plan, PLAN11 = rd(path.join(DC, "../element-forms/plans/kinds-inflight.plan.json")).plan;
 const listIn = (txt, rx, what) => { const m = rx.exec(txt); if (!m) die("the plan no longer carries " + what); return m[1].split(/[,·]/).map((s) => s.replace(/["'`\s]/g, "")).filter(Boolean); };
 const classes = listIn(PLAN10.rosters, /DOES_CLASSES = \(([^)]*)\)/, "DOES_CLASSES"), states = listIn(PLAN10.rosters, /DOES_STATES = \(([^)]*)\)/, "DOES_STATES"), kinds = listIn(PLAN11.schema, /`kind` \(([^)]*)\)/, "the row kinds");
 const worded = (list, dict, what) => list.map((k) => ({ k, plain: (dict[k] || die(`no plain line for the ${what} "${k}" — add it to review.words.json`)).plain }));
 const ex = /```json\n([\s\S]*?)```/.exec(PLAN10.schema) || die("the plan's worked example is gone");
-const FX = rd(path.join(HERE, "gaps-endpoint.effects.raw.json")).verified.pieces.find((x) => x.key === "alive-during-the-request") || die("no effects entry for piece 11");
+const FX = rd(path.join(DC, "gaps-endpoint.effects.raw.json")).verified.pieces.find((x) => x.key === "alive-during-the-request") || die("no effects entry for piece 11");
 const runs10 = PLAN10.landing_order.map((s, i) => { const m = /COST:\s*([^]*?)(?:\s+PASS\b|$)/.exec(s); return m && /\bmin/.test(m[1]) ? { step: i, cost: m[1].trim().replace(/\s+/g, " ").slice(0, 150) } : null; }).filter(Boolean);
 FACTS.p10 = { runs: runs10, example: ex[1].trim(), predicted: /predicted from source/i.test(PLAN10.schema), classes: worded(classes, W.classes, "class"), states: worded(states, W.states, "state word"), steps: PLAN10.landing_order.length, risks: PLAN10.risks.length };
 const steps11 = PLAN11.landing_order.map((s, i) => { const m = /\((~[^)]*?\b(?:days?|h)\b[^)]*)\)/.exec(s), name = /^\s*\d+\s*·\s*([^,(:—]+)/.exec(s); return m ? { step: i, name: name ? name[1].trim().slice(0, 40) : "step " + i, cost: m[1].replace(/^~/, "about ") } : null; }).filter(Boolean);
@@ -76,7 +77,7 @@ const png = (n) => { const p = path.join(SH, n + ".png"); if (!fs.existsSync(p))
 /* numbers inside an authored sentence are tokens the facts fill — a sentence never carries a typed count */
 const thr = f.paths.find((x) => x.id === f.through.id), opener = thr.chain.find((c) => (c.kind === "call" || c.kind === "collapsed") && ((f.inside.calls[c.fn] || {}).opens || []).length) || die("no call on the through-route opens");
 const nIn = f.inside.calls[opener.fn].n, ord = (n) => { const s = ["th", "st", "nd", "rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
-const invRow = /(\d+) of (\d+) endpoints have client code that reads their failures/.exec(fs.readFileSync(path.join(HERE, "inventory-endpoint.md"), "utf8")) || die("the inventory no longer carries the measured client row");
+const invRow = /(\d+) of (\d+) endpoints have client code that reads their failures/.exec(fs.readFileSync(path.join(DC, "inventory-endpoint.md"), "utf8")) || die("the inventory no longer carries the measured client row");
 const routeOnlyT = L.data.tables.filter((t) => t.found === "route effects").map((t) => t.table), top = String(L.context.risk.behind_max_of || ""), topIsEndpoint = /^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS) /.test(top);
 const kindsIn = (n) => { const parts = [[n.raises, "failure"], [n.refusals, "refusal"], [n.commits, "save"], [n.savepoints, "savepoint"], [n.swallows, "swallowed failure"]].filter((x) => x[0]).map((x) => x[0] + " " + x[1] + (x[0] === 1 ? "" : "s")); return parts.length > 1 ? parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1] : parts.join(""); };
 const TOK = { doorElsewhere, loginCheck: (JSON.stringify(L).match(/login check/g) || []).length, feReaders: invRow[1], appEndpoints: L.feedwide.forms_endpoints, routeOnlyNames: routeOnlyT.join(" and "),
@@ -97,7 +98,7 @@ const decisions = W.decisions.map((d0) => { if (!["code", "map"].includes(d0.nat
   d.impacts = Object.fromEntries(Object.entries(d0.impacts).map(([k, v]) => [k, { size: v.size, does: fill(v.does) }])); if (d.facts && !FACTS[d.facts]) die(`${d.id}: no facts named ${d.facts}`); if (!d.options.some((o) => o[0] === d.mine)) die(`${d.id}: my pick "${d.mine}" is not one of its options`);
   return Object.assign({}, d, { facts: d.facts ? { key: d.facts, v: FACTS[d.facts] } : null, shot: d.shot ? png(d.shot) : null, shot2: d.shot2 ? png(d.shot2) : null }); });
 if (new Set(decisions.map((d) => d.id)).size !== decisions.length) die("two decisions share an id");
-const inv = fs.readFileSync(path.join(HERE, "inventory-endpoint.md"), "utf8"), proposed = inv.split("\n").filter((l) => /^\|/.test(l) && /\(proposed\)/.test(l)).length;
+const inv = fs.readFileSync(path.join(DC, "inventory-endpoint.md"), "utf8"), proposed = inv.split("\n").filter((l) => /^\|/.test(l) && /\(proposed\)/.test(l)).length;
 const text = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v.text]));
 const liveN = (k) => W.decisions.filter((x) => x.live === k).length; for (const x of W.decisions) if (!W.live_words[x.live]) die(x.id + ": no word for live = " + x.live);
 Object.assign(TOK, { mapN: W.decisions.filter((x) => x.nature === "map").length, undrawnLines: norms.filter((n) => !n.drawn).length, liveWorth: liveN("worth"), liveOptional: liveN("optional"), liveNone: liveN("none"), topicsN: Object.keys(NORMS).length, drawnTopics: Object.keys(NORMS).filter(drawnTopic).length });
@@ -106,7 +107,7 @@ const data = { kind: "leftovers-review", drawnWords: W.drawn_words, liveWords: W
   map: { img: png("lab-map"), regions: clicks.regions }, ratings: { proposed, url: "https://claude.ai/artifact/B9RnoRC3JV993XZYtAb9fJ" },
   hash: crypto.createHash("sha1").update(JSON.stringify([norms.map((n) => [n.id, n.line]), W.decisions.map((d) => [d.id, d.options, d.mine])])).digest("hex").slice(0, 8) };
 
-const { kitBlocks, withoutMotion } = require("./kit-blocks.js"); let KIT; try { KIT = withoutMotion(kitBlocks(ROOT), ""); } catch (e) { die(e.message); }
+const { kitBlocks, withoutMotion } = require(path.join(DC, "kit-blocks.js")); let KIT; try { KIT = withoutMotion(kitBlocks(ROOT), ""); } catch (e) { die(e.message); }
 let html = fs.readFileSync(path.join(HERE, "review.tpl.html"), "utf8");
 for (const [mark, val] of [["<!--__KIT1__-->", KIT.k1], ["<!--__KIT2__-->", KIT.k2.trim()], ["<!--__KIT3__-->", KIT.k3], ["/*__DATA__*/null", JSON.stringify(data).replace(/</g, "\\u003c")]]) { if (!html.includes(mark)) die("template marker missing: " + mark); html = html.replace(mark, () => val); }
 if (process.argv.includes("--check")) { const ok = fs.existsSync(OUT) && fs.readFileSync(OUT, "utf8") === html; console.log(ok ? "review-leftovers.html is current" : "review-leftovers.html is STALE — run gen-review.js"); process.exit(ok ? 0 : 1); }
