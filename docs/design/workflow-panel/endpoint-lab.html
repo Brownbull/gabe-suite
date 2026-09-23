@@ -29,12 +29,20 @@
 <style id="stationvars">/* filled at boot from STATION.CSSVARS + STATION.CARDCSS — the station's palette and card chrome, verbatim */</style>
 <link rel="stylesheet" href="_lab-ep.css">
 <div id="lab">
+  <!-- the title line (his ask 2026-09-23, as on the all-endpoints page): the name, an info toggle, then the endpoint picker; the
+       page's description sits behind the toggle, closed by default. The could-not-open line stays on the face: it is actionable. -->
   <header id="lede">
-    <div class="ltitle"><span id="ledeglyph"></span><b>Endpoint lab</b> · the six parts of an API endpoint, one panel at a time</div>
+    <div class="ltitle"><span id="ledeglyph"></span><b>Endpoint lab</b>
+      <button class="litog" type="button" id="ledetog" aria-expanded="false" aria-controls="ledeinfo" aria-label="What this page is" title="What this page is"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg></button>
+      <span id="ledebench">—</span></div>
     <div class="lmiss" id="ledemiss" hidden></div>
-    <div class="lsub">bench <span id="ledebench">—</span> · facts from the frozen example feed head <code id="ledehead">—</code> · station tokens lifted by regex · nothing typed by hand.
+    <div class="lsub" id="ledeinfo" hidden>The six parts of an API endpoint, one panel at a time · facts from the frozen example feed head <code id="ledehead">—</code> · station tokens lifted by regex · nothing typed by hand.
       The bench on the right holds ONLY what would be built — the head strip, the part buttons and the panel. Every lab control lives in the rail on the left, above the no-loss checklist, so nothing you are judging is a knob.</div>
   </header>
+  <script>(function(){ var K = "eplab.ledeinfo", b = document.getElementById("ledetog"), box = document.getElementById("ledeinfo");
+    function set(on){ box.hidden = !on; b.setAttribute("aria-expanded", String(on)); try { localStorage.setItem(K, on ? "1" : "0"); } catch (e) {} }
+    var on = false; try { on = localStorage.getItem(K) === "1"; } catch (e) {} box.hidden = !on; b.setAttribute("aria-expanded", String(on));
+    b.addEventListener("click", function(){ set(box.hidden); }); })();</script>
   <div id="row">
     <!-- the LAB RAIL. Nothing here ships with the console: these are the bench's own controls, kept
          OUT of the panel so what you judge is only what would be built (operator 2026-09-11). -->
