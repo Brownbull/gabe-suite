@@ -305,8 +305,8 @@ ok(labSha() === LAB0, 'the lab\'s own facts file is untouched by the sample');
     const own = [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()); if (!own) return; const fs = parseFloat(getComputedStyle(e).fontSize); if (fs < 12) bad.push(e.tagName + '.' + e.className + ' ' + fs); }); return bad; });
   ok(!small.length, 'no visible text under the 12px floor', small.slice(0, 4));
   await p.keyboard.press('Escape'); await p.waitForTimeout(40); ok(!(await p.isVisible('#side')), 'Escape closes the side panel');
-  const picks = await p.evaluate(() => [...document.querySelectorAll('.rgrp')].map((g) => g.querySelectorAll('.opt[data-pick]').length));
-  ok(picks.length && picks.every((n) => n === 1), 'every rail marks exactly one option as my pick', picks);
+  const picks = await p.evaluate(() => [...document.querySelectorAll('.rgrp')].map((g) => g.querySelectorAll('.opt[data-pick], .opt[data-ruled]').length));
+  ok(picks.length && picks.every((n) => n === 1), 'every rail marks exactly one option as its default, his or mine', picks);
   await pick('cols', 'top');
   const rs = await p.evaluate(() => [...document.querySelectorAll('#board thead th[data-col]')].map((h) => window.__allep.data.cols.find((c) => c.id === h.getAttribute('data-col')).r));
   ok(rs.length && rs.every((r) => r === D.tok.rTop), 'rated-top-only draws only the columns the inventory rates at the top', rs);
@@ -327,6 +327,172 @@ ok(labSha() === LAB0, 'the lab\'s own facts file is untouched by the sample');
   const back = await p.evaluate(() => { const bd = document.getElementById('board'), b0 = document.querySelector('#board thead tr.bh th.bstart'); return [Math.round(bd.getBoundingClientRect().top), Math.round(b0.getBoundingClientRect().top)]; });
   ok(Math.abs(back[1] - back[0]) <= 2, 'with the page at its top, the header sits at the board\'s top', back); }
 ok(!errs.length, 'no page error', errs);
+
+/* 8 · D-034: his five defaults, the dash on my picks only, every option an icon square, the Shared group standing out */
+const DECISIONS = path.join(REPO, 'docs/design/design-context/decisions.md');
+const PRISMS = path.join(REPO, 'docs/design/design-context/prisms-endpoint.json');
+{ /* his paste, read from the ruling itself: the lines after "page:" are what the page's copy text must say on a cold start */
+  const dec = fs.readFileSync(DECISIONS, 'utf8'), sec = dec.slice(dec.indexOf('## D-034'));
+  const m = sec.slice(0, 1500).replace(/\n/g, ' ').match(/pasted \(.*?\): "(page: .*?)", with "your words:"/);
+  const paste = m ? m[1].split(' / ').map((x) => x.trim()) : [];
+  ok(paste.length === 5 && /^page: all-endpoints/.test(paste[0]), 'the ruling D-034 carries his pasted copy line', paste);
+  const RULED = { lay: 'layout', grp: 'grouped by', cols: 'columns', shared: 'columns', bord: 'columns' };   /* the rails his paste names, by the copy line that says them */
+  const W8 = D.words, name = (r, k) => W8.rail[r].opts[k].name.replace('{cards}', D.layouts[k]).replace('{rTop}', D.tok.rTop);
+  const said = (r, k) => paste.some((l) => l.startsWith(RULED[r] + ': ') && l.slice(RULED[r].length + 2).split(' · ').some((x) => x.replace(/ \(\d+\)$/, '') === name(r, k)));
+  ok(Object.keys(RULED).every((r) => said(r, W8.rail[r].pick)), 'each ruled rail\'s default is the option his paste names', Object.fromEntries(Object.keys(RULED).map((r) => [r, W8.rail[r].pick])));
+  const ruledSet = Object.keys(W8.rail).filter((r) => W8.rail[r].ruled).sort();
+  ok(JSON.stringify(ruledSet) === JSON.stringify(Object.keys(RULED).sort()), 'exactly the rails his paste names are marked ruled', ruledSet);
+  const cold = async () => p.evaluate(() => ({ st: Object.fromEntries(window.__allep.rails.map((r) => [r, window.__allep.state[r]])), sort: window.__allep.state.sort,
+    out: document.getElementById('out').value.split('\n') }));
+  /* the copy text's state block (the lines before the first empty one), split into his paste's lines and the Shared treatment's
+     line — the one rail on the copy text he has not ruled; everything else must be his paste, line for line and in order */
+  const CL = W8.copy.lines, isSlook = (l) => l.startsWith(CL.slook + ': ');
+  const asPaste = (out) => { const blk = out.slice(0, out.indexOf('')), his = blk.filter((l) => !isSlook(l));
+    return { blk, his, same: his.length === paste.length && his[0] === 'page: all-endpoints · ' + D.tok.app + ' @ ' + D.tok.head && JSON.stringify(his.slice(1)) === JSON.stringify(paste.slice(1)) }; };
+  await open(PAGE);
+  const c0 = await cold(), a0 = asPaste(c0.out);
+  ok(a0.same, 'a cold start\'s copy text is his paste line for line, with the Shared treatment\'s line set aside', { page: a0.his, his: paste });
+  const sl = a0.blk.filter(isSlook), colsAt = a0.blk.findIndex((l) => l.startsWith(CL.cols + ': '));
+  ok(sl.length === 1 && a0.blk.length === paste.length + 1 && a0.blk.indexOf(sl[0]) === colsAt + 1, 'the copy text adds one line to his paste, the Shared treatment\'s, right under the columns line', a0.blk);
+  ok(c0.sort === null, 'a cold start is in path order', c0.sort);
+  /* an old remembered state, from before the ruling, must not override it */
+  const OLD = { lay: 'three', grp: 'method', alone: 'own', gord: 'name', shared: 'first', bord: 'card', cols: 'top', heat: 'plain', norm: 'full', sort: { col: 'tables', dir: -1 } };
+  await p.evaluate((o) => { localStorage.setItem('gabe:allep:v1', JSON.stringify(o)); }, OLD); await p.reload(); await p.waitForFunction('window.__allep && window.__allep.ready');
+  const c1 = await cold();
+  ok(asPaste(c1.out).same && c1.sort === null, 'over a state remembered before the ruling, the page still opens on his defaults', { page: asPaste(c1.out).his, sort: c1.sort });
+  ok(JSON.stringify(c1.st) === JSON.stringify(c0.st), 'over a state remembered before the ruling, every rail opens on its default', { cold: c0.st, over: c1.st });
+  ok(await p.evaluate(() => localStorage.getItem('gabe:allep:v1') === null), 'the state remembered before the ruling is dropped');
+  await open(PAGE);
+
+  /* the dash: on exactly the defaults of the rails he has not ruled, and on nothing else */
+  const opts = await p.evaluate(() => [...document.querySelectorAll('#rail .opt')].map((o) => { const cs = getComputedStyle(o), sv = o.querySelector('svg'), bx = o.getBoundingClientRect();
+    return { r: o.getAttribute('data-rail'), v: o.getAttribute('data-v'), dash: cs.borderTopStyle === 'dashed' && cs.borderLeftStyle === 'dashed', on: o.getAttribute('aria-checked') === 'true',
+      aria: o.getAttribute('aria-label'), svg: sv ? sv.innerHTML : null, shapes: sv ? sv.querySelectorAll('path,rect,circle,line,polyline').length : 0,
+      text: (o.textContent || '').trim(), w: bx.width, h: bx.height, hidden: !o.offsetParent }; }));
+  const unruled = Object.keys(W8.rail).filter((r) => !W8.rail[r].ruled);
+  const dashed = opts.filter((o) => o.dash);
+  ok(dashed.length === unruled.length && dashed.every((o) => !W8.rail[o.r].ruled && W8.rail[o.r].pick === o.v), 'a dashed border sits on exactly one option per unruled rail, its default', { dashed: dashed.map((o) => o.r + ':' + o.v), unruled });
+  ok(!opts.some((o) => W8.rail[o.r].ruled && o.dash), 'no option of a ruled rail wears a dash', opts.filter((o) => W8.rail[o.r].ruled && o.dash).map((o) => o.r + ':' + o.v));
+  ok(Object.keys(W8.rail).every((r) => opts.some((o) => o.r === r && o.v === W8.rail[r].pick && o.on)), 'on a cold start every rail\'s default is the pressed square');
+  /* every option an icon square: a drawn svg, no words on its face, its words in its aria-label */
+  const iconBad = opts.filter((o) => !o.svg || !o.shapes || o.text !== '' || o.aria !== name(o.r, o.v));
+  ok(opts.length === Object.values(W8.rail).reduce((n, R) => n + Object.keys(R.opts).length, 0) && !iconBad.length, 'every option is an icon with its words as its aria-label', iconBad.slice(0, 3));
+  ok(opts.filter((o) => !o.hidden).every((o) => o.w <= 36 && o.h <= 36 && Math.abs(o.w - o.h) <= 1), 'every option is a small square', opts.filter((o) => o.w > 36 || Math.abs(o.w - o.h) > 1).slice(0, 3));
+  const icons = opts.map((o) => o.svg);
+  ok(new Set(icons).size === icons.length, 'no two options draw the same icon', opts.filter((o, i) => icons.indexOf(o.svg) !== i).map((o) => o.r + ':' + o.v));
+  /* resemblance, not only identity: every icon rasterised as the square draws it (stroke 2, round caps, .fl filled) at 48px,
+     and every pair's overlap (intersection over union of the inked pixels) stays under IOU_MAX. It measures a shared
+     silhouette — a sort arrow on two rails, a framed square on five — never what an icon MEANS; that is his to judge by looking */
+  const IOU_MAX = 0.58;
+  const iou = await p.evaluate(async () => { const I = window.__allep.icons, S = 48, flat = [];
+    Object.keys(I).forEach((r) => Object.keys(I[r]).forEach((k) => flat.push([r + ':' + k, I[r][k]])));
+    const mask = async (inner) => { const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="' + S + '" height="' + S + '" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><style>.fl{fill:#000;stroke:none}</style>' + inner + '</svg>';
+      const im = new Image(); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); await im.decode();
+      const c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d'); x.drawImage(im, 0, 0); const d = x.getImageData(0, 0, S, S).data;
+      const m = new Uint8Array(S * S); for (let i = 0; i < S * S; i++) m[i] = d[i * 4 + 3] > 64 ? 1 : 0; return m; };
+    const M = []; for (const [n, s] of flat) M.push([n, await mask(s)]);
+    const out = []; for (let i = 0; i < M.length; i++) for (let j = i + 1; j < M.length; j++) { let a = 0, u = 0;
+      for (let q = 0; q < S * S; q++) { const x = M[i][1][q], y = M[j][1][q]; if (x && y) a++; if (x || y) u++; } out.push([M[i][0], M[j][0], u ? a / u : 1]); }
+    return { n: M.length, inked: M.every(([, m]) => m.some((v) => v)), pairs: out.sort((a, b) => b[2] - a[2]) }; });
+  ok(iou.n === opts.length && iou.inked && iou.pairs[0][2] < IOU_MAX, 'no two option icons share most of their inked pixels (overlap under ' + IOU_MAX + ')', iou.pairs.slice(0, 3));
+  /* the hover names the option (and says whose default it is) */
+  const tipBad = [], longBad = [], HOVER_MAX = 20;
+  for (const o of opts.filter((x) => !x.hidden)) {
+    await p.hover(`.opt[data-rail="${o.r}"][data-v="${o.v}"]`); await p.waitForTimeout(15);
+    const t = await p.evaluate(() => { const tp = document.getElementById('tip'); return tp.getAttribute('data-show') === 'true' ? tp.textContent : ''; });
+    const mark = W8.rail[o.r].pick !== o.v ? null : W8.rail[o.r].ruled ? W8.ruledMark : W8.pickMark;
+    if (!t.startsWith(o.aria) || (mark && !t.includes(mark)) || (!mark && (t.includes(W8.pickMark) || t.includes(W8.ruledMark)))) tipBad.push([o.r, o.v, t.slice(0, 60)]);
+    const words = t.split(/\s+/).filter((w) => /[A-Za-z0-9{]/.test(w)).length; if (words > HOVER_MAX) longBad.push([o.r, o.v, words]); }
+  ok(!tipBad.length, 'every icon\'s hover names it, and a default\'s says whose it is', tipBad.slice(0, 3));
+  ok(!longBad.length, 'every icon\'s hover is ' + HOVER_MAX + ' words or fewer, its name included (D-009: a control\'s hover is short)', longBad.slice(0, 4));
+  await p.mouse.move(5, 5);
+  /* keyboard focus stays visible on an icon square */
+  await p.focus('.opt[data-rail="lay"][data-v="rows"]'); await p.keyboard.press('Tab');
+  const foc = await p.evaluate(() => { const a = document.activeElement, cs = getComputedStyle(a); return { opt: a.classList.contains('opt'), style: cs.outlineStyle, w: parseFloat(cs.outlineWidth) }; });
+  ok(foc.opt && foc.style !== 'none' && foc.w >= 2, 'keyboard focus on an icon square is drawn', foc);
+  /* a press from the keyboard: the rail is rebuilt, and focus stays on the square pressed, its name still in the focus tip */
+  await p.focus('.opt[data-rail="grp"][data-v="seg"]'); await p.keyboard.press('Space'); await p.waitForTimeout(40);
+  const kp = await p.evaluate(() => { const a = document.activeElement, tp = document.getElementById('tip');
+    return { grp: window.__allep.state.grp, r: a.getAttribute('data-rail'), v: a.getAttribute('data-v'), tip: tp.getAttribute('data-show') === 'true' ? tp.textContent : '' }; });
+  ok(kp.grp === 'seg' && kp.r === 'grp' && kp.v === 'seg' && kp.tip.startsWith(name('grp', 'seg')), 'after a key press on an icon, focus stays on that icon and its tip names it', kp);
+  await pick('grp', W8.rail.grp.pick);
+  /* pressing each icon still switches what it switched: its rail's state, its pressed look, every endpoint drawn once */
+  const swBad = [];
+  for (const r of Object.keys(W8.rail)) for (const k of Object.keys(W8.rail[r].opts)) {
+    if (r === 'slook') await pick('shared', 'own');
+    if (r === 'alone' || r === 'gord') await pick('grp', 'entity');
+    await pick(r, k);
+    const st = await p.evaluate((r) => ({ v: window.__allep.state[r], on: [...document.querySelectorAll('.opt[data-rail="' + r + '"][aria-checked="true"]')].map((o) => o.getAttribute('data-v')) }), r);
+    const ids = await drawn();
+    if (st.v !== k || st.on.length !== 1 || st.on[0] !== k || ids.length !== FEED.length || new Set(ids).size !== FEED.length) swBad.push([r, k, st, ids.length]); }
+  ok(!swBad.length, 'pressing each icon switches its rail, presses that icon alone, and draws every endpoint once', swBad.slice(0, 3));
+  await open(PAGE);
+
+  /* the Shared group stands out: each treatment differs, in the table header, down its cells and on a card; the default is my pick */
+  const nShare = (JSON.parse(fs.readFileSync(PRISMS, 'utf8')).clusterOpts || {}).spineClusters;
+  ok(D.tok.nShare === nShare && D.cols.filter((c) => c.shared).every((c) => c.sharedIn.length >= nShare), 'shared means needed by the tree\'s own count of blocks or more', { page: D.tok.nShare, tree: nShare });
+  ok(W8.rail.slook.pick && !W8.rail.slook.ruled && opts.some((o) => o.r === 'slook' && o.v === W8.rail.slook.pick && o.dash), 'the Shared treatment\'s default is my pick, dashed', W8.rail.slook.pick);
+  const sig = () => p.evaluate(() => { const g = (sel, ks) => { const e = document.querySelector(sel); if (!e) return null; const cs = getComputedStyle(e); return ks.map((k) => cs[k]).join('|'); };
+    const K = ['backgroundColor', 'borderTopWidth', 'borderTopColor', 'borderLeftWidth', 'borderLeftColor', 'borderRightWidth', 'fontWeight', 'color'];
+    return { band: g('#board thead tr.bh th[data-block="_shared"]', K), other: g('#board thead tr.bh th[data-block]:not([data-block="_shared"]):not(.bz)', K),
+      head: g('#board thead tr.ch th.shf', K), cell: g('#board tbody tr.row td.shf', K), last: g('#board tbody tr.row:last-child td.shl', ['borderBottomWidth', 'borderBottomColor', 'borderRightWidth']),
+      n: document.querySelectorAll('#board thead tr.ch th.sh').length,
+      heads: [...document.querySelectorAll('#board thead tr.ch th.sh')].map((h) => { const cs = getComputedStyle(h), hd = getComputedStyle(h.querySelector('.hd'));
+        return [cs.backgroundColor, cs.borderTopWidth, cs.borderTopColor, cs.borderLeftWidth, cs.borderLeftColor, cs.borderRightWidth, cs.borderRightColor, hd.color, hd.fontWeight].join('|'); }) }; });
+  const nSharedCols = D.cols.filter((c) => c.shared).length, looks = Object.keys(W8.rail.slook.opts), S8 = {};
+  for (const lk of looks) { await pick('slook', lk); S8[lk] = await sig(); }
+  /* the untreated Shared group, measured by lifting the board's treatment for one reading (a measurement, not a click path) */
+  const bare = await p.evaluate(() => { const bd = document.getElementById('board'), was = bd.getAttribute('data-slook'); bd.setAttribute('data-slook', ''); return was; })
+    .then(async (was) => { const x = await sig(); await p.evaluate((w) => document.getElementById('board').setAttribute('data-slook', w), was); return x; });
+  ok(looks.every((lk) => S8[lk].band !== bare.band), 'every treatment changes the Shared header from its untreated look', looks.map((lk) => [lk, S8[lk].band === bare.band]));
+  /* measured per column head, against that same head untreated: a treatment that styles only the group's edges leaves the
+     middle heads as they were, and this goes red */
+  const sameHeads = (lk) => S8[lk].heads.map((h, i) => (h === bare.heads[i] ? i : -1)).filter((i) => i >= 0);
+  ok(looks.length >= 2 && looks.every((lk) => S8[lk].n === nSharedCols && bare.heads.length === nSharedCols && !sameHeads(lk).length),
+    'under every Shared treatment, each shared column\'s own head looks different from that head untreated', looks.map((lk) => [lk, S8[lk].n, sameHeads(lk)]));
+  /* the band is the Shared group's own hue, not the heat's: an empty Shared cell's ground must not read as a small tinted number.
+     Colours are read as computed; the heat chips are the accent at every tint the page draws (8% to 50%) laid over the card */
+  const hueRead = (theme) => p.evaluate(({ theme }) => { const bd = document.getElementById('board');
+    const rgb = (css, prop) => { const q = document.createElement('i'); q.style[prop || 'backgroundColor'] = css; bd.appendChild(q); const c = getComputedStyle(q)[prop || 'backgroundColor']; q.remove(); return c; };
+    const parse = (c) => { const n = c.match(/[\d.]+/g).map(Number); return c.startsWith('color(') ? n.slice(0, 3).map((x) => x * 255) : n.slice(0, 3); };
+    const A = parse(rgb('var(--accent)')), C = parse(rgb('var(--card)'));
+    const ground = (sel) => { const e = document.querySelector(sel); return e ? parse(getComputedStyle(e).backgroundColor) : null; };
+    const band = ground('#board tbody tr.row td.sh'), bz = ground('#board tbody tr.row td.bz:not(.sh)');
+    /* the hue of a TINT, read against the card it is laid on (a dark card is itself bluish): the ground's step from the card,
+       its grey part removed, as an angle from the accent's step; a step with almost no colour in it is neutral (180) */
+    const chroma = (x) => { const d = x.map((v, i) => v - C[i]), m = (d[0] + d[1] + d[2]) / 3; return [d.map((v) => v - m), Math.hypot(...d)]; };
+    const hueGap = (x) => { const [cx, nx] = chroma(x), [ca] = chroma(A), lx = Math.hypot(...cx), la = Math.hypot(...ca);
+      if (!nx || lx < 0.15 * nx) return 180; return Math.acos(Math.max(-1, Math.min(1, cx.reduce((s, v, i) => s + v * ca[i], 0) / (lx * la)))) * 180 / Math.PI; };
+    const chipDist = (x) => { let m = 1e9; for (let p = 8; p <= 50; p++) { const a = p / 100, ch = A.map((v, i) => a * v + (1 - a) * C[i]); m = Math.min(m, Math.hypot(...ch.map((v, i) => v - x[i]))); } return m; };
+    const hd = ground('#board thead tr.bh th[data-block="_shared"]'), other = ground('#board thead tr.bh th[data-block]:not([data-block="_shared"]):not(.bz)');
+    return { theme, card: C.map(Math.round).join(','), band: band && band.map(Math.round), bz: bz && bz.map(Math.round), bandGap: band && Math.round(hueGap(band)), bandChip: band && +chipDist(band).toFixed(1), bzGap: bz && Math.round(hueGap(bz)),
+      headOff: hd && other ? Math.round(Math.hypot(...hd.map((v, i) => v - other[i]))) : null }; }, { theme });
+  await pick('slook', 'band');
+  const H8 = [await hueRead('light')];
+  await p.emulateMedia({ colorScheme: 'dark' }); await p.waitForTimeout(60); H8.push(await hueRead('dark')); await p.emulateMedia({ colorScheme: 'light' }); await p.waitForTimeout(40);
+  ok(H8[0].card !== H8[1].card, 'the dark reading is taken with the page drawn dark', H8.map((h) => h.card));
+  ok(H8.every((h) => h.band && h.bandGap >= 40 && h.bandChip >= 8), 'under the band, a Shared cell\'s ground is outside the heat\'s hue and is no heat chip\'s colour, light and dark', H8);
+  ok(H8.every((h) => h.bz && h.bzGap >= 40), 'the alternating block ground is outside the heat\'s hue, light and dark', H8.map((h) => [h.theme, h.bz, h.bzGap]));
+  ok(H8.every((h) => h.headOff >= 60), 'under the band, the Shared header stands off another block\'s header by a colour distance of 60 or more, light and dark', H8.map((h) => [h.theme, h.headOff]));
+  const sigOf = (x) => [x.band, x.head, x.cell, x.last].join(' ~ ');
+  ok(new Set(looks.map((lk) => sigOf(S8[lk]))).size === looks.length, 'each Shared treatment looks different from the others', looks.map((lk) => [lk, S8[lk].band]));
+  ok(looks.every((lk) => S8[lk].band !== S8[lk].other), 'under every treatment the Shared header differs from another block\'s', looks.map((lk) => [S8[lk].band, S8[lk].other]));
+  await pick('lay', 'three');
+  const cardSig = () => p.evaluate(() => { const e = document.querySelector('#board .card .cb.sh'), f = document.querySelector('#board .card .cb:not(.sh)'); if (!e || !f) return null;
+    const k = (x) => { const cs = getComputedStyle(x); return [cs.backgroundColor, cs.borderTopWidth, cs.borderTopColor, cs.borderLeftWidth, cs.borderLeftColor].join('|'); }; return { sh: k(e), other: k(f) }; });
+  const C8 = {}; for (const lk of looks) { await pick('slook', lk); C8[lk] = await cardSig(); }
+  ok(looks.every((lk) => C8[lk] && C8[lk].sh !== C8[lk].other) && new Set(looks.map((lk) => C8[lk].sh)).size === looks.length, 'on a card, the Shared block stands out, differently under each treatment', C8);
+  await pick('lay', 'rows'); await pick('slook', W8.rail.slook.pick);
+  await p.hover('#board thead tr.bh th[data-block="_shared"]'); await p.waitForTimeout(20);
+  const stip = await p.evaluate(() => document.getElementById('tip').textContent);
+  ok(stip.includes(String(nShare)) && stip.includes(W8.sharedBlock.name), 'the Shared header\'s hover says how many blocks make an attribute shared', stip);
+  await p.mouse.move(5, 5);
+  await pick('shared', 'first');
+  const off = await p.evaluate(() => ({ sh: document.querySelectorAll('#board .sh').length, look: document.getElementById('board').getAttribute('data-slook'), hid: document.querySelector('.rgrp[data-rail="slook"]').hidden }));
+  ok(off.sh === 0 && off.look === '' && off.hid, 'with the shared columns under their first block, no Shared treatment is drawn and its rail steps aside', off);
+  await shot('d034-shared-first');
+  await pick('shared', 'own'); }
+ok(!errs.length, 'no page error after the D-034 checks', errs);
 
 /* 7 · an arm the feed lacks reads "absent", never 0 — on a fixture built from a scratch copy of the feed */
 { const copy = JSON.parse(JSON.stringify(FJ));

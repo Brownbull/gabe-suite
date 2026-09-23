@@ -20,12 +20,14 @@
     "cmd",
     "value",
     "model",
-    "amb"
+    "amb",
+    "rails",
+    "ruling"
   ],
   "eyebrow": "every endpoint of one app, side by side",
   "h1": "All {nRows} endpoints of {app}, one row each",
   "lede": "Each row is one endpoint. Each column is one attribute of the endpoint card, set under the card's {nBlocks} ruled blocks, so you read a column top to bottom to see a pattern. The small strip under every column header shows how that column's values spread over all {nRows} rows.",
-  "proposal": "This page is a proposal. Which attributes became columns, how each is drawn, and every way of grouping the rows are my picks. Each choice is on the rail below with my pick marked, so you can change it by looking.",
+  "proposal": "This page is a proposal. Which attributes became columns and how each is drawn are my picks. On the rail below, a square with a dashed border is my pick on a rail you have not ruled; a rail you ruled starts on your default, with no dash. Every square is yours to change by looking.",
   "stamp": "{app} at head {head} · {nFeed} endpoints in its feed",
   "partial": "A fixture page, not the app's page: it draws {nRows} of the feed's {nFeed} endpoints.",
   "keys": "Click a column header to sort by it, again to reverse it. Click a piece of a header strip to light the rows in it. Click a row for everything it holds.",
@@ -38,6 +40,7 @@
     "lay": {
       "label": "layout",
       "pick": "rows",
+      "ruled": "D-034",
       "opts": {
         "rows": {
           "name": "one per row",
@@ -56,6 +59,7 @@
     "grp": {
       "label": "group by",
       "pick": "entity",
+      "ruled": "D-034",
       "opts": {
         "entity": {
           "name": "entity",
@@ -71,11 +75,11 @@
         },
         "labels": {
           "name": "ending labels",
-          "plain": "Endpoints whose endings carry the same stage and status labels sit together. A clone shows up as a group."
+          "plain": "Endpoints with the same ending labels sit together, so clones group."
         },
         "counts": {
           "name": "ending counts",
-          "plain": "Endpoints with the same count in every kind of ending sit together. Coarser than the labels."
+          "plain": "Same count in every kind of ending; coarser than the labels."
         },
         "flat": {
           "name": "no groups",
@@ -89,11 +93,11 @@
       "opts": {
         "gather": {
           "name": "gathered at the end",
-          "plain": "Every group that holds a single endpoint is drawn together under one header at the bottom."
+          "plain": "Single-endpoint groups share one header at the bottom."
         },
         "own": {
           "name": "its own header",
-          "plain": "Every group gets its own header, even with a single endpoint in it."
+          "plain": "Every group gets a header, even a single endpoint."
         }
       }
     },
@@ -114,24 +118,44 @@
     "shared": {
       "label": "shared attributes",
       "pick": "own",
+      "ruled": "D-034",
       "opts": {
         "own": {
           "name": "their own group, first",
-          "plain": "An attribute several blocks need is homed in none of them by the ruled tree, so these columns stand in a group of their own, before the blocks."
+          "plain": "Attributes {nShare} or more blocks need, in a group before the blocks."
         },
         "first": {
           "name": "under the first block",
-          "plain": "A shared attribute is drawn under the first block, in the current block order, that needs it."
+          "plain": "Each shared attribute sits under the first block that needs it."
+        }
+      }
+    },
+    "slook": {
+      "label": "shared marked by",
+      "pick": "band",
+      "opts": {
+        "band": {
+          "name": "a tinted band",
+          "plain": "The Shared header and its columns tinted in their own colour."
+        },
+        "rule": {
+          "name": "a strong rule",
+          "plain": "A thick line above the Shared group, its name set bolder."
+        },
+        "box": {
+          "name": "a frame",
+          "plain": "The Shared group framed as a block of its own."
         }
       }
     },
     "bord": {
       "label": "block order",
       "pick": "stage",
+      "ruled": "D-034",
       "opts": {
         "stage": {
           "name": "stage order",
-          "plain": "Blocks in the brain map's stage order: a block sits by the first stage its list names, from the edge to the answer, and blocks that name no stage come last."
+          "plain": "Blocks from the edge to the answer, by the brain map's stages."
         },
         "card": {
           "name": "the card's order",
@@ -142,10 +166,11 @@
     "cols": {
       "label": "columns",
       "pick": "all",
+      "ruled": "D-034",
       "opts": {
         "all": {
           "name": "every column",
-          "plain": "Every column I drew, including the ones the inventory rates below the top, which I kept because a pattern needs them. Their headers say their rating."
+          "plain": "Every column, the lower-rated too; each header shows its rating."
         },
         "top": {
           "name": "rated {rTop} only",
@@ -159,7 +184,7 @@
       "opts": {
         "heat": {
           "name": "tinted by size",
-          "plain": "A number's cell is tinted by its value against the largest in its column, so a column reads as a picture."
+          "plain": "A number's cell tinted by its size against its column's largest."
         },
         "plain": {
           "name": "plain",
@@ -173,7 +198,7 @@
       "opts": {
         "quiet": {
           "name": "drawn quiet",
-          "plain": "In a column of names, the value most endpoints share is a faint dot, and every other value is written out, so the odd one speaks."
+          "plain": "In a name column, the most common value is a faint dot."
         },
         "full": {
           "name": "written out",
@@ -183,7 +208,9 @@
     }
   },
   "pickMark": "my pick",
-  "pickPlain": "The option I would choose alone. Yours to change.",
+  "pickKey": "dashed: my pick",
+  "pickKeyPlain": "A dashed border marks my pick on a rail you have not ruled. The rails without a dash start where you set them.",
+  "ruledMark": "your default",
   "sortBy": "sorted by {col}",
   "sortNone": "in path order",
   "sortReset": "back to path order",
@@ -198,7 +225,6 @@
   "unknown": "unknown",
   "absentWhy": "The feed carries no reading for this: {why}. This is not a zero.",
   "zeroWhy": "Zero, because {why}.",
-  "value": "{col}: {value}",
   "binWords": {
     "absent": "absent",
     "range": "{v}",
@@ -217,9 +243,8 @@
   },
   "sharedBlock": {
     "name": "Shared",
-    "plain": "Attributes that several of the card's blocks need. The ruled tree homes them in none of those blocks."
+    "plain": "Attributes needed by {nShare} or more of the card's blocks. The ruled tree homes them in none of those blocks, so they stand in a group of their own."
   },
-  "blockEmpty": "Nothing in this block is rated {top}, so it is hidden while the rail shows only those columns.",
   "stages": {
     "EDGE": "the app band, before the endpoint is reached",
     "GATE": "the login check",
@@ -529,7 +554,8 @@
       "rating",
       "arm"
     ],
-    "armMap": "the map itself"
+    "armMap": "the map itself",
+    "ruled": "The rails that start on your defaults, ruled in {ruling}: {rails}. Every other rail starts on my pick."
   },
   "copy": {
     "intro": "What you are looking at, as text, to paste back with your words under it.",
@@ -543,7 +569,8 @@
       "lit": "lit",
       "open": "open",
       "cols": "columns",
-      "your": "your words:"
+      "your": "your words:",
+      "slook": "shared marked by"
     }
   },
   "authNoScheme": "own check",

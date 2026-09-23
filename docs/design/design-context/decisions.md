@@ -14,6 +14,7 @@ Date: 2026-09-17 · Fader moved: none (a constant, P6) · Variants compared: sta
 Tests run: none · Result: adopted — the stage only groups the block (rows or columns)
 Decision + reason: the block was tuned over a week and reads well; positional constancy across layouts.
 Revisit if: the glyph-face count fails P3 (the face shows ~7 attributes today) or the 5-second test recalls fewer than 4.
+Backfill 2026-09-23 (the one line of `console-rules.md`, 2026-09-18, not already below; that file is now `records/console-rules.md`): function cards are "usable now, to be revisited — possibly another layout, possibly an attribute every function block must surface."
 
 ## D-003 — The rail is grouped by the region a control changes, and every control is tagged
 Date: 2026-09-17 · Fader moved: none on the console (lab chrome) · Tests run: probe only · Result: adopted
@@ -42,7 +43,7 @@ Revisit if: GET /recipes (22 paths) does not fit the bands; the squint test cann
 
 ---
 
-# Gabe's corrections to D-001 … D-007 (2026-09-18) — his words, condensed; the full rules live in `console-rules.md` and `prisms.md`
+# Gabe's corrections to D-001 … D-007 (2026-09-18) — his words, condensed; the full rules lived in `console-rules.md` (now `records/console-rules.md` — its three lines not carried here are backfilled under D-002 and D-008) and live in `prisms.md`
 
 - **D-001 stands, scoped.** The spine is the structure for API endpoints in general — the result of working a lot on the endpoint itself. Whether it translates to the other element kinds is open: start with it, then look at the principal kinds. Priorities (tier 1 in the graph): backend endpoints · functions · schemas · models; frontend views · components · stores · hooks.
 - **D-002 is downgraded from a law to a default.** "The block card is the table's face in every layout" was an assumption made while settling things; probably not the case. The blocks for tables/models and for schemas are right ("we nailed them"); function cards are to be revisited; tests have no card at all, only labels — wanted; other block kinds may come.
@@ -58,6 +59,7 @@ Decision: COMMAND = concepts and points of view only (topics · prisms · kinds 
 Reason: the command helps you know what is available to explore and move through it swiftly; specifics would crowd it.
 Known conflict: the built PATHS ▸ level lists fourteen endings by status code — to be reworked into kinds in the loop.
 Revisit if: a kind-only command makes "open the 409" slower than today (timed on Q2/Q6).
+Backfill 2026-09-23 (the two lines of `console-rules.md`, 2026-09-18, this entry did not carry; that file is now `records/console-rules.md`): the PORTRAIT never holds navigation. And, marked there "a possibility, not a decision": the command panel gets a section of the possible paths as KINDS of response, and the middle shows everything with the filter by code.
 
 ## D-009 — Hovers have three depths
 Date: 2026-09-18 · Decision: headers · the command panel · little buttons · settings → very short, one brief explanation (+ ONE example of application if complex, nothing more) · elements with more to show (tables · models · function blocks) → a detail hover with more context, less than the portrait · click → the portrait.
@@ -116,7 +118,7 @@ Trigger for the toggle (a "later" needs one): when the display step starts (M3 �
 Revisit if: a fact about the map changes what he would DO — a list he cannot trust, a count that is a floor. Then that one fact is promoted, as an alert, never the whole class.
 
 ## D-018 — The review of the leftovers program: his rulings on what I wrote, piece 10 lands, piece 11 follows it
-Date: 2026-09-20 · Input: the REVIEW text pasted from `review-leftovers.html` (review 7aa8b87d · POST /setup/complete @ 05007957 · 47 his · 10 left as my pick).
+Date: 2026-09-20 · Input: the REVIEW text pasted from `review-leftovers.html` (now `records/review/`; review 7aa8b87d · POST /setup/complete @ 05007957 · 47 his · 10 left as my pick).
 Decision, his: **the 36 norm lines** — 34 ok; `tables · GATE` and `security · EDGE` reword, with no note, so I propose the words and show them before they land. **vocab: sweep** — door and lock leave every drawn string the lab owns, and the probe asserts that quote them; the two sentences lifted from the suite's legend stay (a separate suite change, not ruled). **thresholds: 9 in 10 · 1 in 10** stay. **roles: any raise counts.** **through-route: the most checks, and none named when two tie.** **test roles: the words are right.** **piece 10: land it.** **piece 11: after piece 10.** Opened from the folded section and ruled: the slot sentences are right · mark a helper's guessed place · "after the handler" stays. Already his by D-017: `found by` sits behind "more information".
 Left to my pick by D-017 (choices inside the framework), so they stand as I picked: a `useNavigate` roster — yes · the word for "the caller decides" — `beyond one level`, not the design's `returned` · `toast` as a library idiom — yes · `useTranslation` with no app using it — no · piece 11's part keeps the name `inflight`.
 The five layout cards came pasted as "my pick, not ruled" — never an approval — and were then ruled by his follow-up in the chat, "go with the recommendation": the three new rows on the function record stay · what sits inside a call becomes a RAIL OPTION with three states (always open · closed until clicked · closed; open by default until he has seen all three) · the two rows and the section on an ending's record stay · field and column rules stay on hover cards · this endpoint's place stays on the whole-app card. One correction attached to the place card is a defect, not a choice, and is fixed: the counts took the app's startup as an endpoint (81, the app has 80).
@@ -216,6 +218,12 @@ because the frozen feed is gustify's (D-023); rows vs two or three columns per r
 pages stay, by his words.
 Revisit if: the field layer can be generated for fewer than half the attributes — then the authored proposals outnumber the
 measured ones and the layer is re-priced on a page before it is built.
+Note 2026-09-23: the fold is built — the lab's section map tab carries the brain map's groupings, Keep only, the moves and the
+three placements, and its probe carries the brain map's ruling asserts. `brainmap-endpoint.html` retired to `records/brainmap/`
+(with its template, probe, walk and pictures); `gen-brainmap.js` writes only the tree the lab reads. NOT carried, against
+this entry's own condition: the page's drawn layouts A–D — among them "As sketched" at about 45°, his D-032 ask — and
+shared fields drawn as one band. The lab draws the map as an indented tree only; the retired page still opens from
+`records/brainmap/`, and STATE asks him whether the drawings belong in the lab.
 
 ## D-025 — Standing rules of this loop (backfilled 2026-09-22)
 The working rules that until today lived in memory, briefs or commit bodies. One line each: the rule · since · source.
@@ -399,3 +407,22 @@ bounds by the short arm); no arm fills these slots as slots. `element-forms.html
 needing a person's judgement.
 Consequence: `method.md` step 1 reads these slots as inventory rows for every kind; nothing here builds them.
 Revisit if: a kind's inventory rates one of the six at 3 — then that slot is priced as an arm on a page before it is built.
+
+## D-034 — The all-endpoints table's defaults, icons for its options, and the shared attributes made prominent
+Date: 2026-09-22 · Input: his reply after opening `workflow-panel/all-endpoints.html`, pasting the page's own copy line.
+Decision, his — **the table's defaults**, pasted (its lines joined here with " / "): "page: all-endpoints · gustify @ 05007957
+/ layout: one per row / grouped by: entity (7) / columns: every column · their own group, first · stage order / sorted: in
+path order", with "your words:" left empty. Those five rails stop being
+the agent's picks and become his defaults. The rails his paste does not name (a group of a single endpoint · group order ·
+numbers · a column's most common value) stay the agent's picks, marked as such.
+Decision, his — **the options become icons**: "The titles are okay, but the options should be mostly icons, so they occupy
+less space. The options might be noted by having the border of the square dash." Each option is a small icon square, its
+words on hover (a control's hover stays short, D-009); the agent's unruled pick wears a DASHED border — the same mark the
+decision pages use for "my pick".
+Decision, his — **the shared attributes stand out**: "can we mark the [shared] attributes because they are in their own
+group? I would like to be able to see them more prominently somehow, maybe with some header distinction or highlight". (His
+dictated "chart attributes" is read as the Shared group — the columns the page groups as "their own group, first".) How
+they stand out is built as options and decided by seeing (D-025.2).
+Consequence: the page's rail shrinks to titles + icon squares; the Shared group's header (and its cells) carry a distinct
+treatment; the probe asserts his five defaults, the dashed mark on exactly the unruled picks, and every icon's hover.
+Revisit if: an icon square cannot be told from its neighbours at a glance — then that option gets a short word beside it.

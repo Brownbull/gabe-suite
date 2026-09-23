@@ -11,15 +11,19 @@
           --f-saved:#2f855a; --f-maybe:#d69e2e; --f-rolled:#718096; --f-unsaved:#c05621; --f-after:#2b6cb0; --f-none:var(--rule);
           --p-norm:#cbd5e1; --p-common:#94a3b8; --p-rare:var(--accent); --p-only:var(--alert);
           --m-GET:#2b6cb0; --m-POST:#2f855a; --m-PUT:#b7791f; --m-PATCH:#805ad5; --m-DELETE:#c53030;
-          --bz:color-mix(in srgb, var(--accent) 5%, var(--card)); }
+          /* the Shared group's own hue (D-034 fix): NOT the accent, because the accent is the heat's hue — a Shared cell tinted in
+             the accent reads as a small number. Rose sits far from every skin's accent (indigo · blue · teal) and from --alert */
+          --sh:#be185d; --shp:24%;   /* --shp: the Shared header's tint, stronger in dark where a pale tint drowns */
+          /* the alternating block ground is NEUTRAL for the same reason: the accent is spent on the heat alone */
+          --bz:color-mix(in srgb, var(--ink) 4%, var(--card)); }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --alert:#f0a35a; --alert-soft:#3b2914;
           --k-success:#5fc28e; --k-refusal:#e5b454; --k-framework:#94a3b8; --k-validation:#a78bfa; --k-uncaught:#f47272;
           --f-saved:#5fc28e; --f-maybe:#f2c94c; --f-rolled:#94a3b8; --f-unsaved:#f0955a; --f-after:#6fa8e8; --p-norm:#3b4658; --p-common:#64748b;
-          --m-GET:#6fa8e8; --m-POST:#5fc28e; --m-PUT:#e5b454; --m-PATCH:#b69cf0; --m-DELETE:#f47272; } }
+          --m-GET:#6fa8e8; --m-POST:#5fc28e; --m-PUT:#e5b454; --m-PATCH:#b69cf0; --m-DELETE:#f47272; --sh:#f472b6; --shp:32%; } }
   :root[data-theme="dark"] { --alert:#f0a35a; --alert-soft:#3b2914;
           --k-success:#5fc28e; --k-refusal:#e5b454; --k-framework:#94a3b8; --k-validation:#a78bfa; --k-uncaught:#f47272;
           --f-saved:#5fc28e; --f-maybe:#f2c94c; --f-rolled:#94a3b8; --f-unsaved:#f0955a; --f-after:#6fa8e8; --p-norm:#3b4658; --p-common:#64748b;
-          --m-GET:#6fa8e8; --m-POST:#5fc28e; --m-PUT:#e5b454; --m-PATCH:#b69cf0; --m-DELETE:#f47272; }
+          --m-GET:#6fa8e8; --m-POST:#5fc28e; --m-PUT:#e5b454; --m-PATCH:#b69cf0; --m-DELETE:#f47272; --sh:#f472b6; --shp:32%; }
   body { background: var(--ground); }
 
   .eyebrow { font-size: var(--fs-min); letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0; }
@@ -41,11 +45,19 @@
   .rgrp[hidden] { display: none; }
   .rgrp > .rl { font-size: var(--fs-min); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
   .opts { display: flex; flex-wrap: wrap; gap: 5px; }
-  .opt { font: inherit; font-size: var(--fs-xs); letter-spacing: inherit; cursor: pointer; border-radius: 8px; padding: 4px 10px;
-         border: 1px solid var(--rule); background: var(--raised); color: var(--ink-soft); display: flex; align-items: baseline; gap: 6px; }
+  /* an option is a small icon square (D-034): its words are its aria-label and its hover; pressed = filled; the agent's pick on a
+     rail he has not ruled wears a DASHED border. background-clip keeps the dashes' gaps open when the square is also pressed */
+  .opt { cursor: pointer; width: 32px; height: 32px; padding: 0; box-sizing: border-box; border-radius: 7px; border: 1.5px solid var(--rule);
+         background: var(--raised); background-clip: padding-box; color: var(--ink-soft); display: inline-flex; align-items: center; justify-content: center; }
+  .opt svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: block; pointer-events: none; }
+  .opt svg .fl { fill: currentColor; stroke: none; }
   .opt:hover { border-color: var(--accent); color: var(--accent); }
+  .opt[data-pick="true"] { border-style: dashed; border-color: var(--ink-soft); }
   .opt[aria-checked="true"] { border-color: var(--accent); background: var(--accent); color: var(--ground); }
-  .opt .pk { font-size: var(--fs-min); border-bottom: 1px dashed currentColor; opacity: .85; }
+  .opt[aria-checked="true"][data-pick="true"] { border-color: var(--ink); }
+  .opt:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .rkey { align-self: flex-end; display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--muted); padding-bottom: 7px; }
+  .rkey i { width: 14px; height: 14px; border: 1.5px dashed var(--ink-soft); border-radius: 4px; display: block; box-sizing: border-box; }
   .status { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; font-size: var(--fs-xs); color: var(--ink-soft); margin: 0 0 8px; }
   .litchip { display: inline-flex; gap: 8px; align-items: center; color: var(--alert); border: 1px solid var(--alert); background: var(--alert-soft); border-radius: 8px; padding: 2px 8px; }
   .litchip[hidden] { display: none; }
@@ -135,6 +147,28 @@
   .cb .bn { color: var(--accent); font-size: var(--fs-min); max-width: 6em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .cc { display: inline-flex; align-items: center; gap: 4px; }
   .cc .cl { color: var(--muted); }
+    /* ── the Shared group stands out (D-034): three treatments on a rail, decided by seeing; `.sh` marks its header and cells,
+     `.shf`/`.shl` its first and last column, and the board carries the chosen treatment (none when the group is not drawn).
+     Every treatment is drawn in --sh, the group's own hue, never the heat's accent; each marks EVERY shared column's head ── */
+  .board[data-slook="band"] th.sh { background: color-mix(in srgb, var(--sh) var(--shp), var(--card)); }
+  .board[data-slook="band"] tr.bh th.sh, .board[data-slook="band"] tr.ch th.sh .hd { color: var(--sh); }
+  .board[data-slook="band"] td.sh { background: color-mix(in srgb, var(--sh) 8%, var(--card)); }
+  .board[data-slook="band"] tr.grow td.sh { background: color-mix(in srgb, var(--sh) 14%, var(--raised)); }
+  .board[data-slook="band"] tr.row:hover td.sh { background: color-mix(in srgb, var(--sh) 16%, var(--card)); }
+  .board[data-slook="band"] tr.row[data-sel="true"] td.sh { background: color-mix(in srgb, var(--sh) 24%, var(--card)); }
+  .board[data-slook="rule"] tr.bh th.sh { border-top: 4px solid var(--sh); color: var(--sh); font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+  .board[data-slook="rule"] tr.ch th.sh .hd { color: var(--sh); font-weight: 800; }
+  .board[data-slook="box"] tr.bh th.sh { border-top: 2px solid var(--sh); color: var(--sh); }
+  .board[data-slook="box"] tr.ch th.sh .hd { color: var(--sh); }
+  .board[data-slook="box"] .shf { border-left: 2px solid var(--sh); }
+  .board[data-slook="box"] .shl { border-right: 2px solid var(--sh); }
+  .board[data-slook="box"] tbody tr:last-child td.sh { border-bottom: 2px solid var(--sh); }
+  .board[data-slook="band"] .cb.sh { background: color-mix(in srgb, var(--sh) 10%, var(--card)); border-radius: 5px; padding-left: 5px; }
+  .board[data-slook="band"] .cb.sh .bn { color: var(--sh); }
+  .board[data-slook="rule"] .cb.sh { border-top: 3px solid var(--sh); padding-top: 2px; }
+  .board[data-slook="rule"] .cb.sh .bn { font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--sh); }
+  .board[data-slook="box"] .cb.sh { border: 1.5px solid var(--sh); border-radius: 6px; padding: 1px 6px; }
+  .board[data-slook="box"] .cb.sh .bn { color: var(--sh); }
   .keytable { overflow-x: auto; border: 1px solid var(--rule); border-radius: var(--radius, 10px); background: var(--card); }
 
   /* ── the side panel ── */
@@ -211,16 +245,19 @@
 <script>
 (function () {
   "use strict";
-  var D = window.AE_DATA, W = D.words, T = D.tok, KEY = "gabe:allep:v1";
+  var D = window.AE_DATA, W = D.words, T = D.tok;
+  /* v2: his defaults were ruled (D-034), so a rail remembered before the ruling must not override them — the old key is dropped */
+  var KEY = "gabe:allep:v2", OLD_KEYS = ["gabe:allep:v1"];
   var $ = function (id) { return document.getElementById(id); };
   function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
   function nEp(n) { return fill(n === 1 ? W.group.countOne : W.group.count, { n: n }); }
   function fill(s, x) { return String(s).replace(/\{([a-zA-Z]\w*)\}/g, function (m, k) { return x && x[k] != null ? x[k] : (T[k] != null ? T[k] : m); }); }
 
-  /* ── state: every rail defaults to the words file's pick, and is remembered per viewer ── */
-  var RAILS = ["lay", "grp", "alone", "gord", "shared", "bord", "cols", "heat", "norm"];
+  /* ── state: every rail defaults to the words file's default (his where the rail is ruled, else my pick), remembered per viewer ── */
+  var RAILS = ["lay", "grp", "alone", "gord", "shared", "slook", "bord", "cols", "heat", "norm"];
   var S = { sort: null, lit: null, open: null };
   RAILS.forEach(function (r) { S[r] = W.rail[r].pick; });
+  try { OLD_KEYS.forEach(function (k) { window.localStorage.removeItem(k); }); } catch (e) {}
   try { var raw = window.localStorage.getItem(KEY); if (raw) { var o = JSON.parse(raw);
     RAILS.forEach(function (r) { if (o[r] && W.rail[r].opts[o[r]]) S[r] = o[r]; });
     if (o.sort && D.cols.some(function (c) { return c.id === o.sort.col; })) S.sort = { col: o.sort.col, dir: o.sort.dir === -1 ? -1 : 1 }; } } catch (e) {}
@@ -362,9 +399,10 @@
     var i0 = el("th", "idh"); i0.setAttribute("rowspan", "1"); bh.appendChild(i0);
     var i1 = el("th", "idh"); i1.appendChild(el("span", "hd", W.sortReset)); i1.setAttribute("data-tip", "sortreset"); i1.addEventListener("click", function () { S.sort = null; save(); render(); }); ch.appendChild(i1);
     L.forEach(function (g, gi) {
-      var th = el("th", "bstart" + (gi % 2 ? " bz" : ""), g.name); th.colSpan = g.cols.length; th.setAttribute("data-tip", "block"); th.setAttribute("data-block", g.key); bh.appendChild(th);
+      var SH = g.key === "_shared";
+      var th = el("th", "bstart" + (gi % 2 ? " bz" : "") + (SH ? " sh shf shl" : ""), g.name); th.colSpan = g.cols.length; th.setAttribute("data-tip", "block"); th.setAttribute("data-block", g.key); bh.appendChild(th);
       g.cols.forEach(function (c, ci) {
-        var h = el("th", (ci === 0 ? "bstart" : "") + (gi % 2 ? " bz" : "")); h.setAttribute("data-col", c.id); h.setAttribute("data-tip", "head");
+        var h = el("th", (ci === 0 ? "bstart" : "") + (gi % 2 ? " bz" : "") + shCls(g, ci)); h.setAttribute("data-col", c.id); h.setAttribute("data-tip", "head");
         if (S.sort && S.sort.col === c.id) h.setAttribute("data-sorted", S.sort.dir > 0 ? "up" : "down");
         var hd = el("span", "hd", c.head); if (S.sort && S.sort.col === c.id) hd.appendChild(el("span", "dir", S.sort.dir > 0 ? " ↑" : " ↓")); h.appendChild(hd);
         var pp = el("span", "pips"); for (var q = 1; q <= T.rTop; q++) pp.appendChild(el("i", q <= c.r ? "on" : "")); if (c.alarm) pp.appendChild(el("i", "al")); h.appendChild(pp);
@@ -381,6 +419,7 @@
     });
     thead.appendChild(bh); thead.appendChild(ch); return thead;
   }
+  function shCls(g, ci) { return g.key !== "_shared" ? "" : " sh" + (ci === 0 ? " shf" : "") + (ci === g.cols.length - 1 ? " shl" : ""); }
   function litTest() { if (!S.lit) return null; var c = COL[S.lit.col], b = BINS[S.lit.col].filter(function (x) { return x.key === S.lit.bin; })[0];
     return b ? function (r) { return b.state ? stateOf(r, c) === b.state : b.test(r.k[S.lit.col]); } : null; }
   function idCell(r) { var d = el("div", "idc"); var m = el("span", "mth", r.m); m.style.color = "var(--m-" + r.m + ")"; d.appendChild(m);
@@ -391,12 +430,12 @@
     GS.forEach(function (g) {
       if (S.grp !== "flat") { var gr = el("tr", "grow"); gr.setAttribute("data-group", g.key);
         var gi = el("td", "id"); gi.appendChild(el("span", "gn", g.name)); gi.appendChild(el("span", "gc", nEp(g.rows.length))); gr.appendChild(gi);
-        L.forEach(function (bl, bi) { bl.cols.forEach(function (c, ci) { var td = el("td", (ci === 0 ? "bstart" : "") + (bi % 2 ? " bz" : "")); td.appendChild(el("span", "agg", aggOf(c, g.rows))); if (c.agg) td.setAttribute("data-tip", "agg"); td.setAttribute("data-col", c.id); gr.appendChild(td); }); });
+        L.forEach(function (bl, bi) { bl.cols.forEach(function (c, ci) { var td = el("td", (ci === 0 ? "bstart" : "") + (bi % 2 ? " bz" : "") + shCls(bl, ci)); td.appendChild(el("span", "agg", aggOf(c, g.rows))); if (c.agg) td.setAttribute("data-tip", "agg"); td.setAttribute("data-col", c.id); gr.appendChild(td); }); });
         tb.appendChild(gr); }
       g.rows.forEach(function (r) {
         var tr = el("tr", "row"); tr.setAttribute("data-ep", r.id); if (S.open === r.id) tr.setAttribute("data-sel", "true"); if (lit && !lit(r)) tr.setAttribute("data-dim", "true");
         var td0 = el("td", "id"); td0.appendChild(idCell(r)); tr.appendChild(td0);
-        L.forEach(function (bl, bi) { bl.cols.forEach(function (c, ci) { var td = el("td", (ci === 0 ? "bstart" : "") + (bi % 2 ? " bz" : "")); td.appendChild(cell(c, r)); tr.appendChild(td); }); });
+        L.forEach(function (bl, bi) { bl.cols.forEach(function (c, ci) { var td = el("td", (ci === 0 ? "bstart" : "") + (bi % 2 ? " bz" : "") + shCls(bl, ci)); td.appendChild(cell(c, r)); tr.appendChild(td); }); });
         tr.addEventListener("click", function () { openSide(r.id); });
         tb.appendChild(tr); });
     });
@@ -410,7 +449,7 @@
       g.rows.forEach(function (r) {
         var cd = el("div", "card"); cd.setAttribute("data-ep", r.id); if (S.open === r.id) cd.setAttribute("data-sel", "true"); if (lit && !lit(r)) cd.setAttribute("data-dim", "true");
         cd.appendChild(idCell(r)); var cbs = el("div", "cbs");
-        L.forEach(function (bl) { var b = el("span", "cb"); var bn = el("span", "bn", bl.name); bn.setAttribute("data-tip", "block"); bn.setAttribute("data-block", bl.key); b.appendChild(bn);
+        L.forEach(function (bl) { var b = el("span", "cb" + (bl.key === "_shared" ? " sh" : "")); var bn = el("span", "bn", bl.name); bn.setAttribute("data-tip", "block"); bn.setAttribute("data-block", bl.key); b.appendChild(bn);
           bl.cols.forEach(function (c) { var cc = el("span", "cc"); cc.appendChild(el("span", "cl", c.head)); cc.appendChild(cell(c, r)); b.appendChild(cc); }); cbs.appendChild(b); });
         cd.appendChild(cbs);
         cd.addEventListener("click", function () { openSide(r.id); });
@@ -418,19 +457,61 @@
     wrap.appendChild(cs); return wrap;
   }
 
+  /* ── the rail's icons: Lucide-style strokes on a 24 grid, one per option, drawn inline (no icon CDN). Each picture is of the
+     thing the option DOES, and no two squares on the rail share a silhouette (the probe rasterises them and measures the
+     overlap): the sort glyphs live on "group order" alone, a frame is used once, a tag means labels, a box means an entity ── */
+  var ICON = {
+    lay: { rows: '<rect x="3" y="3.5" width="18" height="4.5" rx="1.2"/><rect x="3" y="10" width="18" height="4.5" rx="1.2"/><rect x="3" y="16.5" width="18" height="4.5" rx="1.2"/>',
+           two: '<rect x="3" y="4" width="8" height="7" rx="1.5"/><rect x="13" y="4" width="8" height="7" rx="1.5"/><rect x="3" y="13" width="8" height="7" rx="1.5"/><rect x="13" y="13" width="8" height="7" rx="1.5"/>',
+           three: '<rect x="2" y="4" width="5.3" height="7" rx="1.2"/><rect x="9.35" y="4" width="5.3" height="7" rx="1.2"/><rect x="16.7" y="4" width="5.3" height="7" rx="1.2"/><rect x="2" y="13" width="5.3" height="7" rx="1.2"/><rect x="9.35" y="13" width="5.3" height="7" rx="1.2"/><rect x="16.7" y="13" width="5.3" height="7" rx="1.2"/>' },
+    grp: { entity: '<path d="M21 8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>',
+           seg: '<path d="M8 21 14 3"/><rect class="fl" x="15" y="14" width="6" height="6" rx="1.2"/><path d="M3 20h2"/>',
+           method: '<path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/>',
+           labels: '<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle class="fl" cx="7.5" cy="7.5" r="1.5"/>',
+           counts: '<path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/>',
+           flat: '<path d="M4 5h16M4 9.7h16M4 14.3h16M4 19h16"/>' },
+    alone: { gather: '<path d="M12 3v13M6 10l6 6 6-6M5 21h14"/>',
+             own: '<path d="M6 4v16M18 4v16M6 12h12"/>' },
+    gord: { size: '<path d="m3 16 4 4 4-4M7 20V4M11 4h10M11 8h7M11 12h4"/>',
+            name: '<path d="m3 16 4 4 4-4M7 20V4M20 8h-5M15 10V6.5a2.5 2.5 0 0 1 5 0V10M15 14h5l-5 6h5"/>' },
+    shared: { own: '<rect class="fl" x="2.5" y="4" width="5" height="16" rx="1.5"/><rect x="11" y="4" width="10.5" height="16" rx="1.5"/>',
+              first: '<rect x="3" y="8" width="18" height="12" rx="1.5"/><path d="M3 4h8" stroke-width="3"/><rect class="fl" x="5.5" y="11" width="4" height="6" rx="1"/>' },
+    slook: { band: '<path d="M4 4v16M20 4v16"/><rect class="fl" x="8" y="3" width="8" height="18" rx="1.2" opacity=".5"/>',
+             rule: '<path d="M4 4.5h16" stroke-width="3.5"/><path d="M7 10v10M12 10v10M17 10v10"/>',
+             box: '<rect x="3.5" y="3" width="17" height="18" rx="2.5" stroke-width="2.6"/><path d="M9.5 8v8M14.5 8v8"/>' },
+    bord: { stage: '<path d="m5 17 5-5-5-5M12 17l5-5-5-5"/>',
+            card: '<path d="M10 6h11M10 12h11M10 18h11M4 6h1v4M4 10h2M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>' },
+    cols: { all: '<circle class="fl" cx="5" cy="5" r="2"/><circle class="fl" cx="12" cy="5" r="2"/><circle class="fl" cx="19" cy="5" r="2"/><circle class="fl" cx="5" cy="12" r="2"/><circle class="fl" cx="12" cy="12" r="2"/><circle class="fl" cx="19" cy="12" r="2"/><circle class="fl" cx="5" cy="19" r="2"/><circle class="fl" cx="12" cy="19" r="2"/><circle class="fl" cx="19" cy="19" r="2"/>',
+            top: '<path d="M11.5 2.3a.5.5 0 0 1 1 0l2.3 4.7a2.1 2.1 0 0 0 1.6 1.2l5.2.7a.5.5 0 0 1 .3.9l-3.7 3.6a2.1 2.1 0 0 0-.6 1.9l.9 5.1a.5.5 0 0 1-.8.6l-4.6-2.4a2.1 2.1 0 0 0-2 0L6.4 21a.5.5 0 0 1-.8-.6l.9-5.1a2.1 2.1 0 0 0-.6-1.9L2.2 9.8a.5.5 0 0 1 .3-.9l5.2-.7a2.1 2.1 0 0 0 1.6-1.2z"/>' },
+    heat: { heat: '<rect class="fl" x="3" y="8" width="5" height="8" rx="1" opacity=".25"/><rect class="fl" x="9.5" y="8" width="5" height="8" rx="1" opacity=".6"/><rect class="fl" x="16" y="8" width="5" height="8" rx="1"/>',
+            plain: '<rect x="3" y="8" width="5" height="8" rx="1"/><rect x="9.5" y="8" width="5" height="8" rx="1"/><rect x="16" y="8" width="5" height="8" rx="1"/>' },
+    norm: { quiet: '<path d="M3 12h5M16 12h5"/><circle class="fl" cx="12" cy="12" r="2"/>',
+            full: '<path d="M4 7V4h16v3M9 20h6M12 4v16"/>' }
+  };
+  function iconOf(r, k) { var s = (ICON[r] || {})[k]; if (!s) return null;
+    var n = document.createElementNS("http://www.w3.org/2000/svg", "svg"); n.setAttribute("viewBox", "0 0 24 24"); n.setAttribute("aria-hidden", "true"); n.innerHTML = s; return n; }
+  function optName(r, k) { return fill(W.rail[r].opts[k].name, { cards: D.layouts[k] }); }
+
   /* ── the rail ── */
   function renderRail() {
-    var rail = $("rail"); rail.textContent = "";
+    /* the rail is rebuilt on every press, so a square that held focus hands it to its rebuilt twin — a keyboard reader keeps
+       their place, and the focus tip (the square's name) stays in front of them */
+    var rail = $("rail"), fa = document.activeElement, keep = fa && fa.classList && fa.classList.contains("opt") && rail.contains(fa) ? [fa.getAttribute("data-rail"), fa.getAttribute("data-v")] : null;
+    rail.textContent = "";
     RAILS.forEach(function (r) {
       var R = W.rail[r], g = el("div", "rgrp"); g.setAttribute("data-rail", r);
       if ((r === "alone" || r === "gord") && S.grp === "flat") g.hidden = true;
+      if (r === "slook" && S.shared !== "own") g.hidden = true;
       g.appendChild(el("span", "rl", R.label)); var o = el("div", "opts"); o.setAttribute("role", "radiogroup"); o.setAttribute("aria-label", R.label);
       Object.keys(R.opts).forEach(function (k) {
         var b = el("button", "opt"); b.type = "button"; b.setAttribute("role", "radio"); b.setAttribute("data-rail", r); b.setAttribute("data-v", k);
-        b.setAttribute("aria-checked", S[r] === k ? "true" : "false"); b.setAttribute("data-tip", "opt");
-        b.appendChild(el("span", null, fill(R.opts[k].name, { cards: D.layouts[k] }))); if (R.pick === k) { var pk = el("span", "pk", W.pickMark); pk.setAttribute("data-tip", "pick"); b.appendChild(pk); b.setAttribute("data-pick", "true"); }
+        b.setAttribute("aria-checked", S[r] === k ? "true" : "false"); b.setAttribute("data-tip", "opt"); b.setAttribute("aria-label", optName(r, k));
+        var ic = iconOf(r, k); if (ic) b.appendChild(ic); else b.textContent = optName(r, k);     /* a missing icon shows its words, never an empty square */
+        if (R.pick === k) b.setAttribute(R.ruled ? "data-ruled" : "data-pick", "true");            /* the dash marks MY pick only; his default wears none */
         b.addEventListener("click", function () { S[r] = k; save(); render(); }); o.appendChild(b); });
       g.appendChild(o); rail.appendChild(g); });
+    var key = el("span", "rkey"); key.appendChild(el("i")); key.appendChild(el("span", null, W.pickKey)); key.setAttribute("data-tip", "pickkey"); rail.appendChild(key);
+    if (keep) { var back = rail.querySelector('.opt[data-rail="' + keep[0] + '"][data-v="' + keep[1] + '"]'); if (back && back.offsetParent) back.focus(); }
   }
 
   function render() {
@@ -438,6 +519,7 @@
     var L = layout(), GS = groups(), lit = litTest(), board = $("board"); board.textContent = "";
     var n = D.layouts[S.lay];
     board.className = "board" + (n > 1 ? " cardsmode" : "");
+    board.setAttribute("data-slook", S.shared === "own" ? S.slook : "");
     board.appendChild(n === 1 ? renderTable(L, GS, lit) : renderCards(L, GS, lit, n));
     var bhr = board.querySelector("tr.bh"); if (bhr) board.style.setProperty("--bh", bhr.getBoundingClientRect().height + "px");
     pageTop();
@@ -508,13 +590,15 @@
   var tip = $("tip");
   function tipFor(t) {
     var kind = t.getAttribute("data-tip"), c = COL[t.getAttribute("data-col")], rowEl = t.closest("[data-ep]"), r = rowEl ? ROWS.filter(function (x) { return x.id === rowEl.getAttribute("data-ep"); })[0] : null;
-    if (kind === "opt") { var R = W.rail[t.getAttribute("data-rail")]; var ck = { cards: D.layouts[t.getAttribute("data-v")] }; return "<b>" + esc(fill(R.opts[t.getAttribute("data-v")].name, ck)) + "</b><span class=pl>" + esc(fill(R.opts[t.getAttribute("data-v")].plain, ck)) + "</span>"; }
-    if (kind === "pick") return esc(W.pickPlain);
+    if (kind === "opt") { var rr = t.getAttribute("data-rail"), R = W.rail[rr], ov = t.getAttribute("data-v"), ck = { cards: D.layouts[ov] };
+      var mk = R.pick !== ov ? "" : R.ruled ? " · " + esc(W.ruledMark) : " · " + esc(W.pickMark);
+      return "<b>" + esc(optName(rr, ov)) + "</b>" + mk + "<span class=pl>" + esc(fill(R.opts[ov].plain, ck)) + "</span>"; }
+    if (kind === "pickkey") return esc(W.pickKeyPlain);
     if (kind === "head") return "<b>" + esc(c.head) + "</b> · " + esc(c.name) + "<span class=pl>" + esc(W.sortHint) + "</span>";
     if (kind === "sortreset") return esc(W.sortReset);
     if (kind === "close") return esc(W.panel.closePlain);
     if (kind === "copycmd") return esc(W.panel.copy);
-    if (kind === "block") { var key = t.getAttribute("data-block"), b = key === "_shared" ? W.sharedBlock : BLK[key]; return "<b>" + esc(b.name) + "</b><span class=pl>" + esc(b.plain) + "</span>"; }
+    if (kind === "block") { var key = t.getAttribute("data-block"), b = key === "_shared" ? W.sharedBlock : BLK[key]; return "<b>" + esc(b.name) + "</b><span class=pl>" + esc(fill(b.plain)) + "</span>"; }
     if (kind === "bin") { var bn = BINS[c.id].filter(function (x) { return x.key === t.getAttribute("data-bin"); })[0];
       return "<b>" + esc(c.head) + "</b> · " + esc(fill(W.strip, { n: bn.n, of: N, what: bn.what })) + "<span class=pl>" + esc(W.stripHint) + "</span>"; }
     if (kind === "agg") return "<b>" + esc(c.head) + "</b> · " + esc(c.name) + "<span class=pl>" + esc(W.group[{ union: "union", count: "has", ratio: "ratio" }[c.agg] || "sum"]) + "</span>";
@@ -536,6 +620,10 @@
     var bx = t.getBoundingClientRect(), tw = tip.offsetWidth, thh = tip.offsetHeight;
     var x = Math.min(window.innerWidth - tw - 8, Math.max(8, bx.left)), y = bx.bottom + 6; if (y + thh > window.innerHeight - 4) y = Math.max(4, bx.top - thh - 6);
     tip.style.left = x + "px"; tip.style.top = y + "px"; tip.setAttribute("data-show", "true"); });
+  document.addEventListener("focusin", function (e) { var t = e.target.closest && e.target.closest(".opt[data-tip]"); if (!t || !t.matches(":focus-visible")) return;   /* a keyboard focus, not a mouse press */
+    var h = tipFor(t); if (!h) return; tip.innerHTML = h; var bx = t.getBoundingClientRect();
+    tip.style.left = Math.min(window.innerWidth - tip.offsetWidth - 8, Math.max(8, bx.left)) + "px"; tip.style.top = (bx.bottom + 6) + "px"; tip.setAttribute("data-show", "true"); });
+  document.addEventListener("focusout", function () { tip.setAttribute("data-show", "false"); });
   window.hoverHide = function () { tip.setAttribute("data-show", "false"); };
 
   /* ── copy text ── */
@@ -546,8 +634,10 @@
   function writeOut(L, GS) {
     var C = W.copy.lines, lines = [C.page + ": all-endpoints · " + T.app + " @ " + T.head,
       C.layout + ": " + fill(W.rail.lay.opts[S.lay].name, { cards: D.layouts[S.lay] }), C.group + ": " + W.rail.grp.opts[S.grp].name + (S.grp !== "flat" ? " (" + GS.length + ")" : ""),
-      C.cols + ": " + fill(W.rail.cols.opts[S.cols].name) + " · " + W.rail.shared.opts[S.shared].name + " · " + W.rail.bord.opts[S.bord].name,
-      C.sort + ": " + (S.sort ? COL[S.sort.col].head + (S.sort.dir > 0 ? " ↑" : " ↓") : W.sortNone)];
+      C.cols + ": " + fill(W.rail.cols.opts[S.cols].name) + " · " + W.rail.shared.opts[S.shared].name + " · " + W.rail.bord.opts[S.bord].name];
+    /* the Shared treatment styles the columns line's group, so its line stands right under it (only while the group is drawn) */
+    if (S.shared === "own") lines.push(C.slook + ": " + W.rail.slook.opts[S.slook].name);
+    lines.push(C.sort + ": " + (S.sort ? COL[S.sort.col].head + (S.sort.dir > 0 ? " ↑" : " ↓") : W.sortNone));
     if (S.lit) lines.push(C.lit + ": " + $("litsays").textContent);
     if (S.open) lines.push(C.open + ": " + S.open);
     lines.push("", C.your, "");
@@ -565,6 +655,9 @@
   $("more-btn").textContent = W.more.show;
   $("more-btn").addEventListener("click", function () { var b = $("more-body"), open = b.hidden; b.hidden = !open; this.setAttribute("aria-expanded", open ? "true" : "false"); this.textContent = open ? W.more.hide : W.more.show; });
   (function () { var mb = $("more-body"); W.more.lines.forEach(function (l) { mb.appendChild(el("p", null, fill(l))); });
+    var ruled = RAILS.filter(function (r) { return W.rail[r].ruled; });
+    if (ruled.length) mb.appendChild(el("p", null, fill(W.more.ruled, { ruling: ruled.map(function (r) { return W.rail[r].ruled; }).filter(function (x, i, a) { return a.indexOf(x) === i; }).join(", "),
+      rails: ruled.map(function (r) { return W.rail[r].label + " " + optName(r, W.rail[r].pick); }).join(" · ") })));
     var t = el("table"), hr = el("tr"); W.more.colsHead.forEach(function (h) { hr.appendChild(el("th", null, h)); }); t.appendChild(hr);
     D.cols.forEach(function (c) { var tr = el("tr"); [c.head, c.shared ? W.sharedBlock.name : BLK[c.home].name, c.label, c.r + (c.alarm ? " · " + W.alarmRating : ""), c.arm ? c.arm + (c.armOn ? "" : " · " + W.absent) : W.more.armMap]
       .forEach(function (v) { tr.appendChild(el("td", null, String(v))); }); t.appendChild(tr); }); mb.appendChild(t); })();
@@ -576,6 +669,6 @@
   window.addEventListener("scroll", pageTop, { passive: true }); window.addEventListener("resize", pageTop);
 
   render();
-  window.__allep = { ready: true, data: D, state: S, render: render, bins: BINS, layout: layout, groups: groups, cellWords: cellWords, aggOf: aggOf };
+  window.__allep = { ready: true, key: KEY, rails: RAILS, icons: ICON, data: D, state: S, render: render, bins: BINS, layout: layout, groups: groups, cellWords: cellWords, aggOf: aggOf };
 })();
 </script>

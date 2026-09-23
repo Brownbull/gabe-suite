@@ -48,6 +48,7 @@ FACTS = HERE / "gen-endpoint-facts.py"
 LAB = HERE / "_lab-ep.js"
 DC = REPO / "docs" / "design" / "design-context"
 BM_WORDS = DC / "brainmap.words.json"
+PRISMS = DC / "prisms-endpoint.json"                                          # the clustering options the ruled tree was built with
 KIT_JS = DC / "kit-blocks.js"
 DEF_FORMS = Path("~/.cache/gabe-map-baselines/lab-input/forms.json")
 
@@ -497,7 +498,7 @@ def build(argv: list) -> tuple:
         argv.remove("--check"); cache = None
     if argv:
         die(f"unknown arguments: {argv}")
-    for p in (forms, archmap, tpl_p, words_p, FACTS, BM_WORDS, KIT_JS):
+    for p in (forms, archmap, tpl_p, words_p, FACTS, BM_WORDS, KIT_JS, PRISMS):
         if not p.is_file():
             die(f"missing input: {p}")
 
@@ -553,6 +554,18 @@ def build(argv: list) -> tuple:
     for c in cols:
         if not c["shared"] and not c["home"]:
             die(f"column {c['id']}: attribute {c['attr']} has no home and is not shared")
+    # SHARED means "needed by this many blocks or more" — the ruled tree's own threshold (m1-cluster.js spineClusters, read
+    # from the options gen-brainmap.js built the tree with, same default), proven against every shared attribute's block list
+    n_share = int(((json.loads(PRISMS.read_text(encoding="utf-8")).get("clusterOpts") or {}).get("spineClusters")) or 3)
+    for a_id, a in A.items():
+        if a.get("shared") and len(a.get("shared_blocks") or []) < n_share:
+            die(f"attribute {a_id} is shared but {len(a.get('shared_blocks') or [])} blocks need it, under the tree's {n_share}")
+    # the rails: every default is one of its options; a rail the operator ruled names the ruling (D-034), the rest are the agent's picks
+    for r_id, R in W["rail"].items():
+        if R.get("pick") not in (R.get("opts") or {}):
+            die(f"rail {r_id}: its default {R.get('pick')!r} is not one of its options")
+        if "ruled" in R and not re.fullmatch(r"D-\d{3}", str(R["ruled"])):
+            die(f"rail {r_id}: `ruled` must name the ruling (D-nnn), not {R['ruled']!r}")
     blocks = [{"key": b["key"], "sig": b["sig"], "name": b["name"], "plain": b["plain"], "kind": b["join"]["kind"]} for b in sm["blocks"]]
     orders = block_orders(sm)
     # the alarm families, in fixed places, most frequent first — so a dot's column means the same finding on every row
@@ -564,7 +577,7 @@ def build(argv: list) -> tuple:
     tok = {"app": app, "head": head, "nFeed": len(keys), "nRows": len(rows), "nCols": len(cols), "nBlocks": len(blocks),
            "formsSha": sha(forms)[:8], "archmapSha": sha(archmap)[:8], "formsPath": tilde(forms), "archmapPath": tilde(archmap),
            "arms": " · ".join(arms_on) or "none", "armsOff": " · ".join(arms_off) or "none",
-           "rTop": max(a["r"] for a in A.values()), "nR3": sum(1 for c in cols if c["r"] == max(a["r"] for a in A.values()))}
+           "nShare": n_share, "rTop": max(a["r"] for a in A.values()), "nR3": sum(1 for c in cols if c["r"] == max(a["r"] for a in A.values()))}
     if sorted(LAYOUTS) != sorted(W["rail"]["lay"]["opts"]):
         die("the words file's layouts and the page's differ")
     data = {"tok": tok, "partial": bool(only), "layouts": LAYOUTS, "rows": rows, "cols": cols, "blocks": blocks, "orders": orders, "families": families,
@@ -574,6 +587,14 @@ def build(argv: list) -> tuple:
     left = set(TOKEN.findall(json.dumps({k2: v2 for k2, v2 in W.items() if not k2.startswith("_")}, ensure_ascii=False))) - {"{" + t + "}" for t in list(tok) + list(RUNTIME)}
     if left:
         die(f"tokens the words file uses that nobody fills: {sorted(left)}")
+
+    # every authored top-level string is READ by the page or by this generator — a line nobody draws says more than the page
+    # does (D-034 review: two hover lines outlived the mark that showed them). Top-level keys only: nested words are reached
+    # through computed keys (a rail's option, a column's id), which a text search cannot follow.
+    tpl_src, gen_src = tpl_p.read_text(encoding="utf-8"), Path(__file__).read_text(encoding="utf-8")
+    unread = [k for k in W if not k.startswith("_") and not re.search(r"\bW\." + re.escape(k) + r"\b", tpl_src) and f'W["{k}"]' not in gen_src]
+    if unread:
+        die(f"words the page never reads — draw them or drop them: {unread}")
 
     kit = subprocess.run(["node", "-e", "const k=require(process.argv[1]);const K=k.withoutMotion(k.kitBlocks(process.argv[2]),'');process.stdout.write(JSON.stringify(K));",
                           str(KIT_JS), str(REPO)], capture_output=True, text=True)

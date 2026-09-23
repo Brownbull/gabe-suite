@@ -19,7 +19,8 @@ await p.goto('file://' + path.join(HERE, 'all-endpoints.html')); await p.waitFor
 await p.evaluate(() => { try { for (const k of Object.keys(localStorage)) if (/^gabe:allep/.test(k)) localStorage.removeItem(k); } catch (e) {} });
 await p.reload(); await p.waitForFunction('window.__allep && window.__allep.ready', { timeout: 20000 });
 const wait = (ms) => p.waitForTimeout(ms), log = [], say = (k, v) => { log.push([k, v]); console.log(k + ': ' + (typeof v === 'string' ? v : JSON.stringify(v))); };
-const txt = async (sel) => p.$eval(sel, (e) => (e.textContent || '').trim().replace(/\s+/g, ' '));
+// an option is an icon square (D-034): its words are its aria-label, so a control's words are read from there first
+const txt = async (sel) => p.$eval(sel, (e) => (e.getAttribute('aria-label') || e.textContent || '').trim().replace(/\s+/g, ' '));
 let n = 0;
 const pic = async (name, clip) => { n++; await p.screenshot({ path: path.join(OUT, String(n).padStart(2, '0') + '-' + name + '.png'), ...(clip ? { clip } : {}) }); };
 const ring = async (sel) => p.$eval(sel, (e) => { e.dataset.__ring = '1'; e.style.outline = '3px solid #ff2d9b'; e.style.outlineOffset = '2px'; });
@@ -35,8 +36,36 @@ const step = async (name, sel, note) => {            // photograph with the targ
   await p.mouse.click(box.x + box.width / 2, box.y + box.height / 2); await wait(400); return true; };
 const rows = () => p.$$eval('#board tr.row[data-ep], #board .card[data-ep]', (els) => els.length);
 
-say('rails at load', await p.$$eval('.rgrp', (gs) => gs.map((g) => (g.querySelector('.rl') || {}).textContent + ': ' + [...g.querySelectorAll('.opt')].map((o) => (o.getAttribute('aria-checked') === 'true' ? '[' : '') + o.textContent.trim().replace(/\s+/g, ' ') + (o.getAttribute('aria-checked') === 'true' ? ']' : '')).join(' | '))));
+// [pressed] · {dashed = my pick on a rail he has not ruled} — read off the squares' aria-labels and their drawn borders
+say('rails at load', await p.$$eval('.rgrp', (gs) => gs.map((g) => (g.querySelector('.rl') || {}).textContent + ': ' + [...g.querySelectorAll('.opt')].map((o) => {
+  const on = o.getAttribute('aria-checked') === 'true', dash = getComputedStyle(o).borderTopStyle === 'dashed', w = o.getAttribute('aria-label');
+  return (on ? '[' : '') + (dash ? '{' + w + '}' : w) + (on ? ']' : ''); }).join(' | '))));
 await pic('cold-load');
+const railClip = async () => { const r = await (await p.$('#rail')).boundingBox(); return { x: Math.max(0, r.x - 8), y: Math.max(0, r.y - 8), width: Math.min(W - 1, r.width + 16), height: r.height + 16 }; };
+await pic('the-rail', await railClip());
+{ // hover one square with the real mouse: its words appear, short
+  const sq = await p.$('.opt[data-rail="grp"][data-v="labels"]'), bx = await sq.boundingBox();
+  await p.mouse.move(bx.x + bx.width / 2, bx.y + bx.height / 2); await wait(250);
+  say('hover on a square', await txt('#tip')); const rc = await railClip(); await pic('hover-a-square', { ...rc, height: rc.height + 90 });
+  await p.mouse.move(5, H - 10); await wait(100); }
+const headClip = async () => { const bd = await (await p.$('#board')).boundingBox(); return { x: bd.x, y: Math.max(0, bd.y), width: Math.min(1100, bd.width), height: 340 }; };
+await pic('shared-header-default', await headClip());
+await step('shared-marked-by-a-rule', '.opt[data-rail="slook"][data-v="rule"]', 'shared marked by: a strong rule');
+await pic('shared-header-rule', await headClip());
+await step('shared-marked-by-a-frame', '.opt[data-rail="slook"][data-v="box"]', 'shared marked by: a frame');
+await pic('shared-header-frame', await headClip());
+await step('shared-back-to-the-band', '.opt[data-rail="slook"][data-v="band"]', 'shared marked by: a tinted band');
+// the same three treatments with the viewer's system in DARK mode — a setting of the viewer's machine, not a control on the page
+// (the page has no light/dark switch of its own); every choice on the page is still made by a real click
+const LOOKS = [['band', 'a tinted band'], ['rule', 'a strong rule'], ['box', 'a frame']];
+const threeLooks = async (where, clip) => { for (const [v, w] of LOOKS) {
+  if (!(await p.$eval('.opt[data-rail="slook"][data-v="' + v + '"]', (e) => e.getAttribute('aria-checked') === 'true'))) await step(where + '-pick-' + v, '.opt[data-rail="slook"][data-v="' + v + '"]', 'shared marked by: ' + w);
+  await p.mouse.move(5, H - 10); await p.evaluate(() => window.hoverHide && window.hoverHide()); await wait(120);
+  await pic(where + '-shared-' + v, await clip()); }
+  await step(where + '-back-to-the-band', '.opt[data-rail="slook"][data-v="band"]', 'shared marked by: a tinted band'); };
+await p.emulateMedia({ colorScheme: 'dark' }); await wait(200); say('viewer system theme', 'dark');
+await threeLooks('dark-table', headClip);
+await p.emulateMedia({ colorScheme: 'light' }); await wait(200); say('viewer system theme', 'light');
 say('rows at load', await rows());
 { const bd = await p.$('#board'), bx = await bd.boundingBox(); await p.mouse.move(W / 2, 400); for (let i = 0; i < 8; i++) { await p.mouse.wheel(0, 120); await wait(40); } await wait(200);
   await pic('the-table-by-wheel'); say('board top after wheel', Math.round((await bd.boundingBox()).y)); }
@@ -64,6 +93,12 @@ await pic('grouped-by-ending-labels');
 await step('three-per-row', '.opt[data-rail="lay"][data-v="three"]', 'layout: 3 per row');
 say('cards drawn', await rows());
 await pic('three-per-row');
+// the Shared block on a card, under each treatment, light then dark (the first cards, where the Shared block is the first run of cells)
+const cardClip = async () => { const c = await (await p.$('#board .cards')).boundingBox(); return { x: c.x, y: Math.max(0, c.y), width: Math.min(W - c.x, c.width), height: 300 }; };
+await threeLooks('cards', cardClip);
+await p.emulateMedia({ colorScheme: 'dark' }); await wait(200); say('viewer system theme', 'dark');
+await threeLooks('dark-cards', cardClip);
+await p.emulateMedia({ colorScheme: 'light' }); await wait(200); say('viewer system theme', 'light');
 { const first = await p.$eval('#board .card[data-ep]', (c) => c.getAttribute('data-ep'));
   await step('open-a-card', '#board .card[data-ep="' + first + '"] .pth', 'the first card\'s path');
   say('side panel', { title: await txt('#side h3'), cmd: await p.$eval('#labcmd', (e) => e.textContent) });

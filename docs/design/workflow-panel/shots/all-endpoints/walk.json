@@ -7,16 +7,119 @@
   [
    "rails at load",
    [
-    "layout: [one per rowmy pick] | 2 per row | 3 per row",
-    "group by: [entitymy pick] | first URL segment | method | ending labels | ending counts | no groups",
-    "a group of a single endpoint: [gathered at the endmy pick] | its own header",
-    "group order: [largest firstmy pick] | by name",
-    "shared attributes: [their own group, firstmy pick] | under the first block",
-    "block order: [stage ordermy pick] | the card's order",
-    "columns: [every columnmy pick] | rated 3 only",
-    "numbers: [tinted by sizemy pick] | plain",
-    "a column's most common value: [drawn quietmy pick] | written out"
+    "layout: [one per row] | 2 per row | 3 per row",
+    "group by: [entity] | first URL segment | method | ending labels | ending counts | no groups",
+    "a group of a single endpoint: [{gathered at the end}] | its own header",
+    "group order: [{largest first}] | by name",
+    "shared attributes: [their own group, first] | under the first block",
+    "shared marked by: [{a tinted band}] | a strong rule | a frame",
+    "block order: [stage order] | the card's order",
+    "columns: [every column] | rated 3 only",
+    "numbers: [{tinted by size}] | plain",
+    "a column's most common value: [{drawn quiet}] | written out"
    ]
+  ],
+  [
+   "hover on a square",
+   "ending labelsEndpoints with the same ending labels sit together, so clones group."
+  ],
+  [
+   "step 5 · shared-marked-by-a-rule",
+   {
+    "click": "a strong rule",
+    "at": [
+     985,
+     450
+    ],
+    "size": [
+     32,
+     32
+    ],
+    "note": "shared marked by: a strong rule"
+   }
+  ],
+  [
+   "step 7 · shared-marked-by-a-frame",
+   {
+    "click": "a frame",
+    "at": [
+     1022,
+     450
+    ],
+    "size": [
+     32,
+     32
+    ],
+    "note": "shared marked by: a frame"
+   }
+  ],
+  [
+   "step 9 · shared-back-to-the-band",
+   {
+    "click": "a tinted band",
+    "at": [
+     948,
+     450
+    ],
+    "size": [
+     32,
+     32
+    ],
+    "note": "shared marked by: a tinted band"
+   }
+  ],
+  [
+   "viewer system theme",
+   "dark"
+  ],
+  [
+   "step 11 · dark-table-pick-rule",
+   {
+    "click": "a strong rule",
+    "at": [
+     985,
+     450
+    ],
+    "size": [
+     32,
+     32
+    ],
+    "note": "shared marked by: a strong rule"
+   }
+  ],
+  [
+   "step 13 · dark-table-pick-box",
+   {
+    "click": "a frame",
+    "at": [
+     1022,
+     450
+    ],
+    "size": [
+     32,
+     32
+    ],
+    "note": "shared marked by: a frame"
+   }
+  ],
+  [
+   "step 15 · dark-table-back-to-the-band",
+   {
+    "click": "a tinted band",
+    "at": [
+     948,
+     450
+    ],
+    "size": [
+     32,
+     32
+    ],
+    "note": "shared marked by: a tinted band"
+   }
+  ],
+  [
+   "viewer system theme",
+   "light"
   ],
   [
    "rows at load",
@@ -24,7 +127,7 @@
   ],
   [
    "board top after wheel",
-   372
+   308
   ],
   [
    "header while the board scrolls",
@@ -36,7 +139,7 @@
    }
   ],
   [
-   "step 4 · sort-by-tables",
+   "step 18 · sort-by-tables",
    {
     "click": "tables",
     "at": [
@@ -55,7 +158,7 @@
    "sorted by tables ↑"
   ],
   [
-   "step 6 · sort-again-reverses",
+   "step 20 · sort-again-reverses",
    {
     "click": "tables ↑",
     "at": [
@@ -74,7 +177,7 @@
    "sorted by tables ↓"
   ],
   [
-   "step 7 · back-to-path-order",
+   "step 21 · back-to-path-order",
    {
     "click": "back to path order",
     "at": [
@@ -89,7 +192,7 @@
    }
   ],
   [
-   "step 8 · light-a-strip-piece",
+   "step 22 · light-a-strip-piece",
    {
     "click": "",
     "at": [
@@ -112,12 +215,12 @@
    26
   ],
   [
-   "step 10 · clear-the-light",
+   "step 24 · clear-the-light",
    {
     "click": "clear",
     "at": [
      403,
-     531
+     510
     ],
     "size": [
      37,
@@ -127,16 +230,16 @@
    }
   ],
   [
-   "step 11 · group-by-ending-labels",
+   "step 25 · group-by-ending-labels",
    {
     "click": "ending labels",
     "at": [
-     747,
-     407
+     271,
+     450
     ],
     "size": [
-     117,
-     31
+     32,
+     32
     ],
     "note": "group by: ending labels"
    }
@@ -162,16 +265,16 @@
    ]
   ],
   [
-   "step 13 · three-per-row",
+   "step 27 · three-per-row",
    {
     "click": "3 per row",
     "at": [
-     288,
-     407
+     106,
+     450
     ],
     "size": [
-     88,
-     31
+     32,
+     32
     ],
     "note": "layout: 3 per row"
    }
@@ -181,12 +284,110 @@
    80
   ],
   [
-   "step 15 · open-a-card",
+   "step 30 · cards-pick-rule",
+   {
+    "click": "a strong rule",
+    "at": [
+     985,
+     450
+    ],
+    "size": [
+     32,
+     32
+    ],
+    "note": "shared marked by: a strong rule"
+   }
+  ],
+  [
+   "step 32 · cards-pick-box",
+   {
+    "click": "a frame",
+    "at": [
+     1022,
+     450
+    ],
+    "size": [
+     32,
+     32
+    ],
+    "note": "shared marked by: a frame"
+   }
+  ],
+  [
+   "step 34 · cards-back-to-the-band",
+   {
+    "click": "a tinted band",
+    "at": [
+     948,
+     450
+    ],
+    "size": [
+     32,
+     32
+    ],
+    "note": "shared marked by: a tinted band"
+   }
+  ],
+  [
+   "viewer system theme",
+   "dark"
+  ],
+  [
+   "step 36 · dark-cards-pick-rule",
+   {
+    "click": "a strong rule",
+    "at": [
+     985,
+     450
+    ],
+    "size": [
+     32,
+     32
+    ],
+    "note": "shared marked by: a strong rule"
+   }
+  ],
+  [
+   "step 38 · dark-cards-pick-box",
+   {
+    "click": "a frame",
+    "at": [
+     1022,
+     450
+    ],
+    "size": [
+     32,
+     32
+    ],
+    "note": "shared marked by: a frame"
+   }
+  ],
+  [
+   "step 40 · dark-cards-back-to-the-band",
+   {
+    "click": "a tinted band",
+    "at": [
+     948,
+     450
+    ],
+    "size": [
+     32,
+     32
+    ],
+    "note": "shared marked by: a tinted band"
+   }
+  ],
+  [
+   "viewer system theme",
+   "light"
+  ],
+  [
+   "step 41 · open-a-card",
    {
     "click": "/",
     "at": [
      101,
-     709
+     688
     ],
     "size": [
      7,
@@ -203,7 +404,7 @@
    }
   ],
   [
-   "step 17 · close-the-panel",
+   "step 43 · close-the-panel",
    {
     "click": "close",
     "at": [
@@ -218,37 +419,37 @@
    }
   ],
   [
-   "step 18 · one-per-row",
+   "step 44 · one-per-row",
    {
-    "click": "one per rowmy pick",
+    "click": "one per row",
     "at": [
      32,
-     407
+     450
     ],
     "size": [
-     158,
-     31
+     32,
+     32
     ],
     "note": "layout: one per row"
    }
   ],
   [
-   "step 19 · group-by-entity",
+   "step 45 · group-by-entity",
    {
-    "click": "entitymy pick",
+    "click": "entity",
     "at": [
-     398,
-     407
+     160,
+     450
     ],
     "size": [
-     121,
-     31
+     32,
+     32
     ],
     "note": "group by: entity"
    }
   ],
   [
-   "step 20 · more-information",
+   "step 46 · more-information",
    {
     "click": "Show how the map knows this",
     "at": [
