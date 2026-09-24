@@ -498,3 +498,16 @@ head line — sits behind it, closed by default. "All 80 endpoints, not justifie
 first read it as "every endpoint at once, one unwrapped line each"; asked, he answered "Nothing — leave the table as it was"
 (2026-09-23). The table stays as D-034/D-036 left it.
 Revisit if: a hidden line turns out to be one he reads every time — it comes back to the face.
+
+## D-039 — The selected endpoint's row is pinned at the top of the all-endpoints page
+Date: 2026-09-24 · Input: his message.
+Decision, his: "when we select an endpoint in the one endpoint section … When we scroll down to the one endpoint, I want to have
+that particular row from the endpoints table with all the labels for all the column names for that row, but only that one. If I
+scroll down, I should still see that one for the selected endpoint. Actually, we can put that at the top of everything … When we
+scroll down, we're always going to see the table and the row for the specific API endpoint."
+Consequence: a pin at the very top of the page holds the table's block and column names and the SELECTED row, and stays on screen
+through the table and down into ONE ENDPOINT. It is drawn by the table's own renderer (its header still sorts and lights), copies
+the table's measured column widths and follows its sideways scroll, so it reads as the top of the same table; while the table is
+scrolled, the table's own header tucks behind it and its rows run on under the pinned row. Picking a row updates it; clicking the
+pinned row goes to ONE ENDPOINT.
+Revisit if: the pin's height crowds the screen at 1080 — then its block-name row folds away and only the column names stay.

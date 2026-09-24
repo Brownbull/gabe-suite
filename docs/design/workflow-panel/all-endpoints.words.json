@@ -1015,5 +1015,6 @@
     "pick": "my pick: the Shared group has no part in the lab",
     "key": "dashed icon: my pick",
     "lab": "the lab's section map marks it this way ({v}) — my pick there too, not ruled"
-  }
+  },
+  "pinRow": "The endpoint picked in the table, pinned at the top with the column names. Click it to go to its section below."
 }

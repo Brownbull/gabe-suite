@@ -341,11 +341,19 @@ ok(labSha() === LAB0, 'the lab\'s own facts file is untouched by the sample');
    (2026-09-23: the table keeps its own scroll box — he asked for no change to the table, D-038) */
 { await p.evaluate(() => { const bd = document.getElementById('board'); window.scrollTo(0, 0); window.scrollTo(0, bd.getBoundingClientRect().top + 400); bd.scrollTop = 600; });
   const settle = (cond) => p.waitForFunction(cond, null, { timeout: 3000 }).catch(() => {});   /* a scroll event lands on the next frame, which a heavy table can delay */
-  await settle(() => { const b0 = document.querySelector('#board thead tr.bh th.bstart'); return Math.abs(b0.getBoundingClientRect().top) <= 4; });
+  await settle(() => { const pin = document.getElementById('pin'); return pin && Math.abs(pin.getBoundingClientRect().top) <= 1; });
   const at = await p.evaluate(() => { const bd = document.getElementById('board'), h = document.querySelector('#board thead tr.ch th[data-col]'), b0 = document.querySelector('#board thead tr.bh th.bstart');
     return { board: Math.round(bd.getBoundingClientRect().top), head: Math.round(h.getBoundingClientRect().top), band: Math.round(b0.getBoundingClientRect().top), scrolled: bd.scrollTop }; });
   ok(at.board < -300 && at.scrolled > 0, 'the page is scrolled past the board\'s top and the board is scrolled', at);
-  ok(at.band >= -1 && at.band <= 4 && at.head > at.band && at.head < 120, 'the block names and the column names sit at the top of the screen', at);
+  /* CHANGED 2026-09-24 (D-039): the names at the top of the screen are the PIN's — it holds the block names, the column names and
+     the selected row; the table's own header tucks BEHIND it (inside the pin's box), so its rows run on under the pinned row */
+  const pn = await p.evaluate(() => { const pin = document.getElementById('pin'), pr = pin.getBoundingClientRect();
+    const pb = pin.querySelector('thead tr.bh th.bstart'), ph = pin.querySelector('thead tr.ch th[data-col]'), row = pin.querySelector('tbody tr.row');
+    return { top: Math.round(pr.top), bottom: Math.round(pr.bottom), band: Math.round(pb.getBoundingClientRect().top), head: Math.round(ph.getBoundingClientRect().top),
+      row: row && row.getAttribute('data-ep'), open: window.__allep.state.open }; });
+  ok(pn.top <= 1 && pn.band >= pn.top && pn.head > pn.band && pn.head < 120 && pn.row === pn.open,
+    'the block names, the column names and the selected row sit at the top of the screen, in the pin', pn);
+  ok(at.band >= pn.top && at.head + 10 <= pn.bottom, 'and the table\'s own header is tucked behind the pin, not stacked under it', { at, pin: pn });
   await p.evaluate(() => { window.scrollTo(0, 0); document.getElementById('board').scrollTop = 0; });
   await settle(() => { const bd = document.getElementById('board'), b0 = document.querySelector('#board thead tr.bh th.bstart'); return Math.abs(b0.getBoundingClientRect().top - bd.getBoundingClientRect().top) <= 2; });
   const back = await p.evaluate(() => { const bd = document.getElementById('board'), b0 = document.querySelector('#board thead tr.bh th.bstart'); return [Math.round(bd.getBoundingClientRect().top), Math.round(b0.getBoundingClientRect().top)]; });

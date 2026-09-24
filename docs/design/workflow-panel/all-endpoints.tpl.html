@@ -80,6 +80,14 @@
   .litchip[hidden] { display: none; }
   .litchip button, .status button { font: inherit; font-size: var(--fs-min); cursor: pointer; background: none; border: 0; color: inherit; text-decoration: underline; padding: 0; }
 
+  /* ── the pin: the selected endpoint's row under the table's names, always at the top of the page (his ask 2026-09-24) ── */
+  .pin { position: sticky; top: 0; z-index: 40; overflow: hidden; background: var(--card); border: 1px solid var(--rule); border-bottom: 2px solid var(--accent); border-radius: 0 0 var(--radius, 10px) var(--radius, 10px); margin: 0 0 10px; box-shadow: 0 6px 14px -10px rgba(0,0,0,.45); }
+  .pin:empty { display: none; }
+  .pin table.grid thead th { position: static; }
+  .pin table.grid.fixed { table-layout: fixed; }
+  .pin table.grid.fixed thead th { overflow: hidden; }   /* a block name longer than its columns is cut at their edge, as the table cuts it */
+  .pin tr.row td, .pin tr.row td.id { background: color-mix(in srgb, var(--accent) 9%, var(--card)); cursor: pointer; }
+  .pin tr.row td.id { box-shadow: inset 4px 0 0 var(--accent); }
   /* ── the board: one scroll surface, header and identity column stick ── */
   .board { position: relative; overflow: auto; max-height: calc(100vh - 24px); border: 1px solid var(--rule); border-radius: var(--radius, 10px); background: var(--card); }
   .board.cardsmode { max-height: none; overflow: visible; border: 0; background: transparent; }
@@ -275,6 +283,9 @@
 </style>
 
 <div class="artifact-page">
+  <!-- THE PIN (his ask 2026-09-24): the table's block and column names and the SELECTED endpoint's row, always at the top of
+       the page — through the table and down into ONE ENDPOINT. Built by the table's own renderer, aligned to its measured columns. -->
+  <div class="pin" id="pin"></div>
   <header>
     <p class="stamp" id="partial" hidden>—</p>
   </header>
@@ -624,6 +635,7 @@
     board.setAttribute("data-slook", S.shared === "own" ? S.slook : "");
     board.appendChild(n === 1 ? renderTable(L, GS, lit) : renderCards(L, GS, lit, n));
     var bhr = board.querySelector("tr.bh"); if (bhr) board.style.setProperty("--bh", bhr.getBoundingClientRect().height + "px");
+    renderPin(L);
     pageTop();
     $("sortsays").textContent = S.sort ? fill(W.sortBy, { col: COL[S.sort.col].head }) + (S.sort.dir > 0 ? " ↑" : " ↓") : W.sortNone;
     if (S.lit) { var b = BINS[S.lit.col].filter(function (x) { return x.key === S.lit.bin; })[0];
@@ -632,6 +644,20 @@
     $("n-board").textContent = nEp(N);
     renderOne(); writeOut(L, GS);
   }
+  /* THE PIN: the board's own header rows (headRows — sorting and the strips work here too) and the selected row, drawn by the same
+     cell renderer. In rows mode it copies the board's measured column widths (a fixed layout) and follows its sideways scroll, so
+     it reads as the top of the same table; in cards mode it stands alone. */
+  function renderPin(L) { var pin = $("pin"); if (!pin) return; pin.textContent = ""; var r = BYID[S.open]; if (!r) return;
+    var t = el("table", "grid"), bt = $("board").querySelector("table.grid");
+    t.appendChild(headRows(L)); var tb = el("tbody"), tr = el("tr", "row"); tr.setAttribute("data-ep", r.id); tr.setAttribute("data-sel", "true");
+    var td0 = el("td", "id"); td0.appendChild(idCell(r)); tr.appendChild(td0);
+    L.forEach(function (bl, bi) { bl.cols.forEach(function (c, ci) { var td = el("td", (ci === 0 ? "bstart" : "") + (bi % 2 ? " bz" : "") + shCls(bl, ci)); td.appendChild(cell(c, r)); tr.appendChild(td); }); });
+    tr.setAttribute("data-tip", "pinrow"); tr.addEventListener("click", function () { var so = $("sec-one"); if (so && so.scrollIntoView) so.scrollIntoView({ block: "start" }); });
+    tb.appendChild(tr); t.appendChild(tb);
+    if (bt) { var ws = [].map.call(bt.querySelectorAll("thead tr.ch th"), function (h) { return h.getBoundingClientRect().width; });
+      var cg = el("colgroup"); ws.forEach(function (w) { var c = el("col"); c.style.width = w + "px"; cg.appendChild(c); });
+      t.insertBefore(cg, t.firstChild); t.classList.add("fixed"); t.style.width = bt.getBoundingClientRect().width + "px"; }
+    pin.setAttribute("data-slook", S.shared === "own" ? S.slook : ""); pin.appendChild(t); pin.scrollLeft = $("board").scrollLeft; }
   function firstId(GS) { for (var i = 0; i < GS.length; i++) if (GS[i].rows.length) return GS[i].rows[0].id; return ROWS[0] ? ROWS[0].id : null; }
 
   /* ══ SECTION 2 · ONE ENDPOINT (D-036): the universe card · the gaps · the code map. The row picked in the table, or the one
@@ -644,7 +670,7 @@
   function pick(id, byClick) {
     S.open = id; setAddress(id); $("onenote").hidden = true;
     document.querySelectorAll("#board tr.row[data-ep], #board .card[data-ep]").forEach(function (e) { if (e.getAttribute("data-ep") === id) e.setAttribute("data-sel", "true"); else e.removeAttribute("data-sel"); });
-    renderOne(); writeOut(LAST.L, LAST.GS);
+    renderPin(LAST.L); renderOne(); writeOut(LAST.L, LAST.GS);
     if (byClick && S.go === "scroll") { var so = $("sec-one"); if (so && so.scrollIntoView) so.scrollIntoView({ block: "start" }); } }
   /* where an attribute sits: its home block, or the Shared group (first block that needs it when the shared rail says so) */
   function groupOfAttr(a) { var at = D.attrs[a]; if (!at) return null; if (!at.shared) return at.home;
@@ -795,6 +821,7 @@
     if (kind === "pickkey") return esc(W.pickKeyPlain);
     if (kind === "head") return "<b>" + esc(c.head) + "</b> · " + esc(c.name) + "<span class=pl>" + esc(W.sortHint) + "</span>";
     if (kind === "sortreset") return esc(W.sortReset);
+    if (kind === "pinrow") return esc(W.pinRow);
     if (kind === "lablink") return esc(W.panel.lab);
     if (kind === "unilink") return esc(t.getAttribute("aria-disabled") === "true" ? W.panel.uniMissing : W.panel.uni);
     if (kind === "itog") return esc(t.getAttribute("aria-expanded") === "true" ? W.info.close : W.info.open);
@@ -855,9 +882,12 @@
   }
 
   /* ── the fixed words ── */
-  function pageTop() { var board = $("board"); if (!board) return; var y = board.getBoundingClientRect().top;
+  function pageTop() { var board = $("board"); if (!board) return; var pin = $("pin"), th = board.querySelector("thead"),
+      off = pin && pin.offsetHeight && th ? Math.max(0, pin.offsetHeight - th.getBoundingClientRect().height) : 0;
+    var y = board.getBoundingClientRect().top - off;
     board.style.setProperty("--pagetop", (y < 0 ? Math.min(-y, Math.max(0, board.clientHeight - 60)) : 0) + "px"); }
-  window.addEventListener("scroll", pageTop, { passive: true }); window.addEventListener("resize", pageTop);
+  window.addEventListener("scroll", pageTop, { passive: true }); window.addEventListener("resize", function () { pageTop(); if (LAST.L) renderPin(LAST.L); });
+  $("board").addEventListener("scroll", function () { var pin = $("pin"); if (pin) pin.scrollLeft = $("board").scrollLeft; }, { passive: true });
   $("eyebrow").textContent = fill(W.eyebrow); $("h1").textContent = fill(W.h1); $("lede").textContent = fill(W.lede); $("prop").textContent = fill(W.proposal);
   $("stamp").textContent = fill(W.stamp); $("keys").textContent = fill(W.keys);
   if (D.partial) { $("partial").hidden = false; $("partial").textContent = fill(W.partial); }
